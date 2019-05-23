@@ -143,11 +143,11 @@ Open problems / Edge cases
 
 ### Multiple impressions convert
 
-If multiple impressions on different publishers convert for the same conversion event, it can be confusing to tell after the fact what happened. Is this a "multi-touch" conversion in which many ads led to one conversion for a single user, or multiple separate conversions from different users?
+If multiple impressions on different publishers convert for the same conversion event, it can be confusing to tell after the fact what happened. Is this a "multi-touch" conversion in which many ads led to one conversion for a single user, or multiple separate conversions from different users? Existing attribution strategies (e.g. [AdWords](https://support.google.com/google-ads/answer/6259715)) try to give variable "credit" to each impression that led to a conversion.
 
-This is a hard problem to solve while still preserving privacy. There may be interesting solutions here using techniques like randomized response or aggregation, though.
+This is a hard problem to solve while still preserving privacy, since the amount of credit any given impression receives could leak cross-publisher information. There may be interesting solutions here using techniques like adding noise to the credit value, or enforcing aggregation thresholds with server side infrastructure.
 
-Solutions to this problem may also need to include protections against false reports, especially in cases where an attacker can drop older reports in favor of new, fake ones.
+Solutions to this problem may also need to include protections against false reports, especially in cases where an attacker has the power to drop older reports in favor of new, fake ones.
 
 ### Multiple conversions per impression
 
