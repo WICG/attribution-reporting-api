@@ -136,7 +136,7 @@ Most publishers and advertisers do not have the server-side infrastructure requi
 
 This goal is purely for ergonomics. It shouldn’t change the underlying privacy properties of the API assuming publishers / advertisers would forward reports to their ad tech companies anyway on the server-side.
 
-Of course, it should not be possible for untrusted third parties to receive conversion reports without publisher / advertiser permission.
+Of course, it should not be possible for untrusted third parties to receive conversion reports without publisher / advertiser permission. This could potentially be addressed via a [Feature Policy](https://w3c.github.io/webappsec-feature-policy/) delegation of permission.
 
 Open problems / Edge cases
 --------------------------
