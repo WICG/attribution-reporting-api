@@ -32,7 +32,7 @@ This doesn’t have to be the case, though. A new API surface can be added to th
 Prior Art
 ---------
 
-Webkit has published a [draft spec](https://trac.webkit.org/wiki/ad-click-attribution-draft-spec) on Ad Click Attribution for the Web.
+There is an alternative [Ad Click Attribution](https://github.com/WICG/ad-click-attribution) draft spec in the WICG. See this [WebKit blog post](https://webkit.org/blog/8943/privacy-preserving-ad-click-attribution-for-the-web/) for more details.
 
 Brave has published and implemented an [Ads Confirmation Protocol](https://github.com/brave/brave-browser/wiki/Security-and-privacy-model-for-ad-confirmations).
 
