@@ -29,6 +29,12 @@ Since the ads industry today uses common identifiers across advertiser and publi
 
 This doesn’t have to be the case, though. A new API surface can be added to the web platforms to satisfy this use-case without propagating user identifiers. This would introduce a new privacy preserving way to ensure cross-site measurement coverage even in cases where cross-site user identifiers are unavailable or undesirable.
 
+Use Cases
+---------
+
+-   **View-through conversion tracking**: Measure the effectiveness of a campaign to generate conversions based on views of an ad.
+-   **Click-through conversion tracking**: Measure the effectiveness of a campaign to generate navigations to an ad landing page.
+
 Prior Art
 ---------
 
