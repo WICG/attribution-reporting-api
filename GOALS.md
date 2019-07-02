@@ -1,5 +1,7 @@
 API Design Goals
-----------------
+===============
+
+This document is a collection of use cases and design principles that a web platform festure for measuring and reporting ad click conversions should fufill.
 
 ### Privacy
 
