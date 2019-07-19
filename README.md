@@ -106,11 +106,13 @@ permission delegation. One way this could work is a new [Feature Policy](https:/
 </iframe>
 ```
 
-Only domains provided as feature policy parameters can be used as
-reporting domains in child contexts. Impression tags in the main frame
-can set any reporting domain, as impression tags in that context are
-inherently trusted. This is done to ensure that a publisher page must
-opt-in to any domain that wants to receive impression reports.
+In child contexts, reporting domains are restricted to only those that were
+explicitly allowed via Feature Policy delegation. Any other values will be ignored.
+This is done to ensure that a publisher page must opt-in to any domain that
+wants to receive impression reports. Impressions in the main frame are trusted
+and can set any reporting domain (i.e. it has a default allow-list of *), but a
+Feature Policy response header set on the main document response could
+optionally restrict it further.
 
 An impression will be eligible for reporting if any page on the
 addestination domain (advertiser site) registers a conversion to the
@@ -275,7 +277,7 @@ https://reportingdomain/.well-known/register-conversion?impression-data=&convers
 The conversion report data is included as query params as they represent
 non-hierarchical data ([URI RFC](https://tools.ietf.org/html/rfc3986#section-3.4)):
 
--   `impression-data`: 64 bit metadata set on the impression tag
+-   `impression-data`: 64 bit metadata set on the impression
 
 -   `conversion-metadata`: 3 bit metadata set in the conversion redirect
 
