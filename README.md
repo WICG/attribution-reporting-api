@@ -96,7 +96,7 @@ In order to prevent arbitrary third parties from receiving conversion
 reports without the publisher’s knowledge, conversion measurement
 reporting in nested iframes will need to be enabled via some sort of
 permission delegation. One way this could work is a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/) that is
-[parameterized](http://parameterized) by a string:
+[parameterized](https://github.com/w3c/webappsec-feature-policy/issues/163) by a string:
 
 ```
 <iframe src=”https://advertiser.test” allow=”conversion-reporting ‘src’ (https://ad-tech.com)”>
