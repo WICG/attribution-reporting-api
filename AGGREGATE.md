@@ -102,14 +102,14 @@ To augment an API that provides aggregate-only data, the browser client can opti
 1.  **Browser to server interaction only**. In this case, the intermediate server infrastructure is merely auxiliary to the browser, and doesn’t form an API surface with end users or developers. This kind of interaction could, analogous to key servers, provide cryptographic capabilities to the API. This topology strengthens otherwise local-only schemes such as [threshold crypto schemes](#threshold-cryptography), which enable values to remain hidden until they reach aggregation thresholds.
 1.  **Ad tech interacts directly with a server**. In this case, intermediary servers act as semi-trusted middlemen between browsers and ad tech where results are aggregated. Servers may send the results periodically to ad-tech companies in a pub-sub API. Alternatively, ad tech may query these servers directly in a query-based API to receive aggregate reports. These ad-tech queries may optionally trigger a cryptographic protocol between the ad tech and the intermediate server, such as [private set intersection](https://eprint.iacr.org/2019/723) or [private information retrieval](https://en.wikipedia.org/wiki/Private_information_retrieval), that can strengthen privacy and/or reduce trust in the intermediate server.
 
-Of these models, it seems like (3) is the least aligned with existing web platform API surface, especially combined with a [query-based](#query-based-/-non-query-based) API (i.e. a developer needs to query some public resources to learn their analytics). (1) is simple to understand but it isn’t clear it can satisfy the desired use cases and privacy goals simultaneously.
+Of these models, it seems like (3) is the least aligned with existing web platform API surface, especially combined with a [query-based](#query-based--non-query-based) API (i.e. a developer needs to query some public resources to learn their analytics). (1) is simple to understand but it isn’t clear it can satisfy the desired use cases and privacy goals simultaneously.
 
 
 ## Query-based / non-query-based
 
 A query-based API would allow advertisers and ad tech to create queries and receive anonymized results based on that query. This has a large number of implications and has two main implementation choices: data kept on device, and data kept in a trusted clearinghouse.
 
-When data is kept on device, browser clients would receive queries and compute results. All known [techniques](#techniques-and-technologies) that support client-side querying require participation in a multi-round protocol within an anonymity cohort of many clients simultaneously.
+When data is kept on device, browser clients would receive queries and compute results. All known [techniques](#Anonymity-Cohorts-and-Secure-Aggregation) that support client-side querying require participation in a multi-round protocol within an anonymity cohort of many clients simultaneously.
 
 When client data is kept in a clearinghouse, it removes some need for complex on-device protocols, but may require other techniques like [multi-party computation](#multi-party-computation) to avoid requiring too much trust in the clearinghouse.
 
