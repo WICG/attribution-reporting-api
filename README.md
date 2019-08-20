@@ -7,6 +7,38 @@ which allows for measuring and reporting ad click conversions.
 
 (Name probably needs bikeshedding)
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+  - [Glossary](#glossary)
+  - [Motivation](#motivation)
+  - [Prior Art](#prior-art)
+- [Overview](#overview)
+  - [Impression Declaration](#impression-declaration)
+    - [Permission Delegation](#permission-delegation)
+  - [Conversion Registration](#conversion-registration)
+    - [Metadata limits and noise](#metadata-limits-and-noise)
+    - [Register a conversion algorithm](#register-a-conversion-algorithm)
+    - [Multiple impressions for the same conversion (Multi-touch)](#multiple-impressions-for-the-same-conversion-multi-touch)
+    - [Multiple conversions for the same impression](#multiple-conversions-for-the-same-impression)
+  - [Sending Scheduled Reports](#sending-scheduled-reports)
+    - [Conversion Reports](#conversion-reports)
+  - [Metadata Encoding](#metadata-encoding)
+- [Sample Usage](#sample-usage)
+- [Privacy Considerations](#privacy-considerations)
+  - [Conversion Metadata](#conversion-metadata)
+  - [Conversion Delay](#conversion-delay)
+  - [Limits on the number of conversion pixels](#limits-on-the-number-of-conversion-pixels)
+  - [Clearing Site Data](#clearing-site-data)
+  - [Reporting cooldown](#reporting-cooldown)
+  - [Speculative: Limits based on first party storage](#speculative-limits-based-on-first-party-storage)
+  - [Speculative: Adding noise to the conversion event itself](#speculative-adding-noise-to-the-conversion-event-itself)
+- [Open Questions](#open-questions)
+  - [Multiple Reporting Endpoints Per Conversion](#multiple-reporting-endpoints-per-conversion)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 Glossary
 --------
 
