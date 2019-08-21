@@ -72,7 +72,7 @@ These technologies are complex. We should try to build the simplest solutions th
 
 If the [privacy goals](#Privacy-goals) of the API are met, it means that we could extend the event-level API with this one, potentially sending parallel aggregate reports alongside event-level reports (as long as the reports are not otherwise associated with each other).
 
-This greatly improves the usability of the API, allowing for many other [use cases](#Use-case-goals) that aren’t possible with just the event-level scheme
+This greatly improves the usability of the API, allowing for many other [use cases](#Use-case-goals) that aren’t possible with just the event-level scheme.
 
 
 ### Fraud protection
