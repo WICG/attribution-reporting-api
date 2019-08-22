@@ -7,6 +7,8 @@ which allows for measuring and reporting ad click conversions.
 
 (Name probably needs bikeshedding)
 
+See the explainer on [aggregate measurement](AGGREGATE.md) for a potential extension on top of this.
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
