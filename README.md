@@ -99,7 +99,7 @@ Impression Declaration
 An impression is an anchor tag with special attributes:
 
 `<a addestination=”[eTLD+1]” impressiondata=”[string]”
-impressionexpiry=[long] reportingdomain=”[eTLD+1]”>`
+impressionexpiry=[unsigned long long] reportingdomain=”[eTLD+1]”>`
 
 Impression attributes:
 
@@ -107,7 +107,7 @@ Impression attributes:
 
 -   `impressiondata`: is the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#metadata-encoding). This value can vary by UA.
 
--   `impressionexpiry`: (optional) expiry in seconds for when the impression should be deleted. Default will be 7 days, with a max value of 30 days.
+-   `impressionexpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default will be 7 days, with a max value of 30 days.
 
 -   `reportingdomain`: (optional) is the desired eTLD+1 endpoint that the conversion report for this impression should go to. Default will be the top level domain (eTLD+1) of the page.
 
@@ -280,7 +280,7 @@ time
 time
 
 Otherwise: Conversions will be reported `impressionexpiry`
-seconds from impression time
+milliseconds from impression time
 
 When a conversion report is scheduled, it will be delayed until the next
 applicable reporting window for the associated impression. Once the
@@ -364,7 +364,7 @@ the `ad-tech.com` reporting domain, and uses impression data that allows
   addestination=”https://toasters.com”
   impressiondata=”0x12345678”
   reportingdomain=”https://ad-tech.com”
-  impressionexpiry=604800>
+  impressionexpiry=604800000>
 ...
 </iframe>
 ```
