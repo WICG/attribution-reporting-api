@@ -410,20 +410,12 @@ https://ad-tech.com/.well-known/register-conversion?impression-data=12345678&con
 
 Privacy Considerations
 ======================
+The main privacy goal of the API is to make _linking identity_ between two different top-level sites difficult. This happens when either a request or a Javascript environment has two user IDs from two different sites simultaneously.
 
-The privacy goal of the API is to make it difficult to communicate
-information about a specific user between the publisher and advertiser
-sites. Limits should be put into place to make attempts to do so both
-hard and detectable, and different UAs should be able to set these
-limits to different values.
+In this API, the 64-bit impression ID can encode a user ID from the publisher’s top level site, but the low entropy, noisy conversion metadata could only encode a small part of a user ID from the advertiser’s top-level site. The impression ID and the conversion metadata are never exposed to a Javascript environment together, and the request that includes both of them is sent without credentials and at a different time from either event, so the request adds little new information linkable to these events.
 
-Note that this privacy goal differs from that of Safari's "Privacy
-Preserving Ad Click Attribution". Safari wishes to keep the publisher
-from learning even the fact that a specific ad click led to a
-conversion. This proposal (by allowing 64 bits of impression metadata)
-allows the publisher to learn that the conversion happened, but not to
-easily learn information the advertiser knows about the user who
-converted, or to join the two sides' notions of the user's identity.
+While this API _does_ allow you to learn "which ad clicks converted", it isn’t enough to link publisher and advertiser identity, unless there is serious abuse of the API, i.e. abusers are using error correcting codes and many clicks to slowly and probabilistically learn advertiser IDs associated with publisher ones. We explore some mitigations to this attack below.
+
 
 Conversion Metadata
 -------------------
