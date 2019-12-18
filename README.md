@@ -219,7 +219,7 @@ The most recent matching impression is given an `attibution-credit` of value 100
 
 For each matching impression, schedule a report. To schedule a report,
 the browser will store the 
- {reporting domain, addestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, attribution_credit} for the impression.
+ {reporting domain, addestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, attribution-credit} for the impression.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each impression is only allowed to schedule a maximum of three reports
@@ -236,7 +236,7 @@ To provide additional utility, the user-agent can choose to provide additional a
 
 The default attribution model will be last-click attribution, giving the last-clicked impression for a given conversion event all of the credit.
 
-To remain flexible, the user-agent sends an `attribution_credit` of value 0 to 100 for all conversion reports associated with a single conversion event. This represents the percent of attribution an impression received for a conversion. The sum of credits across a set of reports for one conversion event should equal 100.
+To remain flexible, the user-agent sends an `attribution-credit` of value 0 to 100 for all conversion reports associated with a single conversion event. This represents the percent of attribution an impression received for a conversion. The sum of credits across a set of reports for one conversion event should equal 100.
 
 There are many possible alternatives to this,
 like providing a choice of rules-based attribution models. However, it
@@ -308,7 +308,7 @@ To send a report, the user agent will make a non-credentialed secure
 HTTP POST request to:
 
 ```
-https://reportingdomain/.well-known/register-conversion?impression-data=&conversion-data=&attribution_credit=
+https://reportingdomain/.well-known/register-conversion?impression-data=&conversion-data=&attribution-credit=
 ```
 
 The conversion report data is included as query params as they represent
@@ -318,7 +318,7 @@ non-hierarchical data ([URI RFC](https://tools.ietf.org/html/rfc3986#section-3.4
 
 -   `conversion-metadata`: 3 bit metadata set in the conversion redirect
 
--   `attribution_credit`: integer in range [0, 100], denotes the percentage of credit this impression received for the given conversion. If a conversion only had one matching impression, this will be 100.
+-   `attribution-credit`: integer in range [0, 100], denotes the percentage of credit this impression received for the given conversion. If a conversion only had one matching impression, this will be 100.
 
 The advertiser site’s eTLD+1 will be added as the Referrer. Note that it
 might be useful to advertise which metadata limits were used in the
