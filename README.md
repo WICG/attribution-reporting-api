@@ -143,7 +143,7 @@ API will need to be enabled in child contexts by a new [Feature Policy](https://
 
 The API will be enabled by default in the top-level context and in same-origin children. Any script running in these contexts can declare an impression with any reporting domain. Publishers who wish to explicitly disable the API for all parties can do so via an [HTTP header](https://w3c.github.io/webappsec-feature-policy/#feature-policy-http-header-field).
 
-Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send impression data, reporting domain, and ad destination to the top level document who can then wrap the iframe in an anchor tag(with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
+Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send impression data, reporting domain, and ad destination to the top level document who can then wrap the iframe in an anchor tag (with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
 
 Conversion Registration
 -----------------------
