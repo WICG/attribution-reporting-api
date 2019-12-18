@@ -124,6 +124,10 @@ least once (i.e. have scheduled a report), they will be removed from
 browser storage and will not be eligible for further reporting. Any
 pending conversion reports for these impressions will still be sent.
 
+An impression will be eligible for reporting if any page on the	
+addestination domain (advertiser site) registers a conversion to the	
+associated reporting domain.
+
 ### Publisher Controls for Impression Declaration
 
 In order to prevent arbitrary third parties from registering impressions without the publisher’s knowledge, the Conversion Measurement
