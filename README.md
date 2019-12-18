@@ -18,7 +18,7 @@ See the explainer on [aggregate measurement](AGGREGATE.md) for a potential exten
   - [Prior Art](#prior-art)
 - [Overview](#overview)
   - [Impression Declaration](#impression-declaration)
-    - [Permission Delegation](#permission-delegation)
+    - [Publisher Controls for Impression Declaration](#publisher-controls-for-impression-declaration)
   - [Conversion Registration](#conversion-registration)
     - [Metadata limits and noise](#metadata-limits-and-noise)
     - [Register a conversion algorithm](#register-a-conversion-algorithm)
@@ -124,37 +124,22 @@ least once (i.e. have scheduled a report), they will be removed from
 browser storage and will not be eligible for further reporting. Any
 pending conversion reports for these impressions will still be sent.
 
-### Permission Delegation
+### Publisher Controls for Impression Declaration
 
-In order to prevent arbitrary third parties from receiving conversion
-reports without the publisher’s knowledge, conversion measurement
-reporting in nested iframes will need to be enabled via some sort of
-permission delegation. One way this could work is a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/) that is
-[parameterized](https://github.com/w3c/webappsec-feature-policy/issues/163) by a string:
+In order to prevent arbitrary third parties from registering impressions without the publisher’s knowledge, the Conversion Measurement
+API will need to be enabled in child contexts by a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/):
 
 ```
-<iframe src=”https://advertiser.test” allow=”conversion-reporting ‘src’ (https://ad-tech.com)”>
+<iframe src=”https://advertiser.test” allow=”conversion-measurement ‘src’)”>
 
 <a … id=”impressionTag” reportingdomain=”https://ad-tech.com”></a>
 
 </iframe>
 ```
 
-In child contexts, reporting domains are restricted to only those that were
-explicitly allowed via Feature Policy delegation. Any other values will be ignored.
-This is done to ensure that a publisher page must opt-in to any domain that
-wants to receive impression reports. Impressions in the main frame are trusted
-and can set any reporting domain (i.e. it has a default allow-list of *), but a
-Feature Policy response header set on the main document response could
-optionally restrict it further.
+The API will be enabled by default in the top-level context and in same-origin children. Any script running in these contexts can declare an impression with any reporting domain. Publishers who wish to explicitly disable the API for all parties can do so via an [HTTP header](https://w3c.github.io/webappsec-feature-policy/#feature-policy-http-header-field).
 
-An impression will be eligible for reporting if any page on the
-addestination domain (advertiser site) registers a conversion to the
-associated reporting domain.
-
-Note: there may be some issues with using Feature Policy this way that
-we’ll need to find solutions for. See [this issue](https://github.com/csharrison/conversion-measurement-api/issues/1)
-for more detail.
+Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send impression data, reporting domain, and ad destination to the top level document who can then wrap the iframe in an anchor tag(with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
 
 Conversion Registration
 -----------------------
