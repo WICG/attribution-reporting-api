@@ -215,13 +215,11 @@ When the user agent receives a conversion registration on a URL matching
 the addestination eTLD+1, it looks up all impressions in storage that
 match <reporting-domain, addestination>.
 
-The most recent matching impression is given a `last-clicked` attribute of
-true. All other matching impressions are given a `last-clicked` value of
-false.
+The most recent matching impression is given an `attibution-credit` of value 100. All other matching impressions are given an `attibution-credit` of value of 0.
 
 For each matching impression, schedule a report. To schedule a report,
 the browser will store the 
- {reporting domain, addestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, last-clicked attribute} for the impression.
+ {reporting domain, addestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, attribution_credit} for the impression.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each impression is only allowed to schedule a maximum of three reports
@@ -232,12 +230,15 @@ will delete all impressions that have scheduled three reports.
 ### Multiple impressions for the same conversion (Multi-touch)
 
 If there are multiple impressions that were clicked and lead to a single
-conversion, send conversion reports for all of them, but label the
-last-clicked one as such. There are many possible alternatives to this,
-like providing a choice of rules-based attribution models. However, it
-isn’t clear the benefits outweigh the additional complexity.
+conversion, send conversion reports for all of them.
 
-Additionally, models other than last-click potentially leak more
+To remain flexible, the API sends an `attribution_credit` of value 0 to 100 for all conversion reports associated with a single conversion event. The sum of these credits should equal 100.
+
+The default attribution model will give the last-clicked impression the full attribution_credit.
+
+There are many possible alternatives to this,
+like providing a choice of rules-based attribution models. However, it
+isn’t clear the benefits outweigh the additional complexity. Additionally, models other than last-click potentially leak more
 cross-site information if impressions are clicked across different
 sites.
 
