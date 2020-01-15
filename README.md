@@ -18,7 +18,7 @@ See the explainer on [aggregate measurement](AGGREGATE.md) for a potential exten
   - [Prior Art](#prior-art)
 - [Overview](#overview)
   - [Impression Declaration](#impression-declaration)
-    - [Permission Delegation](#permission-delegation)
+    - [Publisher Controls for Impression Declaration](#publisher-controls-for-impression-declaration)
   - [Conversion Registration](#conversion-registration)
     - [Metadata limits and noise](#metadata-limits-and-noise)
     - [Register a conversion algorithm](#register-a-conversion-algorithm)
@@ -124,37 +124,26 @@ least once (i.e. have scheduled a report), they will be removed from
 browser storage and will not be eligible for further reporting. Any
 pending conversion reports for these impressions will still be sent.
 
-### Permission Delegation
+An impression will be eligible for reporting if any page on the	
+addestination domain (advertiser site) registers a conversion to the	
+associated reporting domain.
 
-In order to prevent arbitrary third parties from receiving conversion
-reports without the publisher’s knowledge, conversion measurement
-reporting in nested iframes will need to be enabled via some sort of
-permission delegation. One way this could work is a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/) that is
-[parameterized](https://github.com/w3c/webappsec-feature-policy/issues/163) by a string:
+### Publisher Controls for Impression Declaration
+
+In order to prevent arbitrary third parties from registering impressions without the publisher’s knowledge, the Conversion Measurement
+API will need to be enabled in child contexts by a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/):
 
 ```
-<iframe src=”https://advertiser.test” allow=”conversion-reporting ‘src’ (https://ad-tech.com)”>
+<iframe src=”https://advertiser.test” allow=”conversion-measurement ‘src’)”>
 
 <a … id=”impressionTag” reportingdomain=”https://ad-tech.com”></a>
 
 </iframe>
 ```
 
-In child contexts, reporting domains are restricted to only those that were
-explicitly allowed via Feature Policy delegation. Any other values will be ignored.
-This is done to ensure that a publisher page must opt-in to any domain that
-wants to receive impression reports. Impressions in the main frame are trusted
-and can set any reporting domain (i.e. it has a default allow-list of *), but a
-Feature Policy response header set on the main document response could
-optionally restrict it further.
+The API will be enabled by default in the top-level context and in same-origin children. Any script running in these contexts can declare an impression with any reporting domain. Publishers who wish to explicitly disable the API for all parties can do so via an [HTTP header](https://w3c.github.io/webappsec-feature-policy/#feature-policy-http-header-field).
 
-An impression will be eligible for reporting if any page on the
-addestination domain (advertiser site) registers a conversion to the
-associated reporting domain.
-
-Note: there may be some issues with using Feature Policy this way that
-we’ll need to find solutions for. See [this issue](https://github.com/csharrison/conversion-measurement-api/issues/1)
-for more detail.
+Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send impression data, reporting domain, and ad destination to the top level document who can then wrap the iframe in an anchor tag (with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
 
 Conversion Registration
 -----------------------
@@ -215,13 +204,11 @@ When the user agent receives a conversion registration on a URL matching
 the addestination eTLD+1, it looks up all impressions in storage that
 match <reporting-domain, addestination>.
 
-The most recent matching impression is given a `last-clicked` attribute of
-true. All other matching impressions are given a `last-clicked` value of
-false.
+The most recent matching impression is given an `attibution-credit` of value 100. All other matching impressions are given an `attibution-credit` of value of 0.
 
 For each matching impression, schedule a report. To schedule a report,
 the browser will store the 
- {reporting domain, addestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, last-clicked attribute} for the impression.
+ {reporting domain, addestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, attribution-credit} for the impression.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each impression is only allowed to schedule a maximum of three reports
@@ -232,12 +219,17 @@ will delete all impressions that have scheduled three reports.
 ### Multiple impressions for the same conversion (Multi-touch)
 
 If there are multiple impressions that were clicked and lead to a single
-conversion, send conversion reports for all of them, but label the
-last-clicked one as such. There are many possible alternatives to this,
-like providing a choice of rules-based attribution models. However, it
-isn’t clear the benefits outweigh the additional complexity.
+conversion, send conversion reports for all of them. 
 
-Additionally, models other than last-click potentially leak more
+To provide additional utility, the user-agent can choose to provide additional annotations to each of these reports, attributing credits for the conversion to them individually. Attribution models allow for more sophisticated, accurate conversion measurement.
+
+The default attribution model will be last-click attribution, giving the last-clicked impression for a given conversion event all of the credit.
+
+To remain flexible, the user-agent sends an `attribution-credit` of value 0 to 100 for all conversion reports associated with a single conversion event. This represents the percent of attribution an impression received for a conversion. The sum of credits across a set of reports for one conversion event should equal 100.
+
+There are many possible alternatives to this,
+like providing a choice of rules-based attribution models. However, it
+isn’t clear the benefits outweigh the additional complexity. Additionally, models other than last-click potentially leak more
 cross-site information if impressions are clicked across different
 sites.
 
@@ -305,7 +297,7 @@ To send a report, the user agent will make a non-credentialed secure
 HTTP POST request to:
 
 ```
-https://reportingdomain/.well-known/register-conversion?impression-data=&conversion-data=&last-clicked=
+https://reportingdomain/.well-known/register-conversion?impression-data=&conversion-data=&attribution-credit=
 ```
 
 The conversion report data is included as query params as they represent
@@ -315,7 +307,7 @@ non-hierarchical data ([URI RFC](https://tools.ietf.org/html/rfc3986#section-3.4
 
 -   `conversion-metadata`: 3 bit metadata set in the conversion redirect
 
--   `last-clicked`: true or false, denotes whether this impression was the last clicked impression that led to this conversion
+-   `attribution-credit`: integer in range [0, 100], denotes the percentage of credit this impression received for the given conversion. If a conversion only had one matching impression, this will be 100.
 
 The advertiser site’s eTLD+1 will be added as the Referrer. Note that it
 might be useful to advertise which metadata limits were used in the
@@ -405,7 +397,7 @@ sent. The conversion report is associated with the 7 day deadline as the
 2 day deadline has passed. Roughly 5 days later, `ad-tech.com` receives
 the following HTTP POST:
 ```
-https://ad-tech.com/.well-known/register-conversion?impression-data=12345678&conversion-metadata=2&last-click=true
+https://ad-tech.com/.well-known/register-conversion?impression-data=12345678&conversion-metadata=2&attribution-credit=100
 ```
 
 Privacy Considerations
