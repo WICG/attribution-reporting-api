@@ -271,8 +271,10 @@ time
 7 days minus 1 hour: Conversions will be reported 7 days from impression
 time
 
-Otherwise: Conversions will be reported `impressionexpiry`
-milliseconds from impression time
+`impressionexpiry`: Conversions will be reported `impressionexpiry`
+milliseconds plus one hour from impression time
+
+If `impressionexpiry` occurs before the 7 day window deadline it will be used as the next reporting window. For example, if `impressionexpiry` is 3 days, there will be two deadlines, 2 days minus one hour and `impressionexpiry`. If `impressionexpiry` is before the 2 day deadline, the 2 day deadline will still be used. 
 
 When a conversion report is scheduled, it will be delayed until the next
 applicable reporting window for the associated impression. Once the
