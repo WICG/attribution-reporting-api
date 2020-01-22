@@ -134,7 +134,7 @@ In order to prevent arbitrary third parties from registering impressions without
 API will need to be enabled in child contexts by a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/):
 
 ```
-<iframe src=”https://advertiser.test” allow=”conversion-measurement ‘src’)”>
+<iframe src=”https://advertiser.test” allow=”conversion-measurement ‘src’ (https://ad-tech.com)”>
 
 <a … id=”impressionTag” reportingdomain=”https://ad-tech.com”></a>
 
