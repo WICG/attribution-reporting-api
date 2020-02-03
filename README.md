@@ -186,9 +186,12 @@ uniquely identifying an ad click.
 Conversion metadata must therefore be limited quite strictly, both in
 the amount of data, and in noise we apply to the data. Our strawman
 initial proposal is to allow 3 bits of conversion data, with 5%
-noise applied (that is, with 5% chance, we send a random 3 bits). See
-[privacy considerations](#conversion-metadata) for more information. These
-values should be allowed to vary by UA.
+noise applied — that is, with 5% chance, we send a random 3 bits, and the
+other 95% of the time we send the real conversion-metadata. See
+[privacy considerations](#conversion-metadata) for more information,
+including speculative thoughts on the hard question of going farther
+and [adding noise to whether or not the conversion report is even sent](https://github.com/csharrison/conversion-measurement-api#speculative-adding-noise-to-the-conversion-event-itself).
+In any case, noise values should be allowed to vary by UA.
 
 Disclaimer: Adding or removing a single bit of metadata has large
 trade-offs in terms of user privacy and usability to advertisers.
@@ -497,9 +500,9 @@ has unloaded.
 Speculative: Adding noise to the conversion event itself
 --------------------------------------------------------
 
-Another way to add privacy to this system is to not only add noise to
-the conversion metadata, but to whether the conversion occurred in the
-first place. That is:
+Another way to add privacy to this system is to add noise not only to
+the [reported conversion metadata value](https://github.com/csharrison/conversion-measurement-api#metadata-limits-and-noise),
+but also to whether the conversion occurred in the first place. That is:
 
 -   With some probability *p*, true conversions will be dropped
 
