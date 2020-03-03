@@ -98,12 +98,12 @@ Impression Declaration
 
 An impression is an anchor tag with special attributes:
 
-`<a addestination=”[eTLD+1]” impressiondata=”[string]”
+`<a conversiondestination=”[eTLD+1]” impressiondata=”[string]”
 impressionexpiry=[unsigned long long] reportingdomain=”[eTLD+1]”>`
 
 Impression attributes:
 
--   `addestination`: is the intended eTLD+1 destination of the ad click
+-   `conversiondestination`: is the intended eTLD+1 destination of the ad click
 
 -   `impressiondata`: is the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#metadata-encoding). This value can vary by UA.
 
@@ -113,19 +113,19 @@ Impression attributes:
 
 Clicking on an anchor tag that specifies these attributes will log a
 click impression event to storage if the resulting document being
-navigated to ends up sharing the ad destination eTLD+1. A clicked
-impression logs <impressiondata, addestination, reportingdomain,
+navigated to ends up sharing the conversion destination eTLD+1. A clicked
+impression logs <impressiondata, conversiondestination, reportingdomain,
 impressionexpiry> to a new browser storage area.
 
 When an impression is logged for <reportingdomain,
-addestination>, existing impressions matching this pair will be
+conversiondestination>, existing impressions matching this pair will be
 looked up in storage. If the matching impressions have converted at
 least once (i.e. have scheduled a report), they will be removed from
 browser storage and will not be eligible for further reporting. Any
 pending conversion reports for these impressions will still be sent.
 
 An impression will be eligible for reporting if any page on the	
-addestination domain (advertiser site) registers a conversion to the	
+conversiondestination domain (advertiser site) registers a conversion to the	
 associated reporting domain.
 
 ### Publisher Controls for Impression Declaration
@@ -143,7 +143,7 @@ API will need to be enabled in child contexts by a new [Feature Policy](https://
 
 The API will be enabled by default in the top-level context and in same-origin children. Any script running in these contexts can declare an impression with any reporting domain. Publishers who wish to explicitly disable the API for all parties can do so via an [HTTP header](https://w3c.github.io/webappsec-feature-policy/#feature-policy-http-header-field).
 
-Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send impression data, reporting domain, and ad destination to the top level document who can then wrap the iframe in an anchor tag (with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
+Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send impression data, reporting domain, and conversion destination to the top level document who can then wrap the iframe in an anchor tag (with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
 
 Conversion Registration
 -----------------------
@@ -151,7 +151,7 @@ Conversion Registration
 This API will use a similar mechanism for conversion registration as the
 [Ad Click Attribution Proposal](https://wicg.github.io/ad-click-attribution/index.html#legacytriggering).
 
-Conversions are meant to occur on ad destination pages. A conversion
+Conversions are meant to occur on conversion destination pages. A conversion
 will be registered for a given reporting domain through an HTTP GET to
 the reporting domain that redirects to a [.well-known](https://tools.ietf.org/html/rfc5785)
 location. It is required to be the result of a redirect so that the
@@ -204,14 +204,14 @@ from 0-5 (~2.6 bits of information)
 ### Register a conversion algorithm
 
 When the user agent receives a conversion registration on a URL matching
-the addestination eTLD+1, it looks up all impressions in storage that
-match <reporting-domain, addestination>.
+the conversiondestination eTLD+1, it looks up all impressions in storage that
+match <reporting-domain, conversiondestination>.
 
 The most recent matching impression is given an `attibution-credit` of value 100. All other matching impressions are given an `attibution-credit` of value of 0.
 
 For each matching impression, schedule a report. To schedule a report,
 the browser will store the 
- {reporting domain, addestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, attribution-credit} for the impression.
+ {reporting domain, conversiondestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, attribution-credit} for the impression.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each impression is only allowed to schedule a maximum of three reports
@@ -358,7 +358,7 @@ the `ad-tech.com` reporting domain, and uses impression data that allows
 ...
 <a 
   href=”https://toasters.com/purchase”
-  addestination=”https://toasters.com”
+  conversiondestination=”https://toasters.com”
   impressiondata=”0x12345678”
   reportingdomain=”https://ad-tech.com”
   impressionexpiry=604800000>
@@ -368,13 +368,13 @@ the `ad-tech.com` reporting domain, and uses impression data that allows
 
 A user clicks on the ad and has a window open that lands on a URL to
 `toasters.com/purchase`. An impression event is logged to browser storage
-since the landing page matches the ad destination. The following data is
+since the landing page matches the conversion destination. The following data is
 stored:
 
 ```
 {
   impression-data: 0x12345678,
-  ad-destination: https://toasters.com,
+  conversion-destination: https://toasters.com,
   reporting-domain: https://ad-tech.com,
   impression-expiry: <now() + 604800>
 }
