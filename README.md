@@ -98,8 +98,8 @@ Impression Declaration
 
 An impression is an anchor tag with special attributes:
 
-`<a conversiondestination=”[eTLD+1]” impressiondata=”[string]”
-impressionexpiry=[unsigned long long] reportingdomain=”[eTLD+1]”>`
+`<a conversiondestination="[eTLD+1]" impressiondata="[string]"
+impressionexpiry=[unsigned long long] reportingdomain="[eTLD+1]">`
 
 Impression attributes:
 
@@ -134,9 +134,9 @@ In order to prevent arbitrary third parties from registering impressions without
 API will need to be enabled in child contexts by a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/):
 
 ```
-<iframe src=”https://advertiser.test” allow=”conversion-measurement ‘src’)”>
+<iframe src="https://advertiser.test" allow="conversion-measurement 'src')">
 
-<a … id=”impressionTag” reportingdomain=”https://ad-tech.com”></a>
+<a … id="impressionTag" reportingdomain="https://ad-tech.com"></a>
 
 </iframe>
 ```
@@ -164,7 +164,7 @@ advertiser pages. These can be repurposed to register conversions in
 this API:
 
 ```
-<img src="https://ad-tech.test/conversiontracker"/>
+<img src="https://ad-tech.test/conversiontracker">
 ```
 `https://ad-tech.test/conversiontracker` can be redirected to `https://ad-tech.test/.well-known/register-conversion`
 to trigger a conversion event.
@@ -354,13 +354,13 @@ Within the iframe, `toasters.com` code annotates their anchor tags to use
 the `ad-tech.com` reporting domain, and uses impression data that allows
 `ad-tech.com` to identify the ad click (0x12345678)
 ```
-<iframe src=”https://ad-tech-3p.test/show-some-ad” allow=”conversion-reporting ‘src’ (https://ad-tech.com)”>
+<iframe src="https://ad-tech-3p.test/show-some-ad" allow="conversion-reporting 'src' (https://ad-tech.com)">
 ...
 <a 
-  href=”https://toasters.com/purchase”
-  conversiondestination=”https://toasters.com”
-  impressiondata=”0x12345678”
-  reportingdomain=”https://ad-tech.com”
+  href="https://toasters.com/purchase"
+  conversiondestination="https://toasters.com"
+  impressiondata="0x12345678"
+  reportingdomain="https://ad-tech.com"
   impressionexpiry=604800000>
 ...
 </iframe>
@@ -385,7 +385,7 @@ registers conversions on the few different ad-tech companies it buys
 impressions on, including `ad-tech.com`, by adding conversion pixels:
 
 ```
-<img src=”https://ad-tech.com/conversion?model=toastmaster3000&price=$49.99&...” />
+<img src="https://ad-tech.com/conversion?model=toastmaster3000&price=$49.99&...">
 ```
 
 `ad-tech.com` receives this request, and decides to trigger a conversion
