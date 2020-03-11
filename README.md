@@ -105,9 +105,9 @@ Impression attributes:
 
 -   `conversiondestination`: is the intended eTLD+1 destination of the ad click
 
--   `impressiondata`: is the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#metadata-encoding). This value can vary by UA.
+-   `impressiondata`: is the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#metadata-encoding, but the value can vary by UA's that want a higher level of privacy.
 
--   `impressionexpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default will be 7 days, with a max value of 30 days.
+-   `impressionexpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default will be 7 days, with a max value of 30 days. The max expiry can also vary by UA.
 
 -   `reportingdomain`: (optional) is the desired eTLD+1 endpoint that the conversion report for this impression should go to. Default will be the top level domain (eTLD+1) of the page.
 
@@ -340,7 +340,8 @@ function getMetadata(str, max_value) {
 ```
 
 The benefit of this method over using a fixed bit mask is that it allows
-browsers to implement max\_values that aren’t multiples of 2.
+browsers to implement max\_values that aren’t multiples of 2. That is,
+UA's can choose a "fractional" bit limit if they wanted to.
 
 Sample Usage
 ============
