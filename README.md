@@ -105,7 +105,7 @@ Impression attributes:
 
 -   `conversiondestination`: is the intended eTLD+1 destination of the ad click
 
--   `impressiondata`: is the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#metadata-encoding, but the value can vary by UA's that want a higher level of privacy.
+-   `impressiondata`: is the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#metadata-encoding), but the value can vary by UA's that want a higher level of privacy.
 
 -   `impressionexpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default will be 7 days, with a max value of 30 days. The max expiry can also vary by UA.
 
