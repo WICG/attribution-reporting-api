@@ -429,6 +429,11 @@ sophisticated attackers will therefore need to invoke the API many times
 (through many clicks) to join identity between sites with high
 confidence.
 
+Note that this noise still allows for aggregate measurement of bucket sizes
+with an unbiased estimator. See generic approaches of dealing with
+[Randomized response](https://en.wikipedia.org/wiki/Randomized_response) for
+a starting point.
+
 Conversion Delay 
 -----------------
 
