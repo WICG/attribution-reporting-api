@@ -7,7 +7,7 @@ set -x
 set -e
 
 # Run bikeshed.  If there are errors, exit with a non-zero code
-bikeshed --print=plain -f spec
+curl https://api.csswg.org/bikeshed/ -F file=@index.bs -F force=1 > index.html;
 
 # The out directory should contain everything needed to produce the
 # HTML version of the spec.
