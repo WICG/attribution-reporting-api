@@ -1,23 +1,19 @@
-language: generic # don't install any environment
+language: generic
 script:
 - bash ./compile.sh
-
 branches:
   only:
   - master
-
-before_deploy:
-- openssl aes-256-cbc -K $encrypted_6f4272b46f74_key -iv $encrypted_6f4272b46f74_iv -in deploy_key.enc -out deploy_key -d
-
+before_install:
+- openssl aes-256-cbc -K $encrypted_6f4272b46f74_key -iv $encrypted_6f4272b46f74_iv
+  -in deploy_key.enc -out deploy_key -d
 deploy:
   provider: pages
   local_dir: out
   deploy_key: deploy_key
   edge:
     branch: master
-
 notifications:
   email:
     on_success: never
     on_failure: always
-
