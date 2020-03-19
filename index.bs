@@ -1,16 +1,130 @@
 <pre class='metadata'>
-Title: Your Spec Title
-Shortname: your-spec
+Title: Conversion Measurement
+Shortname: conversion-measurement
 Level: 1
-Status: ED
-Group: WGNAMEORWHATEVER
-URL: http://example.com/url-this-spec-will-live-at
-Editor: Your Name, Your Company http://example.com/your-company, your-email@example.com, http://example.com/your-personal-website
-Abstract: A short description of your spec, one or two sentences.
+Status: w3c/ED
+Group: TODO
+URL: http://csharrison.github.io/conversion-measurement-api
+Editor: Charlie Harrison, Google Inc. https://google.com, csharrison@chromium.org
+Abstract: A new API to measure and attribute cross-site conversions.
 </pre>
 
 Introduction {#intro}
 =====================
 
-Introduction here.
+<em>This section is non-normative</em>
 
+This specification describes how web browsers can provide a mechanism to the
+web that allows measuring and attributing conversions (e.g. purchases) to ads
+a user interacted with on another site. This mechanism should remove the need
+for cross site identifiers like third party cookies.
+
+## Overview ## {#overview}
+
+Anchor tags with `impressiondata` and `conversiondestination` attributes are
+classified as impression tags. When impression tags are clicked, and the
+resulting navigation commits in a document matching the `conversiondestination`,
+then the impression is stored in UA storage.
+
+At a later point, the `conversiondestination` site may fire an HTTP request to
+trigger conversion registration, which matches up with any previously
+stored impressions. If matching impressions exist, they are scheduled to be
+reported at a later time, possibly multiple days in the future.
+
+Reports are sent to reporting endpoints that are configured in impression tags
+and conversion registration requests.
+
+# Fetch monkeypatches # {#fetch-monkeypatches}
+TODO: Patch into fetch for cancelling requests redirected to the .well-known
+conversion domain.
+
+# HTML monkeypatches # {#html-monkeypatches}
+
+Rewrite the anchor element to accept the following attributes:
+
+<pre class="idl">
+partial interface HTMLAnchorElement {
+    [CEReactions=NotNeeded, Reflect] attribute DOMString conversiondestination;
+    [CEReactions=NotNeeded, Reflect] attribute DOMString impressiondata;
+    [CEReactions=NotNeeded, Reflect] attribute DOMString reportingdomain;
+    [CEReactions=NotNeeded, Reflect] attribute unsigned long long impressionexpiry;
+};
+</pre>
+
+TODO: Need monkey patches passing impression data in navigation, and a mechanism
+for validating the resulting document matches the conversiondestination.
+
+# Structures # {#structures}
+
+<h3 dfn-type=dfn>Impression</h3>
+
+An impression is a [=struct=] with the following items:
+
+<ul dfn-for="impression">
+* <dfn>impression source</dfn>: An [=url/origin=].
+* <dfn>impression data</dfn>: A {{DOMString}}.
+* <dfn>conversion destination</dfn>: An [=url/origin=].
+* <dfn>reporting endpoint</dfn>: An [=url/origin=].
+* <dfn>expiry</dfn>: A {{DOMTimeStamp}}.
+</ul>
+
+<h3 dfn-type=dfn>Conversion</h3>
+
+A conversion is a [=struct=] with the following items:
+
+<ul dfn-for="conversion">
+* <dfn>conversion source</dfn>: An [=url/origin=].
+* <dfn>conversion data</dfn>: A {{DOMString}}.
+</ul>
+
+<h3 dfn-type=dfn>Conversion report</h3>
+
+A conversion report is a [=struct=] with the following items:
+
+<ul dfn-for="conversion">
+* <dfn>impression data</dfn>: A {{DOMString}}.
+* <dfn>conversion data</dfn>: A {{DOMString}}.
+* <dfn>attribution credit</dfn>: An [EnforceRange] long long.
+</ul>
+
+# Algorithms # {#algorithms}
+
+<h3 algorithm id="creating-conversion">Creating a conversion</h3>
+TODO
+
+<h3 algorithm id="creating-impression">Creating an impression</h3>
+TODO
+
+<h3 algorithm id="register-conversion">Register a conversion</h3>
+TODO
+
+<h3 algorithm id="parsing-metadata">Parsing metadata</h3>
+
+This section defines how to parse and extract both
+[=impression/impression data=] and [=conversion/conversion data=] from a
+{{DOMString}} |input| and a unsigned long long |maxData|.
+
+<dfn>Parsing metadata</dfn> from |input| with |maxData| returns the result of
+the following steps:
+
+1. Let |decodedInput| be the result of decoding |input| as a base-16 integer. 
+1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by
+  |maxData|.
+1. Let |encodedOutput| be the result of encoding |clampedDecodedInput| as a
+  base 16 encoding.
+1. Return |encodedOutput|.
+
+<h3 algorithm id="delivery-time">Establishing report delivery time</h3>
+TODO
+
+<h3 algorithm id="queuing-report">Queuing a conversion report</h3>
+TODO
+
+<h3 algorithm id="attribution-credit">Establishing attribution credit</h3>
+TODO
+
+# Security consideration # {#security-considerations}
+TODO
+
+# Privacy consideration # {#privacy-considerations}
+TODO
