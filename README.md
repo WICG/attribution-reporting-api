@@ -207,7 +207,7 @@ When the user agent receives a conversion registration on a URL matching
 the conversiondestination eTLD+1, it looks up all impressions in storage that
 match <reporting-domain, conversiondestination>.
 
-The most recent matching impression is given an `attibution-credit` of value 100. All other matching impressions are given an `attibution-credit` of value of 0.
+The most recent matching impression is given an `attribution-credit` of value 100. All other matching impressions are given an `attribution-credit` of value of 0.
 
 For each matching impression, schedule a report. To schedule a report,
 the browser will store the 
