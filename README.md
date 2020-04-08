@@ -99,7 +99,7 @@ Impression Declaration
 An impression is an anchor tag with special attributes:
 
 `<a conversiondestination=”[eTLD+1]” impressiondata=”[string]”
-impressionexpiry=[unsigned long long] reportingdomain=”[eTLD+1]”>`
+impressionexpiry=[unsigned long long] reportingorigin=”[origin]”>`
 
 Impression attributes:
 
@@ -109,15 +109,15 @@ Impression attributes:
 
 -   `impressionexpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default will be 7 days, with a max value of 30 days. The max expiry can also vary by UA.
 
--   `reportingdomain`: (optional) is the desired eTLD+1 endpoint that the conversion report for this impression should go to. Default will be the top level domain (eTLD+1) of the page.
+-   `reportingorigin`: (optional) the desired endpoint that the conversion report for this impression should go to. Default will be the top level origin of the page.
 
 Clicking on an anchor tag that specifies these attributes will log a
 click impression event to storage if the resulting document being
 navigated to ends up sharing the conversion destination eTLD+1. A clicked
-impression logs <impressiondata, conversiondestination, reportingdomain,
+impression logs <impressiondata, conversiondestination, reportingorigin,
 impressionexpiry> to a new browser storage area.
 
-When an impression is logged for <reportingdomain,
+When an impression is logged for <reportingorigin,
 conversiondestination>, existing impressions matching this pair will be
 looked up in storage. If the matching impressions have converted at
 least once (i.e. have scheduled a report), they will be removed from
@@ -126,7 +126,7 @@ pending conversion reports for these impressions will still be sent.
 
 An impression will be eligible for reporting if any page on the	
 conversiondestination domain (advertiser site) registers a conversion to the	
-associated reporting domain.
+associated reporting origin.
 
 ### Publisher Controls for Impression Declaration
 
@@ -136,14 +136,14 @@ API will need to be enabled in child contexts by a new [Feature Policy](https://
 ```
 <iframe src=”https://advertiser.test” allow=”conversion-measurement ‘src’)”>
 
-<a … id=”impressionTag” reportingdomain=”https://ad-tech.com”></a>
+<a … id=”impressionTag” reportingorigin=”https://ad-tech.com”></a>
 
 </iframe>
 ```
 
-The API will be enabled by default in the top-level context and in same-origin children. Any script running in these contexts can declare an impression with any reporting domain. Publishers who wish to explicitly disable the API for all parties can do so via an [HTTP header](https://w3c.github.io/webappsec-feature-policy/#feature-policy-http-header-field).
+The API will be enabled by default in the top-level context and in same-origin children. Any script running in these contexts can declare an impression with any reporting origin. Publishers who wish to explicitly disable the API for all parties can do so via an [HTTP header](https://w3c.github.io/webappsec-feature-policy/#feature-policy-http-header-field).
 
-Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send impression data, reporting domain, and conversion destination to the top level document who can then wrap the iframe in an anchor tag (with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
+Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send impression data, reporting origin, and conversion destination to the top level document who can then wrap the iframe in an anchor tag (with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
 
 Conversion Registration
 -----------------------
@@ -152,10 +152,10 @@ This API will use a similar mechanism for conversion registration as the
 [Ad Click Attribution Proposal](https://wicg.github.io/ad-click-attribution/index.html#legacytriggering).
 
 Conversions are meant to occur on conversion destination pages. A conversion
-will be registered for a given reporting domain through an HTTP GET to
-the reporting domain that redirects to a [.well-known](https://tools.ietf.org/html/rfc5785)
+will be registered for a given reporting origin through an HTTP GET to
+the reporting origin that redirects to a [.well-known](https://tools.ietf.org/html/rfc5785)
 location. It is required to be the result of a redirect so that the
-reporting domain can make server-side decisions about when attribution
+reporting origin can make server-side decisions about when attribution
 reports should trigger. Conversions can only be registered in the main
 document.
 
@@ -170,7 +170,7 @@ this API:
 to trigger a conversion event.
 
 The browser will treat redirects to a url of the form:
-`https://<reportingdomain>/.well-known/register-conversion[?conversion-metadata=<metadata>]`
+`https://<reportingorigin>/.well-known/register-conversion[?conversion-metadata=<metadata>]`
 
 as a special request, where optional metadata associated with the
 conversion is specified via a query parameter.
@@ -205,13 +205,13 @@ from 0-5 (~2.6 bits of information)
 
 When the user agent receives a conversion registration on a URL matching
 the conversiondestination eTLD+1, it looks up all impressions in storage that
-match <reporting-domain, conversiondestination>.
+match <reportingorigin, conversiondestination>.
 
 The most recent matching impression is given an `attribution-credit` of value 100. All other matching impressions are given an `attribution-credit` of value of 0.
 
 For each matching impression, schedule a report. To schedule a report,
 the browser will store the 
- {reporting domain, conversiondestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, attribution-credit} for the impression.
+ {reporting origin, conversiondestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, attribution-credit} for the impression.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each impression is only allowed to schedule a maximum of three reports
@@ -291,7 +291,7 @@ The report may be sent at a later date if the browser was not running
 when the window finished. In this case, reports will be sent on startup.
 The user agent may also decide to delay some of these reports for a
 short random time on startup, so that they cannot be joined together
-easily by a given reporting domain.
+easily by a given reporting origin.
 
 Note that to improve utility, it might be possible to randomly send
 reports throughout each reporting window.
@@ -302,7 +302,7 @@ To send a report, the user agent will make a non-credentialed secure
 HTTP POST request to:
 
 ```
-https://reportingdomain/.well-known/register-conversion?impression-data=&conversion-data=&attribution-credit=
+https://reportingorigin/.well-known/register-conversion?impression-data=&conversion-data=&attribution-credit=
 ```
 
 The conversion report data is included as query params as they represent
@@ -349,10 +349,10 @@ Sample Usage
 `publisher.com` wants to show ads on their site, so they contract out to
 `ad-tech.com`. `ad-tech.com` script in the main document creates a
 cross-origin iframe to host the third party advertisement for
-`toasters.com`, and sets `ad-tech.com` to be an allowed reporting domain.
+`toasters.com`, and sets `ad-tech.com` to be an allowed reporting origin.
 
 Within the iframe, `toasters.com` code annotates their anchor tags to use
-the `ad-tech.com` reporting domain, and uses impression data that allows
+the `ad-tech.com` reporting origin, and uses impression data that allows
 `ad-tech.com` to identify the ad click (0x12345678)
 ```
 <iframe src=”https://ad-tech-3p.test/show-some-ad” allow=”conversion-reporting ‘src’ (https://ad-tech.com)”>
@@ -361,7 +361,7 @@ the `ad-tech.com` reporting domain, and uses impression data that allows
   href=”https://toasters.com/purchase”
   conversiondestination=”https://toasters.com”
   impressiondata=”0x12345678”
-  reportingdomain=”https://ad-tech.com”
+  reportingorigin=”https://ad-tech.com”
   impressionexpiry=604800000>
 ...
 </iframe>
@@ -376,7 +376,7 @@ stored:
 {
   impression-data: 0x12345678,
   conversion-destination: https://toasters.com,
-  reporting-domain: https://ad-tech.com,
+  reporting-origin: https://ad-tech.com,
   impression-expiry: <now() + 604800>
 }
 ```
@@ -458,9 +458,9 @@ Limits on the number of conversion pixels
 -----------------------------------------
 
 If the advertiser is allowed to cycle through many possible reporting
-domains (via injecting many `<img>` tags on the page), then the
+origins (via injecting many `<img>` tags on the page), then the
 publisher and advertiser don’t necessarily have to agree apriori on what
-reporting domains to use, and which domain actually ends up getting used
+reporting origin to use, and which origin actually ends up getting used
 reveals some extra information.
 
 To prevent abuse, it makes sense for UAs to add limits here, potentially
