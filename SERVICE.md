@@ -313,7 +313,6 @@ As a general rule an aggregation mechanism that is differentially private needs 
 [Local Differential Privacy](#local-differential-privacy) for an alternative). The need for a central curator led to our approach of a multi-party system to distribute trust in the curator setting.
 
 Differential privacy is an example of a privacy measure that can be used to satisfy the high level
-
 [privacy goals](#high-level-goals). In general, it is quantified by configurable parameters epsilon and delta (smaller values are more private). These parameters measure in a sense the privacy loss of the DP system.
 
 
