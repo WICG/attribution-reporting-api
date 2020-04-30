@@ -2,11 +2,16 @@
 Title: Conversion Measurement
 Shortname: conversion-measurement
 Level: 1
-Status: w3c/ED
-Group: TODO
-URL: http://csharrison.github.io/conversion-measurement-api
+Status: CG-DRAFT
+Group: wicg
+Repository: WICG/conversion-measurement-api
+URL: https://wicg.github.io/conversion-measurement-api
 Editor: Charlie Harrison, Google Inc. https://google.com, csharrison@chromium.org
 Abstract: A new API to measure and attribute cross-site conversions.
+
+Markup Shorthands: markdown on
+Complain About: accidental-2119 on, missing-example-ids on
+Assume Explicit For: on
 </pre>
 
 Introduction {#intro}
@@ -16,17 +21,17 @@ Introduction {#intro}
 
 This specification describes how web browsers can provide a mechanism to the
 web that allows measuring and attributing conversions (e.g. purchases) to ads
-a user interacted with on another site. This mechanism should remove the need
+a user interacted with on another site. This mechanism should remove one need
 for cross site identifiers like third party cookies.
 
 ## Overview ## {#overview}
 
-Anchor tags with `impressiondata` and `conversiondestination` attributes are
-classified as impression tags. When impression tags are clicked, and the
-resulting navigation commits in a document matching the `conversiondestination`,
+An anchor tag with <{a/impressiondata}> and <{a/conversiondestination}> attributes is
+classified as an <dfn export>impression tag</dfn>. When impression tags are clicked, and the
+resulting navigation commits in a document matching the <{a/conversiondestination}>,
 then the impression is stored in UA storage.
 
-At a later point, the `conversiondestination` site may fire an HTTP request to
+At a later point, the <{a/conversiondestination}> site may fire an HTTP request to
 trigger conversion registration, which matches up with any previously
 stored impressions. If matching impressions exist, they are scheduled to be
 reported at a later time, possibly multiple days in the future.
@@ -35,6 +40,7 @@ Reports are sent to reporting endpoints that are configured in impression tags
 and conversion registration requests.
 
 # Fetch monkeypatches # {#fetch-monkeypatches}
+
 TODO: Patch into fetch for cancelling requests redirected to the .well-known
 conversion domain.
 
@@ -44,12 +50,28 @@ Rewrite the anchor element to accept the following attributes:
 
 <pre class="idl">
 partial interface HTMLAnchorElement {
-    [CEReactions=NotNeeded, Reflect] attribute DOMString conversiondestination;
-    [CEReactions=NotNeeded, Reflect] attribute DOMString impressiondata;
-    [CEReactions=NotNeeded, Reflect] attribute DOMString reportingdomain;
-    [CEReactions=NotNeeded, Reflect] attribute unsigned long long impressionexpiry;
+    [CEReactions, Reflect] attribute DOMString conversiondestination;
+    [CEReactions, Reflect] attribute DOMString impressiondata;
+    [CEReactions, Reflect] attribute DOMString reportingdomain;
+    [CEReactions, Reflect] attribute unsigned long long impressionexpiry;
 };
 </pre>
+
+The <dfn for="a" dfn-type="element-attr">conversiondestination</dfn> is the
+declared destination [=scheme-and-registrable-domain=] of the anchor for
+purposes of conversion measurement
+
+The <dfn for="a" dfn-type="element-attr">impressiondata</dfn> is a string
+containing information about the `impression tag` and will be supplied in the
+`conversion report`.
+
+The <dfn for="a" dfn-type="element-attr">reportingdomain</dfn> declares the
+intended [=origin=] to send the `conversion report` for this impression.
+
+The <dfn for="a" dfn-type="element-attr">impressionexpiry</dfn> is the amount
+of time in milliseconds the impression should be considered for conversion
+measurement and reporting reporting.
+
 
 TODO: Need monkey patches passing impression data in navigation, and a mechanism
 for validating the resulting document matches the conversiondestination.
@@ -61,11 +83,17 @@ for validating the resulting document matches the conversiondestination.
 An impression is a [=struct=] with the following items:
 
 <ul dfn-for="impression">
-* <dfn>impression source</dfn>: An [=url/origin=].
-* <dfn>impression data</dfn>: A {{DOMString}}.
-* <dfn>conversion destination</dfn>: An [=url/origin=].
-* <dfn>reporting endpoint</dfn>: An [=url/origin=].
-* <dfn>expiry</dfn>: A {{DOMTimeStamp}}.
+: <dfn>impression source</dfn>
+:: An [=url/origin=].
+: <dfn>impression data</dfn>
+:: A [=string=].
+: <dfn>conversion destination</dfn>
+:: An [=url/origin=].
+: <dfn>reporting endpoint</dfn>
+:: An [=url/origin=].
+: <dfn>expiry</dfn>
+:: A point in time.
+
 </ul>
 
 <h3 dfn-type=dfn>Conversion</h3>
@@ -73,18 +101,25 @@ An impression is a [=struct=] with the following items:
 A conversion is a [=struct=] with the following items:
 
 <ul dfn-for="conversion">
-* <dfn>conversion source</dfn>: An [=url/origin=].
-* <dfn>conversion data</dfn>: A {{DOMString}}.
+: <dfn>conversion source</dfn>
+:: An [=url/origin=].
+: <dfn>conversion data</dfn>
+:: A [=string=].
+
 </ul>
 
 <h3 dfn-type=dfn>Conversion report</h3>
 
 A conversion report is a [=struct=] with the following items:
 
-<ul dfn-for="conversion">
-* <dfn>impression data</dfn>: A {{DOMString}}.
-* <dfn>conversion data</dfn>: A {{DOMString}}.
-* <dfn>attribution credit</dfn>: An [EnforceRange] long long.
+<ul dfn-for="conversion report">
+: <dfn>impression data</dfn>
+:: A [=string=].
+: <dfn>conversion data</dfn>
+:: A [=string=].
+: <dfn>attribution credit</dfn>
+:: An integer in the range [0, 100].
+
 </ul>
 
 # Algorithms # {#algorithms}
@@ -98,20 +133,20 @@ TODO
 <h3 algorithm id="register-conversion">Register a conversion</h3>
 TODO
 
-<h3 algorithm id="parsing-metadata">Parsing metadata</h3>
+<h3 algorithm id="parsing-the-metadata">Parsing the metadata</h3>
 
 This section defines how to parse and extract both
 [=impression/impression data=] and [=conversion/conversion data=] from a
-{{DOMString}} |input| and a unsigned long long |maxData|.
+[=string=] |input| and a unsigned long long |maxData|.
 
 <dfn>Parsing metadata</dfn> from |input| with |maxData| returns the result of
 the following steps:
 
-1. Let |decodedInput| be the result of decoding |input| as a base-16 integer. 
+1. Let |decodedInput| be the result of decoding |input| as a base-16 integer.
 1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by
-  |maxData|.
+    |maxData|.
 1. Let |encodedOutput| be the result of encoding |clampedDecodedInput| as a
-  base 16 encoding.
+    base 16 encoding.
 1. Return |encodedOutput|.
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
