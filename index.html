@@ -1,7 +1,7 @@
 <!doctype html><html lang="en">
  <head>
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-  <title>Your Spec Title</title>
+  <title>Conversion Measurement</title>
   <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
 <style data-fill-with="stylesheet">/******************************************************************************
  *                   Style sheet for the W3C specifications                   *
@@ -1221,8 +1221,9 @@ Possible extra rowspan handling
 		}
 	}
 </style>
+  <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version e3f9ab1a, updated Fri Apr 24 17:43:54 2020 -0700" name="generator">
-  <link href="http://example.com/url-this-spec-will-live-at" rel="canonical">
+  <link href="https://wicg.github.io/conversion-measurement-api" rel="canonical">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -1314,6 +1315,43 @@ figcaption {
 figcaption:not(.no-marker)::before {
     content: "Figure " counter(figure) " ";
 }</style>
+<style>/* style-dfn-panel */
+
+.dfn-panel {
+    position: absolute;
+    z-index: 35;
+    height: auto;
+    width: -webkit-fit-content;
+    width: fit-content;
+    max-width: 300px;
+    max-height: 500px;
+    overflow: auto;
+    padding: 0.5em 0.75em;
+    font: small Helvetica Neue, sans-serif, Droid Sans Fallback;
+    background: #DDDDDD;
+    color: black;
+    border: outset 0.2em;
+}
+.dfn-panel:not(.on) { display: none; }
+.dfn-panel * { margin: 0; padding: 0; text-indent: 0; }
+.dfn-panel > b { display: block; }
+.dfn-panel a { color: black; }
+.dfn-panel a:not(:hover) { text-decoration: none !important; border-bottom: none !important; }
+.dfn-panel > b + b { margin-top: 0.25em; }
+.dfn-panel ul { padding: 0; }
+.dfn-panel li { list-style: inside; }
+.dfn-panel.activated {
+    display: inline-block;
+    position: fixed;
+    left: .5em;
+    bottom: 2em;
+    margin: 0 auto;
+    max-width: calc(100vw - 1.5em - .4em - .5em);
+    max-height: 30vh;
+}
+
+.dfn-paneled { cursor: pointer; }
+</style>
 <style>/* style-md-lists */
 
 /* This is a weird hack for me not yet following the commonmark spec
@@ -1370,48 +1408,279 @@ dfn > a.self-link:hover {
 a.self-link::before            { content: "¶"; }
 .heading > a.self-link::before { content: "§"; }
 dfn > a.self-link::before      { content: "#"; }</style>
+<style>/* style-syntax-highlighting */
+pre.idl.highlight { color: #708090; }
+.highlight:not(.idl) { background: hsl(24, 20%, 95%); }
+code.highlight { padding: .1em; border-radius: .3em; }
+pre.highlight, pre > code.highlight { display: block; padding: 1em; margin: .5em 0; overflow: auto; border-radius: 0; }
+c-[a] { color: #990055 } /* Keyword.Declaration */
+c-[b] { color: #990055 } /* Keyword.Type */
+c-[c] { color: #708090 } /* Comment */
+c-[d] { color: #708090 } /* Comment.Multiline */
+c-[e] { color: #0077aa } /* Name.Attribute */
+c-[f] { color: #669900 } /* Name.Tag */
+c-[g] { color: #222222 } /* Name.Variable */
+c-[k] { color: #990055 } /* Keyword */
+c-[l] { color: #000000 } /* Literal */
+c-[m] { color: #000000 } /* Literal.Number */
+c-[n] { color: #0077aa } /* Name */
+c-[o] { color: #999999 } /* Operator */
+c-[p] { color: #999999 } /* Punctuation */
+c-[s] { color: #a67f59 } /* Literal.String */
+c-[t] { color: #a67f59 } /* Literal.String.Single */
+c-[u] { color: #a67f59 } /* Literal.String.Double */
+c-[cp] { color: #708090 } /* Comment.Preproc */
+c-[c1] { color: #708090 } /* Comment.Single */
+c-[cs] { color: #708090 } /* Comment.Special */
+c-[kc] { color: #990055 } /* Keyword.Constant */
+c-[kn] { color: #990055 } /* Keyword.Namespace */
+c-[kp] { color: #990055 } /* Keyword.Pseudo */
+c-[kr] { color: #990055 } /* Keyword.Reserved */
+c-[ld] { color: #000000 } /* Literal.Date */
+c-[nc] { color: #0077aa } /* Name.Class */
+c-[no] { color: #0077aa } /* Name.Constant */
+c-[nd] { color: #0077aa } /* Name.Decorator */
+c-[ni] { color: #0077aa } /* Name.Entity */
+c-[ne] { color: #0077aa } /* Name.Exception */
+c-[nf] { color: #0077aa } /* Name.Function */
+c-[nl] { color: #0077aa } /* Name.Label */
+c-[nn] { color: #0077aa } /* Name.Namespace */
+c-[py] { color: #0077aa } /* Name.Property */
+c-[ow] { color: #999999 } /* Operator.Word */
+c-[mb] { color: #000000 } /* Literal.Number.Bin */
+c-[mf] { color: #000000 } /* Literal.Number.Float */
+c-[mh] { color: #000000 } /* Literal.Number.Hex */
+c-[mi] { color: #000000 } /* Literal.Number.Integer */
+c-[mo] { color: #000000 } /* Literal.Number.Oct */
+c-[sb] { color: #a67f59 } /* Literal.String.Backtick */
+c-[sc] { color: #a67f59 } /* Literal.String.Char */
+c-[sd] { color: #a67f59 } /* Literal.String.Doc */
+c-[se] { color: #a67f59 } /* Literal.String.Escape */
+c-[sh] { color: #a67f59 } /* Literal.String.Heredoc */
+c-[si] { color: #a67f59 } /* Literal.String.Interpol */
+c-[sx] { color: #a67f59 } /* Literal.String.Other */
+c-[sr] { color: #a67f59 } /* Literal.String.Regex */
+c-[ss] { color: #a67f59 } /* Literal.String.Symbol */
+c-[vc] { color: #0077aa } /* Name.Variable.Class */
+c-[vg] { color: #0077aa } /* Name.Variable.Global */
+c-[vi] { color: #0077aa } /* Name.Variable.Instance */
+c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
+</style>
+<style>/* style-var-click-highlighting */
+
+    var { cursor: pointer; }
+    var.selected0 { background-color: #F4D200; box-shadow: 0 0 0 2px #F4D200; }
+    var.selected1 { background-color: #FF87A2; box-shadow: 0 0 0 2px #FF87A2; }
+    var.selected2 { background-color: #96E885; box-shadow: 0 0 0 2px #96E885; }
+    var.selected3 { background-color: #3EEED2; box-shadow: 0 0 0 2px #3EEED2; }
+    var.selected4 { background-color: #EACFB6; box-shadow: 0 0 0 2px #EACFB6; }
+    var.selected5 { background-color: #82DDFF; box-shadow: 0 0 0 2px #82DDFF; }
+    var.selected6 { background-color: #FFBCF2; box-shadow: 0 0 0 2px #FFBCF2; }
+    </style>
  <body class="h-entry">
   <div class="head">
    <p data-fill-with="logo"></p>
-   <h1 class="p-name no-ref" id="title">Your Spec Title</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="subtitle"><span class="content">, <time class="dt-updated" datetime="2020-04-30">30 April 2020</time></span></h2>
+   <h1 class="p-name no-ref" id="title">Conversion Measurement</h1>
+   <h2 class="no-num no-toc no-ref heading settled" id="subtitle"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2020-04-30">30 April 2020</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
-     <dd><a class="u-url" href="http://example.com/url-this-spec-will-live-at">http://example.com/url-this-spec-will-live-at</a>
+     <dd><a class="u-url" href="https://wicg.github.io/conversion-measurement-api">https://wicg.github.io/conversion-measurement-api</a>
+     <dt>Issue Tracking:
+     <dd><a href="https://github.com/WICG/conversion-measurement-api/issues/">GitHub</a>
      <dt class="editor">Editor:
-     <dd class="editor p-author h-card vcard"><a class="p-name fn u-url url" href="http://example.com/your-personal-website">Your Name</a> (<a class="p-org org" href="http://example.com/your-company">Your Company</a>) <a class="u-email email" href="mailto:your-email@example.com">your-email@example.com</a>
+     <dd class="editor p-author h-card vcard"><a class="p-name fn u-email email" href="mailto:csharrison@chromium.org">Charlie Harrison</a> (<a class="p-org org" href="https://google.com">Google Inc.</a>)
     </dl>
    </div>
    <div data-fill-with="warning"></div>
-   <p class="copyright" data-fill-with="copyright"><a href="http://creativecommons.org/publicdomain/zero/1.0/" rel="license"><img alt="CC0" src="https://licensebuttons.net/p/zero/1.0/80x15.png"></a> To the extent possible under law, the editors have waived all copyright
-and related or neighboring rights to this work.
-In addition, as of 30 April 2020,
-the editors have made this specification available under the <a href="http://www.openwebfoundation.org/legal/the-owf-1-0-agreements/owfa-1-0" rel="license">Open Web Foundation Agreement Version 1.0</a>,
-which is available at http://www.openwebfoundation.org/legal/the-owf-1-0-agreements/owfa-1-0.
-Parts of this work may be from another specification document.  If so, those parts are instead covered by the license of that specification document. </p>
+   <p class="copyright" data-fill-with="copyright"><a href="http://www.w3.org/Consortium/Legal/ipr-notice#Copyright">Copyright</a> © 2020 the Contributors to the Conversion Measurement Specification, published by the <a href="https://www.w3.org/community/wicg/">Web Platform Incubator Community Group</a> under the <a href="https://www.w3.org/community/about/agreements/cla/">W3C Community Contributor License Agreement (CLA)</a>.
+A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/">summary</a> is available. </p>
    <hr title="Separator for header">
   </div>
   <div class="p-summary" data-fill-with="abstract">
    <h2 class="no-num no-toc no-ref heading settled" id="abstract"><span class="content">Abstract</span></h2>
-   <p>A short description of your spec, one or two sentences.</p>
+   <p>A new API to measure and attribute cross-site conversions.</p>
+  </div>
+  <div data-fill-with="at-risk"></div>
+  <h2 class="no-num no-toc no-ref heading settled" id="status"><span class="content">Status of this document</span></h2>
+  <div data-fill-with="status">
+   <p> This specification was published by the <a href="https://www.w3.org/community/wicg/">Web Platform Incubator Community Group</a>.
+  It is not a W3C Standard nor is it on the W3C Standards Track.
+
+  Please note that under the <a href="https://www.w3.org/community/about/agreements/cla/">W3C Community Contributor License Agreement (CLA)</a> there is a limited opt-out and other conditions apply.
+
+  Learn more about <a href="http://www.w3.org/community/">W3C Community and Business Groups</a>. </p>
+   <p></p>
   </div>
   <div data-fill-with="at-risk"></div>
   <nav data-fill-with="table-of-contents" id="toc">
    <h2 class="no-num no-toc no-ref" id="contents">Table of Contents</h2>
    <ol class="toc" role="directory">
-    <li><a href="#intro"><span class="secno">1</span> <span class="content">Introduction</span></a>
+    <li>
+     <a href="#intro"><span class="secno">1</span> <span class="content">Introduction</span></a>
+     <ol class="toc">
+      <li><a href="#overview"><span class="secno">1.1</span> <span class="content">Overview</span></a>
+     </ol>
+    <li><a href="#fetch-monkeypatches"><span class="secno">2</span> <span class="content">Fetch monkeypatches</span></a>
+    <li><a href="#html-monkeypatches"><span class="secno">3</span> <span class="content">HTML monkeypatches</span></a>
+    <li>
+     <a href="#structures"><span class="secno">4</span> <span class="content">Structures</span></a>
+     <ol class="toc">
+      <li><a href="#impression"><span class="secno">4.1</span> <span class="content">Impression</span></a>
+      <li><a href="#conversion"><span class="secno">4.2</span> <span class="content">Conversion</span></a>
+      <li><a href="#conversion-report"><span class="secno">4.3</span> <span class="content">Conversion report</span></a>
+     </ol>
+    <li>
+     <a href="#algorithms"><span class="secno">5</span> <span class="content">Algorithms</span></a>
+     <ol class="toc">
+      <li><a href="#creating-conversion"><span class="secno">5.1</span> <span class="content">Creating a conversion</span></a>
+      <li><a href="#creating-impression"><span class="secno">5.2</span> <span class="content">Creating an impression</span></a>
+      <li><a href="#register-conversion"><span class="secno">5.3</span> <span class="content">Register a conversion</span></a>
+      <li><a href="#parsing-the-metadata"><span class="secno">5.4</span> <span class="content">Parsing the metadata</span></a>
+      <li><a href="#delivery-time"><span class="secno">5.5</span> <span class="content">Establishing report delivery time</span></a>
+      <li><a href="#queuing-report"><span class="secno">5.6</span> <span class="content">Queuing a conversion report</span></a>
+      <li><a href="#attribution-credit"><span class="secno">5.7</span> <span class="content">Establishing attribution credit</span></a>
+     </ol>
+    <li><a href="#security-considerations"><span class="secno">6</span> <span class="content">Security consideration</span></a>
+    <li><a href="#privacy-considerations"><span class="secno">7</span> <span class="content">Privacy consideration</span></a>
     <li><a href="#conformance"><span class="secno"></span> <span class="content"> Conformance</span></a>
+    <li>
+     <a href="#index"><span class="secno"></span> <span class="content">Index</span></a>
+     <ol class="toc">
+      <li><a href="#index-defined-here"><span class="secno"></span> <span class="content">Terms defined by this specification</span></a>
+      <li><a href="#index-defined-elsewhere"><span class="secno"></span> <span class="content">Terms defined by reference</span></a>
+     </ol>
     <li>
      <a href="#references"><span class="secno"></span> <span class="content">References</span></a>
      <ol class="toc">
       <li><a href="#normative"><span class="secno"></span> <span class="content">Normative References</span></a>
      </ol>
+    <li><a href="#idl-index"><span class="secno"></span> <span class="content">IDL Index</span></a>
    </ol>
   </nav>
   <main>
    <h2 class="heading settled" data-level="1" id="intro"><span class="secno">1. </span><span class="content">Introduction</span><a class="self-link" href="#intro"></a></h2>
-   <p>Introduction here.</p>
+   <p><em>This section is non-normative</em></p>
+   <p>This specification describes how web browsers can provide a mechanism to the
+web that allows measuring and attributing conversions (e.g. purchases) to ads
+a user interacted with on another site. This mechanism should remove one need
+for cross site identifiers like third party cookies.</p>
+   <h3 class="heading settled" data-level="1.1" id="overview"><span class="secno">1.1. </span><span class="content">Overview</span><a class="self-link" href="#overview"></a></h3>
+   <p>An anchor tag with <code><a data-link-type="element-sub" href="#element-attrdef-a-impressiondata" id="ref-for-element-attrdef-a-impressiondata">impressiondata</a></code> and <code><a data-link-type="element-sub" href="#element-attrdef-a-conversiondestination" id="ref-for-element-attrdef-a-conversiondestination">conversiondestination</a></code> attributes is
+classified as an <dfn data-dfn-type="dfn" data-export id="impression-tag">impression tag<a class="self-link" href="#impression-tag"></a></dfn>. When impression tags are clicked, and the
+resulting navigation commits in a document matching the <code><a data-link-type="element-sub" href="#element-attrdef-a-conversiondestination" id="ref-for-element-attrdef-a-conversiondestination①">conversiondestination</a></code>,
+then the impression is stored in UA storage.</p>
+   <p>At a later point, the <code><a data-link-type="element-sub" href="#element-attrdef-a-conversiondestination" id="ref-for-element-attrdef-a-conversiondestination②">conversiondestination</a></code> site may fire an HTTP request to
+trigger conversion registration, which matches up with any previously
+stored impressions. If matching impressions exist, they are scheduled to be
+reported at a later time, possibly multiple days in the future.</p>
+   <p>Reports are sent to reporting endpoints that are configured in impression tags
+and conversion registration requests.</p>
+   <h2 class="heading settled" data-level="2" id="fetch-monkeypatches"><span class="secno">2. </span><span class="content">Fetch monkeypatches</span><a class="self-link" href="#fetch-monkeypatches"></a></h2>
+   <p>TODO: Patch into fetch for cancelling requests redirected to the .well-known
+conversion domain.</p>
+   <h2 class="heading settled" data-level="3" id="html-monkeypatches"><span class="secno">3. </span><span class="content">HTML monkeypatches</span><a class="self-link" href="#html-monkeypatches"></a></h2>
+   <p>Rewrite the anchor element to accept the following attributes:</p>
+<pre class="idl highlight def"><c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://html.spec.whatwg.org/multipage/text-level-semantics.html#htmlanchorelement" id="ref-for-htmlanchorelement"><c- g>HTMLAnchorElement</c-></a> {
+    [<a class="idl-code" data-link-type="extended-attribute" href="https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions" id="ref-for-cereactions"><c- g>CEReactions</c-></a>, <a class="idl-code" data-link-type="extended-attribute"><c- g>Reflect</c-></a>] <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString"><c- b>DOMString</c-></a> <dfn class="idl-code" data-dfn-for="HTMLAnchorElement" data-dfn-type="attribute" data-export data-type="DOMString" id="dom-htmlanchorelement-conversiondestination"><code><c- g>conversiondestination</c-></code><a class="self-link" href="#dom-htmlanchorelement-conversiondestination"></a></dfn>;
+    [<a class="idl-code" data-link-type="extended-attribute" href="https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions" id="ref-for-cereactions①"><c- g>CEReactions</c-></a>, <a class="idl-code" data-link-type="extended-attribute"><c- g>Reflect</c-></a>] <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString①"><c- b>DOMString</c-></a> <dfn class="idl-code" data-dfn-for="HTMLAnchorElement" data-dfn-type="attribute" data-export data-type="DOMString" id="dom-htmlanchorelement-impressiondata"><code><c- g>impressiondata</c-></code><a class="self-link" href="#dom-htmlanchorelement-impressiondata"></a></dfn>;
+    [<a class="idl-code" data-link-type="extended-attribute" href="https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions" id="ref-for-cereactions②"><c- g>CEReactions</c-></a>, <a class="idl-code" data-link-type="extended-attribute"><c- g>Reflect</c-></a>] <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString" id="ref-for-idl-DOMString②"><c- b>DOMString</c-></a> <dfn class="idl-code" data-dfn-for="HTMLAnchorElement" data-dfn-type="attribute" data-export data-type="DOMString" id="dom-htmlanchorelement-reportingdomain"><code><c- g>reportingdomain</c-></code><a class="self-link" href="#dom-htmlanchorelement-reportingdomain"></a></dfn>;
+    [<a class="idl-code" data-link-type="extended-attribute" href="https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions" id="ref-for-cereactions③"><c- g>CEReactions</c-></a>, <a class="idl-code" data-link-type="extended-attribute"><c- g>Reflect</c-></a>] <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-unsigned-long-long" id="ref-for-idl-unsigned-long-long"><c- b>unsigned</c-> <c- b>long</c-> <c- b>long</c-></a> <dfn class="idl-code" data-dfn-for="HTMLAnchorElement" data-dfn-type="attribute" data-export data-type="unsigned long long" id="dom-htmlanchorelement-impressionexpiry"><code><c- g>impressionexpiry</c-></code><a class="self-link" href="#dom-htmlanchorelement-impressionexpiry"></a></dfn>;
+};
+</pre>
+   <p>The <dfn class="dfn-paneled" data-dfn-for="a" data-dfn-type="element-attr" data-export id="element-attrdef-a-conversiondestination"><code>conversiondestination</code></dfn> is the
+declared destination <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#scheme-and-registrable-domain" id="ref-for-scheme-and-registrable-domain">scheme-and-registrable-domain</a> of the anchor for
+purposes of conversion measurement</p>
+   <p>The <dfn class="dfn-paneled" data-dfn-for="a" data-dfn-type="element-attr" data-export id="element-attrdef-a-impressiondata"><code>impressiondata</code></dfn> is a string
+containing information about the <code>impression tag</code> and will be supplied in the <code>conversion report</code>.</p>
+   <p>The <dfn data-dfn-for="a" data-dfn-type="element-attr" data-export id="element-attrdef-a-reportingdomain"><code>reportingdomain</code><a class="self-link" href="#element-attrdef-a-reportingdomain"></a></dfn> declares the
+intended <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin" id="ref-for-concept-origin">origin</a> to send the <code>conversion report</code> for this impression.</p>
+   <p>The <dfn data-dfn-for="a" data-dfn-type="element-attr" data-export id="element-attrdef-a-impressionexpiry"><code>impressionexpiry</code><a class="self-link" href="#element-attrdef-a-impressionexpiry"></a></dfn> is the amount
+of time in milliseconds the impression should be considered for conversion
+measurement and reporting reporting.</p>
+   <p>TODO: Need monkey patches passing impression data in navigation, and a mechanism
+for validating the resulting document matches the conversiondestination.</p>
+   <h2 class="heading settled" data-level="4" id="structures"><span class="secno">4. </span><span class="content">Structures</span><a class="self-link" href="#structures"></a></h2>
+   <h3 class="heading settled" data-dfn-type="dfn" data-level="4.1" data-lt="Impression" data-noexport id="impression"><span class="secno">4.1. </span><span class="content">Impression</span><a class="self-link" href="#impression"></a></h3>
+   <p>An impression is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#struct" id="ref-for-struct">struct</a> with the following items:</p>
+   <ul>
+    <dl>
+     <dt data-md><dfn data-dfn-for="impression" data-dfn-type="dfn" data-noexport id="impression-impression-source">impression source<a class="self-link" href="#impression-impression-source"></a></dfn>
+     <dd data-md>
+      <p>An <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-origin" id="ref-for-concept-url-origin">origin</a>.</p>
+     <dt data-md><dfn class="dfn-paneled" data-dfn-for="impression" data-dfn-type="dfn" data-noexport id="impression-impression-data">impression data</dfn>
+     <dd data-md>
+      <p>A <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string">string</a>.</p>
+     <dt data-md><dfn data-dfn-for="impression" data-dfn-type="dfn" data-noexport id="impression-conversion-destination">conversion destination<a class="self-link" href="#impression-conversion-destination"></a></dfn>
+     <dd data-md>
+      <p>An <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-origin" id="ref-for-concept-url-origin①">origin</a>.</p>
+     <dt data-md><dfn data-dfn-for="impression" data-dfn-type="dfn" data-noexport id="impression-reporting-endpoint">reporting endpoint<a class="self-link" href="#impression-reporting-endpoint"></a></dfn>
+     <dd data-md>
+      <p>An <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-origin" id="ref-for-concept-url-origin②">origin</a>.</p>
+     <dt data-md><dfn data-dfn-for="impression" data-dfn-type="dfn" data-noexport id="impression-expiry">expiry<a class="self-link" href="#impression-expiry"></a></dfn>
+     <dd data-md>
+      <p>A point in time.</p>
+    </dl>
+   </ul>
+   <h3 class="heading settled" data-dfn-type="dfn" data-level="4.2" data-lt="Conversion" data-noexport id="conversion"><span class="secno">4.2. </span><span class="content">Conversion</span><a class="self-link" href="#conversion"></a></h3>
+   <p>A conversion is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#struct" id="ref-for-struct①">struct</a> with the following items:</p>
+   <ul>
+    <dl>
+     <dt data-md><dfn data-dfn-for="conversion" data-dfn-type="dfn" data-noexport id="conversion-conversion-source">conversion source<a class="self-link" href="#conversion-conversion-source"></a></dfn>
+     <dd data-md>
+      <p>An <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-origin" id="ref-for-concept-url-origin③">origin</a>.</p>
+     <dt data-md><dfn class="dfn-paneled" data-dfn-for="conversion" data-dfn-type="dfn" data-noexport id="conversion-conversion-data">conversion data</dfn>
+     <dd data-md>
+      <p>A <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①">string</a>.</p>
+    </dl>
+   </ul>
+   <h3 class="heading settled" data-dfn-type="dfn" data-level="4.3" data-lt="Conversion report" data-noexport id="conversion-report"><span class="secno">4.3. </span><span class="content">Conversion report</span><a class="self-link" href="#conversion-report"></a></h3>
+   <p>A conversion report is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#struct" id="ref-for-struct②">struct</a> with the following items:</p>
+   <ul>
+    <dl>
+     <dt data-md><dfn data-dfn-for="conversion report" data-dfn-type="dfn" data-noexport id="conversion-report-impression-data">impression data<a class="self-link" href="#conversion-report-impression-data"></a></dfn>
+     <dd data-md>
+      <p>A <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string②">string</a>.</p>
+     <dt data-md><dfn data-dfn-for="conversion report" data-dfn-type="dfn" data-noexport id="conversion-report-conversion-data">conversion data<a class="self-link" href="#conversion-report-conversion-data"></a></dfn>
+     <dd data-md>
+      <p>A <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string③">string</a>.</p>
+     <dt data-md><dfn data-dfn-for="conversion report" data-dfn-type="dfn" data-noexport id="conversion-report-attribution-credit">attribution credit<a class="self-link" href="#conversion-report-attribution-credit"></a></dfn>
+     <dd data-md>
+      <p>An integer in the range [0, 100].</p>
+    </dl>
+   </ul>
+   <h2 class="heading settled" data-level="5" id="algorithms"><span class="secno">5. </span><span class="content">Algorithms</span><a class="self-link" href="#algorithms"></a></h2>
+   <h3 class="heading settled algorithm" data-algorithm="Creating a conversion" data-level="5.1" id="creating-conversion"><span class="secno">5.1. </span><span class="content">Creating a conversion</span><a class="self-link" href="#creating-conversion"></a></h3>
+    TODO 
+   <h3 class="heading settled algorithm" data-algorithm="Creating an impression" data-level="5.2" id="creating-impression"><span class="secno">5.2. </span><span class="content">Creating an impression</span><a class="self-link" href="#creating-impression"></a></h3>
+    TODO 
+   <h3 class="heading settled algorithm" data-algorithm="Register a conversion" data-level="5.3" id="register-conversion"><span class="secno">5.3. </span><span class="content">Register a conversion</span><a class="self-link" href="#register-conversion"></a></h3>
+    TODO 
+   <h3 class="heading settled algorithm" data-algorithm="Parsing the metadata" data-level="5.4" id="parsing-the-metadata"><span class="secno">5.4. </span><span class="content">Parsing the metadata</span><a class="self-link" href="#parsing-the-metadata"></a></h3>
+   <p>This section defines how to parse and extract both <a data-link-type="dfn" href="#impression-impression-data" id="ref-for-impression-impression-data">impression data</a> and <a data-link-type="dfn" href="#conversion-conversion-data" id="ref-for-conversion-conversion-data">conversion data</a> from a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string④">string</a> <var>input</var> and a unsigned long long <var>maxData</var>.</p>
+   <p><dfn data-dfn-type="dfn" data-noexport id="parsing-metadata">Parsing metadata<a class="self-link" href="#parsing-metadata"></a></dfn> from <var>input</var> with <var>maxData</var> returns the result of
+the following steps:</p>
+   <ol>
+    <li data-md>
+     <p>Let <var>decodedInput</var> be the result of decoding <var>input</var> as a base-16 integer.</p>
+    <li data-md>
+     <p>Let <var>clampedDecodedInput</var> be the remainder when dividing <var>decodedInput</var> by <var>maxData</var>.</p>
+    <li data-md>
+     <p>Let <var>encodedOutput</var> be the result of encoding <var>clampedDecodedInput</var> as a
+base 16 encoding.</p>
+    <li data-md>
+     <p>Return <var>encodedOutput</var>.</p>
+   </ol>
+   <h3 class="heading settled algorithm" data-algorithm="Establishing report delivery time" data-level="5.5" id="delivery-time"><span class="secno">5.5. </span><span class="content">Establishing report delivery time</span><a class="self-link" href="#delivery-time"></a></h3>
+    TODO 
+   <h3 class="heading settled algorithm" data-algorithm="Queuing a conversion report" data-level="5.6" id="queuing-report"><span class="secno">5.6. </span><span class="content">Queuing a conversion report</span><a class="self-link" href="#queuing-report"></a></h3>
+    TODO 
+   <h3 class="heading settled algorithm" data-algorithm="Establishing attribution credit" data-level="5.7" id="attribution-credit"><span class="secno">5.7. </span><span class="content">Establishing attribution credit</span><a class="self-link" href="#attribution-credit"></a></h3>
+    TODO 
+   <h2 class="heading settled" data-level="6" id="security-considerations"><span class="secno">6. </span><span class="content">Security consideration</span><a class="self-link" href="#security-considerations"></a></h2>
+    TODO 
+   <h2 class="heading settled" data-level="7" id="privacy-considerations"><span class="secno">7. </span><span class="content">Privacy consideration</span><a class="self-link" href="#privacy-considerations"></a></h2>
+    TODO 
   </main>
   <div data-fill-with="conformance">
    <h2 class="no-ref no-num heading settled" id="conformance"><span class="content"> Conformance</span><a class="self-link" href="#conformance"></a></h2>
@@ -1559,9 +1828,329 @@ Parts of this work may be from another specification document.  If so, those par
 
 })();
 </script>
+  <h2 class="no-num no-ref heading settled" id="index"><span class="content">Index</span><a class="self-link" href="#index"></a></h2>
+  <h3 class="no-num no-ref heading settled" id="index-defined-here"><span class="content">Terms defined by this specification</span><a class="self-link" href="#index-defined-here"></a></h3>
+  <ul class="index">
+   <li><a href="#conversion-report-attribution-credit">attribution credit</a><span>, in §4.3</span>
+   <li><a href="#conversion">Conversion</a><span>, in §4.1</span>
+   <li>
+    conversion data
+    <ul>
+     <li><a href="#conversion-conversion-data">dfn for conversion</a><span>, in §4.2</span>
+     <li><a href="#conversion-report-conversion-data">dfn for conversion report</a><span>, in §4.3</span>
+    </ul>
+   <li><a href="#impression-conversion-destination">conversion destination</a><span>, in §4.1</span>
+   <li>
+    conversiondestination
+    <ul>
+     <li><a href="#dom-htmlanchorelement-conversiondestination">attribute for HTMLAnchorElement</a><span>, in §3</span>
+     <li><a href="#element-attrdef-a-conversiondestination">element-attr for a</a><span>, in §3</span>
+    </ul>
+   <li><a href="#conversion-report">Conversion report</a><span>, in §4.2</span>
+   <li><a href="#conversion-conversion-source">conversion source</a><span>, in §4.2</span>
+   <li><a href="#impression-expiry">expiry</a><span>, in §4.1</span>
+   <li><a href="#impression">Impression</a><span>, in §4</span>
+   <li>
+    impression data
+    <ul>
+     <li><a href="#conversion-report-impression-data">dfn for conversion report</a><span>, in §4.3</span>
+     <li><a href="#impression-impression-data">dfn for impression</a><span>, in §4.1</span>
+    </ul>
+   <li>
+    impressiondata
+    <ul>
+     <li><a href="#dom-htmlanchorelement-impressiondata">attribute for HTMLAnchorElement</a><span>, in §3</span>
+     <li><a href="#element-attrdef-a-impressiondata">element-attr for a</a><span>, in §3</span>
+    </ul>
+   <li>
+    impressionexpiry
+    <ul>
+     <li><a href="#dom-htmlanchorelement-impressionexpiry">attribute for HTMLAnchorElement</a><span>, in §3</span>
+     <li><a href="#element-attrdef-a-impressionexpiry">element-attr for a</a><span>, in §3</span>
+    </ul>
+   <li><a href="#impression-impression-source">impression source</a><span>, in §4.1</span>
+   <li><a href="#impression-tag">impression tag</a><span>, in §1.1</span>
+   <li><a href="#parsing-metadata">Parsing metadata</a><span>, in §5.4</span>
+   <li>
+    reportingdomain
+    <ul>
+     <li><a href="#dom-htmlanchorelement-reportingdomain">attribute for HTMLAnchorElement</a><span>, in §3</span>
+     <li><a href="#element-attrdef-a-reportingdomain">element-attr for a</a><span>, in §3</span>
+    </ul>
+   <li><a href="#impression-reporting-endpoint">reporting endpoint</a><span>, in §4.1</span>
+  </ul>
+  <aside class="dfn-panel" data-for="term-for-cereactions">
+   <a href="https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions">https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-cereactions">3. HTML monkeypatches</a> <a href="#ref-for-cereactions①">(2)</a> <a href="#ref-for-cereactions②">(3)</a> <a href="#ref-for-cereactions③">(4)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-htmlanchorelement">
+   <a href="https://html.spec.whatwg.org/multipage/text-level-semantics.html#htmlanchorelement">https://html.spec.whatwg.org/multipage/text-level-semantics.html#htmlanchorelement</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-htmlanchorelement">3. HTML monkeypatches</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-concept-origin">
+   <a href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin">https://html.spec.whatwg.org/multipage/origin.html#concept-origin</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-concept-origin">3. HTML monkeypatches</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-scheme-and-registrable-domain">
+   <a href="https://html.spec.whatwg.org/multipage/origin.html#scheme-and-registrable-domain">https://html.spec.whatwg.org/multipage/origin.html#scheme-and-registrable-domain</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-scheme-and-registrable-domain">3. HTML monkeypatches</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-string">
+   <a href="https://infra.spec.whatwg.org/#string">https://infra.spec.whatwg.org/#string</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-string">4.1. Impression</a>
+    <li><a href="#ref-for-string①">4.2. Conversion</a>
+    <li><a href="#ref-for-string②">4.3. Conversion report</a> <a href="#ref-for-string③">(2)</a>
+    <li><a href="#ref-for-string④">5.4. Parsing the metadata</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-struct">
+   <a href="https://infra.spec.whatwg.org/#struct">https://infra.spec.whatwg.org/#struct</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-struct">4.1. Impression</a>
+    <li><a href="#ref-for-struct①">4.2. Conversion</a>
+    <li><a href="#ref-for-struct②">4.3. Conversion report</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-concept-url-origin">
+   <a href="https://url.spec.whatwg.org/#concept-url-origin">https://url.spec.whatwg.org/#concept-url-origin</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-concept-url-origin">4.1. Impression</a> <a href="#ref-for-concept-url-origin①">(2)</a> <a href="#ref-for-concept-url-origin②">(3)</a>
+    <li><a href="#ref-for-concept-url-origin③">4.2. Conversion</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-idl-DOMString">
+   <a href="https://heycam.github.io/webidl/#idl-DOMString">https://heycam.github.io/webidl/#idl-DOMString</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-idl-DOMString">3. HTML monkeypatches</a> <a href="#ref-for-idl-DOMString①">(2)</a> <a href="#ref-for-idl-DOMString②">(3)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-idl-unsigned-long-long">
+   <a href="https://heycam.github.io/webidl/#idl-unsigned-long-long">https://heycam.github.io/webidl/#idl-unsigned-long-long</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-idl-unsigned-long-long">3. HTML monkeypatches</a>
+   </ul>
+  </aside>
+  <h3 class="no-num no-ref heading settled" id="index-defined-elsewhere"><span class="content">Terms defined by reference</span><a class="self-link" href="#index-defined-elsewhere"></a></h3>
+  <ul class="index">
+   <li>
+    <a data-link-type="biblio">[HTML]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="term-for-cereactions" style="color:initial">CEReactions</span>
+     <li><span class="dfn-paneled" id="term-for-htmlanchorelement" style="color:initial">HTMLAnchorElement</span>
+     <li><span class="dfn-paneled" id="term-for-concept-origin" style="color:initial">origin</span>
+     <li><span class="dfn-paneled" id="term-for-scheme-and-registrable-domain" style="color:initial">scheme-and-registrable-domain</span>
+    </ul>
+   <li>
+    <a data-link-type="biblio">[INFRA]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="term-for-string" style="color:initial">string</span>
+     <li><span class="dfn-paneled" id="term-for-struct" style="color:initial">struct</span>
+    </ul>
+   <li>
+    <a data-link-type="biblio">[URL]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="term-for-concept-url-origin" style="color:initial">origin</span>
+    </ul>
+   <li>
+    <a data-link-type="biblio">[WebIDL]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="term-for-idl-DOMString" style="color:initial">DOMString</span>
+     <li><span class="dfn-paneled" id="term-for-idl-unsigned-long-long" style="color:initial">unsigned long long</span>
+    </ul>
+  </ul>
   <h2 class="no-num no-ref heading settled" id="references"><span class="content">References</span><a class="self-link" href="#references"></a></h2>
   <h3 class="no-num no-ref heading settled" id="normative"><span class="content">Normative References</span><a class="self-link" href="#normative"></a></h3>
   <dl>
+   <dt id="biblio-html">[HTML]
+   <dd>Anne van Kesteren; et al. <a href="https://html.spec.whatwg.org/multipage/">HTML Standard</a>. Living Standard. URL: <a href="https://html.spec.whatwg.org/multipage/">https://html.spec.whatwg.org/multipage/</a>
+   <dt id="biblio-infra">[INFRA]
+   <dd>Anne van Kesteren; Domenic Denicola. <a href="https://infra.spec.whatwg.org/">Infra Standard</a>. Living Standard. URL: <a href="https://infra.spec.whatwg.org/">https://infra.spec.whatwg.org/</a>
    <dt id="biblio-rfc2119">[RFC2119]
    <dd>S. Bradner. <a href="https://tools.ietf.org/html/rfc2119">Key words for use in RFCs to Indicate Requirement Levels</a>. March 1997. Best Current Practice. URL: <a href="https://tools.ietf.org/html/rfc2119">https://tools.ietf.org/html/rfc2119</a>
+   <dt id="biblio-url">[URL]
+   <dd>Anne van Kesteren. <a href="https://url.spec.whatwg.org/">URL Standard</a>. Living Standard. URL: <a href="https://url.spec.whatwg.org/">https://url.spec.whatwg.org/</a>
+   <dt id="biblio-webidl">[WebIDL]
+   <dd>Boris Zbarsky. <a href="https://heycam.github.io/webidl/">Web IDL</a>. 15 December 2016. ED. URL: <a href="https://heycam.github.io/webidl/">https://heycam.github.io/webidl/</a>
   </dl>
+  <h2 class="no-num no-ref heading settled" id="idl-index"><span class="content">IDL Index</span><a class="self-link" href="#idl-index"></a></h2>
+<pre class="idl highlight def"><c- b>partial</c-> <c- b>interface</c-> <a class="idl-code" data-link-type="interface" href="https://html.spec.whatwg.org/multipage/text-level-semantics.html#htmlanchorelement"><c- g>HTMLAnchorElement</c-></a> {
+    [<a class="idl-code" data-link-type="extended-attribute" href="https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions"><c- g>CEReactions</c-></a>, <a class="idl-code" data-link-type="extended-attribute"><c- g>Reflect</c-></a>] <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString"><c- b>DOMString</c-></a> <a data-type="DOMString" href="#dom-htmlanchorelement-conversiondestination"><code><c- g>conversiondestination</c-></code></a>;
+    [<a class="idl-code" data-link-type="extended-attribute" href="https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions"><c- g>CEReactions</c-></a>, <a class="idl-code" data-link-type="extended-attribute"><c- g>Reflect</c-></a>] <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString"><c- b>DOMString</c-></a> <a data-type="DOMString" href="#dom-htmlanchorelement-impressiondata"><code><c- g>impressiondata</c-></code></a>;
+    [<a class="idl-code" data-link-type="extended-attribute" href="https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions"><c- g>CEReactions</c-></a>, <a class="idl-code" data-link-type="extended-attribute"><c- g>Reflect</c-></a>] <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-DOMString"><c- b>DOMString</c-></a> <a data-type="DOMString" href="#dom-htmlanchorelement-reportingdomain"><code><c- g>reportingdomain</c-></code></a>;
+    [<a class="idl-code" data-link-type="extended-attribute" href="https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions"><c- g>CEReactions</c-></a>, <a class="idl-code" data-link-type="extended-attribute"><c- g>Reflect</c-></a>] <c- b>attribute</c-> <a class="idl-code" data-link-type="interface" href="https://heycam.github.io/webidl/#idl-unsigned-long-long"><c- b>unsigned</c-> <c- b>long</c-> <c- b>long</c-></a> <a data-type="unsigned long long" href="#dom-htmlanchorelement-impressionexpiry"><code><c- g>impressionexpiry</c-></code></a>;
+};
+
+</pre>
+  <aside class="dfn-panel" data-for="element-attrdef-a-conversiondestination">
+   <b><a href="#element-attrdef-a-conversiondestination">#element-attrdef-a-conversiondestination</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-element-attrdef-a-conversiondestination">1.1. Overview</a> <a href="#ref-for-element-attrdef-a-conversiondestination①">(2)</a> <a href="#ref-for-element-attrdef-a-conversiondestination②">(3)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="element-attrdef-a-impressiondata">
+   <b><a href="#element-attrdef-a-impressiondata">#element-attrdef-a-impressiondata</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-element-attrdef-a-impressiondata">1.1. Overview</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="impression-impression-data">
+   <b><a href="#impression-impression-data">#impression-impression-data</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-impression-impression-data">5.4. Parsing the metadata</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="conversion-conversion-data">
+   <b><a href="#conversion-conversion-data">#conversion-conversion-data</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-conversion-conversion-data">5.4. Parsing the metadata</a>
+   </ul>
+  </aside>
+<script>/* script-dfn-panel */
+
+document.body.addEventListener("click", function(e) {
+    var queryAll = function(sel) { return [].slice.call(document.querySelectorAll(sel)); }
+    // Find the dfn element or panel, if any, that was clicked on.
+    var el = e.target;
+    var target;
+    var hitALink = false;
+    while(el.parentElement) {
+        if(el.tagName == "A") {
+            // Clicking on a link in a <dfn> shouldn't summon the panel
+            hitALink = true;
+        }
+        if(el.classList.contains("dfn-paneled")) {
+            target = "dfn";
+            break;
+        }
+        if(el.classList.contains("dfn-panel")) {
+            target = "dfn-panel";
+            break;
+        }
+        el = el.parentElement;
+    }
+    if(target != "dfn-panel") {
+        // Turn off any currently "on" or "activated" panels.
+        queryAll(".dfn-panel.on, .dfn-panel.activated").forEach(function(el){
+            el.classList.remove("on");
+            el.classList.remove("activated");
+        });
+    }
+    if(target == "dfn" && !hitALink) {
+        // open the panel
+        var dfnPanel = document.querySelector(".dfn-panel[data-for='" + el.id + "']");
+        if(dfnPanel) {
+            dfnPanel.classList.add("on");
+            var rect = el.getBoundingClientRect();
+            dfnPanel.style.left = window.scrollX + rect.right + 5 + "px";
+            dfnPanel.style.top = window.scrollY + rect.top + "px";
+            var panelRect = dfnPanel.getBoundingClientRect();
+            var panelWidth = panelRect.right - panelRect.left;
+            if(panelRect.right > document.body.scrollWidth && (rect.left - (panelWidth + 5)) > 0) {
+                // Reposition, because the panel is overflowing
+                dfnPanel.style.left = window.scrollX + rect.left - (panelWidth + 5) + "px";
+            }
+        } else {
+            console.log("Couldn't find .dfn-panel[data-for='" + el.id + "']");
+        }
+    } else if(target == "dfn-panel") {
+        // Switch it to "activated" state, which pins it.
+        el.classList.add("activated");
+        el.style.left = null;
+        el.style.top = null;
+    }
+
+});
+</script>
+<script>/* script-var-click-highlighting */
+
+    document.addEventListener("click", e=>{
+        if(e.target.nodeName == "VAR") {
+            highlightSameAlgoVars(e.target);
+        }
+    });
+    {
+        const indexCounts = new Map();
+        const indexNames = new Map();
+        function highlightSameAlgoVars(v) {
+            // Find the algorithm container.
+            let algoContainer = null;
+            let searchEl = v;
+            while(algoContainer == null && searchEl != document.body) {
+                searchEl = searchEl.parentNode;
+                if(searchEl.hasAttribute("data-algorithm")) {
+                    algoContainer = searchEl;
+                }
+            }
+
+            // Not highlighting document-global vars,
+            // too likely to be unrelated.
+            if(algoContainer == null) return;
+
+            const algoName = algoContainer.getAttribute("data-algorithm");
+            const varName = getVarName(v);
+            const addClass = !v.classList.contains("selected");
+            let highlightClass = null;
+            if(addClass) {
+                const index = chooseHighlightIndex(algoName, varName);
+                indexCounts.get(algoName)[index] += 1;
+                indexNames.set(algoName+"///"+varName, index);
+                highlightClass = nameFromIndex(index);
+            } else {
+                const index = previousHighlightIndex(algoName, varName);
+                indexCounts.get(algoName)[index] -= 1;
+                highlightClass = nameFromIndex(index);
+            }
+
+            // Find all same-name vars, and toggle their class appropriately.
+            for(const el of algoContainer.querySelectorAll("var")) {
+                if(getVarName(el) == varName) {
+                    el.classList.toggle("selected", addClass);
+                    el.classList.toggle(highlightClass, addClass);
+                }
+            }
+        }
+        function getVarName(el) {
+            return el.textContent.replace(/(\s| )+/, " ").trim();
+        }
+        function chooseHighlightIndex(algoName, varName) {
+            let indexes = null;
+            if(indexCounts.has(algoName)) {
+                indexes = indexCounts.get(algoName);
+            } else {
+                // 7 classes right now
+                indexes = [0,0,0,0,0,0,0];
+                indexCounts.set(algoName, indexes);
+            }
+
+            // If the element was recently unclicked,
+            // *and* that color is still unclaimed,
+            // give it back the same color.
+            const lastIndex = previousHighlightIndex(algoName, varName);
+            if(indexes[lastIndex] === 0) return lastIndex;
+
+            // Find the earliest index with the lowest count.
+            const minCount = Math.min.apply(null, indexes);
+            let index = null;
+            for(var i = 0; i < indexes.length; i++) {
+                if(indexes[i] == minCount) {
+                    return i;
+                }
+            }
+        }
+        function previousHighlightIndex(algoName, varName) {
+            return indexNames.get(algoName+"///"+varName);
+        }
+        function nameFromIndex(index) {
+            return "selected" + index;
+        }
+    }
+    </script>
