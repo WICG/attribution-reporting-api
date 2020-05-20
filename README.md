@@ -158,7 +158,7 @@ location. It is required to be the result of a redirect so that the
 reporting origin can make server-side decisions about when attribution
 reports should trigger.
 
-Conversion registration requires the `conversion-measurement` Feature Policy to be enabled in the context the request is made. As described in [Publisher Controls for Impression Declaration](#publisher-controls-for-impression-declaration), this Feature Policy will be enabled default in the top-level context and in same-origin children, but disabled in cross-origin children.
+Conversion registration requires the `conversion-measurement` Feature Policy to be enabled in the context the request is made. As described in [Publisher Controls for Impression Declaration](#publisher-controls-for-impression-declaration), this Feature Policy will be enabled by default in the top-level context and in same-origin children, but disabled in cross-origin children.
 
 Today, conversion pixels are frequently used to register conversions on
 advertiser pages. These can be repurposed to register conversions in
