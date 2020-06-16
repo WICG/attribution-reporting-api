@@ -1,19 +1,34 @@
-language: generic
+language: python
+python: 3.7
+addons:
+    apt:
+        packages:
+        - python-pip
+
+install:
+- git clone --depth=1 https://github.com/tabatkins/bikeshed.git
+- pip install --editable bikeshed
+- bikeshed update
+
 script:
-- bash ./compile.sh
+- mkdir -p out
+- bikeshed --die-on=warning spec index.bs out/index.html
+
 branches:
   only:
   - master
+
+before_deploy:
+- openssl aes-256-cbc -K $encrypted_189e52c2c347_key -iv $encrypted_189e52c2c347_iv -in deploy_key.enc -out deploy_key -d
+
 deploy:
   provider: pages
   local_dir: out
   deploy_key: deploy_key
   edge:
     branch: master
+
 notifications:
   email:
     on_success: never
     on_failure: always
-before_install:
-- openssl aes-256-cbc -K $encrypted_189e52c2c347_key -iv $encrypted_189e52c2c347_iv
-  -in deploy_key.enc -out deploy_key -d
