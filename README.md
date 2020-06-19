@@ -98,34 +98,34 @@ Impression Declaration
 
 An impression is an anchor tag with special attributes:
 
-`<a conversiondestination=”[eTLD+1]” impressiondata=”[string]”
-impressionexpiry=[unsigned long long] reportingorigin=”[origin]”>`
+`<a conversionDestination=”[eTLD+1]” impressionData=”[string]”
+impressionExpiry=[unsigned long long] reportingOrigin=”[origin]”>`
 
 Impression attributes:
 
--   `conversiondestination`: is the intended eTLD+1 destination of the ad click
+-   `conversionDestination`: is the intended eTLD+1 destination of the ad click
 
--   `impressiondata`: is the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#metadata-encoding), but the value can vary by UA's that want a higher level of privacy.
+-   `impressionData`: is the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#metadata-encoding), but the value can vary by UA's that want a higher level of privacy.
 
--   `impressionexpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default will be 7 days, with a max value of 30 days. The max expiry can also vary by UA.
+-   `impressionExpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default will be 7 days, with a max value of 30 days. The max expiry can also vary by UA.
 
--   `reportingorigin`: (optional) the desired endpoint that the conversion report for this impression should go to. Default will be the top level origin of the page.
+-   `reportingOrigin`: (optional) the desired endpoint that the conversion report for this impression should go to. Default will be the top level origin of the page.
 
 Clicking on an anchor tag that specifies these attributes will log a
 click impression event to storage if the resulting document being
 navigated to ends up sharing the conversion destination eTLD+1. A clicked
-impression logs <impressiondata, conversiondestination, reportingorigin,
-impressionexpiry> to a new browser storage area.
+impression logs <impressionData, conversionDestination, reportingOrigin,
+impressionExpiry> to a new browser storage area.
 
-When an impression is logged for <reportingorigin,
-conversiondestination>, existing impressions matching this pair will be
+When an impression is logged for <reportingOrigin,
+conversionDestination>, existing impressions matching this pair will be
 looked up in storage. If the matching impressions have converted at
 least once (i.e. have scheduled a report), they will be removed from
 browser storage and will not be eligible for further reporting. Any
 pending conversion reports for these impressions will still be sent.
 
 An impression will be eligible for reporting if any page on the	
-conversiondestination domain (advertiser site) registers a conversion to the	
+`conversionDestination` domain (advertiser site) registers a conversion to the	
 associated reporting origin.
 
 ### Publisher Controls for Impression Declaration
@@ -136,7 +136,7 @@ API will need to be enabled in child contexts by a new [Feature Policy](https://
 ```
 <iframe src=”https://advertiser.test” allow=”conversion-measurement ‘src’)”>
 
-<a … id=”impressionTag” reportingorigin=”https://ad-tech.com”></a>
+<a … id=”impressionTag” reportingOrigin=”https://ad-tech.com”></a>
 
 </iframe>
 ```
@@ -206,13 +206,13 @@ from 0-5 (~2.6 bits of information)
 
 When the user agent receives a conversion registration on a URL matching
 the conversiondestination eTLD+1, it looks up all impressions in storage that
-match <reportingorigin, conversiondestination>.
+match <reportingOrigin, conversionDestination>.
 
 The most recent matching impression is given an `attribution-credit` of value 100. All other matching impressions are given an `attribution-credit` of value of 0.
 
 For each matching impression, schedule a report. To schedule a report,
 the browser will store the 
- {reporting origin, conversiondestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, attribution-credit} for the impression.
+ {reportingOrigin, conversionDestination domain, impressionData, [decoded](#metadata-encoding) conversion-metadata, attribution-credit} for the impression.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each impression is only allowed to schedule a maximum of three reports
@@ -275,10 +275,10 @@ time
 7 days minus 1 hour: Conversions will be reported 7 days from impression
 time
 
-`impressionexpiry`: Conversions will be reported `impressionexpiry`
+`impressionExpiry`: Conversions will be reported `impressionExpiry`
 milliseconds plus one hour from impression time
 
-If `impressionexpiry` occurs before the 7 day window deadline it will be used as the next reporting window. For example, if `impressionexpiry` is 3 days, there will be two deadlines, 2 days minus one hour and `impressionexpiry`. If `impressionexpiry` is before the 2 day deadline, the 2 day deadline will still be used. 
+If `impressionExpiry` occurs before the 7 day window deadline it will be used as the next reporting window. For example, if `impressionExpiry` is 3 days, there will be two deadlines, 2 days minus one hour and `impressionExpiry`. If `impressionExpiry` is before the 2 day deadline, the 2 day deadline will still be used. 
 
 When a conversion report is scheduled, it will be delayed until the next
 applicable reporting window for the associated impression. Once the
@@ -360,10 +360,10 @@ the `ad-tech.com` reporting origin, and uses impression data that allows
 ...
 <a 
   href=”https://toasters.com/purchase”
-  conversiondestination=”https://toasters.com”
-  impressiondata=”0x12345678”
-  reportingorigin=”https://ad-tech.com”
-  impressionexpiry=604800000>
+  conversionDestination=”https://toasters.com”
+  impressionData=”0x12345678”
+  reportingOrigin=”https://ad-tech.com”
+  impressionExpiry=604800000>
 ...
 </iframe>
 ```
