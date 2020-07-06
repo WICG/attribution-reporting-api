@@ -153,9 +153,9 @@ This API will use a similar mechanism for conversion registration as the
 
 Conversions are meant to occur on conversion destination pages. A conversion
 will be registered for a given reporting origin through an HTTP GET to
-the reporting origin that redirects to a [.well-known](https://tools.ietf.org/html/rfc5785)
-location. It is required to be the result of a redirect so that the
-reporting origin can make server-side decisions about when attribution
+the reporting origin, that redirects to a [.well-known](https://tools.ietf.org/html/rfc5785)
+location.
+This redirect is useful, because this mechanism enables the reporting origin to make server-side decisions about when attribution
 reports should trigger.
 Note that `.well-known` is only used to register a path that the browser will understand; it shouldn't point to any actual resource, since the request will be cancelled internally.
 
@@ -185,8 +185,7 @@ conversion report as detailed in [Register a conversion algorithm](#register-a-c
 Impression metadata will be limited to 64 bits of information to enable
 uniquely identifying an ad click.
 
-Conversion metadata must therefore be limited quite strictly, both in
-the amount of data, and in noise we apply to the data. Our strawman
+Conversion metadata must therefore be limited quite strictly, by limiting the amount of data and by applying noise to the data. Our strawman
 initial proposal is to allow 3 bits of conversion data, with 5%
 noise applied — that is, with 5% chance, we send a random 3 bits, and the
 other 95% of the time we send the real conversion-metadata. See
@@ -196,7 +195,9 @@ and [adding noise to whether or not the conversion report is even sent](https://
 In any case, noise values should be allowed to vary by UA.
 
 Disclaimer: Adding or removing a single bit of metadata has large
-trade-offs in terms of user privacy and usability to advertisers.
+trade-offs in terms of user privacy and usability to advertisers: 
+* Less bits is more private but less usable to avertisers
+* More bits is less private but more usable to avertisers.
 Browsers should concretely evaluate the trade-offs from these two
 perspectives before setting a limit. As such, this number is subject to
 change based on community feedback. Our encoding scheme should also
@@ -367,7 +368,7 @@ the `ad-tech.com` reporting origin, and uses impression data that allows
 </iframe>
 ```
 
-A user clicks on the ad and has a window open that lands on a URL to
+A user clicks on the ad and this opens a window that lands on a URL to
 `toasters.com/purchase`. An impression event is logged to browser storage
 since the landing page matches the conversion destination. The following data is
 stored:
@@ -418,8 +419,7 @@ While this API _does_ allow you to learn "which ad clicks converted", it isn’t
 Conversion Metadata
 -------------------
 
-Conversion metadata is extremely important for critical use-cases like
-reporting the *value* of a conversion. However, too much conversion
+reporting the *purchase value* of a conversion. However, too much conversion
 metadata could be used to link advertiser identity with publisher
 identity.
 
