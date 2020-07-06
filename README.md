@@ -157,6 +157,7 @@ the reporting origin that redirects to a [.well-known](https://tools.ietf.org/ht
 location. It is required to be the result of a redirect so that the
 reporting origin can make server-side decisions about when attribution
 reports should trigger.
+Note that `.well-known` is only used to register a path that the browser will understand; it shouldn't point to any actual resource, since the request will be cancelled internally.
 
 Conversion registration requires the `conversion-measurement` Feature Policy to be enabled in the context the request is made. As described in [Publisher Controls for Impression Declaration](#publisher-controls-for-impression-declaration), this Feature Policy will be enabled by default in the top-level context and in same-origin children, but disabled in cross-origin children.
 
@@ -176,7 +177,7 @@ The browser will treat redirects to a url of the form:
 as a special request, where optional metadata associated with the
 conversion is specified via a query parameter.
 
-When the special redirect is detected, the user agent will schedule a
+When the special redirect is detected, the browser will schedule a
 conversion report as detailed in [Register a conversion algorithm](#register-a-conversion-algorithm).
 
 ### Metadata limits and noise
@@ -204,9 +205,7 @@ from 0-5 (~2.6 bits of information)
 
 ### Register a conversion algorithm
 
-When the user agent receives a conversion registration on a URL matching
-the conversiondestination eTLD+1, it looks up all impressions in storage that
-match <reportingorigin, conversiondestination>.
+When the browser receives a conversion registration on a URL matching
 
 The most recent matching impression is given an `attribution-credit` of value 100. All other matching impressions are given an `attribution-credit` of value of 0.
 
@@ -225,11 +224,11 @@ will delete all impressions that have scheduled three reports.
 If there are multiple impressions that were clicked and lead to a single
 conversion, send conversion reports for all of them. 
 
-To provide additional utility, the user-agent can choose to provide additional annotations to each of these reports, attributing credits for the conversion to them individually. Attribution models allow for more sophisticated, accurate conversion measurement.
+To provide additional utility, the browser can choose to provide additional annotations to each of these reports, attributing credits for the conversion to them individually. Attribution models allow for more sophisticated, accurate conversion measurement.
 
 The default attribution model will be last-click attribution, giving the last-clicked impression for a given conversion event all of the credit.
 
-To remain flexible, the user-agent sends an `attribution-credit` of value 0 to 100 for all conversion reports associated with a single conversion event. This represents the percent of attribution an impression received for a conversion. The sum of credits across a set of reports for one conversion event should equal 100.
+To remain flexible, the browser sends an `attribution-credit` of value 0 to 100 for all conversion reports associated with a single conversion event. This represents the percent of attribution an impression received for a conversion. The sum of credits across a set of reports for one conversion event should equal 100.
 
 There are many possible alternatives to this,
 like providing a choice of rules-based attribution models. However, it
@@ -244,7 +243,7 @@ goes through a checkout and a purchase flow. To support this in a
 privacy preserving way, we need to make sure that subsequent conversions
 do not leak too much data.
 
-One possible solution, outlined in this document, is for UAs to specify
+One possible solution, outlined in this document, is for browsers to specify
 a maximum number of conversion registrations per click. In this document
 our initial proposal is 3.
 
@@ -290,7 +289,7 @@ order.
 
 The report may be sent at a later date if the browser was not running
 when the window finished. In this case, reports will be sent on startup.
-The user agent may also decide to delay some of these reports for a
+The browser may also decide to delay some of these reports for a
 short random time on startup, so that they cannot be joined together
 easily by a given reporting origin.
 
@@ -299,7 +298,7 @@ reports throughout each reporting window.
 
 ### Conversion Reports
 
-To send a report, the user agent will make a non-credentialed secure
+To send a report, the browser will make a non-credentialed (i.e. without session cookies) secure
 HTTP POST request to:
 
 ```
@@ -342,7 +341,7 @@ function getMetadata(str, max_value) {
 
 The benefit of this method over using a fixed bit mask is that it allows
 browsers to implement max\_values that aren’t multiples of 2. That is,
-UA's can choose a "fractional" bit limit if they wanted to.
+browers can choose a "fractional" bit limit if they want to.
 
 Sample Usage
 ============
@@ -464,14 +463,14 @@ publisher and advertiser don’t necessarily have to agree apriori on what
 reporting origin to use, and which origin actually ends up getting used
 reveals some extra information.
 
-To prevent abuse, it makes sense for UAs to add limits here, potentially
+To prevent abuse, it makes sense for browsers to add limits here, potentially
 on a per-page load or per-reporting epoch basis.
 
 Clearing Site Data
 ------------------
 
 Impressions / conversions in browser storage should be clearable using
-existing “clear browsing data” functionality offered by UAs.
+existing “clear browsing data" functionality offered by browsers.
 
 Reporting cooldown
 ------------------
