@@ -148,7 +148,7 @@ Without a Feature Policy, a top-level document and cooperating iframe could recr
 Conversion Registration
 -----------------------
 
-This API will use a similar mechanism for conversion registration similar to the
+This API will use a mechanism for conversion registration similar to the
 [Ad Click Attribution Proposal](https://wicg.github.io/ad-click-attribution/index.html#legacytriggering).
 
 Conversions are meant to occur on conversion destination pages. A conversion
@@ -214,7 +214,7 @@ The most recent matching impression is given an `attribution-credit` of value 10
 
 For each matching impression, schedule a report. To schedule a report,
 the browser will store the 
- {reporting origin, `conversiondestination` domain, impression data, [decoded](#metadata-encoding) conversion-metadata, attribution-credit} for the impression.
+ {`reportingorigin`, `conversiondestination` domain, `impressiondata`, [decoded](#metadata-encoding) conversion-metadata, attribution-credit} for the impression.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each impression is only allowed to schedule a maximum of three reports
