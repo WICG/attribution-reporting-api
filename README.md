@@ -512,7 +512,7 @@ Speculative: Adding noise to the conversion event itself
 --------------------------------------------------------
 
 Another way to add privacy to this system is to add noise not only to
-the [reported conversion data value](https://github.com/csharrison/conversion-measurement-api#metadata-limits-and-noise),
+the [reported conversion data value](#data-limits-and-noise),
 but also to whether the conversion occurred in the first place. That is:
 
 -   With some probability *p*, true conversions will be dropped
