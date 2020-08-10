@@ -176,7 +176,7 @@ this API:
 to trigger a conversion event.
 
 The browser will treat redirects to a URL of the form:
-`https://<reportingorigin>/.well-known/register-conversion[?conversion-data=<metadata>]`
+`https://<reportingorigin>/.well-known/register-conversion[?conversion-data=<data>]`
 
 as a special request, where optional data associated with the
 conversion is specified via a query parameter.
