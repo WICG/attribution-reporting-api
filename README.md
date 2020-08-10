@@ -74,15 +74,15 @@ and publisher sites to track conversions, these common identifiers can
 be used to enable other forms of cross-site tracking.
 
 This doesn’t have to be the case, though, especially in cases where
-identifiers like third party cookies are either unavailable or
+identifiers such as third-party cookies are either unavailable or
 undesirable. A new API surface can be added to the web platform to
-satisfy this use-case without them, in a way that provides better
+satisfy this use case without them, in a way that provides better
 privacy to users.
 
 This API alone will not be able to support all conversion measurement
 use cases, such as view conversions, or even click conversion reporting
 with richer / more accurate conversion data. We envision this API as
-one of potentially many new API’s that will seek to reproduce valid
+one of potentially many new APIs that will seek to reproduce valid
 advertising use cases in the web platform in a privacy preserving way.
 In particular, we think this API could be extended by using server side
 aggregation to provide richer data, which we are continuing to explore.
@@ -102,34 +102,34 @@ Impression Declaration
 
 An impression is an anchor tag with special attributes:
 
-`<a conversiondestination=”[eTLD+1]” impressiondata=”[string]”
-impressionexpiry=[unsigned long long] reportingorigin=”[origin]”>`
+`<a conversiondestination="[eTLD+1]" impressiondata="[string]"
+impressionexpiry=[unsigned long long] reportingorigin="[origin]">`
 
 Impression attributes:
 
--   `conversiondestination`: is the intended eTLD+1 destination of the ad click
+-   `conversiondestination`: the intended eTLD+1 destination of the ad click.
 
--   `impressiondata`: is the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#data-encoding), but the value can vary by UA's that want a higher level of privacy.
+-   `impressiondata`: the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#data-encoding), but the value can vary for browsers that want a higher level of privacy.
 
--   `impressionexpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default will be 7 days, with a max value of 30 days. The max expiry can also vary by UA.
+-   `impressionexpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default will be 7 days, with a maximum value of 30 days. The maximum expiry can also vary between browsers.
 
 -   `reportingorigin`: (optional) the desired endpoint that the conversion report for this impression should go to. Default will be the top level origin of the page.
 
 Clicking on an anchor tag that specifies these attributes will log a
 click impression event to storage if the resulting document being
 navigated to ends up sharing the conversion destination eTLD+1. A clicked
-impression logs <impressiondata, conversiondestination, reportingorigin,
-impressionexpiry> to a new browser storage area.
+impression logs <`impressiondata`, `conversiondestination`, `reportingorigin`,
+`impressionexpiry`> to a new browser storage area.
 
-When an impression is logged for <reportingorigin,
-conversiondestination>, existing impressions matching this pair will be
+When an impression is logged for <`reportingorigin`,
+`conversiondestination`>, existing impressions matching this pair will be
 looked up in storage. If the matching impressions have converted at
 least once (i.e. have scheduled a report), they will be removed from
 browser storage and will not be eligible for further reporting. Any
 pending conversion reports for these impressions will still be sent.
 
 An impression will be eligible for reporting if any page on the	
-conversiondestination domain (advertiser site) registers a conversion to the	
+`conversiondestination` domain (advertiser site) registers a conversion to the	
 associated reporting origin.
 
 ### Publisher Controls for Impression Declaration
@@ -138,9 +138,9 @@ In order to prevent arbitrary third parties from registering impressions without
 API will need to be enabled in child contexts by a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/):
 
 ```
-<iframe src=”https://advertiser.test” allow=”conversion-measurement ‘src’)”>
+<iframe src="https://advertiser.test" allow="conversion-measurement ‘src’)">
 
-<a … id=”impressionTag” reportingorigin=”https://ad-tech.com”></a>
+<a … id="impressionTag" reportingorigin="https://ad-tech.com"></a>
 
 </iframe>
 ```
@@ -152,15 +152,16 @@ Without a Feature Policy, a top-level document and cooperating iframe could recr
 Conversion Registration
 -----------------------
 
-This API will use a similar mechanism for conversion registration as the
+This API will use a mechanism for conversion registration similar to the
 [Ad Click Attribution Proposal](https://wicg.github.io/ad-click-attribution/index.html#legacytriggering).
 
 Conversions are meant to occur on conversion destination pages. A conversion
 will be registered for a given reporting origin through an HTTP GET to
-the reporting origin that redirects to a [.well-known](https://tools.ietf.org/html/rfc5785)
-location. It is required to be the result of a redirect so that the
-reporting origin can make server-side decisions about when attribution
+the reporting origin, that redirects to a [.well-known](https://tools.ietf.org/html/rfc5785)
+location.
+This redirect is useful, because this mechanism enables the reporting origin to make server-side decisions about when attribution
 reports should trigger.
+Note that `.well-known` is only used to register a path that the browser will understand; it shouldn't point to any actual resource, since the request will be cancelled internally.
 
 Conversion registration requires the `conversion-measurement` Feature Policy to be enabled in the context the request is made. As described in [Publisher Controls for Impression Declaration](#publisher-controls-for-impression-declaration), this Feature Policy will be enabled by default in the top-level context and in same-origin children, but disabled in cross-origin children.
 
@@ -174,13 +175,13 @@ this API:
 `https://ad-tech.test/conversiontracker` can be redirected to `https://ad-tech.test/.well-known/register-conversion`
 to trigger a conversion event.
 
-The browser will treat redirects to a url of the form:
+The browser will treat redirects to a URL of the form:
 `https://<reportingorigin>/.well-known/register-conversion[?conversion-data=<data>]`
 
 as a special request, where optional data associated with the
 conversion is specified via a query parameter.
 
-When the special redirect is detected, the user agent will schedule a
+When the special redirect is detected, the browser will schedule a
 conversion report as detailed in [Register a conversion algorithm](#register-a-conversion-algorithm).
 
 ### Data limits and noise
@@ -188,18 +189,19 @@ conversion report as detailed in [Register a conversion algorithm](#register-a-c
 Impression data will be limited to 64 bits of information to enable
 uniquely identifying an ad click.
 
-Conversion data must therefore be limited quite strictly, both in
-the amount of data, and in noise we apply to the data. Our strawman
+Conversion data must therefore be limited quite strictly, by limiting the amount of data and by applying noise to the data. Our strawman
 initial proposal is to allow 3 bits of conversion data, with 5%
 noise applied — that is, with 5% chance, we send a random 3 bits, and the
 other 95% of the time we send the real conversion-data. See
 [privacy considerations](#conversion-data) for more information,
 including speculative thoughts on the hard question of going farther
 and [adding noise to whether or not the conversion report is even sent](https://github.com/csharrison/conversion-measurement-api#speculative-adding-noise-to-the-conversion-event-itself).
-In any case, noise values should be allowed to vary by UA.
+In any case, noise values should be allowed to vary between browsers.
 
 Disclaimer: Adding or removing a single bit of data has large
-trade-offs in terms of user privacy and usability to advertisers.
+trade-offs in terms of user privacy and usability to advertisers: 
+* Less bits is more private but less usable to avertisers
+* More bits is less private but more usable to avertisers.
 Browsers should concretely evaluate the trade-offs from these two
 perspectives before setting a limit. As such, this number is subject to
 change based on community feedback. Our encoding scheme should also
@@ -208,15 +210,15 @@ from 0-5 (~2.6 bits of information)
 
 ### Register a conversion algorithm
 
-When the user agent receives a conversion registration on a URL matching
-the conversiondestination eTLD+1, it looks up all impressions in storage that
-match <reportingorigin, conversiondestination>.
+When the browser receives a conversion registration on a URL matching
+the `conversiondestination` eTLD+1, it looks up all impressions in storage that
+match <`reportingorigin`, `conversiondestination`>.
 
 The most recent matching impression is given an `attribution-credit` of value 100. All other matching impressions are given an `attribution-credit` of value of 0.
 
 For each matching impression, schedule a report. To schedule a report,
 the browser will store the 
- {reporting origin, conversiondestination domain, impression data, [decoded](#data-encoding) conversion-data, attribution-credit} for the impression.
+ {`reportingorigin`, `conversiondestination` domain, `impressiondata`, [decoded](#data-encoding) conversion-data, attribution-credit} for the impression.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each impression is only allowed to schedule a maximum of three reports
@@ -226,14 +228,14 @@ will delete all impressions that have scheduled three reports.
 
 ### Multiple impressions for the same conversion (Multi-touch)
 
-If there are multiple impressions that were clicked and lead to a single
+If multiple impressions were clicked and led to a single
 conversion, send conversion reports for all of them. 
 
-To provide additional utility, the user-agent can choose to provide additional annotations to each of these reports, attributing credits for the conversion to them individually. Attribution models allow for more sophisticated, accurate conversion measurement.
+To provide additional utility, the browser can choose to provide additional annotations to each of these reports, attributing credits for the conversion to them individually. Attribution models allow for more sophisticated, accurate conversion measurement.
 
 The default attribution model will be last-click attribution, giving the last-clicked impression for a given conversion event all of the credit.
 
-To remain flexible, the user-agent sends an `attribution-credit` of value 0 to 100 for all conversion reports associated with a single conversion event. This represents the percent of attribution an impression received for a conversion. The sum of credits across a set of reports for one conversion event should equal 100.
+To remain flexible, the browser sends an `attribution-credit` of value 0 to 100 for all conversion reports associated with a single conversion event. This represents the percent of attribution an impression received for a conversion. The sum of credits across a set of reports for one conversion event should equal 100.
 
 There are many possible alternatives to this,
 like providing a choice of rules-based attribution models. However, it
@@ -248,7 +250,7 @@ goes through a checkout and a purchase flow. To support this in a
 privacy preserving way, we need to make sure that subsequent conversions
 do not leak too much data.
 
-One possible solution, outlined in this document, is for UAs to specify
+One possible solution, outlined in this document, is for browsers to specify
 a maximum number of conversion registrations per click. In this document
 our initial proposal is 3.
 
@@ -294,7 +296,7 @@ order.
 
 The report may be sent at a later date if the browser was not running
 when the window finished. In this case, reports will be sent on startup.
-The user agent may also decide to delay some of these reports for a
+The browser may also decide to delay some of these reports for a
 short random time on startup, so that they cannot be joined together
 easily by a given reporting origin.
 
@@ -303,7 +305,7 @@ reports throughout each reporting window.
 
 ### Conversion Reports
 
-To send a report, the user agent will make a non-credentialed secure
+To send a report, the browser will make a non-credentialed (i.e. without session cookies) secure
 HTTP POST request to:
 
 ```
@@ -346,13 +348,13 @@ function getData(str, max_value) {
 
 The benefit of this method over using a fixed bit mask is that it allows
 browsers to implement max\_values that aren’t multiples of 2. That is,
-UA's can choose a "fractional" bit limit if they wanted to.
+browers can choose a "fractional" bit limit if they want to.
 
 Sample Usage
 ============
 
 `publisher.com` wants to show ads on their site, so they contract out to
-`ad-tech.com`. `ad-tech.com` script in the main document creates a
+`ad-tech.com`. `ad-tech.com`'s script in the main document creates a
 cross-origin iframe to host the third party advertisement for
 `toasters.com`, and sets `ad-tech.com` to be an allowed reporting origin.
 
@@ -360,19 +362,19 @@ Within the iframe, `toasters.com` code annotates their anchor tags to use
 the `ad-tech.com` reporting origin, and uses impression data that allows
 `ad-tech.com` to identify the ad click (0x12345678)
 ```
-<iframe src=”https://ad-tech-3p.test/show-some-ad” allow=”conversion-reporting ‘src’ (https://ad-tech.com)”>
+<iframe src="https://ad-tech-3p.test/show-some-ad" allow="conversion-reporting ‘src’ (https://ad-tech.com)">
 ...
 <a 
-  href=”https://toasters.com/purchase”
-  conversiondestination=”https://toasters.com”
-  impressiondata=”0x12345678”
-  reportingorigin=”https://ad-tech.com”
+  href="https://toasters.com/purchase"
+  conversiondestination="https://toasters.com"
+  impressiondata="0x12345678"
+  reportingorigin="https://ad-tech.com"
   impressionexpiry=604800000>
 ...
 </iframe>
 ```
 
-A user clicks on the ad and has a window open that lands on a URL to
+A user clicks on the ad and this opens a window that lands on a URL to
 `toasters.com/purchase`. An impression event is logged to browser storage
 since the landing page matches the conversion destination. The following data is
 stored:
@@ -391,12 +393,12 @@ registers conversions on the few different ad-tech companies it buys
 impressions on, including `ad-tech.com`, by adding conversion pixels:
 
 ```
-<img src=”https://ad-tech.com/conversion?model=toastmaster3000&price=$49.99&...” />
+<img src="https://ad-tech.com/conversion?model=toastmaster3000&price=$49.99&..." />
 ```
 
 `ad-tech.com` receives this request, and decides to trigger a conversion
 on `toasters.com`. They must compress all of the conversion data into
-3 bits, so `ad-tech.com` chooses to encode the value as “2” (e.g. some
+3 bits, so `ad-tech.com` chooses to encode the value as “2" (e.g. some
 bucketed version of the purchase value). They respond with a 302
 redirect to:
 ```
@@ -417,14 +419,14 @@ The main privacy goal of the API is to make _linking identity_ between two diffe
 
 In this API, the 64-bit impression ID can encode a user ID from the publisher’s top level site, but the low entropy, noisy conversion data could only encode a small part of a user ID from the advertiser’s top-level site. The impression ID and the conversion data are never exposed to a Javascript environment together, and the request that includes both of them is sent without credentials and at a different time from either event, so the request adds little new information linkable to these events.
 
-While this API _does_ allow you to learn "which ad clicks converted", it isn’t enough to link publisher and advertiser identity, unless there is serious abuse of the API, i.e. abusers are using error correcting codes and many clicks to slowly and probabilistically learn advertiser IDs associated with publisher ones. We explore some mitigations to this attack below.
+While this API _does_ allow you to learn "which ad clicks converted", it isn’t enough to link the user's identity on the publisher's and advertiser's side, unless there is serious abuse of the API, i.e. abusers are using error correcting codes and many clicks to slowly and probabilistically learn advertiser IDs associated with publisher ones. We explore some mitigations to this attack below.
 
 
 Conversion Data
 -------------------
 
-Conversion data is extremely important for critical use-cases like
-reporting the *value* of a conversion. However, too much conversion
+Conversion data is extremely important for critical use cases like
+reporting the *purchase value* of a conversion. However, too much conversion
 data could be used to link advertiser identity with publisher
 identity.
 
@@ -468,14 +470,14 @@ publisher and advertiser don’t necessarily have to agree apriori on what
 reporting origin to use, and which origin actually ends up getting used
 reveals some extra information.
 
-To prevent abuse, it makes sense for UAs to add limits here, potentially
+To prevent abuse, it makes sense for browsers to add limits here, potentially
 on a per-page load or per-reporting epoch basis.
 
 Clearing Site Data
 ------------------
 
 Impressions / conversions in browser storage should be clearable using
-existing “clear browsing data” functionality offered by UAs.
+existing “clear browsing data" functionality offered by browsers.
 
 Reporting cooldown
 ------------------
