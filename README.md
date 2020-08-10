@@ -16,20 +16,24 @@ See the explainer on [aggregate measurement](AGGREGATE.md) for a potential exten
   - [Glossary](#glossary)
   - [Motivation](#motivation)
   - [Prior Art](#prior-art)
+- [Click Through Conversion Measurement Event-Level API Explainer](#click-through-conversion-measurement-event-level-api-explainer)
+  - [Glossary](#glossary)
+  - [Motivation](#motivation)
+  - [Prior Art](#prior-art)
 - [Overview](#overview)
   - [Impression Declaration](#impression-declaration)
     - [Publisher Controls for Impression Declaration](#publisher-controls-for-impression-declaration)
   - [Conversion Registration](#conversion-registration)
-    - [Metadata limits and noise](#metadata-limits-and-noise)
+    - [Data limits and noise](#data-limits-and-noise)
     - [Register a conversion algorithm](#register-a-conversion-algorithm)
     - [Multiple impressions for the same conversion (Multi-touch)](#multiple-impressions-for-the-same-conversion-multi-touch)
     - [Multiple conversions for the same impression](#multiple-conversions-for-the-same-impression)
   - [Sending Scheduled Reports](#sending-scheduled-reports)
     - [Conversion Reports](#conversion-reports)
-  - [Metadata Encoding](#metadata-encoding)
+  - [Data Encoding](#data-encoding)
 - [Sample Usage](#sample-usage)
 - [Privacy Considerations](#privacy-considerations)
-  - [Conversion Metadata](#conversion-metadata)
+  - [Conversion Data](#conversion-data)
   - [Conversion Delay](#conversion-delay)
   - [Limits on the number of conversion pixels](#limits-on-the-number-of-conversion-pixels)
   - [Clearing Site Data](#clearing-site-data)
@@ -77,7 +81,7 @@ privacy to users.
 
 This API alone will not be able to support all conversion measurement
 use cases, such as view conversions, or even click conversion reporting
-with richer / more accurate conversion metadata. We envision this API as
+with richer / more accurate conversion data. We envision this API as
 one of potentially many new API’s that will seek to reproduce valid
 advertising use cases in the web platform in a privacy preserving way.
 In particular, we think this API could be extended by using server side
@@ -105,7 +109,7 @@ Impression attributes:
 
 -   `conversiondestination`: is the intended eTLD+1 destination of the ad click
 
--   `impressiondata`: is the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#metadata-encoding), but the value can vary by UA's that want a higher level of privacy.
+-   `impressiondata`: is the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#data-encoding), but the value can vary by UA's that want a higher level of privacy.
 
 -   `impressionexpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default will be 7 days, with a max value of 30 days. The max expiry can also vary by UA.
 
@@ -171,35 +175,35 @@ this API:
 to trigger a conversion event.
 
 The browser will treat redirects to a url of the form:
-`https://<reportingorigin>/.well-known/register-conversion[?conversion-metadata=<metadata>]`
+`https://<reportingorigin>/.well-known/register-conversion[?conversion-data=<data>]`
 
-as a special request, where optional metadata associated with the
+as a special request, where optional data associated with the
 conversion is specified via a query parameter.
 
 When the special redirect is detected, the user agent will schedule a
 conversion report as detailed in [Register a conversion algorithm](#register-a-conversion-algorithm).
 
-### Metadata limits and noise
+### Data limits and noise
 
-Impression metadata will be limited to 64 bits of information to enable
+Impression data will be limited to 64 bits of information to enable
 uniquely identifying an ad click.
 
-Conversion metadata must therefore be limited quite strictly, both in
+Conversion data must therefore be limited quite strictly, both in
 the amount of data, and in noise we apply to the data. Our strawman
 initial proposal is to allow 3 bits of conversion data, with 5%
 noise applied — that is, with 5% chance, we send a random 3 bits, and the
-other 95% of the time we send the real conversion-metadata. See
-[privacy considerations](#conversion-metadata) for more information,
+other 95% of the time we send the real conversion-data. See
+[privacy considerations](#conversion-data) for more information,
 including speculative thoughts on the hard question of going farther
 and [adding noise to whether or not the conversion report is even sent](https://github.com/csharrison/conversion-measurement-api#speculative-adding-noise-to-the-conversion-event-itself).
 In any case, noise values should be allowed to vary by UA.
 
-Disclaimer: Adding or removing a single bit of metadata has large
+Disclaimer: Adding or removing a single bit of data has large
 trade-offs in terms of user privacy and usability to advertisers.
 Browsers should concretely evaluate the trade-offs from these two
 perspectives before setting a limit. As such, this number is subject to
 change based on community feedback. Our encoding scheme should also
-support fractions of bits, as it’s possible to limit metadata to values
+support fractions of bits, as it’s possible to limit data to values
 from 0-5 (~2.6 bits of information)
 
 ### Register a conversion algorithm
@@ -212,7 +216,7 @@ The most recent matching impression is given an `attribution-credit` of value 10
 
 For each matching impression, schedule a report. To schedule a report,
 the browser will store the 
- {reporting origin, conversiondestination domain, impression data, [decoded](#metadata-encoding) conversion-metadata, attribution-credit} for the impression.
+ {reporting origin, conversiondestination domain, impression data, [decoded](#data-encoding) conversion-data, attribution-credit} for the impression.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each impression is only allowed to schedule a maximum of three reports
@@ -253,8 +257,8 @@ the reporting windows (see [Sending Scheduled Reports](#sending-scheduled-report
 
 Note that from a usability perspective, it is important that all
 conversion reports for the same impression are allowed the same amount
-of metadata. Otherwise, it becomes quite difficult for advertisers to
-efficiently use the space of possible metadata values.
+of data. Otherwise, it becomes quite difficult for advertisers to
+efficiently use the space of possible data values.
 
 Sending Scheduled Reports
 -------------------------
@@ -309,33 +313,33 @@ https://reportingorigin/.well-known/register-conversion?impression-data=&convers
 The conversion report data is included as query params as they represent
 non-hierarchical data ([URI RFC](https://tools.ietf.org/html/rfc3986#section-3.4)):
 
--   `impression-data`: 64 bit metadata set on the impression
+-   `impression-data`: 64 bit data set on the impression
 
--   `conversion-metadata`: 3 bit metadata set in the conversion redirect
+-   `conversion-data`: 3 bit data set in the conversion redirect
 
 -   `attribution-credit`: integer in range [0, 100], denotes the percentage of credit this impression received for the given conversion. If a conversion only had one matching impression, this will be 100.
 
 The advertiser site’s eTLD+1 will be added as the Referrer. Note that it
-might be useful to advertise which metadata limits were used in the
+might be useful to advertise which data limits were used in the
 report, but it isn’t included here.
 
 It also may be beneficial to send reports as JSON instead of in the
 report URL. JSON reports could allow this API to leverage the Reporting
 API in the future should it be desirable.
 
-Metadata Encoding
+Data Encoding
 -----------------
 
-Impression metadata and conversion metadata should be encoded the same
+Impression data and conversion data should be encoded the same
 way, and in a way that is amenable to any privacy level a browser would
-want to choose (i.e. the number of distinct metadata states supported).
+want to choose (i.e. the number of distinct data states supported).
 
-Our proposal is to encode the metadata via hexadecimal numbers, and
-interpret them modulo the maximum metadata value. That is, the algorithm
+Our proposal is to encode the data via hexadecimal numbers, and
+interpret them modulo the maximum data value. That is, the algorithm
 takes as input a string and performs the equivalent of:
 
 ```
-function getMetadata(str, max_value) {
+function getData(str, max_value) {
   return (parseInt(str, 16) % max_value).toString(16);
 }
 ```
@@ -391,12 +395,12 @@ impressions on, including `ad-tech.com`, by adding conversion pixels:
 ```
 
 `ad-tech.com` receives this request, and decides to trigger a conversion
-on `toasters.com`. They must compress all of the conversion metadata into
+on `toasters.com`. They must compress all of the conversion data into
 3 bits, so `ad-tech.com` chooses to encode the value as “2” (e.g. some
 bucketed version of the purchase value). They respond with a 302
 redirect to:
 ```
-https://ad-tech.com/.well-known/register-conversion?conversion-metadata=0x2
+https://ad-tech.com/.well-known/register-conversion?conversion-data=0x2
 ```
 
 The browser sees this request, and schedules a conversion report to be
@@ -404,24 +408,24 @@ sent. The conversion report is associated with the 7 day deadline as the
 2 day deadline has passed. Roughly 5 days later, `ad-tech.com` receives
 the following HTTP POST:
 ```
-https://ad-tech.com/.well-known/register-conversion?impression-data=12345678&conversion-metadata=2&attribution-credit=100
+https://ad-tech.com/.well-known/register-conversion?impression-data=12345678&conversion-data=2&attribution-credit=100
 ```
 
 Privacy Considerations
 ======================
 The main privacy goal of the API is to make _linking identity_ between two different top-level sites difficult. This happens when either a request or a Javascript environment has two user IDs from two different sites simultaneously.
 
-In this API, the 64-bit impression ID can encode a user ID from the publisher’s top level site, but the low entropy, noisy conversion metadata could only encode a small part of a user ID from the advertiser’s top-level site. The impression ID and the conversion metadata are never exposed to a Javascript environment together, and the request that includes both of them is sent without credentials and at a different time from either event, so the request adds little new information linkable to these events.
+In this API, the 64-bit impression ID can encode a user ID from the publisher’s top level site, but the low entropy, noisy conversion data could only encode a small part of a user ID from the advertiser’s top-level site. The impression ID and the conversion data are never exposed to a Javascript environment together, and the request that includes both of them is sent without credentials and at a different time from either event, so the request adds little new information linkable to these events.
 
 While this API _does_ allow you to learn "which ad clicks converted", it isn’t enough to link publisher and advertiser identity, unless there is serious abuse of the API, i.e. abusers are using error correcting codes and many clicks to slowly and probabilistically learn advertiser IDs associated with publisher ones. We explore some mitigations to this attack below.
 
 
-Conversion Metadata
+Conversion Data
 -------------------
 
-Conversion metadata is extremely important for critical use-cases like
+Conversion data is extremely important for critical use-cases like
 reporting the *value* of a conversion. However, too much conversion
-metadata could be used to link advertiser identity with publisher
+data could be used to link advertiser identity with publisher
 identity.
 
 Mitigations against this are to provide only coarse information (only a
@@ -508,12 +512,12 @@ Speculative: Adding noise to the conversion event itself
 --------------------------------------------------------
 
 Another way to add privacy to this system is to add noise not only to
-the [reported conversion metadata value](https://github.com/csharrison/conversion-measurement-api#metadata-limits-and-noise),
+the [reported conversion data value](#data-limits-and-noise),
 but also to whether the conversion occurred in the first place. That is:
 
 -   With some probability *p*, true conversions will be dropped
 
--   With some probability *q*, impressions that have not converted will be marked as converted, and given random conversion metadata.
+-   With some probability *q*, impressions that have not converted will be marked as converted, and given random conversion data.
 
 The biggest problem with this scheme is that conversion events are, in
 general, *rare*. Additionally, different advertisers can have wildly
@@ -534,7 +538,7 @@ Multiple Reporting Endpoints Per Conversion
 
 An advertiser may want to send reports to multiple reporting partners at
 the same time. This is very tricky to get right without revealing any
-extra information. Allowing different conversion metadata for different
+extra information. Allowing different conversion data for different
 reporting endpoints makes things even more difficult.
 
 This problem becomes a bit easier if reporting partners mutually trust
