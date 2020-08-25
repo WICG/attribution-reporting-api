@@ -96,6 +96,8 @@ An impression is a [=struct=] with the following items:
 :: An [=url/origin=].
 : <dfn>expiry</dfn>
 :: A point in time.
+: <dfn>impression time</dfn>
+:: A point in time.
 
 </ul>
 
@@ -108,6 +110,8 @@ A conversion is a [=struct=] with the following items:
 :: An [=url/origin=].
 : <dfn>conversion data</dfn>
 :: A [=string=].
+: <dfn>conversion time</dfn>
+:: A point in time.
 
 </ul>
 
@@ -143,7 +147,9 @@ create a new [=impression=] struct whose items are:
 :: The result of [=origin/obtaining a site=] from the result of parsing
     <{a/reportingorigin}> as an origin.
 : [=impression/expiry=]
-:: Be a timestamp <{a/impressionexpiry}> milliseconds in the future
+:: Be a timestamp <{a/impressionexpiry}> milliseconds in the future.
+: [=impression/impression time=]
+:: Be the current time.
 
 TODO: How to store the impression
 
@@ -156,6 +162,8 @@ To <dfn>create a conversion</dfn> from a [=url=]:
 : [=conversion/conversion data=]
 :: The result of applying [=parsing conversion data=] to the value associated with the
     |conversion-data| field in the URL's query part.
+: [=conversion/conversion time=]
+:: Be the current time.
 
 TODO: Formalize how to parse the query similar to URLSearchParams.
 
@@ -188,7 +196,12 @@ the following steps:
 1. Return |encodedOutput|.
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
-TODO
+To <dfn>establish report delivery time</dfn> given an [=impression=] and a
+[=conversion/conversion time=], run the following steps:
+1. Let |timeDelta| be the difference between the [=conversion/conversion time=] and [=impression/impression time=].
+1. If |timeDelta| <= (2 days - 1 hour), return [=impression/impression time=] + 2 days
+1. If |timeDelta| <= (7 days - 1 hour), return [=impression/impression time=] + 7 days
+1. return the [=impression/expiry=]
 
 <h3 algorithm id="queuing-report">Queuing a conversion report</h3>
 TODO
