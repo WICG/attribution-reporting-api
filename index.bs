@@ -199,9 +199,17 @@ the following steps:
 To <dfn>establish report delivery time</dfn> given an [=impression=] and a
 [=conversion/conversion time=], run the following steps:
 1. Let |timeDelta| be the difference between the [=conversion/conversion time=] and [=impression/impression time=].
+2. Let |expiryDelta| be the difference between the [=impression/expiry=] and the [=impression/impression time=]
 1. If |timeDelta| <= (2 days - 1 hour), return [=impression/impression time=] + 2 days
+1. If
+    - |expiryDelta| > (2 days - 1 hour) and
+    - |expiryDelta| < (7 days - 1 hour) and
+    - |timeDelta| <= |expiryDelta|
+
+
+    return the [=impression/expiry=] + 1 hour.
 1. If |timeDelta| <= (7 days - 1 hour), return [=impression/impression time=] + 7 days
-1. return the [=impression/expiry=]
+1. return the [=impression/expiry=] + 1 hour.
 
 <h3 algorithm id="queuing-report">Queuing a conversion report</h3>
 TODO
