@@ -22,7 +22,7 @@ See the explainer on [aggregate measurement](AGGREGATE.md) for a potential exten
   - [Prior Art](#prior-art)
 - [Overview](#overview)
   - [Impression Declaration](#impression-declaration)
-    - [Publisher Controls for Impression Declaration](#publisher-controls-for-impression-declaration)
+    - [Publisher-side Controls for Impression Declaration](#publisher-side-controls-for-impression-declaration)
   - [Conversion Registration](#conversion-registration)
     - [Data limits and noise](#data-limits-and-noise)
     - [Register a conversion algorithm](#register-a-conversion-algorithm)
@@ -132,7 +132,7 @@ An impression will be eligible for reporting if any page on the
 `conversiondestination` domain (advertiser site) registers a conversion to the	
 associated reporting origin.
 
-### Publisher Controls for Impression Declaration
+### Publisher-side Controls for Impression Declaration
 
 In order to prevent arbitrary third parties from registering impressions without the publisher’s knowledge, the Conversion Measurement
 API will need to be enabled in child contexts by a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/):
