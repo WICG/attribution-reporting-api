@@ -360,14 +360,14 @@ cross-origin iframe to host the third party advertisement for
 
 Within the iframe, `toasters.com` code annotates their anchor tags to use
 the `ad-tech.com` reporting origin, and uses impression data that allows
-`ad-tech.com` to identify the ad click (0x12345678)
+`ad-tech.com` to identify the ad click (12345678)
 ```
 <iframe src="https://ad-tech-3p.test/show-some-ad" allow="conversion-reporting ‘src’ (https://ad-tech.com)">
 ...
 <a 
   href="https://toasters.com/purchase"
   conversiondestination="https://toasters.com"
-  impressiondata="0x12345678"
+  impressiondata="12345678"
   reportingorigin="https://ad-tech.com"
   impressionexpiry=604800000>
 ...
@@ -381,7 +381,7 @@ stored:
 
 ```
 {
-  impression-data: 0x12345678,
+  impression-data: 12345678,
   conversion-destination: https://toasters.com,
   reporting-origin: https://ad-tech.com,
   impression-expiry: <now() + 604800>
@@ -402,7 +402,7 @@ on `toasters.com`. They must compress all of the conversion data into
 bucketed version of the purchase value). They respond with a 302
 redirect to:
 ```
-https://ad-tech.com/.well-known/register-conversion?conversion-data=0x2
+https://ad-tech.com/.well-known/register-conversion?conversion-data=2
 ```
 
 The browser sees this request, and schedules a conversion report to be
