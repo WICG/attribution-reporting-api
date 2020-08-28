@@ -111,9 +111,9 @@ Impression attributes:
 
 -   `impressiondata`: the event-level data associated with this impression. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#data-encoding), but the value can vary for browsers that want a higher level of privacy.
 
--   `impressionexpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default will be 7 days, with a maximum value of 30 days. The maximum expiry can also vary between browsers.
+-   `impressionexpiry`: (optional) expiry in milliseconds for when the impression should be deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry can also vary between browsers.
 
--   `reportingorigin`: (optional) the desired endpoint that the conversion report for this impression should go to. Default will be the top level origin of the page.
+-   `reportingorigin`: (optional) the desired endpoint that the conversion report for this impression should go to. Default is the top level origin of the page.
 
 Clicking on an anchor tag that specifies these attributes will log a
 click impression event to storage if the resulting document being
