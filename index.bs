@@ -44,7 +44,7 @@ and conversion registration requests.
 
 # Fetch monkeypatches # {#fetch-monkeypatches}
 
-TODO: Patch into fetch for cancelling requests redirected to the .well-known
+Issue: Patch into fetch for cancelling requests redirected to the .well-known
 conversion domain.
 
 # HTML monkeypatches # {#html-monkeypatches}
@@ -60,23 +60,23 @@ partial interface HTMLAnchorElement {
 };
 </pre>
 
-The <dfn for="a" dfn-type="element-attr">conversiondestination</dfn> is the
+The <dfn for="a" element-attr>conversiondestination</dfn> is the
 declared destination [=scheme-and-registrable-domain=] of the anchor for
 purposes of conversion measurement
 
-The <dfn for="a" dfn-type="element-attr">impressiondata</dfn> is a string
+The <dfn for="a" element-attr>impressiondata</dfn> is a string
 containing information about the `impression tag` and will be supplied in the
 `conversion report`.
 
 The <dfn for="a" element-attr>reportingorigin</dfn> declares the
 intended [=origin=] to send the `conversion report` for this impression.
 
-The <dfn for="a" dfn-type="element-attr">impressionexpiry</dfn> is the amount
+The <dfn for="a" element-attr>impressionexpiry</dfn> is the amount
 of time in milliseconds the impression should be considered for conversion
 measurement and reporting reporting.
 
 
-TODO: Need monkey patches passing impression data in navigation, and a mechanism
+Issue: Need monkey patches passing impression data in navigation, and a mechanism
 for validating the resulting document matches the conversiondestination.
 
 # Structures # {#structures}
@@ -131,37 +131,47 @@ A conversion report is a [=struct=] with the following items:
 
 # Algorithms # {#algorithms}
 
+<h3 algorithm id="parsing-conversion-destination">Parsing a conversion destination</h3>
+
+To <dfn>parse a conversion destination</dfn> from an <{a}> tag |anchor|,
+1. Let |url| be the result of running the [=URL parser=] on the value of
+    the |anchor|'s <{a/conversiondestination}>.
+1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
+    [=url/origin=].
+
 <h3 algorithm id="creating-impression">Activating an impression</h3>
 
 To <dfn>activate an impression</dfn> from an <{a}> tag |anchor|,
+1. Let |currentTime| be the current time.
 1. Let |impression| be a new [=impression=] struct whose items are:
 
 : [=impression/impression source=]
 :: |anchor|'s [=relevant settings object=]'s [=environment/top-level origin=].
 : [=impression/impression data=]
-:: The result of applying [=parsing conversion data=] to |anchor|'s <{a/impressiondata}>
-    attribute.
+:: The result of applying [=parsing conversion data=] to |anchor|'s
+    <{a/impressiondata}> attribute.
 : [=impression/conversion destination=]
-:: The result of parsing <{a/conversiondestination}> as a site.
+:: The result of running [=parse a conversion destination=] on |anchor|.
 : [=impression/reporting endpoint=]
-:: The result of [=obtain a site|obtaining a site=] from the result of parsing
-    <{a/reportingorigin}> as an origin.
+:: The [=url/origin=] of the result of running the [=URL parser=] on the value
+    of |anchor|'s <{a/reportingorigin}> attribute.
 : [=impression/expiry=]
-:: The point in time <{a/impressionexpiry}> milliseconds in the future.
+:: |currentTime| +  <{a/impressionexpiry}> milliseconds.
 : [=impression/impression time=]
-:: The current time.
+:: |currentTime|.
 
-TODO: How to store the impression
+Issue: Need to spec how to store the impression.
 
 <h3 algorithm id="creating-a-conversion">Creating a conversion</h3>
 
-To <dfn>create a conversion</dfn> from a [=url=] |url|:
+To <dfn>create a conversion</dfn> from a [=url=] |url| and a
+    [=environment settings object=] |environment|.
 
 : [=conversion/conversion source=]
-:: The current top-level origin.
+:: |environment|'s [=environment/top-level origin=].
 : [=conversion/conversion data=]
 :: The result of applying [=parsing conversion data=] to the value associated with the
-    |conversion-data| field in the URL's query part.
+    |conversion-data| field of |url|'s query part.
 : [=conversion/conversion time=]
 :: Be the current time.
 
@@ -173,11 +183,18 @@ To <dfn>register a conversion</dfn> from a [=request=] |request|, run the follow
 
 1. If |request|'s [=request/current url's=] [=url/path=] is not `.well-known/register-conversion`,
     return.
-1. If the request's [=request/redirect count=] is less than 1, return.
+1. If |request|'s [=request/redirect count=] is less than 1, return.
+1. Let |previousUrl| be the second to last [=URL=] in |request|'s
+    [=request/URL list=].
+1. If |request|'s [=request/current url's=] [=url/origin=] is not [=same origin=] with
+    |previousUrl|'s [=url/origin=], return.
 1. Let |conversionToRegister| be the result of applying [=create a conversion=] from the
     request's [=request/current url=].
 
-TODO: How to store the conversion
+Note: the restriction to require a redirect is needed to ensure that the
+request's origin is aware and in control of the conversion registration.
+
+Issue: Need to spec how to store the conversion.
 
 <h3 algorithm id="parsing-data">Parsing data fields</h3>
 
@@ -198,18 +215,29 @@ the following steps:
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 The <dfn>report delivery time</dfn> for an [=impression=] |impression| and a
 [=conversion/conversion time=] |conversionTime| is the result of the following steps:
-1. Let |conversionTimeAfterImpression| be the difference between the [=conversion/conversion time=] and [=impression/impression time=].
-2. Let |expiryDelta| be the difference between the [=impression/expiry=] and the [=impression/impression time=]
-1. If |timeDelta| <= (2 days - 1 hour), return [=impression/impression time=] + 2 days
-1. If
+1. Let |conversionTimeAfterImpression| be the difference between the
+    [=conversion/conversion time=] and [=impression/impression time=].
+2. Let |expiryDelta| be the difference between the [=impression/expiry=] and
+    the [=impression/impression time=]
+
+<dl class="switch">
+<dt>If |conversionTimeAfterImpression| <= (2 days - 1 hour)</dt>
+<dd>return [=impression/impression time=] + 2 days.</dd>
+
+<dt>
+If
     - |expiryDelta| > (2 days - 1 hour) and
     - |expiryDelta| < (7 days - 1 hour) and
-    - |timeDelta| <= |expiryDelta|
+    - |conversionTimeAfterImpression| <= |expiryDelta|
+</dt>
+<dd>return the [=impression/expiry=] + 1 hour.</dd>
 
+<dt>If |conversionTimeAfterImpression| <= (7 days - 1 hour)</dt>
+<dd>return [=impression/impression time=] + 7 days</dd>
 
-    return the [=impression/expiry=] + 1 hour.
-1. If |timeDelta| <= (7 days - 1 hour), return [=impression/impression time=] + 7 days
-1. return the [=impression/expiry=] + 1 hour.
+<dt>Otherwise</dt>
+<dd>return the [=impression/expiry=] + 1 hour.</dd>
+</dl>
 
 <h3 algorithm id="queuing-report">Queuing a conversion report</h3>
 TODO
