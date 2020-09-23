@@ -1,13 +1,15 @@
+#!/usr/bin/env python3
+
 import collections
 import random
 
-# This file provides a helper function to denoise reports coming
-# from the event level API (i.e. those where conversion metadata
-# is potentially randomly selected).
+# This file provides a helper function to denoise grous of reports coming
+# from the event level API (i.e. those where conversion metadata is potentially
+# randomly selected).
 
-# TODO(csharrison): This estimator is unbiased, but its variance
-# can be improved if we add bias. This is something we should
-# be able to smoothly trade off with another parameter.
+# TODO(csharrison): This estimator is unbiased, but its variance can be
+# improved if we add bias. This is something we should be able to smoothly
+# trade off with another parameter.
 def corrected_buckets(buckets, noise_probability=.05):
   """Returns a map of conversion bits --> corrected counts
 
@@ -61,6 +63,7 @@ if __name__ == "__main__":
 
   corrected = corrected_buckets(noisy_reports, noise_probability)
 
-  print("Bucket\ttrue count\tnoisy count\tcorrected count")
-  for bucket, count in corrected.items():
-    print("%d\t%d\t%d\t%f.1" % (bucket, example_reports[bucket], noisy_reports[bucket], count))
+  column_names = ["Bucket", "True count", "Noisy count", "Corrected count"]
+  print("{:<20}{:<20}{:<20}{:<20}".format(*column_names))
+  for bucket, count in sorted(corrected.items()):
+    print(f"{bucket:<20}{example_reports[bucket]:<20}{noisy_reports[bucket]:<20}{count:<20.2f}")
