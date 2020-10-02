@@ -149,6 +149,8 @@ The API will be enabled by default in the top-level context and in same-origin c
 
 Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send impression data, reporting origin, and conversion destination to the top level document who can then wrap the iframe in an anchor tag (with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
 
+In order to prevent ads that have not been seen by the user from registering impressions, the Conversion Measurement API should check to see if the ad has been seen by the user before registring the impression.
+
 Conversion Registration
 -----------------------
 
