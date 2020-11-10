@@ -3,12 +3,13 @@
 import collections
 import random
 
-# This file provides a helper function to denoise grous of reports coming
+# This file provides a helper function to correct noisy grous of reports coming
 # from the event level API (i.e. those where conversion metadata is potentially
-# randomly selected).
+# randomly selected). It implements an unbiased estimator for the true counts
+# of conversions for each metadata bucket.
 
 # TODO(csharrison): This estimator is unbiased, but its variance can be
-# improved if we add bias. This is something we should be able to smoothly
+# improved if we allow bias. This is something we should be able to smoothly
 # trade off with another parameter.
 def corrected_buckets(buckets, noise_probability=.05):
   """Returns a map of conversion bits --> corrected counts
