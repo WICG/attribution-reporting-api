@@ -325,7 +325,7 @@ P(Geo(p) == k) = p(1-p)^k
 ```
 
 
-Consider an AggID count R and R’ that are one-sided-dp-neighbors. wlog there is only one such neighbor to consider, where R has count = n + 1 and R’ has count = n. That is, R’ is a one-sided DP neighbor of R because it consists of replacing a sensitive record with its absence.
+Consider an AggID count R and R’ that are one-sided-DP neighbors. Without loss of generality there is only one such neighbor to consider, where R has count = n + 1 and R’ has count = n. That is, R’ is a one-sided DP neighbor of R because it consists of replacing a sensitive record with its absence.
 
 For every x >= 0:
 
