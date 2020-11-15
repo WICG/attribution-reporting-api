@@ -292,8 +292,7 @@ At a high level, this protocol:
 *   If one helper is malicious and colluding with an ad-tech
     *   DP with partial noise for sums of values and credit (helper reveals their noise share added to the sums). 
     *   Internal counts of records associated with each AggID is learned, artificially inflated by the fake records (can be analyzed with some  [flavor of DP](#intermediate-dp-analysis))
-    *   Records that don’t come from the advertised output domain are learned in pseudorandom domain but the aggkey cannot be recovered
-
+    *   Records that don’t come from the advertised output domain are learned in pseudorandom domain but the aggkey cannot be recovered by default. However, malicious input with known ID<sub>eph</sub> values (or secret shares) can still be tracked through the protocol, so a dishonest helper could still learn counts in the clear for AggIDs if they are intentionally left out of the output domain since those AggIDs don't include any fakes. This could be mitigated by also [sampling fakes from the records themselves](#Alternative-sampling-fake-records-directly-from-the-raw-records), or via other (possibly policy-based) enforcement that the output domain must be honest.
 
 ## Intermediate DP analysis
 
