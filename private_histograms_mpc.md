@@ -155,7 +155,7 @@ T = 1 + log(1 / (2 delta)) / eps<sub>count</sub>
 For instance, to achieve eps = 1 and delta = 10^-5, we need a threshold of ~14.
 This threshold is applied to the noisy counts computed above. Since counts are consistent across helpers in this protocol, both helpers should apply thresholds consistently too.
 
-TODO: Reference for this threshold.
+This threshold follows ones stated in Google's differential privacy library ([1](https://github.com/google/differential-privacy/blob/main/common_docs/Delta_For_Thresholding.pdf), [2](https://github.com/google/differential-privacy/blob/862a3052c89f503b7dcd3555eb48df376a409871/go/noise/laplace_noise.go#L88)).
 
 ## Sums of secret shares
 
@@ -169,6 +169,8 @@ One natural choice here is to make sure that the sum of the noise from the two h
 If only a single helper is honest, we should still be able to show DP bounds on the noise added just from sampling the Polyas, but it is an open item to compute this bound. If the privacy is non-ideal we can consider one of the alternatives below.
 
 Note that we will always need to add noise scaled to the sensitivity of the aggregation. i.e. the input to the protocol should bound the maximum value, fixing the _sensitivity_ of the computation.
+
+TODO: DP bounds on difference of Polya.
 
 ### Alternative: Each helper adds Discrete Laplace
 
