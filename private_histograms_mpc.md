@@ -363,6 +363,7 @@ More analysis on this idea is likely needed :)
 
 **Pros**
 *   Does not require pre-sharing the output domain
+*   Provides internal DP privacy on counts for all aggkeys, not just ones in a pre-shared output domain.
 
 **Cons**
 *   Need to introduce fake records proportional to the number of records rather than the number of aggkeys, this introduces more communication and processing cost to the protocol
