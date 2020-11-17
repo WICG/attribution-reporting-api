@@ -201,7 +201,7 @@ We can enhance the API by including a step where the helpers first interact to i
 
 Records will now include a field _credit_ which is split into secret shares summing to 1 if the record is genuine and 0 if it is a record injected from the MPC protocol. This should ensure that fake records are indistinguishable from real records during internal helper processing.
 
-One important point in this new protocol is that we need a domain of aggkeys to sample from, to ensure that the count for each AggID has the same protection (there is an [alternative](#Alternative-sampling-fake-records-directly-from-the-raw-records) below that does not have this requirement). A silver lining here is that by ensuring the output domain is known a priori by the helpers, we don’t need a thresholding step to achieve DP.
+One important point in this new protocol is that we need a domain of aggkeys to sample from, to ensure that the count for each AggID has the same protection (there is an [alternative](#further-refinement-sampling-fake-records-directly-from-the-raw-records) below that does not have this requirement). A silver lining here is that by ensuring the output domain is known a priori by the helpers, we don’t need a thresholding step to achieve DP.
 
 The output domain is communicated to the helpers in a separate message by the server, alongside the raw records.
 
@@ -292,7 +292,7 @@ At a high level, this protocol:
 *   If one helper is malicious and colluding with an ad-tech
     *   DP with partial noise for sums of values and credit (helper reveals their noise share added to the sums). 
     *   Internal counts of records associated with each AggID is learned, artificially inflated by the fake records (can be analyzed with some  [flavor of DP](#intermediate-dp-analysis))
-    *   Records that don’t come from the advertised output domain are learned in pseudorandom domain but the aggkey cannot be recovered by default. However, malicious input with known ID<sub>eph</sub> values (or secret shares) can still be tracked through the protocol, so a dishonest helper could still learn counts in the clear for AggIDs if they are intentionally left out of the output domain since those AggIDs don't include any fakes. This could be mitigated by also [sampling fakes from the records themselves](#Alternative-sampling-fake-records-directly-from-the-raw-records), or via other (possibly policy-based) enforcement that the output domain must be honest.
+    *   Records that don’t come from the advertised output domain are learned in pseudorandom domain but the aggkey cannot be recovered by default. However, malicious input with known ID<sub>eph</sub> values (or secret shares) can still be tracked through the protocol, so a dishonest helper could still learn counts in the clear for AggIDs if they are intentionally left out of the output domain since those AggIDs don't include any fakes. This could be mitigated by also [sampling fakes from the records themselves](#further-refinement-sampling-fake-records-directly-from-the-raw-records), or via other (possibly policy-based) enforcement that the output domain must be honest.
 
 ## Intermediate DP analysis
 
@@ -347,24 +347,20 @@ The output of the refined mechanism can be analyzed based on the DP for sums of 
 One important thing to note is that because our output is the entire shared output domain at the beginning, we can release credit / values for all aggkeys, including those with no true records. That is, we can remove the thresholds and still preserve DP.
 
 
-## Alternative: sampling fake records directly from the raw records
+## Further refinement: Sampling fake records directly from the raw records
 
-If the output domain is _not_ known a priori, we can try to sample fake records from the raw records that are input from the server. That is, we can iterate through all the raw records, and use re-randomization to mint fake records that have the same underlying aggkey.
+The above protocol achieves internal DP only on records whose aggkey shows up in the output domain. However, there is a technique to achieve privacy on all the records regardless on an advertised output domain: We can sample fake records directly from the raw records themselves. That is, we can iterate through all the raw records at the beginning, and use re-randomization to mint fake records that have the same underlying aggkey.
 
 We must be careful when we do this:
 *   We will never generate fake records that aren’t present in the input
 *   The input records will not follow any particular distribution
 
-What this would entail is for us to do something like sample fake records _per raw input record_ according to some distribution. E.g. sampling Geo(p) records would allow us to provide similar one-sided DP bounds on the count of any one record for records with count > 0.
+Practically, this would entail something like sampling Geo(p) records _per raw input record_ to provide similar one-sided DP bounds on the count of any one aggkey with record count > 0. Of course, this comes at a greater communication cost that scales with the size of the input rather than the size of the domain.
 
-For protecting the presence / absence of any aggkey, we will likely need to re-introduce the thresholding step on the count of real records + fake records though this technique will need some investigation. All of the attacks in the original protocol should be mitigated by the internal DP on the counts.
+ The [attack](#attacks-against-this-protocol) in the original protocol should be fully mitigated by the internal DP on the counts achieved with this refinement. Although we don't achieve internal DP on presence/absence of a particular AggID, the original attacks against the protocol are all predicated on the attacker inserting known records to recover the AggID -> aggkey mapping. If the attacker does not have one of these "fingerprinted" records, then the PRF should provide sufficient privacy for presence/absence.
 
-More analysis on this idea is likely needed :)
+Note that this technique is fully additive with the previous protocol that pre-shares an output domain. All it adds is a separate step of adding fake records from the raw records _in addition to_ adding fakes based on the output domain. We would still drop records not included in the output domain at the end and avoid any thresholding step.
 
-**Pros**
-*   Does not require pre-sharing the output domain
-*   Provides internal DP privacy on counts for all aggkeys, not just ones in a pre-shared output domain.
-
-**Cons**
-*   Need to introduce fake records proportional to the number of records rather than the number of aggkeys, this introduces more communication and processing cost to the protocol
-*   Requires thresholding to protect presence / absence of keys
+However, if no output domain is pre-shared, this technique can be used on its own. In that case we would need to protect the presence / absence of any aggkey in the aggregate output. To do this we will need to re-introduce the thresholding step on the count of real records + fake records, though this technique will need some investigation:
+ *  If no output domain is specified, we will need to re-add the aggkey secret shares in a way that still makes the dummy records indistinguishable.
+ *  The exact threshold needed is not clear given the non-traditional way we are adding positive noise.
