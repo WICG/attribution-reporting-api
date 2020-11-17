@@ -201,7 +201,7 @@ We can enhance the API by including a step where the helpers first interact to i
 
 Records will now include a field _credit_ which is split into secret shares summing to 1 if the record is genuine and 0 if it is a record injected from the MPC protocol. This should ensure that fake records are indistinguishable from real records during internal helper processing.
 
-One important point in this new protocol is that we need a domain of aggkeys to sample from, to ensure that the count for each AggID has the same protection (there is an [alternative](#sampling-fake-records-directly-from-the-raw-records) below that does not have this requirement). A silver lining here is that by ensuring the output domain is known a priori by the helpers, we don’t need a thresholding step to achieve DP.
+One important point in this new protocol is that we need a domain of aggkeys to sample from, to ensure that the count for each AggID has the same protection (there is an [alternative](#further-refinement-sampling-fake-records-directly-from-the-raw-records) below that does not have this requirement). A silver lining here is that by ensuring the output domain is known a priori by the helpers, we don’t need a thresholding step to achieve DP.
 
 The output domain is communicated to the helpers in a separate message by the server, alongside the raw records.
 
@@ -292,7 +292,7 @@ At a high level, this protocol:
 *   If one helper is malicious and colluding with an ad-tech
     *   DP with partial noise for sums of values and credit (helper reveals their noise share added to the sums). 
     *   Internal counts of records associated with each AggID is learned, artificially inflated by the fake records (can be analyzed with some  [flavor of DP](#intermediate-dp-analysis))
-    *   Records that don’t come from the advertised output domain are learned in pseudorandom domain but the aggkey cannot be recovered by default. However, malicious input with known ID<sub>eph</sub> values (or secret shares) can still be tracked through the protocol, so a dishonest helper could still learn counts in the clear for AggIDs if they are intentionally left out of the output domain since those AggIDs don't include any fakes. This could be mitigated by also [sampling fakes from the records themselves](#sampling-fake-records-directly-from-the-raw-records), or via other (possibly policy-based) enforcement that the output domain must be honest.
+    *   Records that don’t come from the advertised output domain are learned in pseudorandom domain but the aggkey cannot be recovered by default. However, malicious input with known ID<sub>eph</sub> values (or secret shares) can still be tracked through the protocol, so a dishonest helper could still learn counts in the clear for AggIDs if they are intentionally left out of the output domain since those AggIDs don't include any fakes. This could be mitigated by also [sampling fakes from the records themselves](#further-refinement-sampling-fake-records-directly-from-the-raw-records), or via other (possibly policy-based) enforcement that the output domain must be honest.
 
 ## Intermediate DP analysis
 
