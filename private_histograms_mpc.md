@@ -395,7 +395,7 @@ We must be careful when we do this:
 *   We will never generate fake records that aren’t present in the input
 *   The input records will not follow any particular distribution
 
-Practically, this would entail something like sampling Geo(p) records _per raw input record_ to provide similar one-sided DP bounds on the count of any one aggkey with record count > 0. Of course, this comes at a greater communication cost that scales with the size of the input rather than the size of the domain.
+Practically, this would entail something like sampling Geo(p) records _per raw input record_ to provide similar one-sided DP bounds on the count of any one aggkey with record count > 0. Of course, this comes at a greater communication cost that scales with the size of the input rather than the size of the domain. It also might entail some changes to the protocol to ensure that helpers adding fake records can successfully add their fake shares at the end.
 
  The [attack](#attacks-against-this-protocol) in the original protocol should be fully mitigated by the internal DP on the counts achieved with this refinement. Although we don't achieve internal DP on presence/absence of a particular AggID, the original attacks against the protocol are all predicated on the attacker inserting known records to recover the AggID -> aggkey mapping. If the attacker does not have one of these "fingerprinted" records, then the PRF should provide sufficient privacy for presence/absence.
 
