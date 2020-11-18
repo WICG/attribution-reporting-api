@@ -401,6 +401,7 @@ Practically, this would entail something like sampling Geo(p) records _per raw i
 
 Note that this technique is fully additive with the previous protocol that pre-shares an output domain. All it adds is a separate step of adding fake records from the raw records _in addition to_ adding fakes based on the output domain. We would still drop records not included in the output domain at the end and avoid any thresholding step.
 
-However, if no output domain is pre-shared, this technique can be used on its own. In that case we would need to protect the presence / absence of any aggkey in the aggregate output. To do this we will need to re-introduce the thresholding step on the count of real records + fake records, though this technique will need some investigation:
+However, if no output domain is pre-shared, this technique may still be usable on its own. In that case we would need to protect the presence / absence of any aggkey in the aggregate output. To do this we will need to re-introduce the thresholding step on the count of real records + fake records, though this technique will need some investigation:
  *  If no output domain is specified, we will need to re-add the aggkey secret shares in a way that still makes the dummy records indistinguishable.
  *  The exact threshold needed is not clear given the non-traditional way we are adding positive noise.
+ *  We need a mechanism for helpers knowing which AggIDs to add their inverse dummy shares to
