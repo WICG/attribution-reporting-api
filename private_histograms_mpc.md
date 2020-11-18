@@ -2,6 +2,46 @@
 
 Authors: Charlie Harrison, Mariana Raykova‎
 
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Overview](#overview)
+- [Properties we want to achieve](#properties-we-want-to-achieve)
+- [Primitives and notation](#primitives-and-notation)
+- [First Attempt: Protection via Thresholding + Noise](#first-attempt-protection-via-thresholding--noise)
+  - [Detailed Protocol](#detailed-protocol)
+    - [Step 0: Browser generates encrypted reports, sends to servers](#step-0-browser-generates-encrypted-reports-sends-to-servers)
+    - [Step 1: Setup, decryption, and partial PRF computation](#step-1-setup-decryption-and-partial-prf-computation)
+    - [Step 2: Exchange partial PRFs and compute final PRF](#step-2-exchange-partial-prfs-and-compute-final-prf)
+    - [Step 3: Aggregation](#step-3-aggregation)
+    - [Step 4: Privacy preserving output](#step-4-privacy-preserving-output)
+    - [Step 5: Return data](#step-5-return-data)
+  - [Properties](#properties)
+- [Output DP analysis](#output-dp-analysis)
+  - [Counts](#counts)
+  - [Thresholds](#thresholds)
+  - [Sums of secret shares](#sums-of-secret-shares)
+    - [Alternative: Each helper adds Discrete Laplace](#alternative-each-helper-adds-discrete-laplace)
+    - [Alternative: Each helper samples from Skellam](#alternative-each-helper-samples-from-skellam)
+- [Attacks against this protocol](#attacks-against-this-protocol)
+- [Refinement to the protocol: Protection via intermediate DP](#refinement-to-the-protocol-protection-via-intermediate-dp)
+    - [Step 0: Browser generates encrypted reports, sends to servers](#step-0-browser-generates-encrypted-reports-sends-to-servers-1)
+    - [Step 1: Setup, partial PRF computation, and dummy record insertion](#step-1-setup-partial-prf-computation-and-dummy-record-insertion)
+    - [Step 2: compute final PRF of domain and records](#step-2-compute-final-prf-of-domain-and-records)
+    - [Step 3: Aggregation](#step-3-aggregation-1)
+    - [Step 4: Privacy preserving output](#step-4-privacy-preserving-output-1)
+    - [Step 5: Return data](#step-5-return-data-1)
+  - [Properties](#properties-1)
+  - [Intermediate DP analysis](#intermediate-dp-analysis)
+    - [Epsilon / delta DP](#epsilon--delta-dp)
+    - [One-sided DP](#one-sided-dp)
+  - [Output DP analysis](#output-dp-analysis-1)
+- [Further refinement: Sampling fake records directly from the raw records](#further-refinement-sampling-fake-records-directly-from-the-raw-records)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Overview
 
 **This document describes low level technical details of a system that could implement the high level goals of [SERVICE.md](https://github.com/WICG/conversion-measurement-api/blob/master/SERVICE.md). Go to that doc if you want a higher level picture.**
@@ -347,7 +387,7 @@ The output of the refined mechanism can be analyzed based on the DP for sums of 
 One important thing to note is that because our output is the entire shared output domain at the beginning, we can release credit / values for all aggkeys, including those with no true records. That is, we can remove the thresholds and still preserve DP.
 
 
-## Further refinement: Sampling fake records directly from the raw records
+# Further refinement: Sampling fake records directly from the raw records
 
 The above protocol achieves internal DP only on records whose aggkey shows up in the output domain. However, there is a technique to achieve privacy on all the records regardless on an advertised output domain: We can sample fake records directly from the raw records themselves. That is, we can iterate through all the raw records at the beginning, and use re-randomization to mint fake records that have the same underlying aggkey.
 
