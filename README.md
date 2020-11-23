@@ -120,7 +120,7 @@ Impression attributes:
 
 -   `reportingorigin`: (optional) the desired endpoint that the conversion report for this impression should go to. Default is the top level origin of the page.
 
-Clicking on an anchor tag that specifies these attributes will log create a new impression that will be handled according to [Handling an impression event](#handling-an-impression-event)
+Clicking on an anchor tag that specifies these attributes will create a new impression event that will be handled according to [Handling an impression event](#handling-an-impression-event)
 
 ### Registering impressions for window.open() navigations
 
