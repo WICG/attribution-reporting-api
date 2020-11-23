@@ -152,9 +152,10 @@ At the time window.open() is invoked, if the associated window has a [transient 
 ### Handling an impression event
 
 An impression event will be logged to storage if the resulting document being
-navigated to ends up sharing the conversion destination eTLD+1. Concretely, this
-impression logs <`impressiondata`, `conversiondestination`, `reportingorigin`,
-`impressionexpiry`> to a new browser storage area.
+navigated to ends up sharing the an eTLD+1 with the conversion destination of
+the impression. Concretely, this impression logs <`impressiondata`,
+`conversiondestination`, `reportingorigin`, `impressionexpiry`> to a new
+browser storage area.
 
 When an impression is logged for <`reportingorigin`,
 `conversiondestination`>, existing impressions matching this pair will be
