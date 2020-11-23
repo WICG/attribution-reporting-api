@@ -147,7 +147,7 @@ dictionary ImpressionParams {
 }
 ```
 
-At the time window.open() is invoked, if the associated window must has a [transient activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation), an impression event will be created and handled following [Handling an impression event](#handling-an-impression-event).
+At the time window.open() is invoked, if the associated window has a [transient activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation), an impression event will be created and handled following [Handling an impression event](#handling-an-impression-event).
 
 ### Handling an impression event
 
