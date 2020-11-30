@@ -22,6 +22,9 @@ See the explainer on [aggregate measurement](AGGREGATE.md) for a potential exten
   - [Prior Art](#prior-art)
 - [Overview](#overview)
   - [Impression Declaration](#impression-declaration)
+    - [Registering impressions for anchor tag navigations](#registering-impressions-for-anchor-tag-navigations)
+    - [Registering impressions for window.open() navigations](#registering-impressions-for-windowopen-navigations)
+    - [Handling an impression event](#handling-an-impression-event)
     - [Publisher-side Controls for Impression Declaration](#publisher-side-controls-for-impression-declaration)
   - [Conversion Registration](#conversion-registration)
     - [Data limits and noise](#data-limits-and-noise)
@@ -100,7 +103,9 @@ Overview
 Impression Declaration
 ----------------------
 
-An impression is an anchor tag with special attributes:
+### Registering impressions for anchor tag navigations
+
+An impression tag is an anchor tag with special attributes:
 
 `<a conversiondestination="[eTLD+1]" impressiondata="[string]"
 impressionexpiry=[unsigned long long] reportingorigin="[origin]">`
@@ -115,11 +120,42 @@ Impression attributes:
 
 -   `reportingorigin`: (optional) the desired endpoint that the conversion report for this impression should go to. Default is the top level origin of the page.
 
-Clicking on an anchor tag that specifies these attributes will log a
-click impression event to storage if the resulting document being
-navigated to ends up sharing the conversion destination eTLD+1. A clicked
-impression logs <`impressiondata`, `conversiondestination`, `reportingorigin`,
-`impressionexpiry`> to a new browser storage area.
+Clicking on an anchor tag that specifies these attributes will create a new impression event that will be handled according to [Handling an impression event](#handling-an-impression-event)
+
+### Registering impressions for window.open() navigations
+
+An impression event can be registered for navigations initiated by [`window.open()`](https://html.spec.whatwg.org/multipage/window-object.html#dom-open).
+
+An impression is registered through a new `window.open()` overload:
+
+```
+WindowProxy? open(
+  optional USVString url = "",
+  optional DOMString target = "_blank",
+  optional [LegacyNullToEmptyString] DOMString features = "",
+  optional ImpressionParams impression_params)
+```
+
+`ImpressionParams` is a dictionary which contains the same impression attributes used by impression anchor tags:
+
+```
+dictionary ImpressionParams {
+  required DOMString impressionData;
+  required USVString conversionDestination;
+  optional USVString reportingOrigin;
+  optional unsigned long impressionExpiry;
+}
+```
+
+At the time window.open() is invoked, if the associated window has a [transient activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation), an impression event will be created and handled following [Handling an impression event](#handling-an-impression-event).
+
+### Handling an impression event
+
+An impression event will be logged to storage if the resulting document being
+navigated to ends up sharing the an eTLD+1 with the conversion destination of
+the impression. Concretely, this impression logs <`impressiondata`,
+`conversiondestination`, `reportingorigin`, `impressionexpiry`> to a new
+browser storage area.
 
 When an impression is logged for <`reportingorigin`,
 `conversiondestination`>, existing impressions matching this pair will be
@@ -131,6 +167,7 @@ pending conversion reports for these impressions will still be sent.
 An impression will be eligible for reporting if any page on the	
 `conversiondestination` domain (advertiser site) registers a conversion to the	
 associated reporting origin.
+
 
 ### Publisher-side Controls for Impression Declaration
 
