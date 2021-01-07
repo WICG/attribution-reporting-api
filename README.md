@@ -251,11 +251,11 @@ When the browser receives a conversion registration on a URL matching
 the `conversiondestination` eTLD+1, it looks up all impressions in storage that
 match <`reportingorigin`, `conversiondestination`>.
 
-The most recent matching impression is given an `attribution-credit` of value 100. All other matching impressions are given an `attribution-credit` of value of 0.
+The most recent matching impression is given an `credit` of value 100. All other matching impressions are given an `credit` of value of 0.
 
 For each matching impression, schedule a report. To schedule a report,
 the browser will store the 
- {`reportingorigin`, `conversiondestination` domain, `impressiondata`, [decoded](#data-encoding) conversion-data, attribution-credit} for the impression.
+ {`reportingorigin`, `conversiondestination` domain, `impressiondata`, [decoded](#data-encoding) conversion-data, credit} for the impression.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each impression is only allowed to schedule a maximum of three reports
@@ -272,7 +272,7 @@ To provide additional utility, the browser can choose to provide additional anno
 
 The default attribution model will be last-click attribution, giving the last-clicked impression for a given conversion event all of the credit.
 
-To remain flexible, the browser sends an `attribution-credit` of value 0 to 100 for all conversion reports associated with a single conversion event. This represents the percent of attribution an impression received for a conversion. The sum of credits across a set of reports for one conversion event should equal 100.
+To remain flexible, the browser sends an `credit` of value 0 to 100 for all conversion reports associated with a single conversion event. This represents the percent of attribution an impression received for a conversion. The sum of credits across a set of reports for one conversion event should equal 100.
 
 There are many possible alternatives to this,
 like providing a choice of rules-based attribution models. However, it
@@ -346,7 +346,7 @@ To send a report, the browser will make a non-credentialed (i.e. without session
 HTTP POST request to:
 
 ```
-https://reportingorigin/.well-known/register-conversion?impression-data=&conversion-data=&attribution-credit=
+https://reportingorigin/.well-known/register-conversion?impression-data=&conversion-data=&credit=
 ```
 
 The conversion report data is included as query params as they represent
@@ -356,7 +356,7 @@ non-hierarchical data ([URI RFC](https://tools.ietf.org/html/rfc3986#section-3.4
 
 -   `conversion-data`: 3 bit data set in the conversion redirect
 
--   `attribution-credit`: integer in range [0, 100], denotes the percentage of credit this impression received for the given conversion. If a conversion only had one matching impression, this will be 100.
+-   `credit`: integer in range [0, 100], denotes the percentage of credit this impression received for the given conversion. If a conversion only had one matching impression, this will be 100.
 
 The advertiser site’s eTLD+1 will be added as the Referrer. Note that it
 might be useful to advertise which data limits were used in the
@@ -447,7 +447,7 @@ sent. The conversion report is associated with the 7 day deadline as the
 2 day deadline has passed. Roughly 5 days later, `ad-tech.com` receives
 the following HTTP POST:
 ```
-https://ad-tech.com/.well-known/register-conversion?impression-data=12345678&conversion-data=2&attribution-credit=100
+https://ad-tech.com/.well-known/register-conversion?impression-data=12345678&conversion-data=2&credit=100
 ```
 
 Privacy Considerations
