@@ -1,4 +1,5 @@
-Event-Level Attribution Measurement API Explainer
+
+Click Through Attribution Reporting API Explainer
 ============
 
 This document is an explainer for a potential new web platform feature
@@ -166,11 +167,10 @@ associated reporting origin.
 
 ### Publisher-side Controls for Source Declaration
 
-In order to prevent arbitrary third parties from registering sources without the publisher’s knowledge, the Attribution Measurement
-API will need to be enabled in child contexts by a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/):
+In order to prevent arbitrary third parties from registering sources without the publisher’s knowledge, the Attribution Reporting API will need to be enabled in child contexts by a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/):
 
 ```
-<iframe src="https://advertiser.test" allow="attribution-measurement ‘src’">
+<iframe src="https://advertiser.test" allow="attribution-reporting ‘src’">
 
 <a … id="impressionTag" attributionreportto="https://ad-tech.com"></a>
 
@@ -187,15 +187,14 @@ Triggering Attribution
 This API will use a mechanism for triggering attribution similar to the
 [Ad Click Attribution Proposal](https://wicg.github.io/ad-click-attribution/index.html#legacytriggering).
 
-Attribution must be triggered on an page . Attribution is
+Attribution triggering is meant to occur on `attributeon` pages. Attribution is
 triggered for a given `reportto` origin on a given `attributeon` through an HTTP GET to
 the origin, that redirects to a [.well-known](https://tools.ietf.org/html/rfc5785)
 location.
-This redirect is useful, because this mechanism enables the reporting origin to make server-side decisions about when attribution
-reports should trigger.
+This redirect is useful, because this mechanism enables the reporting origin to make server-side decisions about when attribution reports should trigger.
 Note that `.well-known` is only used to register a path that the browser will understand; it shouldn't point to any actual resource, since the request will be cancelled internally.
 
-Triggering attribution requires the `attribution-measurement` Feature Policy to be enabled in the context the request is made. As described in [Publisher Controls for Source Declaration](#publisher-side-controls-for-source-declaration), this Feature Policy will be enabled by default in the top-level context and in same-origin children, but disabled in cross-origin children.
+Triggering attribution requires the `attribution-reporting` Feature Policy to be enabled in the context the request is made. As described in [Publisher Controls for Source Declaration](#publisher-side-controls-for-source-declaration), this Feature Policy will be enabled by default in the top-level context and in same-origin children, but disabled in cross-origin children.
 
 Today, conversion pixels are frequently used to register conversions on
 advertiser pages. These can be repurposed to trigger attribution in
@@ -390,7 +389,7 @@ Within the iframe, `toasters.com` code annotates their anchor tags to use
 the `ad-tech.com` reporting origin, and uses a source data value that allows
 `ad-tech.com` to identify the ad click (12345678)
 ```
-<iframe src="https://ad-tech-3p.test/show-some-ad" allow="attribution-measurement ‘src’ (https://ad-tech.com)">
+<iframe src="https://ad-tech-3p.test/show-some-ad" allow="attribution-reporting ‘src’ (https://ad-tech.com)">
 ...
 <a 
   href="https://toasters.com/purchase"
