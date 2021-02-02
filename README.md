@@ -130,7 +130,7 @@ WindowProxy? open(
   optional AttributionSourceParams attribution_source_params)
 ```
 
-`AttributionSourceParams` is a dictionary which contains the same attributes used by attribution source anchor tag:
+`AttributionSourceParams` is a dictionary which contains the same attributes used by attribution source anchor tags:
 
 ```
 dictionary AttributionSourceParams {
