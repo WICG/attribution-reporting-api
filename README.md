@@ -170,7 +170,7 @@ In order to prevent arbitrary third parties from registering sources without the
 ```
 <iframe src="https://advertiser.test" allow="attribution-reporting ‘src’">
 
-<a … id="impressionTag" attributionreportto="https://ad-tech.com"></a>
+<a … id="..." attributionreportto="https://ad-tech.com"></a>
 
 </iframe>
 ```
