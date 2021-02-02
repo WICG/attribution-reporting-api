@@ -238,7 +238,7 @@ from 0-5 (~2.6 bits of information)
 
 ### Trigger attribution algorithm
 
-When the browser receives a attriubtion trigger redirect on a URL matching
+When the browser receives a attribution trigger redirect on a URL matching
 the `attributeon` eTLD+1, it looks up all sources in storage that
 match <`attributionreportto`, `attributeon`>.
 
