@@ -466,7 +466,7 @@ data could be used to link advertiser identity with publisher
 identity.
 
 Mitigations against this are to provide only coarse information (only a
-few bits at a time), and introduce some noise to the trigger-data. Even
+few bits at a time), and introduce some noise to the trigger data. Even
 sophisticated attackers will therefore need to invoke the API many times
 (through many clicks) to join identity between sites with high
 confidence.
