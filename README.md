@@ -554,7 +554,7 @@ but also to whether attribution was triggered in the first place. That is:
 
 -   With some probability *q*, sources that have not been triggered will be triggered, and given random `trigger-data`.
 
-The biggest problem with this scheme is that triggering attribution sources, in
+The biggest problem with this scheme is that attribution trigger events are, in
 general, *rare*. Additionally, different advertisers can have wildly
 different *attribution rates*. These two facts make it very hard to pick
 a *q* that works reliably without drowning out the signal with noise.
