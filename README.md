@@ -242,7 +242,7 @@ When the browser receives a attribution trigger redirect on a URL matching
 the `attributeon` eTLD+1, it looks up all sources in storage that
 match <`attributionreportto`, `attributeon`>.
 
-The most recent matching source is given a `credit` of value 100. All other matching sources are given a `credit` of value of 0.
+The most recent matching source is given a `credit` of value 100. All other matching sources are given a `credit` of value 0.
 
 For each matching source, schedule a report. To schedule a report,
 the browser will store
