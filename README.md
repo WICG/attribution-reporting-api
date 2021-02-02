@@ -51,13 +51,11 @@ Glossary
 
 -   **Advertiser**: Purchaser of ad slots, conversions happen on advertiser sites
 
--   **Impression**: Click/view of an ad, equivalent to an attribution source.
-
 -   **Conversion**: The completion of a meaningful (advertiser specified) user action on the advertiser's web site by a user who has previously interacted with an ad from that advertiser.
 
 -   **Event-level data**: Data that can be tied back to a specific low-level event; not aggregated
 
--   **Click-through-conversion (CTC)**: A conversion attributed to an impression that was clicked
+-   **Click-through-conversion (CTC)**: A conversion attributed to an ad click
 
 Motivation
 ----------
