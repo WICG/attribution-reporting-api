@@ -186,7 +186,7 @@ This API will use a mechanism for triggering attribution similar to the
 [Ad Click Attribution Proposal](https://wicg.github.io/ad-click-attribution/index.html#legacytriggering).
 
 Attribution triggering is meant to occur on `attributeon` pages. Attribution is
-triggered for a given `reportto` origin on a given `attributeon` through an HTTP GET to
+triggered for a given `reportto` origin on a given `attributeon` page through an HTTP GET to
 the origin, that redirects to a [.well-known](https://tools.ietf.org/html/rfc5785)
 location.
 This redirect is useful, because this mechanism enables the reporting origin to make server-side decisions about when attribution reports should trigger.
