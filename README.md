@@ -439,7 +439,7 @@ body:
 {
   "sourceData": "12345678",
   "triggerData": "2",
-  "creidt": 100
+  "credit": 100
 }
 ```
 
