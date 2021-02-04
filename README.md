@@ -205,7 +205,7 @@ to trigger attribution for all matching sources.
 The browser will treat redirects to a URL of the form:
 `https://<attributionreportto>/.well-known/trigger-attribution[?data=<data>]`
 
-as a special request, where optional data associated with the event that trigged attrbution is stored in a query parameter.
+as a special request, where optional data associated with the event that triggered attribution is stored in a query parameter.
 
 When the special redirect is detected, the browser will schedule an attribution
 report as detailed in [Trigger attribution algorithm](#trigger-attribution-algorithm).
