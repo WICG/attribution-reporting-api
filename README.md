@@ -237,8 +237,8 @@ In any case, noise values should be allowed to vary between browsers.
 
 Disclaimer: Adding or removing a single bit of data has large
 trade-offs in terms of user privacy and usability to advertisers: 
-* Less bits is more private but less usable to avertisers
-* More bits is less private but more usable to avertisers.
+* Less bits is more private but less usable to advertisers
+* More bits is less private but more usable to advertisers.
 Browsers should concretely evaluate the trade-offs from these two
 perspectives before setting a limit. As such, this number is subject to
 change based on community feedback. Our encoding scheme should also
