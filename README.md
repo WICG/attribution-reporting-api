@@ -337,7 +337,7 @@ https://attributionreportto/.well-known/report-attribution
 
 The report data is included in the request body as a JSON object with the following keys:
 
--   `source_data`: 64 bit data set on the attribution source
+-   `source_event_id`: 64 bit event id set on the attribution source
 
 -   `trigger_data`: 3 bit data set in the attribution trigger redirect
 
@@ -437,8 +437,8 @@ https://ad-tech.com/.well-known/report-attribution
 
 body:
 {
-  "sourceData": "12345678",
-  "triggerData": "2",
+  "source_event_id": "12345678",
+  "trigger_data": "2",
   "credit": 100
 }
 ```
