@@ -221,7 +221,7 @@ noise applied — that is, with 5% chance, we send a random 3 bits, and the
 other 95% of the time we send the real trigger data. See
 [privacy considerations](#trigger-data) for more information,
 including speculative thoughts on the hard question of going farther
-and [adding noise to whether or not the attribution report is even sent](https://github.com/csharrison/conversion-measurement-api#speculative-adding-noise-to-the-attribution-report-itself).
+and [adding noise to whether or not the attribution report is even sent](#speculative-adding-noise-to-the-attribution-of-the-source-itself).
 In any case, noise values should be allowed to vary between browsers.
 
 Disclaimer: Adding or removing a single bit of data has large
