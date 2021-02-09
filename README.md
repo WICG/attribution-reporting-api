@@ -101,14 +101,14 @@ Attribution Source Declaration
 
 An attribution source is an anchor tag with special attributes:
 
-`<a attributeon="[eTLD+1]" attributionsourceeventid="[string]"
+`<a attributeon="[eTLD+1]" attributionsourceeventid=[unsigned long long]
 attributionexpiry=[unsigned long long] attributionreportto="[origin]">`
 
 Attribution source attributes:
 
 -   `attributeon`: the eTLD+1 where attribution will be triggered for this source. 
 
--   `attributionsourceeventid`: the event-level data associated with this source. This will be limited to 64 bits of information, [encoded as a hexadecimal string](#data-encoding), but the value can vary for browsers that want a higher level of privacy.
+-   `attributionsourceeventid`: the event-level data associated with this source. This will be limited to 64 bits of information but the value can vary for browsers that want a higher level of privacy.
 
 -   `attributionexpiry`: (optional) expiry in milliseconds for when the source should be deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry can also vary between browsers.
 
@@ -354,17 +354,17 @@ API in the future should it be desirable.
 Data Encoding
 -----------------
 
-The source event id and trigger data should be encoded the same
-way, and in a way that is amenable to any privacy level a browser would
-want to choose (i.e. the number of distinct data states supported).
+The source event id and trigger data should be in a way that is amenable
+to any privacy level a browser would want to choose (i.e. the number of
+distinct data states supported).
 
-Our proposal is to encode the data via hexadecimal numbers, and
-interpret them modulo the maximum data value. That is, the algorithm
-takes as input a string and performs the equivalent of:
+The input values will be 64 bit integers which the browser will interpret
+modulo its maximum data value chosen by the browser. The browser
+will take the input and performs the equivalent of:
 
 ```
-function getData(str, max_value) {
-  return (parseInt(str, 16) % max_value).toString(16);
+function getData(input, max_value) {
+  return input % max_value;
 }
 ```
 
