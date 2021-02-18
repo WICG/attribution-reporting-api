@@ -199,11 +199,11 @@ this API:
 ```
 <img src="https://ad-tech.test/conversiontracker"/>
 ```
-`https://ad-tech.test/conversiontracker` can be redirected to `https://ad-tech.test/.well-known/trigger-attribution`
+`https://ad-tech.test/conversiontracker` can be redirected to `https://ad-tech.test/.well-known/attribution-reporting/trigger-attribution`
 to trigger attribution for all matching sources.
 
 The browser will treat redirects to a URL of the form:
-`https://<attributionreportto>/.well-known/trigger-attribution[?data=<data>]`
+`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?data=<data>]`
 
 as a special request, where optional data associated with the event that triggered attribution is stored in a query parameter.
 
@@ -332,7 +332,7 @@ To send a report, the browser will make a non-credentialed (i.e. without session
 HTTP POST request to:
 
 ```
-https://attributionreportto/.well-known/report-attribution
+https://attributionreportto/.well-known/attribution-reporting/report-attribution
 ```
 
 The report data is included in the request body as a JSON object with the following keys:
@@ -424,7 +424,7 @@ on `toasters.com`. They must compress all of the data into
 bucketed version of the purchase value). They respond with a 302
 redirect to:
 ```
-https://ad-tech.com/.well-known/trigger-attribution?data=2
+https://ad-tech.com/.well-known/attribution-reporting/trigger-attribution?data=2
 ```
 
 The browser sees this request, and schedules a report to be
@@ -433,7 +433,7 @@ sent. The report is associated with the 7 day deadline as the
 the following HTTP POST:
 ```
 URL:
-https://ad-tech.com/.well-known/report-attribution
+https://ad-tech.com/.well-known/attribution-reporting/report-attribution
 
 body:
 {
