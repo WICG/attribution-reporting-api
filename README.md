@@ -244,7 +244,7 @@ The most recent matching source is given a `credit` of value 100. All other matc
 
 For each matching source, schedule a report. To schedule a report,
 the browser will store
- {`attributionreportto`, `attributiondestination` domain, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, credit} for the source.
+ {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, credit} for the source.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each source is only allowed to schedule a maximum of three reports
