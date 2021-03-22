@@ -101,12 +101,12 @@ Attribution Source Declaration
 
 An attribution source is an anchor tag with special attributes:
 
-`<a attributeon="[eTLD+1]" attributionsourceeventid=[unsigned long long]
+`<a attributiondestination="[eTLD+1]" attributionsourceeventid=[unsigned long long]
 attributionexpiry=[unsigned long long] attributionreportto="[origin]">`
 
 Attribution source attributes:
 
--   `attributeon`: the eTLD+1 where attribution will be triggered for this source. 
+-   `attributiondestination`: an origin whose eTLD+1 is where attribution will be triggered for this source. 
 
 -   `attributionsourceeventid`: the event-level data associated with this source. This will be limited to 64 bits of information but the value can vary for browsers that want a higher level of privacy.
 
@@ -135,7 +135,7 @@ WindowProxy? open(
 ```
 dictionary AttributionSourceParams {
   required DOMString attributionSourceEventId;
-  required USVString attributeOn;
+  required USVString attributionDestination;
   optional USVString attributionReportTo;
   optional unsigned long attributionExpiry;
 }
@@ -146,19 +146,19 @@ At the time window.open() is invoked, if the associated window has a [transient 
 ### Handling an attribution source event
 
 An attribution source event will be logged to storage if the resulting document being
-navigated to ends up sharing the an eTLD+1 with the `attributeon` origin. Concretely, this logs <`attributionsourceeventid`,
-`attributeon`, `attributionreportto`, `attributionexpiry`> to a new
+navigated to ends up sharing the an eTLD+1 with the `attributionDestination` origin. Concretely, this logs <`attributionsourceeventid`,
+`attributiondestination`, `attributionreportto`, `attributionexpiry`> to a new
 browser storage area.
 
 When a source is logged for <`attributionreportto`,
-`attributeon`>, existing sources matching this pair will be
+`attributiondestination`>, existing sources matching this pair will be
 looked up in storage. If the matching sources have been triggered at
 least once (i.e. have scheduled a report), they will be removed from
 browser storage and will not be eligible for further reporting. Any
 pending reports for these sources will still be sent.
 
 An attribution source will be eligible for reporting if any page on the	
-`attributeon` eTLD+1 (advertiser site) triggers attribution for the	
+`attributiondestination` eTLD+1 (advertiser site) triggers attribution for the	
 associated reporting origin.
 
 
@@ -176,7 +176,7 @@ In order to prevent arbitrary third parties from registering sources without the
 
 The API will be enabled by default in the top-level context and in same-origin children. Any script running in these contexts can declare a source with any reporting origin. Publishers who wish to explicitly disable the API for all parties can do so via an [HTTP header](https://w3c.github.io/webappsec-feature-policy/#feature-policy-http-header-field).
 
-Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send the `attributionsourceeventid`, `attributionreportto`, `attributeon` values to the top level document who can then wrap the iframe in an anchor tag (with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
+Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send the `attributionsourceeventid`, `attributionreportto`, `attributiondestination` values to the top level document who can then wrap the iframe in an anchor tag (with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
 
 Triggering Attribution
 -----------------------
@@ -184,7 +184,7 @@ Triggering Attribution
 This API will use a mechanism for triggering an attribution source similar to the
 [Ad Click Attribution Proposal](https://wicg.github.io/ad-click-attribution/index.html#legacytriggering).
 
-Attribution can only be triggered for a source on a page whose eTLD+1 matches the eTLD+1 of the site provided in `attributeon`.  A source can be triggered through an HTTP GET to
+Attribution can only be triggered for a source on a page whose eTLD+1 matches the eTLD+1 of the site provided in `attributiondestination`.  A source can be triggered through an HTTP GET to
 its `attributionreportto` origin, that redirects to a [.well-known](https://tools.ietf.org/html/rfc5785)
 location.
 This redirect is useful, because this mechanism enables the reporting origin to make server-side decisions about when attribution reports should trigger.
@@ -237,14 +237,14 @@ from 0-5 (~2.6 bits of information)
 ### Trigger attribution algorithm
 
 When the browser receives a attribution trigger redirect on a URL matching
-the `attributeon` eTLD+1, it looks up all sources in storage that
-match <`attributionreportto`, `attributeon`>.
+the `attributiondestination` eTLD+1, it looks up all sources in storage that
+match <`attributionreportto`, `attributiondestination`>.
 
 The most recent matching source is given a `credit` of value 100. All other matching sources are given a `credit` of value 0.
 
 For each matching source, schedule a report. To schedule a report,
 the browser will store
- {`attributionreportto`, `attributeon` domain, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, credit} for the source.
+ {`attributionreportto`, `attributiondestination` domain, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, credit} for the source.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each source is only allowed to schedule a maximum of three reports
@@ -388,7 +388,7 @@ the `ad-tech.com` reporting origin, and uses a source event id value that allows
 ...
 <a 
   href="https://toasters.com/purchase"
-  attributeon="https://toasters.com"
+  attributiondestination="https://toasters.com"
   attributionsourceeventid="12345678"
   attributionreportto="https://ad-tech.com"
   attributionexpiry=604800000>
@@ -398,13 +398,13 @@ the `ad-tech.com` reporting origin, and uses a source event id value that allows
 
 A user clicks on the ad and this opens a window that lands on a URL to
 `toasters.com/purchase`. An attribution source is logged to browser storage
-since the landing page matches the `attributeon` eTLD+1. The following data is
+since the landing page matches the `attributiondestination` eTLD+1. The following data is
 stored:
 
 ```
 {
   attributionsourceeventid: 12345678,
-  attributeon: https://toasters.com,
+  attributiondestination: https://toasters.com,
   attributionreportto: https://ad-tech.com,
   attributionexpiry: <now() + 604800>
 }
