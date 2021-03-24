@@ -167,7 +167,7 @@ associated reporting origin.
 In order to prevent arbitrary third parties from registering sources without the publisher’s knowledge, the Attribution Reporting API will need to be enabled in child contexts by a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/):
 
 ```
-<iframe src="https://advertiser.test" allow="attribution-reporting ‘src’">
+<iframe src="https://advertiser.test" allow="attribution-reporting 'src'">
 
 <a … id="..." attributionreportto="https://ad-tech.com"></a>
 
