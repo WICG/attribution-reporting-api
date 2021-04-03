@@ -49,7 +49,7 @@ TODO: Design for view-through attribution is still TBD, with some initial API su
 
 To register clicks from apps, we can send an ACTION_VIEW Intent with some extra parameters to configure the API. The extra parameters are embedded within a [PendingIntent](https://developer.android.com/reference/android/app/PendingIntent) the browser will self-fire.
 
-```
+```java
 // After an ad click, in response to some InputEvent `inputEvent`
 
 // Craft the inner intent which the user's browser will self-fire. Set the
@@ -97,7 +97,7 @@ startActivity(outerIntent);
 
 Views won't necessarily start the browser with an intent, so we can use a [ContentProvider](https://developer.android.com/reference/android/content/ContentProvider) to communicate events the browser.
 
-```
+```java
 // After an ad view. Parameters for event-level API only.
 ContentValues newValues = new ContentValues();
 newValues.put("attributionSourceEventId", 123456);
