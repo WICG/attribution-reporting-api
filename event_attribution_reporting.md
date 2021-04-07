@@ -127,7 +127,7 @@ Note: Since conversion rates in practice are extremely rare events, we need to b
 
 ### Limiting the number of unique sites covered by pending sources
 
-To limit the breadth of `attributiondestination` sites that a `reportingorigin` may be trying to measure user visits on, the browser can limit the number `attributiondestination` eTLD+1s represented by pending sources for a publisher.
+To limit the breadth of `attributiondestination` sites that a `reportingorigin` may be trying to measure user visits on, the browser can limit the number `attributiondestination` eTLD+1s represented by pending sources for a source-site.
 
 The browser can place a limit on the number of a source site's pending source's unique `attributiondestination`s. When an attribution source is registered for an eTLD+1 that is not already in the pending sources and a source site is at its limit, the browser will delete the oldest pending attribution source from the source site. If after deleting the oldest source, the source site is still at its limit, the browser will continue to delete pending sources until it is able to make room for the newly registered source.
 
