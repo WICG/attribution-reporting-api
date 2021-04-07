@@ -1,18 +1,26 @@
 
-Click Through Attribution Reporting API Explainer
+Attribution Reporting API Explainer
 ============
 
 This document is an explainer for a potential new web platform feature
-which allows for measuring and reporting ad click conversions.
+which allows for measuring and reporting ad conversions.
 
-(Name probably needs bikeshedding)
+This README focuses on attribution reporting for **click-through conversions**, at an **event**'s level. 
+Extended functionality on top of this is being considered: 
 
-See the explainer on [aggregate measurement](AGGREGATE.md) for a potential extension on top of this.
+* [Aggregate Attribution Reporting](AGGREGATE.md)
+* [App-to-web Attribution Reporting](app_to_web.md)
+
+_For an overview of the changes on this API over time, see [CHANGES.md](CHANGES.md)._
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
+  - [Glossary](#glossary)
+  - [Motivation](#motivation)
+  - [Prior Art](#prior-art)
+- [Attribution Reporting API Explainer](#attribution-reporting-api-explainer)
   - [Glossary](#glossary)
   - [Motivation](#motivation)
   - [Prior Art](#prior-art)
