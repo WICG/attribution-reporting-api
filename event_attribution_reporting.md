@@ -60,7 +60,7 @@ Event sources will only be able to generate a single attribution report, compare
 
 Event sources will have their `attributionexpiry` rounded to the nearest whole day.
 
-The `attributionexpiry` of a source can be used to associate attributionsourceeventids with a coarse trigger side timestamp. Because event sources are easier to register en masse than navigation sources, it would allow a reporting origin to do this with a finer granularity.
+The `attributionexpiry` of a source can be used to associate `attributionsourceeventid`s with a coarse trigger side timestamp. Because event sources are easier to register en masse than navigation sources, it would allow a reporting origin to do this with a finer granularity.
 
 
 ### Noise on the attribution triggering event
@@ -85,7 +85,7 @@ To provide additional utility in prioritizing the distribution of credit between
 
 When a trigger redirect is received, the browser will find the matching source with highest `attributionsourcepriority` value and generate a report. The other sources will not generate reports.
 
-If reports were sent for these sources, it would be possible for `reportingorigin` to use these other reports to remove the noise on the attribution triggering event. 
+If reports were sent for these sources, it would be possible for `reportingorigin` to use these other reports to remove the noise on the attribution triggering event, unless we introduced a mechanism to noise the sources dependently on others. 
 
 
 ### Single Reporting Window
@@ -113,7 +113,7 @@ The number of reporting windows is another vector which can contain trigger side
 
 ## Browsing history reconstruction
 
-Reporting attribution without a pre-existing navigation allows the `reportingorigin` to learn whether a given user on the source site visited the attributiondestination site at all. In the Click through API, this is not an issue because the `reportingorigin` knows a priori the user was navigating to attributiondestination.
+Reporting attribution without a pre-existing navigation allows the `reportingorigin` to learn whether a given user on the source site visited the `attributiondestination` site at all. For click-through reports, this is not an issue because the `reportingorigin` knows a priori the user was navigating to `attributiondestination`.
 
 This new threat is/can be mitigated in a number of ways:
 
@@ -127,10 +127,10 @@ Note: Since conversion rates in practice are extremely rare events, we need to b
 
 ### Limiting the number of unique sites covered by pending sources
 
-To limit the breadth of attributiondestination sites that a `reportingorigin` may be trying to measure user visits on, the browser can limit the number attributiondestination eTLD+1s represented by pending sources for a publisher.
+To limit the breadth of `attributiondestination` sites that a `reportingorigin` may be trying to measure user visits on, the browser can limit the number `attributiondestination` eTLD+1s represented by pending sources for a publisher.
 
-The browser can place a limit on the number of a source site's pending source's unique attributiondestinations. When an attribution source is registered for an eTLD+1 that is not already in the pending sources and a source site is at its limit, the browser will delete the oldest pending attribution source from the source site. If after deleting the oldest source, the source site is still at its limit, the browser will continue to delete pending sources until it is able to make room for the newly registered source.
+The browser can place a limit on the number of a source site's pending source's unique `attributiondestination`s. When an attribution source is registered for an eTLD+1 that is not already in the pending sources and a source site is at its limit, the browser will delete the oldest pending attribution source from the source site. If after deleting the oldest source, the source site is still at its limit, the browser will continue to delete pending sources until it is able to make room for the newly registered source.
 
-The lower this value, the harder it is for a `reportingorigin` to use the API to try and measure user browsing activity not associated with ads being shown. Browsers may choose parameters on the number of attributiondestinations to make their own tradeoffs for privacy and utility.
+The lower this value, the harder it is for a `reportingorigin` to use the API to try and measure user browsing activity not associated with ads being shown. Browsers may choose parameters on the number of `attributiondestination`s to make their own tradeoffs for privacy and utility.
 
-Because this limit is per source site, it is possible for different reportingorigins on a site to push the other attribution sources out of the browser. To limit abuse by potentially bad actors, the browser could consider adding a publisher side configuration which could partition this queue into smaller queues managed per reportingorigin.
+Because this limit is per source site, it is possible for different `reportingorigin`s on a site to push the other attribution sources out of the browser. To limit abuse by potentially bad actors, the browser could consider adding a source-site side configuration which could partition this queue into smaller queues managed per `reportingorigin`.
