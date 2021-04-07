@@ -24,7 +24,7 @@ This proposal does not attempt to support attribution across devices that span m
 
 ### Opting-in to cross-device attribution
 
-*   On attribution sources, a new anchor element `crossdevice` will tag the source as eligible for cross device attribution.
+*   On attribution sources, a new anchor element attribute `crossdevice` will tag the source as eligible for cross device attribution.
 *   On attribution triggers, a new query param `cross-device={0,1}` will tag the trigger as eligible for cross device attribution.
 
 Events that are eligible for cross device attribution will be broadcast to all the connected devices, or synchronized in some way such that all the devices will have a unified view.
