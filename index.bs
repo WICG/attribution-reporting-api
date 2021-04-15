@@ -61,8 +61,8 @@ partial interface HTMLAnchorElement {
 </pre>
 
 The <dfn for="a" element-attr>attributiondestination</dfn> is an [=url/origin=]
-which declares the intended final navigation url resulting from executing
-<a spec="html">follow the hyperlink</a> on the <{a}> element.
+which declares the intended final navigation url resulting from running
+<a spec="html">follow the hyperlink</a> with the <{a}> element.
 
 Note: This origin does not need to match the exact final origin of the navigation. 
 However, this navigation and the final navigation url have to produce the same result when
@@ -122,7 +122,7 @@ An attribution trigger is a [=struct=] with the following items:
 
 <h3 dfn-type=dfn>Attribution report</h3>
 
-A attribution report is a [=struct=] with the following items:
+An attribution report is a [=struct=] with the following items:
 
 <dl dfn-for="attribution report">
 : <dfn>event id</dfn>
@@ -155,7 +155,7 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
     : [=attribution source/source origin=]
     :: |anchor|'s [=relevant settings object=]'s [=environment/top-level origin=].
     : [=attribution source/event id=]
-    :: The result of executing [=parsing attribution data=] with |anchor|'s
+    :: The result of running [=parse attribution data=] with |anchor|'s
         <{a/attributionsourceeventid}> attribute and [=max event id value=].
     : [=attribution source/attribution destination=]
     :: The result of running [=parse an attribution destination=] with |anchor|'s <{a/attributiondestination}> attribute.
@@ -181,7 +181,7 @@ with the items:
     : [=attribution trigger/trigger origin=]
     :: |environment|'s [=environment/top-level origin=].
     : [=attribution trigger/trigger data=]
-    :: The result of applying [=parsing attribution data=] with the value associated with the
+    :: The result of applying [=parse attribution data=] with the value associated with the
         `"data"` field of |url|'s [=url/query=] and the user agent's [=max trigger data value=].
     : [=attribution trigger/trigger time=]
     :: The current time.
@@ -211,14 +211,13 @@ To <dfn>trigger attribution</dfn> from a [=request=] |request|, run the followin
 
 1. Issue: Need to spec how to store |trigger|.
 
-<h3 algorithm id="parsing-data">Parsing data fields</h3>
+<h3 algorithm id="parse-attribution-data">Parsing data fields</h3>
 
 This section defines how to parse and extract both
-[=attribution source/event id=] and [=attribution trigger/trigger data=] from a
-[=string=] |input| and a unsigned long long |maxData|.
+[=attribution source/event id=] and [=attribution trigger/trigger data=].
 
-<dfn>Parsing attribution data</dfn> from |input| with |maxData| returns the result of
-the following steps:
+To <dfn>Parse attribution data</dfn> given a [=string=] |input|, and an unsigned long long
+|maxData| returns the result of the following steps:
 
 1. Let |decodedInput| be the result of decoding |input| as a base-10 integer.
 1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by
