@@ -66,7 +66,7 @@ which declares the intended final navigation url resulting from running
 
 Note: This origin does not need to match the exact final origin of the navigation. 
 However, this navigation and the final navigation url have to produce the same result when
-passed to [=obtain a site=]
+passed to [=obtain a site=].
 
 The <dfn for="a" element-attr>attributionsourceeventid</dfn> is a string
 containing information about the `attribution source` and will be supplied in the
@@ -78,13 +78,10 @@ intended [=origin=] to send the [=attribution report=] for this source.
 The <dfn for="a" element-attr>attributionexpiry</dfn> is the amount
 of time in milliseconds the attribution source should be considered for reporting.
 
-
-Issue: Need monkey patches passing impression data in navigation, and a mechanism
-for validating the resulting document matches the conversiondestination.
+Issue: Need monkey patches passing attribution source in navigation, and a mechanism
+for validating the resulting document matches the attributiondestination.
 
 # Structures # {#structures}
-
-<h3 dfn-type=dfn>Impression</h3>
 
 <h3 dfn-type=dfn>Attribution source</h3>
 
@@ -146,8 +143,6 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
-<h3 algorithm id="creating-impression">Activating an impression</h3>
-
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
 To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
@@ -172,7 +167,7 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
 
 <dfn>Max event id value</dfn> is a vendor specific integer which controls the meximum size value which can be used as an [=attribution source/event id=]
 
-1. Issue: Need to spec how to store the impression.
+1. Issue: Need to spec how to store the attribution source.
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
@@ -236,7 +231,8 @@ return a point in time.
 1. Let |expiryDelta| be the difference between the |source|'s [=attribution source/expiry=] and
     the |source|'s [=attribution source/source time=]
 
-    Note: |timeToTrigger| is less than |expiryDelta| because it is not normally possible to convert an expired impression.
+    Note: |timeToTrigger| is less than |expiryDelta| because it is not normally possible to
+    convert an expired attribution source.
 
 1. If:
     <dl class="switch">
