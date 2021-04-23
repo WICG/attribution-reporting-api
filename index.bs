@@ -7,7 +7,7 @@ Group: wicg
 Repository: WICG/conversion-measurement-api
 URL: https://wicg.github.io/conversion-measurement-api
 Editor: Charlie Harrison, Google Inc. https://google.com, csharrison@chromium.org
-Abstract: A new API to measure and attribute cross-site events.
+Abstract: A new API to measure and attribute two cross-site events to each other.
 
 Markup Shorthands: markdown on
 Complain About: accidental-2119 on, missing-example-ids on
@@ -39,8 +39,8 @@ trigger attribution, which matches an [=attribution trigger=] with any previousl
 stored sources. If matching sources exist, they are scheduled to be
 reported at a later time, possibly multiple days in the future.
 
-Reports are sent to reporting endpoints that are configured in attribution sources
-and attribution trigger requests.
+Reports are sent to reporting endpoints that are configured in the attribution source
+and attribution trigger.
 
 # Fetch monkeypatches # {#fetch-monkeypatches}
 
@@ -61,21 +61,17 @@ partial interface HTMLAnchorElement {
 </pre>
 
 The <dfn for="a" element-attr>attributiondestination</dfn> is an [=url/origin=]
-which declares the intended final navigation url resulting from running
-<a spec="html">follow the hyperlink</a> with the <{a}> element.
-
-Note: This origin does not need to match the exact final origin of the navigation. 
-However, this navigation and the final navigation url have to produce the same result when
-passed to [=obtain a site=].
+that is intended to be [=same site=] with the origin of the final navigation url resulting 
+from running <a spec="html">follow the hyperlink</a> with the <{a}> element.
 
 The <dfn for="a" element-attr>attributionsourceeventid</dfn> is a string
 containing information about the `attribution source` and will be supplied in the
 [=attribution report=].
 
-The <dfn for="a" element-attr>attributionreportto</dfn> declares the
-intended [=origin=] to send the [=attribution report=] for this source.
+The <dfn for="a" element-attr>attributionreportto</dfn> optionally declares the
+[=origin=] to send the [=attribution report=] for this source.
 
-The <dfn for="a" element-attr>attributionexpiry</dfn> is the amount
+The <dfn for="a" element-attr>attributionexpiry</dfn> optionally defines the amount
 of time in milliseconds the attribution source should be considered for reporting.
 
 Issue: Need monkey patches passing attribution source in navigation, and a mechanism
@@ -91,7 +87,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>source origin</dfn>
 :: An [=url/origin=].
 : <dfn>event id</dfn>
-:: A [=string=].
+:: A non-negative 64-bit integer.
 : <dfn>attribution destination</dfn>
 :: An [=url/origin=].
 : <dfn>reporting endpoint</dfn>
@@ -140,6 +136,7 @@ An attribution report is a [=struct=] with the following items:
 To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. Let |url| be the result of running the [=URL parser=] on the value of
     the |str|.
+1. If |url| is failure or null, return null.
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
@@ -147,25 +144,43 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 
 To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
 1. Let |currentTime| be the current time.
+1. If |anchor| does not have both an <{a/attributiondestination}> attribute and
+    an <{a/attributionsourceeventid}> attribute, return null.
+1. Let |attributionDestination| be the result of running
+    [=parse an attribution destination=] with anchor's
+    <{a/attributiondestination}> attribute.
+1. If |attributionDestination| is null, return null.
+1. Let |sourceOrigin| be |anchor|'s [=relevant settings object=]'s
+    [=environment/top-level origin=].
+1. Let |reportingOrigin| be |sourceOrigin|.
+1. If |anchor| has an <{a/attributionreportto}> attribute, then:
+    1. Let |reportingUrl| be the result of running the
+        [=URL parser=] with |anchor|'s <{a/attributionreportto}> value
+    1. If |reportingUrl| is failure or null, return null.
+    1. Set |reportingOrigin| to |reportingUrl|'s [=url/origin=].
+1. If |anchor| has an <{a/attributionexpiry}> attribute, let |expiry| be that 
+    attribute's value in milliseconds.
+
+    Otherwise, let |expiry| be 30 days.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source origin=]
-    :: |anchor|'s [=relevant settings object=]'s [=environment/top-level origin=].
+    :: |sourceOrigin|
     : [=attribution source/event id=]
     :: The result of running [=parse attribution data=] with |anchor|'s
         <{a/attributionsourceeventid}> attribute and [=max event id value=].
     : [=attribution source/attribution destination=]
-    :: The result of running [=parse an attribution destination=] with |anchor|'s <{a/attributiondestination}> attribute.
+    :: |attributionDestination|
     : [=attribution source/reporting endpoint=]
-    :: The [=url/origin=] of the result of running the [=URL parser=] with
-        |anchor|'s <{a/attributionreportto}> attribute.
+    :: |reportingOrigin|
     : [=attribution source/expiry=]
-    :: |currentTime| +  <{a/attributionexpiry}> milliseconds.
+    :: |currentTime| +  |expiry|
     : [=attribution source/source time=]
-    :: |currentTime|.
+    :: |currentTime|
 1. Return |source|
 
-<dfn>Max event id value</dfn> is a vendor specific integer which controls the meximum size value which can be used as an [=attribution source/event id=]
+<dfn>Max event id value</dfn> is a vendor specific integer which controls 
+the maximum size value which can be used as an [=attribution source/event id=]
 
 1. Issue: Need to spec how to store the attribution source.
 
@@ -179,7 +194,7 @@ with the items:
     :: |environment|'s [=environment/top-level origin=].
     : [=attribution trigger/trigger data=]
     :: The result of applying [=parse attribution data=] with the value associated with the
-        `"data"` field of |url|'s [=url/query=] and the user agent's [=max trigger data value=].
+        `"data"` field of |url|'s [=url/query=] modulo the user agent's [=max trigger data value=].
     : [=attribution trigger/trigger time=]
     :: The current time.
     : [=attribution trigger/reporting endpoint=]
@@ -201,7 +216,7 @@ To <dfn>trigger attribution</dfn> from a [=request=] |request|, run the followin
 1. If |request|'s [=request/current url's=] [=url/origin=] is not [=same origin=] with
     |previousUrl|'s [=url/origin=], return.
 1. Let |trigger| be the result of running [=obtain an attribution trigger=] with
-    |request|'s [=request/current url=].
+    |request|'s [=request/current url=] and |request|'s client.
 
     Note: the restriction to require a redirect is needed to ensure that the
     request's origin is aware and in control of triggering attribution.
@@ -213,12 +228,13 @@ To <dfn>trigger attribution</dfn> from a [=request=] |request|, run the followin
 This section defines how to parse and extract both
 [=attribution source/event id=] and [=attribution trigger/trigger data=].
 
-To <dfn>parse attribution data</dfn> given a [=string=] |input|, and an unsigned long long
+To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an unsigned long long
 |maxData| perform the  following steps. They return an unsigned long long:
 
-1. Let |decodedInput| be the result of decoding |input| as a base-10 integer.
-1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by
-    |maxData|.
+1. Let |decodedInput| be the result of applying the
+    <a spec="html">rules for parsing non-negative integers</a> to |input|.
+1. If |decodedInput| is an error, return zero.
+1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by |maxData|.
 1. Return |clampedDecodedInput|.
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
