@@ -33,7 +33,7 @@ See [explainer](https://github.com/WICG/conversion-measurement-api/blob/main/REA
 <!-- Click-through attributions: -->
 <a 
   href="https://advertiser.example/buy-shoes"
-  attributionsourceeventid=123456
+  attributionsourceeventid="123456"
   attributionreportto="https://reporter.example"
   attributeon="https://advertiser.example"
   attributionexpiry=604800000>
@@ -58,7 +58,7 @@ To register clicks from apps, we can send an ACTION_VIEW Intent with some extra 
 // TODO: which namespace should the APP_ATTRIBUTION type live in?
 Intent convIntent = new Intent("android.web.action.APP_ATTRIBUTION");
 Bundle innerBundle = new Bundle();
-innerBundle.putInt("attributionSourceEventId", 123456);
+innerBundle.putString("attributionSourceEventId", "123456");
 innerBundle.putString("attributionReportTo", "https://reporter.example");
 innerBundle.putString("attributeOn", "https://advertiser.example");
 innerBundle.putInt("attributionExpiry", 604800000);
@@ -100,7 +100,7 @@ Views won't necessarily start the browser with an intent, so we can use a [Conte
 ```java
 // After an ad view. Parameters for event-level API only.
 ContentValues newValues = new ContentValues();
-newValues.put("attributionSourceEventId", 123456);
+newValues.put("attributionSourceEventId", "123456");
 newValues.put("attributionReportTo", "https://reporter.example");
 newValues.put("attributeOn", "https://advertiser.example");
 newValues.put("attributionExpiry", 604800000);
