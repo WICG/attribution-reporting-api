@@ -108,7 +108,7 @@ Attribution source attributes:
 
 -   `attributiondestination`: an origin whose eTLD+1 is where attribution will be triggered for this source. 
 
--   `attributionsourceeventid`: A DOMString representing a 64-bit unsigned integer which represents the event-level data associated with this source. This will be limited to 64 bits of information but the value can vary for browsers that want a higher level of privacy.
+-   `attributionsourceeventid`: A DOMString encoding a 64-bit unsigned integer which represents the event-level data associated with this source. This will be limited to 64 bits of information but the value can vary for browsers that want a higher level of privacy.
 
 -   `attributionexpiry`: (optional) expiry in milliseconds for when the source should be deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry can also vary between browsers.
 
