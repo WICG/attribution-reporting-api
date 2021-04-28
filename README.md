@@ -124,7 +124,8 @@ A source is registered in a call to `window.open()` by providing attribution sou
 
 ```
 window.open("https://dest.example", "_blank",     
- "noopener,attributionsourceeventid=1234,attributiondestination=https://dest.example,attributionreportto=https://reporter.example,attributionexpiry=604800000");)
+ "noopener,attributionsourceeventid=1234,attributiondestination=https://dest.example,\
+ attributionreportto=https://reporter.example,attributionexpiry=604800000");)
 ```
 
 At the time window.open() is invoked with these attributes specified in `features`, if the associated window has a [transient activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation), an attribution source event will be created and handled following [Handling an attribution source event](#handling-an-attribution-source-event).
