@@ -120,7 +120,7 @@ Clicking on an anchor tag that specifies these attributes will create a new attr
 
 An attribution source can be registered for navigations initiated by [`window.open()`](https://html.spec.whatwg.org/multipage/window-object.html#dom-open).
 
-A source is registered through a `window.open()` by providing attribution source attributes within the `features` parameter:
+A source is registered in a call to `window.open()` by providing attribution source attributes within the `features` parameter:
 
 ```
 window.open("https://dest.example", "_blank",     
