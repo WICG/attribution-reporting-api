@@ -7,7 +7,7 @@ Group: wicg
 Repository: WICG/conversion-measurement-api
 URL: https://wicg.github.io/conversion-measurement-api
 Editor: Charlie Harrison, Google Inc. https://google.com, csharrison@chromium.org
-Abstract: A new API to measure and attribute two cross-site events to each other.
+Abstract: An API to report that an event may have been caused by another cross-site event. These reports are designed to transfer little enough data between sites that the sites can't use them to track individual users.
 
 Markup Shorthands: markdown on
 Complain About: accidental-2119 on, missing-example-ids on
@@ -31,7 +31,7 @@ for cross site identifiers like third party cookies.
 
 A page can register an [=attribution source=] on a site by providing
  <{a/attributionsourceeventid}> and <{a/attributiondestination}> attributes on an <{a}> element.
-When such an <{a}> element is clicked, and the resulting navigation commits in a document matching
+When such an <{a}> element is clicked, and the resulting navigation commits in a document within the [=same site=] as
 the <{a/attributiondestination}>, the [=attribution source=] is stored in UA storage.
 
 At a later point, the <{a/attributiondestination}> site may fire an HTTP request to
@@ -174,7 +174,7 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
     : [=attribution source/reporting endpoint=]
     :: |reportingOrigin|
     : [=attribution source/expiry=]
-    :: |currentTime| +  |expiry|
+    :: |currentTime| + |expiry|
     : [=attribution source/source time=]
     :: |currentTime|
 1. Return |source|
@@ -229,7 +229,7 @@ This section defines how to parse and extract both
 [=attribution source/event id=] and [=attribution trigger/trigger data=].
 
 To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an unsigned long long
-|maxData| perform the  following steps. They return an unsigned long long:
+|maxData| perform the following steps. They return an unsigned long long:
 
 1. Let |decodedInput| be the result of applying the
     <a spec="html">rules for parsing non-negative integers</a> to |input|.
