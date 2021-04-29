@@ -39,7 +39,18 @@ The browser will expose a new interface:
 }
 ```
 
-See [this section](https://github.com/WICG/conversion-measurement-api/blob/main/README.md#registering-attribution-sources-for-windowopen-navigations) of the Attribution Reporting explainer for the definition of `AttributionSourceParams`. When invoked the browser will directly add the specified source to storage, and return whether the browser was successful in parsing the params.
+`AttributionSourceParams` is a dictionary which contains the same attributes used by attribution source anchor tags:
+
+```
+dictionary AttributionSourceParams {
+  required DOMString attributionSourceEventId;
+  required USVString attributionDestination;
+  optional USVString attributionReportTo;
+  optional unsigned long attributionExpiry;
+}
+```
+
+When invoked the browser will directly add the specified source to storage, and return whether the browser was successful in parsing the params.
 
 
 ### Different Classes of Attribution Sources

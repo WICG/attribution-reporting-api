@@ -120,28 +120,15 @@ Clicking on an anchor tag that specifies these attributes will create a new attr
 
 An attribution source can be registered for navigations initiated by [`window.open()`](https://html.spec.whatwg.org/multipage/window-object.html#dom-open).
 
-A source is registered through a new `window.open()` overload:
+A source is registered in a call to `window.open()` by providing attribution source attributes within the `features` parameter:
 
 ```
-WindowProxy? open(
-  optional USVString url = "",
-  optional DOMString target = "_blank",
-  optional [LegacyNullToEmptyString] DOMString features = "",
-  optional AttributionSourceParams attribution_source_params)
+window.open("https://dest.example", "_blank",     
+ "noopener,attributionsourceeventid=1234,attributiondestination=https://dest.example,\
+ attributionreportto=https://reporter.example,attributionexpiry=604800000");)
 ```
 
-`AttributionSourceParams` is a dictionary which contains the same attributes used by attribution source anchor tags:
-
-```
-dictionary AttributionSourceParams {
-  required DOMString attributionSourceEventId;
-  required USVString attributionDestination;
-  optional USVString attributionReportTo;
-  optional unsigned long attributionExpiry;
-}
-```
-
-At the time window.open() is invoked, if the associated window has a [transient activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation), an attribution source event will be created and handled following [Handling an attribution source event](#handling-an-attribution-source-event).
+At the time window.open() is invoked with these attributes specified in `features`, if the associated window has a [transient activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation), an attribution source event will be created and handled following [Handling an attribution source event](#handling-an-attribution-source-event).
 
 ### Handling an attribution source event
 
