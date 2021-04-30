@@ -158,10 +158,10 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
         [=URL parser=] with |anchor|'s <{a/attributionreportto}> value
     1. If |reportingUrl| is failure or null, return null.
     1. Set |reportingOrigin| to |reportingUrl|'s [=url/origin=].
-1. If |anchor| has an <{a/attributionexpiry}> attribute, let |expiry| be that 
-    attribute's value in milliseconds.
-
-    Otherwise, let |expiry| be 30 days.
+1. Let |expiry| be 30 days.
+1. If |anchor| has an <{a/attributionexpiry}> attribute, and applying the
+    <a spec="html">rules for parsing non-negative integers</a> to the attributes's value
+    results in a number greater than zero, then set |expiry| to that value.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source origin=]
@@ -200,7 +200,7 @@ with the items:
     : [=attribution trigger/reporting endpoint=]
     :: |url|'s [=url/origin=]
 
-<dfn>Max trigger data value</dfn> is a vendor specific integer which controls the values of [=attribution-report/trigger-data=].
+<dfn>Max trigger data value</dfn> is a vendor specific integer which controls the potential values of [=attribution report/trigger data=].
 
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
