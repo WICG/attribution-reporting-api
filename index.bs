@@ -200,7 +200,7 @@ with the items:
     : [=attribution trigger/reporting endpoint=]
     :: |url|'s [=url/origin=]
 
-<dfn>Max trigger data value</dfn> is a vendor specific integer which controls the values of [=attribution-report/trigger-data].
+<dfn>Max trigger data value</dfn> is a vendor specific integer which controls the values of [=attribution-report/trigger-data=].
 
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
@@ -228,12 +228,13 @@ To <dfn>trigger attribution</dfn> from a [=request=] |request|, run the followin
 This section defines how to parse and extract both
 [=attribution source/event id=] and [=attribution trigger/trigger data=].
 
-To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an unsigned long long
-|maxData| perform the following steps. They return an unsigned long long:
+To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an integer
+|maxData| perform the following steps. They return a non-negative integer:
 
 1. Let |decodedInput| be the result of applying the
     <a spec="html">rules for parsing non-negative integers</a> to |input|.
 1. If |decodedInput| is an error, return zero.
+1. If |decodedInput| is greater than 2<sup>64</sup>, return zero.
 1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by |maxData|.
 1. Return |clampedDecodedInput|.
 
