@@ -1,13 +1,13 @@
 <pre class='metadata'>
-Title: Conversion Measurement
-Shortname: conversion-measurement
+Title: Attribution Reporting
+Shortname: attribution-reporting
 Level: 1
 Status: CG-DRAFT
 Group: wicg
 Repository: WICG/conversion-measurement-api
 URL: https://wicg.github.io/conversion-measurement-api
 Editor: Charlie Harrison, Google Inc. https://google.com, csharrison@chromium.org
-Abstract: A new API to measure and attribute cross-site conversions.
+Abstract: An API to report that an event may have been caused by another cross-site event. These reports are designed to transfer little enough data between sites that the sites can't use them to track individual users.
 
 Markup Shorthands: markdown on
 Complain About: accidental-2119 on, missing-example-ids on
@@ -23,24 +23,24 @@ Introduction {#intro}
 <em>This section is non-normative</em>
 
 This specification describes how web browsers can provide a mechanism to the
-web that allows measuring and attributing conversions (e.g. purchases) to ads
+web that supports measuring and attributing conversions (e.g. purchases) to ads
 a user interacted with on another site. This mechanism should remove one need
 for cross site identifiers like third party cookies.
 
 ## Overview ## {#overview}
 
-An anchor tag with <{a/impressiondata}> and <{a/conversiondestination}> attributes is
-classified as an <dfn export>impression tag</dfn>. When impression tags are clicked, and the
-resulting navigation commits in a document matching the <{a/conversiondestination}>,
-then the impression is stored in UA storage.
+A page can register an [=attribution source=] on a site by providing
+ <{a/attributionsourceeventid}> and <{a/attributiondestination}> attributes on an <{a}> element.
+When such an <{a}> element is clicked, and the resulting navigation commits in a document within the [=same site=] as
+the <{a/attributiondestination}>, the [=attribution source=] is stored in UA storage.
 
-At a later point, the <{a/conversiondestination}> site may fire an HTTP request to
-trigger conversion registration, which matches up with any previously
-stored impressions. If matching impressions exist, they are scheduled to be
+At a later point, the <{a/attributiondestination}> site may fire an HTTP request to
+trigger attribution, which matches an [=attribution trigger=] with any previously
+stored sources. If matching sources exist, they are scheduled to be
 reported at a later time, possibly multiple days in the future.
 
-Reports are sent to reporting endpoints that are configured in impression tags
-and conversion registration requests.
+Reports are sent to reporting endpoints that are configured in the attribution source
+and attribution trigger.
 
 # Fetch monkeypatches # {#fetch-monkeypatches}
 
@@ -49,198 +49,224 @@ conversion domain.
 
 # HTML monkeypatches # {#html-monkeypatches}
 
-Rewrite the anchor element to accept the following attributes:
+Add the following content attributes to the <{a}> element:
 
 <pre class="idl">
 partial interface HTMLAnchorElement {
-    [CEReactions, Reflect] attribute DOMString conversiondestination;
-    [CEReactions, Reflect] attribute DOMString impressiondata;
-    [CEReactions, Reflect] attribute DOMString reportingorigin;
-    [CEReactions, Reflect] attribute unsigned long long impressionexpiry;
+    [CEReactions, Reflect] attribute DOMString attributiondestination;
+    [CEReactions, Reflect] attribute DOMString attributionsourceeventid;
+    [CEReactions, Reflect] attribute DOMString attributionreportto;
+    [CEReactions, Reflect] attribute unsigned long long attributionexpiry;
 };
 </pre>
 
-The <dfn for="a" element-attr>conversiondestination</dfn> is the
-declared destination [=scheme-and-registrable-domain=] of the anchor for
-purposes of conversion measurement
+The <dfn for="a" element-attr>attributiondestination</dfn> is an [=url/origin=]
+that is intended to be [=same site=] with the origin of the final navigation url resulting 
+from running <a spec="html">follow the hyperlink</a> with the <{a}> element.
 
-The <dfn for="a" element-attr>impressiondata</dfn> is a string
-containing information about the `impression tag` and will be supplied in the
-`conversion report`.
+The <dfn for="a" element-attr>attributionsourceeventid</dfn> is a string
+containing information about the `attribution source` and will be supplied in the
+[=attribution report=].
 
-The <dfn for="a" element-attr>reportingorigin</dfn> declares the
-intended [=origin=] to send the `conversion report` for this impression.
+The <dfn for="a" element-attr>attributionreportto</dfn> optionally declares the
+[=origin=] to send the [=attribution report=] for this source.
 
-The <dfn for="a" element-attr>impressionexpiry</dfn> is the amount
-of time in milliseconds the impression should be considered for conversion
-measurement and reporting reporting.
+The <dfn for="a" element-attr>attributionexpiry</dfn> optionally defines the amount
+of time in milliseconds the attribution source should be considered for reporting.
 
-
-Issue: Need monkey patches passing impression data in navigation, and a mechanism
-for validating the resulting document matches the conversiondestination.
+Issue: Need monkey patches passing attribution source in navigation, and a mechanism
+for validating the resulting document matches the attributiondestination.
 
 # Structures # {#structures}
 
-<h3 dfn-type=dfn>Impression</h3>
+<h3 dfn-type=dfn>Attribution source</h3>
 
-An impression is a [=struct=] with the following items:
+An attribution source is a [=struct=] with the following items:
 
-<dl dfn-for="impression">
-: <dfn>impression source</dfn>
+<dl dfn-for="attribution source">
+: <dfn>source origin</dfn>
 :: An [=url/origin=].
-: <dfn>impression data</dfn>
-:: A [=string=].
-: <dfn>conversion destination</dfn>
+: <dfn>event id</dfn>
+:: A non-negative 64-bit integer.
+: <dfn>attribution destination</dfn>
 :: An [=url/origin=].
 : <dfn>reporting endpoint</dfn>
 :: An [=url/origin=].
 : <dfn>expiry</dfn>
 :: A point in time.
-: <dfn>impression time</dfn>
+: <dfn>source time</dfn>
 :: A point in time.
 
 </dl>
 
-<h3 dfn-type=dfn>Conversion</h3>
+<h3 dfn-type=dfn>Attribution trigger</h3>
 
-A conversion is a [=struct=] with the following items:
+An attribution trigger is a [=struct=] with the following items:
 
-<dl dfn-for="conversion">
-: <dfn>conversion source</dfn>
+<dl dfn-for="attribution trigger">
+: <dfn>trigger origin</dfn>
 :: An [=url/origin=].
-: <dfn>conversion data</dfn>
+: <dfn>trigger data</dfn>
 :: A [=string=].
-: <dfn>conversion time</dfn>
+: <dfn>trigger time</dfn>
 :: A point in time.
+: <dfn>reporting endpoint</dfn>
+:: An [=url/origin=].
 
 </dl>
 
-<h3 dfn-type=dfn>Conversion report</h3>
+<h3 dfn-type=dfn>Attribution report</h3>
 
-A conversion report is a [=struct=] with the following items:
+An attribution report is a [=struct=] with the following items:
 
-<dl dfn-for="conversion report">
-: <dfn>impression data</dfn>
+<dl dfn-for="attribution report">
+: <dfn>event id</dfn>
 :: A [=string=].
-: <dfn>conversion data</dfn>
+: <dfn>trigger data</dfn>
 :: A [=string=].
-: <dfn>attribution credit</dfn>
+: <dfn>credit</dfn>
 :: An integer in the range [0, 100].
 
 </dl>
 
 # Algorithms # {#algorithms}
 
-<h3 algorithm id="parsing-conversion-destination">Parsing a conversion destination</h3>
+<h3 algorithm id="parsing-attribution-destination">Parsing an attribution destination</h3>
 
-To <dfn>parse a conversion destination</dfn> from an <{a}> tag |anchor|,
+To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. Let |url| be the result of running the [=URL parser=] on the value of
-    the |anchor|'s <{a/conversiondestination}>.
+    the |str|.
+1. If |url| is failure or null, return null.
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
-<h3 algorithm id="creating-impression">Activating an impression</h3>
+<h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
-To <dfn>activate an impression</dfn> from an <{a}> tag |anchor|,
+To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
 1. Let |currentTime| be the current time.
-1. Let |impression| be a new [=impression=] struct whose items are:
+1. If |anchor| does not have both an <{a/attributiondestination}> attribute and
+    an <{a/attributionsourceeventid}> attribute, return null.
+1. Let |attributionDestination| be the result of running
+    [=parse an attribution destination=] with anchor's
+    <{a/attributiondestination}> attribute.
+1. If |attributionDestination| is null, return null.
+1. Let |sourceOrigin| be |anchor|'s [=relevant settings object=]'s
+    [=environment/top-level origin=].
+1. Let |reportingOrigin| be |sourceOrigin|.
+1. If |anchor| has an <{a/attributionreportto}> attribute, then:
+    1. Let |reportingUrl| be the result of running the
+        [=URL parser=] with |anchor|'s <{a/attributionreportto}> value
+    1. If |reportingUrl| is failure or null, return null.
+    1. Set |reportingOrigin| to |reportingUrl|'s [=url/origin=].
+1. Let |expiry| be 30 days.
+1. If |anchor| has an <{a/attributionexpiry}> attribute, and applying the
+    <a spec="html">rules for parsing non-negative integers</a> to the attributes's value
+    results in a number greater than zero, then set |expiry| to that value.
+1. Let |source| be a new [=attribution source=] struct whose items are:
 
-    : [=impression/impression source=]
-    :: |anchor|'s [=relevant settings object=]'s [=environment/top-level origin=].
-    : [=impression/impression data=]
-    :: The result of applying [=parsing conversion data=] to |anchor|'s
-        <{a/impressiondata}> attribute.
-    : [=impression/conversion destination=]
-    :: The result of running [=parse a conversion destination=] on |anchor|.
-    : [=impression/reporting endpoint=]
-    :: The [=url/origin=] of the result of running the [=URL parser=] on the value
-        of |anchor|'s <{a/reportingorigin}> attribute.
-    : [=impression/expiry=]
-    :: |currentTime| +  <{a/impressionexpiry}> milliseconds.
-    : [=impression/impression time=]
-    :: |currentTime|.
+    : [=attribution source/source origin=]
+    :: |sourceOrigin|
+    : [=attribution source/event id=]
+    :: The result of running [=parse attribution data=] with |anchor|'s
+        <{a/attributionsourceeventid}> attribute modulo [=max event id value=].
+    : [=attribution source/attribution destination=]
+    :: |attributionDestination|
+    : [=attribution source/reporting endpoint=]
+    :: |reportingOrigin|
+    : [=attribution source/expiry=]
+    :: |currentTime| + |expiry|
+    : [=attribution source/source time=]
+    :: |currentTime|
+1. Return |source|
 
-1. Issue: Need to spec how to store the impression.
+<dfn>Max event id value</dfn> is a vendor specific integer which controls 
+the maximum size value which can be used as an [=attribution source/event id=]
 
-<h3 algorithm id="creating-a-conversion">Creating a conversion</h3>
+Issue: Need to spec how to store the attribution source.
 
-To <dfn>create a conversion</dfn> from a [=url=] |url| and an
-[=environment settings object=] |environment|, return a new [=conversion=]
-struct with the items:
+<h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
-    : [=conversion/conversion source=]
+To <dfn>obtain an attribution trigger</dfn> given a [=url=] |url| and an
+[=environment settings object=] |environment|, return a [=attribution trigger=]
+with the items:
+
+    : [=attribution trigger/trigger origin=]
     :: |environment|'s [=environment/top-level origin=].
-    : [=conversion/conversion data=]
-    :: The result of applying [=parsing conversion data=] to the value associated with the
-        `"conversion-data"` field of |url|'s [=url/query=].
-    : [=conversion/conversion time=]
+    : [=attribution trigger/trigger data=]
+    :: The result of applying [=parse attribution data=] with the value associated with the
+        `"data"` field of |url|'s [=url/query=] modulo the user agent's [=max trigger data value=].
+    : [=attribution trigger/trigger time=]
     :: The current time.
+    : [=attribution trigger/reporting endpoint=]
+    :: |url|'s [=url/origin=]
+
+<dfn>Max trigger data value</dfn> is a vendor specific integer which controls the potential values of [=attribution report/trigger data=].
 
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
-<h3 algorithm id="register-conversion">Register a conversion</h3>
+<h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
-To <dfn>register a conversion</dfn> from a [=request=] |request|, run the following steps:
+To <dfn>trigger attribution</dfn> from a [=request=] |request|, run the following steps:
 
-1. If |request|'s [=request/current url's=] [=url/path=] is not `.well-known/register-conversion`,
+1. If |request|'s [=request/current url's=] [=url/path=] is not `.well-known/attribution-reporting/trigger-attribution`,
     return.
 1. If |request|'s [=request/redirect count=] is less than 1, return.
 1. Let |previousUrl| be the second to last [=URL=] in |request|'s
     [=request/URL list=].
 1. If |request|'s [=request/current url's=] [=url/origin=] is not [=same origin=] with
     |previousUrl|'s [=url/origin=], return.
-1. Let |conversionToRegister| be the result of applying [=create a conversion=] from the
-    request's [=request/current url=].
+1. Let |trigger| be the result of running [=obtain an attribution trigger=] with
+    |request|'s [=request/current url=] and |request|'s client.
 
     Note: the restriction to require a redirect is needed to ensure that the
-    request's origin is aware and in control of the conversion registration.
+    request's origin is aware and in control of triggering attribution.
 
-1. Issue: Need to spec how to store the conversion.
+1. Issue: Need to spec how to store |trigger|.
 
-<h3 algorithm id="parsing-data">Parsing data fields</h3>
+<h3 algorithm id="parsing-data-fields">Parsing data fields</h3>
 
 This section defines how to parse and extract both
-[=impression/impression data=] and [=conversion/conversion data=] from a
-[=string=] |input| and a unsigned long long |maxData|.
+[=attribution source/event id=] and [=attribution trigger/trigger data=].
 
-<dfn>Parsing conversion data</dfn> from |input| with |maxData| returns the result of
-the following steps:
+To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an integer
+|maxData| perform the following steps. They return a non-negative integer:
 
-1. Let |decodedInput| be the result of decoding |input| as a base-16 integer.
-1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by
-    |maxData|.
-1. Let |encodedOutput| be the result of encoding |clampedDecodedInput| as a
-    base 16 encoding.
-1. Return |encodedOutput|.
+1. Let |decodedInput| be the result of applying the
+    <a spec="html">rules for parsing non-negative integers</a> to |input|.
+1. If |decodedInput| is an error, return zero.
+1. If |decodedInput| is greater than 2<sup>64</sup>, return zero.
+1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by |maxData|.
+1. Return |clampedDecodedInput|.
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
-The <dfn>report delivery time</dfn> for an [=impression=] |impression| and a
-[=conversion/conversion time=] |conversionTime| is the result of the following steps:
-1. Let |conversionTimeAfterImpression| be the difference between the
-    [=conversion/conversion time=] and [=impression/impression time=].
-1. Let |expiryDelta| be the difference between the [=impression/expiry=] and
-    the [=impression/impression time=]
 
-    Note: |conversionTimeAfterImpression| should always be less than
-    |expiryDelta| because it should not be possible to convert an expired
-    impression.
+To <dfn>obtain a report delivery time</dfn> given an [=attribution source=] |source| and a
+[=attribution trigger/trigger time=] |triggerTime| perform the  following steps. They
+return a point in time.
+1. Let |timeToTrigger| be the difference between
+    |triggerTime| and [=attribution source/source time=].
+1. Let |expiryDelta| be the difference between the |source|'s [=attribution source/expiry=] and
+    the |source|'s [=attribution source/source time=]
+
+    Note: |timeToTrigger| is less than |expiryDelta| because it is not normally possible to
+    convert an expired attribution source.
 
 1. If:
     <dl class="switch">
-    <dt>|conversionTimeAfterImpression| <= (2 days - 1 hour)</dt>
-    <dd>return [=impression/impression time=] + 2 days.</dd>
+    <dt>|timeToTrigger| <= (2 days - 1 hour)</dt>
+    <dd>return [=attribution source/source time=] + 2 days.</dd>
 
     <dt> |expiryDelta| > (2 days - 1 hour)
         - and |expiryDelta| < (7 days - 1 hour)
-        - and |conversionTimeAfterImpression| <= |expiryDelta|
+        - and |timeToTrigger| <= |expiryDelta|
     </dt>
-    <dd>return the [=impression/expiry=] + 1 hour.</dd>
+    <dd>return |source|'s [=attribution source/expiry=] + 1 hour.</dd>
 
-    <dt>|conversionTimeAfterImpression| <= (7 days - 1 hour)</dt>
-    <dd>return [=impression/impression time=] + 7 days</dd>
+    <dt>|timeToTrigger| <= (7 days - 1 hour)</dt>
+    <dd>return [=attribution source/source time=] + 7 days</dd>
 
     <dt>Otherwise</dt>
-    <dd>return the [=impression/expiry=] + 1 hour.</dd>
+    <dd>return |source|'s [=attribution source/expiry=] + 1 hour.</dd>
     </dl>
 
 <h3 algorithm id="queuing-report">Queuing a conversion report</h3>
