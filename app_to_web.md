@@ -35,7 +35,7 @@ See [explainer](https://github.com/WICG/conversion-measurement-api/blob/main/REA
   href="https://advertiser.example/buy-shoes"
   attributionsourceeventid="123456"
   attributionreportto="https://reporter.example"
-  attributeon="https://advertiser.example"
+  attributiondestination="https://advertiser.example"
   attributionexpiry=604800000>
   Click me!
 </a>
@@ -60,7 +60,7 @@ Intent convIntent = new Intent("android.web.action.APP_ATTRIBUTION");
 Bundle innerBundle = new Bundle();
 innerBundle.putString("attributionSourceEventId", "123456");
 innerBundle.putString("attributionReportTo", "https://reporter.example");
-innerBundle.putString("attributeOn", "https://advertiser.example");
+innerBundle.putString("attributionDestination", "https://advertiser.example");
 innerBundle.putInt("attributionExpiry", 604800000);
 
 // Put the input event that triggered the ad click in the bundle. The browser will
@@ -102,7 +102,7 @@ Views won't necessarily start the browser with an intent, so we can use a [Conte
 ContentValues newValues = new ContentValues();
 newValues.put("attributionSourceEventId", "123456");
 newValues.put("attributionReportTo", "https://reporter.example");
-newValues.put("attributeOn", "https://advertiser.example");
+newValues.put("attributionDestination", "https://advertiser.example");
 newValues.put("attributionExpiry", 604800000);
 
 // Get the default browser to send to.
@@ -139,7 +139,7 @@ Attribution for apps without such links will be ignored.
 
 This proposal explicitly links data from app and web contexts, which is a new form of data that the web platform has not had explicit access to before. It enables apps to learn coarse user behavior patterns in the browser in the same way that the existing Attribution Reporting API allows websites to learn coarse user behavior patterns in the browser. In other words, we can safely think of an app as a particular "kind of website", and we can share data to apps that we’d be comfortable sharing to a (cross-site) website.
 
-Additionally, depending on implementation decisions, browsers may add new, temporary storage to collect app events before unifying them with the browser’s collection of events produced by websites. Any new storage should be cleared when the user deletes their site data for the site of any of the source, attributeOn, or reportTo origins.
+Additionally, depending on implementation decisions, browsers may add new, temporary storage to collect app events before unifying them with the browser’s collection of events produced by websites. Any new storage should be cleared when the user deletes their site data for the site of any of the source, attributionDestination, or reportTo origins.
 
 
 ### **Verifying Clicks**
