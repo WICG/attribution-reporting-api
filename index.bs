@@ -49,29 +49,45 @@ conversion domain.
 
 # HTML monkeypatches # {#html-monkeypatches}
 
-Add the following content attributes to the <{a}> element:
+Add the following <a spec=html>content attributes</a> to the <{a}> element:
+
+: <{a/attributionsourceeventid}>
+:: Identifies the declared attribution source
+: <{a/attributiondestination}>
+:: Site which can attribute an event to the declared attribution source
+: <{a/attributionreportto}>
+:: [=url/origin=] to receive attribution reports
+: <{a/attributionexpiry}>
+:: Length of time the attribution souce is valid
+
+Extend <{a}> element <a spec=html>DOM interface</a> to include the following interface:
 
 <pre class="idl">
 partial interface HTMLAnchorElement {
-    [CEReactions, Reflect] attribute DOMString attributiondestination;
-    [CEReactions, Reflect] attribute DOMString attributionsourceeventid;
-    [CEReactions, Reflect] attribute DOMString attributionreportto;
-    [CEReactions, Reflect] attribute unsigned long long attributionexpiry;
+    [CEReactions] attribute DOMString attributiondestination;
+    [CEReactions] attribute DOMString attributionsourceeventid;
+    [CEReactions] attribute DOMString attributionreportto;
+    [CEReactions] attribute DOMString attributionexpiry;
 };
 </pre>
 
-The <dfn for="a" element-attr>attributiondestination</dfn> is an [=url/origin=]
-that is intended to be [=same site=] with the origin of the final navigation url resulting 
-from running <a spec="html">follow the hyperlink</a> with the <{a}> element.
+The IDL attributes {{HTMLAnchorElement/attributiondestination}}, {{HTMLAnchorElement/attributionsourceeventid}}, 
+{{HTMLAnchorElement/attributionreportto}}, {{HTMLAnchorElement/attributionexpiry}}
+must <a spec=html>reflect</a> the respective content attributes of the same name.
 
-The <dfn for="a" element-attr>attributionsourceeventid</dfn> is a string
+The <dfn for="a" element-attr>attributiondestination</dfn> attribute is a string
+representing an [=url/origin=] that is intended to be [=same site=] with the origin
+of the final navigation url resulting from running <a spec="html">follow the hyperlink</a>
+with the <{a}> element.
+
+The <dfn for="a" element-attr>attributionsourceeventid</dfn> attribute is a string
 containing information about the `attribution source` and will be supplied in the
 [=attribution report=].
 
-The <dfn for="a" element-attr>attributionreportto</dfn> optionally declares the
+The <dfn for="a" element-attr>attributionreportto</dfn> attribute optionally declares the
 [=origin=] to send the [=attribution report=] for this source.
 
-The <dfn for="a" element-attr>attributionexpiry</dfn> optionally defines the amount
+The <dfn for="a" element-attr>attributionexpiry</dfn> attribute optionally defines the amount
 of time in milliseconds the attribution source should be considered for reporting.
 
 Issue: Need monkey patches passing attribution source in navigation, and a mechanism
