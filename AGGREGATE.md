@@ -341,7 +341,7 @@ In general, it is undesirable to require JavaScript on the attribution trigger r
 
 ### Custom attribution models
 
-The worklet based scheme possibly allows for more flexible attribution options, including specifying partial “credit” for multiple previous impressions that would provide value to advertisers that are interested in attribution models other than last-touch.
+The worklet based scheme possibly allows for more flexible attribution options, including specifying partial “credit” for multiple previous attribution sources that would provide value to advertisers that are interested in attribution models other than last-touch.
 
 ### “Count” vs. “value” histograms
 
