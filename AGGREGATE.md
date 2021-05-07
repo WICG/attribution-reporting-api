@@ -46,7 +46,7 @@ This API builds on the same mechanisms described in the [Multi-browser aggregati
 
 In particular, we introduce experimental mechanisms including:
 
-*   **Bring your own aggregation servers:** anyone can receive reports for aggregation during an initial experimentation perio.
+*   **Bring your own aggregation servers:** anyone can receive reports for aggregation during an initial experimentation period.
 *   **Multi-party computation (MPC) optional:** Long-term,  we expect servers will need to process data exclusively with [secure multi-party computation](https://en.wikipedia.org/wiki/Secure_multi-party_computation) (or technology that achieves similar goals), but for an initial experimentation period this is optional.
 
 ## Goals
