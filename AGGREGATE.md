@@ -158,7 +158,7 @@ Actions in the worklet won’t affect the embedder context, to avoid leaking inf
 Attribution reports will look very similar to [event-level reports](https://github.com/WICG/conversion-measurement-api#attribution-reports). They will be reported to the configured `attributionreportto` endpoint at the path `.well-known/attribution-reporting/report-aggregate-attribution`. The payload will be JSON encoded with the following scheme:
 
 
-```json
+```
 {
   "source_site": "https://publisher.com",
   "attribution_destination": "https://advertiser.com",
@@ -166,11 +166,11 @@ Attribution reports will look very similar to [event-level reports](https://gith
   "aggregation_service_payloads": [
     {
       "origin": "https://helper1.com",
-      "payload": <base64 encoded encrypted data>
+      "payload": "<base64 encoded encrypted data>"
     },
     {
       "origin": "https://helper2.com",
-      "payload": <base64 encoded encrypted data>
+      "payload": "<base64 encoded encrypted data>"
     }
   ],
   "privacy_budget_key": "<field for server to do privacy budgeting>",
@@ -260,39 +260,39 @@ Imagine the following prefix-tree of counts, where each key is 3 bits long in to
 We could have a query configuration asking for counts at every prefix level, with some strategy for iterating down and pruning the tree.
 
 
-```json
+```
 {
-  prefix_lengths: [1, 2, 3],
+  "prefix_lengths": [1, 2, 3],
 
   // assume no noise for simplicity, this setting could allow distributing the
   // noise across levels in some non-uniform fashion.
-  privacy_budget_per_prefix: [...],
+  "privacy_budget_per_prefix": [...],
 
   // Don't expand a node if it doesn't reach the threshold.
-  expansion_threshold_per_prefix: [5, 5, 5]
+  "expansion_threshold_per_prefix": [5, 5, 5]
 }
 ```
 
 The output (after merging results from two servers) could look like this, where the aggregate data is returned for all queried prefixes.
 
 
-```json
+```
 [
   {
-    prefix_length: 1,
-    histogram: {0: 102, 1: 402},
-    expansion_threshold: 5
+    "prefix_length": 1,
+    "histogram": {0: 102, 1: 402},
+    "expansion_threshold": 5
   },
   {
-    prefix_length: 2,
-    histogram: {0: 99, 1: 3, 2: 400, 3: 2},
-    expansion_threshold: 5
+    "prefix_length": 2,
+    "histogram": {0: 99, 1: 3, 2: 400, 3: 2},
+    "expansion_threshold": 5
   },
   {
-    prefix_length: 3,
+    "prefix_length": 3,
     // Note dropped buckets due to thresholding on the previous histogram
-    histogram: {0: 99, 1: 0, 4: 200, 5: 200},
-    expansion_threshold: 5
+    "histogram": {0: 99, 1: 0, 4: 200, 5: 200},
+    "expansion_threshold": 5
   }
 ]
 ```
