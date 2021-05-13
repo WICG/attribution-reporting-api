@@ -120,13 +120,13 @@ function processAggregate(triggerContext, attributionSourceContext, sourceType) 
  
   // Use the trigger context to pass some notion of a non-negative conversion value
   let purchaseValue = parseInt(triggerContext, 10)
-  histogram_contributions = [
+  histogramContributions = [
     {bucket: bucket, value: purchaseValue}
   ]
   return {
-    histogram_contributions: histogram_contributions,
-    processing_type: "insecure-single-server", // or "two-party" the default
-    aggregation_services: [
+    histogramContributions: histogramContributions,
+    processingType: "insecure-single-server", // or "two-party" the default
+    aggregationServices: [
       {origin: "https://helper1.com"},
       {origin: "https://helper2.com"},
     ]
