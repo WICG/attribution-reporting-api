@@ -34,7 +34,7 @@ Scripts running on a source site can register attribution sources via a new Java
 The browser will expose a new interface:
 
 ```
-[Exposed=Window] interface Attribution {
+[Exposed=Window] interface AttributionReporting {
   bool registerAttributionSource(AttributionSourceParams params);
 }
 ```
