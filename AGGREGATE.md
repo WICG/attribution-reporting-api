@@ -281,18 +281,21 @@ The output (after merging results from two servers) could look like this, where 
   {
     "prefix_length": 1,
     "histogram": {0: 102, 1: 402},
-    "expansion_threshold": 5
+    "expansion_threshold": 5,
+    "privacy_budget": ...
   },
   {
     "prefix_length": 2,
     "histogram": {0: 99, 1: 3, 2: 400, 3: 2},
-    "expansion_threshold": 5
+    "expansion_threshold": 5,
+    "privacy_budget": ...
   },
   {
     "prefix_length": 3,
     // Note dropped buckets due to thresholding on the previous histogram
     "histogram": {0: 99, 1: 0, 4: 200, 5: 200},
-    "expansion_threshold": 5
+    "expansion_threshold": 5,
+    "privacy_budget": ...
   }
 ]
 ```
