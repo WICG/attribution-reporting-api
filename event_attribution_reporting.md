@@ -35,8 +35,8 @@ The browser will expose a new interface:
 
 ```
 [Exposed=Window] interface Attribution {
-  bool registerAttributionSource(AttributionSourceParams params);
-}
+  boolean registerAttributionSource(AttributionSourceParams params);
+};
 ```
 
 `AttributionSourceParams` is a dictionary which contains the same attributes used by attribution source anchor tags:
@@ -45,9 +45,9 @@ The browser will expose a new interface:
 dictionary AttributionSourceParams {
   required DOMString attributionSourceEventId;
   required USVString attributionDestination;
-  optional USVString attributionReportTo;
-  optional unsigned long attributionExpiry;
-}
+  USVString attributionReportTo;
+  unsigned long attributionExpiry;
+};
 ```
 
 When invoked the browser will directly add the specified source to storage, and return whether the browser was successful in parsing the params.
