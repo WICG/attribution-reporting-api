@@ -49,6 +49,28 @@ conversion domain.
 
 # HTML monkeypatches # {#html-monkeypatches}
 
+<h3 id="longlong-reflection"> long long reflection </h3>
+
+Add the following rules for <a spec=html>reflecting</a> <a spec=html>content attributes</a>:
+
+If a reflecting IDL attribute has a signed integer type ({{long long}}) then, on getting, the content attribute must be
+parsed according to the <a spec="html">rules for parsing integers</a>, and if that is successful, and the value is in the
+range of the IDL attribute's type, the resulting value must be returned. If, on the other hand, it fails or returns
+an out of range value, or if the attribute is absent, then the default value must be returned instead, or 0 if there
+is no default value. On setting, the given value must be converted to the shortest possible string representing the
+number as a valid integer and then that string must be used as the new content attribute value.
+
+If a reflecting IDL attribute has a signed integer type ({{long long}}) that is <dfn>limited to only non-negative numbers</dfn> then,
+on getting, the content attribute must be parsed according to the <a spec="html">rules for parsing non-negative integers</a>, and if
+that is successful, and the value is in the range of the IDL attribute's type, the resulting value must be returned.
+If, on the other hand, it fails or returns an out of range value, or if the attribute is absent, the default value
+must be returned instead, or −1 if there is no default value. On setting, if the value is negative, the user agent
+must throw an {{"IndexSizeError"}} {{DOMException}}. Otherwise, the given value must be converted to the shortest possible
+string representing the number as a valid non-negative integer and then that string must be used as the new content
+attribute value.
+
+<h3 id="monkeypatch-anchor">&lt;a&gt; element</h3>
+
 Add the following <a spec=html>content attributes</a> to the <{a}> element:
 
 : <{a/attributionsourceeventid}>
@@ -72,8 +94,11 @@ partial interface HTMLAnchorElement {
 </pre>
 
 The IDL attributes {{HTMLAnchorElement/attributionDestination}}, {{HTMLAnchorElement/attributionSourceEventId}}, 
-{{HTMLAnchorElement/attributionReportTo}}, {{HTMLAnchorElement/attributionExpiry}}
-must <a spec=html>reflect</a> the respective content attributes of the same name.
+{{HTMLAnchorElement/attributionReportTo}} must <a spec=html>reflect</a> the respective content 
+attributes of the same name.
+
+The IDL attribute {{HTMLAnchorElement/attributionExpiry}} must reflect the <{a/attributionexpiry}>
+content attribute, [=limited to only non-negative numbers=].
 
 The <dfn for="a" element-attr>attributiondestination</dfn> attribute is a string
 representing an [=url/origin=] that is intended to be [=same site=] with the origin
