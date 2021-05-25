@@ -50,7 +50,7 @@ dictionary AttributionSourceParams {
 }
 ```
 
-When invoked the browser will directly add the specified source to storage, and resolve or reject the promise based on whether the browser was successful in parsing the params and storing the source.
+When invoked the browser will directly add the specified source to storage, and resolve or reject the promise based on whether the browser was successful in parsing the params and storing the source. Due to privacy reasons, some failure states (e.g. those that depend on cross-site information) may not show up as rejections.
 
 
 ### Different Classes of Attribution Sources
