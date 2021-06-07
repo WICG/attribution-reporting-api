@@ -190,9 +190,12 @@ this API:
 to trigger attribution for all matching sources.
 
 The browser will treat redirects to a URL of the form:
-`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?data=<data>]`
+`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?data=<data>&priority=<priority>]`
 
 as a special request, where optional data associated with the event that triggered attribution is stored in a query parameter.
+
+- `data`: an integer label used for the trigger, limited to 3 bits.
+- `priority`: an integer representing the priority of this trigger compared to other triggers for the same source, allows 64 bit values.
 
 When the special redirect is detected, the browser will schedule an attribution
 report as detailed in [Trigger attribution algorithm](#trigger-attribution-algorithm).
@@ -231,12 +234,18 @@ The most recent matching source is given a `credit` of value 100. All other matc
 
 For each matching source, schedule a report. To schedule a report,
 the browser will store
- {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, credit} for the source.
+ {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, credit} for the source.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 Each source is only allowed to schedule a maximum of three reports
-(see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). Once
-reports are scheduled, the browser will delete all sources that have scheduled three reports.
+(see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). 
+The browser will delete sources which have sent three reports.
+
+If a given source already has three scheduled reports when a new report is being scheduled, 
+the browser will compare the priority of the new report with the priorities of the old reports.
+If the new report has the lowest priority, it will be ignored. Otherwise, the browser will
+delete the scehduled report with the lowest priority, and schedule the new report.
+
 
 ### Multiple sources for the same trigger (Multi-touch)
 
@@ -263,6 +272,14 @@ privacy preserving way, we need to make sure that triggering a source multiple t
 One possible solution, outlined in this document, is for browsers to specify
 a maximum number of reports that can be sent for a single source. In this document
 our initial proposal is 3.
+
+However, this limit may not be sufficient in cases where attribution triggers consitute a long funnel. For example,
+a checkout flow involving: page visit, add to cart, signup, purchase would prevent the purchase trigger from
+being reported.
+
+To address this, the `priority` query param in the trigger redirect can be used to prioritize the purchase trigger,
+over the page visit trigger.
+
 
 Note that triggering attribution for the same source multiple times does not refresh
 the reporting windows (see [Sending Scheduled Reports](#sending-scheduled-reports)).
