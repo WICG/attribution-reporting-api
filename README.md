@@ -277,9 +277,8 @@ However, this limit may not be sufficient in cases where attribution triggers co
 a checkout flow involving: page visit, add to cart, signup, purchase would prevent the purchase trigger from
 being reported.
 
-To address this, the `priority` query param in the trigger redirect can be used to prioritize the purchase trigger,
-over the page visit trigger.
-
+To address this, the `priority` query param in the trigger redirect can be used to prioritize the purchase trigger
+over less important triggers like the page visit trigger.
 
 Note that triggering attribution for the same source multiple times does not refresh
 the reporting windows (see [Sending Scheduled Reports](#sending-scheduled-reports)).
