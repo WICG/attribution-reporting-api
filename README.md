@@ -192,7 +192,7 @@ to trigger attribution for all matching sources.
 The browser will treat redirects to a URL of the form:
 `https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?data=<data>&dedup-key=<dedup-key>]`
 
-as a special request. The query string for the request contains additional information about the attributeion trigger:
+as a special request. The query string for the request contains additional information about the attribution trigger:
 - `data`: optional data to identify the triggering event
 - `dedup-key`: optional key which will be used to deduplicate multiple triggers which contain the same dedup-key
 
@@ -236,7 +236,7 @@ the browser will store
  {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, credit, dedup-key} for the source.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
-The browser will only create reports for a source, the trigger's dedup-key has not already been associated with a report for that source.
+The browser will only create reports for a source if the trigger's dedup-key has not already been associated with a report for that source.
 
 Each source is only allowed to schedule a maximum of three reports
 (see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). Once
