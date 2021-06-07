@@ -241,10 +241,10 @@ Each source is only allowed to schedule a maximum of three reports
 (see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). 
 The browser will delete sources which have sent three reports.
 
-If a given source already has three scheduled reports when a new report is being scheduled, 
-the browser will compare the priority of the new report with the priorities of the old reports.
+If a source already has three scheduled reports when a new report is being scheduled, 
+the browser will compare the priority of the new report with the priorities of the scheduled reports for that source.
 If the new report has the lowest priority, it will be ignored. Otherwise, the browser will
-delete the scehduled report with the lowest priority, and schedule the new report.
+delete the scehduled report with the lowest priority and schedule the new report.
 
 
 ### Multiple sources for the same trigger (Multi-touch)
