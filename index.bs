@@ -151,9 +151,23 @@ to set the [=navigation params/attribution source=] of |navigationParams| to |at
 
 In the case where
 
+> If resource is a request whose url's scheme is "javascript"
+
+modify the substep 
+
+> 4. Let navigationParams be a new navigation params whose request is resource, 
+>     ...
+
+to set the [=navigation params/attribution source=] of |navigationParams| to |attributionSource|.
+
+In the case where
+
 > If resource is a request whose url's scheme is a fetch scheme
 
 modify the substep to pass |attributionSource| to the <a spec="html">process a navigate fetch</a> algorithm.
+
+Note: The final case, were the request is not a javascript or fetch scheme, does not need to be handled
+ as it will not result in the navigation of a top-level browsing context.
 
 <h4 id="monkeypatch-navigate-fetch">Process a navigate fetch</h4>
 
@@ -348,13 +362,14 @@ To <dfn>maybe process an attribution source</dfn> given a <a spec="HTML">navigat
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
 
 1. Let |cache| be the user agent's [=attribution source cache=].
-1. [=list/Remove=] all entries in |cache| where any of:
+1. [=list/Remove=] all entries in |cache| where all of the following are true:
     1. the entry's [=attribution source/attribution destination=] matches |source|'s [=attribution source/attribution destination=].
     1. the entry's [=attribution source/reporting endpoint=] matches |source|'s [=attribution source/reporting endpoint=].
-    1. the entry's [=attribution source/num reports=] value is greater than 0 .
+    1. the entry's [=attribution source/number of reports=] value is greater than 0 .
 
     Note: This causes the user agent to favor triggering newer [=attribution sources=] over sources that have already been triggered.
-1. [=set/Append=] |source| to |cache|.
+1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry=] value is less than the current time.
+1. If the [=list/size=] is less than an implementation-defined limit, [=set/Append=] |source| to |cache|.
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
