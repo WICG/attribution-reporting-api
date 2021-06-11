@@ -81,6 +81,8 @@ Add the following <a spec=html>content attributes</a> to the <{a}> element:
 :: [=url/origin=] to receive attribution reports
 : <{a/attributionexpiry}>
 :: Length of time the attribution souce is valid
+: <{a/attributionsourcepriority}>
+:: The priority of this source relative to other sources for attribution triggers
 
 Extend the <{a}> element's <a spec=html>DOM interface</a> to include the following interface:
 
@@ -90,6 +92,7 @@ partial interface HTMLAnchorElement {
     [CEReactions] attribute DOMString attributionSourceEventId;
     [CEReactions] attribute DOMString attributionReportTo;
     [CEReactions] attribute long long attributionExpiry;
+    [CEReactions] attribute long long attributionSourcePriority;
 };
 </pre>
 
@@ -114,6 +117,9 @@ The <dfn for="a" element-attr>attributionreportto</dfn> attribute optionally dec
 
 The <dfn for="a" element-attr>attributionexpiry</dfn> attribute optionally defines the amount
 of time in milliseconds the attribution source should be considered for reporting.
+
+The <dfn for="a" element-attr>attributionsourcepriority</dfn> attribute optionally defines the
+priority of a source relative to other sources when triggering attribution.
 
 <h3 id="monkeypatch-navigation">Navigation</h3>
 
@@ -241,6 +247,8 @@ An attribution source is a [=struct=] with the following items:
 :: An [=url/origin=].
 : <dfn>expiry</dfn>
 :: A point in time.
+: <dfn>priority</dfn>
+:: A 64-bit integer.
 : <dfn>source time</dfn>
 :: A point in time.
 : <dfn>number of reports</dfn>
@@ -322,7 +330,11 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
 1. Let |expiry| be 30 days.
 1. If |anchor| has an <{a/attributionexpiry}> attribute, and applying the
     <a spec="html">rules for parsing non-negative integers</a> to the attributes's value
-    results in a number greater than zero, then set |expiry| to that value.
+    results in an integer greater than zero, then set |expiry| to that value.
+1. Let |priority| be 0.
+1. If |anchor| has an <{a/attributionsourcepriority}> attribute, and applying the
+    <a spec="html">rules for parsing integers</a> to the attributes's value
+    results in an integer, then set |priority| to that value.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source origin=]
@@ -336,6 +348,8 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
     :: |reportingOrigin|
     : [=attribution source/expiry=]
     :: |currentTime| + |expiry|
+    : [=attribution source/priority=]
+    :: |priority|
     : [=attribution source/source time=]
     :: |currentTime|
 1. Return |source|
