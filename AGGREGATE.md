@@ -88,13 +88,13 @@ The worklet is used to generate histogram contributions, which are key-value pai
 
 The following code triggers attribution by invoking a worklet.
 ```javascript
-await window.attributionReporting.worklet.addModule("https://reporter.com/convert.js");
+await window.attributionReporting.worklet.addModule("https://reporter.example/convert.js");
 
 // The first argument should match the origin of the module we are invoking, and
 // determines the scope of attribution similar to the existing HTTP-based API,
 // i.e. it should match the "attributionreportto" attribute.
 // The last argument needs to match what AggregateAttributionReporter uses upon calling registerAggregateReporter
-window.attributionReporting.triggerAttribution("https://reporter.com", 
+window.attributionReporting.triggerAttribution("https://reporter.example", 
   <triggerContextStr>, "my-aggregate-reporter");
 ```
 
@@ -127,8 +127,8 @@ function processAggregate(triggerContext, attributionSourceContext, sourceType) 
     histogramContributions: histogramContributions,
     processingType: "insecure-single-server", // or "two-party" the default
     aggregationServices: [
-      {origin: "https://helper1.com"},
-      {origin: "https://helper2.com"},
+      {origin: "https://helper1.example"},
+      {origin: "https://helper2.example"},
     ]
   }
 }
@@ -160,16 +160,16 @@ Attribution reports will look very similar to [event-level reports](https://gith
 
 ```
 {
-  "source_site": "https://publisher.com",
-  "attribution_destination": "https://advertiser.com",
+  "source_site": "https://publisher.example",
+  "attribution_destination": "https://advertiser.example",
   "scheduled_report_time": <timestamp in msec>,
   "aggregation_service_payloads": [
     {
-      "origin": "https://helper1.com",
+      "origin": "https://helper1.example",
       "payload": "<base64 encoded encrypted data>"
     },
     {
-      "origin": "https://helper2.com",
+      "origin": "https://helper2.example",
       "payload": "<base64 encoded encrypted data>"
     }
   ],
