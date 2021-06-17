@@ -184,9 +184,9 @@ advertiser pages. These can be repurposed to trigger attribution in
 this API:
 
 ```
-<img src="https://ad-tech.test/conversiontracker"/>
+<img src="https://ad-tech.example/conversiontracker"/>
 ```
-`https://ad-tech.test/conversiontracker` can be redirected to `https://ad-tech.test/.well-known/attribution-reporting/trigger-attribution`
+`https://ad-tech.example/conversiontracker` can be redirected to `https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution`
 to trigger attribution for all matching sources.
 
 The browser will treat redirects to a URL of the form:
@@ -387,7 +387,7 @@ Within the iframe, `toasters.example` code annotates their anchor tags to use
 the `ad-tech.example` reporting origin, and uses a source event id value that allows
 `ad-tech.example` to identify the ad click (12345678)
 ```
-<iframe src="https://ad-tech-3p.test/show-some-ad" allow="attribution-reporting ‘src’ (https://ad-tech.example)">
+<iframe src="https://ad-tech-3p.example/show-some-ad" allow="attribution-reporting ‘src’ (https://ad-tech.example)">
 ...
 <a 
   href="https://toasters.example/purchase"
