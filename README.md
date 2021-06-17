@@ -154,9 +154,9 @@ associated reporting origin.
 In order to prevent arbitrary third parties from registering sources without the publisher’s knowledge, the Attribution Reporting API will need to be enabled in child contexts by a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/):
 
 ```
-<iframe src="https://advertiser.test" allow="attribution-reporting 'src'">
+<iframe src="https://advertiser.example" allow="attribution-reporting 'src'">
 
-<a … id="..." attributionreportto="https://ad-tech.com"></a>
+<a … id="..." attributionreportto="https://ad-tech.example"></a>
 
 </iframe>
 ```
@@ -378,65 +378,65 @@ browers can choose a "fractional" bit limit if they want to.
 Sample Usage
 ============
 
-`publisher.com` wants to show ads on their site, so they contract out to
-`ad-tech.com`. `ad-tech.com`'s script in the main document creates a
+`publisher.example` wants to show ads on their site, so they contract out to
+`ad-tech.example`. `ad-tech.example`'s script in the main document creates a
 cross-origin iframe to host the third party advertisement for
-`toasters.com`, and sets `ad-tech.com` to be an allowed reporting origin.
+`toasters.example`, and sets `ad-tech.example` to be an allowed reporting origin.
 
-Within the iframe, `toasters.com` code annotates their anchor tags to use
-the `ad-tech.com` reporting origin, and uses a source event id value that allows
-`ad-tech.com` to identify the ad click (12345678)
+Within the iframe, `toasters.example` code annotates their anchor tags to use
+the `ad-tech.example` reporting origin, and uses a source event id value that allows
+`ad-tech.example` to identify the ad click (12345678)
 ```
-<iframe src="https://ad-tech-3p.test/show-some-ad" allow="attribution-reporting ‘src’ (https://ad-tech.com)">
+<iframe src="https://ad-tech-3p.test/show-some-ad" allow="attribution-reporting ‘src’ (https://ad-tech.example)">
 ...
 <a 
-  href="https://toasters.com/purchase"
-  attributiondestination="https://toasters.com"
+  href="https://toasters.example/purchase"
+  attributiondestination="https://toasters.example"
   attributionsourceeventid="12345678"
-  attributionreportto="https://ad-tech.com"
+  attributionreportto="https://ad-tech.example"
   attributionexpiry=604800000>
 ...
 </iframe>
 ```
 
 A user clicks on the ad and this opens a window that lands on a URL to
-`toasters.com/purchase`. An attribution source is logged to browser storage
+`toasters.example/purchase`. An attribution source is logged to browser storage
 since the landing page matches the `attributiondestination` eTLD+1. The following data is
 stored:
 
 ```
 {
   attributionsourceeventid: 12345678,
-  attributiondestination: https://toasters.com,
-  attributionreportto: https://ad-tech.com,
+  attributiondestination: https://toasters.example,
+  attributionreportto: https://ad-tech.example,
   attributionexpiry: <now() + 604800>
 }
 ```
 
-2 days later, the user buys something on `toasters.com`. `toasters.com`
+2 days later, the user buys something on `toasters.example`. `toasters.example`
 triggers attribution on the few different ad-tech companies it buys
-ads on, including `ad-tech.com`, by adding conversion pixels:
+ads on, including `ad-tech.example`, by adding conversion pixels:
 
 ```
-<img src="https://ad-tech.com/trigger-attribution?model=toastmaster3000&price=$49.99&..." />
+<img src="https://ad-tech.example/trigger-attribution?model=toastmaster3000&price=$49.99&..." />
 ```
 
-`ad-tech.com` receives this request, and decides to trigger attribution
-on `toasters.com`. They must compress all of the data into
-3 bits, so `ad-tech.com` chooses to encode the value as “2" (e.g. some
+`ad-tech.example` receives this request, and decides to trigger attribution
+on `toasters.example`. They must compress all of the data into
+3 bits, so `ad-tech.example` chooses to encode the value as “2" (e.g. some
 bucketed version of the purchase value). They respond with a 302
 redirect to:
 ```
-https://ad-tech.com/.well-known/attribution-reporting/trigger-attribution?data=2
+https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution?data=2
 ```
 
 The browser sees this request, and schedules a report to be
 sent. The report is associated with the 7 day deadline as the
-2 day deadline has passed. Roughly 5 days later, `ad-tech.com` receives
+2 day deadline has passed. Roughly 5 days later, `ad-tech.example` receives
 the following HTTP POST:
 ```
 URL:
-https://ad-tech.com/.well-known/attribution-reporting/report-attribution
+https://ad-tech.example/.well-known/attribution-reporting/report-attribution
 
 body:
 {
