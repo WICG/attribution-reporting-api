@@ -1,6 +1,6 @@
 # Attribution Reporting API
 
-_This document is an overview of the Attribution Reporting API proposal. The API supports clicks and views across event-level and aggregate reports. If you're looking specifically for the explainer for event-level click reports that used to live on this page, head over to [LINK](LINK) instead._
+_This document is an overview of the Attribution Reporting API proposal. The API supports clicks and views across event-level and aggregate reports. If you're looking specifically for the explainer for event-level click reports that used to live on this page, head over to [Attribution Reporting API for Click-Through](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md) instead._
 
 ## Participate
 
