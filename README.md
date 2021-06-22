@@ -30,7 +30,7 @@ This API is being incubated and developed in the open. All the features below ar
 
 ### Event-Level reports (clicks and views)
 
-Attribute cross-site click-through or view-through conversions at an event's level. See details in the [Explainer: event-level reports for views](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_views.md]) and in the [Explainer: event-level reports for clicks](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md])
+Attribute cross-site click-through or view-through conversions at an event's level. See details in the [Explainer: event-level reports for views](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_views.md]) and in the [Explainer: event-level reports for clicks](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md]).
 
 Implementation status:
 
@@ -58,6 +58,6 @@ Implementation status: `🟤 not implemented yet (all browsers)`
 
 ## Documentation
 
-- [API guide](https://web.dev/conversion-measurement) // only valid for the first iteration of the API (event-level, clicks only)
-- [Experiment guide](https://web.dev/using-conversion-measurement/) // only valid for the first iteration of the API (event-level, clicks only)
-- [Demo](https://goo.gle/demo-attribution-reporting) // only demos the first iteration of the API (event-level, clicks only)
+- [API guide](https://web.dev/conversion-measurement) // ⚠️ only valid for the first iteration of the API (event-level, clicks only)
+- [Experiment guide](https://web.dev/using-conversion-measurement/) // ⚠️ only valid for the first iteration of the API (event-level, clicks only)
+- [Demo](https://goo.gle/demo-attribution-reporting) // ⚠️ only demos the first iteration of the API (event-level, clicks only)
