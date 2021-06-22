@@ -28,7 +28,7 @@ Any browser on Android could implement this API. This proposal was inspired by S
 
 ### Existing Web API (for reference)
 
-See [explainer](https://github.com/WICG/conversion-measurement-api/blob/main/README.md#registering-attribution-sources-for-anchor-tag-navigations).
+See [explainer](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md#registering-attribution-sources-for-anchor-tag-navigations).
 ```
 <!-- Click-through attributions: -->
 <a 

@@ -1,4 +1,4 @@
-# Event Attribution Reporting API Explainer
+# Attribution Reporting API for View-Through
 
 
 ## Authors:
