@@ -194,7 +194,7 @@ The browser will treat redirects to a URL of the form:
 
 as a special request. The query string for the request contains additional information about the attribution trigger:
 - `data`: optional data to identify the triggering event
-- `dedup-key`: optional key which will be used to deduplicate multiple triggers which contain the same dedup-key
+- `dedup-key`: optional signed 64 bit integer which will be used to deduplicate multiple triggers which contain the same dedup-key for a single source
 
 When the special redirect is detected, the browser will schedule an attribution
 report as detailed in [Trigger attribution algorithm](#trigger-attribution-algorithm).
