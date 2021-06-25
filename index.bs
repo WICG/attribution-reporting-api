@@ -42,10 +42,6 @@ reported at a later time, possibly multiple days in the future.
 Reports are sent to reporting endpoints that are configured in the attribution source
 and attribution trigger.
 
-# Fetch monkeypatches # {#fetch-monkeypatches}
-
-Issue: Patch into fetch for cancelling requests redirected to the .well-known
-conversion domain.
 
 # HTML monkeypatches # {#html-monkeypatches}
 
@@ -235,6 +231,18 @@ Modify the step:
 to call <a spec="html">navigate</a> with |attributionSource| set to |attributionSource|.
 
 
+# Fetch monkeypatches # {#fetch-monkeypatches}
+
+In <a spec="FETCH">main fetch</a>, within the step:
+
+> 17. If response is not a network error and any of the following returns blocked
+>     ...
+
+add the following check to the list:
+
+* [=should internalResponse to request be blocked as attribution trigger=]
+
+
 # Structures # {#structures}
 
 <h3 dfn-type=dfn>Attribution source</h3>
@@ -286,8 +294,12 @@ An attribution report is a [=struct=] with the following items:
 :: A [=string=].
 : <dfn>trigger data</dfn>
 :: A [=string=].
-: <dfn>credit</dfn>
-:: An integer in the range [0, 100].
+: <dfn>reporting endpoint</dfn>
+:: An [=url/origin=]
+: <dfn>attribution destination</dfn>
+:: An [=url/origin=]
+: <dfn>report time</dfn>
+:: A point in time
 
 </dl>
 
@@ -303,7 +315,22 @@ shared among all [=environment settings objects=].
 Note: This would ideally use <a spec=storage>storage bottles</a> to provide access to the attribution caches.
 However attribution data is inherently cross-site, and operations on storage would need to span across all storage bottle maps.
 
-# Algorithms # {#algorithms}
+# Source Algorithms # {#source-algorithms}
+
+<h3 algorithm id="parsing-data-fields">Parsing data fields</h3>
+
+This section defines how to parse and extract both
+[=attribution source/event id=] and [=attribution trigger/trigger data=].
+
+To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an integer
+|maxData| perform the following steps. They return a non-negative integer:
+
+1. Let |decodedInput| be the result of applying the
+    <a spec="html">rules for parsing non-negative integers</a> to |input|.
+1. If |decodedInput| is an error, return zero.
+1. If |decodedInput| is greater than 2<sup>64</sup>, return zero.
+1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by |maxData|.
+1. Return |clampedDecodedInput|.
 
 <h3 algorithm id="parsing-attribution-destination">Parsing an attribution destination</h3>
 
@@ -385,59 +412,77 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry=] value is less than the current time.
 1. If the [=list/size=] of |cache| is less than an implementation-defined limit, [=set/append=] |source| to |cache|.
 
+
+# Triggering Algorithms # {#trigger-algorithms}
+
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
 To <dfn>obtain an attribution trigger</dfn> given a [=url=] |url| and an
-[=environment settings object=] |environment|, return a [=attribution trigger=]
-with the items:
+[=environment settings object=] |environment|, run the following steps:
+
+1. Let |triggerData| be 0.
+1. If |url|'s [=url/query=] has a `"data"` field, set |triggerData| to the result of running [=parse attribution data=] with
+    the value associated with field modulo the user agent's [=max trigger data value=].
+1. Let |trigger| be a new [=attribution trigger=] with the items:
 
     : [=attribution trigger/trigger origin=]
     :: |environment|'s [=environment/top-level origin=].
     : [=attribution trigger/trigger data=]
-    :: The result of applying [=parse attribution data=] with the value associated with the
-        `"data"` field of |url|'s [=url/query=] modulo the user agent's [=max trigger data value=].
+    :: |triggerData|
     : [=attribution trigger/trigger time=]
     :: The current time.
     : [=attribution trigger/reporting endpoint=]
     :: |url|'s [=url/origin=]
+1. Return |trigger|
 
 <dfn>Max trigger data value</dfn> is a vendor specific integer which controls the potential values of [=attribution report/trigger data=].
 
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
-<h3 algorithm id="triggering-attribution">Triggering attribution</h3>
+<h3 dfn id="should-block-response">Should internalResponse to request be blocked as attribution trigger</h3>
 
-To <dfn>trigger attribution</dfn> from a [=request=] |request|, run the following steps:
+Given a [=request=] |request|:
 
-1. If |request|'s [=request/current url's=] [=url/path=] is not `.well-known/attribution-reporting/trigger-attribution`,
-    return.
-1. If |request|'s [=request/redirect count=] is less than 1, return.
+1. If |request|'s [=request/current url's=] [=url/path=] is not equal to « ".well-known","attribution-reporting","trigger-attribution" »,
+    return <strong>allowed</strong>.
+1. Let |environment| be |request|'s [=request/window=].
+1. If |environment| is not an [=environment settings object=], return <strong>allowed</strong>.
+1. If |environment|'s [=environment/top-level origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
+1. If |request|'s [=request/current url's=] [=url/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
+1. If |request|'s [=request/redirect count=] is less than 1, return <strong>allowed</strong>.
 1. Let |previousUrl| be the second to last [=URL=] in |request|'s
     [=request/URL list=].
 1. If |request|'s [=request/current url's=] [=url/origin=] is not [=same origin=] with
-    |previousUrl|'s [=url/origin=], return.
-1. Let |trigger| be the result of running [=obtain an attribution trigger=] with
-    |request|'s [=request/current url=] and |request|'s client.
+    |previousUrl|'s [=url/origin=], return <strong>allowed</strong>.
 
-    Note: the restriction to require a redirect is needed to ensure that the
-    request's origin is aware and in control of triggering attribution.
+    Note: The restriction to require a redirect is necessary to ensure that the
+     request's origin is aware and in control of the conversion registration.
+1. Let |trigger| be the result of running [=obtain an attribution trigger=] with |request|'s [=request/current url=] and |environment|.
+1. [=Queue a task=] to [=trigger attribution=] with |trigger|.
+1. Return <strong>blocked</strong>
 
-1. Issue: Need to spec how to store |trigger|.
+<h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
-<h3 algorithm id="parsing-data-fields">Parsing data fields</h3>
+To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run the following steps:
 
-This section defines how to parse and extract both
-[=attribution source/event id=] and [=attribution trigger/trigger data=].
+1. Let |matchingSources| be all entries in the [=attribution source cache=] where the following are true:
+    1. entry's [=attribution source/attribution destination=] and |source|'s [=attribution source/attribution destination=] are equal.
+    1. entry's [=attribution source/reporting endpoint=] and |source|'s [=attribution source/reporting endpoint=] are equal.
+    1. entry's [=attribution source/expiry=] is greater than the current time.
+1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources| in descending order, with |a| being less than |b| if |a|'s [=attribution source/priority=] 
+    is less than |b|'s [=attribution source/priority=] and |a|'s [=attribution source/source time=] is less than |b|'s [=attribution source/source time=].
+1. Let |sourceToAttribute| be the first item in |matchingSources|.
+1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
+1. For each |item| of |matchingSources|:
+    1. [=list/Remove=] |item| from the [=attribution source cache=].
+1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute| and |trigger|.
+1. Add |report| to the [=attribution report cache=].
+1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
+1. If |source|'s [=attribution source/number of reports=] value is greater than or equal to the user agent's [=max reports per source=] value, remove |source| from the [=attribution source cache=].
 
-To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an integer
-|maxData| perform the following steps. They return a non-negative integer:
+<dfn>Max reports per source</dfn> is a vendor specific integer which controls how many [=attribution reports=] can be created for an [=attribution source=]. 
 
-1. Let |decodedInput| be the result of applying the
-    <a spec="html">rules for parsing non-negative integers</a> to |input|.
-1. If |decodedInput| is an error, return zero.
-1. If |decodedInput| is greater than 2<sup>64</sup>, return zero.
-1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by |maxData|.
-1. Return |clampedDecodedInput|.
+Note: This parameter represents a privacy/utility tradeoff. Lower values mean that less trigger-side data can be joined with a single event id. Larger values allows for more robust reporting.
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 
@@ -470,11 +515,23 @@ return a point in time.
     <dd>return |source|'s [=attribution source/expiry=] + 1 hour.</dd>
     </dl>
 
-<h3 algorithm id="queuing-report">Queuing a conversion report</h3>
-TODO
+<h3 algorithm id="obtaining-a-report">Obtaining a report</h3>
 
-<h3 algorithm id="attribution-credit">Establishing attribution credit</h3>
-TODO
+To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=attribution trigger=] |trigger|:
+
+1. Let |report| be a new [=attribution report=] struct whose items are:
+
+    : [=attribution report/event id=]
+    :: |source|'s [=attribution source/event id=].
+    : [=attribution report/trigger data=]
+    :: |trigger|'s [=attribution trigger/trigger data=].
+    : [=attribution report/reporting endpoint=]
+    :: |source|'s [=attribution source/reporting endpoint=].
+    : [=attribution report/attribution destination=]
+    :: |source|'s [=attribution source/attribution destination=].
+    : [=attribution report/reporting time=]
+    :: The result of running [=obtain a report delivery time=] with |source| and |trigger|'s [=attribution trigger/trigger time=].
+1. Return |report|.
 
 # Security consideration # {#security-considerations}
 TODO
