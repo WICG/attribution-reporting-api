@@ -6,7 +6,8 @@
 *   John Delaney
 
 ## Participate
-* Please file [Github issues](https://github.com/WICG/conversion-measurement-api/issues?q=is%3Aissue+is%3Aopen+label%3Aapp-to-web+) with the "app-to-web" label
+See [Participate](https://github.com/WICG/conversion-measurement-api#participate).
+Please file [GitHub issues](https://github.com/WICG/conversion-measurement-api/issues?q=is%3Aissue+is%3Aopen+label%3Aapp-to-web+) with the `app-to-web` label.
 
 
 ## Introduction
@@ -28,7 +29,7 @@ Any browser on Android could implement this API. This proposal was inspired by S
 
 ### Existing Web API (for reference)
 
-See [explainer](https://github.com/WICG/conversion-measurement-api/blob/main/README.md#registering-attribution-sources-for-anchor-tag-navigations).
+See [explainer](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md#registering-attribution-sources-for-anchor-tag-navigations).
 ```
 <!-- Click-through attributions: -->
 <a 

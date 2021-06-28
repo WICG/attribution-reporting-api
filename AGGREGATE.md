@@ -4,26 +4,27 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Authors](#authors)
-- [Participate](#participate)
-- [Introduction](#introduction)
-- [Goals](#goals)
-- [API changes](#api-changes)
-  - [Attribution source registration](#attribution-source-registration)
-  - [Attribution trigger registration](#attribution-trigger-registration)
-  - [Aggregate attribution reports](#aggregate-attribution-reports)
-  - [Privacy budgeting](#privacy-budgeting)
-- [Data processing through the aggregation service](#data-processing-through-the-aggregation-service)
-  - [High level two-party flow](#high-level-two-party-flow)
-  - [Example query model](#example-query-model)
-  - [insecure-single-server should be compatible with MPC](#insecure-single-server-should-be-compatible-with-mpc)
-- [Privacy considerations](#privacy-considerations)
-- [Considered alternatives / follow-up work](#considered-alternatives--follow-up-work)
-  - [Larger / sparser histogram domains](#larger--sparser-histogram-domains)
-  - [Declarative / HTTP-based aggregation triggering](#declarative--http-based-aggregation-triggering)
-  - [Custom attribution models](#custom-attribution-models)
-  - [“Count” vs. “value” histograms](#count-vs-value-histograms)
-- [References & acknowledgements](#references--acknowledgements)
+- [Attribution Reporting API with Aggregate Reports](#attribution-reporting-api-with-aggregate-reports)
+  - [Authors](#authors)
+  - [Participate](#participate)
+  - [Introduction](#introduction)
+  - [Goals](#goals)
+  - [API changes](#api-changes)
+    - [Attribution source registration](#attribution-source-registration)
+    - [Attribution trigger registration](#attribution-trigger-registration)
+    - [Aggregate attribution reports](#aggregate-attribution-reports)
+    - [Privacy budgeting](#privacy-budgeting)
+  - [Data processing through the aggregation service](#data-processing-through-the-aggregation-service)
+    - [High level two-party flow](#high-level-two-party-flow)
+    - [Example query model](#example-query-model)
+    - [insecure-single-server as an interim step](#insecure-single-server-as-an-interim-step)
+  - [Privacy considerations](#privacy-considerations)
+  - [Considered alternatives / follow-up work](#considered-alternatives--follow-up-work)
+    - [Larger / sparser histogram domains](#larger--sparser-histogram-domains)
+    - [Declarative / HTTP-based aggregation triggering](#declarative--http-based-aggregation-triggering)
+    - [Custom attribution models](#custom-attribution-models)
+    - [“Count” vs. “value” histograms](#count-vs-value-histograms)
+  - [References & acknowledgements](#references--acknowledgements)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -36,7 +37,7 @@
 
 ## Participate
 
-*   https://github.com/WICG/conversion-measurement-api/issues
+See [Participate](https://github.com/WICG/conversion-measurement-api#participate).
 
 ## Introduction
 
@@ -64,7 +65,7 @@ Note: fraud detection is a goal but it is left out of scope for this document. W
 
 ## API changes
 
-Aggregate reports use the same API base [as event-level reports](https://github.com/WICG/conversion-measurement-api/blob/main/README.md), with a few new extensions.
+Aggregate reports use the same API base [as event-level reports for clicks](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md), with a few new extensions.
 
 ### Attribution source registration
 
