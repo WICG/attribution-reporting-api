@@ -1,5 +1,5 @@
 
-# Attribution Reporting API for Click-Through
+# Attribution Reporting for Click-Through Measurement
 
 This document is an explainer for a potential new web platform feature
 which allows for measuring and reporting ad click conversions.
@@ -13,7 +13,7 @@ See the explainer on [aggregate measurement](AGGREGATE.md) for a potential exten
   - [Glossary](#glossary)
   - [Motivation](#motivation)
   - [Prior Art](#prior-art)
-- [Attribution Reporting API for Click-Through](#attribution-reporting-api-for-click-through)
+- [Attribution Reporting for Click-Through Measurement](#attribution-reporting-for-click-through-measurement)
   - [Glossary](#glossary)
   - [Motivation](#motivation)
   - [Prior Art](#prior-art)

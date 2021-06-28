@@ -37,7 +37,7 @@
 
 ## Participate
 
-*   https://github.com/WICG/conversion-measurement-api/issues
+See [Participate](https://github.com/WICG/conversion-measurement-api#participate).
 
 ## Introduction
 

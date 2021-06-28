@@ -6,7 +6,8 @@
 *   John Delaney
 
 ## Participate
-* Please file [Github issues](https://github.com/WICG/conversion-measurement-api/issues?q=is%3Aissue+is%3Aopen+label%3Aapp-to-web+) with the "app-to-web" label
+See [Participate](https://github.com/WICG/conversion-measurement-api#participate).
+Please file [GitHub issues](https://github.com/WICG/conversion-measurement-api/issues?q=is%3Aissue+is%3Aopen+label%3Aapp-to-web+) with the `app-to-web` label.
 
 
 ## Introduction

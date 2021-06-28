@@ -1,4 +1,4 @@
-# Attribution Reporting API for View-Through
+# Attribution Reporting for View-Through Measurement
 
 
 ## Authors:
@@ -8,7 +8,7 @@
 
 
 ## Participate
-https://github.com/WICG/conversion-measurement-api/issues
+See [Participate](https://github.com/WICG/conversion-measurement-api#participate).
 
 
 ## Introduction
