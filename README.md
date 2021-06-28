@@ -1,6 +1,6 @@
 # Attribution Reporting API
 
-_This document is an overview of the Attribution Reporting API proposal. The API supports clicks and views across event-level and aggregate reports. If you're looking specifically for the explainer for event-level click reports that used to live on this page, head over to [Attribution Reporting for Click-Through Measurement](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md) instead._
+_This document is an overview of the Attribution Reporting API proposal. The API supports measurement of clicks and views with event-level and aggregate reports.. If you're looking specifically for the explainer for event-level click reports that used to live on this page, head over to [Attribution Reporting for Click-Through Measurement](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md) instead._
 
 ## Participate
 
@@ -26,11 +26,11 @@ The API enables two types of attribution reports:
 
 🕙 Last updated: June 2021
 
-This API is being incubated and developed in the open. All the features below are proposals under incubation. This list evolves over time.
+All the features below are proposals under incubation. This list evolves over time.
 
 ### Event-Level reports (clicks and views)
 
-Attribute cross-site click-through or view-through conversions at an event's level. See details in the [Explainer: event-level reports for views](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_views.md]) and in the [Explainer: event-level reports for clicks](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md]).
+Attribute cross-site click-through or view-through conversions with reports at a per-event level. See details in the [Explainer: event-level reports for views](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_views.md]) and in the [Explainer: event-level reports for clicks](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md]).
 
 Implementation status:
 
@@ -56,7 +56,7 @@ Attribute conversions occurring across distinct devices, i.e. as distinct web br
 
 Implementation status: `🟤 not implemented yet (all browsers)`
 
-## Documentation
+## External Documentation
 - [API overview](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting/)
 
 - [API guide](https://web.dev/conversion-measurement) // ⚠️ only valid for the first iteration of the API (event-level, clicks only)
