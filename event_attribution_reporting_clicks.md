@@ -191,7 +191,7 @@ this API:
 to trigger attribution for all matching sources.
 
 The browser will treat redirects to a URL of the form:
-`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?data=<data>&priority=<priority>]`
+`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?trigger-data=<trigger-data>&priority=<priority>]`
 
 as a special request, where optional data associated with the event that triggered attribution is stored in a query parameter.
 
@@ -428,7 +428,7 @@ on `toasters.example`. They must compress all of the data into
 bucketed version of the purchase value). They respond with a 302
 redirect to:
 ```
-https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution?data=2
+https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution?trigger-data=2
 ```
 
 The browser sees this request, and schedules a report to be
