@@ -228,11 +228,9 @@ When the browser receives a attribution trigger redirect on a URL matching
 the `attributiondestination` eTLD+1, it looks up all sources in storage that
 match <`attributionreportto`, `attributiondestination`>.
 
-The most recent matching source is given a `credit` of value 100. All other matching sources are given a `credit` of value 0.
-
 For each matching source, schedule a report. To schedule a report,
 the browser will store
- {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, credit, dedup-key} for the source.
+ {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, dedup-key} for the source.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 The browser will only create reports for a source if the trigger's dedup-key has not already been associated with a report for that source.
@@ -247,13 +245,7 @@ delete the scheduled report with the lowest priority and schedule the new report
 
 ### Multiple sources for the same trigger (Multi-touch)
 
-If multiple sources were clicked and associated with a single attribution trigger, send reports for all of them. 
-
-To provide additional utility, the browser can choose to provide additional annotations to each of these reports, attributing credits for the triggering redirect to them individually. Attribution models allow for more sophisticated, accurate measurement.
-
-The default attribution model will be last-click attribution, giving the last-clicked source for a given trigger redirect all of the credit.
-
-To remain flexible, the browser sends an `credit` of value 0 to 100 for all reports associated with a single trigger. This represents the percent of attribution a source received. The sum of credits across a set of reports for one trigger should equal 100.
+If multiple sources were clicked and associated with a single attribution trigger, send reports for the one with the highest priority.
 
 There are many possible alternatives to this,
 like providing a choice of rules-based attribution models. However, it
@@ -341,8 +333,6 @@ The report data is included in the request body as a JSON object with the follow
 -   `source_event_id`: 64-bit event id set on the attribution source
 
 -   `trigger_data`: 3-bit data set in the attribution trigger redirect
-
--   `credit`: integer in range [0, 100], denotes the percentage of credit this source received for the given trigger. If a trigger only had one matching source, this will be 100.
 
 The advertiser site’s eTLD+1 will be added as the Referrer. Note that it
 might be useful to advertise which data limits were used in the
@@ -439,8 +429,7 @@ https://ad-tech.example/.well-known/attribution-reporting/report-attribution
 body:
 {
   "source_event_id": "12345678",
-  "trigger_data": "2",
-  "credit": 100
+  "trigger_data": "2"
 }
 ```
 
