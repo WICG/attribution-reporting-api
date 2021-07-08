@@ -4,26 +4,27 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Authors](#authors)
-- [Participate](#participate)
-- [Introduction](#introduction)
-- [Goals](#goals)
-- [API changes](#api-changes)
-  - [Attribution source registration](#attribution-source-registration)
-  - [Attribution trigger registration](#attribution-trigger-registration)
-  - [Aggregate attribution reports](#aggregate-attribution-reports)
-  - [Privacy budgeting](#privacy-budgeting)
-- [Data processing through the aggregation service](#data-processing-through-the-aggregation-service)
-  - [High level two-party flow](#high-level-two-party-flow)
-  - [Example query model](#example-query-model)
-  - [insecure-single-server should be compatible with MPC](#insecure-single-server-should-be-compatible-with-mpc)
-- [Privacy considerations](#privacy-considerations)
-- [Considered alternatives / follow-up work](#considered-alternatives--follow-up-work)
-  - [Larger / sparser histogram domains](#larger--sparser-histogram-domains)
-  - [Declarative / HTTP-based aggregation triggering](#declarative--http-based-aggregation-triggering)
-  - [Custom attribution models](#custom-attribution-models)
-  - [“Count” vs. “value” histograms](#count-vs-value-histograms)
-- [References & acknowledgements](#references--acknowledgements)
+- [Attribution Reporting API with Aggregate Reports](#attribution-reporting-api-with-aggregate-reports)
+  - [Authors](#authors)
+  - [Participate](#participate)
+  - [Introduction](#introduction)
+  - [Goals](#goals)
+  - [API changes](#api-changes)
+    - [Attribution source registration](#attribution-source-registration)
+    - [Attribution trigger registration](#attribution-trigger-registration)
+    - [Aggregate attribution reports](#aggregate-attribution-reports)
+    - [Privacy budgeting](#privacy-budgeting)
+  - [Data processing through the aggregation service](#data-processing-through-the-aggregation-service)
+    - [High level two-party flow](#high-level-two-party-flow)
+    - [Example query model](#example-query-model)
+    - [insecure-single-server as an interim step](#insecure-single-server-as-an-interim-step)
+  - [Privacy considerations](#privacy-considerations)
+  - [Considered alternatives / follow-up work](#considered-alternatives--follow-up-work)
+    - [Larger / sparser histogram domains](#larger--sparser-histogram-domains)
+    - [Declarative / HTTP-based aggregation triggering](#declarative--http-based-aggregation-triggering)
+    - [Custom attribution models](#custom-attribution-models)
+    - [“Count” vs. “value” histograms](#count-vs-value-histograms)
+  - [References & acknowledgements](#references--acknowledgements)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -36,7 +37,7 @@
 
 ## Participate
 
-*   https://github.com/WICG/conversion-measurement-api/issues
+See [Participate](https://github.com/WICG/conversion-measurement-api#participate).
 
 ## Introduction
 
@@ -64,7 +65,7 @@ Note: fraud detection is a goal but it is left out of scope for this document. W
 
 ## API changes
 
-Aggregate reports use the same API base [as event-level reports](https://github.com/WICG/conversion-measurement-api/blob/main/README.md), with a few new extensions.
+Aggregate reports use the same API base [as event-level reports for clicks](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md), with a few new extensions.
 
 ### Attribution source registration
 
@@ -88,13 +89,13 @@ The worklet is used to generate histogram contributions, which are key-value pai
 
 The following code triggers attribution by invoking a worklet.
 ```javascript
-await window.attributionReporting.worklet.addModule("https://reporter.com/convert.js");
+await window.attributionReporting.worklet.addModule("https://reporter.example/convert.js");
 
 // The first argument should match the origin of the module we are invoking, and
 // determines the scope of attribution similar to the existing HTTP-based API,
 // i.e. it should match the "attributionreportto" attribute.
 // The last argument needs to match what AggregateAttributionReporter uses upon calling registerAggregateReporter
-window.attributionReporting.triggerAttribution("https://reporter.com", 
+window.attributionReporting.triggerAttribution("https://reporter.example", 
   <triggerContextStr>, "my-aggregate-reporter");
 ```
 
@@ -127,8 +128,8 @@ function processAggregate(triggerContext, attributionSourceContext, sourceType) 
     histogramContributions: histogramContributions,
     processingType: "insecure-single-server", // or "two-party" the default
     aggregationServices: [
-      {origin: "https://helper1.com"},
-      {origin: "https://helper2.com"},
+      {origin: "https://helper1.example"},
+      {origin: "https://helper2.example"},
     ]
   }
 }
@@ -160,16 +161,16 @@ Attribution reports will look very similar to [event-level reports](https://gith
 
 ```
 {
-  "source_site": "https://publisher.com",
-  "attribution_destination": "https://advertiser.com",
+  "source_site": "https://publisher.example",
+  "attribution_destination": "https://advertiser.example",
   "scheduled_report_time": <timestamp in msec>,
   "aggregation_service_payloads": [
     {
-      "origin": "https://helper1.com",
+      "origin": "https://helper1.example",
       "payload": "<base64 encoded encrypted data>"
     },
     {
-      "origin": "https://helper2.com",
+      "origin": "https://helper2.example",
       "payload": "<base64 encoded encrypted data>"
     }
   ],

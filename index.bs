@@ -49,33 +49,191 @@ conversion domain.
 
 # HTML monkeypatches # {#html-monkeypatches}
 
-Add the following content attributes to the <{a}> element:
+<h3 id="longlong-reflection"> long long reflection </h3>
+
+Add the following rules for <a spec=html>reflecting</a> <a spec=html>content attributes</a>:
+
+If a reflecting IDL attribute has a signed integer type ({{long long}}) then, on getting, the content attribute must be
+parsed according to the <a spec="html">rules for parsing integers</a>, and if that is successful, and the value is in the
+range of the IDL attribute's type, the resulting value must be returned. If, on the other hand, it fails or returns
+an out of range value, or if the attribute is absent, then the default value must be returned instead, or 0 if there
+is no default value. On setting, the given value must be converted to the shortest possible string representing the
+number as a valid integer and then that string must be used as the new content attribute value.
+
+If a reflecting IDL attribute has a signed integer type ({{long long}}) that is <dfn>limited to only non-negative numbers</dfn> then,
+on getting, the content attribute must be parsed according to the <a spec="html">rules for parsing non-negative integers</a>, and if
+that is successful, and the value is in the range of the IDL attribute's type, the resulting value must be returned.
+If, on the other hand, it fails or returns an out of range value, or if the attribute is absent, the default value
+must be returned instead, or −1 if there is no default value. On setting, if the value is negative, the user agent
+must throw an {{"IndexSizeError"}} {{DOMException}}. Otherwise, the given value must be converted to the shortest possible
+string representing the number as a valid non-negative integer and then that string must be used as the new content
+attribute value.
+
+<h3 id="monkeypatch-anchor">&lt;a&gt; element</h3>
+
+Add the following <a spec=html>content attributes</a> to the <{a}> element:
+
+: <{a/attributionsourceeventid}>
+:: Identifies the declared attribution source
+: <{a/attributiondestination}>
+:: Site which can attribute an event to the declared attribution source
+: <{a/attributionreportto}>
+:: [=url/origin=] to receive attribution reports
+: <{a/attributionexpiry}>
+:: Length of time the attribution souce is valid
+: <{a/attributionsourcepriority}>
+:: The priority of this source relative to other sources when triggering attribution
+
+Extend the <{a}> element's <a spec=html>DOM interface</a> to include the following interface:
 
 <pre class="idl">
 partial interface HTMLAnchorElement {
-    [CEReactions, Reflect] attribute DOMString attributiondestination;
-    [CEReactions, Reflect] attribute DOMString attributionsourceeventid;
-    [CEReactions, Reflect] attribute DOMString attributionreportto;
-    [CEReactions, Reflect] attribute unsigned long long attributionexpiry;
+    [CEReactions] attribute DOMString attributionDestination;
+    [CEReactions] attribute DOMString attributionSourceEventId;
+    [CEReactions] attribute DOMString attributionReportTo;
+    [CEReactions] attribute long long attributionExpiry;
+    [CEReactions] attribute long long attributionSourcePriority;
 };
 </pre>
 
-The <dfn for="a" element-attr>attributiondestination</dfn> is an [=url/origin=]
-that is intended to be [=same site=] with the origin of the final navigation url resulting 
-from running <a spec="html">follow the hyperlink</a> with the <{a}> element.
+The IDL attributes {{HTMLAnchorElement/attributionDestination}}, {{HTMLAnchorElement/attributionSourceEventId}}, 
+{{HTMLAnchorElement/attributionReportTo}}, {{HTMLAnchorElement/attributionSourcePriority}} must <a spec=html>reflect</a> 
+the respective content attributes of the same name.
 
-The <dfn for="a" element-attr>attributionsourceeventid</dfn> is a string
+The IDL attribute {{HTMLAnchorElement/attributionExpiry}} must reflect the <{a/attributionexpiry}>
+content attribute, [=limited to only non-negative numbers=].
+
+The <dfn for="a" element-attr>attributiondestination</dfn> attribute is a string
+representing an [=url/origin=] that is intended to be [=same site=] with the origin
+of the final navigation url resulting from running <a spec="html">follow the hyperlink</a>
+with the <{a}> element.
+
+The <dfn for="a" element-attr>attributionsourceeventid</dfn> attribute is a string
 containing information about the `attribution source` and will be supplied in the
 [=attribution report=].
 
-The <dfn for="a" element-attr>attributionreportto</dfn> optionally declares the
+The <dfn for="a" element-attr>attributionreportto</dfn> attribute optionally declares the
 [=origin=] to send the [=attribution report=] for this source.
 
-The <dfn for="a" element-attr>attributionexpiry</dfn> optionally defines the amount
+The <dfn for="a" element-attr>attributionexpiry</dfn> attribute optionally defines the amount
 of time in milliseconds the attribution source should be considered for reporting.
 
-Issue: Need monkey patches passing attribution source in navigation, and a mechanism
-for validating the resulting document matches the attributiondestination.
+The <dfn for="a" element-attr>attributionsourcepriority</dfn> attribute optionally defines the
+priority of a source relative to other sources when triggering attribution. If not specified, 0 is used as the
+priority. An [=attribution trigger=] with a given [=attribution trigger/reporting endpoint=] and [=attribution trigger/trigger origin=]
+will always be attributed to the source with the highest priority value that has the same [=attribution source/reporting endpoint=] 
+and [=attribution source/attribution destination=]. 
+
+Note: One simple priority scheme would be to use the current millisecond timestamp as the priority value.
+
+<h3 id="monkeypatch-navigation">Navigation</h3>
+
+This section ensures that an [=attribution source=] associated with a navigation
+results in a top-level navigation whose final url is [=same site=] with the
+[=attribution source/attribution destination=].
+
+<h4 id="monkeypatch-navigation-params">Navigation Params</h4>
+
+A <a spec="HTML">navigation params</a> struct has an item:
+
+: <dfn for="navigation params">attribution source</dfn>
+:: null or an [=attribution source=] declared when initiating a navigation
+
+<h4 id="monkeypatch-navigate-algorithm">Navigate algorithm</h4>
+
+Modify the <a spec="html">navigate</a> algorithm to accept a new optional parameter
+<var>attributionSource</var> of type [=attribution source=] defaulting to null.
+
+In <a spec="html">navigate</a>, within step
+
+> 19. This is the step that attempts to obtain resource, if necessary. Jump to the first appropriate substep:
+>     ...
+
+in the case where
+
+> If resource is a response
+
+modify the substep
+
+> 7. Let navigationParams be a new navigation params whose request is null, response is resource
+>     ...
+
+to set the [=navigation params/attribution source=] of |navigationParams| to |attributionSource|.
+
+In the case where
+
+> If resource is a request whose url's scheme is "javascript"
+
+modify the substep 
+
+> 4. Let navigationParams be a new navigation params whose request is resource, 
+>     ...
+
+to set the [=navigation params/attribution source=] of |navigationParams| to |attributionSource|.
+
+In the case where
+
+> If resource is a request whose url's scheme is a fetch scheme
+
+modify the substep to pass |attributionSource| to the <a spec="html">process a navigate fetch</a> algorithm.
+
+Note: The final case, were the request is not a javascript or fetch scheme, does not need to be handled
+ as it will not result in the navigation of a top-level browsing context.
+
+<h4 id="monkeypatch-navigate-fetch">Process a navigate fetch</h4>
+
+Modify the <a spec="html">process a navigate fetch</a> algorithm to accept a new optional parameter
+<var>attributionSource</var> of type [=attribution source=] defaulting to null.
+
+In <a spec="html">process a navigate fetch</a>, modify the step
+
+> 15. Otherwise, if locationURL is a URL whose scheme is a fetch scheme, then run process a navigate fetch with a new request 
+>     ...
+
+to also pass |attributionSource| into the <a spec="html">process a navigate fetch</a> algorithm.
+
+Modify the step
+
+> 19. Let navigationParams be a new navigation params whose request is request, response is response,
+>     ...
+
+to set the [=navigation params/attribution source=] of |navigationParams| to |attributionSource|.
+
+<h4 id="monkeypatch-document-creation">Document creation</h4>
+
+At the time <a spec="html">create and initialize a <code>Document</code> object</a> is invoked, the user agent knows the final url used for the
+navigation and can validate the [=attribution source/attribution destination=].
+
+In <a spec="html">create and initialize a <code>Document</code> object</a>, before
+
+> 2. Let permissionsPolicy be the result of creating a permissions policy from a response given browsingContext
+>     ...
+
+add the following step:
+
+1. Execute [=maybe process an attribution source=] with |navigationParams| and |browsingContext|.
+
+<h3 id="monkeypatch-following-hyperlink">Follow the hyperlink</h4>
+
+Attribution source information declared on the <{a}> element needs to be passed to the
+<a spec="html">navigate</a> algorithm. 
+
+In <a spec="html">follow the hyperlink</a> after
+
+> 14. Let historyHandling be "replace" if windowType is not "existing or none"; otherwise, "default".
+
+add the following steps:
+
+1. Let <var>attributionSource</var> be null
+1. If |subject| is an <{a}> element, set |attributionSource| to the result of running [=obtain an attribution source=] with |subject|.
+
+Modify the step:
+
+> 15. Queue an element task on the DOM manipulation task source given subject to navigate target to request
+>     ...
+
+to call <a spec="html">navigate</a> with |attributionSource| set to |attributionSource|.
+
 
 # Structures # {#structures}
 
@@ -89,13 +247,17 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>event id</dfn>
 :: A non-negative 64-bit integer.
 : <dfn>attribution destination</dfn>
-:: An [=url/origin=].
+:: A [=site=].
 : <dfn>reporting endpoint</dfn>
 :: An [=url/origin=].
 : <dfn>expiry</dfn>
 :: A point in time.
+: <dfn>priority</dfn>
+:: A 64-bit integer.
 : <dfn>source time</dfn>
 :: A point in time.
+: <dfn>number of reports</dfn>
+:: Number of [=attribution reports=] created for this [=attribution source=].
 
 </dl>
 
@@ -129,6 +291,18 @@ An attribution report is a [=struct=] with the following items:
 
 </dl>
 
+# Storage # {#storage}
+
+A user agent holds an <dfn>attribution source cache</dfn>, which is an [=ordered set=] of [=attribution sources=].
+
+A user agent holds an <dfn>attribution report cache</dfn>, which is an [=ordered set=] of [=attribution reports=].
+
+The above caches are collectively known as the <dfn>attribution caches</dfn>. The [=attribution caches=] are
+shared among all [=environment settings objects=].
+
+Note: This would ideally use <a spec=storage>storage bottles</a> to provide access to the attribution caches.
+However attribution data is inherently cross-site, and operations on storage would need to span across all storage bottle maps.
+
 # Algorithms # {#algorithms}
 
 <h3 algorithm id="parsing-attribution-destination">Parsing an attribution destination</h3>
@@ -161,7 +335,11 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
 1. Let |expiry| be 30 days.
 1. If |anchor| has an <{a/attributionexpiry}> attribute, and applying the
     <a spec="html">rules for parsing non-negative integers</a> to the attributes's value
-    results in a number greater than zero, then set |expiry| to that value.
+    results in an integer greater than zero, then set |expiry| to that value.
+1. Let |priority| be 0.
+1. If |anchor| has an <{a/attributionsourcepriority}> attribute, and applying the
+    <a spec="html">rules for parsing integers</a> to the attributes's value
+    results in an integer, then set |priority| to that value.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source origin=]
@@ -175,6 +353,8 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
     :: |reportingOrigin|
     : [=attribution source/expiry=]
     :: |currentTime| + |expiry|
+    : [=attribution source/priority=]
+    :: |priority|
     : [=attribution source/source time=]
     :: |currentTime|
 1. Return |source|
@@ -182,7 +362,28 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
 <dfn>Max event id value</dfn> is a vendor specific integer which controls 
 the maximum size value which can be used as an [=attribution source/event id=]
 
-Issue: Need to spec how to store the attribution source.
+<h3 id="processing-an-attribution-source">Processing an attribution source</h3>
+
+To <dfn>maybe process an attribution source</dfn> given a <a spec="HTML">navigation params</a>
+|navigationParams| and [=browsing context=] |browsingContext|, run the following steps:
+1. If |browsingContext| is not a <a spec="html">top-level browsing context</a>, return.
+1. Let <var>attributionSource</var> be |navigationParams|'s [=navigation params/attribution source=].
+1. If |attributionSource| is null, return.
+1. If |attributionSource|'s [=attribution source/attribution destination=] is not [=same site=] to |navigationParams|'s 
+    <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigation-params-origin">origin</a>, return.
+1. [=Queue a task=] to [=process an attribution source=] with |attributionSource|.
+
+To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
+
+1. Let |cache| be the user agent's [=attribution source cache=].
+1. [=list/Remove=] all entries in |cache| where all of the following are true:
+    * the entry's [=attribution source/attribution destination=] and |source|'s [=attribution source/attribution destination=] are equal.
+    * the entry's [=attribution source/reporting endpoint=] is [=same origin=] with |source|'s [=attribution source/reporting endpoint=].
+    * the entry's [=attribution source/number of reports=] value is greater than 0 .
+
+    Note: This causes the user agent to favor triggering newer [=attribution sources=] over sources that have already been triggered.
+1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry=] value is less than the current time.
+1. If the [=list/size=] of |cache| is less than an implementation-defined limit, [=set/append=] |source| to |cache|.
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
@@ -280,3 +481,13 @@ TODO
 
 # Privacy consideration # {#privacy-considerations}
 TODO
+
+<h3 id="clearing-attribution-storage">Clearing attribution storage</h3>
+
+A user agent's [=attribution caches=] contain data about a user's web activity. When a user agent clears an origin's storage, 
+it MUST also remove entries in the [=attribution caches=] whose  [=attribution source/source origin=],
+[=attribution source/attribution destination=], [=attribution source/reporting endpoint=], or 
+[=attribution trigger/trigger origin=] is the [=same origin|same=] as the cleared origin.
+
+A user agent MAY clear [=attribution cache=] entries at other times. For example, when a user agent clears
+an origin from a user's browsing history.

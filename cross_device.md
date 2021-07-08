@@ -32,7 +32,7 @@ Events that are eligible for cross device attribution will be broadcast to all t
 
 ### Reporting whether attribution occurred cross device
 
-*   For [event-level data](https://github.com/WICG/conversion-measurement-api/blob/master/README.md), a new boolean will be added to JSON reports: `cross_device`
+*   For [event-level data](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md), a new boolean will be added to JSON reports: `cross_device`
 *   For [aggregate data](https://github.com/WICG/conversion-measurement-api/blob/master/AGGREGATE.md), we expect to add a mechanism to allow this bit (or something similar) to be present on aggregation keys. For example, this is something that could be integrated easily into the “worklet” technique (see [issue](https://github.com/WICG/conversion-measurement-api/issues/114)).
 
 
