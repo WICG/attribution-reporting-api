@@ -242,6 +242,8 @@ add the following check to the list:
 
 * [=should internalResponse to request be blocked as attribution trigger=]
 
+# Permissions Policy integration # {#permission-policy-integration}
+This specification defines a [=policy-controlled feature=] identified by the string "<code><dfn>attribution-reporting</dfn></code>". Its [=default allowlist=] is *.
 
 # Structures # {#structures}
 
@@ -347,6 +349,8 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
 1. Let |currentTime| be the current time.
 1. If |anchor| does not have both an <{a/attributiondestination}> attribute and
     an <{a/attributionsourceeventid}> attribute, return null.
+1. If |anchor|'s [=relevant settings object=]'s [=environment settings object/responsible document=] is
+    not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=], return null.
 1. Let |attributionDestination| be the result of running
     [=parse an attribution destination=] with anchor's
     <{a/attributiondestination}> attribute.
@@ -447,7 +451,10 @@ Given a [=request=] |request|:
     return <strong>allowed</strong>.
 1. Let |environment| be |request|'s [=request/window=].
 1. If |environment| is not an [=environment settings object=], return <strong>allowed</strong>.
+1. If |environment|'s [=environment settings object/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
 1. If |environment|'s [=environment/top-level origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
+1. If ||environment|'s [=environment settings object/responsible document=] is not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=], 
+    return <strong>allowed</strong>.
 1. If |request|'s [=request/current url's=] [=url/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
 1. If |request|'s [=request/redirect count=] is less than 1, return <strong>allowed</strong>.
 1. Let |previousUrl| be the second to last [=URL=] in |request|'s
@@ -456,7 +463,8 @@ Given a [=request=] |request|:
     |previousUrl|'s [=url/origin=], return <strong>allowed</strong>.
 
     Note: The restriction to require a redirect is necessary to ensure that the
-     request's origin is aware and in control of the conversion registration.
+     request's origin is aware and in control of the conversion registration. This could also be done with a 
+     <a href="https://github.com/WICG/conversion-measurement-api/issues/91">header-based mechanism</a>.
 1. Let |trigger| be the result of running [=obtain an attribution trigger=] with |request|'s [=request/current url=] and |environment|.
 1. [=Queue a task=] to [=trigger attribution=] with |trigger|.
 1. Return <strong>blocked</strong>
@@ -480,6 +488,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. For each |item| of |matchingSources|:
     1. [=list/Remove=] |item| from the [=attribution source cache=].
 1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute| and |trigger|.
+1. If the [=list/size=] of the [=attribution report cache=] is greater than an implementation-defined limit, return.
 1. Add |report| to the [=attribution report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
 1. If |source|'s [=attribution source/number of reports=] value is greater than or equal to the
