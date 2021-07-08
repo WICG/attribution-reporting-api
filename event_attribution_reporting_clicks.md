@@ -4,14 +4,13 @@
 This document is an explainer for a potential new web platform feature
 which allows for measuring and reporting ad click conversions.
 
-(Name probably needs bikeshedding)
-
 See the explainer on [aggregate measurement](AGGREGATE.md) for a potential extension on top of this.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
+- [Attribution Reporting for Click-Through Measurement](#attribution-reporting-for-click-through-measurement)
   - [Glossary](#glossary)
   - [Motivation](#motivation)
   - [Prior Art](#prior-art)
@@ -153,9 +152,9 @@ associated reporting origin.
 In order to prevent arbitrary third parties from registering sources without the publisher’s knowledge, the Attribution Reporting API will need to be enabled in child contexts by a new [Feature Policy](https://w3c.github.io/webappsec-feature-policy/):
 
 ```
-<iframe src="https://advertiser.test" allow="attribution-reporting 'src'">
+<iframe src="https://advertiser.example" allow="attribution-reporting 'src'">
 
-<a … id="..." attributionreportto="https://ad-tech.com"></a>
+<a … id="..." attributionreportto="https://ad-tech.example"></a>
 
 </iframe>
 ```
@@ -183,16 +182,17 @@ advertiser pages. These can be repurposed to trigger attribution in
 this API:
 
 ```
-<img src="https://ad-tech.test/conversiontracker"/>
+<img src="https://ad-tech.example/conversiontracker"/>
 ```
-`https://ad-tech.test/conversiontracker` can be redirected to `https://ad-tech.test/.well-known/attribution-reporting/trigger-attribution`
+`https://ad-tech.example/conversiontracker` can be redirected to `https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution`
 to trigger attribution for all matching sources.
 
 The browser will treat redirects to a URL of the form:
-`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?data=<data>&dedup-key=<dedup-key>]`
+`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?data=<data>&priority=<priority>&dedup-key=<dedup-key>]`
 
 as a special request. The query string for the request contains additional information about the attribution trigger:
 - `data`: optional data to identify the triggering event
+- `priority`: optional signed 64-bit integer representing the priority of this trigger compared to other triggers for the same source.
 - `dedup-key`: optional signed 64 bit integer which will be used to deduplicate multiple triggers which contain the same dedup-key for a single source
 
 When the special redirect is detected, the browser will schedule an attribution
@@ -232,7 +232,7 @@ The most recent matching source is given a `credit` of value 100. All other matc
 
 For each matching source, schedule a report. To schedule a report,
 the browser will store
- {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, credit, dedup-key} for the source.
+ {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, credit, dedup-key} for the source.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 The browser will only create reports for a source if the trigger's dedup-key has not already been associated with a report for that source.
@@ -240,6 +240,11 @@ The browser will only create reports for a source if the trigger's dedup-key has
 Each source is only allowed to schedule a maximum of three reports
 (see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). Once
 reports are scheduled, the browser will delete all sources that have scheduled three reports.
+
+If a source already has three scheduled reports when a new report is being scheduled, 
+the browser will compare the priority of the new report with the priorities of the scheduled reports for that source.
+If the new report has the lowest priority, it will be ignored. Otherwise, the browser will
+delete the scheduled report with the lowest priority and schedule the new report.
 
 ### Multiple sources for the same trigger (Multi-touch)
 
@@ -266,6 +271,13 @@ privacy preserving way, we need to make sure that triggering a source multiple t
 One possible solution, outlined in this document, is for browsers to specify
 a maximum number of reports that can be sent for a single source. In this document
 our initial proposal is 3.
+
+However, this limit may not be sufficient in cases where attribution triggers consitute a long funnel. For example,
+a checkout flow involving: page visit, add to cart, signup, purchase would prevent the purchase trigger from
+being reported.
+
+To address this, the `priority` query param in the trigger redirect can be used to prioritize the purchase trigger
+over less important triggers like the page visit trigger.
 
 Note that triggering attribution for the same source multiple times does not refresh
 the reporting windows (see [Sending Scheduled Reports](#sending-scheduled-reports)).
@@ -365,65 +377,65 @@ browers can choose a "fractional" bit limit if they want to.
 Sample Usage
 ============
 
-`publisher.com` wants to show ads on their site, so they contract out to
-`ad-tech.com`. `ad-tech.com`'s script in the main document creates a
+`publisher.example` wants to show ads on their site, so they contract out to
+`ad-tech.example`. `ad-tech.example`'s script in the main document creates a
 cross-origin iframe to host the third party advertisement for
-`toasters.com`, and sets `ad-tech.com` to be an allowed reporting origin.
+`toasters.example`, and sets `ad-tech.example` to be an allowed reporting origin.
 
-Within the iframe, `toasters.com` code annotates their anchor tags to use
-the `ad-tech.com` reporting origin, and uses a source event id value that allows
-`ad-tech.com` to identify the ad click (12345678)
+Within the iframe, `toasters.example` code annotates their anchor tags to use
+the `ad-tech.example` reporting origin, and uses a source event id value that allows
+`ad-tech.example` to identify the ad click (12345678)
 ```
-<iframe src="https://ad-tech-3p.test/show-some-ad" allow="attribution-reporting ‘src’ (https://ad-tech.com)">
+<iframe src="https://ad-tech-3p.example/show-some-ad" allow="attribution-reporting ‘src’ (https://ad-tech.example)">
 ...
 <a 
-  href="https://toasters.com/purchase"
-  attributiondestination="https://toasters.com"
+  href="https://toasters.example/purchase"
+  attributiondestination="https://toasters.example"
   attributionsourceeventid="12345678"
-  attributionreportto="https://ad-tech.com"
+  attributionreportto="https://ad-tech.example"
   attributionexpiry=604800000>
 ...
 </iframe>
 ```
 
 A user clicks on the ad and this opens a window that lands on a URL to
-`toasters.com/purchase`. An attribution source is logged to browser storage
+`toasters.example/purchase`. An attribution source is logged to browser storage
 since the landing page matches the `attributiondestination` eTLD+1. The following data is
 stored:
 
 ```
 {
   attributionsourceeventid: 12345678,
-  attributiondestination: https://toasters.com,
-  attributionreportto: https://ad-tech.com,
+  attributiondestination: https://toasters.example,
+  attributionreportto: https://ad-tech.example,
   attributionexpiry: <now() + 604800>
 }
 ```
 
-2 days later, the user buys something on `toasters.com`. `toasters.com`
+2 days later, the user buys something on `toasters.example`. `toasters.example`
 triggers attribution on the few different ad-tech companies it buys
-ads on, including `ad-tech.com`, by adding conversion pixels:
+ads on, including `ad-tech.example`, by adding conversion pixels:
 
 ```
-<img src="https://ad-tech.com/trigger-attribution?model=toastmaster3000&price=$49.99&..." />
+<img src="https://ad-tech.example/trigger-attribution?model=toastmaster3000&price=$49.99&..." />
 ```
 
-`ad-tech.com` receives this request, and decides to trigger attribution
-on `toasters.com`. They must compress all of the data into
-3 bits, so `ad-tech.com` chooses to encode the value as “2" (e.g. some
+`ad-tech.example` receives this request, and decides to trigger attribution
+on `toasters.example`. They must compress all of the data into
+3 bits, so `ad-tech.example` chooses to encode the value as “2" (e.g. some
 bucketed version of the purchase value). They respond with a 302
 redirect to:
 ```
-https://ad-tech.com/.well-known/attribution-reporting/trigger-attribution?data=2
+https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution?data=2
 ```
 
 The browser sees this request, and schedules a report to be
 sent. The report is associated with the 7 day deadline as the
-2 day deadline has passed. Roughly 5 days later, `ad-tech.com` receives
+2 day deadline has passed. Roughly 5 days later, `ad-tech.example` receives
 the following HTTP POST:
 ```
 URL:
-https://ad-tech.com/.well-known/attribution-reporting/report-attribution
+https://ad-tech.example/.well-known/attribution-reporting/report-attribution
 
 body:
 {
