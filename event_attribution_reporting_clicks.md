@@ -193,7 +193,7 @@ The browser will treat redirects to a URL of the form:
 as a special request. The query string for the request contains additional information about the attribution trigger:
 - `data`: optional data to identify the triggering event
 - `priority`: optional signed 64-bit integer representing the priority of this trigger compared to other triggers for the same source.
-- `dedup-key`: optional signed 64 bit integer which will be used to deduplicate multiple triggers which contain the same dedup-key for a single source
+- `dedup-key`: optional signed 64-bit integer which will be used to deduplicate multiple triggers which contain the same dedup-key for a single source
 
 When the special redirect is detected, the browser will schedule an attribution
 report as detailed in [Trigger attribution algorithm](#trigger-attribution-algorithm).
@@ -338,9 +338,9 @@ https://attributionreportto/.well-known/attribution-reporting/report-attribution
 
 The report data is included in the request body as a JSON object with the following keys:
 
--   `source_event_id`: 64 bit event id set on the attribution source
+-   `source_event_id`: 64-bit event id set on the attribution source
 
--   `trigger_data`: 3 bit data set in the attribution trigger redirect
+-   `trigger_data`: 3-bit data set in the attribution trigger redirect
 
 -   `credit`: integer in range [0, 100], denotes the percentage of credit this source received for the given trigger. If a trigger only had one matching source, this will be 100.
 
@@ -359,7 +359,7 @@ The source event id and trigger data should be in a way that is amenable
 to any privacy level a browser would want to choose (i.e. the number of
 distinct data states supported).
 
-The input values will be 64 bit integers which the browser will interpret
+The input values will be 64-bit integers which the browser will interpret
 modulo its maximum data value chosen by the browser. The browser
 will take the input and performs the equivalent of:
 
