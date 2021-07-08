@@ -238,8 +238,7 @@ Scheduled reports will be sent as detailed in [Sending scheduled reports](#sendi
 The browser will only create reports for a source if the trigger's dedup-key has not already been associated with a report for that source.
 
 Each source is only allowed to schedule a maximum of three reports
-(see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). Once
-reports are scheduled, the browser will delete all sources that have scheduled three reports.
+(see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). The browser will delete sources which have sent three reports.
 
 If a source already has three scheduled reports when a new report is being scheduled, 
 the browser will compare the priority of the new report with the priorities of the scheduled reports for that source.
