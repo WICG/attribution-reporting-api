@@ -60,6 +60,7 @@ Implementation status: `🟤 not implemented yet (all browsers)`
 
 ## External Documentation
 - [API overview](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting/)
+
 - [API guide](https://web.dev/conversion-measurement) // ⚠️ only valid for the first iteration of the API (event-level, clicks only)
 - [Experiment (origin trial) guide](https://web.dev/using-conversion-measurement/) // ⚠️ only valid for the first iteration of the API (event-level, clicks only)
 - [Demo](https://goo.gle/demo-attribution-reporting) // ⚠️ only demos the first iteration of the API (event-level, clicks only)
