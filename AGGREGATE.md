@@ -105,40 +105,40 @@ Here is `convert.js` which crafts an aggregate report.
 
 ```javascript
 class AggregateAttributionReporter {
-function processAggregate(triggerContext, attributionSourceContext, sourceType) {
-  // First bit of the bucket is the campaign
-  var bucket = 0;
-  if (attributionSourceContext === "campaign-foo") {
-    bucket = 0;
-  } else if (attributionSourceContext === "campaign-bar") {
-    bucket = 1
-  }
+  processAggregate(triggerContext, attributionSourceContext, sourceType) {
+    // First bit of the bucket is the campaign
+    let bucket = 0;
+    if (attributionSourceContext === "campaign-foo") {
+      bucket = 0;
+    } else if (attributionSourceContext === "campaign-bar") {
+      bucket = 1;
+    }
 
-  // Second bit distinguishes the sourceType.
-  if (sourceType === "navigation") {
-    bucket = bucket + 2;
-  }
+    // Second bit distinguishes the sourceType.
+    if (sourceType === "navigation") {
+      bucket = bucket + 2;
+    }
  
-  // Use the trigger context to pass some notion of a non-negative conversion value
-  let purchaseValue = parseInt(triggerContext, 10)
-  histogramContributions = [
-    {bucket: bucket, value: purchaseValue}
-  ]
-  return {
-    histogramContributions: histogramContributions,
-    processingType: "insecure-single-server", // or "two-party" the default
-    aggregationServices: [
-      {origin: "https://helper1.example"},
-      {origin: "https://helper2.example"},
-    ]
+    // Use the trigger context to pass some notion of a non-negative conversion value
+    let purchaseValue = parseInt(triggerContext, 10)
+    histogramContributions = [
+      {bucket: bucket, value: purchaseValue}
+    ];
+    return {
+      histogramContributions: histogramContributions,
+      processingType: "insecure-single-server", // or "two-party" the default
+      aggregationServices: [
+        {origin: "https://helper1.example"},
+        {origin: "https://helper2.example"},
+      ]
+    }
   }
-}
 }
 
 // Bound classes will be invoked when an attribution triggered on this document is
 // successfully attributed to a source whose reporting origin matches the worklet
 // origin.
-registerAggregateReporter("my-aggregate-reporter", AggregateReporter);
+registerAggregateReporter("my-aggregate-reporter", AggregateAttributionReporter);
 ```
 
 The `processAggregate` function needs to return:
