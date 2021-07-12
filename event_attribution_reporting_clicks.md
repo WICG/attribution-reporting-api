@@ -100,17 +100,20 @@ Attribution Source Declaration
 An attribution source is an anchor tag with special attributes:
 
 `<a attributiondestination="[eTLD+1]" attributionsourceeventid="[64-bit unsigned integer]"
-attributionexpiry=[unsigned long long] attributionreportto="[origin]">`
+attributionexpiry=[unsigned long long] attributionreportto="[origin]"
+attributionsourcepriority="[64-bit signed integer"]>`
 
 Attribution source attributes:
 
--   `attributiondestination`: an origin whose eTLD+1 is where attribution will be triggered for this source. 
+-   `attributiondestination`: an origin whose eTLD+1 is where attribution will be triggered for this source.
 
 -   `attributionsourceeventid`: A DOMString encoding a 64-bit unsigned integer which represents the event-level data associated with this source. This will be limited to 64 bits of information but the value can vary for browsers that want a higher level of privacy.
 
 -   `attributionexpiry`: (optional) expiry in milliseconds for when the source should be deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry can also vary between browsers.
 
 -   `attributionreportto`: (optional) the desired endpoint that the attribution report for this source should go to. Default is the top level origin of the page.
+
+-   `attributionsourcepriority`: (optional) a signed 64-bit integer used to prioritize this source with respect to other matching sources. When a trigger redirect is received, the browser will find the matching source with highest `attributionsourcepriority` value and generate a report. The other sources will not generate reports.
 
 Clicking on an anchor tag that specifies these attributes will create a new attribution source event that will be handled according to [Handling an attribution source event](#handling-an-attribution-source-event)
 
@@ -238,7 +241,7 @@ The browser will only create reports for a source if the trigger's dedup-key has
 Each source is only allowed to schedule a maximum of three reports
 (see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). The browser will delete sources which have sent three reports.
 
-If a source already has three scheduled reports when a new report is being scheduled, 
+If a source already has three scheduled reports when a new report is being scheduled,
 the browser will compare the priority of the new report with the priorities of the scheduled reports for that source.
 If the new report has the lowest priority, it will be ignored. Otherwise, the browser will
 delete the scheduled report with the lowest priority and schedule the new report.
@@ -246,6 +249,7 @@ delete the scheduled report with the lowest priority and schedule the new report
 ### Multiple sources for the same trigger (Multi-touch)
 
 If multiple sources were clicked and associated with a single attribution trigger, send reports for the one with the highest priority.
+If no priority is specified, the browser performs last-touch.
 
 There are many possible alternatives to this,
 like providing a choice of rules-based attribution models. However, it

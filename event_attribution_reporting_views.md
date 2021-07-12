@@ -91,7 +91,7 @@ See the [privacy considerations section](#privacy-considerations) for the ration
 
 ### Controlling which attribution source to trigger
 
-The browser associates a priority with each attribution source. This priority will be defined in a new attribute on attribution source tags, `attributionsourcepriority`, which holds a 64 bit integer.
+The browser associates a priority with each attribution source. This priority will be defined in an attribute on attribution source tags, `attributionsourcepriority`, which holds a 64-bit signed integer.
 
 When a trigger redirect is received, the browser will find the matching source with highest `attributionsourcepriority` value and generate a report. The other sources will not generate reports.
 
