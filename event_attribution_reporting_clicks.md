@@ -195,7 +195,7 @@ The browser will treat redirects to a URL of the form:
 
 as a special request, where optional data associated with the event that triggered attribution is stored in a query parameter.
 
-- `data`: an integer label used for the trigger, limited to 3 bits.
+- `trigger-data`: an integer label used for the trigger, limited to 3 bits.
 - `priority`: a signed 64-bit integer representing the priority of this trigger compared to other triggers for the same source.
 
 When the special redirect is detected, the browser will schedule an attribution
