@@ -15,7 +15,7 @@
     - [Aggregate attribution reports](#aggregate-attribution-reports)
     - [Privacy budgeting](#privacy-budgeting)
   - [Data processing through the aggregation service](#data-processing-through-the-aggregation-service)
-    - [High level two-party flow](#two-party-flow)
+    - [Two-party flow](#two-party-flow)
     - [Example query model](#example-query-model)
     - [Single-server flow](#single-server-flow)
   - [Privacy considerations](#privacy-considerations)
