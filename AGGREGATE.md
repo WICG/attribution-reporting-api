@@ -17,7 +17,7 @@
   - [Data processing through the aggregation service](#data-processing-through-the-aggregation-service)
     - [High level two-party flow](#high-level-two-party-flow)
     - [Example query model](#example-query-model)
-    - [insecure-single-server as an interim step](#insecure-single-server-as-an-interim-step)
+    - [single-server flow](#single-server-flow)
   - [Privacy considerations](#privacy-considerations)
   - [Considered alternatives / follow-up work](#considered-alternatives--follow-up-work)
     - [Larger / sparser histogram domains](#larger--sparser-histogram-domains)
@@ -43,12 +43,7 @@ See [Participate](https://github.com/WICG/conversion-measurement-api#participate
 
 This document proposes extensions to our existing [Attribution Reporting API](https://github.com/csharrison/conversion-measurement-api) that reports event-level data. The intention is to provide mechanisms for information to be reported in a way that reporting endpoints can only learn _aggregate data_, not any data associated with a particular click or user. In this way, we can satisfy measurement use cases for which an event-level API would reveal too much private information.
 
-This API builds on the same mechanisms described in the [Multi-browser aggregation service](https://github.com/WICG/conversion-measurement-api/blob/main/SERVICE.md) explainer.
-
-In particular, we introduce experimental mechanisms including:
-
-*   **Bring your own aggregation servers:** anyone can receive reports for aggregation during an initial experimentation period.
-*   **Multi-party computation (MPC) optional:** Long-term,  we expect servers will need to process data exclusively with [secure multi-party computation](https://en.wikipedia.org/wiki/Secure_multi-party_computation) (or technology that achieves similar goals), but for an initial experimentation period this is optional.
+This API builds on some of the same mechanisms described in the [Multi-browser aggregation service](https://github.com/WICG/conversion-measurement-api/blob/main/SERVICE.md) explainer.
 
 ## Goals
 
@@ -126,7 +121,7 @@ function processAggregate(triggerContext, attributionSourceContext, sourceType) 
   ]
   return {
     histogramContributions: histogramContributions,
-    processingType: "insecure-single-server", // or "two-party" the default
+    processingType: "single-server", // or "two-party"
     aggregationServices: [
       {origin: "https://helper1.example"},
       {origin: "https://helper2.example"},
@@ -144,13 +139,13 @@ registerAggregateReporter("my-aggregate-reporter", AggregateReporter);
 The `processAggregate` function needs to return:
 
 *   A list of histogram contributions to a histogram with keys that are members of a single _fixed domain_ under some hardcoded limit (like 2<sup>32</sup> keys). Note that this list will have some small max size (e.g. 3). The `value` will be capped at some max size, see the L<sub>inf</sub> parameter  [below](#privacy-budgeting).
-*   A processing type which indicates whether we expect the aggregation servers to be running a true MPC protocol.  There are two processing types options, i.e. two values processing\_types can take: 
-    *   `two-party` (default): this is more secure. It qualifies as "true MPC", because multiple parties are involved, and neither party can see raw data in the clear.
-    *   `insecure-single-server`: this is the less secure option, and is not truly MPC ("non-MPC server"). It's introduced here to easen initial experimentation, because a single server is simpler to set up than a true MPC system. The goal is to eventually deprecate this option as this API matures, in favor of the more secure, true MPC approach.
+*   A processing type which indicates whether we expect the aggregation servers to be running an MPC protocol or not.  There are two processing types options, i.e. two values processing\_types can take: 
+    *   `two-party`: This is the MPC option, because multiple parties are involved and neither party can see raw data in the clear.
+    *   `single-server`: This option sends data in the clear to a single server which is solely responsible for aggregating. If two endpoints are specified, one will receive a "null" report.
 
-    Some helper servers might support only one of these processing types, and some might support both. Explicitly specifying the type is useful e.g. for experiments when helpers are trying to migrate off `insecure-single-server`.
+    Some helper servers might support only one of these processing types, and some might support both. Explicitly specifying the type is useful e.g. for experiments when helpers are trying to migrate between options.
 
-*   A list of aggregation services which work together to aggregate the results. For initial experimentation we plan on allowing any origin to be an aggregation service, with the eventual goal of having an explicit allowlist of browser-trusted origins. Note that setting up a fallback mechanism in case these services fail is up to the services themselves. As long as the decryption key is available, reports for a particular service could be processed anywhere.
+*   A list of aggregation services which work together to aggregate the results. Note that setting up a fallback mechanism in case these services fail is up to the services themselves. As long as the decryption key is available, reports for a particular service could be processed anywhere.
 
 Actions in the worklet won’t affect the embedder context, to avoid leaking information about the sensitive join of `triggerContext` and `attributionSourceContext`. This means that we need to be careful how errors are handled.
 
@@ -187,7 +182,7 @@ The `scheduled_report_time` will be the number of milliseconds since the Unix Ep
 The `payload` will need to contain all the information needed for the aggregation services to do their jobs. It will need to contain:
 
 
-*   Histogram contributions. For the MPC protocol we propose initially to use incremental[ distributed point functions](https://github.com/google/distributed_point_functions) (see [issue](https://github.com/WICG/conversion-measurement-api/issues/116)) which form the most flexible and robust protocols we know about. For the insecure-single-server design we will send the data in the clear to one of the processing origins, and a “null” record to the other (at random).
+*   Histogram contributions. For the MPC protocol we propose initially to use incremental[ distributed point functions](https://github.com/google/distributed_point_functions) (see [issue](https://github.com/WICG/conversion-measurement-api/issues/116)) which form the most flexible and robust protocols we know about. For the single-server design we will send the data (i.e. without using the DPF protocol) to one of the processing origins, and a “null” record to the other (at random).
 *   Privacy budgeting metadata. which could be some combination of `scheduled_report_time`, `attribution_destination` and the reporting origin (e.g. some function of information available in the clear to the reporter). This information can be used to bound how often batches of reports are sent for aggregation. Adding this to the encrypted payload makes this information immutable by the reporter. It should also be returned outside the payload to allow the reporting origin to maintain similar budgets.
 
 The payload should be encrypted via [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/), to public keys specified by the processing origins at some well-known address  `/.well-known/aggregation-service/keys.json` that the browser can fetch. Note that we are avoiding using the `attribution-reporting` namespace because many APIs may want to use this infrastructure beyond attribution reporting.
@@ -230,7 +225,7 @@ This would yield noise with standard deviation roughly ~80k to every bucket afte
 We expect to have more information on the data flow from reporter → processing origins shortly, but what follows is a high level summary.
 
 
-### High level two-party flow
+### Two-party flow
 
 The high level approach here is described in more detail in the [SERVICE.md](https://github.com/WICG/conversion-measurement-api/blob/main/SERVICE.md) doc. At a high level, the browser will encrypt histogram contribution shares associated with each helper and send them to the reporting endpoint. This is the `payload`. The reporter can then interact with the processing origins to learn shares of the final aggregate output, which can be summed together to learn the full histogram.
 
@@ -298,23 +293,18 @@ The output (after merging results from two servers) could look like this, where 
 ]
 ```
 
-### insecure-single-server as an interim step
+### Single server flow
 
+Another option is a design based around a single server infrastructure, which relies on a variety of other policy/technology options to establish browser trust. The MPC architecture is non-trivial and it might take some time to spin up a fully productionized system (scale, cost, etc). Though a misbehaving single server could recover 3p-cookie-like functionality by revealing raw data without aggregating, various mitigations (server audits, [TEEs](https://en.wikipedia.org/wiki/Trusted_execution_environment), etc) could be used to establish browser trust.
 
-We are introducing insecure-single-server to make it easier to initially support the API with server infrastructure. The MPC architecture is non-trivial and it might take some time to spin up a fully productionized system. Though a misbehaving single server could recover 3p-cookie-like functionality by revealing raw data without aggregating, mitigations like server audits could be used in the interim while MPC systems are being developed, to establish a baseline of trust in the server infrastructure.
+In general this flow will look very similar to data flow with MPC, although the inputs will be sent in the clear to the aggregation server without any cryptographic secret sharing (e.g.  distributed point functions as described above). Data is still routed through the reporting endpoint and queried in a batch-like fashion to aggregators.
 
-Note that even for the “insecure-single-server” option for aggregate reports we would ideally strive to make the API as “MPC-like” as possible. That is:
-
-
-*   **Payload similarity:** Reports from the browser will be encrypted and split into two “pseudo” shares (i.e. one null and one cleartext). From the reporting endpoint’s perspective, these should look indistinguishable from MPC reports.
-*   **Output similarity:** Processing origins that receive insecure-single-server results should craft their _output_ as if they were actually computing via MPC. In other words, if the MPC output would be to have each server output a vector-share histogram, the insecure-single-server servers should do that too (e.g. by splitting the cleartext histogram after aggregation), with each “helper” returning a share each, even if the computation was done all on one server.
-
-The ideal state would be to make MPC a **backend implementation detail** for aggregation service origin pairs, and they could migrate to without any API breaking changes for end consumers (i.e. “reporters”) once `insecure-single-server` is flipped to `two-party`. However, we understand that the current MPC protocol using distributed point functions imposes difficult restrictions on how data can be aggregated, even in a single-server design. Server designs during experimentation are free to experiment with other aggregation functions / output and provide feedback if other techniques work better for utility.
+The ideal end state would be to make MPC a **backend implementation detail** for aggregation service origin pairs, and they could migrate without any API breaking changes for end consumers (i.e. “reporters”) if the `single-server` argument is flipped to `two-party`. However, we understand that the current MPC protocol using distributed point functions imposes difficult restrictions on how data can be aggregated, even in a `single-server` design. Single server designs may allow for easier exploration than MPC for alternative aggregation functions during development / incubation that provide better utility.
 
 
 ## Privacy considerations
 
-This proposal introduces a new isolated worklet-style computation model where sensitive, fine grained data from two sites can be joined together (attribution source and trigger data).
+This proposal introduces a new isolated worklet-style computation model where sensitive, fine grained data from two sites can be joined together (attribution source and trigger data) in the browser (regardless of `processing_type`).
 
 However, data from the worklet can only be used to compute histogram contributions which will be protected by aggregation and differential privacy. It should not be possible to exfiltrate other data from the worklet.
 
@@ -326,6 +316,8 @@ The private histograms supported in the API may end up having large domains (e.g
 
 ## Considered alternatives / follow-up work
 
+### Restrictions on `aggregationServices` origins
+Browsers may want to add restrictions on which origins can provide aggregation services, as those origins receive potentially sensitive, cross site user data. For example, browsers could rely on an allowlist of services which have met hypothetical trust requirements.
 
 ### Larger / sparser histogram domains
 
