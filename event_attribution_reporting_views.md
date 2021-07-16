@@ -91,9 +91,7 @@ See the [privacy considerations section](#privacy-considerations) for the ration
 
 ### Controlling which attribution source to trigger
 
-In the Click Through Explainer, at triggering time, the browser looks up all matching sources in storage. A [credit](https://github.com/WICG/conversion-measurement-api#multiple-sources-for-the-same-trigger-multi-touch) of 100 is assigned to the most recent matching source in storage, and a credit of 0 is assigned to the rest. Reports are sent for each of these. We propose changing this for both click sources and event sources.
-
-To provide additional utility in prioritizing the distribution of credit between different classes of sources, the browser can associate a priority with each attribution source. This priority will be defined in a new attribute on attribution source tags, `attributionsourcepriority`, which holds a 64 bit integer.
+Attribution sources with different `source_types` can be prioritized among one another using the `[attributionsourcepriority](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md#multiple-sources-for-the-same-trigger-multi-touch)` attribute proposed in the clicks explainer.
 
 When a trigger redirect is received, the browser will find the matching source with highest `attributionsourcepriority` value and generate a report. The other sources will not generate reports.
 

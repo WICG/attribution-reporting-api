@@ -100,17 +100,20 @@ Attribution Source Declaration
 An attribution source is an anchor tag with special attributes:
 
 `<a attributiondestination="[eTLD+1]" attributionsourceeventid="[64-bit unsigned integer]"
-attributionexpiry="[64-bit signed integer]" attributionreportto="[origin]">`
+attributionexpiry="[64-bit signed integer]" attributionreportto="[origin]"
+attributionsourcepriority="[64-bit signed integer"]>`
 
 Attribution source attributes:
 
--   `attributiondestination`: an origin whose eTLD+1 is where attribution will be triggered for this source. 
+-   `attributiondestination`: an origin whose eTLD+1 is where attribution will be triggered for this source.
 
 -   `attributionsourceeventid`: A DOMString encoding a 64-bit unsigned integer which represents the event-level data associated with this source. This will be limited to 64 bits of information but the value can vary for browsers that want a higher level of privacy.
 
 -   `attributionexpiry`: (optional) expiry in milliseconds for when the source should be deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry can also vary between browsers.
 
 -   `attributionreportto`: (optional) the desired endpoint that the attribution report for this source should go to. Default is the top level origin of the page.
+
+-   `attributionsourcepriority`: (optional) a signed 64-bit integer used to prioritize this source with respect to other matching sources. When a trigger redirect is received, the browser will find the matching source with highest `attributionsourcepriority` value and generate a report. The other sources will not generate reports.
 
 Clicking on an anchor tag that specifies these attributes will create a new attribution source event that will be handled according to [Handling an attribution source event](#handling-an-attribution-source-event)
 
@@ -228,11 +231,9 @@ When the browser receives a attribution trigger redirect on a URL matching
 the `attributiondestination` eTLD+1, it looks up all sources in storage that
 match <`attributionreportto`, `attributiondestination`>.
 
-The most recent matching source is given a `credit` of value 100. All other matching sources are given a `credit` of value 0.
-
 For each matching source, schedule a report. To schedule a report,
 the browser will store
- {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, credit, dedup-key} for the source.
+ {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, dedup-key} for the source.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 The browser will only create reports for a source if the trigger's dedup-key has not already been associated with a report for that source.
@@ -240,20 +241,15 @@ The browser will only create reports for a source if the trigger's dedup-key has
 Each source is only allowed to schedule a maximum of three reports
 (see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). The browser will delete sources which have sent three reports.
 
-If a source already has three scheduled reports when a new report is being scheduled, 
+If a source already has three scheduled reports when a new report is being scheduled,
 the browser will compare the priority of the new report with the priorities of the scheduled reports for that source.
 If the new report has the lowest priority, it will be ignored. Otherwise, the browser will
 delete the scheduled report with the lowest priority and schedule the new report.
 
 ### Multiple sources for the same trigger (Multi-touch)
 
-If multiple sources were clicked and associated with a single attribution trigger, send reports for all of them. 
-
-To provide additional utility, the browser can choose to provide additional annotations to each of these reports, attributing credits for the triggering redirect to them individually. Attribution models allow for more sophisticated, accurate measurement.
-
-The default attribution model will be last-click attribution, giving the last-clicked source for a given trigger redirect all of the credit.
-
-To remain flexible, the browser sends an `credit` of value 0 to 100 for all reports associated with a single trigger. This represents the percent of attribution a source received. The sum of credits across a set of reports for one trigger should equal 100.
+If multiple sources were clicked and associated with a single attribution trigger, send reports for the one with the highest priority.
+If no priority is specified, the browser performs last-touch.
 
 There are many possible alternatives to this,
 like providing a choice of rules-based attribution models. However, it
@@ -341,8 +337,6 @@ The report data is included in the request body as a JSON object with the follow
 -   `source_event_id`: 64-bit event id set on the attribution source
 
 -   `trigger_data`: 3-bit data set in the attribution trigger redirect
-
--   `credit`: integer in range [0, 100], denotes the percentage of credit this source received for the given trigger. If a trigger only had one matching source, this will be 100.
 
 The advertiser site’s eTLD+1 will be added as the Referrer. Note that it
 might be useful to advertise which data limits were used in the
@@ -439,8 +433,7 @@ https://ad-tech.example/.well-known/attribution-reporting/report-attribution
 body:
 {
   "source_event_id": "12345678",
-  "trigger_data": "2",
-  "credit": 100
+  "trigger_data": "2"
 }
 ```
 
