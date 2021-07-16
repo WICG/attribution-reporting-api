@@ -100,7 +100,7 @@ Attribution Source Declaration
 An attribution source is an anchor tag with special attributes:
 
 `<a attributiondestination="[eTLD+1]" attributionsourceeventid="[64-bit unsigned integer]"
-attributionexpiry=[unsigned long long] attributionreportto="[origin]"
+attributionexpiry="[64-bit signed integer]" attributionreportto="[origin]"
 attributionsourcepriority="[64-bit signed integer"]>`
 
 Attribution source attributes:
