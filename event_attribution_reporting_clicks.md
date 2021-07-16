@@ -10,9 +10,6 @@ See the explainer on [aggregate measurement](AGGREGATE.md) for a potential exten
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-  - [Glossary](#glossary)
-  - [Motivation](#motivation)
-  - [Prior Art](#prior-art)
 - [Attribution Reporting for Click-Through Measurement](#attribution-reporting-for-click-through-measurement)
   - [Glossary](#glossary)
   - [Motivation](#motivation)
@@ -191,12 +188,12 @@ this API:
 to trigger attribution for all matching sources.
 
 The browser will treat redirects to a URL of the form:
-`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?data=<data>&priority=<priority>]`
+`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?data=<data>&priority=<priority>&dedup-key=<dedup-key>]`
 
-as a special request, where optional data associated with the event that triggered attribution is stored in a query parameter.
-
-- `data`: an integer label used for the trigger, limited to 3 bits.
-- `priority`: a signed 64-bit integer representing the priority of this trigger compared to other triggers for the same source.
+as a special request. The query string for the request contains additional information about the attribution trigger:
+- `data`: optional data to identify the triggering event
+- `priority`: optional signed 64-bit integer representing the priority of this trigger compared to other triggers for the same source.
+- `dedup-key`: optional signed 64-bit integer which will be used to deduplicate multiple triggers which contain the same dedup-key for a single source
 
 When the special redirect is detected, the browser will schedule an attribution
 report as detailed in [Trigger attribution algorithm](#trigger-attribution-algorithm).
@@ -235,18 +232,18 @@ The most recent matching source is given a `credit` of value 100. All other matc
 
 For each matching source, schedule a report. To schedule a report,
 the browser will store
- {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, credit} for the source.
+ {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, credit, dedup-key} for the source.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
+The browser will only create reports for a source if the trigger's dedup-key has not already been associated with a report for that source.
+
 Each source is only allowed to schedule a maximum of three reports
-(see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). 
-The browser will delete sources which have sent three reports.
+(see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). The browser will delete sources which have sent three reports.
 
 If a source already has three scheduled reports when a new report is being scheduled, 
 the browser will compare the priority of the new report with the priorities of the scheduled reports for that source.
 If the new report has the lowest priority, it will be ignored. Otherwise, the browser will
 delete the scheduled report with the lowest priority and schedule the new report.
-
 
 ### Multiple sources for the same trigger (Multi-touch)
 
@@ -341,9 +338,9 @@ https://attributionreportto/.well-known/attribution-reporting/report-attribution
 
 The report data is included in the request body as a JSON object with the following keys:
 
--   `source_event_id`: 64 bit event id set on the attribution source
+-   `source_event_id`: 64-bit event id set on the attribution source
 
--   `trigger_data`: 3 bit data set in the attribution trigger redirect
+-   `trigger_data`: 3-bit data set in the attribution trigger redirect
 
 -   `credit`: integer in range [0, 100], denotes the percentage of credit this source received for the given trigger. If a trigger only had one matching source, this will be 100.
 
@@ -362,7 +359,7 @@ The source event id and trigger data should be in a way that is amenable
 to any privacy level a browser would want to choose (i.e. the number of
 distinct data states supported).
 
-The input values will be 64 bit integers which the browser will interpret
+The input values will be 64-bit integers which the browser will interpret
 modulo its maximum data value chosen by the browser. The browser
 will take the input and performs the equivalent of:
 
