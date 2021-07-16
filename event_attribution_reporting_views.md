@@ -43,10 +43,11 @@ The browser will expose a new interface:
 
 ```
 dictionary AttributionSourceParams {
-  required DOMString attributionSourceEventId;
   required USVString attributionDestination;
-  optional USVString attributionReportTo;
-  optional unsigned long attributionExpiry;
+  required DOMString attributionSourceEventId;
+  USVString attributionReportTo;
+  long long attributionExpiry;
+  long long attributionSourcePriority;
 }
 ```
 
