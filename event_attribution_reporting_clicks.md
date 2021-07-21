@@ -229,10 +229,12 @@ from 0-5 (~2.6 bits of information)
 
 When the browser receives a attribution trigger redirect on a URL matching
 the `attributiondestination` eTLD+1, it looks up all sources in storage that
-match <`attributionreportto`, `attributiondestination`>.
+match <`attributionreportto`, `attributiondestination`> and picks the one with
+the greatest `attributionsourcepriority`. If multiple sources have the greatest
+`attributionsourcepriority`, the browser picks the one that was stored most
+recently.
 
-For each matching source, schedule a report. To schedule a report,
-the browser will store
+The browser then schedules a report for the source that was picked by storing
  {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, dedup-key} for the source.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
