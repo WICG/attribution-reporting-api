@@ -252,6 +252,8 @@ This specification defines a [=policy-controlled feature=] identified by the str
 An attribution source is a [=struct=] with the following items:
 
 <dl dfn-for="attribution source">
+: <dfn>source identifier</dfn>
+:: A unique opaque string.
 : <dfn>source origin</dfn>
 :: An [=url/origin=].
 : <dfn>event id</dfn>
@@ -312,8 +314,8 @@ An attribution report is a [=struct=] with the following items:
 :: A 64-bit integer.
 : <dfn>trigger time</dfn>
 :: A point in time.
-: <dfn>source</dfn>
-:: An [=attribution source=].
+: <dfn>source identifier</dfn>
+:: An opaque string.
 
 </dl>
 
@@ -358,6 +360,7 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
 To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
+1. Let |sourceIdentifier| be a new unique opaque string.
 1. Let |currentTime| be the current time.
 1. If |anchor| does not have both an <{a/attributiondestination}> attribute and
     an <{a/attributionsourceeventid}> attribute, return null.
@@ -385,6 +388,8 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
     results in an integer, then set |priority| to that value.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
+    : [=attribution source/source identifier=]
+    :: |sourceIdentifier|
     : [=attribution source/source origin=]
     :: |sourceOrigin|
     : [=attribution source/event id=]
@@ -516,7 +521,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     user agent's [=max reports per source=] value, then:
     1. Let |matchingReports| be all entries in the [=attribution report cache=] where all of the following are true:
          * entry's [=attribution report/report time=] and |report|'s [=attribution report/report time=] are equal.
-         * entry's [=attribution report/source=] and |report|'s [=attribution report/source=] are the same.
+         * entry's [=attribution report/source identifier=] and |report|'s [=attribution report/source identifier=] are equal.
     1. If |matchingReports| is empty, then [=list/remove=] |sourceToAttribute| from the [=attribution source cache=] and return.
     1. Set |matchingReports| to the result of [=list/sort in ascending order|sorting=] |matchingReports|
         in ascending order, with |a| being less than |b| if any of the following are true:
@@ -591,8 +596,8 @@ To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=
     :: |trigger|'s [=attribution trigger/trigger priority=].
     : [=attribution report/trigger time=]
     :: |trigger|'s [=attribution trigger/trigger time=].
-    : [=attribution report/source=]
-    :: |source|
+    : [=attribution report/source identifier=]
+    :: |source|'s [=attribution source/source identifier=].
 1. Return |report|.
 
 # Security consideration # {#security-considerations}
