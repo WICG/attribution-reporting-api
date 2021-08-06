@@ -252,6 +252,8 @@ This specification defines a [=policy-controlled feature=] identified by the str
 An attribution source is a [=struct=] with the following items:
 
 <dl dfn-for="attribution source">
+: <dfn>source identifier</dfn>
+:: A unique opaque string.
 : <dfn>source origin</dfn>
 :: An [=url/origin=].
 : <dfn>event id</dfn>
@@ -288,6 +290,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: An [=url/origin=].
 : <dfn>dedup key</dfn>
 :: Null or a 64-bit integer.
+: <dfn>priority</dfn>
+:: A 64-bit integer.
 
 </dl>
 
@@ -306,6 +310,12 @@ An attribution report is a [=struct=] with the following items:
 :: An [=url/origin=]
 : <dfn>report time</dfn>
 :: A point in time
+: <dfn>trigger priority</dfn>
+:: A 64-bit integer.
+: <dfn>trigger time</dfn>
+:: A point in time.
+: <dfn>source identifier</dfn>
+:: An opaque string.
 
 </dl>
 
@@ -350,6 +360,7 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
 To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
+1. Let |sourceIdentifier| be a new unique opaque string.
 1. Let |currentTime| be the current time.
 1. If |anchor| does not have both an <{a/attributiondestination}> attribute and
     an <{a/attributionsourceeventid}> attribute, return null.
@@ -377,6 +388,8 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
     results in an integer, then set |priority| to that value.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
+    : [=attribution source/source identifier=]
+    :: |sourceIdentifier|
     : [=attribution source/source origin=]
     :: |sourceOrigin|
     : [=attribution source/event id=]
@@ -435,6 +448,10 @@ To <dfn>obtain an attribution trigger</dfn> given a [=url=] |url| and an
 1. If |url|'s [=url/query=] has a `"dedup-key"` field, and applying the <a spec="html">rules for
     parsing integers</a> to the field's value results in an integer, then set |dedupKey| to that
     value.
+1. Let |triggerPriority| be 0.
+1. If |url|'s [=url/query=] has a `"priority"` field, and applying the
+    <a spec="html">rules for parsing integers</a> to the field's value results
+    in an integer, set |triggerPriority| to that value.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
 
     : [=attribution trigger/trigger origin=]
@@ -447,6 +464,8 @@ To <dfn>obtain an attribution trigger</dfn> given a [=url=] |url| and an
     :: |url|'s [=url/origin=]
     : [=attribution trigger/dedup key=]
     :: |dedupKey|
+    : [=attribution trigger/priority=]
+    :: |triggerPriority|
 1. Return |trigger|
 
 <dfn>Max trigger data value</dfn> is a vendor specific integer which controls the potential values of [=attribution report/trigger data=].
@@ -492,22 +511,34 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources|
     in descending order, with |a| being less than |b| if any of the following are true:
       * |a|'s [=attribution source/priority=] is less than |b|'s [=attribution source/priority=].
-      * |a|'s [=attribution source/priority=] is equal to |b|'s [=attribution source/priority=] and |a|'s 
+      * |a|'s [=attribution source/priority=] is equal to |b|'s [=attribution source/priority=] and |a|'s
          [=attribution source/source time=] is less than |b|'s [=attribution source/source time=].
 1. Let |sourceToAttribute| be the first item in |matchingSources|.
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null and |sourceToAttribute|'s
     [=attribution source/dedup keys=] [=list/contains=] it, return.
+1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute| and |trigger|.
+1. If |sourceToAttribute|'s [=attribution source/number of reports=] value is equal to the
+    user agent's [=max reports per source=] value, then:
+    1. Let |matchingReports| be all entries in the [=attribution report cache=] where all of the following are true:
+         * entry's [=attribution report/report time=] and |report|'s [=attribution report/report time=] are equal.
+         * entry's [=attribution report/source identifier=] [=string/is=] |report|'s [=attribution report/source identifier=]
+    1. If |matchingReports| is empty, then [=list/remove=] |sourceToAttribute| from the [=attribution source cache=] and return.
+    1. Set |matchingReports| to the result of [=list/sort in ascending order|sorting=] |matchingReports|
+        in ascending order, with |a| being less than |b| if any of the following are true:
+             * |a|'s [=attribution report/trigger priority=] is less than |b|'s [=attribution report/trigger priority=].
+             * |a|'s [=attribution report/trigger priority=] is equal to |b|'s [=attribution report/trigger priority=]
+                and |a|'s [=attribution report/trigger time=] is greater than |b|'s [=attribution report/trigger time=].
+    1. Let |lowestPriorityReport| be the first item in |matchingReports|.
+    1. If |report|'s [=attribution report/trigger priority=] is less than or equal to |lowestPriorityReport|'s [=attribution report/trigger priority=], return.
+    1. Remove |lowestPriorityReport| from the [=attribution report cache=].
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
 1. For each |item| of |matchingSources|:
     1. [=list/Remove=] |item| from the [=attribution source cache=].
-1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute| and |trigger|.
 1. If the [=list/size=] of the [=attribution report cache=] is greater than an implementation-defined limit, return.
 1. Add |report| to the [=attribution report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null, [=list/append=] it to |sourceToAttribute|'s
     [=attribution source/dedup keys=].
-1. If |sourceToAttribute|'s [=attribution source/number of reports=] value is greater than or equal to the
-    user agent's [=max reports per source=] value, [=list/remove=] |sourceToAttribute| from the [=attribution source cache=].
 
 <dfn>Max reports per source</dfn> is a vendor specific integer which controls how many [=attribution reports=] can be created for an [=attribution source=]. 
 
@@ -561,6 +592,12 @@ To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=
     :: |source|'s [=attribution source/attribution destination=].
     : [=attribution report/reporting time=]
     :: The result of running [=obtain a report delivery time=] with |source| and |trigger|'s [=attribution trigger/trigger time=].
+    : [=attribution report/trigger priority=]
+    :: |trigger|'s [=attribution trigger/priority=].
+    : [=attribution report/trigger time=]
+    :: |trigger|'s [=attribution trigger/trigger time=].
+    : [=attribution report/source identifier=]
+    :: |source|'s [=attribution source/source identifier=].
 1. Return |report|.
 
 # Security consideration # {#security-considerations}
