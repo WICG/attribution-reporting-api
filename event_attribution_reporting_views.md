@@ -91,7 +91,7 @@ See the [privacy considerations section](#privacy-considerations) for the ration
 
 ### Controlling which attribution source to trigger
 
-Attribution sources with different `source_types` can be prioritized among one another using the `[attributionsourcepriority](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md#multiple-sources-for-the-same-trigger-multi-touch)` attribute proposed in the clicks explainer.
+Attribution sources with different `source_types` can be prioritized among one another using the [attributionsourcepriority](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md#multiple-sources-for-the-same-trigger-multi-touch) attribute proposed in the clicks explainer.
 
 When a trigger redirect is received, the browser will find the matching source with highest `attributionsourcepriority` value and generate a report. The other sources will not generate reports.
 
