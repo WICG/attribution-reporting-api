@@ -63,7 +63,7 @@ Attribution sources will have a browser associated `source_type`. Attribution so
 
 Attribution trigger redirects will be able to specify different data to be used, depending on the `source_type` of any associated sources.
 
-This is done via a new query param, `event-source-trigger-data` on the trigger [redirect](https://github.com/WICG/conversion-measurement-api#triggering-attribution). This data will be limited to 1 bit. This data will be noised 5% of the time, matching the [noise](https://github.com/WICG/conversion-measurement-api#data-limits-and-noise) for navigation sources.
+This is done via a new query param, `event-source-trigger-data` on the trigger [redirect](event_attribution_reporting_clicks.md#triggering-attribution). This data will be limited to 1 bit. This data will be noised 5% of the time, matching the [noise](event_attribution_reporting_clicks.md#data-limits-and-noise) for navigation sources.
 
 Event sources will only be able to generate a single attribution report, compared to the three reports for navigation sources. Alongside the 1 bit of data, this further restricts the total amount of trigger side data which can be associated with a single `attributionsourceeventid`. See [privacy considerations](#privacy-considerations) for why this is necessary.
 
@@ -77,7 +77,7 @@ The `attributionexpiry` of a source can be used to associate `attributionsourcee
 
 ### Noise on the attribution triggering event
 
-Attribution sources registered without a navigation will receive additional noise on whether attribution was triggered for the source. This is similar to the speculative noise discussed in the [Click Through Explainer](https://github.com/WICG/conversion-measurement-api#speculative-adding-noise-to-the-attribution-of-the-source-itself). 
+Attribution sources registered without a navigation will receive additional noise on whether attribution was triggered for the source. This is similar to the speculative noise discussed in the [Click Through Explainer](event_attribution_reporting_clicks.md#speculative-adding-noise-to-the-attribution-of-the-source-itself). 
 
 When an attribution source is registered, the browser will perform one of the following steps given noise `p`:
 * With probability `1 - p`, the browser logs the source as normal
@@ -91,7 +91,7 @@ See the [privacy considerations section](#privacy-considerations) for the ration
 
 ### Controlling which attribution source to trigger
 
-Attribution sources with different `source_types` can be prioritized among one another using the [attributionsourcepriority](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md#multiple-sources-for-the-same-trigger-multi-touch) attribute proposed in the clicks explainer.
+Attribution sources with different `source_types` can be prioritized among one another using the [attributionsourcepriority](event_attribution_reporting_clicks.md#multiple-sources-for-the-same-trigger-multi-touch) attribute proposed in the clicks explainer.
 
 When a trigger redirect is received, the browser will find the matching source with highest `attributionsourcepriority` value and generate a report. The other sources will not generate reports.
 
@@ -102,10 +102,10 @@ If reports were sent for these sources, it would be possible for `reportingorigi
 
 Attribution sources registered without a navigation will be reported at the end of their expirations, compared to the three reporting windows for navigation sources.
 
-This limits the amount of information that can be learned about the time a report was created in comparison to the [Click Through API](https://github.com/WICG/conversion-measurement-api#reporting-delay).
+This limits the amount of information that can be learned about the time a report was created in comparison to the [Click Through API](event_attribution_reporting_clicks.md#reporting-delay).
 
 ## Privacy Considerations
-The privacy goals of this proposal are in line with those in the [Click Through Explainer](https://github.com/WICG/conversion-measurement-api#privacy-considerations).
+The privacy goals of this proposal are in line with those in the [Click Through Explainer](event_attribution_reporting_clicks.md#privacy-considerations).
 
  >The main privacy goal of the API is to make linking identity between two different top-level sites difficult. This happens when either a request or a JavaScript environment has two user IDs from two different sites simultaneously.
 
@@ -116,7 +116,7 @@ Further, the addition of event noising protects against any cross site data leak
 
 Registering event attribution sources is not gated on a user interaction or top level navigation, allowing them to be registered more frequently and with greater ease. For example, by restricting to 1 bit of data and 1 report per source, a `reportingorigin` would need to register many more sources in order to link cross-site identity relative to the Click Through API.
 
-This is further restricted by rate limiting the usage of the API between two sites, using [reporting cooldowns](https://github.com/WICG/conversion-measurement-api#reporting-cooldown). Due to the different characteristics between classes of sources, these cooldowns should have independent limits on the number of reports of each type.
+This is further restricted by rate limiting the usage of the API between two sites, using [reporting cooldowns](event_attribution_reporting_clicks.md#reporting-cooldown). Due to the different characteristics between classes of sources, these cooldowns should have independent limits on the number of reports of each type.
 
 The number of reporting windows is another vector which can contain trigger side information. By restricting to a [single window](#single-reporting-window), a `reportingorigin` does not receive any additional information on when in the attribution window a source was triggered.
 
