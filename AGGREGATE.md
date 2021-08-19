@@ -69,7 +69,7 @@ This adds a new attribute at source registration time (click or view event) call
 ```html
 <a
   attributionsourceeventid="..."
-  attributeon="..."
+  attributiondestination="..."
   attributionreportto="..."
   attributionsourcecontext="campaign123"> ...</a>
 ```
