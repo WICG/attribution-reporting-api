@@ -58,7 +58,8 @@ When invoked the browser will directly add the specified source to storage, and 
 
 Attribution sources will have a browser associated `source_type`. Attribution sources registered with the `registerattributionsource` attribute or via the JS API  will have source_type set to "event". Sources registered via clicks on anchor tags or with the `window.open()` API will have `source_type` set to "navigation".
 
-The `source-type` will be included as a new key in the [report JSON](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md#attribution-reports). Its value will be either `"event"` or `"navigation"`.
+`source_type` will be included as a new key in the [report JSON](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md#attribution-reports). Its value will be either `"event"` or `"navigation"` corresponding to the source for
+the report.
 
 
 ### Attribution Triggering
