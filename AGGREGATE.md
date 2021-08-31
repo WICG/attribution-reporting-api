@@ -151,22 +151,24 @@ Actions in the worklet won’t affect the embedder context, to avoid leaking inf
 
 ### Aggregate attribution reports
 
-Attribution reports will look very similar to [event-level reports](https://github.com/WICG/conversion-measurement-api#attribution-reports). They will be reported to the configured `attributionreportto` endpoint at the path `.well-known/attribution-reporting/report-aggregate-attribution`. The payload will be JSON encoded with the following scheme:
+Attribution reports will look very similar to [event-level reports](https://github.com/WICG/conversion-measurement-api#attribution-reports). They will be reported to the configured `attributionreportto` endpoint at the path `.well-known/attribution-reporting/report-aggregate-attribution`. The report will be JSON encoded with the following scheme:
 
 
 ```
 {
   "source_site": "https://publisher.example",
   "attribution_destination": "https://advertiser.example",
-  "scheduled_report_time": <timestamp in msec>,
+  "scheduled_report_time": "<timestamp in msec>",
   "aggregation_service_payloads": [
     {
       "origin": "https://helper1.example",
-      "payload": "<base64 encoded encrypted data>"
+      "payload": "<base64 encoded encrypted data>",
+      "key_id": "<string identifying public key used>"
     },
     {
       "origin": "https://helper2.example",
-      "payload": "<base64 encoded encrypted data>"
+      "payload": "<base64 encoded encrypted data>",
+      "key_id": "<string identifying public key used>"
     }
   ],
   "privacy_budget_key": "<field for server to do privacy budgeting>",
@@ -187,8 +189,22 @@ The `payload` will need to contain all the information needed for the aggregatio
 
 The payload should be encrypted via [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/), to public keys specified by the processing origins at some well-known address  `/.well-known/aggregation-service/keys.json` that the browser can fetch. Note that we are avoiding using the `attribution-reporting` namespace because many APIs may want to use this infrastructure beyond attribution reporting.
 
-**TODO**: more formally specify `payload`.
+For the MPC protocol, we propose the contents of this base64-encoded encrypted payload will be a [CBOR](https://cbor.io) map with the following structure:
 
+```
+// CBOR
+{
+  "version": "<api version>",
+  "operation": "hierarchical-histogram",  // Allows for the service to support other operations in the future
+  "privacy_budget_key": "<field for server to do privacy budgeting>",
+  "scheduled_report_time": <timestamp in msec>,
+  "reporting_origin": "https://reporter.example",
+  "dpf_key": <binary serialization of the DPF key>,
+}
+```
+Note that the `dpf_key` value would differ in the two payloads.
+
+For the single-server design, the `dpf_key` field would be replaced with `"data": { "bucket": <bucket>, "value": <value> }`. If two `aggregationServices` are specified, one payload (chosen randomly) would contain that data and the other would instead contain `"data": {}`.
 
 ### Privacy budgeting
 
