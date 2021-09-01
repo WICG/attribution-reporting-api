@@ -189,7 +189,9 @@ The `payload` will need to contain all the information needed for the aggregatio
 
 The payload should be encrypted via [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/), to public keys specified by the processing origins at some well-known address  `/.well-known/aggregation-service/keys.json` that the browser can fetch and then base64 encoded. Note that we are avoiding using the `attribution-reporting` namespace because many APIs may want to use this infrastructure beyond attribution reporting.
 
-For the MPC protocol, we propose the contents of this base64-encoded encrypted payload will be a [CBOR](https://cbor.io) map with the following structure:
+The contents of this base64-encoded encrypted payload will be a [CBOR](https://cbor.io) map.
+
+Payloads generated with the `two-party` processingType will have the following structure:
 
 ```
 // CBOR
