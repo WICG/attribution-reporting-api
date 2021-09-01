@@ -187,7 +187,7 @@ The `payload` will need to contain all the information needed for the aggregatio
 *   Histogram contributions. For the MPC protocol we propose initially to use incremental[ distributed point functions](https://github.com/google/distributed_point_functions) (see [issue](https://github.com/WICG/conversion-measurement-api/issues/116)) which form the most flexible and robust protocols we know about. For the single-server design we will send the data (i.e. without using the DPF protocol) to one of the processing origins, and a “null” record to the other (at random).
 *   Privacy budgeting metadata. which could be some combination of `scheduled_report_time`, `attribution_destination` and the reporting origin (e.g. some function of information available in the clear to the reporter). This information can be used to bound how often batches of reports are sent for aggregation. Adding this to the encrypted payload makes this information immutable by the reporter. It should also be returned outside the payload to allow the reporting origin to maintain similar budgets.
 
-TODO: formally specify the `privacy_budget_key`.
+**TODO:** more formally specify the `privacy_budget_key`.
 
 The payload should be encrypted via [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/), to public keys specified by the processing origins at some well-known address  `/.well-known/aggregation-service/keys.json` that the browser can fetch, and then base64 encoded. Note that we are avoiding using the `attribution-reporting` namespace because many APIs may want to use this infrastructure beyond attribution reporting.
 
