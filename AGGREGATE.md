@@ -187,7 +187,7 @@ The `payload` will need to contain all the information needed for the aggregatio
 
 The payload should be encrypted via [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/), to public keys specified by the processing origins at some well-known address  `/.well-known/aggregation-service/keys.json` that the browser can fetch. Note that we are avoiding using the `attribution-reporting` namespace because many APIs may want to use this infrastructure beyond attribution reporting.
 
-The  processing origin will respond with a set of keys which will be stored according to standard HTTP caching rules, i.e. using Cache-Control headers to dictate how long to store the keys for. The browser will use these keys for the freshness lifetime as specified by the header. The scheme of the JSON encoded public keys is as follows:
+The processing origin will respond with a set of keys which will be stored according to standard HTTP caching rules, i.e. using Cache-Control headers to dictate how long to store the keys for. The browser will use these keys for the freshness lifetime as specified by the header. The scheme of the JSON encoded public keys is as follows:
 
 
 ```
