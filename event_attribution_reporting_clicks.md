@@ -191,10 +191,10 @@ this API:
 to trigger attribution for all matching sources.
 
 The browser will treat redirects to a URL of the form:
-`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?data=<data>&priority=<priority>&dedup-key=<dedup-key>]`
+`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?trigger-data=<trigger-data>&priority=<priority>&dedup-key=<dedup-key>]`
 
 as a special request. The query string for the request contains additional information about the attribution trigger:
-- `data`: optional data to identify the triggering event
+- `trigger-data`: optional data to identify the triggering event
 - `priority`: optional signed 64-bit integer representing the priority of this trigger compared to other triggers for the same source.
 - `dedup-key`: optional signed 64-bit integer which will be used to deduplicate multiple triggers which contain the same dedup-key for a single source
 
