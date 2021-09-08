@@ -205,8 +205,8 @@ The browser will encrypt payloads just before the report is sent by requesting p
   ]
 }
 ```
-Each processing origin should specify unique ID strings for each key.
-Further, the origin must not repeat the same id in a particular keyset (i.e. a particular fetch of `keys.json`).
+A processing origin should not reuse an ID string for a different key.
+In particular, the origin must not repeat the same ID in a keyset (i.e. a single fetch of `keys.json`).
 
 **Note:** The browser may need some mechanism to ensure that the same set of keys are delivered to different users.
 
