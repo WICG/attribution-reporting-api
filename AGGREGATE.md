@@ -191,9 +191,31 @@ The `payload` will need to contain all the information needed for the aggregatio
 
 The payload should be encrypted via [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/), to public keys specified by the processing origins at some well-known address  `/.well-known/aggregation-service/keys.json` that the browser can fetch, and then base64 encoded. Note that we are avoiding using the `attribution-reporting` namespace because many APIs may want to use this infrastructure beyond attribution reporting.
 
-The contents of this base64-encoded encrypted payload will be a [CBOR](https://cbor.io) map.
+The browser will encrypt payloads just before the report is sent by requesting public keys for the processing origin. `keys.json` will be fetched with an un-credentialed request. The processing origin will respond with a set of keys which will be stored according to standard HTTP caching rules, i.e. using Cache-Control headers to dictate how long to store the keys for (e.g. following the [freshness lifetime](https://datatracker.ietf.org/doc/html/rfc7234#section-4.2)). The browser could enforce maximum/minimum lifetimes of stored keys to encourage faster key rotation and/or mitigate bandwidth usage. The scheme of the JSON encoded public keys is as follows:
 
-Payloads generated with the `two-party` processingType will have the following structure:
+
+```
+{
+  "version": "<format version>",
+  "keys": [
+    {
+      "id": "<arbitrary string identifying the key (up to 128 characters)",
+      "key": "<base64 encoded public key>"
+    },
+    {
+      "id": "<arbitrary string identifying the key (up to 128 characters)",
+      "key": "<base64 encoded public key>"
+    }
+  ]
+}
+```
+
+
+**Note:** The browser may need some mechanism to ensure that the same set of keys are delivered to different users.
+
+The contents of the base64-encoded encrypted payload will be a [CBOR](https://cbor.io) map.
+
+Payloads generated with the `two-party` processing type will have the following structure:
 
 ```
 // CBOR
@@ -208,7 +230,8 @@ Payloads generated with the `two-party` processingType will have the following s
 ```
 Note that the `dpf_key` value would differ in the two payloads.
 
-Payloads generated with the `single-server` processingType will directly encode the bucket and value of the histogram contribution instead of a DPF key. The `dpf_key` field will be replaced with `"data": { "bucket": <bucket>, "value": <value> }`.
+Payloads generated with the `single-server` processing type will directly encode the bucket and value of the histogram contribution instead of a DPF key.
+The `dpf_key` field will be replaced with `"data": { "bucket": <bucket>, "value": <value> }`.
 If two `aggregationServices` are specified, one payload (chosen randomly) would contain that data and the other would instead contain `"data": {}`.
 
 ### Privacy budgeting

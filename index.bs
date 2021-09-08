@@ -34,6 +34,10 @@ A page can register an [=attribution source=] on a site by providing
 When such an <{a}> element is clicked, and the resulting navigation commits in a document within the [=same site=] as
 the <{a/attributiondestination}>, the [=attribution source=] is stored in UA storage.
 
+Alternatively, a page can register an [=attribution source=] on a site by providing a
+<{a/registerattributionsource}> attribute on an <{a}> element. When such an <{a}> element is added
+to the page, the [=attribution source=] is stored in UA storage.
+
 At a later point, the <{a/attributiondestination}> site may fire an HTTP request to
 trigger attribution, which matches an [=attribution trigger=] with any previously
 stored sources. If matching sources exist, they are scheduled to be
@@ -79,6 +83,8 @@ Add the following <a spec=html>content attributes</a> to the <{a}> element:
 :: Length of time the attribution souce is valid
 : <{a/attributionsourcepriority}>
 :: The priority of this source relative to other sources when triggering attribution
+: <{a/registerattributionsource}>
+:: Registers an [=attribution source=] with a source type "<code>event</code>"
 
 Extend the <{a}> element's <a spec=html>DOM interface</a> to include the following interface:
 
@@ -89,12 +95,14 @@ partial interface HTMLAnchorElement {
     [CEReactions] attribute USVString attributionReportTo;
     [CEReactions] attribute long long attributionExpiry;
     [CEReactions] attribute long long attributionSourcePriority;
+    [CEReactions] attribute boolean registerAttributionSource;
 };
 </pre>
 
-The IDL attributes {{HTMLAnchorElement/attributionDestination}}, {{HTMLAnchorElement/attributionSourceEventId}}, 
-{{HTMLAnchorElement/attributionReportTo}}, {{HTMLAnchorElement/attributionSourcePriority}} must <a spec=html>reflect</a> 
-the respective content attributes of the same name.
+The IDL attributes {{HTMLAnchorElement/attributionDestination}}, {{HTMLAnchorElement/attributionSourceEventId}},
+{{HTMLAnchorElement/attributionReportTo}}, {{HTMLAnchorElement/attributionSourcePriority}},
+{{HTMLAnchorElement/registerAttributionSource}} must <a spec=html>reflect</a> the respective
+content attributes of the same name.
 
 The IDL attribute {{HTMLAnchorElement/attributionExpiry}} must reflect the <{a/attributionexpiry}>
 content attribute, [=limited to only non-negative numbers=].
@@ -119,6 +127,9 @@ priority of a source relative to other sources when triggering attribution. If n
 priority. An [=attribution trigger=] with a given [=attribution trigger/reporting endpoint=] and [=attribution trigger/trigger origin=]
 will always be attributed to the source with the highest priority value that has the same [=attribution source/reporting endpoint=] 
 and [=attribution source/attribution destination=]. 
+
+The <dfn for="a" element-attr>registerattributionsource</dfn> attribute, if present, registers an
+additional source whose [=attribution source/source type=] is "<code>event</code>".
 
 Note: One simple priority scheme would be to use the current millisecond timestamp as the priority value.
 
@@ -207,7 +218,7 @@ In <a spec="html">create and initialize a <code>Document</code> object</a>, befo
 
 add the following step:
 
-1. Execute [=maybe process an attribution source=] with |navigationParams| and |browsingContext|.
+1. Execute [=maybe process a navigation attribution source=] with |navigationParams| and |browsingContext|.
 
 <h3 id="monkeypatch-following-hyperlink">Follow the hyperlink</h4>
 
@@ -262,6 +273,8 @@ An attribution source is a [=struct=] with the following items:
 :: A [=site=].
 : <dfn>reporting endpoint</dfn>
 :: An [=url/origin=].
+: <dfn>source type</dfn>
+:: Either "<code>navigation</code>" or "<code>event</code>".
 : <dfn>expiry</dfn>
 :: A point in time.
 : <dfn>priority</dfn>
@@ -284,6 +297,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: An [=url/origin=].
 : <dfn>trigger data</dfn>
 :: A [=string=].
+: <dfn>event source trigger data</dfn>
+:: A [=string=].
 : <dfn>trigger time</dfn>
 :: A point in time.
 : <dfn>reporting endpoint</dfn>
@@ -302,6 +317,8 @@ An attribution report is a [=struct=] with the following items:
 <dl dfn-for="attribution report">
 : <dfn>event id</dfn>
 :: A [=string=].
+: <dfn>source type</dfn>
+:: Either "<code>navigation</code>" or "<code>event</code>".
 : <dfn>trigger data</dfn>
 :: A [=string=].
 : <dfn>reporting endpoint</dfn>
@@ -335,8 +352,8 @@ However attribution data is inherently cross-site, and operations on storage wou
 
 <h3 algorithm id="parsing-data-fields">Parsing data fields</h3>
 
-This section defines how to parse and extract both
-[=attribution source/event id=] and [=attribution trigger/trigger data=].
+This section defines how to parse and extract
+[=attribution source/event id=], [=attribution trigger/trigger data=], and [=attribution trigger/event source trigger data=].
 
 To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an integer
 |maxData| perform the following steps. They return a non-negative integer:
@@ -405,14 +422,27 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
     :: |priority|
     : [=attribution source/source time=]
     :: |currentTime|
-1. Return |source|
+    : [=attribution source/source type=]
+    :: "<code>navigation</code>"
+1. Return |source|.
 
 <dfn>Max event id value</dfn> is a vendor specific integer which controls 
 the maximum size value which can be used as an [=attribution source/event id=]
 
+<h3 algorithm id="obtaining-event-attribution-source-anchor">Obtaining an event attribution source from an <code>a</code> element</h3>
+
+To <dfn>maybe obtain an event attribution source</dfn> given an |anchor|, run the following steps:
+
+1. Let |source| be the result of running [=obtain an attribution source=] with |anchor|.
+1. If |source| is null, return null.
+1. If |source| does not have an <{a/registerattributionsource}> attribute, return null.
+1. Set |source|'s [=attribution source/source type=] to "<code>event</code>".
+1. Round |source|'s [=attribution source/expiry=] away from zero to the nearest day.
+1. Return |source|.
+
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
-To <dfn>maybe process an attribution source</dfn> given a <a spec="HTML">navigation params</a>
+To <dfn>maybe process a navigation attribution source</dfn> given a <a spec="HTML">navigation params</a>
 |navigationParams| and [=browsing context=] |browsingContext|, run the following steps:
 1. If |browsingContext| is not a <a spec="html">top-level browsing context</a>, return.
 1. Let <var>attributionSource</var> be |navigationParams|'s [=navigation params/attribution source=].
@@ -443,7 +473,10 @@ To <dfn>obtain an attribution trigger</dfn> given a [=url=] |url| and an
 
 1. Let |triggerData| be 0.
 1. If |url|'s [=url/query=] has a `"data"` field, set |triggerData| to the result of running [=parse attribution data=] with
-    the value associated with field modulo the user agent's [=max trigger data value=].
+    the value associated with the field modulo the user agent's [=max trigger data value=].
+1. Let |eventSourceTriggerData| be 0.
+1. If |url|'s [=url/query=] has an `"event-source-trigger-data"` field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
+    the value associated with the field modulo the user agent's [=max event source trigger data value=].
 1. Let |dedupKey| be null.
 1. If |url|'s [=url/query=] has a `"dedup-key"` field, and applying the <a spec="html">rules for
     parsing integers</a> to the field's value results in an integer, then set |dedupKey| to that
@@ -458,6 +491,8 @@ To <dfn>obtain an attribution trigger</dfn> given a [=url=] |url| and an
     :: |environment|'s [=environment/top-level origin=].
     : [=attribution trigger/trigger data=]
     :: |triggerData|
+    : [=attribution trigger/event source trigger data=]
+    :: |eventSourceTriggerData|
     : [=attribution trigger/trigger time=]
     :: The current time.
     : [=attribution trigger/reporting endpoint=]
@@ -468,7 +503,9 @@ To <dfn>obtain an attribution trigger</dfn> given a [=url=] |url| and an
     :: |triggerPriority|
 1. Return |trigger|
 
-<dfn>Max trigger data value</dfn> is a vendor specific integer which controls the potential values of [=attribution report/trigger data=].
+<dfn>Max trigger data value</dfn> is a vendor-specific integer which controls the potential values of [=attribution trigger/trigger data=].
+
+<dfn>Max event source trigger data value</dfn> is a vendor-specific integer which controls the potential values of [=attribution trigger/event source trigger data=].
 
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
@@ -548,8 +585,10 @@ can be joined associated with a source event id. Larger values allow for more at
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 
 To <dfn>obtain a report delivery time</dfn> given an [=attribution source=] |source| and a
-[=attribution trigger/trigger time=] |triggerTime| perform the  following steps. They
+[=attribution trigger/trigger time=] |triggerTime|, perform the following steps. They
 return a point in time.
+1. If |source|'s [=attribution source/source type=] is "<code>event</code>", return |source|'s
+     [=attribution source/expiry=] + 1 hour.
 1. Let |timeToTrigger| be the difference between
     |triggerTime| and [=attribution source/source time=].
 1. Let |expiryDelta| be the difference between the |source|'s [=attribution source/expiry=] and
@@ -580,12 +619,14 @@ return a point in time.
 
 To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=attribution trigger=] |trigger|:
 
+1. Let |triggerData| be |source|'s [=attribution source/trigger data=].
+1. If |source|'s [=attribution source/source type=] is "<code>event</code>", set |triggerData| to |trigger|'s [=attribution trigger/event source trigger data=].
 1. Let |report| be a new [=attribution report=] struct whose items are:
 
     : [=attribution report/event id=]
     :: |source|'s [=attribution source/event id=].
     : [=attribution report/trigger data=]
-    :: |trigger|'s [=attribution trigger/trigger data=].
+    :: |triggerData|.
     : [=attribution report/reporting endpoint=]
     :: |source|'s [=attribution source/reporting endpoint=].
     : [=attribution report/attribution destination=]
