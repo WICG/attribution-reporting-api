@@ -421,7 +421,7 @@ on `toasters.example`. They must compress all of the data into
 bucketed version of the purchase value). They respond with a 302
 redirect to:
 ```
-https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution?data=2
+https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution?trigger-data=2
 ```
 
 The browser sees this request, and schedules a report to be
