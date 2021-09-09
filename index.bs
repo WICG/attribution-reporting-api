@@ -25,7 +25,7 @@ Introduction {#intro}
 This specification describes how web browsers can provide a mechanism to the
 web that supports measuring and attributing conversions (e.g. purchases) to ads
 a user interacted with on another site. This mechanism should remove one need
-for cross site identifiers like third party cookies.
+for cross-site identifiers like third-party cookies.
 
 ## Overview ## {#overview}
 
@@ -40,7 +40,7 @@ to the page, the [=attribution source=] is stored in UA storage.
 
 At a later point, the <{a/attributiondestination}> site may fire an HTTP request to
 trigger attribution, which matches an [=attribution trigger=] with any previously
-stored sources. If matching sources exist, they are scheduled to be
+stored sources. If a matching source exists, it is scheduled to be
 reported at a later time, possibly multiple days in the future.
 
 Reports are sent to reporting endpoints that are configured in the attribution source
@@ -109,7 +109,7 @@ content attribute, [=limited to only non-negative numbers=].
 
 The <dfn for="a" element-attr>attributiondestination</dfn> attribute is a string
 representing an [=url/origin=] that is intended to be [=same site=] with the origin
-of the final navigation url resulting from running <a spec="html">follow the hyperlink</a>
+of the final navigation URL resulting from running <a spec="html">follow the hyperlink</a>
 with the <{a}> element.
 
 The <dfn for="a" element-attr>attributionsourceeventid</dfn> attribute is a string
@@ -125,8 +125,8 @@ of time in milliseconds the attribution source should be considered for reportin
 The <dfn for="a" element-attr>attributionsourcepriority</dfn> attribute optionally defines the
 priority of a source relative to other sources when triggering attribution. If not specified, 0 is used as the
 priority. An [=attribution trigger=] with a given [=attribution trigger/reporting endpoint=] and [=attribution trigger/trigger origin=]
-will always be attributed to the source with the highest priority value that has the same [=attribution source/reporting endpoint=] 
-and [=attribution source/attribution destination=]. 
+will always be attributed to the source with the highest priority value that has the same [=attribution source/reporting endpoint=]
+and [=attribution source/attribution destination=].
 
 The <dfn for="a" element-attr>registerattributionsource</dfn> attribute, if present, registers an
 additional source whose [=attribution source/source type=] is "<code>event</code>".
@@ -136,7 +136,7 @@ Note: One simple priority scheme would be to use the current millisecond timesta
 <h3 id="monkeypatch-navigation">Navigation</h3>
 
 This section ensures that an [=attribution source=] associated with a navigation
-results in a top-level navigation whose final url is [=same site=] with the
+results in a top-level navigation whose final URL is [=same site=] with the
 [=attribution source/attribution destination=].
 
 <h4 id="monkeypatch-navigation-params">Navigation Params</h4>
@@ -169,22 +169,22 @@ to set the [=navigation params/attribution source=] of |navigationParams| to |at
 
 In the case where
 
-> If resource is a request whose url's scheme is "javascript"
+> If resource is a request whose URL's scheme is "javascript"
 
-modify the substep 
+modify the substep
 
-> 4. Let navigationParams be a new navigation params whose request is resource, 
+> 4. Let navigationParams be a new navigation params whose request is resource,
 >     ...
 
 to set the [=navigation params/attribution source=] of |navigationParams| to |attributionSource|.
 
 In the case where
 
-> If resource is a request whose url's scheme is a fetch scheme
+> If resource is a request whose URL's scheme is a fetch scheme
 
 modify the substep to pass |attributionSource| to the <a spec="html">process a navigate fetch</a> algorithm.
 
-Note: The final case, were the request is not a javascript or fetch scheme, does not need to be handled
+Note: The final case, where the request is not a javascript or fetch scheme, does not need to be handled
  as it will not result in the navigation of a top-level browsing context.
 
 <h4 id="monkeypatch-navigate-fetch">Process a navigate fetch</h4>
@@ -194,7 +194,7 @@ Modify the <a spec="html">process a navigate fetch</a> algorithm to accept a new
 
 In <a spec="html">process a navigate fetch</a>, modify the step
 
-> 15. Otherwise, if locationURL is a URL whose scheme is a fetch scheme, then run process a navigate fetch with a new request 
+> 15. Otherwise, if locationURL is a URL whose scheme is a fetch scheme, then run process a navigate fetch with a new request
 >     ...
 
 to also pass |attributionSource| into the <a spec="html">process a navigate fetch</a> algorithm.
@@ -208,7 +208,7 @@ to set the [=navigation params/attribution source=] of |navigationParams| to |at
 
 <h4 id="monkeypatch-document-creation">Document creation</h4>
 
-At the time <a spec="html">create and initialize a <code>Document</code> object</a> is invoked, the user agent knows the final url used for the
+At the time <a spec="html">create and initialize a <code>Document</code> object</a> is invoked, the user agent knows the final URL used for the
 navigation and can validate the [=attribution source/attribution destination=].
 
 In <a spec="html">create and initialize a <code>Document</code> object</a>, before
@@ -223,7 +223,7 @@ add the following step:
 <h3 id="monkeypatch-following-hyperlink">Follow the hyperlink</h4>
 
 Attribution source information declared on the <{a}> element needs to be passed to the
-<a spec="html">navigate</a> algorithm. 
+<a spec="html">navigate</a> algorithm.
 
 In <a spec="html">follow the hyperlink</a> after
 
@@ -231,7 +231,7 @@ In <a spec="html">follow the hyperlink</a> after
 
 add the following steps:
 
-1. Let <var>attributionSource</var> be null
+1. Let <var>attributionSource</var> be null.
 1. If |subject| is an <{a}> element, set |attributionSource| to the result of running [=obtain an attribution source=] with |subject|.
 
 Modify the step:
@@ -322,11 +322,11 @@ An attribution report is a [=struct=] with the following items:
 : <dfn>trigger data</dfn>
 :: A [=string=].
 : <dfn>reporting endpoint</dfn>
-:: An [=url/origin=]
+:: An [=url/origin=].
 : <dfn>attribution destination</dfn>
-:: An [=url/origin=]
+:: An [=url/origin=].
 : <dfn>report time</dfn>
-:: A point in time
+:: A point in time.
 : <dfn>trigger priority</dfn>
 :: A 64-bit integer.
 : <dfn>trigger time</dfn>
@@ -384,7 +384,7 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
 1. If |anchor|'s [=relevant settings object=]'s [=environment settings object/responsible document=] is
     not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=], return null.
 1. Let |attributionDestination| be the result of running
-    [=parse an attribution destination=] with anchor's
+    [=parse an attribution destination=] with |anchor|'s
     <{a/attributiondestination}> attribute.
 1. If |attributionDestination| is null, return null.
 1. Let |sourceOrigin| be |anchor|'s [=relevant settings object=]'s
@@ -426,8 +426,8 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
     :: "<code>navigation</code>"
 1. Return |source|.
 
-<dfn>Max event id value</dfn> is a vendor specific integer which controls 
-the maximum size value which can be used as an [=attribution source/event id=]
+<dfn>Max event id value</dfn> is a vendor-specific integer which controls
+the maximum value which can be used as an [=attribution source/event id=].
 
 <h3 algorithm id="obtaining-event-attribution-source-anchor">Obtaining an event attribution source from an <code>a</code> element</h3>
 
@@ -447,7 +447,7 @@ To <dfn>maybe process a navigation attribution source</dfn> given a <a spec="HTM
 1. If |browsingContext| is not a <a spec="html">top-level browsing context</a>, return.
 1. Let <var>attributionSource</var> be |navigationParams|'s [=navigation params/attribution source=].
 1. If |attributionSource| is null, return.
-1. If |attributionSource|'s [=attribution source/attribution destination=] is not [=same site=] to |navigationParams|'s 
+1. If |attributionSource|'s [=attribution source/attribution destination=] is not [=same site=] to |navigationParams|'s
     <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigation-params-origin">origin</a>, return.
 1. [=Queue a task=] to [=process an attribution source=] with |attributionSource|.
 
@@ -457,7 +457,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. [=list/Remove=] all entries in |cache| where all of the following are true:
     * the entry's [=attribution source/attribution destination=] and |source|'s [=attribution source/attribution destination=] are equal.
     * the entry's [=attribution source/reporting endpoint=] is [=same origin=] with |source|'s [=attribution source/reporting endpoint=].
-    * the entry's [=attribution source/number of reports=] value is greater than 0 .
+    * the entry's [=attribution source/number of reports=] value is greater than 0.
 
     Note: This causes the user agent to favor triggering newer [=attribution sources=] over sources that have already been triggered.
 1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry=] value is less than the current time.
@@ -468,7 +468,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
-To <dfn>obtain an attribution trigger</dfn> given a [=url=] |url| and an
+To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 [=environment settings object=] |environment|, run the following steps:
 
 1. Let |triggerData| be 0.
@@ -490,18 +490,18 @@ To <dfn>obtain an attribution trigger</dfn> given a [=url=] |url| and an
     : [=attribution trigger/trigger origin=]
     :: |environment|'s [=environment/top-level origin=].
     : [=attribution trigger/trigger data=]
-    :: |triggerData|
+    :: |triggerData|.
     : [=attribution trigger/event source trigger data=]
-    :: |eventSourceTriggerData|
+    :: |eventSourceTriggerData|.
     : [=attribution trigger/trigger time=]
     :: The current time.
     : [=attribution trigger/reporting endpoint=]
-    :: |url|'s [=url/origin=]
+    :: |url|'s [=url/origin=].
     : [=attribution trigger/dedup key=]
-    :: |dedupKey|
+    :: |dedupKey|.
     : [=attribution trigger/priority=]
-    :: |triggerPriority|
-1. Return |trigger|
+    :: |triggerPriority|.
+1. Return |trigger|.
 
 <dfn>Max trigger data value</dfn> is a vendor-specific integer which controls the potential values of [=attribution trigger/trigger data=].
 
@@ -513,27 +513,27 @@ Issue: Formalize how to parse the query similar to URLSearchParams.
 
 Given a [=request=] |request|:
 
-1. If |request|'s [=request/current url's=] [=url/path=] is not equal to « ".well-known","attribution-reporting","trigger-attribution" »,
+1. If |request|'s [=request/current URL's=] [=url/path=] is not equal to « ".well-known","attribution-reporting","trigger-attribution" »,
     return <strong>allowed</strong>.
 1. Let |environment| be |request|'s [=request/window=].
 1. If |environment| is not an [=environment settings object=], return <strong>allowed</strong>.
-1. If ||environment|'s [=environment settings object/responsible document=] is not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=], 
+1. If |environment|'s [=environment settings object/responsible document=] is not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=],
     return <strong>allowed</strong>.
 1. If |environment|'s [=environment settings object/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
 1. If |environment|'s [=environment/top-level origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
-1. If |request|'s [=request/current url's=] [=url/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
+1. If |request|'s [=request/current URL's=] [=url/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
 1. If |request|'s [=request/redirect count=] is less than 1, return <strong>allowed</strong>.
 1. Let |previousUrl| be the second to last [=URL=] in |request|'s
     [=request/URL list=].
-1. If |request|'s [=request/current url's=] [=url/origin=] is not [=same origin=] with
+1. If |request|'s [=request/current URL's=] [=url/origin=] is not [=same origin=] with
     |previousUrl|'s [=url/origin=], return <strong>allowed</strong>.
 
     Note: The restriction to require a redirect is necessary to ensure that the
-     request's origin is aware and in control of the conversion registration. This could also be done with a 
+     request's origin is aware and in control of the conversion registration. This could also be done with a
      <a href="https://github.com/WICG/conversion-measurement-api/issues/91">header-based mechanism</a>.
-1. Let |trigger| be the result of running [=obtain an attribution trigger=] with |request|'s [=request/current url=] and |environment|.
+1. Let |trigger| be the result of running [=obtain an attribution trigger=] with |request|'s [=request/current URL=] and |environment|.
 1. [=Queue a task=] to [=trigger attribution=] with |trigger|.
-1. Return <strong>blocked</strong>
+1. Return <strong>blocked</strong>.
 
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
@@ -577,10 +577,10 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null, [=list/append=] it to |sourceToAttribute|'s
     [=attribution source/dedup keys=].
 
-<dfn>Max reports per source</dfn> is a vendor specific integer which controls how many [=attribution reports=] can be created for an [=attribution source=]. 
+<dfn>Max reports per source</dfn> is a vendor-specific integer which controls how many [=attribution reports=] can be created for an [=attribution source=].
 
 Note: This parameter represents a privacy/utility tradeoff. Lower values mean that less trigger-side data
-can be joined associated with a source event id. Larger values allow for more attribution triggers to be reported.
+can be associated with a source event id. Larger values allow for more attribution triggers to be reported.
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 
@@ -592,7 +592,7 @@ return a point in time.
 1. Let |timeToTrigger| be the difference between
     |triggerTime| and [=attribution source/source time=].
 1. Let |expiryDelta| be the difference between the |source|'s [=attribution source/expiry=] and
-    the |source|'s [=attribution source/source time=]
+    the |source|'s [=attribution source/source time=].
 
     Note: |timeToTrigger| is less than |expiryDelta| because it is not normally possible to
     convert an expired attribution source.
@@ -609,7 +609,7 @@ return a point in time.
     <dd>return |source|'s [=attribution source/expiry=] + 1 hour.</dd>
 
     <dt>|timeToTrigger| <= (7 days - 1 hour)</dt>
-    <dd>return [=attribution source/source time=] + 7 days</dd>
+    <dd>return [=attribution source/source time=] + 7 days.</dd>
 
     <dt>Otherwise</dt>
     <dd>return |source|'s [=attribution source/expiry=] + 1 hour.</dd>
@@ -649,9 +649,9 @@ TODO
 
 <h3 id="clearing-attribution-storage">Clearing attribution storage</h3>
 
-A user agent's [=attribution caches=] contain data about a user's web activity. When a user agent clears an origin's storage, 
-it MUST also remove entries in the [=attribution caches=] whose  [=attribution source/source origin=],
-[=attribution source/attribution destination=], [=attribution source/reporting endpoint=], or 
+A user agent's [=attribution caches=] contain data about a user's web activity. When a user agent clears an origin's storage,
+it MUST also remove entries in the [=attribution caches=] whose [=attribution source/source origin=],
+[=attribution source/attribution destination=], [=attribution source/reporting endpoint=], or
 [=attribution trigger/trigger origin=] is the [=same origin|same=] as the cleared origin.
 
 A user agent MAY clear [=attribution cache=] entries at other times. For example, when a user agent clears
