@@ -233,7 +233,7 @@ In <a spec="html">follow the hyperlink</a> after
 add the following steps:
 
 1. Let <var>attributionSource</var> be null.
-1. If |subject| is an <{a}> element, set |attributionSource| to the result of running [=obtain an attribution source=] with |subject|.
+1. If |subject| is an <{a}> element, set |attributionSource| to the result of running [=obtain an attribution source from an anchor=] with |subject|.
 
 Modify the step:
 
@@ -253,6 +253,39 @@ In <a spec="FETCH">main fetch</a>, within the step:
 add the following check to the list:
 
 * [=should internalResponse to request be blocked as attribution trigger=]
+
+# Attribution Reporting API
+
+<pre class="idl">
+dictionary AttributionSourceParams {
+  required USVString attributionDestination;
+  required DOMString attributionSourceEventId;
+  USVString attributionReportTo;
+  long long attributionExpiry;
+  long long attributionSourcePriority;
+};
+
+[Exposed=Window, SecureContext]
+interface AttributionReporting {
+  Promise&lt;void&gt; registerAttributionSource(AttributionSourceParams params);
+};
+
+[SecureContext]
+partial interface Window {
+  readonly attribute AttributionReporting attributionReporting;
+};
+</pre>
+
+The
+<dfn method for=AttributionReporting><code>registerAttributionSource(<var>params</var>)</code></dfn>
+method steps are:
+
+1. Let |source| be the result of running [=obtain an attribution source from params=] with |params|
+    and the [=relevant settings object=].
+1. If |source| is null, return [=a promise rejected with=] the [=undefined=] value.
+1. Set |source| to the result of running [=obtain an event attribution source from a source=] with |source|.
+1. [=Queue a task=] to [=process an attribution source=] with |source|.
+1. Return [=a promise resolved with=] the [=undefined=] value.
 
 # Permissions Policy integration # {#permission-policy-integration}
 This specification defines a [=policy-controlled feature=] identified by the string "<code><dfn>attribution-reporting</dfn></code>". Its [=default allowlist=] is *.
@@ -382,35 +415,70 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
-To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
+To <dfn>obtain an attribution source from an anchor</dfn> given an <{a}> element |anchor|:
+
+1. If anchor does not have both an <{a/attributiondestination}> attribute and an <{a/attributionsourceeventid}> attribute, return null.
+1. Let |params| be an {{AttributionSourceParams}} with the following key/value pairs:
+     : {{AttributionSourceParams/attributionDestination}}
+     :: |anchor|'s <{a/attributiondestination}> attribute
+     : {{AttributionSourceParams/attributionSourceEventId}}
+     :: |anchor|'s <{a/attributionsourceeventid}> attribute
+     : {{AttributionSourceParams/attributionReportTo}}
+     :: |anchor|'s <{a/attributionreportto}> attribute
+     : {{AttributionSourceParams/attributionExpiry}}
+     :: |anchor|'s <{a/attributionexpiry}> attribute
+     : {{AttributionSourceParams/attributionSourcePriority}}
+     :: |anchor|'s <{a/attributionsourcepriority}> attribute
+1. Return the result of running [=obtain an attribution source from params=] with |params| and
+    |anchor|'s [=relevant settings object=].
+
+<h3 algorithm id="obtaining-event-attribution-source-anchor">Obtaining an event attribution source from an <code>a</code> element</h3>
+
+To <dfn>maybe obtain an event attribution source from an anchor</dfn> given an <{a}> element |anchor|, run the following steps:
+
+1. If |anchor| does not have a <{a/registerattributionsource}> attribute, return null.
+1. Let |source| be the result of running [=obtain an attribution source from an anchor=] with |anchor|.
+1. If |source| is null, return null.
+1. Return the result of running [=obtain an event attribution source from a source=] with |source|.
+
+<h3 algorithm id="obtaining-event-attribution-source-source">Obtaining an event attribution source from a source</h3>
+
+To <dfn>obtain an event attribution source from a source</dfn> given an [=attribution source=] |source|, run the following steps:
+
+1. Let |resultSource| be a shallow clone of |source|.
+1. Set |resultSource|'s [=attribution source/source type=] to "<code>event</code>".
+1. Round |resultSource|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
+1. Return |resultSource|.
+
+<h3 algorithm id="obtaining-attribution-source-params">Obtaining an attribution source from {{AttributionSourceParams}}</h3>
+
+To <dfn>obtain an attribution source from params</dfn> given an {{AttributionSourceParams}} |params|
+and an [=environment settings object=] |settings|, run the following steps:
+
 1. Let |sourceIdentifier| be a new unique string.
 1. Let |currentTime| be the current time.
-1. If |anchor| does not have both an <{a/attributiondestination}> attribute and
-    an <{a/attributionsourceeventid}> attribute, return null.
-1. If |anchor|'s [=relevant settings object=]'s [=environment settings object/responsible document=] is
+1. If |params|["{{AttributionSourceParams/attributionDestination}}"] or
+    |params|["{{AttributionSourceParams/attributionSourceEventId}}"] does not [=map/exists|exist=], return null.
+1. If |settings|'s [=environment settings object/responsible document=] is
     not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=], return null.
 1. Let |attributionDestination| be the result of running
-    [=parse an attribution destination=] with |anchor|'s
-    <{a/attributiondestination}> attribute.
+    [=parse an attribution destination=] with |params|["{{AttributionSourceParams/attributionDestination}}"].
 1. If |attributionDestination| is null, return null.
-1. Let |sourceOrigin| be |anchor|'s [=relevant settings object=]'s
-    [=environment/top-level origin=].
+1. Let |sourceOrigin| be |settings|'s [=environment/top-level origin=].
 1. If |sourceOrigin| is an [=opaque origin=], return null.
 1. Let |reportingOrigin| be |sourceOrigin|.
-1. If |anchor| has an <{a/attributionreportto}> attribute, then:
+1. If |params|["{{AttributionSourceParams/attributionReportTo}}"] [=map/exists=], then:
     1. Let |reportingUrl| be the result of running the
-        [=URL parser=] with |anchor|'s <{a/attributionreportto}> value.
+        [=URL parser=] with |params|["{{AttributionSourceParams/attributionReportTo}}"].
     1. If |reportingUrl| is failure or null, return null.
     1. If |reportingUrl|'s [=url/origin=] is an [=opaque origin=], return null.
     1. Set |reportingOrigin| to |reportingUrl|'s [=url/origin=].
 1. Let |expiry| be 30 days.
-1. If |anchor| has an <{a/attributionexpiry}> attribute, and applying the
-    <a spec="html">rules for parsing non-negative integers</a> to the attributes's value
-    results in an integer greater than zero, then set |expiry| to that value.
+1. If |params|["{{AttributionSourceParams/attributionExpiry}}"] [=map/exists=],
+    then set |expiry| to that value.
 1. Let |priority| be 0.
-1. If |anchor| has an <{a/attributionsourcepriority}> attribute, and applying the
-    <a spec="html">rules for parsing integers</a> to the attributes's value
-    results in an integer, then set |priority| to that value.
+1. If |params|["{{AttributionSourceParams/attributionSourcePriority}}"] [=map/exists=],
+    then set |priority| to that value.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -418,8 +486,8 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
     : [=attribution source/source origin=]
     :: |sourceOrigin|
     : [=attribution source/event id=]
-    :: The result of running [=parse attribution data=] with |anchor|'s
-        <{a/attributionsourceeventid}> attribute modulo [=max event id value=].
+    :: The result of running [=parse attribution data=] with
+        |params|["{{AttributionSourceParams/attributionSourceEventId}}"] modulo [=max event id value=].
     : [=attribution source/attribution destination=]
     :: |attributionDestination|
     : [=attribution source/reporting endpoint=]
@@ -436,17 +504,6 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
 
 <dfn>Max event id value</dfn> is a vendor-specific integer which controls
 the maximum value which can be used as an [=attribution source/event id=].
-
-<h3 algorithm id="obtaining-event-attribution-source-anchor">Obtaining an event attribution source from an <code>a</code> element</h3>
-
-To <dfn>maybe obtain an event attribution source</dfn> given an |anchor|, run the following steps:
-
-1. Let |source| be the result of running [=obtain an attribution source=] with |anchor|.
-1. If |source| is null, return null.
-1. If |source| does not have an <{a/registerattributionsource}> attribute, return null.
-1. Set |source|'s [=attribution source/source type=] to "<code>event</code>".
-1. Round |source|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
-1. Return |source|.
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
