@@ -619,7 +619,7 @@ return a point in time.
 
 To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=attribution trigger=] |trigger|:
 
-1. Let |triggerData| be |source|'s [=attribution source/trigger data=].
+1. Let |triggerData| be |trigger|'s [=attribution trigger/trigger data=].
 1. If |source|'s [=attribution source/source type=] is "<code>event</code>", set |triggerData| to |trigger|'s [=attribution trigger/event source trigger data=].
 1. Let |report| be a new [=attribution report=] struct whose items are:
 
@@ -640,6 +640,92 @@ To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=
     : [=attribution report/source identifier=]
     :: |source|'s [=attribution source/source identifier=].
 1. Return |report|.
+
+# Report delivery # {#report-delivery}
+
+The user agent MUST periodically gather [=attribution reports=] from its [=attribution report cache=] and run [=queue a report for delivery=] on each report.
+
+To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report| run the following steps:
+
+1. If |report|'s [=attribution report/report time=] is less than the current time, add an [=implementation-defined=] random amount to report time.
+    
+    Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was 
+     closed. Adding random delay prevents temporal joining or reports from different [=attribution source/source origin=]'s.
+1. Wait until |report|'s [=attribution report/report time=] is the current time.
+1. Optionally, wait a further implementation-defined length of time.
+    
+    Note: This is intended to allow user agents to optimize device resource usage.
+1. Run [=attempt to deliver a report=] with |report|.
+
+<h3 id="serialize-report-body">Serialize attribution report body</h3>
+
+To <dfn>serialize an [=attribution report=]</dfn> |report|:
+
+1. Let |data| be a map of the following key/value pairs:
+
+    : `source_engagement_type`
+    :: report's [=attribution report/source type=]
+    : `source_event_id`
+    :: |report|'s [=attribution report/event id=]
+    : `trigger_data`
+    :: |report|'s [=attribution report/trigger data=]
+    : `attribution_destination`
+    :: |report|'s [=attribution report/attribution destination=]
+
+1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|
+
+<h3 id="get-report-url">Get report request url</h3>
+
+To <dfn>generate a report url</dfn> for a given [=attribution report=] |report|:
+
+1. Let |serializedOrigin| be the result of executing [=serialization of an origin=] with |report|'s [=attribution report/reporting endpoint=]
+1. Let |urlComponents| be the list «|serializedOrigin|, ".well-known/attribution-reporting/report-attribution"»
+1. Let |urlString| be the result of executing [=string/concatenate=] on |urlComponents|
+1. Return the result of running the [=URL parser=] on |urlString|
+
+<h3 id="issue-report-request">Issuing a report request</h3>
+
+This algorithm constructs a [=request=] and attempts to deliver it to
+|report|'s [=attribution report/reporting endpoint=].
+
+To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report| run the following steps:
+
+1. Let |body| be the result of executing [=serialize an attribution report=] on |report|.
+1. Let |url| be the result of executing [=generate a report url=] on |report|
+1. Let |request| be a new [=request=] with the follow properties [[FETCH]]:
+    :   `method`
+    ::  "`POST`"
+    :   `url`
+    ::  |url|
+    :   `header list`
+    ::  A new <a>header list</a> containing a <a>header</a> named
+        "`Content-Type`" whose value is "`application/reports+json`"
+    :   `body`
+    ::  A [=/body=] whose [=body/source=] is |body|.
+    :   `client`
+    ::  `null`
+    :   `window`
+    ::  "`no-window`"
+    :   `service-workers mode`
+    ::  "`none`"
+    :   `initiator`
+    ::  ""
+    :   `mode`
+    ::  "`cors`"
+    :   `unsafe-request` flag
+    ::  set
+    :   `credentials mode`
+    ::  "`omit`"
+    :   `cache mode`
+    ::  "`no-store`"
+1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being these steps:
+    1. [=Queue a task=] to remove |report| from the [=attribution report cache=]
+
+A user agent MAY include logic to retry this algorithm in the event that there was an error.
+
+
+# Security considerations # {#security-considerations}
+TODO
 
 # Security consideration # {#security-considerations}
 TODO
