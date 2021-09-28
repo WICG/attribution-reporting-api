@@ -277,7 +277,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>source type</dfn>
 :: Either "<code>navigation</code>" or "<code>event</code>".
 : <dfn>expiry</dfn>
-:: A point in time.
+:: A length of time.
 : <dfn>priority</dfn>
 :: A 64-bit integer.
 : <dfn>source time</dfn>
@@ -418,7 +418,7 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
     : [=attribution source/reporting endpoint=]
     :: |reportingOrigin|
     : [=attribution source/expiry=]
-    :: |currentTime| + |expiry|
+    :: |expiry|
     : [=attribution source/priority=]
     :: |priority|
     : [=attribution source/source time=]
@@ -438,7 +438,7 @@ To <dfn>maybe obtain an event attribution source</dfn> given an |anchor|, run th
 1. If |source| is null, return null.
 1. If |source| does not have an <{a/registerattributionsource}> attribute, return null.
 1. Set |source|'s [=attribution source/source type=] to "<code>event</code>".
-1. Round |source|'s [=attribution source/expiry=] away from zero to the nearest day.
+1. Round |source|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
 1. Return |source|.
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
@@ -461,9 +461,14 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     * the entry's [=attribution source/number of reports=] value is greater than 0.
 
     Note: This causes the user agent to favor triggering newer [=attribution sources=] over sources that have already been triggered.
-1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry=] value is less than the current time.
+1. [=list/Remove=] all entries in |cache| where the entry's [=obtain an attribution source's expiry time|expiry time=] is less than the current time.
 1. If the [=list/size=] of |cache| is less than an implementation-defined limit, [=set/append=] |source| to |cache|.
 
+<h3 id="obtaining-attribution-source-expiry-time">Obtaining an attribution source's expiry time</h3>
+
+To <dfn>obtain an attribution source's expiry time</dfN> given an [=attribution source=] |source|:
+
+1. Return |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
 
 # Triggering Algorithms # {#trigger-algorithms}
 
@@ -544,7 +549,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Let |matchingSources| be all entries in the [=attribution source cache=] where all of the following are true:
      * entry's [=attribution source/attribution destination=] and |attributionDestination| are equal.
      * entry's [=attribution source/reporting endpoint=] and |trigger|'s [=attribution source/reporting endpoint=] are equal.
-     * entry's [=attribution source/expiry=] is greater than the current time.
+     * entry's [=obtain an attribution source's expiry time|expiry time=] is greater than the current time.
 1. If |matchingSources| is empty, return.
 1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources|
     in descending order, with |a| being less than |b| if any of the following are true:
@@ -589,13 +594,11 @@ To <dfn>obtain a report delivery time</dfn> given an [=attribution source=] |sou
 [=attribution trigger/trigger time=] |triggerTime|, perform the following steps. They
 return a point in time.
 1. If |source|'s [=attribution source/source type=] is "<code>event</code>", return |source|'s
-     [=attribution source/expiry=] + 1 hour.
+     [=obtain an attribution source's expiry time|expiry time=] + 1 hour.
 1. Let |timeToTrigger| be the difference between
     |triggerTime| and [=attribution source/source time=].
-1. Let |expiryDelta| be the difference between the |source|'s [=attribution source/expiry=] and
-    the |source|'s [=attribution source/source time=].
 
-    Note: |timeToTrigger| is less than |expiryDelta| because it is not normally possible to
+    Note: |timeToTrigger| is less than |source|'s [=attribution source/expiry=] because it is not normally possible to
     convert an expired attribution source.
 
 1. If:
@@ -603,17 +606,17 @@ return a point in time.
     <dt>|timeToTrigger| <= (2 days - 1 hour)</dt>
     <dd>return [=attribution source/source time=] + 2 days.</dd>
 
-    <dt> |expiryDelta| > (2 days - 1 hour)
-        - and |expiryDelta| < (7 days - 1 hour)
-        - and |timeToTrigger| <= |expiryDelta|
+    <dt> |source|'s [=attribution source/expiry=] > (2 days - 1 hour)
+        - and |source|'s [=attribution source/expiry=] < (7 days - 1 hour)
+        - and |timeToTrigger| <= |source|'s [=attribution source/expiry=]
     </dt>
-    <dd>return |source|'s [=attribution source/expiry=] + 1 hour.</dd>
+    <dd>return |source|'s [=obtain an attribution source's expiry time|expiry time=] + 1 hour.</dd>
 
     <dt>|timeToTrigger| <= (7 days - 1 hour)</dt>
     <dd>return [=attribution source/source time=] + 7 days.</dd>
 
     <dt>Otherwise</dt>
-    <dd>return |source|'s [=attribution source/expiry=] + 1 hour.</dd>
+    <dd>return |source|'s [=obtain an attribution source's expiry time|expiry time=] + 1 hour.</dd>
     </dl>
 
 <h3 algorithm id="obtaining-a-report">Obtaining a report</h3>
