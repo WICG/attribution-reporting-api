@@ -461,14 +461,12 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     * the entry's [=attribution source/number of reports=] value is greater than 0.
 
     Note: This causes the user agent to favor triggering newer [=attribution sources=] over sources that have already been triggered.
-1. [=list/Remove=] all entries in |cache| where the entry's [=obtain an attribution source's expiry time|expiry time=] is less than the current time.
+1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry time=] is less than the current time.
 1. If the [=list/size=] of |cache| is less than an implementation-defined limit, [=set/append=] |source| to |cache|.
 
 <h3 id="obtaining-attribution-source-expiry-time">Obtaining an attribution source's expiry time</h3>
 
-An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</dfn> is the result of the following algorithm.
-
-1. Return |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
+An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
 
 # Triggering Algorithms # {#trigger-algorithms}
 
@@ -549,7 +547,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Let |matchingSources| be all entries in the [=attribution source cache=] where all of the following are true:
      * entry's [=attribution source/attribution destination=] and |attributionDestination| are equal.
      * entry's [=attribution source/reporting endpoint=] and |trigger|'s [=attribution source/reporting endpoint=] are equal.
-     * entry's [=obtain an attribution source's expiry time|expiry time=] is greater than the current time.
+     * entry's [=attribution source/expiry time=] is greater than the current time.
 1. If |matchingSources| is empty, return.
 1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources|
     in descending order, with |a| being less than |b| if any of the following are true:
@@ -594,7 +592,7 @@ To <dfn>obtain a report delivery time</dfn> given an [=attribution source=] |sou
 [=attribution trigger/trigger time=] |triggerTime|, perform the following steps. They
 return a point in time.
 1. If |source|'s [=attribution source/source type=] is "<code>event</code>", return |source|'s
-     [=obtain an attribution source's expiry time|expiry time=] + 1 hour.
+     [=attribution source/expiry time=] + 1 hour.
 1. Let |timeToTrigger| be the difference between
     |triggerTime| and [=attribution source/source time=].
 
@@ -610,13 +608,13 @@ return a point in time.
         - and |source|'s [=attribution source/expiry=] < (7 days - 1 hour)
         - and |timeToTrigger| <= |source|'s [=attribution source/expiry=]
     </dt>
-    <dd>return |source|'s [=obtain an attribution source's expiry time|expiry time=] + 1 hour.</dd>
+    <dd>return |source|'s [=attribution source/expiry time=] + 1 hour.</dd>
 
     <dt>|timeToTrigger| <= (7 days - 1 hour)</dt>
     <dd>return [=attribution source/source time=] + 7 days.</dd>
 
     <dt>Otherwise</dt>
-    <dd>return |source|'s [=obtain an attribution source's expiry time|expiry time=] + 1 hour.</dd>
+    <dd>return |source|'s [=attribution source/expiry time=] + 1 hour.</dd>
     </dl>
 
 <h3 algorithm id="obtaining-a-report">Obtaining a report</h3>
