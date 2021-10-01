@@ -408,18 +408,6 @@ To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an intege
 1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by |maxData|.
 1. Return |clampedDecodedInput|.
 
-<h3 algorithm id="noising-data-fields">Noising data fields</h3>
-
-This section defines how to noise [=attribution trigger/trigger data=] and
-[=attribution trigger/event source trigger data=].
-
-To <dfn>noise trigger data</dfn> given an integer |input|, integer |maxData|, and probability |noiseRate| where |input| must be between 0 (inclusive) and |maxData|, run the following steps:
-(exclusive) and a probability |noiseRate|:
-
-1. Let |shouldNoise| be a randomly selected boolean value such that true is selected with probability |noiseRate|.
-1. If |shouldNoise| is false, return |input|.
-1. Return a randomly selected integer between 0 (inclusive) and |maxData| (exclusive).
-
 <h3 algorithm id="parsing-attribution-destination">Parsing an attribution destination</h3>
 
 To <dfn>parse an attribution destination</dfn> from a string |str|:
@@ -548,6 +536,19 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 
 # Triggering Algorithms # {#trigger-algorithms}
 
+<h3 algorithm id="noising-data-fields">Noising trigger data</h3>
+
+This section defines how to noise [=attribution trigger/trigger data=] and
+[=attribution trigger/event source trigger data=].
+
+To <dfn>noise trigger data</dfn> given an integer |input|, integer |maxData|, and double |noiseRate|,
+where |input| must be between 0 (inclusive) and |maxData| (exclusive) and |noiseRate| must be
+between 0 and 1 (both inclusive), run the following steps:
+
+1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive).
+1. If |r| is greater than or equal to |noiseRate|, return |input|.
+1. Return a random integer between 0 (inclusive) and |maxData| (exclusive).
+
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
 To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
@@ -556,12 +557,12 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 1. Let |triggerData| be 0.
 1. If |url|'s [=url/query=] has a `"trigger-data"` field, set |triggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=max trigger data value=].
-1. Set |triggerData| to the result of running [=noise attribution data=] with |triggerData|, the
+1. Set |triggerData| to the result of running [=noise trigger data=] with |triggerData|, the
     user agent's [=max trigger data value=], and the user agent's [=trigger data noise rate=].
 1. Let |eventSourceTriggerData| be 0.
 1. If |url|'s [=url/query=] has an `"event-source-trigger-data"` field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=max event source trigger data value=].
-1. Set |eventSourceTriggerData| to the result of running [=noise attribution data=] with
+1. Set |eventSourceTriggerData| to the result of running [=noise trigger data=] with
     |eventSourceTriggerData|, the user agent's [=max event source trigger data value=], and the
     user agent's [=event source trigger data noise rate=].
 1. Let |dedupKey| be null.
@@ -594,9 +595,9 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 
 <dfn>Max event source trigger data value</dfn> is a vendor-specific integer which controls the potential values of [=attribution trigger/event source trigger data=].
 
-<dfn>Trigger data noise rate</dfn> is a vendor-specific probability which controls noising of [=attribution trigger/trigger data=].
+<dfn>Trigger data noise rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive) which controls noising of [=attribution trigger/trigger data=].
 
-<dfn>Event source trigger data noise rate</dfn> is a vendor-specific probability which controls noising of [=attribution trigger/event source trigger data=].
+<dfn>Event source trigger data noise rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive) which controls noising of [=attribution trigger/event source trigger data=].
 
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
