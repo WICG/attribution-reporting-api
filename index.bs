@@ -333,6 +333,8 @@ An attribution report is a [=struct=] with the following items:
 :: A point in time.
 : <dfn>source identifier</dfn>
 :: An opaque string.
+: <dfn>delivered</dfn>
+:: A boolean (default false).
 
 </dl>
 
@@ -647,6 +649,8 @@ The user agent MUST periodically [=set/iterate=] over its [=attribution report c
 
 To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report|, run the following steps [=in parallel=]:
 
+1. If |report|'s [=attribution report/delivered=] flag is true, return.
+1. Set |report|'s [=attribution report/delivered=] value to true.
 1. If |report|'s [=attribution report/report time=] is less than the current time, add an [=implementation-defined=] random amount to report time.
     
     Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was 
@@ -676,10 +680,13 @@ To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following st
 
 To <dfn>generate a report URL</dfn> for a given [=attribution report=] |report|, run the following steps:
 
-1. Let |serializedOrigin| be the result of executing [=serialization of an origin=] with |report|'s [=attribution report/reporting endpoint=].
-1. Let |urlComponents| be the list «|serializedOrigin|, "`.well-known/attribution-reporting/report-attribution`"».
-1. Let |urlString| be the result of executing [=string/concatenate=] on |urlComponents|.
-1. Return the result of running the [=URL parser=] on |urlString|.
+1. Let |reportUrl| be a new [=URL record=].
+1. Let |reportingOrigin| be |report|'s [=attribution report/reporting endpoint=].
+1. Set |reportUrl|'s [=URL/scheme=] to |reportingOrigin|'s [=origin/scheme=].
+1. Set |reportUrl|'s [=URL/host=] to |reportingOrigin|'s [=origin/host=].
+1. Set |reportUrl|'s [=URL/port=] to |reportingOrigin|'s [=origin/port=].
+1. Set |reportUrl|'s [=URL/path=] to «"`.well-known`","`attribution-reporting`","`report-attribution`"».
+1. Return |reportUrl|.
 
 <h3 id="issue-report-request">Issuing a report request</h3>
 
