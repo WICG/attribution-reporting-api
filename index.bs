@@ -333,8 +333,8 @@ An attribution report is a [=struct=] with the following items:
 :: A point in time.
 : <dfn>source identifier</dfn>
 :: An opaque string.
-: <dfn>delivered</dfn>
-:: A boolean (default false).
+: <dfn>delivered</dfn> (default false)
+:: A boolean.
 
 </dl>
 
@@ -474,17 +474,17 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 [=environment settings object=] |environment|, run the following steps:
 
 1. Let |triggerData| be 0.
-1. If |url|'s [=url/query=] has a `"trigger-data"` field, set |triggerData| to the result of running [=parse attribution data=] with
+1. If |url|'s [=url/query=] has a "`trigger-data`" field, set |triggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=max trigger data value=].
 1. Let |eventSourceTriggerData| be 0.
-1. If |url|'s [=url/query=] has an `"event-source-trigger-data"` field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
+1. If |url|'s [=url/query=] has an "`event-source-trigger-data`" field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=max event source trigger data value=].
 1. Let |dedupKey| be null.
-1. If |url|'s [=url/query=] has a `"dedup-key"` field, and applying the <a spec="html">rules for
+1. If |url|'s [=url/query=] has a "`dedup-key`" field, and applying the <a spec="html">rules for
     parsing integers</a> to the field's value results in an integer, then set |dedupKey| to that
     value.
 1. Let |triggerPriority| be 0.
-1. If |url|'s [=url/query=] has a `"priority"` field, and applying the
+1. If |url|'s [=url/query=] has a "`priority`" field, and applying the
     <a spec="html">rules for parsing integers</a> to the field's value results
     in an integer, set |triggerPriority| to that value.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
@@ -667,11 +667,11 @@ To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following st
 
 1. Let |data| be a [=map=] of the following key/value pairs:
 
-    : `"source_type"`
+    : "`source_type`"
     :: |report|'s [=attribution report/source type=]
-    : `"source_event_id"`
+    : "`source_event_id`"
     :: |report|'s [=attribution report/event id=]
-    : `"trigger_data"`
+    : "`trigger_data`"
     :: |report|'s [=attribution report/trigger data=]
 
 1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
@@ -697,7 +697,11 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
 
 1. Let |body| be the result of executing [=serialize an attribution report=] on |report|.
 1. Let |url| be the result of executing [=generate a report URL=] on |report|.
-1. Let |referrer| the result of running the [=URL parser=] on |report|'s [=attribution report/attribution destination=].
+1. Let |referrer| be a new [=URL record=].
+1. Let |destination| be |report|'s [=attribution report/attribution destination=].
+1. Set |reportUrl|'s [=URL/scheme=] to |destination|'s [=origin/scheme=].
+1. Set |reportUrl|'s [=URL/host=] to |destination|'s [=origin/host=].
+1. Set |reportUrl|'s [=URL/port=] to |destination|'s [=origin/port=].
 1. Let |request| be a new [=request=] with the following properties:
     :   `method`
     ::  "`POST`"
