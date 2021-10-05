@@ -376,6 +376,7 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. Let |url| be the result of running the [=URL parser=] on the value of
     the |str|.
 1. If |url| is failure or null, return null.
+1. If |url|'s [=url/origin=] is an [=opaque origin=], return null.
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
@@ -394,11 +395,13 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
 1. If |attributionDestination| is null, return null.
 1. Let |sourceOrigin| be |anchor|'s [=relevant settings object=]'s
     [=environment/top-level origin=].
+1. If |sourceOrigin| is an [=opaque origin=], return null.
 1. Let |reportingOrigin| be |sourceOrigin|.
 1. If |anchor| has an <{a/attributionreportto}> attribute, then:
     1. Let |reportingUrl| be the result of running the
-        [=URL parser=] with |anchor|'s <{a/attributionreportto}> value
+        [=URL parser=] with |anchor|'s <{a/attributionreportto}> value.
     1. If |reportingUrl| is failure or null, return null.
+    1. If |reportingUrl|'s [=url/origin=] is an [=opaque origin=], return null.
     1. Set |reportingOrigin| to |reportingUrl|'s [=url/origin=].
 1. Let |expiry| be 30 days.
 1. If |anchor| has an <{a/attributionexpiry}> attribute, and applying the
@@ -517,6 +520,7 @@ Issue: Formalize how to parse the query similar to URLSearchParams.
 
 Given a [=request=] |request|:
 
+1. If |request|'s [=request/current URL's=] [=url/origin=] is an [=opaque origin=], return <strong>allowed</strong>.
 1. If |request|'s [=request/current URL's=] [=url/path=] is not equal to « ".well-known","attribution-reporting","trigger-attribution" »,
     return <strong>allowed</strong>.
 1. Let |environment| be |request|'s [=request/window=].
@@ -524,6 +528,7 @@ Given a [=request=] |request|:
 1. If |environment|'s [=environment settings object/responsible document=] is not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=],
     return <strong>allowed</strong>.
 1. If |environment|'s [=environment settings object/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
+1. If |environment|'s [=environment/top-level origin=] is an [=opaque origin=], return <strong>allowed</strong>.
 1. If |environment|'s [=environment/top-level origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
 1. If |request|'s [=request/current URL's=] [=url/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
 1. If |request|'s [=request/redirect count=] is less than 1, return <strong>allowed</strong>.
