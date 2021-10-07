@@ -536,6 +536,20 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 
 # Triggering Algorithms # {#trigger-algorithms}
 
+<h3 algorithm id="noising-data-fields">Noising trigger data</h3>
+
+This section defines how to noise [=attribution trigger/trigger data=] and
+[=attribution trigger/event source trigger data=].
+
+To <dfn>noise trigger data</dfn> given an integer |input|, integer |maxData|, and double |noiseRate|,
+run the following steps:
+
+1. Assert: |input| is between 0 (inclusive) and |maxData| exclusive.
+1. Assert: |noiseRate| is between 0 and 1 (both inclusive).
+1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive).
+1. If |r| is greater than or equal to |noiseRate|, return |input|.
+1. Return a random integer between 0 (inclusive) and |maxData| (exclusive).
+
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
 To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
@@ -544,9 +558,14 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 1. Let |triggerData| be 0.
 1. If |url|'s [=url/query=] has a `"trigger-data"` field, set |triggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=max trigger data value=].
+1. Set |triggerData| to the result of running [=noise trigger data=] with |triggerData|, the
+    user agent's [=max trigger data value=], and the user agent's [=trigger data noise rate=].
 1. Let |eventSourceTriggerData| be 0.
 1. If |url|'s [=url/query=] has an `"event-source-trigger-data"` field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=max event source trigger data value=].
+1. Set |eventSourceTriggerData| to the result of running [=noise trigger data=] with
+    |eventSourceTriggerData|, the user agent's [=max event source trigger data value=], and the
+    user agent's [=event source trigger data noise rate=].
 1. Let |dedupKey| be null.
 1. If |url|'s [=url/query=] has a `"dedup-key"` field, and applying the <a spec="html">rules for
     parsing integers</a> to the field's value results in an integer, then set |dedupKey| to that
@@ -576,6 +595,10 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 <dfn>Max trigger data value</dfn> is a vendor-specific integer which controls the potential values of [=attribution trigger/trigger data=].
 
 <dfn>Max event source trigger data value</dfn> is a vendor-specific integer which controls the potential values of [=attribution trigger/event source trigger data=].
+
+<dfn>Trigger data noise rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive) which controls noising of [=attribution trigger/trigger data=].
+
+<dfn>Event source trigger data noise rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive) which controls noising of [=attribution trigger/event source trigger data=].
 
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
