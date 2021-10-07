@@ -532,7 +532,12 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 
     Note: This causes the user agent to favor triggering newer [=attribution sources=] over sources that have already been triggered.
 1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry time=] is less than the current time.
-1. If the [=list/size=] of |cache| is less than an implementation-defined limit, [=set/append=] |source| to |cache|.
+1. If the [=list/size=] of |cache| is greater than or equal to the user agent's
+     [=max source cache size=], return.
+1. [=set/Append=] |source| to |cache|.
+
+<dfn>Max source cache size</dfn> is a vendor-specific integer which controls how many
+[=attribution sources=] can be in the [=attribution source cache=].
 
 # Triggering Algorithms # {#trigger-algorithms}
 
@@ -648,6 +653,10 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Let |sourceToAttribute| be the first item in |matchingSources|.
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null and |sourceToAttribute|'s
     [=attribution source/dedup keys=] [=list/contains=] it, return.
+1. Let |numMatchingReports| be the number of entries in the [=attribution report cache=] whose
+    [=attribution report/attribution destination=] equals |attributionDestination|.
+1. If |numMatchingReports| is greater than or equal to the user agent's
+    [=max reports per attribution destination=], return.
 1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute| and |trigger|.
 1. If |sourceToAttribute|'s [=attribution source/number of reports=] value is equal to the
     user agent's [=max reports per source=] value, then:
@@ -666,13 +675,21 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
 1. For each |item| of |matchingSources|:
     1. [=list/Remove=] |item| from the [=attribution source cache=].
-1. If the [=list/size=] of the [=attribution report cache=] is greater than an implementation-defined limit, return.
+1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
+    agent's [=max report cache size=], return.
 1. Add |report| to the [=attribution report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null, [=list/append=] it to |sourceToAttribute|'s
     [=attribution source/dedup keys=].
 
+<dfn>Max reports per attribution destination</dfn> is a vendor-specific integer which controls how
+many [=attribution reports=] can be in the [=attribution report cache=] for an
+[=attribution report/attribution destination=].
+
 <dfn>Max reports per source</dfn> is a vendor-specific integer which controls how many [=attribution reports=] can be created for an [=attribution source=].
+
+<dfn>Max report cache size</dfn> is a vendor-specific integer which controls how many
+[=attribution reports=] can be in the [=attribution report cache=].
 
 Note: This parameter represents a privacy/utility tradeoff. Lower values mean that less trigger-side data
 can be associated with a source event id. Larger values allow for more attribution triggers to be reported.
