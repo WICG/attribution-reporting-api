@@ -422,6 +422,15 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
+<h3 algorithm id="noising-attribution">Noising attribution</h3>
+
+To <dfn>select a random attribution mode</dfn> given a double |noiseRate|, run the following steps:
+
+1. Assert: |noiseRate| is between 0 and 1 (both inclusive).
+1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive).
+1. If |r| is greater than or equal to |noiseRate|, return "<code>truthfully</code>".
+1. Return "<code>never</code>".
+
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
 To <dfn>obtain an attribution source from an anchor</dfn> given an <{a}> element |anchor|:
@@ -458,9 +467,12 @@ To <dfn>obtain an event attribution source from a source</dfn> given an [=attrib
 1. Set |resultSource|'s [=attribution source/source identifier=] to a new unique opaque string.
 1. Set |resultSource|'s [=attribution source/source type=] to "<code>event</code>".
 1. Round |resultSource|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
-1. Set |resultSource|'s [=attribution source/attribution mode=] to a randomly selected value of
-    "<code>truthfully</code>" or "<code>never</code>", with implementation-defined probability.
+1. Set |resultSource|'s [=attribution source/attribution mode=] to the result of running
+    [=select a random attribution mode=] with the user agent's [=attribution mode noise rate=].
 1. Return |resultSource|.
+
+<dfn>Attribution mode noise rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive)
+which controls noising of [=attribution source/attribution mode=].
 
 <h3 algorithm id="obtaining-attribution-source-params">Obtaining an attribution source from {{AttributionSourceParams}}</h3>
 
