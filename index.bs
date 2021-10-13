@@ -376,6 +376,8 @@ An attribution report is a [=struct=] with the following items:
 :: A point in time.
 : <dfn>source identifier</dfn>
 :: A string.
+: <dfn>delivered</dfn> (default false)
+:: A boolean.
 
 </dl>
 
@@ -581,22 +583,22 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 [=environment settings object=] |environment|, run the following steps:
 
 1. Let |triggerData| be 0.
-1. If |url|'s [=url/query=] has a `"trigger-data"` field, set |triggerData| to the result of running [=parse attribution data=] with
+1. If |url|'s [=url/query=] has a "`trigger-data`" field, set |triggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=max trigger data value=].
 1. Set |triggerData| to the result of running [=noise trigger data=] with |triggerData|, the
     user agent's [=max trigger data value=], and the user agent's [=trigger data noise rate=].
 1. Let |eventSourceTriggerData| be 0.
-1. If |url|'s [=url/query=] has an `"event-source-trigger-data"` field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
+1. If |url|'s [=url/query=] has an "`event-source-trigger-data`" field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=max event source trigger data value=].
 1. Set |eventSourceTriggerData| to the result of running [=noise trigger data=] with
     |eventSourceTriggerData|, the user agent's [=max event source trigger data value=], and the
     user agent's [=event source trigger data noise rate=].
 1. Let |dedupKey| be null.
-1. If |url|'s [=url/query=] has a `"dedup-key"` field, and applying the <a spec="html">rules for
+1. If |url|'s [=url/query=] has a "`dedup-key`" field, and applying the <a spec="html">rules for
     parsing integers</a> to the field's value results in an integer, then set |dedupKey| to that
     value.
 1. Let |triggerPriority| be 0.
-1. If |url|'s [=url/query=] has a `"priority"` field, and applying the
+1. If |url|'s [=url/query=] has a "`priority`" field, and applying the
     <a spec="html">rules for parsing integers</a> to the field's value results
     in an integer, set |triggerPriority| to that value.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
@@ -751,7 +753,7 @@ return a point in time.
 
 To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=attribution trigger=] |trigger|:
 
-1. Let |triggerData| be |source|'s [=attribution source/trigger data=].
+1. Let |triggerData| be |trigger|'s [=attribution trigger/trigger data=].
 1. If |source|'s [=attribution source/source type=] is "<code>event</code>", set |triggerData| to |trigger|'s [=attribution trigger/event source trigger data=].
 1. Let |report| be a new [=attribution report=] struct whose items are:
 
@@ -773,7 +775,103 @@ To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=
     :: |source|'s [=attribution source/source identifier=].
 1. Return |report|.
 
-# Security consideration # {#security-considerations}
+# Report delivery # {#report-delivery}
+
+The user agent MUST periodically [=set/iterate=] over its [=attribution report cache=] and run [=queue a report for delivery=] on each item.
+
+To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report|, run the following steps [=in parallel=]:
+
+1. If |report|'s [=attribution report/delivered=] value is true, return.
+1. Set |report|'s [=attribution report/delivered=] value to true.
+1. If |report|'s [=attribution report/report time=] is less than the current time, add an [=implementation-defined=] random amount to report time.
+    
+    Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was 
+     closed. Adding random delay prevents temporal joining of reports from different [=attribution source/source origin=]s.
+1. Wait until |report|'s [=attribution report/report time=] is the current time.
+1. Optionally, wait a further [=implementation-defined=] length of time.
+    
+    Note: This is intended to allow user agents to optimize device resource usage.
+1. Run [=attempt to deliver a report=] with |report|.
+
+<h3 id="serialize-report-body">Serialize attribution report body</h3>
+
+To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following steps:
+
+1. Let |data| be a [=map=] of the following key/value pairs:
+
+    : "`source_type`"
+    :: |report|'s [=attribution report/source type=]
+    : "`source_event_id`"
+    :: |report|'s [=attribution report/event id=]
+    : "`trigger_data`"
+    :: |report|'s [=attribution report/trigger data=]
+
+1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
+
+<h3 id="get-report-url">Get report request URL</h3>
+
+To <dfn>generate a report URL</dfn> for a given [=attribution report=] |report|, run the following steps:
+
+1. Let |reportUrl| be a new [=URL record=].
+1. Let |reportingOrigin| be |report|'s [=attribution report/reporting endpoint=].
+1. Assert: |reportingOrigin| is not an [=opaque origin=].
+1. Set |reportUrl|'s [=URL/scheme=] to |reportingOrigin|'s [=origin/scheme=].
+1. Set |reportUrl|'s [=URL/host=] to |reportingOrigin|'s [=origin/host=].
+1. Set |reportUrl|'s [=URL/port=] to |reportingOrigin|'s [=origin/port=].
+1. Set |reportUrl|'s [=URL/path=] to «"`.well-known`", "`attribution-reporting`", "`report-attribution`"».
+1. Return |reportUrl|.
+
+<h3 id="issue-report-request">Issuing a report request</h3>
+
+This algorithm constructs a [=request=] and attempts to deliver it to
+|report|'s [=attribution report/reporting endpoint=].
+
+To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report|, run the following steps:
+
+1. Let |body| be the result of executing [=serialize an attribution report=] on |report|.
+1. Let |url| be the result of executing [=generate a report URL=] on |report|.
+1. Let |referrer| be a new [=URL record=].
+1. Let |destination| be |report|'s [=attribution report/attribution destination=].
+1. Assert: |destination| is not an [=opaque origin=].
+1. Set |reportUrl|'s [=URL/scheme=] to |destination|'s [=origin/scheme=].
+1. Set |reportUrl|'s [=URL/host=] to |destination|'s [=origin/host=].
+1. Set |reportUrl|'s [=URL/port=] to |destination|'s [=origin/port=].
+1. Let |request| be a new [=request=] with the following properties:
+    :   `method`
+    ::  "`POST`"
+    :   `url`
+    ::  |url|
+    :   `header list`
+    ::  A new [=header list=] containing a [=header=] named
+        "`Content-Type`" whose value is "`application/json`"
+    :   `body`
+    ::  A [=/body=] whose [=body/source=] is |body|.
+    : `referrer`
+    :: |referrer|
+    :   `client`
+    ::  `null`
+    :   `window`
+    ::  "`no-window`"
+    :   `service-workers mode`
+    ::  "`none`"
+    :   `initiator`
+    ::  ""
+    :   `mode`
+    ::  "`cors`"
+    :   `unsafe-request` flag
+    ::  set
+    :   `credentials mode`
+    ::  "`omit`"
+    :   `cache mode`
+    ::  "`no-store`"
+1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being these steps:
+    1. [=Queue a task=] to remove |report| from the [=attribution report cache=].
+    
+Issue(220): This fetch should use a network partition key for an opaque origin.
+
+A user agent MAY retry this algorithm in the event that there was an error.
+
+# Security considerations # {#security-considerations}
 TODO
 
 # Privacy consideration # {#privacy-considerations}
