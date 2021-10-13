@@ -151,22 +151,24 @@ Actions in the worklet won’t affect the embedder context, to avoid leaking inf
 
 ### Aggregate attribution reports
 
-Attribution reports will look very similar to [event-level reports](https://github.com/WICG/conversion-measurement-api#attribution-reports). They will be reported to the configured `attributionreportto` endpoint at the path `.well-known/attribution-reporting/report-aggregate-attribution`. The payload will be JSON encoded with the following scheme:
+Attribution reports will look very similar to [event-level reports](https://github.com/WICG/conversion-measurement-api#attribution-reports). They will be reported to the configured `attributionreportto` endpoint at the path `.well-known/attribution-reporting/report-aggregate-attribution`. The report will be JSON encoded with the following scheme:
 
 
 ```
 {
   "source_site": "https://publisher.example",
   "attribution_destination": "https://advertiser.example",
-  "scheduled_report_time": <timestamp in msec>,
+  "scheduled_report_time": "<timestamp in msec>",
   "aggregation_service_payloads": [
     {
       "origin": "https://helper1.example",
-      "payload": "<base64 encoded encrypted data>"
+      "payload": "<base64 encoded encrypted data>",
+      "key_id": "<string identifying public key used>"
     },
     {
       "origin": "https://helper2.example",
-      "payload": "<base64 encoded encrypted data>"
+      "payload": "<base64 encoded encrypted data>",
+      "key_id": "<string identifying public key used>"
     }
   ],
   "privacy_budget_key": "<field for server to do privacy budgeting>",
@@ -185,7 +187,9 @@ The `payload` will need to contain all the information needed for the aggregatio
 *   Histogram contributions. For the MPC protocol we propose initially to use incremental[ distributed point functions](https://github.com/google/distributed_point_functions) (see [issue](https://github.com/WICG/conversion-measurement-api/issues/116)) which form the most flexible and robust protocols we know about. For the single-server design we will send the data (i.e. without using the DPF protocol) to one of the processing origins, and a “null” record to the other (at random).
 *   Privacy budgeting metadata. which could be some combination of `scheduled_report_time`, `attribution_destination` and the reporting origin (e.g. some function of information available in the clear to the reporter). This information can be used to bound how often batches of reports are sent for aggregation. Adding this to the encrypted payload makes this information immutable by the reporter. It should also be returned outside the payload to allow the reporting origin to maintain similar budgets.
 
-The payload should be encrypted via [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/), to public keys specified by the processing origins at some well-known address  `/.well-known/aggregation-service/keys.json` that the browser can fetch. Note that we are avoiding using the `attribution-reporting` namespace because many APIs may want to use this infrastructure beyond attribution reporting.
+**TODO:** more formally specify the `privacy_budget_key`.
+
+The `payload` should be encrypted via [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/) and then base64 encoded. The encryption will use public keys specified by the processing origins at some well-known address  `/.well-known/aggregation-service/keys.json` that the browser can fetch. Note that we are avoiding using the `attribution-reporting` namespace because many APIs may want to use this infrastructure beyond attribution reporting.
 
 The browser will encrypt payloads just before the report is sent by requesting public keys for the processing origin. `keys.json` will be fetched with an un-credentialed request. The processing origin will respond with a set of keys which will be stored according to standard HTTP caching rules, i.e. using Cache-Control headers to dictate how long to store the keys for (e.g. following the [freshness lifetime](https://datatracker.ietf.org/doc/html/rfc7234#section-4.2)). The browser could enforce maximum/minimum lifetimes of stored keys to encourage faster key rotation and/or mitigate bandwidth usage. The scheme of the JSON encoded public keys is as follows:
 
@@ -209,8 +213,26 @@ The browser will encrypt payloads just before the report is sent by requesting p
 
 **Note:** The browser may need some mechanism to ensure that the same set of keys are delivered to different users.
 
-**TODO**: more formally specify `payload`.
+The contents of the base64-encoded encrypted `payload` will be a [CBOR](https://cbor.io) map.
 
+Payloads generated with the `two-party` processing type will have the following structure:
+
+```
+// CBOR
+{
+  "version": "<api version>",
+  "operation": "hierarchical-histogram",  // Allows for the service to support other operations in the future
+  "privacy_budget_key": "<field for server to do privacy budgeting>",
+  "scheduled_report_time": <timestamp in msec>,
+  "reporting_origin": "https://reporter.example",
+  "dpf_key": <binary serialization of the DPF key>,
+}
+```
+Note that the `dpf_key` value would differ in the two payloads.
+
+Payloads generated with the `single-server` processing type will directly encode the bucket and value of the histogram contribution instead of a DPF key.
+The `dpf_key` field will be replaced with `"data": { "bucket": <bucket>, "value": <value> }`.
+If two `aggregationServices` are specified, one payload (chosen randomly) would contain that data and the other would instead contain `"data": {}`.
 
 ### Privacy budgeting
 

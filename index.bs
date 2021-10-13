@@ -7,6 +7,7 @@ Group: wicg
 Repository: WICG/conversion-measurement-api
 URL: https://wicg.github.io/conversion-measurement-api
 Editor: Charlie Harrison, Google Inc. https://google.com, csharrison@chromium.org
+Editor: John Delaney, Google Inc. https://google.com, johnidel@chromium.org
 Abstract: An API to report that an event may have been caused by another cross-site event. These reports are designed to transfer little enough data between sites that the sites can't use them to track individual users.
 
 Markup Shorthands: markdown on
@@ -232,7 +233,7 @@ In <a spec="html">follow the hyperlink</a> after
 add the following steps:
 
 1. Let <var>attributionSource</var> be null.
-1. If |subject| is an <{a}> element, set |attributionSource| to the result of running [=obtain an attribution source=] with |subject|.
+1. If |subject| is an <{a}> element, set |attributionSource| to the result of running [=obtain an attribution source from an anchor=] with |subject|.
 
 Modify the step:
 
@@ -253,6 +254,44 @@ add the following check to the list:
 
 * [=should internalResponse to request be blocked as attribution trigger=]
 
+# Attribution Reporting API
+
+<pre class="idl">
+dictionary AttributionSourceParams {
+  required USVString attributionDestination;
+  required DOMString attributionSourceEventId;
+  USVString attributionReportTo;
+  long long attributionExpiry;
+  long long attributionSourcePriority;
+};
+
+[Exposed=Window, SecureContext]
+interface AttributionReporting {
+  Promise&lt;undefined&gt; registerAttributionSource(AttributionSourceParams params);
+};
+
+[SecureContext]
+partial interface Window {
+  readonly attribute AttributionReporting attributionReporting;
+};
+</pre>
+
+The
+<dfn method for=AttributionReporting><code>registerAttributionSource(<var>params</var>)</code></dfn>
+method steps are:
+
+1. Let |source| be the result of running [=obtain an attribution source from params=] with |params|
+    and the [=relevant settings object=] of [=this=].
+1. If |source| is null, return [=a promise rejected with=] the {{undefined}} value.
+1. Set |source| to the result of running [=obtain an event attribution source from a source=] with |source|.
+1. [=Queue a task=] to [=process an attribution source=] with |source|.
+1. Return [=a promise resolved with=] the {{undefined}} value.
+
+Note: This function returns a promise even though the promise is always resolved or rejected by the
+time the function returns; in the future, the promise may be resolved with a value that provides
+finer-grained detail about other errors that occurred during the [=process an attribution source=]
+step.
+
 # Permissions Policy integration # {#permission-policy-integration}
 This specification defines a [=policy-controlled feature=] identified by the string "<code><dfn>attribution-reporting</dfn></code>". Its [=default allowlist=] is *.
 
@@ -264,7 +303,7 @@ An attribution source is a [=struct=] with the following items:
 
 <dl dfn-for="attribution source">
 : <dfn>source identifier</dfn>
-:: A unique opaque string.
+:: A string.
 : <dfn>source origin</dfn>
 :: An [=url/origin=].
 : <dfn>event id</dfn>
@@ -276,7 +315,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>source type</dfn>
 :: Either "<code>navigation</code>" or "<code>event</code>".
 : <dfn>expiry</dfn>
-:: A point in time.
+:: A length of time.
 : <dfn>priority</dfn>
 :: A 64-bit integer.
 : <dfn>source time</dfn>
@@ -285,6 +324,10 @@ An attribution source is a [=struct=] with the following items:
 :: Number of [=attribution reports=] created for this [=attribution source=].
 : <dfn>dedup keys</dfn>
 :: [=ordered set=] of [=attribution trigger/dedup keys=] associated with this [=attribution source=].
+: <dfn>attribution mode</dfn>
+:: Either "<code>truthfully</code>" or "<code>never</code>".
+
+Issue: Add a mode that results in fake reports.
 
 </dl>
 
@@ -332,7 +375,7 @@ An attribution report is a [=struct=] with the following items:
 : <dfn>trigger time</dfn>
 :: A point in time.
 : <dfn>source identifier</dfn>
-:: An opaque string.
+:: A string.
 : <dfn>delivered</dfn> (default false)
 :: A boolean.
 
@@ -351,6 +394,10 @@ Note: This would ideally use <a spec=storage>storage bottles</a> to provide acce
 However attribution data is inherently cross-site, and operations on storage would need to span across all storage bottle maps.
 
 # Source Algorithms # {#source-algorithms}
+
+<h3 id="obtaining-attribution-source-expiry-time">Obtaining an attribution source's expiry time</h3>
+
+An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
 
 <h3 algorithm id="parsing-data-fields">Parsing data fields</h3>
 
@@ -373,38 +420,91 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. Let |url| be the result of running the [=URL parser=] on the value of
     the |str|.
 1. If |url| is failure or null, return null.
+1. If |url|'s [=url/origin=] is an [=opaque origin=], return null.
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
+<h3 algorithm id="noising-attribution">Noising attribution</h3>
+
+To <dfn>select a random attribution mode</dfn> given a double |noiseRate|, run the following steps:
+
+1. Assert: |noiseRate| is between 0 and 1 (both inclusive).
+1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive).
+1. If |r| is greater than or equal to |noiseRate|, return "<code>truthfully</code>".
+1. Return "<code>never</code>".
+
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
-To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
-1. Let |sourceIdentifier| be a new unique opaque string.
+To <dfn>obtain an attribution source from an anchor</dfn> given an <{a}> element |anchor|:
+
+1. If anchor does not have both an <{a/attributiondestination}> attribute and an <{a/attributionsourceeventid}> attribute, return null.
+1. Let |params| be an {{AttributionSourceParams}} with the following key/value pairs:
+     : {{AttributionSourceParams/attributionDestination}}
+     :: |anchor|'s <{a/attributiondestination}> attribute
+     : {{AttributionSourceParams/attributionSourceEventId}}
+     :: |anchor|'s <{a/attributionsourceeventid}> attribute
+     : {{AttributionSourceParams/attributionReportTo}}
+     :: |anchor|'s <{a/attributionreportto}> attribute
+     : {{AttributionSourceParams/attributionExpiry}}
+     :: |anchor|'s <{a/attributionexpiry}> attribute
+     : {{AttributionSourceParams/attributionSourcePriority}}
+     :: |anchor|'s <{a/attributionsourcepriority}> attribute
+1. Return the result of running [=obtain an attribution source from params=] with |params| and
+    |anchor|'s [=relevant settings object=].
+
+<h3 algorithm id="obtaining-event-attribution-source-anchor">Obtaining an event attribution source from an <code>a</code> element</h3>
+
+To <dfn>obtain an event attribution source from an anchor</dfn> given an <{a}> element |anchor|, run the following steps:
+
+1. If |anchor| does not have a <{a/registerattributionsource}> attribute, return null.
+1. Let |source| be the result of running [=obtain an attribution source from an anchor=] with |anchor|.
+1. If |source| is null, return null.
+1. Return the result of running [=obtain an event attribution source from a source=] with |source|.
+
+<h3 algorithm id="obtaining-event-attribution-source-source">Obtaining an event attribution source from a source</h3>
+
+To <dfn>obtain an event attribution source from a source</dfn> given an [=attribution source=] |source|, run the following steps:
+
+1. Let |resultSource| be a shallow clone of |source|.
+1. Set |resultSource|'s [=attribution source/source identifier=] to a new unique opaque string.
+1. Set |resultSource|'s [=attribution source/source type=] to "<code>event</code>".
+1. Round |resultSource|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
+1. Set |resultSource|'s [=attribution source/attribution mode=] to the result of running
+    [=select a random attribution mode=] with the user agent's [=attribution mode noise rate=].
+1. Return |resultSource|.
+
+<dfn>Attribution mode noise rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive)
+which controls noising of [=attribution source/attribution mode=].
+
+<h3 algorithm id="obtaining-attribution-source-params">Obtaining an attribution source from {{AttributionSourceParams}}</h3>
+
+To <dfn>obtain an attribution source from params</dfn> given an {{AttributionSourceParams}} |params|
+and an [=environment settings object=] |settings|, run the following steps:
+
+1. Let |sourceIdentifier| be a new unique string.
 1. Let |currentTime| be the current time.
-1. If |anchor| does not have both an <{a/attributiondestination}> attribute and
-    an <{a/attributionsourceeventid}> attribute, return null.
-1. If |anchor|'s [=relevant settings object=]'s [=environment settings object/responsible document=] is
+1. Assert: |params|["{{AttributionSourceParams/attributionDestination}}"] and
+    |params|["{{AttributionSourceParams/attributionSourceEventId}}"] [=map/exist=].
+1. If |settings|'s [=environment settings object/responsible document=] is
     not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=], return null.
 1. Let |attributionDestination| be the result of running
-    [=parse an attribution destination=] with |anchor|'s
-    <{a/attributiondestination}> attribute.
+    [=parse an attribution destination=] with |params|["{{AttributionSourceParams/attributionDestination}}"].
 1. If |attributionDestination| is null, return null.
-1. Let |sourceOrigin| be |anchor|'s [=relevant settings object=]'s
-    [=environment/top-level origin=].
+1. Let |sourceOrigin| be |settings|'s [=environment/top-level origin=].
+1. If |sourceOrigin| is an [=opaque origin=], return null.
 1. Let |reportingOrigin| be |sourceOrigin|.
-1. If |anchor| has an <{a/attributionreportto}> attribute, then:
+1. If |params|["{{AttributionSourceParams/attributionReportTo}}"] [=map/exists=], then:
     1. Let |reportingUrl| be the result of running the
-        [=URL parser=] with |anchor|'s <{a/attributionreportto}> value
+        [=URL parser=] with |params|["{{AttributionSourceParams/attributionReportTo}}"].
     1. If |reportingUrl| is failure or null, return null.
+    1. If |reportingUrl|'s [=url/origin=] is an [=opaque origin=], return null.
     1. Set |reportingOrigin| to |reportingUrl|'s [=url/origin=].
 1. Let |expiry| be 30 days.
-1. If |anchor| has an <{a/attributionexpiry}> attribute, and applying the
-    <a spec="html">rules for parsing non-negative integers</a> to the attributes's value
-    results in an integer greater than zero, then set |expiry| to that value.
+1. If |params|["{{AttributionSourceParams/attributionExpiry}}"] [=map/exists=],
+    then set |expiry| to that value.
 1. Let |priority| be 0.
-1. If |anchor| has an <{a/attributionsourcepriority}> attribute, and applying the
-    <a spec="html">rules for parsing integers</a> to the attributes's value
-    results in an integer, then set |priority| to that value.
+1. If |params|["{{AttributionSourceParams/attributionSourcePriority}}"] [=map/exists=],
+    then set |priority| to that value.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -412,35 +512,26 @@ To <dfn>obtain an attribution source</dfn> from an <{a}> element |anchor|:
     : [=attribution source/source origin=]
     :: |sourceOrigin|
     : [=attribution source/event id=]
-    :: The result of running [=parse attribution data=] with |anchor|'s
-        <{a/attributionsourceeventid}> attribute modulo [=max event id value=].
+    :: The result of running [=parse attribution data=] with
+        |params|["{{AttributionSourceParams/attributionSourceEventId}}"] modulo [=max event id value=].
     : [=attribution source/attribution destination=]
     :: |attributionDestination|
     : [=attribution source/reporting endpoint=]
     :: |reportingOrigin|
     : [=attribution source/expiry=]
-    :: |currentTime| + |expiry|
+    :: |expiry|
     : [=attribution source/priority=]
     :: |priority|
     : [=attribution source/source time=]
     :: |currentTime|
     : [=attribution source/source type=]
     :: "<code>navigation</code>"
+    : [=attribution source/attribution mode=]
+    :: "<code>truthfully</code>"
 1. Return |source|.
 
 <dfn>Max event id value</dfn> is a vendor-specific integer which controls
 the maximum value which can be used as an [=attribution source/event id=].
-
-<h3 algorithm id="obtaining-event-attribution-source-anchor">Obtaining an event attribution source from an <code>a</code> element</h3>
-
-To <dfn>maybe obtain an event attribution source</dfn> given an |anchor|, run the following steps:
-
-1. Let |source| be the result of running [=obtain an attribution source=] with |anchor|.
-1. If |source| is null, return null.
-1. If |source| does not have an <{a/registerattributionsource}> attribute, return null.
-1. Set |source|'s [=attribution source/source type=] to "<code>event</code>".
-1. Round |source|'s [=attribution source/expiry=] away from zero to the nearest day.
-1. Return |source|.
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
@@ -462,11 +553,29 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     * the entry's [=attribution source/number of reports=] value is greater than 0.
 
     Note: This causes the user agent to favor triggering newer [=attribution sources=] over sources that have already been triggered.
-1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry=] value is less than the current time.
-1. If the [=list/size=] of |cache| is less than an implementation-defined limit, [=set/append=] |source| to |cache|.
+1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry time=] is less than the current time.
+1. If the [=list/size=] of |cache| is greater than or equal to the user agent's
+     [=max source cache size=], return.
+1. [=set/Append=] |source| to |cache|.
 
+<dfn>Max source cache size</dfn> is a vendor-specific integer which controls how many
+[=attribution sources=] can be in the [=attribution source cache=].
 
 # Triggering Algorithms # {#trigger-algorithms}
+
+<h3 algorithm id="noising-data-fields">Noising trigger data</h3>
+
+This section defines how to noise [=attribution trigger/trigger data=] and
+[=attribution trigger/event source trigger data=].
+
+To <dfn>noise trigger data</dfn> given an integer |input|, integer |maxData|, and double |noiseRate|,
+run the following steps:
+
+1. Assert: |input| is between 0 (inclusive) and |maxData| exclusive.
+1. Assert: |noiseRate| is between 0 and 1 (both inclusive).
+1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive).
+1. If |r| is greater than or equal to |noiseRate|, return |input|.
+1. Return a random integer between 0 (inclusive) and |maxData| (exclusive).
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
@@ -476,9 +585,14 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 1. Let |triggerData| be 0.
 1. If |url|'s [=url/query=] has a "`trigger-data`" field, set |triggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=max trigger data value=].
+1. Set |triggerData| to the result of running [=noise trigger data=] with |triggerData|, the
+    user agent's [=max trigger data value=], and the user agent's [=trigger data noise rate=].
 1. Let |eventSourceTriggerData| be 0.
 1. If |url|'s [=url/query=] has an "`event-source-trigger-data`" field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=max event source trigger data value=].
+1. Set |eventSourceTriggerData| to the result of running [=noise trigger data=] with
+    |eventSourceTriggerData|, the user agent's [=max event source trigger data value=], and the
+    user agent's [=event source trigger data noise rate=].
 1. Let |dedupKey| be null.
 1. If |url|'s [=url/query=] has a "`dedup-key`" field, and applying the <a spec="html">rules for
     parsing integers</a> to the field's value results in an integer, then set |dedupKey| to that
@@ -509,12 +623,17 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 
 <dfn>Max event source trigger data value</dfn> is a vendor-specific integer which controls the potential values of [=attribution trigger/event source trigger data=].
 
+<dfn>Trigger data noise rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive) which controls noising of [=attribution trigger/trigger data=].
+
+<dfn>Event source trigger data noise rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive) which controls noising of [=attribution trigger/event source trigger data=].
+
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
 <h3 dfn id="should-block-response">Should internalResponse to request be blocked as attribution trigger</h3>
 
 Given a [=request=] |request|:
 
+1. If |request|'s [=request/current URL's=] [=url/origin=] is an [=opaque origin=], return <strong>allowed</strong>.
 1. If |request|'s [=request/current URL's=] [=url/path=] is not equal to « ".well-known","attribution-reporting","trigger-attribution" »,
     return <strong>allowed</strong>.
 1. Let |environment| be |request|'s [=request/window=].
@@ -522,6 +641,7 @@ Given a [=request=] |request|:
 1. If |environment|'s [=environment settings object/responsible document=] is not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=],
     return <strong>allowed</strong>.
 1. If |environment|'s [=environment settings object/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
+1. If |environment|'s [=environment/top-level origin=] is an [=opaque origin=], return <strong>allowed</strong>.
 1. If |environment|'s [=environment/top-level origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
 1. If |request|'s [=request/current URL's=] [=url/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
 1. If |request|'s [=request/redirect count=] is less than 1, return <strong>allowed</strong>.
@@ -545,7 +665,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Let |matchingSources| be all entries in the [=attribution source cache=] where all of the following are true:
      * entry's [=attribution source/attribution destination=] and |attributionDestination| are equal.
      * entry's [=attribution source/reporting endpoint=] and |trigger|'s [=attribution source/reporting endpoint=] are equal.
-     * entry's [=attribution source/expiry=] is greater than the current time.
+     * entry's [=attribution source/expiry time=] is greater than the current time.
 1. If |matchingSources| is empty, return.
 1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources|
     in descending order, with |a| being less than |b| if any of the following are true:
@@ -555,6 +675,10 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Let |sourceToAttribute| be the first item in |matchingSources|.
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null and |sourceToAttribute|'s
     [=attribution source/dedup keys=] [=list/contains=] it, return.
+1. Let |numMatchingReports| be the number of entries in the [=attribution report cache=] whose
+    [=attribution report/attribution destination=] equals |attributionDestination|.
+1. If |numMatchingReports| is greater than or equal to the user agent's
+    [=max reports per attribution destination=], return.
 1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute| and |trigger|.
 1. If |sourceToAttribute|'s [=attribution source/number of reports=] value is equal to the
     user agent's [=max reports per source=] value, then:
@@ -570,16 +694,26 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     1. Let |lowestPriorityReport| be the first item in |matchingReports|.
     1. If |report|'s [=attribution report/trigger priority=] is less than or equal to |lowestPriorityReport|'s [=attribution report/trigger priority=], return.
     1. Remove |lowestPriorityReport| from the [=attribution report cache=].
+    1. Decrement |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
 1. For each |item| of |matchingSources|:
     1. [=list/Remove=] |item| from the [=attribution source cache=].
-1. If the [=list/size=] of the [=attribution report cache=] is greater than an implementation-defined limit, return.
-1. Add |report| to the [=attribution report cache=].
+1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
+    agent's [=max report cache size=], return.
+1. If |sourceToAttribute|'s [=attribution source/attribution mode=] is "<code>truthfully</code>",
+    add |report| to the [=attribution report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null, [=list/append=] it to |sourceToAttribute|'s
     [=attribution source/dedup keys=].
 
+<dfn>Max reports per attribution destination</dfn> is a vendor-specific integer which controls how
+many [=attribution reports=] can be in the [=attribution report cache=] for an
+[=attribution report/attribution destination=].
+
 <dfn>Max reports per source</dfn> is a vendor-specific integer which controls how many [=attribution reports=] can be created for an [=attribution source=].
+
+<dfn>Max report cache size</dfn> is a vendor-specific integer which controls how many
+[=attribution reports=] can be in the [=attribution report cache=].
 
 Note: This parameter represents a privacy/utility tradeoff. Lower values mean that less trigger-side data
 can be associated with a source event id. Larger values allow for more attribution triggers to be reported.
@@ -590,13 +724,11 @@ To <dfn>obtain a report delivery time</dfn> given an [=attribution source=] |sou
 [=attribution trigger/trigger time=] |triggerTime|, perform the following steps. They
 return a point in time.
 1. If |source|'s [=attribution source/source type=] is "<code>event</code>", return |source|'s
-     [=attribution source/expiry=] + 1 hour.
+     [=attribution source/expiry time=] + 1 hour.
 1. Let |timeToTrigger| be the difference between
     |triggerTime| and [=attribution source/source time=].
-1. Let |expiryDelta| be the difference between the |source|'s [=attribution source/expiry=] and
-    the |source|'s [=attribution source/source time=].
 
-    Note: |timeToTrigger| is less than |expiryDelta| because it is not normally possible to
+    Note: |timeToTrigger| is less than |source|'s [=attribution source/expiry=] because it is not normally possible to
     convert an expired attribution source.
 
 1. If:
@@ -604,17 +736,17 @@ return a point in time.
     <dt>|timeToTrigger| <= (2 days - 1 hour)</dt>
     <dd>return [=attribution source/source time=] + 2 days.</dd>
 
-    <dt> |expiryDelta| > (2 days - 1 hour)
-        - and |expiryDelta| < (7 days - 1 hour)
-        - and |timeToTrigger| <= |expiryDelta|
+    <dt> |source|'s [=attribution source/expiry=] > (2 days - 1 hour)
+        - and |source|'s [=attribution source/expiry=] < (7 days - 1 hour)
+        - and |timeToTrigger| <= |source|'s [=attribution source/expiry=]
     </dt>
-    <dd>return |source|'s [=attribution source/expiry=] + 1 hour.</dd>
+    <dd>return |source|'s [=attribution source/expiry time=] + 1 hour.</dd>
 
     <dt>|timeToTrigger| <= (7 days - 1 hour)</dt>
     <dd>return [=attribution source/source time=] + 7 days.</dd>
 
     <dt>Otherwise</dt>
-    <dd>return |source|'s [=attribution source/expiry=] + 1 hour.</dd>
+    <dd>return |source|'s [=attribution source/expiry time=] + 1 hour.</dd>
     </dl>
 
 <h3 algorithm id="obtaining-a-report">Obtaining a report</h3>
