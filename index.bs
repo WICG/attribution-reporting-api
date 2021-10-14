@@ -380,11 +380,29 @@ An attribution report is a [=struct=] with the following items:
 
 </dl>
 
+<h3 dfn-type=dfn>Attribution rate-limit record</h3>
+
+An attribution rate-limit record is a [=struct=] with the following items:
+
+<dl dfn-for="attribution rate-limit record">
+: <dfn>source site</dfn>
+:: An [=url/origin=].
+: <dfn>attribution destination</dfn>
+:: An [=url/origin=].
+: <dfn>source type</dfn>
+:: Either "<code>navigation</code>" or "<code>event</code>".
+: <dfn>trigger time</dfn>
+:: A point in time.
+
+</dl>
+
 # Storage # {#storage}
 
 A user agent holds an <dfn>attribution source cache</dfn>, which is an [=ordered set=] of [=attribution sources=].
 
 A user agent holds an <dfn>attribution report cache</dfn>, which is an [=ordered set=] of [=attribution reports=].
+
+A user agent holds an <dfn>attribution rate-limit cache</dfn>, which is an [=ordered set=] of [=attribution rate-limit records=].
 
 The above caches are collectively known as the <dfn>attribution caches</dfn>. The [=attribution caches=] are
 shared among all [=environment settings objects=].
@@ -413,9 +431,9 @@ To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an intege
 1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by |maxData|.
 1. Return |clampedDecodedInput|.
 
-<h3 algorithm id="parsing-attribution-destination">Parsing an attribution destination</h3>
+<h3 algorithm id="parsing-attribution-destination">Parsing a site</h3>
 
-To <dfn>parse an attribution destination</dfn> from a string |str|:
+To <dfn>parse a site</dfn> from a string |str|:
 1. Let |url| be the result of running the [=URL parser=] on the value of
     the |str|.
 1. If |url| is failure or null, return null.
@@ -476,7 +494,7 @@ and an [=environment settings object=] |settings|, run the following steps:
 1. If |settings|'s [=environment settings object/responsible document=] is
     not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=], return null.
 1. Let |attributionDestination| be the result of running
-    [=parse an attribution destination=] with |params|["{{AttributionSourceParams/attributionDestination}}"].
+    [=parse a site=] with |params|["{{AttributionSourceParams/attributionDestination}}"].
 1. If |attributionDestination| is null, return null.
 1. Let |sourceOrigin| be |settings|'s [=environment/top-level origin=].
 1. If |sourceOrigin| is an [=opaque origin=], return null.
@@ -694,6 +712,15 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     [=attribution report/attribution destination=] equals |attributionDestination|.
 1. If |numMatchingReports| is greater than or equal to the user agent's
     [=max reports per attribution destination=], return.
+1. Set |rateLimitCutoff| to an [=implementation-defined=] time before |trigger|'s [=attribution trigger/trigger time=].
+1. Let |sourceSite| be the result of running [=parse a site=] with |sourceToAttribute|'s [=attribution source/source origin=].
+1. If |sourceSite| is null, return.
+1. Let |matchingRateLimitRecords| be all entries in the [=attribution rate-limit cache=] where all of the following are true:
+     * entry's [=attribution rate-limit record/source site=] and |sourceSite| are equal
+     * entry's [=attribution rate-limit record/attribution destination=] and |attributionDestination| are equal
+     * entry's [=attribution rate-limit record/source type=] and |sourceToAttribute|'s [=attribution source/source type=] are equal
+     * entry's [=attribution rate-limit record/trigger time=] is greater than |rateLimitCutoff|
+1. If the [=list/size=] of |matchingRateLimitRecords| is greater than or equal to an [=implementation-defined=] value, return.
 1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute| and |trigger|.
 1. If |sourceToAttribute|'s [=attribution source/number of reports=] value is equal to the
     user agent's [=max reports per source=] value, then:
@@ -720,6 +747,17 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null, [=list/append=] it to |sourceToAttribute|'s
     [=attribution source/dedup keys=].
+1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
+
+    : [=attribution rate-limit record/source site=]
+    :: |sourceSite|
+    : [=attribution rate-limit record/attribution destination=]
+    :: |attributionDestination|
+    : [=attribution rate-limit record/source type=]
+    :: |sourceToAttribute|'s [=attribution source/source type=]
+    : [=attribution rate-limit record/trigger time=]
+    :: |trigger|'s [=attribution trigger/trigger time=]
+1. Add |rateLimitRecord| to the [=attribution rate-limit cache=].
 
 <dfn>Max reports per attribution destination</dfn> is a vendor-specific integer which controls how
 many [=attribution reports=] can be in the [=attribution report cache=] for an
