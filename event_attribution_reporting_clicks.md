@@ -336,12 +336,13 @@ https://attributionreportto/.well-known/attribution-reporting/report-attribution
 
 The report data is included in the request body as a JSON object with the following keys:
 
+-   `attribution_destination`: the attribution destination set on the source
+
 -   `source_event_id`: 64-bit event id set on the attribution source
 
 -   `trigger_data`: 3-bit data set in the attribution trigger redirect
 
-The advertiser site’s eTLD+1 will be added as the Referrer. Note that it
-might be useful to advertise which data limits were used in the
+Note that it might be useful to advertise which data limits were used in the
 report, but it isn’t included here.
 
 It also may be beneficial to send reports as JSON instead of in the

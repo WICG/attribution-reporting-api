@@ -798,8 +798,13 @@ To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |repor
 
 To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following steps:
 
+1. Let |destination| be |report|'s [=attribution report/attribution destination=].
+1. Assert: |destination| is not an [=opaque origin=].
+1. Let |serializedHost| be the |destination|'s host, [=host serializer|serialized=].
 1. Let |data| be a [=map=] of the following key/value pairs:
 
+    : "`attribution_destination`"
+    :: The [=string/concatenate|concatenation=] of «|destination|'s scheme, "`://`", |serializedHost|».
     : "`source_type`"
     :: |report|'s [=attribution report/source type=]
     : "`source_event_id`"
@@ -831,11 +836,6 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
 
 1. Let |body| be the result of executing [=serialize an attribution report=] on |report|.
 1. Let |url| be the result of executing [=generate a report URL=] on |report|.
-1. Let |referrer| be a new [=URL record=].
-1. Let |destination| be |report|'s [=attribution report/attribution destination=].
-1. Assert: |destination| is not an [=opaque origin=].
-1. Set |referrer|'s [=URL/scheme=] to |destination|'s scheme.
-1. Set |referrer|'s [=URL/host=] to |destination|'s host.
 1. Let |request| be a new [=request=] with the following properties:
     :   `method`
     ::  "`POST`"
@@ -847,7 +847,7 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
     :   `body`
     ::  A [=/body=] whose [=body/source=] is |body|.
     : `referrer`
-    :: |referrer|
+    :: "`no-referrer`"
     :   `client`
     ::  `null`
     :   `window`
