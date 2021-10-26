@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version d7036035b, updated Fri Oct 8 17:07:11 2021 -0700" name="generator">
   <link href="https://wicg.github.io/conversion-measurement-api" rel="canonical">
-  <meta content="b93c5645cdb171ecdb15560d3452dad15c685129" name="document-revision">
+  <meta content="f38027de57d9b37f81e28b27860f0a40abdf2a84" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -1597,8 +1597,15 @@ convert an expired attribution source.</p>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="serialize-an-attribution-report">serialize an <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report⑨">attribution report</a></dfn> <var>report</var>, run the following steps:</p>
    <ol>
     <li data-md>
+     <p>Let <var>destination</var> be <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-attribution-destination" id="ref-for-attribution-report-attribution-destination③">attribution destination</a>.</p>
+    <li data-md>
+     <p class="assertion">Assert: <var>destination</var> is not an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque" id="ref-for-concept-origin-opaque⑤">opaque origin</a>.</p>
+    <li data-md>
      <p>Let <var>data</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map">map</a> of the following key/value pairs:</p>
      <dl>
+      <dt data-md>"<code>attribution_destination</code>"
+      <dd data-md>
+       <p><var>destination</var>, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a></p>
       <dt data-md>"<code>source_type</code>"
       <dd data-md>
        <p><var>report</var>’s <a data-link-type="dfn" href="#attribution-report-source-type" id="ref-for-attribution-report-source-type">source type</a></p>
@@ -1620,7 +1627,7 @@ convert an expired attribution source.</p>
     <li data-md>
      <p>Let <var>reportingOrigin</var> be <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-reporting-endpoint" id="ref-for-attribution-report-reporting-endpoint①">reporting endpoint</a>.</p>
     <li data-md>
-     <p class="assertion">Assert: <var>reportingOrigin</var> is not an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque" id="ref-for-concept-origin-opaque⑤">opaque origin</a>.</p>
+     <p class="assertion">Assert: <var>reportingOrigin</var> is not an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque" id="ref-for-concept-origin-opaque⑥">opaque origin</a>.</p>
     <li data-md>
      <p>Set <var>reportUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-scheme" id="ref-for-concept-url-scheme">scheme</a> to <var>reportingOrigin</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-scheme" id="ref-for-concept-origin-scheme">scheme</a>.</p>
     <li data-md>
@@ -1641,16 +1648,6 @@ convert an expired attribution source.</p>
     <li data-md>
      <p>Let <var>url</var> be the result of executing <a data-link-type="dfn" href="#generate-a-report-url" id="ref-for-generate-a-report-url">generate a report URL</a> on <var>report</var>.</p>
     <li data-md>
-     <p>Let <var>referrer</var> be a new <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url" id="ref-for-concept-url③">URL record</a>.</p>
-    <li data-md>
-     <p>Let <var>destination</var> be <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-attribution-destination" id="ref-for-attribution-report-attribution-destination③">attribution destination</a>.</p>
-    <li data-md>
-     <p class="assertion">Assert: <var>destination</var> is not an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque" id="ref-for-concept-origin-opaque⑥">opaque origin</a>.</p>
-    <li data-md>
-     <p>Set <var>referrer</var>’s <a data-link-type="dfn">scheme</a> to <var>destination</var>’s scheme.</p>
-    <li data-md>
-     <p>Set <var>referrer</var>’s <a data-link-type="dfn">host</a> to <var>destination</var>’s host.</p>
-    <li data-md>
      <p>Let <var>request</var> be a new <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request" id="ref-for-concept-request②">request</a> with the following properties:</p>
      <dl>
       <dt data-md><code>method</code>
@@ -1668,7 +1665,7 @@ convert an expired attribution source.</p>
        <p>A <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-body" id="ref-for-concept-body">body</a> whose <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-body-source" id="ref-for-concept-body-source">source</a> is <var>body</var>.</p>
       <dt data-md><code>referrer</code>
       <dd data-md>
-       <p><var>referrer</var></p>
+       <p>"<code>no-referrer</code>"</p>
       <dt data-md><code>client</code>
       <dd data-md>
        <p><code>null</code></p>
@@ -2087,8 +2084,8 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-concept-origin-opaque">8.3. Parsing an attribution destination</a>
     <li><a href="#ref-for-concept-origin-opaque①">8.8. Obtaining an attribution source from AttributionSourceParams</a> <a href="#ref-for-concept-origin-opaque②">(2)</a>
     <li><a href="#ref-for-concept-origin-opaque③">9.3. Should internalResponse to request be blocked as attribution trigger</a> <a href="#ref-for-concept-origin-opaque④">(2)</a>
-    <li><a href="#ref-for-concept-origin-opaque⑤">10.2. Get report request URL</a>
-    <li><a href="#ref-for-concept-origin-opaque⑥">10.3. Issuing a report request</a>
+    <li><a href="#ref-for-concept-origin-opaque⑤">10.1. Serialize attribution report body</a>
+    <li><a href="#ref-for-concept-origin-opaque⑥">10.2. Get report request URL</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-settings-object-origin">
@@ -2377,7 +2374,6 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-concept-url">9.2. Creating an attribution trigger</a>
     <li><a href="#ref-for-concept-url①">9.3. Should internalResponse to request be blocked as attribution trigger</a>
     <li><a href="#ref-for-concept-url②">10.2. Get report request URL</a>
-    <li><a href="#ref-for-concept-url③">10.3. Issuing a report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-url-parser">
@@ -2393,7 +2389,6 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-concept-url">9.2. Creating an attribution trigger</a>
     <li><a href="#ref-for-concept-url①">9.3. Should internalResponse to request be blocked as attribution trigger</a>
     <li><a href="#ref-for-concept-url②">10.2. Get report request URL</a>
-    <li><a href="#ref-for-concept-url③">10.3. Issuing a report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-idl-DOMException">
@@ -3056,7 +3051,7 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-attribution-report-attribution-destination">9.4. Triggering attribution</a> <a href="#ref-for-attribution-report-attribution-destination①">(2)</a>
     <li><a href="#ref-for-attribution-report-attribution-destination②">9.6. Obtaining a report</a>
-    <li><a href="#ref-for-attribution-report-attribution-destination③">10.3. Issuing a report request</a>
+    <li><a href="#ref-for-attribution-report-attribution-destination③">10.1. Serialize attribution report body</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-report-report-time">
