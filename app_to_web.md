@@ -25,9 +25,8 @@ Any browser on Android could implement this API. This proposal was inspired by S
 
 
 Use cases such as the following would be supported:
-* Ad view/tap within a native Android app, conversion within a native browser app (e.g. a browser's mobile app). 
-* Ad view/tap within a native Android app, conversion within a native in-app browser (e.g. Chrome Custom Tabs or other mechanisms). 
-
+* Ad view/tap within a native Android app or embedded webview, conversion within a native browser app (e.g. a browser's mobile app). 
+* Ad view/tap within a native Android app or embedded webview, conversion within a custom tab provider (e.g. Chrome Custom Tabs or other mechanisms). 
 
 
 ## API changes
