@@ -126,7 +126,7 @@ of time in milliseconds the attribution source should be considered for reportin
 
 The <dfn for="a" element-attr>attributionsourcepriority</dfn> attribute optionally defines the
 priority of a source relative to other sources when triggering attribution. If not specified, 0 is used as the
-priority. An [=attribution trigger=] with a given [=attribution trigger/reporting endpoint=] and [=attribution trigger/trigger origin=]
+priority. An [=attribution trigger=] with a given [=attribution trigger/reporting endpoint=] and [=attribution trigger/attribution destination=]
 will always be attributed to the source with the highest priority value that has the same [=attribution source/reporting endpoint=]
 and [=attribution source/attribution destination=].
 
@@ -337,8 +337,8 @@ Issue: Add a mode that results in fake reports.
 An attribution trigger is a [=struct=] with the following items:
 
 <dl dfn-for="attribution trigger">
-: <dfn>trigger origin</dfn>
-:: An [=url/origin=].
+: <dfn>attribution destination</dfn>
+:: A [=site=].
 : <dfn>trigger data</dfn>
 :: A [=string=].
 : <dfn>event source trigger data</dfn>
@@ -604,8 +604,8 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
     in an integer, set |triggerPriority| to that value.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
 
-    : [=attribution trigger/trigger origin=]
-    :: |environment|'s [=environment/top-level origin=].
+    : [=attribution trigger/attribution destination=]
+    :: The result of [=obtain a site|obtaining a site=] from |environment|'s [=environment/top-level origin=].
     : [=attribution trigger/trigger data=]
     :: |triggerData|.
     : [=attribution trigger/event source trigger data=]
@@ -662,8 +662,7 @@ Given a [=request=] |request|:
 
 To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run the following steps:
 
-1. Let |attributionDestination| be the result of running [=parse an attribution destination=] with |trigger|'s [=attribution trigger/trigger origin=].
-1. If |attributionDestination| is null, return.
+1. Let |attributionDestination| be |trigger|'s [=attribution trigger/attribution destination=].
 1. Let |matchingSources| be all entries in the [=attribution source cache=] where all of the following are true:
      * entry's [=attribution source/attribution destination=] and |attributionDestination| are equal.
      * entry's [=attribution source/reporting endpoint=] and |trigger|'s [=attribution source/reporting endpoint=] are equal.
@@ -881,8 +880,9 @@ TODO
 
 A user agent's [=attribution caches=] contain data about a user's web activity. When a user agent clears an origin's storage,
 it MUST also remove entries in the [=attribution caches=] whose [=attribution source/source origin=],
-[=attribution source/attribution destination=], [=attribution source/reporting endpoint=], or
-[=attribution trigger/trigger origin=] is the [=same origin|same=] as the cleared origin.
+[=attribution source/attribution destination=], [=attribution source/reporting endpoint=],
+[=attribution report/attribution destination=], or [=attribution report/reporting endpoint=]
+is the [=same origin|same=] as the cleared origin.
 
 A user agent MAY clear [=attribution cache=] entries at other times. For example, when a user agent clears
 an origin from a user's browsing history.
