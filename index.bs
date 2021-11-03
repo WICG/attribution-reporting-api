@@ -304,7 +304,7 @@ An attribution source is a [=struct=] with the following items:
 
 <dl dfn-for="attribution source">
 : <dfn>source identifier</dfn>
-:: A string.
+:: A [=string=].
 : <dfn>source origin</dfn>
 :: An [=url/origin=].
 : <dfn>event id</dfn>
@@ -340,9 +340,9 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>attribution destination</dfn>
 :: A [=site=].
 : <dfn>trigger data</dfn>
-:: A [=string=].
+:: A non-negative 64-bit integer.
 : <dfn>event source trigger data</dfn>
-:: A [=string=].
+:: A non-negative 64-bit integer.
 : <dfn>trigger time</dfn>
 :: A point in time.
 : <dfn>reporting endpoint</dfn>
@@ -360,11 +360,11 @@ An attribution report is a [=struct=] with the following items:
 
 <dl dfn-for="attribution report">
 : <dfn>event id</dfn>
-:: A [=string=].
+:: A non-negative 64-bit integer.
 : <dfn>source type</dfn>
 :: Either "<code>navigation</code>" or "<code>event</code>".
 : <dfn>trigger data</dfn>
-:: A [=string=].
+:: A non-negative 64-bit integer.
 : <dfn>reporting endpoint</dfn>
 :: An [=url/origin=].
 : <dfn>attribution destination</dfn>
@@ -402,7 +402,7 @@ An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</
 
 <h3 algorithm id="parsing-data-fields">Parsing data fields</h3>
 
-This section defines how to parse and extract
+This section defines how to parse strings into integers for
 [=attribution source/event id=], [=attribution trigger/trigger data=], and [=attribution trigger/event source trigger data=].
 
 To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an integer
@@ -812,6 +812,10 @@ To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following st
     :: |report|'s [=attribution report/trigger data=]
 
 1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
+
+Issue: How can we force [=attribution report/event id=] and [=attribution report/trigger data=] to
+be serialized as JSON strings, since JSON numbers don't necessarily support all possible values of
+unsigned 64-bit integers?
 
 <h3 id="get-report-url">Get report request URL</h3>
 
