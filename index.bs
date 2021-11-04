@@ -688,6 +688,28 @@ Given a [=request=] |request|:
 1. [=Queue a task=] to [=trigger attribution=] with |trigger|.
 1. Return <strong>blocked</strong>.
 
+<h3 dfn id="should-rate-limit-attribution">Should attribution be rate-limited</h3>
+
+Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToAttribute|:
+
+1. Let |sourceSite| be the result of running [=parse a site=] with |sourceToAttribute|'s [=attribution source/source origin=].
+1. If |sourceSite| is null, return <strong>blocked</strong>.
+1. Let |matchingRateLimitRecords| be all entries in the [=attribution rate-limit cache=] where all of the following are true:
+     * entry's [=attribution rate-limit record/source site=] and |sourceSite| are equal
+     * entry's [=attribution rate-limit record/attribution destination=] and |trigger|'s [=attribution trigger/attribution destination=] are equal
+     * entry's [=attribution rate-limit record/source type=] and |sourceToAttribute|'s [=attribution source/source type=] are equal
+     * entry's [=attribution rate-limit record/trigger time=] is greater than [=attribution rate-limit window=] before |trigger|'s [=attribution trigger/trigger time=]
+1. If the [=list/size=] of |matchingRateLimitRecords| is greater than or equal to [=max attributions per rate-limit window=], return <strong>blocked</strong>.
+1. Return <strong>allowed</strong>.
+
+<dfn>Attribution rate-limit window</dfn> is a vendor-specific duration that controls the
+rate-limiting window for attribution.
+
+<dfn>Max attributions per rate-limit window</dfn> is a vendor-specific integer that controls
+the maximum number of attributions for a ([=attribution rate-limit record/source site=],
+[=attribution rate-limit record/attribution destination=],
+[=attribution rate-limit record/source type=]) per [=attribution rate-limit window=].
+
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
 To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run the following steps:
@@ -712,15 +734,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     [=attribution report/attribution destination=] equals |attributionDestination|.
 1. If |numMatchingReports| is greater than or equal to the user agent's
     [=max reports per attribution destination=], return.
-1. Set |rateLimitTimePeriod| to an [=implementation-defined=] time before |trigger|'s [=attribution trigger/trigger time=].
-1. Let |sourceSite| be the result of running [=parse a site=] with |sourceToAttribute|'s [=attribution source/source origin=].
-1. If |sourceSite| is null, return.
-1. Let |matchingRateLimitRecords| be all entries in the [=attribution rate-limit cache=] where all of the following are true:
-     * entry's [=attribution rate-limit record/source site=] and |sourceSite| are equal
-     * entry's [=attribution rate-limit record/attribution destination=] and |attributionDestination| are equal
-     * entry's [=attribution rate-limit record/source type=] and |sourceToAttribute|'s [=attribution source/source type=] are equal
-     * entry's [=attribution rate-limit record/trigger time=] is greater than |rateLimitTimePeriod|
-1. If the [=list/size=] of |matchingRateLimitRecords| is greater than or equal to an [=implementation-defined=] value, return.
+1. If the result of running [=should attribution be rate-limited=] with |trigger| and
+    |sourceToAttribute| is <strong>blocked</strong>, return.
 1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute| and |trigger|.
 1. If |sourceToAttribute|'s [=attribution source/number of reports=] value is equal to the
     user agent's [=max reports per source=] value, then:
@@ -759,8 +774,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     :: |trigger|'s [=attribution trigger/trigger time=]
 1. Add |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. Remove all entries from the [=attribution rate-limit cache=] whose
-    [=attribution rate-limit record/trigger time=] is less than the current time -
-    |rateLimitTimePeriod|.
+    [=attribution rate-limit record/trigger time=] is at least [=attribution rate-limit window=]
+    before the current time.
 
 <dfn>Max reports per attribution destination</dfn> is a vendor-specific integer which controls how
 many [=attribution reports=] can be in the [=attribution report cache=] for an
