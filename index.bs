@@ -568,25 +568,23 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     1. Assert: |source|'s [=attribution source/source type=] is "<code>event</code>".
     1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
         agent's [=max report cache size=], return.
-    1. Let |fakeReport| be a new [=attribution report=] with the items:
-        : [=attribution report/event id=]
-        :: |source|'s [=attribution source/event id=]
-        : [=attribution report/trigger data=]
+    1. Let |fakeTrigger| be a new [=attribution trigger=] with the items:
+        : [=attribution trigger/attribution destination=]
+        :: |source|'s [=attribution source/attribution destination=]
+        : [=attribution trigger/trigger data=]
+	:: 0
+        : [=attribution trigger/event source trigger data=]
         :: A random value between 0 (inclusive) and the user agent's
             [=max event source trigger data value=] (exclusive)
-        : [=attribution report/reporting endpoint=]
-        :: |source|'s [=attribution source/reporting endpoint=]
-        : [=attribution report/attribution destination=]
-        :: |source|'s [=attribution source/attribution destination=]
-        : [=attribution report/reporting time=]
-        :: The result of running [=obtain a report delivery time=] with |source| and |source|'s
-            [=attribution source/source time=]
-        : [=attribution report/trigger priority=]
-        :: 0
-        : [=attribution report/trigger time=]
+        : [=attribution trigger/trigger time=]
         :: |source|'s [=attribution source/source time=]
-        : [=attribution report/source identifier=]
-        :: |source|'s [=attribution source/source identifier=]
+        : [=attribution trigger/reporting endpoint=]
+        :: |source|'s [=attribution source/reporting endpoint=]
+        : [=attribution trigger/dedup key=]
+        :: null
+        : [=attribution trigger/priority=]
+        :: 0
+    1. Let |fakeReport| be the result of running [=obtain a report=] with |source| and |fakeTrigger|.
     1. Add |fakeReport| to the [=attribution report cache=].
     1. Return.
 1. [=set/Append=] |source| to |cache|.
