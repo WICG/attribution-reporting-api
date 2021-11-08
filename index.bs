@@ -326,9 +326,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>dedup keys</dfn>
 :: [=ordered set=] of [=attribution trigger/dedup keys=] associated with this [=attribution source=].
 : <dfn>attribution mode</dfn>
-:: Either "<code>truthfully</code>" or "<code>never</code>".
-
-Issue: Add a mode that results in fake reports.
+:: Either "<code>truthfully</code>", "<code>never</code>", or "<code>falsely</code>".
 
 </dl>
 
@@ -425,15 +423,6 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
-<h3 algorithm id="noising-attribution">Noising attribution</h3>
-
-To <dfn>select a random attribution mode</dfn> given a double |noiseRate|, run the following steps:
-
-1. Assert: |noiseRate| is between 0 and 1 (both inclusive).
-1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive).
-1. If |r| is greater than or equal to |noiseRate|, return "<code>truthfully</code>".
-1. Return "<code>never</code>".
-
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
 To <dfn>obtain an attribution source from an anchor</dfn> given an <{a}> element |anchor|:
@@ -470,12 +459,10 @@ To <dfn>obtain an event attribution source from a source</dfn> given an [=attrib
 1. Set |resultSource|'s [=attribution source/source identifier=] to a new unique opaque string.
 1. Set |resultSource|'s [=attribution source/source type=] to "<code>event</code>".
 1. Round |resultSource|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
-1. Set |resultSource|'s [=attribution source/attribution mode=] to the result of running
-    [=select a random attribution mode=] with the user agent's [=attribution mode noise rate=].
+1. Set |resultSource|'s [=attribution source/attribution mode=] to one of
+    "<code>truthfully</code>", "<code>never</code>", or "<code>falsely</code>", with
+    [=implementation-defined=] probability.
 1. Return |resultSource|.
-
-<dfn>Attribution mode noise rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive)
-which controls noising of [=attribution source/attribution mode=].
 
 <h3 algorithm id="obtaining-attribution-source-params">Obtaining an attribution source from {{AttributionSourceParams}}</h3>
 
@@ -557,7 +544,32 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry time=] is less than the current time.
 1. If the [=list/size=] of |cache| is greater than or equal to the user agent's
      [=max source cache size=], return.
+1. If |source|'s [=attribution source/attribution mode=] is "<code>falsely</code>", then:
+    1. Assert: |source|'s [=attribution source/source type=] is "<code>event</code>".
+    1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
+        agent's [=max report cache size=], return.
+    1. Let |fakeTrigger| be a new [=attribution trigger=] with the items:
+        : [=attribution trigger/attribution destination=]
+        :: |source|'s [=attribution source/attribution destination=]
+        : [=attribution trigger/trigger data=]
+        :: 0
+        : [=attribution trigger/event source trigger data=]
+        :: A random value between 0 (inclusive) and the user agent's
+            [=max event source trigger data value=] (exclusive)
+        : [=attribution trigger/trigger time=]
+        :: |source|'s [=attribution source/source time=]
+        : [=attribution trigger/reporting endpoint=]
+        :: |source|'s [=attribution source/reporting endpoint=]
+        : [=attribution trigger/dedup key=]
+        :: null
+        : [=attribution trigger/priority=]
+        :: 0
+    1. Let |fakeReport| be the result of running [=obtain a report=] with |source| and |fakeTrigger|.
+    1. Add |fakeReport| to the [=attribution report cache=].
+    1. Return.
 1. [=set/Append=] |source| to |cache|.
+
+Issue: Should fake reports respect the user agent's [=max reports per attribution destination=]?
 
 <dfn>Max source cache size</dfn> is a vendor-specific integer which controls how many
 [=attribution sources=] can be in the [=attribution source cache=].
@@ -674,6 +686,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
       * |a|'s [=attribution source/priority=] is equal to |b|'s [=attribution source/priority=] and |a|'s
          [=attribution source/source time=] is less than |b|'s [=attribution source/source time=].
 1. Let |sourceToAttribute| be the first item in |matchingSources|.
+1. Assert: |sourceToAttribute|'s [=attribution source/attribution mode=] is
+    "<code>truthfully</code>" or "<code>never</code>".
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null and |sourceToAttribute|'s
     [=attribution source/dedup keys=] [=list/contains=] it, return.
 1. Let |numMatchingReports| be the number of entries in the [=attribution report cache=] whose
