@@ -423,21 +423,6 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
-<h3 algorithm id="noising-attribution">Noising attribution</h3>
-
-To <dfn>select a random attribution mode</dfn> given doubles |neverRate| and |falselyRate|, run the
-following steps:
-
-1. Assert: |neverRate| is between 0 and 1 (both inclusive).
-1. Assert: |falselyRate| is between 0 and 1 (both inclusive).
-1. Let |noiseRate| be the sum of |neverRate| and |falselyRate|.
-1. Assert: |noiseRate| <= 1.
-1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive).
-1. If |r| is greater than or equal to |noiseRate|, return "<code>truthfully</code>".
-1. Let |t| be a random double between 0 (inclusive) and 1 (exclusive).
-1. If |t| is greater than or equal to |falselyRate|, return "<code>never</code>".
-1. Return "<code>falsely</code>".
-
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
 To <dfn>obtain an attribution source from an anchor</dfn> given an <{a}> element |anchor|:
@@ -474,23 +459,10 @@ To <dfn>obtain an event attribution source from a source</dfn> given an [=attrib
 1. Set |resultSource|'s [=attribution source/source identifier=] to a new unique opaque string.
 1. Set |resultSource|'s [=attribution source/source type=] to "<code>event</code>".
 1. Round |resultSource|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
-1. Set |resultSource|'s [=attribution source/attribution mode=] to the result of running
-    [=select a random attribution mode=] with the user agent's [=drop report rate=] and
-    the user agent's [=fake report rate=].
+1. Set |resultSource|'s [=attribution source/attribution mode=] to one of
+    "<code>truthfully</code>", "<code>never</code>", or "<code>falsely</code>", with
+    [=implementation-defined=] probability.
 1. Return |resultSource|.
-
-<dfn>Drop report rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive)
-which controls the probability of [=attribution source/attribution mode=] being
-"<code>never</code>".
-
-<dfn>Fake report rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive)
-which controls the probability of [=attribution source/attribution mode=] being
-"<code>falsely</code>".
-
-Note: The user agent's [=drop report rate=] and [=fake report rate=] must sum to no greater than 1.
-For example, to select "<code>truthfully</code>" 75% of the time, "<code>never</code>" 20% of the
-time, and "<code>falsely</code>" 5% of the time, the [=drop report rate=] should be 0.2 and the
-[=fake report rate=] should be 0.05.
 
 <h3 algorithm id="obtaining-attribution-source-params">Obtaining an attribution source from {{AttributionSourceParams}}</h3>
 
