@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 83b904c2e, updated Wed Nov 3 17:20:53 2021 -0700" name="generator">
   <link href="https://wicg.github.io/conversion-measurement-api" rel="canonical">
-  <meta content="ee4f982d2f6c3fdb77f61a3da3e2d93f9b2c1005" name="document-revision">
+  <meta content="3c7fb7b1ad5ebbb22e77c29bc892a39188fe7d95" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -588,7 +588,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Attribution Reporting</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2021-11-08">8 November 2021</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2021-11-09">9 November 2021</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -655,6 +655,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#attribution-source"><span class="secno">6.1</span> <span class="content">Attribution source</span></a>
       <li><a href="#attribution-trigger"><span class="secno">6.2</span> <span class="content">Attribution trigger</span></a>
       <li><a href="#attribution-report"><span class="secno">6.3</span> <span class="content">Attribution report</span></a>
+      <li><a href="#attribution-rate-limit-record"><span class="secno">6.4</span> <span class="content">Attribution rate-limit record</span></a>
      </ol>
     <li><a href="#storage"><span class="secno">7</span> <span class="content">Storage</span></a>
     <li>
@@ -675,9 +676,10 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#noising-data-fields"><span class="secno">9.1</span> <span class="content">Noising trigger data</span></a>
       <li><a href="#attribution-trigger-creation"><span class="secno">9.2</span> <span class="content">Creating an attribution trigger</span></a>
       <li><a href="#should-block-response"><span class="secno">9.3</span> <span class="content">Should internalResponse to request be blocked as attribution trigger</span></a>
-      <li><a href="#triggering-attribution"><span class="secno">9.4</span> <span class="content">Triggering attribution</span></a>
-      <li><a href="#delivery-time"><span class="secno">9.5</span> <span class="content">Establishing report delivery time</span></a>
-      <li><a href="#obtaining-a-report"><span class="secno">9.6</span> <span class="content">Obtaining a report</span></a>
+      <li><a href="#should-rate-limit-attribution"><span class="secno">9.4</span> <span class="content">Should attribution be blocked by rate limit</span></a>
+      <li><a href="#triggering-attribution"><span class="secno">9.5</span> <span class="content">Triggering attribution</span></a>
+      <li><a href="#delivery-time"><span class="secno">9.6</span> <span class="content">Establishing report delivery time</span></a>
+      <li><a href="#obtaining-a-report"><span class="secno">9.7</span> <span class="content">Obtaining a report</span></a>
      </ol>
     <li>
      <a href="#report-delivery"><span class="secno">10</span> <span class="content">Report delivery</span></a>
@@ -966,7 +968,7 @@ finer-grained detail about other errors that occurred during the <a data-link-ty
    <h2 class="heading settled" data-level="5" id="permission-policy-integration"><span class="secno">5. </span><span class="content">Permissions Policy integration</span><a class="self-link" href="#permission-policy-integration"></a></h2>
     This specification defines a <a data-link-type="dfn" href="https://w3c.github.io/webappsec-permissions-policy/#policy-controlled-feature" id="ref-for-policy-controlled-feature">policy-controlled feature</a> identified by the string "<code><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attribution-reporting">attribution-reporting</dfn></code>". Its <a data-link-type="dfn" href="https://w3c.github.io/webappsec-permissions-policy/#default-allowlist" id="ref-for-default-allowlist">default allowlist</a> is *. 
    <h2 class="heading settled" data-level="6" id="structures"><span class="secno">6. </span><span class="content">Structures</span><a class="self-link" href="#structures"></a></h2>
-   <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="6.1" data-lt="Attribution source" data-noexport id="attribution-source"><span class="secno">6.1. </span><span class="content">Attribution source</span><a class="self-link" href="#attribution-source" id="ref-for-attribution-source②①"></a></h3>
+   <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="6.1" data-lt="Attribution source" data-noexport id="attribution-source"><span class="secno">6.1. </span><span class="content">Attribution source</span><a class="self-link" href="#attribution-source" id="ref-for-attribution-source②②"></a></h3>
    <p>An attribution source is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#struct" id="ref-for-struct">struct</a> with the following items:</p>
    <dl>
     <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution source" data-dfn-type="dfn" data-noexport id="attribution-source-source-identifier">source identifier</dfn>
@@ -1006,7 +1008,7 @@ finer-grained detail about other errors that occurred during the <a data-link-ty
     <dd data-md>
      <p>Either "<code>truthfully</code>", "<code>never</code>", or "<code>falsely</code>".</p>
    </dl>
-   <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="6.2" data-lt="Attribution trigger" data-noexport id="attribution-trigger"><span class="secno">6.2. </span><span class="content">Attribution trigger</span><a class="self-link" href="#attribution-trigger" id="ref-for-attribution-trigger⑥"></a></h3>
+   <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="6.2" data-lt="Attribution trigger" data-noexport id="attribution-trigger"><span class="secno">6.2. </span><span class="content">Attribution trigger</span><a class="self-link" href="#attribution-trigger" id="ref-for-attribution-trigger⑦"></a></h3>
    <p>An attribution trigger is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#struct" id="ref-for-struct①">struct</a> with the following items:</p>
    <dl>
     <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution trigger" data-dfn-type="dfn" data-noexport id="attribution-trigger-attribution-destination">attribution destination</dfn>
@@ -1065,9 +1067,26 @@ finer-grained detail about other errors that occurred during the <a data-link-ty
     <dd data-md>
      <p>A boolean.</p>
    </dl>
+   <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="6.4" data-lt="Attribution rate-limit record" data-noexport id="attribution-rate-limit-record"><span class="secno">6.4. </span><span class="content">Attribution rate-limit record</span><a class="self-link" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record"></a></h3>
+   <p>An attribution rate-limit record is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#struct" id="ref-for-struct③">struct</a> with the following items:</p>
+   <dl>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution rate-limit record" data-dfn-type="dfn" data-noexport id="attribution-rate-limit-record-source-site">source site</dfn>
+    <dd data-md>
+     <p>A <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#site" id="ref-for-site③">site</a>.</p>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution rate-limit record" data-dfn-type="dfn" data-noexport id="attribution-rate-limit-record-attribution-destination">attribution destination</dfn>
+    <dd data-md>
+     <p>A <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#site" id="ref-for-site④">site</a>.</p>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution rate-limit record" data-dfn-type="dfn" data-noexport id="attribution-rate-limit-record-source-type">source type</dfn>
+    <dd data-md>
+     <p>Either "<code>navigation</code>" or "<code>event</code>".</p>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution rate-limit record" data-dfn-type="dfn" data-noexport id="attribution-rate-limit-record-trigger-time">trigger time</dfn>
+    <dd data-md>
+     <p>A point in time.</p>
+   </dl>
    <h2 class="heading settled" data-level="7" id="storage"><span class="secno">7. </span><span class="content">Storage</span><a class="self-link" href="#storage"></a></h2>
    <p>A user agent holds an <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attribution-source-cache">attribution source cache</dfn>, which is an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①">ordered set</a> of <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source①①">attribution sources</a>.</p>
    <p>A user agent holds an <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attribution-report-cache">attribution report cache</dfn>, which is an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set②">ordered set</a> of <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report③">attribution reports</a>.</p>
+   <p>A user agent holds an <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attribution-rate-limit-cache">attribution rate-limit cache</dfn>, which is an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set③">ordered set</a> of <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record②">attribution rate-limit records</a>.</p>
    <p>The above caches are collectively known as the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attribution-caches">attribution caches</dfn>. The <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches">attribution caches</a> are
 shared among all <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object" id="ref-for-environment-settings-object">environment settings objects</a>.</p>
    <p class="note" role="note"><span>Note:</span> This would ideally use <a data-link-type="dfn" href="https://storage.spec.whatwg.org/#storage-bottle" id="ref-for-storage-bottle">storage bottles</a> to provide access to the attribution caches.
@@ -1438,11 +1457,37 @@ return <strong>allowed</strong>.</p>
     <li data-md>
      <p>Return <strong>blocked</strong>.</p>
    </ol>
-   <h3 class="heading settled algorithm" data-algorithm="Triggering attribution" data-level="9.4" id="triggering-attribution"><span class="secno">9.4. </span><span class="content">Triggering attribution</span><a class="self-link" href="#triggering-attribution"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="trigger-attribution">trigger attribution</dfn> given an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-trigger④">attribution trigger</a> <var>trigger</var> run the following steps:</p>
+   <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="9.4" data-lt="Should attribution be blocked by rate limit" data-noexport id="should-rate-limit-attribution"><span class="secno">9.4. </span><span class="content">Should attribution be blocked by rate limit</span><a class="self-link" href="#should-rate-limit-attribution" id="ref-for-should-rate-limit-attribution"></a></h3>
+   <p>Given an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-trigger④">attribution trigger</a> <var>trigger</var> and <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source①⑧">attribution source</a> <var>sourceToAttribute</var>:</p>
    <ol>
     <li data-md>
-     <p>Let <var>attributionDestination</var> be <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-attribution-destination" id="ref-for-attribution-trigger-attribution-destination③">attribution destination</a>.</p>
+     <p>Let <var>sourceSite</var> be the result of <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#obtain-a-site" id="ref-for-obtain-a-site②">obtaining a site</a> from <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin①">source origin</a>.</p>
+    <li data-md>
+     <p>Let <var>matchingRateLimitRecords</var> be all entries in the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache">attribution rate-limit cache</a> where all of the following are true:</p>
+     <ul>
+      <li data-md>
+       <p>entry’s <a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site">source site</a> and <var>sourceSite</var> are equal</p>
+      <li data-md>
+       <p>entry’s <a data-link-type="dfn" href="#attribution-rate-limit-record-attribution-destination" id="ref-for-attribution-rate-limit-record-attribution-destination">attribution destination</a> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-attribution-destination" id="ref-for-attribution-trigger-attribution-destination③">attribution destination</a> are equal</p>
+      <li data-md>
+       <p>entry’s <a data-link-type="dfn" href="#attribution-rate-limit-record-source-type" id="ref-for-attribution-rate-limit-record-source-type">source type</a> and <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type④">source type</a> are equal</p>
+      <li data-md>
+       <p>entry’s <a data-link-type="dfn" href="#attribution-rate-limit-record-trigger-time" id="ref-for-attribution-rate-limit-record-trigger-time">trigger time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window">attribution rate-limit window</a> before <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time②">trigger time</a></p>
+     </ul>
+    <li data-md>
+     <p>If the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size②">size</a> of <var>matchingRateLimitRecords</var> is greater than or equal to <a data-link-type="dfn" href="#max-attributions-per-rate-limit-window" id="ref-for-max-attributions-per-rate-limit-window">max attributions per rate-limit window</a>, return <strong>blocked</strong>.</p>
+    <li data-md>
+     <p>Return <strong>allowed</strong>.</p>
+   </ol>
+   <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attribution-rate-limit-window">Attribution rate-limit window</dfn> is a vendor-specific duration that controls the
+rate-limiting window for attribution.</p>
+   <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-attributions-per-rate-limit-window">Max attributions per rate-limit window</dfn> is a vendor-specific integer that controls
+the maximum number of attributions for a (<a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site①">source site</a>, <a data-link-type="dfn" href="#attribution-rate-limit-record-attribution-destination" id="ref-for-attribution-rate-limit-record-attribution-destination①">attribution destination</a>, <a data-link-type="dfn" href="#attribution-rate-limit-record-source-type" id="ref-for-attribution-rate-limit-record-source-type①">source type</a>) per <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window①">attribution rate-limit window</a>.</p>
+   <h3 class="heading settled algorithm" data-algorithm="Triggering attribution" data-level="9.5" id="triggering-attribution"><span class="secno">9.5. </span><span class="content">Triggering attribution</span><a class="self-link" href="#triggering-attribution"></a></h3>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="trigger-attribution">trigger attribution</dfn> given an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-trigger⑤">attribution trigger</a> <var>trigger</var> run the following steps:</p>
+   <ol>
+    <li data-md>
+     <p>Let <var>attributionDestination</var> be <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-attribution-destination" id="ref-for-attribution-trigger-attribution-destination④">attribution destination</a>.</p>
     <li data-md>
      <p>Let <var>matchingSources</var> be all entries in the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache②">attribution source cache</a> where all of the following are true:</p>
      <ul>
@@ -1474,6 +1519,8 @@ return <strong>allowed</strong>.</p>
      <p>Let <var>numMatchingReports</var> be the number of entries in the <a data-link-type="dfn" href="#attribution-report-cache" id="ref-for-attribution-report-cache②">attribution report cache</a> whose <a data-link-type="dfn" href="#attribution-report-attribution-destination" id="ref-for-attribution-report-attribution-destination">attribution destination</a> equals <var>attributionDestination</var>.</p>
     <li data-md>
      <p>If <var>numMatchingReports</var> is greater than or equal to the user agent’s <a data-link-type="dfn" href="#max-reports-per-attribution-destination" id="ref-for-max-reports-per-attribution-destination①">max reports per attribution destination</a>, return.</p>
+    <li data-md>
+     <p>If the result of running <a data-link-type="dfn" href="#should-rate-limit-attribution" id="ref-for-should-rate-limit-attribution①">should attribution be blocked by rate limit</a> with <var>trigger</var> and <var>sourceToAttribute</var> is <strong>blocked</strong>, return.</p>
     <li data-md>
      <p>Let <var>report</var> be the result of running <a data-link-type="dfn" href="#obtain-a-report" id="ref-for-obtain-a-report①">obtain a report</a> with <var>sourceToAttribute</var> and <var>trigger</var>.</p>
     <li data-md>
@@ -1516,7 +1563,7 @@ user agent’s <a data-link-type="dfn" href="#max-reports-per-source" id="ref-fo
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove④">Remove</a> <var>item</var> from the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache④">attribution source cache</a>.</p>
      </ol>
     <li data-md>
-     <p>If the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size②">size</a> of the <a data-link-type="dfn" href="#attribution-report-cache" id="ref-for-attribution-report-cache⑤">attribution report cache</a> is greater than or equal to the user
+     <p>If the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size③">size</a> of the <a data-link-type="dfn" href="#attribution-report-cache" id="ref-for-attribution-report-cache⑤">attribution report cache</a> is greater than or equal to the user
 agent’s <a data-link-type="dfn" href="#max-report-cache-size" id="ref-for-max-report-cache-size①">max report cache size</a>, return.</p>
     <li data-md>
      <p>If <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-mode" id="ref-for-attribution-source-attribution-mode④">attribution mode</a> is "<code>truthfully</code>",
@@ -1525,19 +1572,39 @@ add <var>report</var> to the <a data-link-type="dfn" href="#attribution-report-c
      <p>Increment <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-number-of-reports" id="ref-for-attribution-source-number-of-reports③">number of reports</a> value by 1.</p>
     <li data-md>
      <p>If <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-dedup-key" id="ref-for-attribution-trigger-dedup-key④">dedup key</a> is not null, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append">append</a> it to <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-dedup-keys" id="ref-for-attribution-source-dedup-keys①">dedup keys</a>.</p>
+    <li data-md>
+     <p>Let <var>rateLimitRecord</var> be a new <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record①">attribution rate-limit record</a> with the items:</p>
+     <dl>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site②">source site</a>
+      <dd data-md>
+       <p>The result of <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#obtain-a-site" id="ref-for-obtain-a-site③">obtaining a site</a> from <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin②">source origin</a>.</p>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-attribution-destination" id="ref-for-attribution-rate-limit-record-attribution-destination②">attribution destination</a>
+      <dd data-md>
+       <p><var>attributionDestination</var></p>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-source-type" id="ref-for-attribution-rate-limit-record-source-type②">source type</a>
+      <dd data-md>
+       <p><var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑤">source type</a></p>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-trigger-time" id="ref-for-attribution-rate-limit-record-trigger-time①">trigger time</a>
+      <dd data-md>
+       <p><var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time③">trigger time</a></p>
+     </dl>
+    <li data-md>
+     <p>Add <var>rateLimitRecord</var> to the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache①">attribution rate-limit cache</a>.</p>
+    <li data-md>
+     <p>Remove all entries from the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache②">attribution rate-limit cache</a> whose <a data-link-type="dfn" href="#attribution-rate-limit-record-trigger-time" id="ref-for-attribution-rate-limit-record-trigger-time②">trigger time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window②">attribution rate-limit window</a> before the current time.</p>
    </ol>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-reports-per-attribution-destination">Max reports per attribution destination</dfn> is a vendor-specific integer which controls how
 many <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report④">attribution reports</a> can be in the <a data-link-type="dfn" href="#attribution-report-cache" id="ref-for-attribution-report-cache⑦">attribution report cache</a> for an <a data-link-type="dfn" href="#attribution-report-attribution-destination" id="ref-for-attribution-report-attribution-destination①">attribution destination</a>.</p>
-   <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-reports-per-source">Max reports per source</dfn> is a vendor-specific integer which controls how many <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report⑤">attribution reports</a> can be created for an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source①⑧">attribution source</a>.</p>
+   <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-reports-per-source">Max reports per source</dfn> is a vendor-specific integer which controls how many <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report⑤">attribution reports</a> can be created for an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source①⑨">attribution source</a>.</p>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-report-cache-size">Max report cache size</dfn> is a vendor-specific integer which controls how many <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report⑥">attribution reports</a> can be in the <a data-link-type="dfn" href="#attribution-report-cache" id="ref-for-attribution-report-cache⑧">attribution report cache</a>.</p>
    <p class="note" role="note"><span>Note:</span> This parameter represents a privacy/utility tradeoff. Lower values mean that less trigger-side data
 can be associated with a source event id. Larger values allow for more attribution triggers to be reported.</p>
-   <h3 class="heading settled algorithm" data-algorithm="Establishing report delivery time" data-level="9.5" id="delivery-time"><span class="secno">9.5. </span><span class="content">Establishing report delivery time</span><a class="self-link" href="#delivery-time"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-report-delivery-time">obtain a report delivery time</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source①⑨">attribution source</a> <var>source</var> and a <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time②">trigger time</a> <var>triggerTime</var>, perform the following steps. They
+   <h3 class="heading settled algorithm" data-algorithm="Establishing report delivery time" data-level="9.6" id="delivery-time"><span class="secno">9.6. </span><span class="content">Establishing report delivery time</span><a class="self-link" href="#delivery-time"></a></h3>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-report-delivery-time">obtain a report delivery time</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⓪">attribution source</a> <var>source</var> and a <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time④">trigger time</a> <var>triggerTime</var>, perform the following steps. They
 return a point in time.</p>
    <ol>
     <li data-md>
-     <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type④">source type</a> is "<code>event</code>", return <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time②">expiry time</a> + 1 hour.</p>
+     <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑥">source type</a> is "<code>event</code>", return <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time②">expiry time</a> + 1 hour.</p>
     <li data-md>
      <p>Let <var>timeToTrigger</var> be the difference between <var>triggerTime</var> and <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑤">source time</a>.</p>
      <p class="note" role="note"><span>Note:</span> <var>timeToTrigger</var> is less than <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry" id="ref-for-attribution-source-expiry③">expiry</a> because it is not normally possible to
@@ -1562,13 +1629,13 @@ convert an expired attribution source.</p>
       <dd>return <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time④">expiry time</a> + 1 hour.
      </dl>
    </ol>
-   <h3 class="heading settled algorithm" data-algorithm="Obtaining a report" data-level="9.6" id="obtaining-a-report"><span class="secno">9.6. </span><span class="content">Obtaining a report</span><a class="self-link" href="#obtaining-a-report"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-report">obtain a report</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⓪">attribution source</a> <var>source</var> and an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-trigger⑤">attribution trigger</a> <var>trigger</var>:</p>
+   <h3 class="heading settled algorithm" data-algorithm="Obtaining a report" data-level="9.7" id="obtaining-a-report"><span class="secno">9.7. </span><span class="content">Obtaining a report</span><a class="self-link" href="#obtaining-a-report"></a></h3>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-report">obtain a report</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②①">attribution source</a> <var>source</var> and an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-trigger⑥">attribution trigger</a> <var>trigger</var>:</p>
    <ol>
     <li data-md>
      <p>Let <var>triggerData</var> be <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-data" id="ref-for-attribution-trigger-trigger-data⑥">trigger data</a>.</p>
     <li data-md>
-     <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑤">source type</a> is "<code>event</code>", set <var>triggerData</var> to <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-event-source-trigger-data" id="ref-for-attribution-trigger-event-source-trigger-data⑥">event source trigger data</a>.</p>
+     <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑦">source type</a> is "<code>event</code>", set <var>triggerData</var> to <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-event-source-trigger-data" id="ref-for-attribution-trigger-event-source-trigger-data⑥">event source trigger data</a>.</p>
     <li data-md>
      <p>Let <var>report</var> be a new <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report⑦">attribution report</a> struct whose items are:</p>
      <dl>
@@ -1586,13 +1653,13 @@ convert an expired attribution source.</p>
        <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination⑨">attribution destination</a>.</p>
       <dt data-md><a data-link-type="dfn" href="#attribution-report-report-time" id="ref-for-attribution-report-report-time②">reporting time</a>
       <dd data-md>
-       <p>The result of running <a data-link-type="dfn" href="#obtain-a-report-delivery-time" id="ref-for-obtain-a-report-delivery-time">obtain a report delivery time</a> with <var>source</var> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time③">trigger time</a>.</p>
+       <p>The result of running <a data-link-type="dfn" href="#obtain-a-report-delivery-time" id="ref-for-obtain-a-report-delivery-time">obtain a report delivery time</a> with <var>source</var> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time⑤">trigger time</a>.</p>
       <dt data-md><a data-link-type="dfn" href="#attribution-report-trigger-priority" id="ref-for-attribution-report-trigger-priority⑥">trigger priority</a>
       <dd data-md>
        <p><var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-priority" id="ref-for-attribution-trigger-priority②">priority</a>.</p>
       <dt data-md><a data-link-type="dfn" href="#attribution-report-trigger-time" id="ref-for-attribution-report-trigger-time②">trigger time</a>
       <dd data-md>
-       <p><var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time④">trigger time</a>.</p>
+       <p><var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time⑥">trigger time</a>.</p>
       <dt data-md><a data-link-type="dfn" href="#attribution-report-source-identifier" id="ref-for-attribution-report-source-identifier②">source identifier</a>
       <dd data-md>
        <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-identifier" id="ref-for-attribution-source-source-identifier②">source identifier</a>.</p>
@@ -1611,7 +1678,7 @@ convert an expired attribution source.</p>
     <li data-md>
      <p>If <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-report-time" id="ref-for-attribution-report-report-time③">report time</a> is less than the current time, add an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#implementation-defined" id="ref-for-implementation-defined①">implementation-defined</a> random amount to report time.</p>
      <p class="note" role="note"><span>Note:</span> On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
- closed. Adding random delay prevents temporal joining of reports from different <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin①">source origin</a>s.</p>
+ closed. Adding random delay prevents temporal joining of reports from different <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin③">source origin</a>s.</p>
     <li data-md>
      <p>Wait until <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-report-time" id="ref-for-attribution-report-report-time④">report time</a> is the current time.</p>
     <li data-md>
@@ -1736,7 +1803,7 @@ convert an expired attribution source.</p>
     TODO 
    <h3 class="heading settled" data-level="12.1" id="clearing-attribution-storage"><span class="secno">12.1. </span><span class="content">Clearing attribution storage</span><a class="self-link" href="#clearing-attribution-storage"></a></h3>
    <p>A user agent’s <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches①">attribution caches</a> contain data about a user’s web activity. When a user agent clears an origin’s storage,
-it MUST also remove entries in the <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches②">attribution caches</a> whose <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin②">source origin</a>, <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination①⓪">attribution destination</a>, <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑧">reporting endpoint</a>, <a data-link-type="dfn" href="#attribution-report-attribution-destination" id="ref-for-attribution-report-attribution-destination④">attribution destination</a>, or <a data-link-type="dfn" href="#attribution-report-reporting-endpoint" id="ref-for-attribution-report-reporting-endpoint③">reporting endpoint</a> is the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin②">same</a> as the cleared origin.</p>
+it MUST also remove entries in the <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches②">attribution caches</a> whose <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin④">source origin</a>, <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination①⓪">attribution destination</a>, <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑧">reporting endpoint</a>, <a data-link-type="dfn" href="#attribution-report-attribution-destination" id="ref-for-attribution-report-attribution-destination④">attribution destination</a>, or <a data-link-type="dfn" href="#attribution-report-reporting-endpoint" id="ref-for-attribution-report-reporting-endpoint③">reporting endpoint</a> is the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin②">same</a> as the cleared origin.</p>
    <p>A user agent MAY clear <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches③">attribution cache</a> entries at other times. For example, when a user agent clears
 an origin from a user’s browsing history.</p>
   </main>
@@ -1790,6 +1857,7 @@ an origin from a user’s browsing history.</p>
    <li>
     attribution destination
     <ul>
+     <li><a href="#attribution-rate-limit-record-attribution-destination">dfn for attribution rate-limit record</a><span>, in § 6.4</span>
      <li><a href="#attribution-report-attribution-destination">dfn for attribution report</a><span>, in § 6.3</span>
      <li><a href="#attribution-source-attribution-destination">dfn for attribution source</a><span>, in § 6.1</span>
      <li><a href="#attribution-trigger-attribution-destination">dfn for attribution trigger</a><span>, in § 6.2</span>
@@ -1809,6 +1877,9 @@ an origin from a user’s browsing history.</p>
     </ul>
    <li><a href="#element-attrdef-a-attributionexpiry">attributionexpiry</a><span>, in § 2.2</span>
    <li><a href="#attribution-source-attribution-mode">attribution mode</a><span>, in § 6.1</span>
+   <li><a href="#attribution-rate-limit-cache">attribution rate-limit cache</a><span>, in § 7</span>
+   <li><a href="#attribution-rate-limit-record">Attribution rate-limit record</a><span>, in § 6.3</span>
+   <li><a href="#attribution-rate-limit-window">Attribution rate-limit window</a><span>, in § 9.4</span>
    <li><a href="#attribution-report">Attribution report</a><span>, in § 6.2</span>
    <li><a href="#attribution-report-cache">attribution report cache</a><span>, in § 7</span>
    <li><a href="#attribution-reporting">attribution-reporting</a><span>, in § 5</span>
@@ -1855,11 +1926,12 @@ an origin from a user’s browsing history.</p>
    <li><a href="#attribution-source-expiry-time">expiry time</a><span>, in § 8.1</span>
    <li><a href="#generate-a-report-url">generate a report URL</a><span>, in § 10.3</span>
    <li><a href="#limited-to-only-non-negative-numbers">limited to only non-negative numbers</a><span>, in § 2.1</span>
+   <li><a href="#max-attributions-per-rate-limit-window">Max attributions per rate-limit window</a><span>, in § 9.4</span>
    <li><a href="#max-event-id-value">Max event id value</a><span>, in § 8.7</span>
    <li><a href="#max-event-source-trigger-data-value">Max event source trigger data value</a><span>, in § 9.2</span>
-   <li><a href="#max-report-cache-size">Max report cache size</a><span>, in § 9.4</span>
-   <li><a href="#max-reports-per-attribution-destination">Max reports per attribution destination</a><span>, in § 9.4</span>
-   <li><a href="#max-reports-per-source">Max reports per source</a><span>, in § 9.4</span>
+   <li><a href="#max-report-cache-size">Max report cache size</a><span>, in § 9.5</span>
+   <li><a href="#max-reports-per-attribution-destination">Max reports per attribution destination</a><span>, in § 9.5</span>
+   <li><a href="#max-reports-per-source">Max reports per source</a><span>, in § 9.5</span>
    <li><a href="#max-source-cache-size">Max source cache size</a><span>, in § 8.8</span>
    <li><a href="#max-trigger-data-value">Max trigger data value</a><span>, in § 9.2</span>
    <li><a href="#maybe-process-a-navigation-attribution-source">maybe process a navigation attribution source</a><span>, in § 8.8</span>
@@ -1870,8 +1942,8 @@ an origin from a user’s browsing history.</p>
    <li><a href="#obtain-an-attribution-trigger">obtain an attribution trigger</a><span>, in § 9.2</span>
    <li><a href="#obtain-an-event-attribution-source-from-an-anchor">obtain an event attribution source from an anchor</a><span>, in § 8.5</span>
    <li><a href="#obtain-an-event-attribution-source-from-a-source">obtain an event attribution source from a source</a><span>, in § 8.6</span>
-   <li><a href="#obtain-a-report">obtain a report</a><span>, in § 9.6</span>
-   <li><a href="#obtain-a-report-delivery-time">obtain a report delivery time</a><span>, in § 9.5</span>
+   <li><a href="#obtain-a-report">obtain a report</a><span>, in § 9.7</span>
+   <li><a href="#obtain-a-report-delivery-time">obtain a report delivery time</a><span>, in § 9.6</span>
    <li><a href="#parse-an-attribution-destination">parse an attribution destination</a><span>, in § 8.3</span>
    <li><a href="#parse-attribution-data">parse attribution data</a><span>, in § 8.2</span>
    <li>
@@ -1895,6 +1967,7 @@ an origin from a user’s browsing history.</p>
    <li><a href="#attribution-report-report-time">report time</a><span>, in § 6.3</span>
    <li><a href="#serialize-an-attribution-report">serialize an attribution report</a><span>, in § 10.2</span>
    <li><a href="#serialize-an-integer">serialize an integer</a><span>, in § 10.1</span>
+   <li><a href="#should-rate-limit-attribution">Should attribution be blocked by rate limit</a><span>, in § 9.3</span>
    <li><a href="#should-block-response">Should internalResponse to request be blocked as attribution trigger</a><span>, in § 9.2</span>
    <li>
     source identifier
@@ -1903,14 +1976,16 @@ an origin from a user’s browsing history.</p>
      <li><a href="#attribution-source-source-identifier">dfn for attribution source</a><span>, in § 6.1</span>
     </ul>
    <li><a href="#attribution-source-source-origin">source origin</a><span>, in § 6.1</span>
+   <li><a href="#attribution-rate-limit-record-source-site">source site</a><span>, in § 6.4</span>
    <li><a href="#attribution-source-source-time">source time</a><span>, in § 6.1</span>
    <li>
     source type
     <ul>
+     <li><a href="#attribution-rate-limit-record-source-type">dfn for attribution rate-limit record</a><span>, in § 6.4</span>
      <li><a href="#attribution-report-source-type">dfn for attribution report</a><span>, in § 6.3</span>
      <li><a href="#attribution-source-source-type">dfn for attribution source</a><span>, in § 6.1</span>
     </ul>
-   <li><a href="#trigger-attribution">trigger attribution</a><span>, in § 9.4</span>
+   <li><a href="#trigger-attribution">trigger attribution</a><span>, in § 9.5</span>
    <li>
     trigger data
     <ul>
@@ -1922,6 +1997,7 @@ an origin from a user’s browsing history.</p>
    <li>
     trigger time
     <ul>
+     <li><a href="#attribution-rate-limit-record-trigger-time">dfn for attribution rate-limit record</a><span>, in § 6.4</span>
      <li><a href="#attribution-report-trigger-time">dfn for attribution report</a><span>, in § 6.3</span>
      <li><a href="#attribution-trigger-trigger-time">dfn for attribution trigger</a><span>, in § 6.2</span>
     </ul>
@@ -2106,6 +2182,8 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-obtain-a-site">8.3. Parsing an attribution destination</a>
     <li><a href="#ref-for-obtain-a-site①">9.2. Creating an attribution trigger</a>
+    <li><a href="#ref-for-obtain-a-site②">9.4. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-obtain-a-site③">9.5. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-origin-opaque">
@@ -2210,6 +2288,7 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-site">6.1. Attribution source</a>
     <li><a href="#ref-for-site①">6.2. Attribution trigger</a>
     <li><a href="#ref-for-site②">6.3. Attribution report</a>
+    <li><a href="#ref-for-site③">6.4. Attribution rate-limit record</a> <a href="#ref-for-site④">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-top-level-browsing-context">
@@ -2241,7 +2320,7 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-list-contain">
    <a href="https://infra.spec.whatwg.org/#list-contain">https://infra.spec.whatwg.org/#list-contain</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-list-contain">9.4. Triggering attribution</a>
+    <li><a href="#ref-for-list-contain">9.5. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-map-exists">
@@ -2260,7 +2339,7 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-string-is">
    <a href="https://infra.spec.whatwg.org/#string-is">https://infra.spec.whatwg.org/#string-is</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-string-is">9.4. Triggering attribution</a>
+    <li><a href="#ref-for-string-is">9.5. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-list-iterate">
@@ -2279,14 +2358,14 @@ an origin from a user’s browsing history.</p>
    <a href="https://infra.spec.whatwg.org/#ordered-set">https://infra.spec.whatwg.org/#ordered-set</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-ordered-set">6.1. Attribution source</a>
-    <li><a href="#ref-for-ordered-set①">7. Storage</a> <a href="#ref-for-ordered-set②">(2)</a>
+    <li><a href="#ref-for-ordered-set①">7. Storage</a> <a href="#ref-for-ordered-set②">(2)</a> <a href="#ref-for-ordered-set③">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-list-remove">
    <a href="https://infra.spec.whatwg.org/#list-remove">https://infra.spec.whatwg.org/#list-remove</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-list-remove">8.8. Processing an attribution source</a> <a href="#ref-for-list-remove①">(2)</a>
-    <li><a href="#ref-for-list-remove②">9.4. Triggering attribution</a> <a href="#ref-for-list-remove③">(2)</a> <a href="#ref-for-list-remove④">(3)</a>
+    <li><a href="#ref-for-list-remove②">9.5. Triggering attribution</a> <a href="#ref-for-list-remove③">(2)</a> <a href="#ref-for-list-remove④">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-serialize-an-infra-value-to-json-bytes">
@@ -2299,19 +2378,20 @@ an origin from a user’s browsing history.</p>
    <a href="https://infra.spec.whatwg.org/#list-size">https://infra.spec.whatwg.org/#list-size</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-list-size">8.8. Processing an attribution source</a> <a href="#ref-for-list-size①">(2)</a>
-    <li><a href="#ref-for-list-size②">9.4. Triggering attribution</a>
+    <li><a href="#ref-for-list-size②">9.4. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-list-size③">9.5. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-list-sort-in-ascending-order">
    <a href="https://infra.spec.whatwg.org/#list-sort-in-ascending-order">https://infra.spec.whatwg.org/#list-sort-in-ascending-order</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-list-sort-in-ascending-order">9.4. Triggering attribution</a>
+    <li><a href="#ref-for-list-sort-in-ascending-order">9.5. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-list-sort-in-descending-order">
    <a href="https://infra.spec.whatwg.org/#list-sort-in-descending-order">https://infra.spec.whatwg.org/#list-sort-in-descending-order</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-list-sort-in-descending-order">9.4. Triggering attribution</a>
+    <li><a href="#ref-for-list-sort-in-descending-order">9.5. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-string">
@@ -2327,6 +2407,7 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-struct">6.1. Attribution source</a>
     <li><a href="#ref-for-struct①">6.2. Attribution trigger</a>
     <li><a href="#ref-for-struct②">6.3. Attribution report</a>
+    <li><a href="#ref-for-struct③">6.4. Attribution rate-limit record</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-default-allowlist">
@@ -2858,9 +2939,10 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-source①③">8.6. Obtaining an event attribution source from a source</a>
     <li><a href="#ref-for-attribution-source①④">8.7. Obtaining an attribution source from AttributionSourceParams</a>
     <li><a href="#ref-for-attribution-source①⑤">8.8. Processing an attribution source</a> <a href="#ref-for-attribution-source①⑥">(2)</a> <a href="#ref-for-attribution-source①⑦">(3)</a>
-    <li><a href="#ref-for-attribution-source①⑧">9.4. Triggering attribution</a>
-    <li><a href="#ref-for-attribution-source①⑨">9.5. Establishing report delivery time</a>
-    <li><a href="#ref-for-attribution-source②⓪">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-source①⑧">9.4. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-source①⑨">9.5. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-source②⓪">9.6. Establishing report delivery time</a>
+    <li><a href="#ref-for-attribution-source②①">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-source-identifier">
@@ -2868,15 +2950,17 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-attribution-source-source-identifier">8.6. Obtaining an event attribution source from a source</a>
     <li><a href="#ref-for-attribution-source-source-identifier①">8.7. Obtaining an attribution source from AttributionSourceParams</a>
-    <li><a href="#ref-for-attribution-source-source-identifier②">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-source-source-identifier②">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-source-origin">
    <b><a href="#attribution-source-source-origin">#attribution-source-source-origin</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-source-source-origin">8.7. Obtaining an attribution source from AttributionSourceParams</a>
-    <li><a href="#ref-for-attribution-source-source-origin①">10. Report delivery</a>
-    <li><a href="#ref-for-attribution-source-source-origin②">12.1. Clearing attribution storage</a>
+    <li><a href="#ref-for-attribution-source-source-origin①">9.4. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-source-source-origin②">9.5. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-source-source-origin③">10. Report delivery</a>
+    <li><a href="#ref-for-attribution-source-source-origin④">12.1. Clearing attribution storage</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-event-id">
@@ -2884,7 +2968,7 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-attribution-source-event-id">8.2. Parsing data fields</a>
     <li><a href="#ref-for-attribution-source-event-id①">8.7. Obtaining an attribution source from AttributionSourceParams</a> <a href="#ref-for-attribution-source-event-id②">(2)</a>
-    <li><a href="#ref-for-attribution-source-event-id③">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-source-event-id③">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-attribution-destination">
@@ -2895,8 +2979,8 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-source-attribution-destination②">2.3.4. Document creation</a>
     <li><a href="#ref-for-attribution-source-attribution-destination③">8.7. Obtaining an attribution source from AttributionSourceParams</a>
     <li><a href="#ref-for-attribution-source-attribution-destination④">8.8. Processing an attribution source</a> <a href="#ref-for-attribution-source-attribution-destination⑤">(2)</a> <a href="#ref-for-attribution-source-attribution-destination⑥">(3)</a> <a href="#ref-for-attribution-source-attribution-destination⑦">(4)</a>
-    <li><a href="#ref-for-attribution-source-attribution-destination⑧">9.4. Triggering attribution</a>
-    <li><a href="#ref-for-attribution-source-attribution-destination⑨">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-source-attribution-destination⑧">9.5. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-source-attribution-destination⑨">9.7. Obtaining a report</a>
     <li><a href="#ref-for-attribution-source-attribution-destination①⓪">12.1. Clearing attribution storage</a>
    </ul>
   </aside>
@@ -2906,8 +2990,8 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-source-reporting-endpoint">2.2. &lt;a> element</a>
     <li><a href="#ref-for-attribution-source-reporting-endpoint①">8.7. Obtaining an attribution source from AttributionSourceParams</a>
     <li><a href="#ref-for-attribution-source-reporting-endpoint②">8.8. Processing an attribution source</a> <a href="#ref-for-attribution-source-reporting-endpoint③">(2)</a> <a href="#ref-for-attribution-source-reporting-endpoint④">(3)</a>
-    <li><a href="#ref-for-attribution-source-reporting-endpoint⑤">9.4. Triggering attribution</a> <a href="#ref-for-attribution-source-reporting-endpoint⑥">(2)</a>
-    <li><a href="#ref-for-attribution-source-reporting-endpoint⑦">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-source-reporting-endpoint⑤">9.5. Triggering attribution</a> <a href="#ref-for-attribution-source-reporting-endpoint⑥">(2)</a>
+    <li><a href="#ref-for-attribution-source-reporting-endpoint⑦">9.7. Obtaining a report</a>
     <li><a href="#ref-for-attribution-source-reporting-endpoint⑧">12.1. Clearing attribution storage</a>
    </ul>
   </aside>
@@ -2918,8 +3002,10 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-source-source-type①">8.6. Obtaining an event attribution source from a source</a>
     <li><a href="#ref-for-attribution-source-source-type②">8.7. Obtaining an attribution source from AttributionSourceParams</a>
     <li><a href="#ref-for-attribution-source-source-type③">8.8. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-source-source-type④">9.5. Establishing report delivery time</a>
-    <li><a href="#ref-for-attribution-source-source-type⑤">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-source-source-type④">9.4. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-source-source-type⑤">9.5. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-source-source-type⑥">9.6. Establishing report delivery time</a>
+    <li><a href="#ref-for-attribution-source-source-type⑦">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-expiry">
@@ -2928,14 +3014,14 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-source-expiry">8.1. Obtaining an attribution source’s expiry time</a>
     <li><a href="#ref-for-attribution-source-expiry①">8.6. Obtaining an event attribution source from a source</a>
     <li><a href="#ref-for-attribution-source-expiry②">8.7. Obtaining an attribution source from AttributionSourceParams</a>
-    <li><a href="#ref-for-attribution-source-expiry③">9.5. Establishing report delivery time</a> <a href="#ref-for-attribution-source-expiry④">(2)</a> <a href="#ref-for-attribution-source-expiry⑤">(3)</a> <a href="#ref-for-attribution-source-expiry⑥">(4)</a>
+    <li><a href="#ref-for-attribution-source-expiry③">9.6. Establishing report delivery time</a> <a href="#ref-for-attribution-source-expiry④">(2)</a> <a href="#ref-for-attribution-source-expiry⑤">(3)</a> <a href="#ref-for-attribution-source-expiry⑥">(4)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-priority">
    <b><a href="#attribution-source-priority">#attribution-source-priority</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-source-priority">8.7. Obtaining an attribution source from AttributionSourceParams</a>
-    <li><a href="#ref-for-attribution-source-priority①">9.4. Triggering attribution</a> <a href="#ref-for-attribution-source-priority②">(2)</a> <a href="#ref-for-attribution-source-priority③">(3)</a> <a href="#ref-for-attribution-source-priority④">(4)</a>
+    <li><a href="#ref-for-attribution-source-priority①">9.5. Triggering attribution</a> <a href="#ref-for-attribution-source-priority②">(2)</a> <a href="#ref-for-attribution-source-priority③">(3)</a> <a href="#ref-for-attribution-source-priority④">(4)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-source-time">
@@ -2944,21 +3030,21 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-source-source-time">8.1. Obtaining an attribution source’s expiry time</a>
     <li><a href="#ref-for-attribution-source-source-time①">8.7. Obtaining an attribution source from AttributionSourceParams</a>
     <li><a href="#ref-for-attribution-source-source-time②">8.8. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-source-source-time③">9.4. Triggering attribution</a> <a href="#ref-for-attribution-source-source-time④">(2)</a>
-    <li><a href="#ref-for-attribution-source-source-time⑤">9.5. Establishing report delivery time</a> <a href="#ref-for-attribution-source-source-time⑥">(2)</a> <a href="#ref-for-attribution-source-source-time⑦">(3)</a>
+    <li><a href="#ref-for-attribution-source-source-time③">9.5. Triggering attribution</a> <a href="#ref-for-attribution-source-source-time④">(2)</a>
+    <li><a href="#ref-for-attribution-source-source-time⑤">9.6. Establishing report delivery time</a> <a href="#ref-for-attribution-source-source-time⑥">(2)</a> <a href="#ref-for-attribution-source-source-time⑦">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-number-of-reports">
    <b><a href="#attribution-source-number-of-reports">#attribution-source-number-of-reports</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-source-number-of-reports">8.8. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-source-number-of-reports①">9.4. Triggering attribution</a> <a href="#ref-for-attribution-source-number-of-reports②">(2)</a> <a href="#ref-for-attribution-source-number-of-reports③">(3)</a>
+    <li><a href="#ref-for-attribution-source-number-of-reports①">9.5. Triggering attribution</a> <a href="#ref-for-attribution-source-number-of-reports②">(2)</a> <a href="#ref-for-attribution-source-number-of-reports③">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-dedup-keys">
    <b><a href="#attribution-source-dedup-keys">#attribution-source-dedup-keys</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-source-dedup-keys">9.4. Triggering attribution</a> <a href="#ref-for-attribution-source-dedup-keys①">(2)</a>
+    <li><a href="#ref-for-attribution-source-dedup-keys">9.5. Triggering attribution</a> <a href="#ref-for-attribution-source-dedup-keys①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-attribution-mode">
@@ -2967,7 +3053,7 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-source-attribution-mode">8.6. Obtaining an event attribution source from a source</a>
     <li><a href="#ref-for-attribution-source-attribution-mode①">8.7. Obtaining an attribution source from AttributionSourceParams</a>
     <li><a href="#ref-for-attribution-source-attribution-mode②">8.8. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-source-attribution-mode③">9.4. Triggering attribution</a> <a href="#ref-for-attribution-source-attribution-mode④">(2)</a>
+    <li><a href="#ref-for-attribution-source-attribution-mode③">9.5. Triggering attribution</a> <a href="#ref-for-attribution-source-attribution-mode④">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-trigger">
@@ -2978,8 +3064,9 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-trigger">6.2. Attribution trigger</a>
     <li><a href="#ref-for-attribution-trigger②">8.8. Processing an attribution source</a>
     <li><a href="#ref-for-attribution-trigger③">9.2. Creating an attribution trigger</a>
-    <li><a href="#ref-for-attribution-trigger④">9.4. Triggering attribution</a>
-    <li><a href="#ref-for-attribution-trigger⑤">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-trigger④">9.4. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-trigger⑤">9.5. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-trigger⑥">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-trigger-attribution-destination">
@@ -2988,7 +3075,8 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-trigger-attribution-destination">2.2. &lt;a> element</a>
     <li><a href="#ref-for-attribution-trigger-attribution-destination①">8.8. Processing an attribution source</a>
     <li><a href="#ref-for-attribution-trigger-attribution-destination②">9.2. Creating an attribution trigger</a>
-    <li><a href="#ref-for-attribution-trigger-attribution-destination③">9.4. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-trigger-attribution-destination③">9.4. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-trigger-attribution-destination④">9.5. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-trigger-trigger-data">
@@ -2998,7 +3086,7 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-trigger-trigger-data①">8.8. Processing an attribution source</a>
     <li><a href="#ref-for-attribution-trigger-trigger-data②">9.1. Noising trigger data</a>
     <li><a href="#ref-for-attribution-trigger-trigger-data③">9.2. Creating an attribution trigger</a> <a href="#ref-for-attribution-trigger-trigger-data④">(2)</a> <a href="#ref-for-attribution-trigger-trigger-data⑤">(3)</a>
-    <li><a href="#ref-for-attribution-trigger-trigger-data⑥">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-trigger-trigger-data⑥">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-trigger-event-source-trigger-data">
@@ -3008,7 +3096,7 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-trigger-event-source-trigger-data①">8.8. Processing an attribution source</a>
     <li><a href="#ref-for-attribution-trigger-event-source-trigger-data②">9.1. Noising trigger data</a>
     <li><a href="#ref-for-attribution-trigger-event-source-trigger-data③">9.2. Creating an attribution trigger</a> <a href="#ref-for-attribution-trigger-event-source-trigger-data④">(2)</a> <a href="#ref-for-attribution-trigger-event-source-trigger-data⑤">(3)</a>
-    <li><a href="#ref-for-attribution-trigger-event-source-trigger-data⑥">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-trigger-event-source-trigger-data⑥">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-trigger-trigger-time">
@@ -3016,8 +3104,10 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-attribution-trigger-trigger-time">8.8. Processing an attribution source</a>
     <li><a href="#ref-for-attribution-trigger-trigger-time①">9.2. Creating an attribution trigger</a>
-    <li><a href="#ref-for-attribution-trigger-trigger-time②">9.5. Establishing report delivery time</a>
-    <li><a href="#ref-for-attribution-trigger-trigger-time③">9.6. Obtaining a report</a> <a href="#ref-for-attribution-trigger-trigger-time④">(2)</a>
+    <li><a href="#ref-for-attribution-trigger-trigger-time②">9.4. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-trigger-trigger-time③">9.5. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-trigger-trigger-time④">9.6. Establishing report delivery time</a>
+    <li><a href="#ref-for-attribution-trigger-trigger-time⑤">9.7. Obtaining a report</a> <a href="#ref-for-attribution-trigger-trigger-time⑥">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-trigger-reporting-endpoint">
@@ -3034,7 +3124,7 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-trigger-dedup-key">6.1. Attribution source</a>
     <li><a href="#ref-for-attribution-trigger-dedup-key①">8.8. Processing an attribution source</a>
     <li><a href="#ref-for-attribution-trigger-dedup-key②">9.2. Creating an attribution trigger</a>
-    <li><a href="#ref-for-attribution-trigger-dedup-key③">9.4. Triggering attribution</a> <a href="#ref-for-attribution-trigger-dedup-key④">(2)</a>
+    <li><a href="#ref-for-attribution-trigger-dedup-key③">9.5. Triggering attribution</a> <a href="#ref-for-attribution-trigger-dedup-key④">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-trigger-priority">
@@ -3042,7 +3132,7 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-attribution-trigger-priority">8.8. Processing an attribution source</a>
     <li><a href="#ref-for-attribution-trigger-priority①">9.2. Creating an attribution trigger</a>
-    <li><a href="#ref-for-attribution-trigger-priority②">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-trigger-priority②">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-report">
@@ -3052,8 +3142,8 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-report②">6.1. Attribution source</a>
     <li><a href="#ref-for-attribution-report">6.3. Attribution report</a>
     <li><a href="#ref-for-attribution-report③">7. Storage</a>
-    <li><a href="#ref-for-attribution-report④">9.4. Triggering attribution</a> <a href="#ref-for-attribution-report⑤">(2)</a> <a href="#ref-for-attribution-report⑥">(3)</a>
-    <li><a href="#ref-for-attribution-report⑦">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report④">9.5. Triggering attribution</a> <a href="#ref-for-attribution-report⑤">(2)</a> <a href="#ref-for-attribution-report⑥">(3)</a>
+    <li><a href="#ref-for-attribution-report⑦">9.7. Obtaining a report</a>
     <li><a href="#ref-for-attribution-report⑧">10. Report delivery</a>
     <li><a href="#ref-for-attribution-report⑨">10.2. Serialize attribution report body</a>
     <li><a href="#ref-for-attribution-report①⓪">10.3. Get report request URL</a>
@@ -3063,7 +3153,7 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="attribution-report-event-id">
    <b><a href="#attribution-report-event-id">#attribution-report-event-id</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-report-event-id">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report-event-id">9.7. Obtaining a report</a>
     <li><a href="#ref-for-attribution-report-event-id①">10.2. Serialize attribution report body</a>
    </ul>
   </aside>
@@ -3076,14 +3166,14 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="attribution-report-trigger-data">
    <b><a href="#attribution-report-trigger-data">#attribution-report-trigger-data</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-report-trigger-data">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report-trigger-data">9.7. Obtaining a report</a>
     <li><a href="#ref-for-attribution-report-trigger-data①">10.2. Serialize attribution report body</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-report-reporting-endpoint">
    <b><a href="#attribution-report-reporting-endpoint">#attribution-report-reporting-endpoint</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-report-reporting-endpoint">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report-reporting-endpoint">9.7. Obtaining a report</a>
     <li><a href="#ref-for-attribution-report-reporting-endpoint①">10.3. Get report request URL</a>
     <li><a href="#ref-for-attribution-report-reporting-endpoint②">10.4. Issuing a report request</a>
     <li><a href="#ref-for-attribution-report-reporting-endpoint③">12.1. Clearing attribution storage</a>
@@ -3092,8 +3182,8 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="attribution-report-attribution-destination">
    <b><a href="#attribution-report-attribution-destination">#attribution-report-attribution-destination</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-report-attribution-destination">9.4. Triggering attribution</a> <a href="#ref-for-attribution-report-attribution-destination①">(2)</a>
-    <li><a href="#ref-for-attribution-report-attribution-destination②">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report-attribution-destination">9.5. Triggering attribution</a> <a href="#ref-for-attribution-report-attribution-destination①">(2)</a>
+    <li><a href="#ref-for-attribution-report-attribution-destination②">9.7. Obtaining a report</a>
     <li><a href="#ref-for-attribution-report-attribution-destination③">10.2. Serialize attribution report body</a>
     <li><a href="#ref-for-attribution-report-attribution-destination④">12.1. Clearing attribution storage</a>
    </ul>
@@ -3101,30 +3191,30 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="attribution-report-report-time">
    <b><a href="#attribution-report-report-time">#attribution-report-report-time</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-report-report-time">9.4. Triggering attribution</a> <a href="#ref-for-attribution-report-report-time①">(2)</a>
-    <li><a href="#ref-for-attribution-report-report-time②">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report-report-time">9.5. Triggering attribution</a> <a href="#ref-for-attribution-report-report-time①">(2)</a>
+    <li><a href="#ref-for-attribution-report-report-time②">9.7. Obtaining a report</a>
     <li><a href="#ref-for-attribution-report-report-time③">10. Report delivery</a> <a href="#ref-for-attribution-report-report-time④">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-report-trigger-priority">
    <b><a href="#attribution-report-trigger-priority">#attribution-report-trigger-priority</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-report-trigger-priority">9.4. Triggering attribution</a> <a href="#ref-for-attribution-report-trigger-priority①">(2)</a> <a href="#ref-for-attribution-report-trigger-priority②">(3)</a> <a href="#ref-for-attribution-report-trigger-priority③">(4)</a> <a href="#ref-for-attribution-report-trigger-priority④">(5)</a> <a href="#ref-for-attribution-report-trigger-priority⑤">(6)</a>
-    <li><a href="#ref-for-attribution-report-trigger-priority⑥">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report-trigger-priority">9.5. Triggering attribution</a> <a href="#ref-for-attribution-report-trigger-priority①">(2)</a> <a href="#ref-for-attribution-report-trigger-priority②">(3)</a> <a href="#ref-for-attribution-report-trigger-priority③">(4)</a> <a href="#ref-for-attribution-report-trigger-priority④">(5)</a> <a href="#ref-for-attribution-report-trigger-priority⑤">(6)</a>
+    <li><a href="#ref-for-attribution-report-trigger-priority⑥">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-report-trigger-time">
    <b><a href="#attribution-report-trigger-time">#attribution-report-trigger-time</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-report-trigger-time">9.4. Triggering attribution</a> <a href="#ref-for-attribution-report-trigger-time①">(2)</a>
-    <li><a href="#ref-for-attribution-report-trigger-time②">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report-trigger-time">9.5. Triggering attribution</a> <a href="#ref-for-attribution-report-trigger-time①">(2)</a>
+    <li><a href="#ref-for-attribution-report-trigger-time②">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-report-source-identifier">
    <b><a href="#attribution-report-source-identifier">#attribution-report-source-identifier</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-report-source-identifier">9.4. Triggering attribution</a> <a href="#ref-for-attribution-report-source-identifier①">(2)</a>
-    <li><a href="#ref-for-attribution-report-source-identifier②">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report-source-identifier">9.5. Triggering attribution</a> <a href="#ref-for-attribution-report-source-identifier①">(2)</a>
+    <li><a href="#ref-for-attribution-report-source-identifier②">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-report-delivered">
@@ -3133,20 +3223,63 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-report-delivered">10. Report delivery</a> <a href="#ref-for-attribution-report-delivered①">(2)</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="attribution-rate-limit-record">
+   <b><a href="#attribution-rate-limit-record">#attribution-rate-limit-record</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-attribution-rate-limit-record">6.4. Attribution rate-limit record</a>
+    <li><a href="#ref-for-attribution-rate-limit-record">7. Storage</a>
+    <li><a href="#ref-for-attribution-rate-limit-record①">9.5. Triggering attribution</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="attribution-rate-limit-record-source-site">
+   <b><a href="#attribution-rate-limit-record-source-site">#attribution-rate-limit-record-source-site</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-attribution-rate-limit-record-source-site">9.4. Should attribution be blocked by rate limit</a> <a href="#ref-for-attribution-rate-limit-record-source-site①">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-source-site②">9.5. Triggering attribution</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="attribution-rate-limit-record-attribution-destination">
+   <b><a href="#attribution-rate-limit-record-attribution-destination">#attribution-rate-limit-record-attribution-destination</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-attribution-rate-limit-record-attribution-destination">9.4. Should attribution be blocked by rate limit</a> <a href="#ref-for-attribution-rate-limit-record-attribution-destination①">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-attribution-destination②">9.5. Triggering attribution</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="attribution-rate-limit-record-source-type">
+   <b><a href="#attribution-rate-limit-record-source-type">#attribution-rate-limit-record-source-type</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-attribution-rate-limit-record-source-type">9.4. Should attribution be blocked by rate limit</a> <a href="#ref-for-attribution-rate-limit-record-source-type①">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-source-type②">9.5. Triggering attribution</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="attribution-rate-limit-record-trigger-time">
+   <b><a href="#attribution-rate-limit-record-trigger-time">#attribution-rate-limit-record-trigger-time</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-attribution-rate-limit-record-trigger-time">9.4. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-trigger-time①">9.5. Triggering attribution</a> <a href="#ref-for-attribution-rate-limit-record-trigger-time②">(2)</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="attribution-source-cache">
    <b><a href="#attribution-source-cache">#attribution-source-cache</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-source-cache">8.8. Processing an attribution source</a> <a href="#ref-for-attribution-source-cache①">(2)</a>
-    <li><a href="#ref-for-attribution-source-cache②">9.4. Triggering attribution</a> <a href="#ref-for-attribution-source-cache③">(2)</a> <a href="#ref-for-attribution-source-cache④">(3)</a>
+    <li><a href="#ref-for-attribution-source-cache②">9.5. Triggering attribution</a> <a href="#ref-for-attribution-source-cache③">(2)</a> <a href="#ref-for-attribution-source-cache④">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-report-cache">
    <b><a href="#attribution-report-cache">#attribution-report-cache</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-report-cache">8.8. Processing an attribution source</a> <a href="#ref-for-attribution-report-cache①">(2)</a>
-    <li><a href="#ref-for-attribution-report-cache②">9.4. Triggering attribution</a> <a href="#ref-for-attribution-report-cache③">(2)</a> <a href="#ref-for-attribution-report-cache④">(3)</a> <a href="#ref-for-attribution-report-cache⑤">(4)</a> <a href="#ref-for-attribution-report-cache⑥">(5)</a> <a href="#ref-for-attribution-report-cache⑦">(6)</a> <a href="#ref-for-attribution-report-cache⑧">(7)</a>
+    <li><a href="#ref-for-attribution-report-cache②">9.5. Triggering attribution</a> <a href="#ref-for-attribution-report-cache③">(2)</a> <a href="#ref-for-attribution-report-cache④">(3)</a> <a href="#ref-for-attribution-report-cache⑤">(4)</a> <a href="#ref-for-attribution-report-cache⑥">(5)</a> <a href="#ref-for-attribution-report-cache⑦">(6)</a> <a href="#ref-for-attribution-report-cache⑧">(7)</a>
     <li><a href="#ref-for-attribution-report-cache⑨">10. Report delivery</a>
     <li><a href="#ref-for-attribution-report-cache①⓪">10.4. Issuing a report request</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="attribution-rate-limit-cache">
+   <b><a href="#attribution-rate-limit-cache">#attribution-rate-limit-cache</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-attribution-rate-limit-cache">9.4. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-cache①">9.5. Triggering attribution</a> <a href="#ref-for-attribution-rate-limit-cache②">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-caches">
@@ -3160,8 +3293,8 @@ an origin from a user’s browsing history.</p>
    <b><a href="#attribution-source-expiry-time">#attribution-source-expiry-time</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-source-expiry-time">8.8. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-source-expiry-time①">9.4. Triggering attribution</a>
-    <li><a href="#ref-for-attribution-source-expiry-time②">9.5. Establishing report delivery time</a> <a href="#ref-for-attribution-source-expiry-time③">(2)</a> <a href="#ref-for-attribution-source-expiry-time④">(3)</a>
+    <li><a href="#ref-for-attribution-source-expiry-time①">9.5. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-source-expiry-time②">9.6. Establishing report delivery time</a> <a href="#ref-for-attribution-source-expiry-time③">(2)</a> <a href="#ref-for-attribution-source-expiry-time④">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="parse-attribution-data">
@@ -3267,6 +3400,26 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-should-block-response">9.3. Should internalResponse to request be blocked as attribution trigger</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="should-rate-limit-attribution">
+   <b><a href="#should-rate-limit-attribution">#should-rate-limit-attribution</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-should-rate-limit-attribution">9.4. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-should-rate-limit-attribution">9.5. Triggering attribution</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="attribution-rate-limit-window">
+   <b><a href="#attribution-rate-limit-window">#attribution-rate-limit-window</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-attribution-rate-limit-window">9.4. Should attribution be blocked by rate limit</a> <a href="#ref-for-attribution-rate-limit-window①">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-window②">9.5. Triggering attribution</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="max-attributions-per-rate-limit-window">
+   <b><a href="#max-attributions-per-rate-limit-window">#max-attributions-per-rate-limit-window</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-max-attributions-per-rate-limit-window">9.4. Should attribution be blocked by rate limit</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="trigger-attribution">
    <b><a href="#trigger-attribution">#trigger-attribution</a></b><b>Referenced in:</b>
    <ul>
@@ -3277,33 +3430,33 @@ an origin from a user’s browsing history.</p>
    <b><a href="#max-reports-per-attribution-destination">#max-reports-per-attribution-destination</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-max-reports-per-attribution-destination">8.8. Processing an attribution source</a>
-    <li><a href="#ref-for-max-reports-per-attribution-destination①">9.4. Triggering attribution</a>
+    <li><a href="#ref-for-max-reports-per-attribution-destination①">9.5. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="max-reports-per-source">
    <b><a href="#max-reports-per-source">#max-reports-per-source</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-max-reports-per-source">9.4. Triggering attribution</a>
+    <li><a href="#ref-for-max-reports-per-source">9.5. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="max-report-cache-size">
    <b><a href="#max-report-cache-size">#max-report-cache-size</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-max-report-cache-size">8.8. Processing an attribution source</a>
-    <li><a href="#ref-for-max-report-cache-size①">9.4. Triggering attribution</a>
+    <li><a href="#ref-for-max-report-cache-size①">9.5. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="obtain-a-report-delivery-time">
    <b><a href="#obtain-a-report-delivery-time">#obtain-a-report-delivery-time</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-obtain-a-report-delivery-time">9.6. Obtaining a report</a>
+    <li><a href="#ref-for-obtain-a-report-delivery-time">9.7. Obtaining a report</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="obtain-a-report">
    <b><a href="#obtain-a-report">#obtain-a-report</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-obtain-a-report">8.8. Processing an attribution source</a>
-    <li><a href="#ref-for-obtain-a-report①">9.4. Triggering attribution</a>
+    <li><a href="#ref-for-obtain-a-report①">9.5. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="queue-a-report-for-delivery">
