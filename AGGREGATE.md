@@ -210,7 +210,7 @@ The browser will encrypt payloads just before the report is sent by requesting p
 ```
 In the case of backwards incompatible changes to this scheme (e.g. in future versions), the hosting address (i.e. URL) should also change.
 
-**Note:** The browser may need some mechanism to ensure that the same set of keys are delivered to different users. Backwards incompatible 
+**Note:** The browser may need some mechanism to ensure that the same set of keys are delivered to different users.
 
 The contents of the base64-encoded encrypted `payload` will be a [CBOR](https://cbor.io) map.
 
