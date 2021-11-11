@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2016/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 83b904c2e, updated Wed Nov 3 17:20:53 2021 -0700" name="generator">
   <link href="https://wicg.github.io/conversion-measurement-api" rel="canonical">
-  <meta content="3c7fb7b1ad5ebbb22e77c29bc892a39188fe7d95" name="document-revision">
+  <meta content="da1fafe00b39d19fbd5cf38ec090e7cac497227e" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -586,9 +586,9 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
 </style>
  <body class="h-entry">
   <div class="head">
-   <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
+   <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Attribution Reporting</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2021-11-09">9 November 2021</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Community Group Report, <time class="dt-updated" datetime="2021-11-11">11 November 2021</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -1066,6 +1066,9 @@ finer-grained detail about other errors that occurred during the <a data-link-ty
     <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution report" data-dfn-type="dfn" data-noexport id="attribution-report-delivered">delivered</dfn> (default false)
     <dd data-md>
      <p>A boolean.</p>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution report" data-dfn-type="dfn" data-noexport id="attribution-report-report-id">report id</dfn>
+    <dd data-md>
+     <p>A string.</p>
    </dl>
    <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="6.4" data-lt="Attribution rate-limit record" data-noexport id="attribution-rate-limit-record"><span class="secno">6.4. </span><span class="content">Attribution rate-limit record</span><a class="self-link" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record"></a></h3>
    <p>An attribution rate-limit record is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#struct" id="ref-for-struct③">struct</a> with the following items:</p>
@@ -1663,6 +1666,9 @@ convert an expired attribution source.</p>
       <dt data-md><a data-link-type="dfn" href="#attribution-report-source-identifier" id="ref-for-attribution-report-source-identifier②">source identifier</a>
       <dd data-md>
        <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-identifier" id="ref-for-attribution-source-source-identifier②">source identifier</a>.</p>
+      <dt data-md><a data-link-type="dfn" href="#attribution-report-report-id" id="ref-for-attribution-report-report-id">report id</a>
+      <dd data-md>
+       <p>The result of <a data-link-type="dfn" href="https://wicg.github.io/uuid/#dfn-generate-a-random-uuid" id="ref-for-dfn-generate-a-random-uuid">generating a random UUID</a>.</p>
      </dl>
     <li data-md>
      <p>Return <var>report</var>.</p>
@@ -1712,10 +1718,17 @@ convert an expired attribution source.</p>
       <dt data-md>"<code>trigger_data</code>"
       <dd data-md>
        <p><var>report</var>’s <a data-link-type="dfn" href="#attribution-report-trigger-data" id="ref-for-attribution-report-trigger-data①">trigger data</a>, <a data-link-type="dfn" href="#serialize-an-integer" id="ref-for-serialize-an-integer①">serialized</a></p>
+      <dt data-md>"<code>report_id</code>"
+      <dd data-md>
+       <p><var>report</var>’s <a data-link-type="dfn" href="#attribution-report-report-id" id="ref-for-attribution-report-report-id①">report id</a></p>
      </dl>
     <li data-md>
      <p>Return the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#byte-sequence" id="ref-for-byte-sequence">byte sequence</a> resulting from executing <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#serialize-an-infra-value-to-json-bytes" id="ref-for-serialize-an-infra-value-to-json-bytes">serialize an infra value to JSON bytes</a> on <var>data</var>.</p>
    </ol>
+   <p class="note" role="note"><span>Note:</span> The inclusion of "<code>report_id</code>" in the report body is intended to allow the report recipient
+to perform deduplication and prevent double counting, in the event that the user agent retries
+reports on failure. To prevent the report recipient from learning additional information about
+whether a user is online, retries should be limited in number and subject to random delays.</p>
    <h3 class="heading settled" data-level="10.3" id="get-report-url"><span class="secno">10.3. </span><span class="content">Get report request URL</span><a class="self-link" href="#get-report-url"></a></h3>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="generate-a-report-url">generate a report URL</dfn> for a given <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report①⓪">attribution report</a> <var>report</var>, run the following steps:</p>
    <ol>
@@ -1957,6 +1970,7 @@ an origin from a user’s browsing history.</p>
    <li><a href="#dom-htmlanchorelement-registerattributionsource">registerAttributionSource</a><span>, in § 2.2</span>
    <li><a href="#element-attrdef-a-registerattributionsource">registerattributionsource</a><span>, in § 2.2</span>
    <li><a href="#dom-attributionreporting-registerattributionsource">registerAttributionSource(params)</a><span>, in § 4</span>
+   <li><a href="#attribution-report-report-id">report id</a><span>, in § 6.3</span>
    <li>
     reporting endpoint
     <ul>
@@ -2503,6 +2517,12 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-concept-url②">10.3. Get report request URL</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="term-for-dfn-generate-a-random-uuid">
+   <a href="https://wicg.github.io/uuid/#dfn-generate-a-random-uuid">https://wicg.github.io/uuid/#dfn-generate-a-random-uuid</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dfn-generate-a-random-uuid">9.7. Obtaining a report</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="term-for-idl-DOMException">
    <a href="https://webidl.spec.whatwg.org/#idl-DOMException">https://webidl.spec.whatwg.org/#idl-DOMException</a><b>Referenced in:</b>
    <ul>
@@ -2687,6 +2707,11 @@ an origin from a user’s browsing history.</p>
      <li><span class="dfn-paneled" id="term-for-concept-url">url</span>
      <li><span class="dfn-paneled" id="term-for-concept-url-parser">url parser</span>
      <li><span class="dfn-paneled" id="term-for-concept-url①">url record</span>
+    </ul>
+   <li>
+    <a data-link-type="biblio">[uuid]</a> defines the following terms:
+    <ul>
+     <li><span class="dfn-paneled" id="term-for-dfn-generate-a-random-uuid">generate a random uuid</span>
     </ul>
    <li>
     <a data-link-type="biblio">[WEBIDL]</a> defines the following terms:
@@ -3221,6 +3246,13 @@ an origin from a user’s browsing history.</p>
    <b><a href="#attribution-report-delivered">#attribution-report-delivered</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-report-delivered">10. Report delivery</a> <a href="#ref-for-attribution-report-delivered①">(2)</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="attribution-report-report-id">
+   <b><a href="#attribution-report-report-id">#attribution-report-report-id</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-attribution-report-report-id">9.7. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report-report-id①">10.2. Serialize attribution report body</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-rate-limit-record">
