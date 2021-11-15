@@ -381,7 +381,7 @@ An attribution report is a [=struct=] with the following items:
 :: A string.
 : <dfn>delivered</dfn> (default false)
 :: A boolean.
-: <dfn>report id</dfn>
+: <dfn>idempotency key</dfn>
 :: A string.
 
 </dl>
@@ -850,7 +850,7 @@ To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=
     :: |trigger|'s [=attribution trigger/trigger time=].
     : [=attribution report/source identifier=]
     :: |source|'s [=attribution source/source identifier=].
-    : [=attribution report/report id=]
+    : [=attribution report/idempotency key=]
     :: The result of [=generating a random UUID=].
 1. Return |report|.
 
@@ -895,15 +895,15 @@ To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following st
     :: |report|'s [=attribution report/event id=], [=serialize an integer|serialized=]
     : "`trigger_data`"
     :: |report|'s [=attribution report/trigger data=], [=serialize an integer|serialized=]
-    : "`report_id`"
-    :: |report|'s [=attribution report/report id=]
+    : "`idempotency_key`"
+    :: |report|'s [=attribution report/idempotency key=]
 
 1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
 
-Note: The inclusion of "`report_id`" in the report body is intended to allow the report recipient
-to perform deduplication and prevent double counting, in the event that the user agent retries
-reports on failure. To prevent the report recipient from learning additional information about
-whether a user is online, retries should be limited in number and subject to random delays.
+Note: The inclusion of "`idempotency_key`" in the report body is intended to allow the report
+recipient to perform deduplication and prevent double counting, in the event that the user agent
+retries reports on failure. To prevent the report recipient from learning additional information
+about whether a user is online, retries should be limited in number and subject to random delays.
 
 <h3 id="get-report-url">Get report request URL</h3>
 
