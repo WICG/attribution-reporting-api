@@ -196,7 +196,6 @@ The browser will encrypt payloads just before the report is sent by requesting p
 
 ```
 {
-  "version": "<format version>",
   "keys": [
     {
       "id": "<arbitrary string identifying the key (up to 128 characters)",
@@ -209,7 +208,7 @@ The browser will encrypt payloads just before the report is sent by requesting p
   ]
 }
 ```
-
+In the case of backwards incompatible changes to this scheme (e.g. in future versions of the API), the .well-known endpoint should also change.
 
 **Note:** The browser may need some mechanism to ensure that the same set of keys are delivered to different users.
 
