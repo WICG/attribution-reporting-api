@@ -208,6 +208,8 @@ The browser will encrypt payloads just before the report is sent by requesting p
   ]
 }
 ```
+A processing origin should not reuse an ID string for a different key.
+In particular, IDs must be unique within a `keys.json` to be valid.
 In the case of backwards incompatible changes to this scheme (e.g. in future versions of the API), the .well-known endpoint should also change.
 
 **Note:** The browser may need some mechanism to ensure that the same set of keys are delivered to different users.
