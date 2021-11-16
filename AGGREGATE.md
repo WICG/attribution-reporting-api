@@ -208,7 +208,7 @@ The browser will encrypt payloads just before the report is sent by requesting p
   ]
 }
 ```
-In the case of backwards incompatible changes to this scheme (e.g. in future versions), the hosting address (i.e. URL) should also change.
+In the case of backwards incompatible changes to this scheme (e.g. in future versions of the API), the .well-known endpoint should also change.
 
 **Note:** The browser may need some mechanism to ensure that the same set of keys are delivered to different users.
 
