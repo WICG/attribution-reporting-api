@@ -191,10 +191,10 @@ this API:
 to trigger attribution for all matching sources.
 
 The browser will treat redirects to a URL of the form:
-`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?data=<data>&priority=<priority>&dedup-key=<dedup-key>]`
+`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?trigger-data=<trigger-data>&priority=<priority>&dedup-key=<dedup-key>]`
 
 as a special request. The query string for the request contains additional information about the attribution trigger:
-- `data`: optional data to identify the triggering event
+- `trigger-data`: optional data to identify the triggering event
 - `priority`: optional signed 64-bit integer representing the priority of this trigger compared to other triggers for the same source.
 - `dedup-key`: optional signed 64-bit integer which will be used to deduplicate multiple triggers which contain the same dedup-key for a single source
 
@@ -336,12 +336,13 @@ https://attributionreportto/.well-known/attribution-reporting/report-attribution
 
 The report data is included in the request body as a JSON object with the following keys:
 
+-   `attribution_destination`: the attribution destination set on the source
+
 -   `source_event_id`: 64-bit event id set on the attribution source
 
 -   `trigger_data`: 3-bit data set in the attribution trigger redirect
 
-The advertiser site’s eTLD+1 will be added as the Referrer. Note that it
-might be useful to advertise which data limits were used in the
+Note that it might be useful to advertise which data limits were used in the
 report, but it isn’t included here.
 
 It also may be beneficial to send reports as JSON instead of in the
@@ -421,7 +422,7 @@ on `toasters.example`. They must compress all of the data into
 bucketed version of the purchase value). They respond with a 302
 redirect to:
 ```
-https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution?data=2
+https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution?trigger-data=2
 ```
 
 The browser sees this request, and schedules a report to be
