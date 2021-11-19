@@ -232,8 +232,9 @@ Payloads generated with the `two-party` processing type will have the following 
 Note that the `dpf_key` value would differ in the two payloads.
 
 Payloads generated with the `single-server` processing type will directly encode the bucket and value of the histogram contribution instead of a DPF key.
-The `dpf_key` field will be replaced with `"data": { "bucket": <bucket>, "value": <value> }`.
-If two `aggregationServices` are specified, one payload (chosen randomly) would contain that data and the other would instead contain `"data": {}`.
+Optionally, the browser may encode multiple contributions in the same payload; this is only possible if all other fields in the report/payload are identical for the contributions.
+The `dpf_key` field will be replaced with `"data": [{ "bucket": <bucket>, "value": <value> }, ...]`.
+If two `aggregationServices` are specified, one payload (chosen randomly) would contain that data and the other would instead contain `"data": []`.
 
 ### Privacy budgeting
 
