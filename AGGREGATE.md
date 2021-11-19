@@ -222,7 +222,7 @@ Payloads generated with the `two-party` processing type will have the following 
 // CBOR
 {
   "version": "<api version>",
-  "operation": "hierarchical-histogram",  // Allows for the service to support other operations in the future
+  "operation": "histogram",  // Allows for the service to support other operations in the future
   "privacy_budget_key": "<field for server to do privacy budgeting>",
   "scheduled_report_time": <timestamp in msec>,
   "reporting_origin": "https://reporter.example",
