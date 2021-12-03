@@ -53,66 +53,91 @@ To register clicks from apps, we can send an ACTION_VIEW Intent with some extra 
 ```java
 // After an ad click, in response to some InputEvent `inputEvent`
 
-// Craft the inner intent which the user's browser will self-fire. Set the
-// package of this intent later by querying the default app for the outer intent.
+// Craft the inner Intent which the user's browser will self-fire. For browsers not
+// supporting attributions, this inner Intent will simply be ignored.
 
-// TODO: which namespace should the APP_ATTRIBUTION type live in?
-Intent convIntent = new Intent("android.web.action.APP_ATTRIBUTION");
+// TODO: which namespace should the APP_ATTRIBUTION Action live in?
+Intent innerIntent = new Intent("android.web.action.APP_ATTRIBUTION");
+
+// Required for the PendingIntent to launch Chrome.
+innerIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+// Set the attribution parameters.
 Bundle innerBundle = new Bundle();
 innerBundle.putString("attributionSourceEventId", "123456");
 innerBundle.putString("attributionReportTo", "https://reporter.example");
 innerBundle.putString("attributionDestination", "https://advertiser.example");
-innerBundle.putInt("attributionExpiry", 604800000);
+innerBundle.putLong("attributionExpiry", 604800000);
 
 // Put the input event that triggered the ad click in the bundle. The browser will
 // verify this with the system on Android 11+.
 // To be sure that the input event will verify on the browser side, apps could
 // pre-verify by calling InputManger.verifyInputEvent here.
 innerBundle.putParcelable(inputEvent);
-convIntent.putExtras(innerBundle);
+innerIntent.putExtras(innerBundle);
 
-// Craft the outer intent which will actually start the browser activity and
-// navigate to a URL. This includes the inner intent wrapped as a PendingIntent.
+// Choose a browser and set the Package on the Intent to ensure the inner Intent is sent to
+// the same browser as the outer Intent. Note that choosing a browser may be difficult to
+// implement correctly in the case where the user has not set a default handler for VIEW
+// Intents, and is not covered here. When possible the default browser should be used.
+String browserPackage = getbrowserPackageName();
+innerIntent.setPackage(browserPackage);
+
+// Create a PendingIntent for the Intent so that the browser can verify the source of the
+// attribution parameters.
+PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, innerIntent,
+        PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ONE_SHOT);
+
+// Craft the outer Intent which will actually start the browser activity and
+// navigate to a URL, adding the PendingIntent as an Extra.
 Intent outerIntent = new Intent(Intent.ACTION_VIEW);
 outerIntent.setData(Uri.parse("https://advertiser.example/buy-shoes"));
 
-// Check the default browser to ensure the inner intent is sent to the right
-// app that would receive the intent by default. Set the package of the inner
-// intent.
-String packageName = getPackageManager().resolveActivity(
-  i, PackageManager.MATCH_DEFAULT_ONLY);
-convIntent.setPackage(packageName);
-outerIntent.setPackage(packageName);
-
 Bundle outerBundle = new Bundle();
-PendingIntent pending = PendingIntent.getActivity(this, 0, convIntent,
-  PendingIntent.FLAG_MUTABLE);
-outerBundle.putParcelable("android.web.extra.CONVERSION_INTENT", pending);
+outerBundle.putParcelable("android.web.extra.CONVERSION_INTENT", pendingIntent);
 outerIntent.putExtras(outerBundle);
-startActivity(outerIntent);
+outerIntent.setPackage(browserPackage);
+context.startActivity(outerIntent);
 ```
 
 
 
 ### Registering views from apps
 
-Views won't necessarily start the browser with an intent, so we can use a [ContentProvider](https://developer.android.com/reference/android/content/ContentProvider) to communicate events the browser.
+Views won't necessarily start the browser with an Intent, so we can use a [ContentProvider](https://developer.android.com/reference/android/content/ContentProvider) to communicate events the browser.
 
 ```java
-// After an ad view. Parameters for event-level API only.
-ContentValues newValues = new ContentValues();
-newValues.put("attributionSourceEventId", "123456");
-newValues.put("attributionReportTo", "https://reporter.example");
-newValues.put("attributionDestination", "https://advertiser.example");
-newValues.put("attributionExpiry", 604800000);
+// One-time setup
 
-// Get the default browser to send to.
-Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("http://test"));
-String packageName = getPackageManager().resolveActivity(
-  i, PackageManager.MATCH_DEFAULT_ONLY).activityInfo.packageName;
+// Choose a browser to send the attribution event to. Note that choosing a browser may be difficult to
+// implement correctly in the case where the user has not set a default handler for VIEW
+// Intents, and is not covered here. When possible the default browser should be used.
+String browserPackage = getbrowserPackageName();
 
-getContentResolver().insert(
-  String.format("content://%s/app-conversions", packageName), newValues);
+String authority = browserPackage + ".AttributionReporting/";
+Uri providerUri = Uri.parse("content://" + authority);
+
+
+// Sending the attribution after an ad view. Parameters for event-level API only.
+
+// The client may be held onto for the duration of a session where multiple attributions may be
+// reported.
+ContentProviderClient client = context.getContentResolver().acquireContentProviderClient(providerUri);
+
+ContentValues attributionValues = new ContentValues();
+attributionValues.put("attributionSourceEventId", "123456");
+attributionValues.put("attributionReportTo", "https://reporter.example");
+attributionValues.put("attributionDestination", "https://advertiser.example");
+attributionValues.put("attributionExpiry", 604800000);
+
+try {
+  client.insert(providerUri, attributionValues);
+} catch (Exception e) {
+  // Always catch exceptions thrown by ContentProviders so an error in the browser cannot crash your app.
+}
+
+// The client should be closed when no longer needed (eg. your app is no longer foreground).
+client.close();
 ```
 
 
@@ -129,11 +154,7 @@ Any other suggested solutions to this problem are appreciated!
 
 ## Computing Origins from Apps
 
-We propose to use [Digital Asset Links](https://developers.google.com/digital-asset-links/v1/getting-started) to reliably compute origins from apps, so that internal API logic can treat APKs just like origins.
-
-Like the [CCT PostMessage API](https://developers.google.cn/web/android/custom-tabs/headers?hl=zh-cn#set_up_digital_asset_links), the browser will look at the `delegate_permission/common.use_as_origin` relation for the app and use that origin directly as the attribution source origin (which will govern things like API rate-limiting).
-
-Attribution for apps without such links will be ignored.
+An Origin will be constructed from the Package Name of the app reporting the events, and will take the form: android-app://<packageName>
 
 
 ## Privacy considerations
@@ -187,7 +208,7 @@ There are a few reasons we’d want to validate clicks with the Android system b
 
 In Android 11+, there are <code>[VerifiedInputEvents](https://developer.android.com/reference/android/view/VerifiedInputEvent)</code> which are verified by the system. Normal <code>[InputEvents](https://developer.android.com/reference/android/view/InputEvent)</code> can be verified by the system by calling <code>[InputManager.verifyInputEvent(InputEvent)](https://developer.android.com/reference/android/hardware/input/InputManager#verifyInputEvent(android.view.InputEvent))</code>.
 
-The browser can verify clicks by having an API surface that receives parceled InputEvents in the view intent, and subsequently calling `InputManager.verifyInputEvent(InputEvent)`. This design allows the API to be backward compatible, and verify events on a best-effort basis.
+The browser can verify clicks by having an API surface that receives parceled InputEvents in the view Intent, and subsequently calling `InputManager.verifyInputEvent(InputEvent)`. This design allows the API to be backward compatible, and verify events on a best-effort basis.
 
 **Note: It is a non-goal to attempt to verify clicks from a compromised system.**
 
