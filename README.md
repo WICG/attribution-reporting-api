@@ -1,6 +1,18 @@
 # Attribution Reporting API
 
-_This document is an overview of the Attribution Reporting API proposal. The API supports measurement of clicks and views with event-level and aggregate reports.. If you're looking specifically for the explainer for event-level click reports that used to live on this page, head over to [Attribution Reporting for Click-Through Measurement](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md) instead._
+_The Attribution Reporting API supports measurement of clicks and views with event-level and aggregate reports._
+
+_This repository hosts multiple technical explainers that specify various features of the API. This document offers an overview of the API and its explainers._
+
+## Just getting started?
+
+This repository hosts detailed technical explainers.
+Before diving into these, check out these newcomer-friendly resources:
+
+- For a quick overview of Attribution Reporting, head over to [Attribution Reporting in five minutes](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-event-introduction/).
+- For an an in-depth introduction to the API's use cases, features, and privacy model, read [Introduction to Attribution Reporting](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-introduction/).
+
+These articles, as well as additional API guides and blogposts for this API, are listed [here](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting/).
 
 ## Participate
 

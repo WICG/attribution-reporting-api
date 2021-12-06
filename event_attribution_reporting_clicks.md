@@ -1,3 +1,6 @@
+_This is an in-depth technical explainer. If you're looking for a high-level introduction to Attribution Reporting for Click-Through Measurement with event-level reports, head over to [Event-level reports in the Attribution Reporting API](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-event-introduction/)._
+
+_A list of all API guides and blogposts for this API is also available [here](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting/)._
 
 # Attribution Reporting for Click-Through Measurement
 
