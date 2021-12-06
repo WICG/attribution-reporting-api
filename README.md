@@ -33,6 +33,7 @@ The API enables two types of attribution reports:
 - **Event-level reports** associate a particular event on the ad side (a click, view or touch) with coarse conversion data. To preserve user privacy, conversion-side data is coarse and noised, reports are not sent immediately, and the number of conversions is limited.
 - **Aggregate reports** are not tied with a specific event on the ad side. These reports provide richer, higher-fidelity conversion data than event-level reports. A combination of privacy techniques across cryptography, distribution of trust, and differential privacy help reduce the risk of identity joining across sites.
 
+
 These two report types can be used simultaneously. They're complementary.
 
 ## API features (proposals)
@@ -70,5 +71,4 @@ Attribute conversions occurring across distinct devices, i.e. as distinct web br
 Implementation status: `🟤 not implemented yet (all browsers)`
 
 ## External Documentation
-
 API guides and blogposts for this API are listed [here](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting/).
