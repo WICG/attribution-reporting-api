@@ -46,19 +46,21 @@ See the explainer on [aggregate measurement](AGGREGATE.md) for a potential exten
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## Glossary
+Glossary
+--------
 
-- **Publisher**: Page that shows ads, sells ad slots
+-   **Publisher**: Page that shows ads, sells ad slots
 
-- **Advertiser**: Purchaser of ad slots, conversions happen on advertiser sites
+-   **Advertiser**: Purchaser of ad slots, conversions happen on advertiser sites
 
-- **Conversion**: The completion of a meaningful (advertiser specified) user action on the advertiser's web site by a user who has previously interacted with an ad from that advertiser.
+-   **Conversion**: The completion of a meaningful (advertiser specified) user action on the advertiser's web site by a user who has previously interacted with an ad from that advertiser.
 
-- **Event-level data**: Data that can be tied back to a specific low-level event; not aggregated
+-   **Event-level data**: Data that can be tied back to a specific low-level event; not aggregated
 
-- **Click-through-conversion (CTC)**: A conversion attributed to an ad click
+-   **Click-through-conversion (CTC)**: A conversion attributed to an ad click
 
-## Motivation
+Motivation
+----------
 
 Currently, the web ad industry measures conversions via identifiers they
 can associate across sites. These identifiers tie information about
@@ -84,33 +86,38 @@ advertising use cases in the web platform in a privacy preserving way.
 In particular, we think this API could be extended by using server side
 aggregation to provide richer data, which we are continuing to explore.
 
-## Prior Art
+Prior Art
+---------
 
 There is an alternative [Ad Click Attribution](https://github.com/WICG/ad-click-attribution) draft spec in the WICG. See this [WebKit blog post](https://webkit.org/blog/8943/privacy-preserving-ad-click-attribution-for-the-web/) for more details.
 
 Brave has published and implemented an [Ads Confirmation Protocol](https://github.com/brave/brave-browser/wiki/Security-and-privacy-model-for-ad-confirmations).
 
-# Overview
+Overview
+========
 
-## Attribution Source Declaration
+Attribution Source Declaration
+----------------------
 
 ### Registering attribution sources for anchor tag navigations
 
 An attribution source is an anchor tag with special attributes:
 
-`<a attributiondestination="[eTLD+1]" attributionsourceeventid="[64-bit unsigned integer]" attributionexpiry="[64-bit signed integer]" attributionreportto="[origin]" attributionsourcepriority="[64-bit signed integer"]>`
+`<a attributiondestination="[eTLD+1]" attributionsourceeventid="[64-bit unsigned integer]"
+attributionexpiry="[64-bit signed integer]" attributionreportto="[origin]"
+attributionsourcepriority="[64-bit signed integer"]>`
 
 Attribution source attributes:
 
-- `attributiondestination`: an origin whose eTLD+1 is where attribution will be triggered for this source.
+-   `attributiondestination`: an origin whose eTLD+1 is where attribution will be triggered for this source.
 
-- `attributionsourceeventid`: A DOMString encoding a 64-bit unsigned integer which represents the event-level data associated with this source. This will be limited to 64 bits of information but the value can vary for browsers that want a higher level of privacy.
+-   `attributionsourceeventid`: A DOMString encoding a 64-bit unsigned integer which represents the event-level data associated with this source. This will be limited to 64 bits of information but the value can vary for browsers that want a higher level of privacy.
 
-- `attributionexpiry`: (optional) expiry in milliseconds for when the source should be deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry can also vary between browsers.
+-   `attributionexpiry`: (optional) expiry in milliseconds for when the source should be deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry can also vary between browsers.
 
-- `attributionreportto`: (optional) the desired endpoint that the attribution report for this source should go to. Default is the top level origin of the page.
+-   `attributionreportto`: (optional) the desired endpoint that the attribution report for this source should go to. Default is the top level origin of the page.
 
-- `attributionsourcepriority`: (optional) a signed 64-bit integer used to prioritize this source with respect to other matching sources. When a trigger redirect is received, the browser will find the matching source with highest `attributionsourcepriority` value and generate a report. The other sources will not generate reports.
+-   `attributionsourcepriority`: (optional) a signed 64-bit integer used to prioritize this source with respect to other matching sources. When a trigger redirect is received, the browser will find the matching source with highest `attributionsourcepriority` value and generate a report. The other sources will not generate reports.
 
 Clicking on an anchor tag that specifies these attributes will create a new attribution source event that will be handled according to [Handling an attribution source event](#handling-an-attribution-source-event)
 
@@ -121,7 +128,7 @@ An attribution source can be registered for navigations initiated by [`window.op
 A source is registered in a call to `window.open()` by providing attribution source attributes within the `features` parameter:
 
 ```
-window.open("https://dest.example", "_blank",
+window.open("https://dest.example", "_blank",     
  "noopener,attributionsourceeventid=1234,attributiondestination=https://dest.example,\
  attributionreportto=https://reporter.example,attributionexpiry=604800000");)
 ```
@@ -142,9 +149,10 @@ least once (i.e. have scheduled a report), they will be removed from
 browser storage and will not be eligible for further reporting. Any
 pending reports for these sources will still be sent.
 
-An attribution source will be eligible for reporting if any page on the
-`attributiondestination` eTLD+1 (advertiser site) triggers attribution for the
+An attribution source will be eligible for reporting if any page on the	
+`attributiondestination` eTLD+1 (advertiser site) triggers attribution for the	
 associated reporting origin.
+
 
 ### Publisher-side Controls for Attribution Source Declaration
 
@@ -162,12 +170,13 @@ The API will be enabled by default in the top-level context and in same-origin c
 
 Without a Feature Policy, a top-level document and cooperating iframe could recreate this functionality. This is possible by using [postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage) to send the `attributionsourceeventid`, `attributionreportto`, `attributiondestination` values to the top level document who can then wrap the iframe in an anchor tag (with some additional complexities behind handling clicks on the iframe). Using Feature Policy prevents the need for these hacks. This is inline with the classification of powerful features as discussed on [this issue](https://github.com/w3c/webappsec-feature-policy/issues/252).
 
-## Triggering Attribution
+Triggering Attribution
+-----------------------
 
 This API will use a mechanism for triggering an attribution source similar to the
 [Ad Click Attribution Proposal](https://wicg.github.io/ad-click-attribution/index.html#legacytriggering).
 
-Attribution can only be triggered for a source on a page whose eTLD+1 matches the eTLD+1 of the site provided in `attributiondestination`. A source can be triggered through an HTTP GET to
+Attribution can only be triggered for a source on a page whose eTLD+1 matches the eTLD+1 of the site provided in `attributiondestination`.  A source can be triggered through an HTTP GET to
 its `attributionreportto` origin, that redirects to a [.well-known](https://tools.ietf.org/html/rfc5785)
 location.
 This redirect is useful, because this mechanism enables the reporting origin to make server-side decisions about when attribution reports should trigger.
@@ -182,7 +191,6 @@ this API:
 ```
 <img src="https://ad-tech.example/conversiontracker"/>
 ```
-
 `https://ad-tech.example/conversiontracker` can be redirected to `https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution`
 to trigger attribution for all matching sources.
 
@@ -190,7 +198,6 @@ The browser will treat redirects to a URL of the form:
 `https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?trigger-data=<trigger-data>&priority=<priority>&dedup-key=<dedup-key>]`
 
 as a special request. The query string for the request contains additional information about the attribution trigger:
-
 - `trigger-data`: optional data to identify the triggering event
 - `priority`: optional signed 64-bit integer representing the priority of this trigger compared to other triggers for the same source.
 - `dedup-key`: optional signed 64-bit integer which will be used to deduplicate multiple triggers which contain the same dedup-key for a single source
@@ -213,15 +220,14 @@ and [adding noise to whether or not the attribution report is even sent](#specul
 In any case, noise values should be allowed to vary between browsers.
 
 Disclaimer: Adding or removing a single bit of data has large
-trade-offs in terms of user privacy and usability to advertisers:
-
-- Less bits is more private but less usable to advertisers
-- More bits is less private but more usable to advertisers.
-  Browsers should concretely evaluate the trade-offs from these two
-  perspectives before setting a limit. As such, this number is subject to
-  change based on community feedback. Our encoding scheme should also
-  support fractions of bits, as it’s possible to limit data to values
-  from 0-5 (~2.6 bits of information)
+trade-offs in terms of user privacy and usability to advertisers: 
+* Less bits is more private but less usable to advertisers
+* More bits is less private but more usable to advertisers.
+Browsers should concretely evaluate the trade-offs from these two
+perspectives before setting a limit. As such, this number is subject to
+change based on community feedback. Our encoding scheme should also
+support fractions of bits, as it’s possible to limit data to values
+from 0-5 (~2.6 bits of information)
 
 ### Trigger attribution algorithm
 
@@ -233,7 +239,7 @@ the greatest `attributionsourcepriority`. If multiple sources have the greatest
 recently.
 
 The browser then schedules a report for the source that was picked by storing
-{`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, dedup-key} for the source.
+ {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, dedup-key} for the source.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
 The browser will only create reports for a source if the trigger's dedup-key has not already been associated with a report for that source.
@@ -282,7 +288,8 @@ reports for the same source are allowed the same amount
 of data. Otherwise, it becomes quite difficult for advertisers to
 efficiently use the space of possible data values.
 
-## Sending Scheduled Reports
+Sending Scheduled Reports
+-------------------------
 
 After an attribution source is successfully registered, a
 schedule of reporting windows and deadlines associated with that
@@ -303,7 +310,7 @@ time
 `attributionexpiry`: Reports will be sent `attributionexpiry`
 milliseconds plus one hour from source registration time
 
-If `attributionexpiry` occurs before the 7 day window deadline it will be used as the next reporting window. For example, if `attributionexpiry` is 3 days, there will be two deadlines, 2 days minus one hour and `attributionexpiry`. If `attributionexpiry` is before the 2 day deadline, the 2 day deadline will still be used.
+If `attributionexpiry` occurs before the 7 day window deadline it will be used as the next reporting window. For example, if `attributionexpiry` is 3 days, there will be two deadlines, 2 days minus one hour and `attributionexpiry`. If `attributionexpiry` is before the 2 day deadline, the 2 day deadline will still be used. 
 
 When a report is scheduled, it will be delayed until the next
 applicable reporting window for the associated source. Once the
@@ -333,11 +340,11 @@ https://attributionreportto/.well-known/attribution-reporting/report-attribution
 
 The report data is included in the request body as a JSON object with the following keys:
 
-- `attribution_destination`: the attribution destination set on the source
+-   `attribution_destination`: the attribution destination set on the source
 
-- `source_event_id`: 64-bit event id set on the attribution source
+-   `source_event_id`: 64-bit event id set on the attribution source
 
-- `trigger_data`: 3-bit data set in the attribution trigger redirect
+-   `trigger_data`: 3-bit data set in the attribution trigger redirect
 
 Note that it might be useful to advertise which data limits were used in the
 report, but it isn’t included here.
@@ -346,7 +353,8 @@ It also may be beneficial to send reports as JSON instead of in the
 report URL. JSON reports could allow this API to leverage the Reporting
 API in the future should it be desirable.
 
-## Data Encoding
+Data Encoding
+-----------------
 
 The source event id and trigger data should be in a way that is amenable
 to any privacy level a browser would want to choose (i.e. the number of
@@ -363,10 +371,11 @@ function getData(input, max_value) {
 ```
 
 The benefit of this method over using a fixed bit mask is that it allows
-browsers to implement max_values that aren’t multiples of 2. That is,
+browsers to implement max\_values that aren’t multiples of 2. That is,
 browers can choose a "fractional" bit limit if they want to.
 
-# Sample Usage
+Sample Usage
+============
 
 `publisher.example` wants to show ads on their site, so they contract out to
 `ad-tech.example`. `ad-tech.example`'s script in the main document creates a
@@ -376,11 +385,10 @@ cross-origin iframe to host the third party advertisement for
 Within the iframe, `toasters.example` code annotates their anchor tags to use
 the `ad-tech.example` reporting origin, and uses a source event id value that allows
 `ad-tech.example` to identify the ad click (12345678)
-
 ```
 <iframe src="https://ad-tech-3p.example/show-some-ad" allow="attribution-reporting ‘src’ (https://ad-tech.example)">
 ...
-<a
+<a 
   href="https://toasters.example/purchase"
   attributiondestination="https://toasters.example"
   attributionsourceeventid="12345678"
@@ -417,7 +425,6 @@ on `toasters.example`. They must compress all of the data into
 3 bits, so `ad-tech.example` chooses to encode the value as “2" (e.g. some
 bucketed version of the purchase value). They respond with a 302
 redirect to:
-
 ```
 https://ad-tech.example/.well-known/attribution-reporting/trigger-attribution?trigger-data=2
 ```
@@ -426,7 +433,6 @@ The browser sees this request, and schedules a report to be
 sent. The report is associated with the 7 day deadline as the
 2 day deadline has passed. Roughly 5 days later, `ad-tech.example` receives
 the following HTTP POST:
-
 ```
 URL:
 https://ad-tech.example/.well-known/attribution-reporting/report-attribution
@@ -438,18 +444,20 @@ body:
 }
 ```
 
-# Privacy Considerations
-
+Privacy Considerations
+======================
 The main privacy goal of the API is to make _linking identity_ between two different top-level sites difficult. This happens when either a request or a Javascript environment has two user IDs from two different sites simultaneously.
 
 In this API, the 64-bit source ID can encode a user ID from the publisher’s top level site, but the low entropy, noisy trigger data could only encode a small part of a user ID from the advertiser’s top-level site. The source ID and the trigger data are never exposed to a Javascript environment together, and the request that includes both of them is sent without credentials and at a different time from either event, so the request adds little new information linkable to these events.
 
 While this API _does_ allow you to learn "which ad clicks converted", it isn’t enough to link the user's identity on the publisher's and advertiser's side, unless there is serious abuse of the API, i.e. abusers are using error correcting codes and many clicks to slowly and probabilistically learn advertiser IDs associated with publisher ones. We explore some mitigations to this attack below.
 
-## Trigger Data
+
+Trigger Data
+-------------------
 
 Trigger data, e.g. advertiser side data, is extremely important for critical use cases like
-reporting the _purchase value_ of a conversion. However, too much advertiser side
+reporting the *purchase value* of a conversion. However, too much advertiser side
 data could be used to link advertiser identity with publisher
 identity.
 
@@ -464,7 +472,8 @@ with an unbiased estimator. See generic approaches of dealing with
 [Randomized response](https://en.wikipedia.org/wiki/Randomized_response) for
 a starting point.
 
-## Reporting Delay
+Reporting Delay 
+-----------------
 
 By bucketing reports within a small number reporting deadlines, it
 becomes harder to associate a report with the identity of the
@@ -483,7 +492,8 @@ time-to-conversion is an important signal for proper
 attribution. Browsers should make sure that this trade-off is concretely
 evaluated for both privacy and utility before deciding on a delay.
 
-## Limits on the number of attribution triggers
+Limits on the number of attribution triggers
+-----------------------------------------
 
 If the advertiser is allowed to cycle through many possible
 `attributionreportto` origins (via injecting many `<img>` tags on the
@@ -494,11 +504,13 @@ used reveals some extra information.
 To prevent abuse, it makes sense for browsers to add limits here, potentially
 on a per-page load or per-reporting epoch basis.
 
-## Clearing Site Data
+Clearing Site Data
+------------------
 
 Attribution source data and attribution reports in browser storage should be clearable using existing “clear browsing data" functionality offered by browsers.
 
-## Reporting cooldown
+Reporting cooldown
+------------------
 
 To limit the amount of user identity leakage between a <publisher,
 advertiser> pair, the browser should throttle the amount of total
@@ -515,7 +527,8 @@ long as practically possible.
 
 It’s an open question what specific limits are possible here.
 
-## Speculative: Limits based on first party storage
+Speculative: Limits based on first party storage
+------------------------------------------------
 
 Another mitigation on joining identity across publisher and advertiser
 sites is to limit the number of reports for any given
@@ -527,20 +540,21 @@ To prevent linking across deletions, we might need to introduce new
 options to the Clear-Site-Data header to only clear data after the page
 has unloaded.
 
-## Speculative: Adding noise to the attribution of the source itself
+Speculative: Adding noise to the attribution of the source itself
+--------------------------------------------------------
 
 Another way to add privacy to this system is to add noise not only to
 the [reported trigger data value](#data-limits-and-noise),
 but also to whether attribution was triggered in the first place. That is:
 
-- With some probability _p_, sources that are triggered will be dropped
+-   With some probability *p*, sources that are triggered will be dropped
 
-- With some probability _q_, sources that have not been triggered will be triggered, and given random `trigger-data`.
+-   With some probability *q*, sources that have not been triggered will be triggered, and given random `trigger-data`.
 
 The biggest problem with this scheme is that attribution trigger events are, in
-general, _rare_. Additionally, different advertisers can have wildly
-different _attribution rates_. These two facts make it very hard to pick
-a _q_ that works reliably without drowning out the signal with noise.
+general, *rare*. Additionally, different advertisers can have wildly
+different *attribution rates*. These two facts make it very hard to pick
+a *q* that works reliably without drowning out the signal with noise.
 We’re still thinking of solutions here.
 
 Additionally, sending reports for sources that never
@@ -548,9 +562,11 @@ actually converted could have real monetary impact on advertisers that
 pay per attributed source. Tight bounds on error estimation will be crucial for
 correct billing in these cases.
 
-# Open Questions
+Open Questions
+==============
 
-## Multiple Reporting Endpoints Per Attributed Source
+Multiple Reporting Endpoints Per Attributed Source
+-------------------------------------------
 
 An advertiser may want to send reports to multiple reporting partners at
 the same time for the same attributed source. This is very tricky to get right without revealing any
