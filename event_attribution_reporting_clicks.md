@@ -11,7 +11,6 @@ See the explainer on [aggregate measurement](AGGREGATE.md) for a potential exten
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 **Table of Contents**
 
 - [Attribution Reporting for Click-Through Measurement](#attribution-reporting-for-click-through-measurement)
