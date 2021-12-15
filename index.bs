@@ -416,6 +416,19 @@ shared among all [=environment settings objects=].
 Note: This would ideally use <a spec=storage>storage bottles</a> to provide access to the attribution caches.
 However attribution data is inherently cross-site, and operations on storage would need to span across all storage bottle maps.
 
+# General Algorithms # {#general-algorithms}
+
+<h3 id="obtaining-randomized-response">Obtaining a randomized response</h3>
+
+To <dfn>obtain a randomized response</dfn> given |trueInput|, a [=set=] |possibleInputs|, and a
+double |falseRate|:
+
+1. Assert: |possibleInputs| [=list/contains=] |trueInput|.
+1. Assert: |falseRate| is between 0 and 1 (both inclusive).
+1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive) with uniform probability.
+1. If |r| is greater than or equal to |falseRate|, return |trueInput|.
+1. Otherwise, return a random [=item=] from |possibleInputs| with uniform probability.
+
 # Source Algorithms # {#source-algorithms}
 
 <h3 id="obtaining-attribution-source-expiry-time">Obtaining an attribution source's expiry time</h3>
@@ -483,10 +496,16 @@ To <dfn>obtain an event attribution source from a source</dfn> given an [=attrib
 1. Set |resultSource|'s [=attribution source/source identifier=] to a new unique opaque string.
 1. Set |resultSource|'s [=attribution source/source type=] to "<code>event</code>".
 1. Round |resultSource|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
-1. Set |resultSource|'s [=attribution source/attribution mode=] to one of
-    "<code>truthfully</code>", "<code>never</code>", or "<code>falsely</code>", with
-    [=implementation-defined=] probability.
+1. Set |resultSource|'s [=attribution source/attribution mode=] to the result of
+    [=obtaining a randomized response=] with "`truthfully`",
+    «"`truthfully`", "`never`", "`falsely`"», and the user agent's
+    [=event source false trigger probability=].
 1. Return |resultSource|.
+
+<dfn>Event source false trigger probability</dfn> is a vendor-specific double between 0 and 1 (both
+inclusive) that controls the randomized response probability for the
+[=attribution source/attribution mode=] of an [=attribution source=] whose
+[=attribution source/source type=] is "`event`".
 
 <h3 algorithm id="obtaining-attribution-source-params">Obtaining an attribution source from {{AttributionSourceParams}}</h3>
 
@@ -605,14 +624,12 @@ Issue: Should fake reports respect the user agent's [=max reports per attributio
 This section defines how to noise [=attribution trigger/trigger data=] and
 [=attribution trigger/event source trigger data=].
 
-To <dfn>noise trigger data</dfn> given an integer |input|, integer |maxData|, and double |noiseRate|,
+To <dfn>noise trigger data</dfn> given an integer |input|, integer |max|, and double |noiseRate|,
 run the following steps:
 
-1. Assert: |input| is between 0 (inclusive) and |maxData| exclusive.
-1. Assert: |noiseRate| is between 0 and 1 (both inclusive).
-1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive).
-1. If |r| is greater than or equal to |noiseRate|, return |input|.
-1. Return a random integer between 0 (inclusive) and |maxData| (exclusive).
+1. Let |possibleInputs| be a [=set=] containing the integers between 0 and |max| (both inclusive).
+1. Return the result of [=obtaining a randomized response=] with |input|, |possibleInputs|, and
+    |noiseRate|.
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
