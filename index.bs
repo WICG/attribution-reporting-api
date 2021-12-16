@@ -302,6 +302,12 @@ This specification defines a [=policy-controlled feature=] identified by the str
 
 # Structures # {#structures}
 
+<h3 dfn-type=dfn>Attribution mode</h3>
+
+An attribution mode is a [=tuple=] consisting of a mode and a random trigger data. The mode is
+either "`truthfully`", "`never`", or "`falsely`". The random trigger data is a non-negative 64-bit
+integer, if the mode is "`falsely`", or null otherwise.
+
 <h3 dfn-type=dfn>Attribution source</h3>
 
 An attribution source is a [=struct=] with the following items:
@@ -330,7 +336,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>dedup keys</dfn>
 :: [=ordered set=] of [=attribution trigger/dedup keys=] associated with this [=attribution source=].
 : <dfn>attribution mode</dfn>
-:: Either "<code>truthfully</code>", "<code>never</code>", or "<code>falsely</code>".
+:: An [=attribution mode=].
 
 </dl>
 
@@ -461,6 +467,18 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
+<h3 algorithm id="obtaining-random-attribution-mode">Obtaining a random attribution mode</h3>
+
+To <dfn>obtain a random attribution mode</dfn> given a positive integer |triggerDataCardinality|
+and a double |randomizedPickRate|:
+
+1. Let |possibleValues| be the [=set=] of [=attribution modes=]
+    « (`"truthfully"`, null), (`"never"`, null) ».
+1. For each integer |i| between 0 (inclusive) and |triggerDataCardinality| (exclusive):
+    1. [=set/Append=] the [=attribution mode=] (`"falsely"`, |i|) to |possibleValues|.
+1. Return the result of [=obtaining a randomized response=] with (`"truthfully"`, null), |possibleValues|, and
+    |randomPickRate|.
+
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
 To <dfn>obtain an attribution source from an anchor</dfn> given an <{a}> element |anchor|:
@@ -498,12 +516,12 @@ To <dfn>obtain an event attribution source from a source</dfn> given an [=attrib
 1. Set |resultSource|'s [=attribution source/source type=] to "<code>event</code>".
 1. Round |resultSource|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
 1. Set |resultSource|'s [=attribution source/attribution mode=] to the result of
-    [=obtaining a randomized response=] with "`truthfully`",
-    «"`truthfully`", "`never`", "`falsely`"», and the user agent's
-    [=event-source false trigger probability=].
+    [=obtaining a random attribution mode=] with the user agent's
+    [=event-source trigger data cardinality=] and the user agent's
+    [=event-source randomized trigger probability=].
 1. Return |resultSource|.
 
-<dfn>Event-source false trigger probability</dfn> is a vendor-specific double between 0 and 1 (both
+<dfn>Event-source randomized trigger probability</dfn> is a vendor-specific double between 0 and 1 (both
 inclusive) that controls the randomized response probability for the
 [=attribution source/attribution mode=] of an [=attribution source=] whose
 [=attribution source/source type=] is "`event`".
@@ -559,7 +577,7 @@ and an [=environment settings object=] |settings|, run the following steps:
     : [=attribution source/source type=]
     :: "<code>navigation</code>"
     : [=attribution source/attribution mode=]
-    :: "<code>truthfully</code>"
+    :: ("`truthfully`", null)
 1. Return |source|.
 
 <dfn>Max event id value</dfn> is a vendor-specific integer which controls
@@ -588,7 +606,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry time=] is less than the current time.
 1. If the [=list/size=] of |cache| is greater than or equal to the user agent's
      [=max source cache size=], return.
-1. If |source|'s [=attribution source/attribution mode=] is "<code>falsely</code>", then:
+1. If |source|'s [=attribution source/attribution mode=][0] is "`falsely`", then:
     1. Assert: |source|'s [=attribution source/source type=] is "<code>event</code>".
     1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
         agent's [=max report cache size=], return.
@@ -598,8 +616,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         : [=attribution trigger/trigger data=]
         :: 0
         : [=attribution trigger/event source trigger data=]
-        :: A random value between 0 (inclusive) and the user agent's
-            [=event-source trigger data cardinality=] (exclusive)
+        :: |source|'s [=attribution source/attribution mode=][1]
         : [=attribution trigger/trigger time=]
         :: |source|'s [=attribution source/source time=]
         : [=attribution trigger/reporting endpoint=]
@@ -759,8 +776,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
       * |a|'s [=attribution source/priority=] is equal to |b|'s [=attribution source/priority=] and |a|'s
          [=attribution source/source time=] is less than |b|'s [=attribution source/source time=].
 1. Let |sourceToAttribute| be the first item in |matchingSources|.
-1. Assert: |sourceToAttribute|'s [=attribution source/attribution mode=] is
-    "<code>truthfully</code>" or "<code>never</code>".
+1. Assert: |sourceToAttribute|'s [=attribution source/attribution mode=][0] is
+    "`truthfully`" or "`never`".
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null and |sourceToAttribute|'s
     [=attribution source/dedup keys=] [=list/contains=] it, return.
 1. Let |numMatchingReports| be the number of entries in the [=attribution report cache=] whose
@@ -790,7 +807,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     1. [=list/Remove=] |item| from the [=attribution source cache=].
 1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
     agent's [=max report cache size=], return.
-1. If |sourceToAttribute|'s [=attribution source/attribution mode=] is "<code>truthfully</code>",
+1. If |sourceToAttribute|'s [=attribution source/attribution mode=][0] is "`truthfully`",
     add |report| to the [=attribution report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null, [=list/append=] it to |sourceToAttribute|'s
