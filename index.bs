@@ -327,8 +327,8 @@ An attribution source is a [=struct=] with the following items:
 :: A point in time.
 : <dfn>number of reports</dfn>
 :: Number of [=attribution reports=] created for this [=attribution source=].
-: <dfn>dedup keys</dfn>
-:: [=ordered set=] of [=attribution trigger/dedup keys=] associated with this [=attribution source=].
+: <dfn>deduplication keys</dfn>
+:: [=ordered set=] of [=attribution trigger/deduplication keys=] associated with this [=attribution source=].
 : <dfn>attribution mode</dfn>
 :: Either "<code>truthfully</code>", "<code>never</code>", or "<code>falsely</code>".
 
@@ -349,7 +349,7 @@ An attribution trigger is a [=struct=] with the following items:
 :: A point in time.
 : <dfn>reporting endpoint</dfn>
 :: An [=url/origin=].
-: <dfn>dedup key</dfn>
+: <dfn>deduplication key</dfn>
 :: Null or a 64-bit integer.
 : <dfn>priority</dfn>
 :: A 64-bit integer.
@@ -584,7 +584,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         :: |source|'s [=attribution source/source time=]
         : [=attribution trigger/reporting endpoint=]
         :: |source|'s [=attribution source/reporting endpoint=]
-        : [=attribution trigger/dedup key=]
+        : [=attribution trigger/deduplication key=]
         :: null
         : [=attribution trigger/priority=]
         :: 0
@@ -630,9 +630,9 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 1. Set |eventSourceTriggerData| to the result of running [=noise trigger data=] with
     |eventSourceTriggerData|, the user agent's [=max event source trigger data value=], and the
     user agent's [=event source trigger data noise rate=].
-1. Let |dedupKey| be null.
-1. If |url|'s [=url/query=] has a "`dedup-key`" field, and applying the <a spec="html">rules for
-    parsing integers</a> to the field's value results in an integer, then set |dedupKey| to that
+1. Let |deduplicationKey| be null.
+1. If |url|'s [=url/query=] has a "`deduplication-key`" field, and applying the <a spec="html">rules for
+    parsing integers</a> to the field's value results in an integer, then set |deduplicationKey| to that
     value.
 1. Let |triggerPriority| be 0.
 1. If |url|'s [=url/query=] has a "`priority`" field, and applying the
@@ -650,8 +650,8 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
     :: The current time.
     : [=attribution trigger/reporting endpoint=]
     :: |url|'s [=url/origin=].
-    : [=attribution trigger/dedup key=]
-    :: |dedupKey|.
+    : [=attribution trigger/deduplication key=]
+    :: |deduplicationKey|.
     : [=attribution trigger/priority=]
     :: |triggerPriority|.
 1. Return |trigger|.
@@ -734,8 +734,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Let |sourceToAttribute| be the first item in |matchingSources|.
 1. Assert: |sourceToAttribute|'s [=attribution source/attribution mode=] is
     "<code>truthfully</code>" or "<code>never</code>".
-1. If |trigger|'s [=attribution trigger/dedup key=] is not null and |sourceToAttribute|'s
-    [=attribution source/dedup keys=] [=list/contains=] it, return.
+1. If |trigger|'s [=attribution trigger/deduplication key=] is not null and |sourceToAttribute|'s
+    [=attribution source/deduplication keys=] [=list/contains=] it, return.
 1. Let |numMatchingReports| be the number of entries in the [=attribution report cache=] whose
     [=attribution report/attribution destination=] equals |attributionDestination|.
 1. If |numMatchingReports| is greater than or equal to the user agent's
@@ -766,8 +766,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. If |sourceToAttribute|'s [=attribution source/attribution mode=] is "<code>truthfully</code>",
     add |report| to the [=attribution report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
-1. If |trigger|'s [=attribution trigger/dedup key=] is not null, [=list/append=] it to |sourceToAttribute|'s
-    [=attribution source/dedup keys=].
+1. If |trigger|'s [=attribution trigger/deduplication key=] is not null, [=list/append=] it to |sourceToAttribute|'s
+    [=attribution source/deduplication keys=].
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
 
     : [=attribution rate-limit record/source site=]
