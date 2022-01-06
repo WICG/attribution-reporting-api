@@ -337,6 +337,8 @@ An attribution source is a [=struct=] with the following items:
 :: [=ordered set=] of [=attribution trigger/dedup keys=] associated with this [=attribution source=].
 : <dfn>attribution mode</dfn>
 :: An [=attribution mode=].
+: <dfn>randomized trigger rate</dfn>
+:: A number between 0 and 1 (both inclusive).
 
 </dl>
 
@@ -351,6 +353,10 @@ An attribution trigger is a [=struct=] with the following items:
 :: A non-negative 64-bit integer.
 : <dfn>event source trigger data</dfn>
 :: A non-negative 64-bit integer.
+: <dfn>randomized trigger data rate</dfn>
+:: A number between 0 and 1 (both inclusive).
+: <dfn>randomized event-source trigger data rate</dfn>
+:: A number between 0 and 1 (both inclusive).
 : <dfn>trigger time</dfn>
 :: A point in time.
 : <dfn>reporting endpoint</dfn>
@@ -373,6 +379,10 @@ An attribution report is a [=struct=] with the following items:
 :: Either "<code>navigation</code>" or "<code>event</code>".
 : <dfn>trigger data</dfn>
 :: A non-negative 64-bit integer.
+: <dfn>randomized trigger data rate</dfn>
+:: A number between 0 and 1 (both inclusive).
+: <dfn>randomized trigger rate</dfn>
+:: A number between 0 and 1 (both inclusive).
 : <dfn>reporting endpoint</dfn>
 :: An [=url/origin=].
 : <dfn>attribution destination</dfn>
@@ -576,6 +586,8 @@ and an [=environment settings object=] |settings|, run the following steps:
     :: "<code>navigation</code>"
     : [=attribution source/attribution mode=]
     :: ("`truthfully`", null)
+    : [=attribution source/randomized trigger rate=]
+    :: 0
 1. Return |source|.
 
 <dfn>Max event id value</dfn> is a vendor-specific integer which controls
@@ -615,6 +627,10 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         :: 0
         : [=attribution trigger/event source trigger data=]
         :: |source|'s [=attribution source/attribution mode=][1]
+        : [=attribution trigger/randomized trigger data rate=]
+        :: The user agent's [=randomized trigger data rate=].
+        : [=attribution trigger/randomized event-source trigger data rate=]
+        :: The user agent's [=randomized event-source trigger data rate=].
         : [=attribution trigger/trigger time=]
         :: |source|'s [=attribution source/source time=]
         : [=attribution trigger/reporting endpoint=]
@@ -680,6 +696,10 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
     :: |triggerData|.
     : [=attribution trigger/event source trigger data=]
     :: |eventSourceTriggerData|.
+    : [=attribution trigger/randomized trigger data rate=]
+    :: The user agent's [=randomized trigger data rate=].
+    : [=attribution trigger/randomized event-source trigger data rate=]
+    :: The user agent's [=randomized event-source trigger data rate=].
     : [=attribution trigger/trigger time=]
     :: The current time.
     : [=attribution trigger/reporting endpoint=]
@@ -873,13 +893,20 @@ return a point in time.
 To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=attribution trigger=] |trigger|:
 
 1. Let |triggerData| be |trigger|'s [=attribution trigger/trigger data=].
-1. If |source|'s [=attribution source/source type=] is "<code>event</code>", set |triggerData| to |trigger|'s [=attribution trigger/event source trigger data=].
+1. Let |randomizedTriggerDataRate| be |trigger|'s [=attribution trigger/randomized trigger data rate=].
+1. If |source|'s [=attribution source/source type=] is "`event`":
+    1. Set |triggerData| to |trigger|'s [=attribution trigger/event source trigger data=].
+    1. Set |randomizedTriggerDataRate| to |trigger|'s [=attribution trigger/randomized event-source trigger data rate=].
 1. Let |report| be a new [=attribution report=] struct whose items are:
 
     : [=attribution report/event id=]
     :: |source|'s [=attribution source/event id=].
     : [=attribution report/trigger data=]
     :: |triggerData|.
+    : [=attribution report/randomized trigger data rate=]
+    :: |randomizedTriggerDataRate|.
+    : [=attribution report/randomized trigger rate=]
+    :: |source|'s [=attribution source/randomized trigger rate=].
     : [=attribution report/reporting endpoint=]
     :: |source|'s [=attribution source/reporting endpoint=].
     : [=attribution report/attribution destination=]
@@ -931,6 +958,10 @@ To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following st
 
     : "`attribution_destination`"
     :: |destination|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
+    : "`randomized_trigger_data_rate`"
+    :: |report|'s [=attribution report/randomized trigger data rate=]
+    : "`randomized_trigger_rate`"
+    :: |report|'s [=attribution report/randomized trigger rate=]
     : "`source_type`"
     :: |report|'s [=attribution report/source type=]
     : "`source_event_id`"
