@@ -194,12 +194,12 @@ this API:
 to trigger attribution for all matching sources.
 
 The browser will treat redirects to a URL of the form:
-`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?trigger-data=<trigger-data>&priority=<priority>&dedup-key=<dedup-key>]`
+`https://<attributionreportto>/.well-known/attribution-reporting/trigger-attribution[?trigger-data=<trigger-data>&priority=<priority>&deduplication-key=<deduplication-key>]`
 
 as a special request. The query string for the request contains additional information about the attribution trigger:
 - `trigger-data`: optional data to identify the triggering event
 - `priority`: optional signed 64-bit integer representing the priority of this trigger compared to other triggers for the same source.
-- `dedup-key`: optional signed 64-bit integer which will be used to deduplicate multiple triggers which contain the same dedup-key for a single source
+- `deduplication-key`: optional signed 64-bit integer which will be used to deduplicate multiple triggers which contain the same deduplication-key for a single source
 
 When the special redirect is detected, the browser will schedule an attribution
 report as detailed in [Trigger attribution algorithm](#trigger-attribution-algorithm).
@@ -238,10 +238,10 @@ the greatest `attributionsourcepriority`. If multiple sources have the greatest
 recently.
 
 The browser then schedules a report for the source that was picked by storing
- {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, dedup-key} for the source.
+ {`attributionreportto`, `attributiondestination` eTLD+1, `attributionsourceeventid`, [decoded](#data-encoding) trigger-data, priority, deduplication-key} for the source.
 Scheduled reports will be sent as detailed in [Sending scheduled reports](#sending-scheduled-reports).
 
-The browser will only create reports for a source if the trigger's dedup-key has not already been associated with a report for that source.
+The browser will only create reports for a source if the trigger's deduplication-key has not already been associated with a report for that source.
 
 Each source is only allowed to schedule a maximum of three reports
 (see [Triggering attribution multiple times for the same source](#triggering-attribution-multiple-times-for-the-same-source)). The browser will delete sources which have sent three reports.
