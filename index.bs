@@ -302,6 +302,12 @@ This specification defines a [=policy-controlled feature=] identified by the str
 
 # Structures # {#structures}
 
+<h3 dfn-type=dfn>Attribution mode</h3>
+
+An attribution mode is a [=tuple=] consisting of a mode and a random trigger data. The mode is
+either "`truthfully`", "`never`", or "`falsely`". The random trigger data is a non-negative 64-bit
+integer, if the mode is "`falsely`", or null otherwise.
+
 <h3 dfn-type=dfn>Attribution source</h3>
 
 An attribution source is a [=struct=] with the following items:
@@ -330,7 +336,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>dedup keys</dfn>
 :: [=ordered set=] of [=attribution trigger/dedup keys=] associated with this [=attribution source=].
 : <dfn>attribution mode</dfn>
-:: Either "<code>truthfully</code>", "<code>never</code>", or "<code>falsely</code>".
+:: An [=attribution mode=].
 
 </dl>
 
@@ -416,6 +422,19 @@ shared among all [=environment settings objects=].
 Note: This would ideally use <a spec=storage>storage bottles</a> to provide access to the attribution caches.
 However attribution data is inherently cross-site, and operations on storage would need to span across all storage bottle maps.
 
+# General Algorithms # {#general-algorithms}
+
+<h3 id="obtaining-randomized-response">Obtaining a randomized response</h3>
+
+To <dfn>obtain a randomized response</dfn> given |trueValue|, a [=set=] |possibleValues|, and a
+double |randomPickRate|:
+
+1. Assert: |randomPickRate| is between 0 and 1 (both inclusive).
+1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive) with uniform probability.
+1. If |r| is less than |randomPickRate|, return a random item from |possibleValues| with uniform
+    probability.
+1. Otherwise, return |trueValue|.
+
 # Source Algorithms # {#source-algorithms}
 
 <h3 id="obtaining-attribution-source-expiry-time">Obtaining an attribution source's expiry time</h3>
@@ -446,6 +465,17 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. If |url|'s [=url/origin=] is an [=opaque origin=], return null.
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
+
+<h3 algorithm id="obtaining-random-attribution-mode">Obtaining a random attribution mode</h3>
+
+To <dfn>obtain a random attribution mode</dfn> given a positive integer |triggerDataCardinality|
+and a double |randomPickRate|:
+
+1. Let |possibleValues| be the [=set=] of [=attribution modes=] « (`"never"`, null) ».
+1. For each integer |i| between 0 (inclusive) and |triggerDataCardinality| (exclusive):
+    1. [=set/Append=] the [=attribution mode=] (`"falsely"`, |i|) to |possibleValues|.
+1. Return the result of [=obtaining a randomized response=] with the [=attribution mode=]
+    (`"truthfully"`, null), |possibleValues|, and |randomPickRate|.
 
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
@@ -483,10 +513,16 @@ To <dfn>obtain an event attribution source from a source</dfn> given an [=attrib
 1. Set |resultSource|'s [=attribution source/source identifier=] to a new unique opaque string.
 1. Set |resultSource|'s [=attribution source/source type=] to "<code>event</code>".
 1. Round |resultSource|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
-1. Set |resultSource|'s [=attribution source/attribution mode=] to one of
-    "<code>truthfully</code>", "<code>never</code>", or "<code>falsely</code>", with
-    [=implementation-defined=] probability.
+1. Set |resultSource|'s [=attribution source/attribution mode=] to the result of
+    [=obtaining a random attribution mode=] with the user agent's
+    [=event-source trigger data cardinality=] and the user agent's
+    [=randomized event-source trigger rate=].
 1. Return |resultSource|.
+
+<dfn>Randomized event-source trigger rate</dfn> is a vendor-specific double between 0 and 1 (both
+inclusive) that controls the randomized response probability for the
+[=attribution source/attribution mode=] of an [=attribution source=] whose
+[=attribution source/source type=] is "`event`".
 
 <h3 algorithm id="obtaining-attribution-source-params">Obtaining an attribution source from {{AttributionSourceParams}}</h3>
 
@@ -539,7 +575,7 @@ and an [=environment settings object=] |settings|, run the following steps:
     : [=attribution source/source type=]
     :: "<code>navigation</code>"
     : [=attribution source/attribution mode=]
-    :: "<code>truthfully</code>"
+    :: ("`truthfully`", null)
 1. Return |source|.
 
 <dfn>Max event id value</dfn> is a vendor-specific integer which controls
@@ -568,7 +604,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry time=] is less than the current time.
 1. If the [=list/size=] of |cache| is greater than or equal to the user agent's
      [=max source cache size=], return.
-1. If |source|'s [=attribution source/attribution mode=] is "<code>falsely</code>", then:
+1. If |source|'s [=attribution source/attribution mode=][0] is "`falsely`", then:
     1. Assert: |source|'s [=attribution source/source type=] is "<code>event</code>".
     1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
         agent's [=max report cache size=], return.
@@ -578,8 +614,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         : [=attribution trigger/trigger data=]
         :: 0
         : [=attribution trigger/event source trigger data=]
-        :: A random value between 0 (inclusive) and the user agent's
-            [=max event source trigger data value=] (exclusive)
+        :: |source|'s [=attribution source/attribution mode=][1]
         : [=attribution trigger/trigger time=]
         :: |source|'s [=attribution source/source time=]
         : [=attribution trigger/reporting endpoint=]
@@ -605,14 +640,13 @@ Issue: Should fake reports respect the user agent's [=max reports per attributio
 This section defines how to noise [=attribution trigger/trigger data=] and
 [=attribution trigger/event source trigger data=].
 
-To <dfn>noise trigger data</dfn> given an integer |input|, integer |maxData|, and double |noiseRate|,
+To <dfn>noise trigger data</dfn> given an integer |input|, integer |cardinality|, and double |randomPickRate|,
 run the following steps:
 
-1. Assert: |input| is between 0 (inclusive) and |maxData| exclusive.
-1. Assert: |noiseRate| is between 0 and 1 (both inclusive).
-1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive).
-1. If |r| is greater than or equal to |noiseRate|, return |input|.
-1. Return a random integer between 0 (inclusive) and |maxData| (exclusive).
+1. Let |possibleValues| be a [=set=] containing the integers between 0 (inclusive) and
+    |cardinality| (exclusive).
+1. Return the result of [=obtaining a randomized response=] with |input|, |possibleValues|, and
+    |randomPickRate|.
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
@@ -621,15 +655,15 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 
 1. Let |triggerData| be 0.
 1. If |url|'s [=url/query=] has a "`trigger-data`" field, set |triggerData| to the result of running [=parse attribution data=] with
-    the value associated with the field modulo the user agent's [=max trigger data value=].
+    the value associated with the field modulo the user agent's [=trigger data cardinality=].
 1. Set |triggerData| to the result of running [=noise trigger data=] with |triggerData|, the
-    user agent's [=max trigger data value=], and the user agent's [=trigger data noise rate=].
+    user agent's [=trigger data cardinality=], and the user agent's [=randomized trigger data rate=].
 1. Let |eventSourceTriggerData| be 0.
 1. If |url|'s [=url/query=] has an "`event-source-trigger-data`" field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
-    the value associated with the field modulo the user agent's [=max event source trigger data value=].
+    the value associated with the field modulo the user agent's [=event-source trigger data cardinality=].
 1. Set |eventSourceTriggerData| to the result of running [=noise trigger data=] with
-    |eventSourceTriggerData|, the user agent's [=max event source trigger data value=], and the
-    user agent's [=event source trigger data noise rate=].
+    |eventSourceTriggerData|, the user agent's [=event-source trigger data cardinality=], and the
+    user agent's [=randomized event-source trigger data rate=].
 1. Let |dedupKey| be null.
 1. If |url|'s [=url/query=] has a "`dedup-key`" field, and applying the <a spec="html">rules for
     parsing integers</a> to the field's value results in an integer, then set |dedupKey| to that
@@ -656,13 +690,21 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
     :: |triggerPriority|.
 1. Return |trigger|.
 
-<dfn>Max trigger data value</dfn> is a vendor-specific integer which controls the potential values of [=attribution trigger/trigger data=].
+<dfn>Trigger data cardinality</dfn> is a vendor-specific integer that controls the valid range of
+[=attribution trigger/trigger data=]:
+0 <= [=attribution trigger/trigger data=] < [=trigger data cardinality=].
 
-<dfn>Max event source trigger data value</dfn> is a vendor-specific integer which controls the potential values of [=attribution trigger/event source trigger data=].
+<dfn>Event-source trigger data cardinality</dfn> is a vendor-specific integer that controls the valid
+range of [=attribution trigger/event source trigger data=]:
+0 <= [=attribution trigger/event source trigger data=] < [=event-source trigger data cardinality=].
 
-<dfn>Trigger data noise rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive) which controls noising of [=attribution trigger/trigger data=].
+<dfn>Randomized trigger data rate</dfn> is a vendor-specific double between 0 and 1 (both
+inclusive) that controls the randomized response probability for
+[=attribution trigger/trigger data=].
 
-<dfn>Event source trigger data noise rate</dfn> is a vendor-specific double between 0 and 1 (both inclusive) which controls noising of [=attribution trigger/event source trigger data=].
+<dfn>Randomized event-source trigger data rate</dfn> is a vendor-specific double between 0 and 1
+(both inclusive) that controls the randomized response probability for
+[=attribution trigger/event source trigger data=].
 
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
@@ -732,8 +774,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
       * |a|'s [=attribution source/priority=] is equal to |b|'s [=attribution source/priority=] and |a|'s
          [=attribution source/source time=] is less than |b|'s [=attribution source/source time=].
 1. Let |sourceToAttribute| be the first item in |matchingSources|.
-1. Assert: |sourceToAttribute|'s [=attribution source/attribution mode=] is
-    "<code>truthfully</code>" or "<code>never</code>".
+1. Assert: |sourceToAttribute|'s [=attribution source/attribution mode=][0] is
+    "`truthfully`" or "`never`".
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null and |sourceToAttribute|'s
     [=attribution source/dedup keys=] [=list/contains=] it, return.
 1. Let |numMatchingReports| be the number of entries in the [=attribution report cache=] whose
@@ -763,7 +805,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     1. [=list/Remove=] |item| from the [=attribution source cache=].
 1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
     agent's [=max report cache size=], return.
-1. If |sourceToAttribute|'s [=attribution source/attribution mode=] is "<code>truthfully</code>",
+1. If |sourceToAttribute|'s [=attribution source/attribution mode=][0] is "`truthfully`",
     add |report| to the [=attribution report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null, [=list/append=] it to |sourceToAttribute|'s
