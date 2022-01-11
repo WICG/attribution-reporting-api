@@ -441,6 +441,11 @@ double |randomPickRate|:
 
 An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
 
+<h3 id="obtaining-attribution-source-site">Obtaining an attribution source's source site</h3>
+
+An [=attribution source=] |source|'s <dfn for="attribution source">source site</dfn> is the result
+of [=obtain a site|obtaining a site=] from |source|'s [=attribution source/source origin=].
+
 <h3 algorithm id="parsing-data-fields">Parsing data fields</h3>
 
 This section defines how to parse strings into integers for
@@ -604,6 +609,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry time=] is less than the current time.
 1. If the [=list/size=] of |cache| is greater than or equal to the user agent's
      [=max source cache size=], return.
+1. Run [=ensure capacity for pending destination limit=] with |source|.
 1. If |source|'s [=attribution source/attribution mode=][0] is "`falsely`", then:
     1. Assert: |source|'s [=attribution source/source type=] is "<code>event</code>".
     1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
@@ -632,6 +638,40 @@ Issue: Should fake reports respect the user agent's [=max reports per attributio
 
 <dfn>Max source cache size</dfn> is a vendor-specific integer which controls how many
 [=attribution sources=] can be in the [=attribution source cache=].
+
+To <dfn>ensure capacity for pending destination limit</dfn> given an [=attribution source=] |source|:
+
+1. If |source|'s [=attribution source/source type=] is not "`event`", return.
+1. Let |cache| be the user agent's [=attribution source cache=].
+1. Let |matchingSources| be all entries in |cache| where all of the following are true:
+    * the entry's [=attribution source/source site=] and |source|'s [=attribution source/source site=] are equal
+    * the entry's [=attribution source/source type=] is "`event`"
+    * the entry's [=attribution source/number of reports=] is 0
+1. Set |matchingSources| to the result of [=list/sort in ascending order|sorting=] |matchingSources|
+    in ascending order, with |a| being less than |b| if |a|'s [=attribution source/source time=]
+    is less than |b|'s [=attribution source/source time=].
+1. Let |destinationCounts| be a [=map=].
+1. For each |item| of |matchingSources|:
+    1. Let |destination| be |item|'s [=attribution source/attribution destination=].
+    1. If |destination| equals |source|'s [=attribution source/attribution destination=], return.
+    1. If |destinationCounts|[|destination|] [=map/exists=], then:
+        1. Let |count| be |destinationCounts|[|destination|].
+        1. [=map/Set=] |destinationCounts|[|destination|] to |count| + 1.
+    1. Otherwise, [=map/set=] |destinationCounts|[|destination|] to 1.
+1. Let |max| be the user agent's [=max attribution destinations per event source site=].
+1. If |destinationCounts|'s [=map/size=] is less than |max|, return.
+1. For each |item| of |matchingSources|:
+    1. Let |destination| be |item|'s [=attribution source/attribution destination=].
+    1. Let |count| be |destinationCounts|[|destination|].
+    1. [=map/Set=] |destinationCounts|[|destination|] to |count| - 1.
+    1. If |destinationCounts|[|destination|] is 0, [=map/remove=] |destinationCounts|[|destination|].
+    1. [=list/Remove=] |item| from |cache|.
+    1. If |destinationCounts|'s [=map/size=] is less than |max|, return.
+
+<dfn>Max attribution destinations per event source site</dfn> is a vendor-specific integer which
+controls how many distinct [=attribution source/attribution destinations=] can be in the
+[=attribution source cache=] for a given [=attribution source/source site=] for sources whose
+[=attribution source/source type=] is "`event`".
 
 # Triggering Algorithms # {#trigger-algorithms}
 
@@ -740,10 +780,8 @@ Given a [=request=] |request|:
 
 Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToAttribute|:
 
-1. Let |sourceSite| be the result of [=obtain a site|obtaining a site=] from |sourceToAttribute|'s
-    [=attribution source/source origin=].
 1. Let |matchingRateLimitRecords| be all entries in the [=attribution rate-limit cache=] where all of the following are true:
-     * entry's [=attribution rate-limit record/source site=] and |sourceSite| are equal
+     * entry's [=attribution rate-limit record/source site=] and |sourceToAttribute|'s [=attribution source/source site=] are equal
      * entry's [=attribution rate-limit record/attribution destination=] and |trigger|'s [=attribution trigger/attribution destination=] are equal
      * entry's [=attribution rate-limit record/source type=] and |sourceToAttribute|'s [=attribution source/source type=] are equal
      * entry's [=attribution rate-limit record/trigger time=] is at least [=attribution rate-limit window=] before |trigger|'s [=attribution trigger/trigger time=]
@@ -813,7 +851,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
 
     : [=attribution rate-limit record/source site=]
-    :: The result of [=obtain a site|obtaining a site=] from |sourceToAttribute|'s [=attribution source/source origin=].
+    :: |sourceToAttribute|'s [=attribution source/source site=].
     : [=attribution rate-limit record/attribution destination=]
     :: |attributionDestination|
     : [=attribution rate-limit record/source type=]
