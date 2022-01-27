@@ -156,10 +156,10 @@ configures the API:
 
 ```json
 {
-  source_event_id: "12340873456",
-  destination: "[eTLD+1]",
-  expiry: "[64-bit signed integer]"
-  source_priority: "[64-bit signed integer]"
+  "source_event_id": "12340873456",
+  "destination": "[eTLD+1]",
+  "expiry": "[64-bit signed integer]",
+  "source_priority": "[64-bit signed integer]"
 }
 ```
 
@@ -262,9 +262,9 @@ header `Attribution-Reporting-Register-Event-Trigger` which contains information
 about how to treat the trigger event:
 ```json
 [{
-    trigger_data: "[unsigned 64-bit integer]"
-    trigger_priority: "[signed 64-bit integer]",
-    deduplication_key: "[signed 64-bit integer]"
+    "trigger_data": "[unsigned 64-bit integer]",
+    "trigger_priority": "[signed 64-bit integer]",
+    "deduplication_key": "[signed 64-bit integer]"
 }]
 ```
 TODO: Consider moving this over to a structured header. See [issue
@@ -444,13 +444,13 @@ This can be done via simple extensions to the registration configuration.
 Source registration:
 ```json
 {
-  source_event_id: "12345678",
-  destination: "https://toasters.example",
-  expiry: "604800000"
-  source_data: {
-    conversion_subdomain: ["electronics.megastore"
-                           "electronics2.megastore"],
-    product: "1234",
+  "source_event_id": "12345678",
+  "destination": "https://toasters.example",
+  "expiry": "604800000",
+  "source_data": {
+    "conversion_subdomain": ["electronics.megastore"
+                             "electronics2.megastore"],
+    "product": "1234",
     // Note that "source_type" will be automatically generated as
     // one of {"navigation", "event"}
   }
@@ -460,9 +460,9 @@ Trigger registration will now accept an option header
 `Attribution-Reporting-Filters`:
 ```json
 {
-  conversion_subdomain: "electronics.megastore"
+  "conversion_subdomain": "electronics.megastore",
   // Not set on the source side, so this key is ignored
-  directory: "/store/electronics" 
+  "directory": "/store/electronics" 
 }
 ```
 If keys in the filters JSON match keys in `source_data`, the trigger is
@@ -480,13 +480,13 @@ to do selective filtering to set `trigger_data` based on `source_data`:
 ```json
 // Filter by the source type to handle different bit limits.
 [{
-  trigger_data: "2",
+  "trigger_data": "2",
   // Note that “not_filters” which filters with a negation is also supported.
-  filters: {source_type: "navigation"}
+  "filters": {"source_type": "navigation"}
 },
 {
-  trigger_data: "1",
-  filters: {source_type: "event"}
+  "trigger_data": "1",
+  "filters": {"source_type": "event"}
 }]
 ```
 ### Optional: extended debugging reports
@@ -502,8 +502,8 @@ alternatives.
 Source and trigger registration will accept a new parameter `debug_key`:
 ```json
 {
-    ...
-    debug_key: "[64-bit unsigned integer]"
+    // ...
+    "debug_key": "[64-bit unsigned integer]"
 }
 ```
 
@@ -512,8 +512,8 @@ will be sent immediately to a `.well-known/attribution-reporting/debug`
 endpoint. The debug reports will be a JSON dictionary with both debug keys:
 ```json
 {
-    source_debug_key: "[64-bit unsigned integer]",
-    trigger_debug_key: "[64-bit unsigned integer]"
+    "source_debug_key": "[64-bit unsigned integer]",
+    "trigger_debug_key": "[64-bit unsigned integer]"
 }
 ```
 
@@ -522,9 +522,9 @@ from source and trigger events unaltered. This allows tying normal reports to th
 separate stream of debug reports.
 ```json
 {
-    ...
-    source_debug_key: "[64-bit unsigned integer]",
-    trigger_debug_key: "[64-bit unsigned integer]"
+    // ...
+    "source_debug_key": "[64-bit unsigned integer]",
+    "trigger_debug_key": "[64-bit unsigned integer]"
 }
 ```
 
@@ -567,9 +567,9 @@ request to `https://ad-tech.example?adid=123456`. The ad-tech responds with a
 `Attribution-Reporting-Register-Source` JSON header:
 ```json
 {
-  source_event_id: "12345678",
-  destination: "https://toasters.example",
-  expiry: "604800000"
+  "source_event_id": "12345678",
+  "destination": "https://toasters.example",
+  "expiry": "604800000"
 }
 ```
 
@@ -588,7 +588,7 @@ of the purchase value). They respond to the request with a
 `Attribution-Reporting-Register-Event-Trigger` header:
 ```json
 [{
-    trigger_data: "2"
+    "trigger_data": "2"
 }]
 ```
 
@@ -748,9 +748,9 @@ order to link cross-site identity relative to the Click Through API.
 
 This is further restricted by rate-limiting the usage of the API between two
 sites, using [reporting
-cooldowns](event_attribution_reporting_clicks.md#reporting-cooldown). Due to the
-different characteristics between classes of sources, these cooldowns should
-have independent limits on the number of reports of each type.
+cooldowns](event_attribution_reporting_clicks.md#reporting-cooldown--rate-limits).
+Due to the different characteristics between classes of sources, these cooldowns
+should have independent limits on the number of reports of each type.
 
 The number of reporting windows is another vector which can contain trigger-side
 information. By restricting to a [single window](#single-reporting-window), a
