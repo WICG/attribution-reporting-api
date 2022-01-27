@@ -44,7 +44,7 @@ All the features below are proposals under incubation. This list evolves over ti
 
 ### Event-Level reports (clicks and views)
 
-Attribute cross-site click-through or view-through conversions with reports at a per-event level. See details in the [Explainer: event-level reports](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md).
+Attribute cross-site click-through or view-through conversions with reports at a per-event level. See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md).
 
 Implementation status: `Latest version not implemented yet, under development in Chrome`
 
