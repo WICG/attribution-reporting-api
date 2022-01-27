@@ -10,7 +10,7 @@ This repository hosts detailed technical explainers.
 Before diving into these, check out these newcomer-friendly resources:
 
 - For a quick overview of Attribution Reporting, head over to [Attribution Reporting in five minutes](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-event-introduction/).
-- For an an in-depth introduction to the API's use cases, features, and privacy model, read [Introduction to Attribution Reporting](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-introduction/).
+- For an in-depth introduction to the API's use cases, features, and privacy model, read [Introduction to Attribution Reporting](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-introduction/).
 
 These articles, as well as additional API guides and blogposts for this API, are listed [here](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting/).
 
@@ -30,45 +30,41 @@ The Attribution Reporting API makes it possible to measure when an ad click or v
 
 The API enables two types of attribution reports:
 
-- **Event-level reports** associate a particular event on the ad side (a click, view or touch) with coarse conversion data. To preserve user privacy, conversion-side data is coarse and noised, reports are not sent immediately, and the number of conversions is limited.
-- **Aggregate reports** are not tied with a specific event on the ad side. These reports provide richer, higher-fidelity conversion data than event-level reports. A combination of privacy techniques across cryptography, distribution of trust, and differential privacy help reduce the risk of identity joining across sites.
+* **Event-level reports** associate a particular event on the ad side (a click, view or touch) with coarse conversion data. To preserve user privacy, conversion-side data is coarse, and reports are noised and are not sent immediately. The number of conversions is also limited.
+* **Aggregatable reports** provide a mechanism for rich metadata to be reported in aggregate, to better support use-cases such as campaign-level performance reporting or  conversion values.
 
 
 These two report types can be used simultaneously. They're complementary.
 
 ## API features (proposals)
 
-🕙 Last updated: June 2021
+🕙 Last updated: January 2022
 
 All the features below are proposals under incubation. This list evolves over time.
 
 ### Event-Level reports (clicks and views)
 
-Attribute cross-site click-through or view-through conversions with reports at a per-event level. See details in the [Explainer: event-level reports for views](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_views.md) and in the [Explainer: event-level reports for clicks](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md).
+Attribute cross-site click-through or view-through conversions with reports at a per-event level. See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md).
 
-Implementation status:
+Implementation status: `Latest version not implemented yet, under development in Chrome`
 
-Click-through: `🟢 available for experimentation in Chrome`. See the [origin trial](https://developer.chrome.com/origintrials/#/view_trial/3411476717733150721).
-
-View-through: `🟤 not implemented yet (all browsers)`
-
-### Aggregate reports (clicks and views)
+### Aggregatable reports (clicks and views)
 
 Attribution reports for aggregated conversions (both clicks and views). Complements the event-level reports. See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/AGGREGATE.md).
 
-Implementation status: `🟤 not implemented yet (all browsers)`
+Implementation status: `Under development (Chrome)`
 
 ### App-to-web (clicks and views)
 
 Attribution reports for web conversions for ad clicks (touches) or views that occurred within an Android app. See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/app_to_web.md).
 
-Implementation status: `🟤 not implemented yet (all browsers)`
+Implementation status: `Proposal. Not implemented yet (all browsers)`
 
 ### Cross-device (clicks and views)
 
 Attribute conversions occurring across distinct devices, i.e. as distinct web browser instances. See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/cross_device.md).
 
-Implementation status: `🟤 not implemented yet (all browsers)`
+Implementation status: `Proposal. Not implemented yet (all browsers)`
 
 ## External Documentation
 API guides and blogposts for this API are listed [here](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting/).
