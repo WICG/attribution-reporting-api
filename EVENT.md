@@ -586,7 +586,7 @@ including `ad-tech.example`, by adding conversion pixels:
 `ad-tech.example` chooses to encode the value as “2" (e.g. some bucketed version
 of the purchase value). They respond to the request with a
 `Attribution-Reporting-Register-Event-Trigger` header:
-```json
+```jsonc
 [{
     "trigger_data": "2"
 }]

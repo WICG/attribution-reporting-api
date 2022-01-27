@@ -187,8 +187,8 @@ The report will be JSON encoded with the following scheme:
 {
   "source_site": "https://publisher.example",
   "attribution_destination": "https://advertiser.example",
-  "source_registration_time": [timestamp in seconds],
-  “report_id”: [64 bit unsigned integer],
+  "source_registration_time": "[timestamp in seconds]",
+  "report_id": "[64 bit unsigned integer]",
 
   // Info that the aggregation services also need encoded in JSON
   // for use with AEAD.
