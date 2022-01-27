@@ -351,8 +351,7 @@ but disallows exfiltrating sensitive cross-site data out of the worklet.
 
 The worklet is used to generate histogram contributions, which are key-value
 pairs of integers. Note that there will be some maximum number of keys (e.g.
-2^32 keys, see the [considered
-alternative](#considered-alternatives--follow-up-work) for more detail).
+2^128 keys).
 
 The following code triggers attribution by invoking a worklet.
 ```javascript
