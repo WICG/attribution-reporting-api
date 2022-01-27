@@ -442,7 +442,7 @@ Source and trigger registration has additional optional functionality to both:
 This can be done via simple extensions to the registration configuration.
 
 Source registration:
-```json
+```
 {
   "source_event_id": "12345678",
   "destination": "https://toasters.example",
@@ -458,7 +458,7 @@ Source registration:
 ```
 Trigger registration will now accept an option header
 `Attribution-Reporting-Filters`:
-```json
+```
 {
   "conversion_subdomain": "electronics.megastore",
   // Not set on the source side, so this key is ignored
@@ -477,7 +477,7 @@ values. A list value for a key may only have integer or string items.
 
 The `Attribution-Reporting-Register-Event-Trigger` header can also be extended
 to do selective filtering to set `trigger_data` based on `source_data`:
-```json
+```
 // Filter by the source type to handle different bit limits.
 [{
   "trigger_data": "2",
@@ -502,7 +502,7 @@ alternatives.
 Source and trigger registration will accept a new parameter `debug_key`:
 ```json
 {
-    // ...
+    ...
     "debug_key": "[64-bit unsigned integer]"
 }
 ```
@@ -522,7 +522,7 @@ from source and trigger events unaltered. This allows tying normal reports to th
 separate stream of debug reports.
 ```json
 {
-    // ...
+    ...
     "source_debug_key": "[64-bit unsigned integer]",
     "trigger_debug_key": "[64-bit unsigned integer]"
 }
