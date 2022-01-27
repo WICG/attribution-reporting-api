@@ -154,7 +154,7 @@ The response to this request will configure the API. The browser will expect
 data in a new JSON HTTP header `Attribution-Reporting-Register-Source` which
 configures the API:
 
-```json
+```jsonc
 {
   "source_event_id": "12340873456",
   "destination": "[eTLD+1]",
@@ -260,7 +260,7 @@ support legacy HTML tags for triggers.
 Like source event registrations, these requests should respond with a new HTTP
 header `Attribution-Reporting-Register-Event-Trigger` which contains information
 about how to treat the trigger event:
-```json
+```jsonc
 [{
     "trigger_data": "[unsigned 64-bit integer]",
     "trigger_priority": "[signed 64-bit integer]",
@@ -320,7 +320,7 @@ updated to include `p` so that noise correction can work correctly in the event
 that `p` changes over time, or if different browsers apply different
 probabilities:
 
-```json
+```jsonc
 {
   "randomized_trigger_rate": 0.24,
   ...
@@ -442,7 +442,7 @@ Source and trigger registration has additional optional functionality to both:
 This can be done via simple extensions to the registration configuration.
 
 Source registration:
-```
+```jsonc
 {
   "source_event_id": "12345678",
   "destination": "https://toasters.example",
@@ -458,7 +458,7 @@ Source registration:
 ```
 Trigger registration will now accept an option header
 `Attribution-Reporting-Filters`:
-```
+```jsonc
 {
   "conversion_subdomain": "electronics.megastore",
   // Not set on the source side, so this key is ignored
@@ -477,7 +477,7 @@ values. A list value for a key may only have integer or string items.
 
 The `Attribution-Reporting-Register-Event-Trigger` header can also be extended
 to do selective filtering to set `trigger_data` based on `source_data`:
-```
+```jsonc
 // Filter by the source type to handle different bit limits.
 [{
   "trigger_data": "2",
@@ -500,7 +500,7 @@ or caller code), and more easily compare the performance to cookie-based
 alternatives.
 
 Source and trigger registration will accept a new parameter `debug_key`:
-```json
+```jsonc
 {
     ...
     "debug_key": "[64-bit unsigned integer]"
@@ -510,7 +510,7 @@ Source and trigger registration will accept a new parameter `debug_key`:
 If a report is created with source+trigger debug keys, a duplicate debug report
 will be sent immediately to a `.well-known/attribution-reporting/debug`
 endpoint. The debug reports will be a JSON dictionary with both debug keys:
-```json
+```jsonc
 {
     "source_debug_key": "[64-bit unsigned integer]",
     "trigger_debug_key": "[64-bit unsigned integer]"
@@ -520,7 +520,7 @@ endpoint. The debug reports will be a JSON dictionary with both debug keys:
 Normal reports will also include two new parameters which pass the debug keys
 from source and trigger events unaltered. This allows tying normal reports to the
 separate stream of debug reports.
-```json
+```jsonc
 {
     ...
     "source_debug_key": "[64-bit unsigned integer]",
@@ -565,7 +565,7 @@ A user clicks on the ad and this opens a window that lands on a URL to
 `toasters.example/purchase`. In the background, the browser issues an HTTP
 request to `https://ad-tech.example?adid=123456`. The ad-tech responds with a
 `Attribution-Reporting-Register-Source` JSON header:
-```json
+```jsonc
 {
   "source_event_id": "12345678",
   "destination": "https://toasters.example",
@@ -597,7 +597,7 @@ associated with the 7-day deadline as the 2-day deadline has passed. Roughly 5
 days later, `ad-tech.example` receives the following HTTP POST to
 `https://ad-tech.example/.well-known/attribution-reporting/report-attribution`
 with the following body:
-```json
+```jsonc
 {
   "attribution_destination": "https://toasters.example",
   "source_event_id": "12345678",

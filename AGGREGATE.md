@@ -71,7 +71,7 @@ Registering sources eligible for aggregate reporting entails adding a new header
 on the response to the `attributionsrc` request:
 `Attribution-Reporting-Register-Aggregatable-Source`, in the form of a JSON
 list.
-```
+```jsonc
 [{
   // Generates a "101011001" key prefix named "campaignCounts"
   "id": "campaignCounts",
@@ -104,7 +104,7 @@ string piece and an offset.
 Trigger registration will also include two new headers:
 `Attribution-Reporting-Register-Aggregatable-Trigger-Data` is a list of dict
 which generates aggregation keys.
-```
+```jsonc
 [
 // Each dict independently adds pieces to multiple source keys.
 {
@@ -128,7 +128,7 @@ are generated. See the [contribution
 budgeting](#contribution-bounding-and-budgeting) section for more details on how
 to allocate these contribution values.
 
-```
+```jsonc
 {
     // Each source event can contribute a maximum of L1 = 2^16 to the aggregate
     // histogram. In this example, use this whole budget on a single trigger,
@@ -146,7 +146,7 @@ to allocate these contribution values.
 ```
 
 The scheme above will generate the following abstract histogram contributions:
-```
+```jsonc
 [
 // campaignCounts
 {
@@ -183,7 +183,7 @@ trusted aggregation service known by the browser.
 
 The report will be JSON encoded with the following scheme:
 
-```
+```jsonc
 {
   "source_site": "https://publisher.example",
   "attribution_destination": "https://advertiser.example",
