@@ -320,10 +320,10 @@ updated to include `p` so that noise correction can work correctly in the event
 that `p` changes over time, or if different browsers apply different
 probabilities:
 
-```
+```json
 {
-  randomized_trigger_rate: 0.24,
-  …
+  "randomized_trigger_rate": 0.24,
+  ...
 }
 ```
 
