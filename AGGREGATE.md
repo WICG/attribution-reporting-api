@@ -346,7 +346,7 @@ conversion). From within the worklet, code can access both the source and
 trigger context in the same function to generate an aggregate report. This
 allows for more dynamic keys than a declarative API (like the existing[
 HTTP-based
-triggering](https://github.com/WICG/conversion-measurement-api#triggering-attribution)),
+triggering](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#triggering-attribution)),
 but disallows exfiltrating sensitive cross-site data out of the worklet.
 
 The worklet is used to generate histogram contributions, which are key-value
@@ -369,7 +369,7 @@ window.attributionReporting.triggerAttribution("https://reporter.example",
 
 Internally, the browser will look up to see which source should be attributed,
 similar to how
-[attribution](https://github.com/WICG/conversion-measurement-api#trigger-attribution-algorithm)
+[attribution](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#trigger-attribution-algorithm)
 works in the HTTP-based API. Note here that only a single source will be
 matched.
 
