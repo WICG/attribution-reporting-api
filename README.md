@@ -30,7 +30,7 @@ The Attribution Reporting API makes it possible to measure when an ad click or v
 
 The API enables two types of attribution reports:
 
-* **Event-level reports** associate a particular event on the ad side (a click, view or touch) with coarse conversion data. To preserve user privacy, conversion-side data is coarse, and reports are noised and are not sent immediately.he number of conversions is also limited.
+* **Event-level reports** associate a particular event on the ad side (a click, view or touch) with coarse conversion data. To preserve user privacy, conversion-side data is coarse, and reports are noised and are not sent immediately. The number of conversions is also limited.
 * **Aggregatable reports** provide a mechanism for rich metadata to be reported in aggregate, to better support use-cases such as campaign-level performance reporting or  conversion values.
 
 
