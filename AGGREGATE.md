@@ -35,8 +35,8 @@
 
 ## Introduction
 
-This document proposes extensions to our existing [Attribution Reporting API]
-(https://github.com/csharrison/conversion-measurement-api) that reports
+This document proposes extensions to our existing [Attribution Reporting
+API](https://github.com/csharrison/conversion-measurement-api) that reports
 event-level data. The intention is to provide a mechanism for rich metadata to
 be reported in aggregate, to better support use-cases such as campaign-level
 performance reporting or conversion values.
