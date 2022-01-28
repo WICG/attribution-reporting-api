@@ -781,10 +781,7 @@ eTLD+1s represented by pending sources for a source-site.
 The browser can place a limit on the number of a source site's pending source's
 unique `destination`s. When an attribution source is registered for an eTLD+1
 that is not already in the pending sources and a source site is at its limit,
-the browser will delete the oldest pending attribution source from the source
-site. If after deleting the oldest source, the source site is still at its
-limit, the browser will continue to delete pending sources until it is able to
-make room for the newly registered source.
+the browser will drop the new source.
 
 The lower this value, the harder it is for a reporting origin to use the API to
 try and measure user browsing activity not associated with ads being shown.
