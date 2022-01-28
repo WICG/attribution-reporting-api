@@ -349,9 +349,9 @@ An attribution trigger is a [=struct=] with the following items:
 <dl dfn-for="attribution trigger">
 : <dfn>attribution destination</dfn>
 :: A [=site=].
-: <dfn>trigger data</dfn>
+: <dfn>navigation-source trigger data</dfn>
 :: A non-negative 64-bit integer.
-: <dfn>event source trigger data</dfn>
+: <dfn>event-source trigger data</dfn>
 :: A non-negative 64-bit integer.
 : <dfn>trigger time</dfn>
 :: A point in time.
@@ -448,7 +448,7 @@ An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</
 <h3 algorithm id="parsing-data-fields">Parsing data fields</h3>
 
 This section defines how to parse strings into integers for
-[=attribution source/event id=], [=attribution trigger/trigger data=], and [=attribution trigger/event source trigger data=].
+[=attribution source/event id=], [=attribution trigger/navigation-source trigger data=], and [=attribution trigger/event-source trigger data=].
 
 To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an integer
 |maxData| perform the following steps. They return a non-negative integer:
@@ -619,9 +619,9 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     1. Let |fakeTrigger| be a new [=attribution trigger=] with the items:
         : [=attribution trigger/attribution destination=]
         :: |source|'s [=attribution source/attribution destination=]
-        : [=attribution trigger/trigger data=]
+        : [=attribution trigger/navigation-source trigger data=]
         :: 0
-        : [=attribution trigger/event source trigger data=]
+        : [=attribution trigger/event-source trigger data=]
         :: |source|'s [=attribution source/attribution mode=][1]
         : [=attribution trigger/trigger time=]
         :: |source|'s [=attribution source/source time=]
@@ -648,8 +648,8 @@ Issue: Should fake reports respect the user agent's [=max reports per attributio
 To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 [=environment settings object=] |environment|, run the following steps:
 
-1. Let |triggerData| be 0.
-1. If |url|'s [=url/query=] has a "`trigger-data`" field, set |triggerData| to the result of running [=parse attribution data=] with
+1. Let |navigationSourceTriggerData| be 0.
+1. If |url|'s [=url/query=] has a "`trigger-data`" field, set |navigationSourceTriggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=trigger data cardinality=].
 1. Let |eventSourceTriggerData| be 0.
 1. If |url|'s [=url/query=] has an "`event-source-trigger-data`" field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
@@ -666,9 +666,9 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 
     : [=attribution trigger/attribution destination=]
     :: The result of [=obtain a site|obtaining a site=] from |environment|'s [=environment/top-level origin=].
-    : [=attribution trigger/trigger data=]
-    :: |triggerData|.
-    : [=attribution trigger/event source trigger data=]
+    : [=attribution trigger/navigation-source trigger data=]
+    :: |navigationSourceTriggerData|.
+    : [=attribution trigger/event-source trigger data=]
     :: |eventSourceTriggerData|.
     : [=attribution trigger/trigger time=]
     :: The current time.
@@ -681,12 +681,12 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 1. Return |trigger|.
 
 <dfn>Trigger data cardinality</dfn> is a vendor-specific integer that controls the valid range of
-[=attribution trigger/trigger data=]:
-0 <= [=attribution trigger/trigger data=] < [=trigger data cardinality=].
+[=attribution trigger/navigation-source trigger data=]:
+0 <= [=attribution trigger/navigation-source trigger data=] < [=trigger data cardinality=].
 
 <dfn>Event-source trigger data cardinality</dfn> is a vendor-specific integer that controls the valid
-range of [=attribution trigger/event source trigger data=]:
-0 <= [=attribution trigger/event source trigger data=] < [=event-source trigger data cardinality=].
+range of [=attribution trigger/event-source trigger data=]:
+0 <= [=attribution trigger/event-source trigger data=] < [=event-source trigger data cardinality=].
 
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
