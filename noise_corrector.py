@@ -144,10 +144,10 @@ def simulate_randomization(true_reports, randomized_response_rate):
   noisy_reports = [0] * k
 
   # This method could be implemented by doing randomized response on every
-  # indivual true report. However, we can optimize this by noticing that
-  # Every bucket's final result will be distributed according to a Binomial
+  # individual true report. However, we can optimize this by noticing that
+  # every bucket's final result will be distributed according to a Binomial
   # distribution with parameter n and q = (1 - x)*(v' / n) + xr
-  # Where x = randomized_response_rate. Note that this is just an estimate,
+  # where x = randomized_response_rate. Note that this is just an estimate,
   # since the true randomized response will not be independent for each value.
   x = randomized_response_rate
 
