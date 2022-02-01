@@ -528,6 +528,9 @@ separate stream of debug reports.
 }
 ```
 
+Note that event-level reports associated with false trigger events
+will not have `trigger_debug_key`s. This allows developers to more
+closely understand how noise is applied in the API.
 
 To ensure that this data (which could enable cross-site tracking) is only
 available in a transitional phase while third-party cookies are available and
