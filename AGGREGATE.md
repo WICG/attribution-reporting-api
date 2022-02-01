@@ -200,11 +200,16 @@ The report will be JSON encoded with the following scheme:
   "aggregation_service_payloads": [
     {
       "payload": "[base64 HPKE encrypted data readable only by the aggregation service]",
-      "key_id": "[string identifying public key used to encrypt payload]"
+      "key_id": "[string identifying public key used to encrypt payload]",
+
+      // Optional debugging information (also present in event-level reports),
+      // if the cookie `ar_debug` is present.
+      "debug_cleartext_payload": "[decrypted payload]",
     },
   ],
 
-  // Optional debugging information (also present in event-level reports)
+  // Optional debugging information (also present in event-level reports),
+  // if the cookie `ar_debug` is present.
   "source_debug_key": "[64 bit unsigned integer]",
   "trigger_debug_key": "[64 bit unsigned integer]"
 }
@@ -238,7 +243,8 @@ utilize techniques like retries to minimize data loss.
   Note that the true key used to track batches will be `privacy_budget_key`
   concatenated with `round_to_hour(scheduled_report_time)`. The latter is
   omitted from the key for ergonomic reasons to help keys stay consistent over
-  time.
+  time. All reports that share a privacy budget key should be sent to the aggregation service at the same time (in any order).
+
 
 * The `shared_info` will be a serialized JSON object. The authenticated data for
   decryption will consist of this string (encoded as UTF-8) with a constant
@@ -247,8 +253,10 @@ utilize techniques like retries to minimize data loss.
   to access the encoded fields.
 
 
-All reports that share these attributes should be sent to the aggregation
-service at the same time (in any order).
+Note: if [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
+is enabled, additional debug fields will be present in aggregatable reports,
+including the cleartext payloads, to allow downstream systems to verify that
+reports are constructed correctly.
 
 ### Contribution bounding and budgeting
 
