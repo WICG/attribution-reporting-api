@@ -15,8 +15,7 @@ import random
 # - generate_possible_outputs_per_source
 
 # Estimates the true values for data generated through k-ary randomized
-# response. It includes a parameter `beta` which allows smoothly trading off
-# bias (minimized with `beta` = 0) and variance (minimized when `beta` = 1).
+# response. The estimator should be unbiased.
 def estimate_true_values(observed_values, randomized_response_rate, beta=0):
   """Returns a list of corrected counts
 
@@ -25,29 +24,17 @@ def estimate_true_values(observed_values, randomized_response_rate, beta=0):
   randomized_response_rate: The probability any given output is randomized
   """
   n = sum(observed_values)
-  r = 1. / len(observed_values)
+  k = len(observed_values)
   x = randomized_response_rate
 
-  # An observed value v will be distributed according to
-  # BinomialDistribution[n, q] where
-  # q = (1 - x)*(v' / n) + xr
-  # Where v' is the true value.
-  #
-  # E[v_hat] = E[(v - (1 - b)nxr) / (1 - (1 - b)x)]
-  # = (v'(1 - x) + nxr - (1 - b)nxr) / (1 - (1 - b)x)
-  # = (v'(1 - x) + bnxr) / (1 - (1 - b)x)
-  #
-  # For b = 0 --> E[v_hat] = v' i.e. the estimator is unbiased.
-  # For b = 1 --> E[v_hat] = v'(1-x) + bnxr
-  #
-  # V[v_hat] = V[(v - (1 - b)nxr) / (1 - (1 - b)x)]
-  # = V[v] / (1 - (1 - b)x)^2
-  # = nq(1-q) / (1 - (1 - b)x)^2
-  #
-  # For b = 0 --> V[v_hat] = nq(1-q) / (1 - x)^2
-  # For b = 1 --> V[v_hat] = nq(1-q)
+  # Proof: see formula 6 in https://arxiv.org/pdf/1602.07387.pdf. Note in that
+  # formulation, `x` = (k / (k + exp(epsilon) - 1)).
+  # Performing that substitution yields:
+  # estimate(v) = (v(k + exp(eps) - 1) - n) / (exp(eps) - 1)
+  # Which matches formula 6 after applying a multiplication of `n` to transform
+  # rates to counts.
   def estimate(v):
-    return (v - (1 - beta) * n * x * r) / (1 - (1 - beta) * x)
+    return (v -  n * x / k) / (1 - x)
 
   return [estimate(v) for v in observed_values]
 
@@ -65,6 +52,8 @@ def generate_possible_outputs_per_source(max_reports, data_cardinality,
            `max_reports`, describing each report (its trigger_data and window).
   """
 
+  # TODO(csharrison): Consider just enumerating the reports directly vs.
+  # enumerating the k-combinations.
   def find_k_comb(N, k):
     """Computes the Nth lexicographically smallest k-combination
 
@@ -151,11 +140,13 @@ def simulate_randomization(true_reports, randomized_response_rate):
   # since the true randomized response will not be independent for each value.
   x = randomized_response_rate
 
-  def gen_noisy(true_count):
-    q = (1 - x) * (true_count / n) + x / k
-    return numpy.random.binomial(n, q)
-  return [gen_noisy(c) for c in true_reports]
+  # Compute the non-flipped counts.
+  non_flipped_counts = [numpy.random.binomial(true_count, 1 - x) for true_count in true_reports]
 
+  # Distribute the flipped reports uniformly among all k buckets.
+  num_flipped = n - sum(non_flipped_counts)
+  flipped_counts = numpy.random.multinomial(num_flipped, [1/k] * k)
+  return non_flipped_counts + flipped_counts
 
 if __name__ == "__main__":
   # This example runs sample data through a simulation of the randomized
