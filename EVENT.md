@@ -322,7 +322,7 @@ probabilities:
 
 ```jsonc
 {
-  "randomized_trigger_rate": 0.24,
+  "randomized_trigger_rate": 0.0024,
   ...
 }
 ```
