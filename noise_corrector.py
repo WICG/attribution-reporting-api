@@ -14,6 +14,32 @@ import random
 # - get_possible_event_source_outputs
 # - generate_possible_outputs_per_source
 
+RANDOMIZED_RESPONSE_RATE_EVENT_SOURCES = .0000025
+RANDOMIZED_RESPONSE_RATE_NAV_SOURCES = .0024
+
+def run_example():
+  ################ EXAMPLE ##################
+  # This example runs sample data through a simulation of the randomized
+  # # response, and applies the noise correction to it.
+
+  outputs = get_possible_event_source_outputs()
+  true_reports = [
+      100_000_000,  # Sources with no reports
+      100_000,  # Sources with conversion metadata "0"
+      40_000,  # Sources with conversion metadata "1"
+  ]
+  noisy_reports = simulate_randomization(
+      true_reports, RANDOMIZED_RESPONSE_RATE_EVENT_SOURCES)
+  corrected_reports = correct_event_sources(noisy_reports)
+
+  # Print the result in a tabular form
+  column_names = ["Output", "True count", "Noisy count", "Corrected count"]
+  print("{:<30}{:<20}{:<20}{:<20}".format(*column_names))
+  for i, v in enumerate(corrected_reports):
+    d = json.dumps(outputs[i])
+    print(f"{d:<30}{true_reports[i]:<20,}{noisy_reports[i]:<20,}{v:<20,.1f}")
+
+
 # Estimates the true values for data generated through k-ary randomized
 # response. The estimator should be unbiased.
 def estimate_true_values(observed_values, randomized_response_rate, beta=0):
@@ -78,7 +104,12 @@ def generate_possible_outputs_per_source(max_reports, data_cardinality,
     return combos
 
   def bars_to_report(star_index, num_star):
-    """Returns a report description"""
+    """Returns a report description of the form:
+    {
+      "window": <window index>,
+      "trigger_data": <trigger data>
+    }
+    """
 
     bars_prior_to_star = star_index - (max_reports - 1 - num_star)
 
@@ -90,7 +121,7 @@ def generate_possible_outputs_per_source(max_reports, data_cardinality,
     # of |data_cardinality| x |num_windows|.
     # Subtract the first bar because that just begins the first window.
     window, data = divmod(bars_prior_to_star - 1, data_cardinality)
-    return {"window": window, "data": data}
+    return {"window": window, "trigger_data": data}
 
   def generate_output(N):
     star_indices = find_k_comb(N, max_reports)
@@ -103,31 +134,58 @@ def generate_possible_outputs_per_source(max_reports, data_cardinality,
 
 def get_possible_event_source_outputs():
   """Returns the possible outputs for an event source"""
-  return generate_possible_outputs_per_source(1, 2, 1)
+  # event_sources are when a user views an ad
+  max_reports_event_sources = 1
+  # view source events id can be up to one bit i.e. their value is one the 2 values
+  data_cardinality_event_sources = 2
+  # for views, there's only one reporting window
+  max_windows_event_sources = 1
+  return generate_possible_outputs_per_source(max_reports_event_sources,
+                                              data_cardinality_event_sources,
+                                              max_windows_event_sources)
 
 
 def get_possible_nav_source_outputs():
   """Returns all the possible outputs for navigation source"""
-  return generate_possible_outputs_per_source(3, 8, 3)
+  # nav_sources are when a user clicks on an ad.
+  max_reports_nav_sources = 3
+  # Navigation source id can be up to 3 bits i.e. their value is one of 8
+  # values.
+  data_cardinality_nav_sources = 8
+  # for clicks, there are 3 reporting windows.
+  max_windows_nav_sources = 3
+  return generate_possible_outputs_per_source(max_reports_nav_sources,
+                                              data_cardinality_nav_sources,
+                                              max_windows_nav_sources)
 
 
 # Params are taken from the EVENT.md explainer:
 # https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#data-limits-and-noise
 def correct_event_sources(observed_values):
+  # For event sources, there should be 3 possible observed values:
   # No triggers, 1 trigger with metadata 0, 1 trigger with metadata 1.
   assert len(observed_values) == 3
-  randomized_response_rate = .0000025
-  return estimate_true_values(observed_values, randomized_response_rate)
+  return estimate_true_values(observed_values,
+                              RANDOMIZED_RESPONSE_RATE_EVENT_SOURCES)
 
 
 def correct_nav_sources(observed_values):
+  # For navigation sources, there should be 2925 possible observed values. The
+  # reasion for this is fairly complicated. The output for a given source has a
+  # one-to-one mapping with a "stars and bars" sequence of `max_reports` stars
+  # and `max_windows * data_cardinality` bars. Thus the number of possible
+  # outputs is given by (num_stars + num_bars choose num_bars) = (27 choose 3) =
+  # 2925.
+  # https://en.wikipedia.org/wiki/Stars_and_bars_(combinatorics)
   assert len(observed_values) == 2925
-  randomized_response_rate = .0024
-  return estimate_true_values(observed_values, randomized_response_rate)
+  return estimate_true_values(observed_values,
+                              RANDOMIZED_RESPONSE_RATE_NAV_SOURCES)
 
 
 def simulate_randomization(true_reports, randomized_response_rate):
-  """Simulates randomized response on true_reports"""
+  """Simulates randomized response on true_reports; this simulates the way the
+  browser would treat reports in an idealized system (e.g. no rate limits hit,
+  etc)."""
   n = sum(true_reports)
   k = len(true_reports)
   noisy_reports = [0] * k
@@ -149,20 +207,4 @@ def simulate_randomization(true_reports, randomized_response_rate):
   return non_flipped_counts + flipped_counts
 
 if __name__ == "__main__":
-  # This example runs sample data through a simulation of the randomized
-  # response, and applies the noise correction to it.
-  true_reports = [
-      100_000_000,  # Sources with no reports
-      100_000,  # Sources with conversion metadata "0"
-      40_000,  # Sources with conversion metadata "1"
-  ]
-  randomized_response_rate = .0000025
-
-  noisy_reports = simulate_randomization(true_reports, randomized_response_rate)
-  corrected = correct_event_sources(noisy_reports)
-  outputs = get_possible_event_source_outputs()
-  column_names = ["Output", "True count", "Noisy count", "Corrected count"]
-  print("{:<30}{:<20}{:<20}{:<20}".format(*column_names))
-  for i, v in enumerate(corrected):
-    d = json.dumps(outputs[i])
-    print(f"{d:<30}{true_reports[i]:<20,}{noisy_reports[i]:<20,}{v:<20,.1f}")
+  run_example()
