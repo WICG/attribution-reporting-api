@@ -226,7 +226,7 @@ utilize techniques like retries to minimize data loss.
   browser initially scheduled the report to be sent (to avoid noise around
   offline devices reporting late).
 
-* The `source_registration_time` will represent (in ms since the Unix Epoch) the
+* The `source_registration_time` will represent (in seconds since the Unix Epoch) the
   time the source event was registered, rounded to the nearest whole day.
 
 * The `payload` will contain the actual histogram contributions. It should be be
