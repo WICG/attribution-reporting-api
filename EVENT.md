@@ -450,7 +450,7 @@ Source registration:
   "source_data": {
     "conversion_subdomain": ["electronics.megastore"
                              "electronics2.megastore"],
-    "product": "1234",
+    "product": ["1234"],
     // Note that "source_type" will be automatically generated as
     // one of {"navigation", "event"}
   }
@@ -460,9 +460,9 @@ Trigger registration will now accept an option header
 `Attribution-Reporting-Filters`:
 ```jsonc
 {
-  "conversion_subdomain": "electronics.megastore",
+  "conversion_subdomain": ["electronics.megastore"],
   // Not set on the source side, so this key is ignored
-  "directory": "/store/electronics" 
+  "directory": ["/store/electronics]" 
 }
 ```
 If keys in the filters JSON match keys in `source_data`, the trigger is
@@ -472,8 +472,8 @@ Note: A key which is present in one JSON and not the other will not be included
 in the matching logic.
 
 Note: The filter JSON does not support nested dictionaries or lists.
-`source_data` and `filters` are only allowed to have string, list
-values. A list value for a key may only have string items.
+`source_data` and `filters` are only allowed to have a list of values with
+string type.
 
 The `Attribution-Reporting-Register-Event-Trigger` header can also be extended
 to do selective filtering to set `trigger_data` based on `source_data`:
@@ -482,11 +482,11 @@ to do selective filtering to set `trigger_data` based on `source_data`:
 [{
   "trigger_data": "2",
   // Note that “not_filters” which filters with a negation is also supported.
-  "filters": {"source_type": "navigation"}
+  "filters": {"source_type": ["navigation"]}
 },
 {
   "trigger_data": "1",
-  "filters": {"source_type": "event"}
+  "filters": {"source_type": ["event"]}
 }]
 ```
 ### Optional: extended debugging reports
