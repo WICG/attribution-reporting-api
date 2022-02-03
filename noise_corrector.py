@@ -6,30 +6,41 @@ import math
 import numpy
 import random
 
-# This file provides a helper function `estimate_true_values` to correct noisy data coming from the
-# event-level reports in the Attribution Reporting API. It also includes
-# utilities for enumerating the possible outputs from various parametrizations
-# of the event-level reports. See
-# - get_possible_nav_source_outputs
-# - get_possible_event_source_outputs
-# - generate_possible_outputs_per_source
+# This file provides functionality to correct noisy data coming from the event-level reports in the Attribution Reporting API. The output is an estimate of what the real report distribution looks like.
+# Call `correct_nav_sources` and `correct_event_sources` to correct noisy reports⏤respectively click reports and view reports.
+# Under the hood, both these functions use `estimate_true_values`; this function applies mathematical operations to correct noisy data coming from the event-level reports. 
+# This file also includes additional utilities for enumerating the possible outputs from various parametrizations
+# of the event-level reports.
+# - `get_possible_nav_source_outputs`
+# - `get_possible_event_source_outputs`
+# - `generate_possible_outputs_per_source`
+
+
+# Noise rate values are taken from the EVENT.md explainer:
+# https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#data-limits-and-noise
 
 RANDOMIZED_RESPONSE_RATE_EVENT_SOURCES = .0000025
 RANDOMIZED_RESPONSE_RATE_NAV_SOURCES = .0024
 
 def run_example():
-  ################ EXAMPLE ##################
+  ################ EXAMPLE ################
   # This example runs sample data through a simulation of the randomized
-  # # response, and applies the noise correction to it.
+  # response, and applies the noise correction to it.
 
+  # Optional (added here to help understanding of this example): get all the possible outputs
   outputs = get_possible_event_source_outputs()
   true_reports = [
       100_000_000,  # Sources with no reports
-      100_000,  # Sources with conversion metadata "0"
-      40_000,  # Sources with conversion metadata "1"
+      100_000,  # Sources with trigger (conversion) data "0"
+      40_000,  # Sources with trigger (conversion) data "1"
   ]
+  # Simulate what the noisy reports produced by the browser would look like
   noisy_reports = simulate_randomization(
       true_reports, RANDOMIZED_RESPONSE_RATE_EVENT_SOURCES)
+  # Generate the noise-corrected reports 
+  # To use this script in a real system, replace `noisy_reports` with the actual attribution reports received by the endpoint (and sent from users' browsers).
+  # Note how `noisy_reports` is NOT a list of reports; it's an array of counts of reports of each kind
+  # For example, for view reports: `noisy_reports = [42, 10, 13]` would mean that among the 147 views that you recorded: 42 of them resulted in no report, 10 of them resulted in a report with trigger data 0, and 13 of them in a report with trigger data 1
   corrected_reports = correct_event_sources(noisy_reports)
 
   # Print the result in a tabular form
@@ -163,7 +174,7 @@ def get_possible_nav_source_outputs():
 # https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#data-limits-and-noise
 def correct_event_sources(observed_values):
   # For event sources, there should be 3 possible observed values:
-  # No triggers, 1 trigger with metadata 0, 1 trigger with metadata 1.
+  # No triggers, 1 trigger with trigger (conversion) data 0, 1 trigger with trigger (conversion) data 1.
   assert len(observed_values) == 3
   return estimate_true_values(observed_values,
                               RANDOMIZED_RESPONSE_RATE_EVENT_SOURCES)
