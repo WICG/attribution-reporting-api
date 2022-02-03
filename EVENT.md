@@ -472,8 +472,8 @@ Note: A key which is present in one JSON and not the other will not be included
 in the matching logic.
 
 Note: The filter JSON does not support nested dictionaries or lists.
-`source_data` and `filters` are only allowed to have integer, string, list
-values. A list value for a key may only have integer or string items.
+`source_data` and `filters` are only allowed to have string, list
+values. A list value for a key may only have string items.
 
 The `Attribution-Reporting-Register-Event-Trigger` header can also be extended
 to do selective filtering to set `trigger_data` based on `source_data`:
