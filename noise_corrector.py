@@ -191,11 +191,9 @@ def simulate_randomization(true_reports, randomized_response_rate):
   noisy_reports = [0] * k
 
   # This method could be implemented by doing randomized response on every
-  # individual true report. However, we can optimize this by noticing that
-  # every bucket's final result will be distributed according to a Binomial
-  # distribution with parameter n and q = (1 - x)*(v' / n) + xr
-  # where x = randomized_response_rate. Note that this is just an estimate,
-  # since the true randomized response will not be independent for each value.
+  # individual true report. However, we can optimize this by directly computing
+  # the number of total responses that would have flipped, and uniformly
+  # distributing them across all k buckets.
   x = randomized_response_rate
 
   # Compute the non-flipped counts.
