@@ -341,6 +341,12 @@ Note: there are a few caveats about a formal differential privacy claim:
   origin trial period, and our goal with this initial version is to create a
   foundation for further exploration into formally private methods for
   aggregation.
+  
+  ### Rate limits
+  
+  Various rate limits outlined in the 
+  [event-level explainer](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#reporting-cooldown--rate-limits)
+  should also apply to aggregatable reports.
 
 ## Ideas for future iteration
 
