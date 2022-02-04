@@ -1,8 +1,6 @@
 _This is an in-depth technical explainer. If you're looking for a high-level
-introduction to Attribution Reporting for Click-Through Measurement with
-event-level reports, head over to [Event-level reports in the Attribution
-Reporting
-API](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-event-introduction/)._
+introduction to Attribution Reporting with event-level reports, head over to
+[Event-level reports in the Attribution Reporting API](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-event-introduction/)._
 
 _A list of all API guides and blog posts for this API is also available
 [here](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting/)._
@@ -10,7 +8,7 @@ _A list of all API guides and blog posts for this API is also available
 # Attribution Reporting with event-level reports
 
 This document is an explainer for a potential new web platform feature which
-allows for measuring and reporting ad click conversions.
+allows for measuring and reporting ad click and view conversions.
 
 See the explainer on [aggregate measurement](AGGREGATE.md) for a potential
 extension on top of this.
