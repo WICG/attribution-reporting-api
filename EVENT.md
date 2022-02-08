@@ -404,8 +404,8 @@ following keys:
 
 -   `trigger_data`: Coarse data set in the attribution trigger registration
 
--   `report_id`: A unique id for this report which can be used to prevent double
-    counting
+-   `report_id`: A UUID string for this report which can be used to prevent
+    double counting
 
 -   `source_type`: Either "navigation" or "event", indicates whether this source
     was associated with a navigation.
