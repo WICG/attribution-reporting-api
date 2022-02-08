@@ -230,12 +230,7 @@ utilize techniques like retries to minimize data loss.
   time the source event was registered, rounded to the nearest whole day.
 
 * The `payload` will contain the actual histogram contributions. It should be be
-  encrypted via [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/).
-  Its exact format is not specified in this doc, but it should use AEAD to
-  ensure that the information in `shared_info` is not tampered with, since the
-  aggregation service will need that information to do proper replay protection.
-  How the browser obtains the service’s public key is left as an implementation
-  detail.
+  encrypted and then base64 encoded, see [below](#encrypted-payload).
 
 * The `privacy_budget_key` is used to define distinct batches of aggregate
   reports. It is used by the aggregation service to prevent replay attacks. It
@@ -257,6 +252,60 @@ Note: if [debugging](https://github.com/WICG/conversion-measurement-api/blob/mai
 is enabled, additional debug fields will be present in aggregatable reports,
 including the cleartext payloads, to allow downstream systems to verify that
 reports are constructed correctly.
+
+#### Encrypted payload
+The `payload` should be a [CBOR](https://cbor.io) map encrypted via
+[HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/) and then base64
+encoded. The map will have the following structure:
+
+```jsonc
+// CBOR
+{
+  "operation": "histogram",  // Allows for the service to support other operations in the future
+  "reporting_origin": "https://reporter.example",
+  "data": [{"bucket": <bucket>, "value": <value> }, ...]
+}
+```
+Optionally, the browser may encode multiple contributions in the same payload;
+this is only possible if all other fields in the report/payload are identical
+for the contributions.
+
+This encryption should use [AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption)
+to ensure that the information in `shared_info` is not tampered with, since the
+aggregation service will need that information to do proper replay protection.
+The associated data for AEAD will be the `shared_info` string, encoded as UTF-8,
+with a constant prefix to protect against cross-protocol attacks.
+
+The encryption will use public keys specified by the aggregation service. The
+browser will encrypt payloads just before the report is sent by fetching the
+public key endpoint with an un-credentialed request. The processing origin will
+respond with a set of keys which will be stored according to standard HTTP
+caching rules, i.e. using Cache-Control headers to dictate how long to store the
+keys for (e.g. following the [freshness
+lifetime](https://datatracker.ietf.org/doc/html/rfc7234#section-4.2)). The
+browser could enforce maximum/minimum lifetimes of stored keys to encourage
+faster key rotation and/or mitigate bandwidth usage. The scheme of the JSON
+encoded public keys is as follows:
+
+```jsonc
+{
+  "keys": [
+    {
+      "id": "[arbitrary string identifying the key (up to 128 characters)]",
+      "key": "[base64 encoded public key]"
+    },
+    // Optionally, more keys.
+  ]
+}
+```
+
+A public key endpoint should not reuse an ID string for a different key. In
+particular, IDs must be unique within a single response to be valid. In the case
+of backwards incompatible changes to this scheme (e.g. in future versions of the
+API), the endpoint URL should also change.
+
+**Note:** The browser may need some mechanism to ensure that the same set of
+keys are delivered to different users.
 
 ### Contribution bounding and budgeting
 
