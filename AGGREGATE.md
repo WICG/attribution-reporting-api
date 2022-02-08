@@ -187,12 +187,11 @@ The report will be JSON encoded with the following scheme:
 {
   "source_site": "https://publisher.example",
   "attribution_destination": "https://advertiser.example",
-  "source_registration_time": "[timestamp in seconds]",
   "report_id": "[64 bit unsigned integer]",
 
   // Info that the aggregation services also need encoded in JSON
   // for use with AEAD.
-  "shared_info": "{\"scheduled_report_time\":[timestamp in seconds],\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\"}",
+  "shared_info": "{\"scheduled_report_time\":[timestamp in seconds], \"source_registration_time\": \"[timestamp in seconds]\",\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\"}",
 
   // Support a list of payloads for future extensibility if multiple helpers
   // are necessary. Currently only supports a single helper configured
@@ -226,9 +225,6 @@ utilize techniques like retries to minimize data loss.
   browser initially scheduled the report to be sent (to avoid noise around
   offline devices reporting late).
 
-* The `source_registration_time` will represent (in seconds since the Unix Epoch) the
-  time the source event was registered, rounded to the nearest whole day.
-
 * The `payload` will contain the actual histogram contributions. It should be be
   encrypted via [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/).
   Its exact format is not specified in this doc, but it should use AEAD to
@@ -237,20 +233,25 @@ utilize techniques like retries to minimize data loss.
   How the browser obtains the service’s public key is left as an implementation
   detail.
 
-* The `privacy_budget_key` is used to define distinct batches of aggregate
-  reports. It is used by the aggregation service to prevent replay attacks. It
-  will be a hash of: `reporting_origin | source_site | destination | version`.
-  Note that the true key used to track batches will be `privacy_budget_key`
-  concatenated with `round_to_hour(scheduled_report_time)`. The latter is
-  omitted from the key for ergonomic reasons to help keys stay consistent over
-  time. All reports that share a privacy budget key should be sent to the aggregation service at the same time (in any order).
-
-
 * The `shared_info` will be a serialized JSON object. The authenticated data for
   decryption will consist of this string (encoded as UTF-8) with a constant
   prefix added for domain separation. The string therefore must be forwarded to
   the aggregation service unmodified. The reporting origin can parse the string
   to access the encoded fields.
+  
+* The `source_registration_time` within `shared_info` will represent (in seconds 
+  since the Unix Epoch) the time the source event was registered, rounded to the
+  nearest whole day.
+  
+* The `privacy_budget_key` is used to define distinct batches of aggregate
+  reports. It is used by the aggregation service to prevent replay attacks. It
+  will be a hash of: `reporting_origin | source_site | destination | version`.
+  Note that the true key used to track batches will be `privacy_budget_key`
+  concatenated with `round_to_hour(scheduled_report_time)` and 
+  `round_to_hour(source_registration_time`. The latter two are omitted from the key
+  for ergonomic reasons to help keys stay consistent over time. All reports that
+  share a privacy budget key should be sent to the aggregation service at the same 
+  time (in any order).
 
 
 Note: if [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
