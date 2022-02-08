@@ -241,11 +241,10 @@ utilize techniques like retries to minimize data loss.
   time. All reports that share a privacy budget key should be sent to the aggregation service at the same time (in any order).
 
 
-* The `shared_info` will be a serialized JSON object. The authenticated data for
-  decryption will consist of this string (encoded as UTF-8) with a constant
-  prefix added for domain separation. The string therefore must be forwarded to
-  the aggregation service unmodified. The reporting origin can parse the string
-  to access the encoded fields.
+* The `shared_info` will be a serialized JSON object. This exact string is used
+  as authenticated data for decryption, see [below](#encrypted-payload). The
+  string therefore must be forwarded to the aggregation service unmodified. The
+  reporting origin can parse the string to access the encoded fields.
 
 
 Note: if [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
@@ -273,8 +272,8 @@ for the contributions.
 This encryption should use [AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption)
 to ensure that the information in `shared_info` is not tampered with, since the
 aggregation service will need that information to do proper replay protection.
-The associated data for AEAD will be the `shared_info` string, encoded as UTF-8,
-with a constant prefix to protect against cross-protocol attacks.
+The authenticated data will consist of the `shared_info` string (encoded as
+UTF-8) with a constant prefix added for domain separation.
 
 The encryption will use public keys specified by the aggregation service. The
 browser will encrypt payloads just before the report is sent by fetching the
