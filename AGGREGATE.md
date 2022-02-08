@@ -188,11 +188,10 @@ The report will be JSON encoded with the following scheme:
   "source_site": "https://publisher.example",
   "attribution_destination": "https://advertiser.example",
   "source_registration_time": "[timestamp in seconds]",
-  "report_id": "[64 bit unsigned integer]",
 
   // Info that the aggregation services also need encoded in JSON
   // for use with AEAD.
-  "shared_info": "{\"scheduled_report_time\":[timestamp in seconds],\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\"}",
+  "shared_info": "{\"scheduled_report_time\":[timestamp in seconds],\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\".\"report_id\":\"[UUID]\"}",
 
   // Support a list of payloads for future extensibility if multiple helpers
   // are necessary. Currently only supports a single helper configured
