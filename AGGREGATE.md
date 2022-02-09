@@ -104,18 +104,18 @@ which generates aggregation keys.
 // Each dict independently adds pieces to multiple source keys.
 {
   // Conversion type purchase = 2 at a 9 bit offset, i.e. 2 << 9.
-  // 9 bit offset is needed because there are 511 possible campaigns, which
+  // A 9 bit offset is needed because there are 511 possible campaigns, which
   // will take up 9 bits in the resulting key.
   "key_piece": "0x400",
-  // Apply this suffix to:
+  // Apply this key piece to:
   "source_keys": ["campaignCounts"]
 },
 {
   // Purchase category shirts = 21 at a 7 bit offset, i.e. 21 << 7.
-  // 7 bit offset needed because there are 100 regions for the geo key, which
-  // will take up 7 bits of space in the resulting key.
+  // A 7 bit offset is needed because there are ~100 regions for the geo key,
+  // which will take up 7 bits of space in the resulting key.
   "key_piece": "0xA80",
-  // Apply this suffix to:
+  // Apply this key piece to:
   "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"]
 }
 ]
