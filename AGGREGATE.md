@@ -73,14 +73,15 @@ on the response to the `attributionsrc` request:
 list.
 ```jsonc
 [{
-  // Generates a "0x159" key prefix named "campaignCounts"
+  // Generates a "0x159" key piece (low order bits of the key) named
+  // "campaignCounts"
   "id": "campaignCounts",
   "key_piece": "0x159", // User saw ad from campaign 345 (out of 511)
 },
 {
-  // Generates a "0x5" key prefix named "geoValue"
+  // Generates a "0x5" key piece (low order bits of the key) named "geoValue"
   "id": "geoValue",
-  // Source-side geo region = 5 (US).
+  // Source-side geo region = 5 (US), out of a possible ~100 regions.
   "key_piece": "0x5",
 }]
 ```
@@ -102,12 +103,18 @@ which generates aggregation keys.
 [
 // Each dict independently adds pieces to multiple source keys.
 {
-  "key_piece": "0x400",// Conversion type purchase = 2 at a 9 bit offset
+  // Conversion type purchase = 2 at a 9 bit offset, i.e. 2 << 9.
+  // 9 bit offset is needed because there are 511 possible campaigns, which
+  // will take up 9 bits in the resulting key.
+  "key_piece": "0x400",
   // Apply this suffix to:
   "source_keys": ["campaignCounts"]
 },
 {
-  "key_piece": "0xA80",// Purchase category shirts = 21 at a 7 bit offset
+  // Purchase category shirts = 21 at a 7 bit offset, i.e. 21 << 7.
+  // 7 bit offset needed because there are 100 regions for the geo key, which
+  // will take up 7 bits of space in the resulting key.
+  "key_piece": "0xA80",
   // Apply this suffix to:
   "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"]
 }
@@ -142,12 +149,12 @@ The scheme above will generate the following abstract histogram contributions:
 [
 // campaignCounts
 {
-  key: 0x566, // 0b10101100110
+  key: 0x559, // = 0x159 | 0x400
   value: 32768 
 },
 // geoValue:
 {
-  key: 0xB5, // 0b000010110101
+  key: 0xA85, // = 0x5 | 0xA80
   value: 1664
 }]
 ```
