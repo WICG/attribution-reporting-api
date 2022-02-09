@@ -73,31 +73,25 @@ on the response to the `attributionsrc` request:
 list.
 ```jsonc
 [{
-  // Generates a "101011001" key prefix named "campaignCounts"
+  // Generates a "0x159" key prefix named "campaignCounts"
   "id": "campaignCounts",
-  "key_piece": "101011001", // User saw ad from campaign 345 (out of 511)
-  "key_offset": 0
+  "key_piece": "0x159", // User saw ad from campaign 345 (out of 511)
 },
 {
-  // Generates a "101" key prefix named "geoValue"
+  // Generates a "0x5" key prefix named "geoValue"
   "id": "geoValue",
-  // Source-side geo region = 5 (US) but pad with 0s since the shop operates in
-  // ~100 separate countries.
-  "key_piece": "0000101",
-  "key_offset": 0
+  // Source-side geo region = 5 (US).
+  "key_piece": "0x5",
 }]
 ```
 This defines a list named histogram contributions, each with a piece of the
-aggregation key defined as a bit-string at a particular offset. The final
-histogram bucket key will be fully defined at trigger time using a combination
-of this piece and trigger-side pieces.
+aggregation key defined as a hex-string. The final histogram bucket key will be
+fully defined at trigger time using a combination (binary OR) of this piece and
+trigger-side pieces.
 
 Final keys will be restricted to a maximum of 128 bits. Keys longer than this
-will be truncated.
-
-TODO: consider it an option to use binary or decimal notation e.g. with 0b
-prefix. Also consider using a single parameter to specify the key vs. a
-string piece and an offset.
+will be truncated. This means that hex strings in the JSON should be limited to
+at most 32 digits.
 
 ### Attribution trigger registration
 
@@ -108,14 +102,12 @@ which generates aggregation keys.
 [
 // Each dict independently adds pieces to multiple source keys.
 {
-  "key_piece": "10",// Conversion type purchase = 2
-  "key_offset": 9,
+  "key_piece": "0x400",// Conversion type purchase = 2 at a 9 bit offset
   // Apply this suffix to:
   "source_keys": ["campaignCounts"]
 },
 {
-  "key_piece": "10101",// Purchase category shirts = 21
-  "key_offset": 7,
+  "key_piece": "0xA80",// Purchase category shirts = 21 at a 7 bit offset
   // Apply this suffix to:
   "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"]
 }
@@ -150,12 +142,12 @@ The scheme above will generate the following abstract histogram contributions:
 [
 // campaignCounts
 {
-  key: 1382, // 0b10101100110
+  key: 0x566, // 0b10101100110
   value: 32768 
 },
 // geoValue:
 {
-  key: 181, // 0b000010110101
+  key: 0xB5, // 0b000010110101
   value: 1664
 }]
 ```
