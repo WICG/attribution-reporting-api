@@ -188,11 +188,10 @@ The report will be JSON encoded with the following scheme:
   "source_site": "https://publisher.example",
   "attribution_destination": "https://advertiser.example",
   "source_registration_time": "[timestamp in seconds]",
-  "report_id": "[64 bit unsigned integer]",
 
   // Info that the aggregation services also need encoded in JSON
   // for use with AEAD.
-  "shared_info": "{\"scheduled_report_time\":\"[timestamp in seconds]\",\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\"}",
+  "shared_info": "{\"scheduled_report_time\":\"[timestamp in seconds]\",\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\".\"report_id\":\"[UUID]\"}",
 
   // Support a list of payloads for future extensibility if multiple helpers
   // are necessary. Currently only supports a single helper configured
@@ -341,6 +340,13 @@ Note: there are a few caveats about a formal differential privacy claim:
   origin trial period, and our goal with this initial version is to create a
   foundation for further exploration into formally private methods for
   aggregation.
+  
+  ### Rate limits
+  
+  Various rate limits outlined in the 
+  [event-level explainer](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#reporting-cooldown--rate-limits)
+  should also apply to aggregatable reports. The limits should be shared across
+  all types of reports.
 
 ## Ideas for future iteration
 
