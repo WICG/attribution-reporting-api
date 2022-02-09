@@ -262,7 +262,7 @@ encoded. The map will have the following structure:
 {
   "operation": "histogram",  // Allows for the service to support other operations in the future
   "reporting_origin": "https://reporter.example",
-  "data": [{"bucket": <bucket>, "value": <value> }, ...]
+  "data": [{"bucket": <bucket, encoded as a big-endian bytestring>, "value": <value, as an integer> }, ...]
 }
 ```
 Optionally, the browser may encode multiple contributions in the same payload;
