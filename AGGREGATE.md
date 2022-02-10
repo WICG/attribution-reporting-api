@@ -255,8 +255,8 @@ Note: if [debugging](https://github.com/WICG/conversion-measurement-api/blob/mai
 is enabled, additional debug fields will be present in aggregatable reports,
 including the cleartext payloads, to allow downstream systems to verify that
 reports are constructed correctly. If debugging is enabled, the `shared_info` 
-will include the flag `debug_mode=true` to let the aggregation service know
-that debugging functionality can be enabled when processing this record.
+will include the flag `debug_mode=1` to allow the aggregation service to 
+support debugging functionality on debug reports.
 
 ### Contribution bounding and budgeting
 
