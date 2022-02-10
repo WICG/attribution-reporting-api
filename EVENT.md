@@ -40,6 +40,8 @@ extension on top of this.
   - [Trigger Data](#trigger-data)
   - [Reporting Delay](#reporting-delay)
   - [Reporting origin limits](#reporting-origin-limits)
+  - [Pending source limits](#pending-source-limits)
+  - [Pending report limits](#pending-report-limits)
   - [Clearing Site Data](#clearing-site-data)
   - [Reporting cooldown / rate limits](#reporting-cooldown--rate-limits)
   - [Less trigger-side data](#less-trigger-side-data)
@@ -285,6 +287,9 @@ Controls for Attribution Source
 Declaration](#publisher-side-controls-for-attribution-source-declaration), this
 Permissions Policy will be enabled by default in the top-level context and in
 same-origin children, but disabled in cross-origin children.
+
+Navigation sources may be attributed up to 3 times. Event sources may be
+attributed up to 1 time.
 
 ### Data limits and noise
 
@@ -710,6 +715,14 @@ registration. This should be limited to 100 origins per 30 days.
 Additionally, there should be a limit of 10 reporting origins per <source site,
 destination site, 30 days>, counted for every attribution report that is
 generated.
+
+### Pending source limits
+
+There should be a limit of 1024 pending sources per source origin.
+
+### Pending report limits
+
+There should be a limit of 1024 pending reports per destination site.
 
 ### Clearing Site Data
 
