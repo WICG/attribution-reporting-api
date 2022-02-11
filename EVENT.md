@@ -36,12 +36,11 @@ extension on top of this.
   - [Optional attribution filters](#optional-attribution-filters)
   - [Optional: extended debugging reports](#optional-extended-debugging-reports)
   - [Noisy fake conversion example](#noisy-fake-conversion-example)
+  - [Storage limits](#storage-limits)
 - [Privacy Considerations](#privacy-considerations)
   - [Trigger Data](#trigger-data)
   - [Reporting Delay](#reporting-delay)
   - [Reporting origin limits](#reporting-origin-limits)
-  - [Pending source limits](#pending-source-limits)
-  - [Pending report limits](#pending-report-limits)
   - [Clearing Site Data](#clearing-site-data)
   - [Reporting cooldown / rate limits](#reporting-cooldown--rate-limits)
   - [Less trigger-side data](#less-trigger-side-data)
@@ -635,6 +634,15 @@ In the above example, the browser could have chosen to generate three reports:
 * One report with metadata “3”, sent 7 days after the click
 * One report with metadata “0”, also sent 7 days after the click
 
+### Storage limits
+
+The browser may apply storage limits in order to prevent excessive resource
+usage.
+
+Strawman: There should be a limit of 1024 pending sources per source origin.
+
+Strawman: There should be a limit of 1024 pending reports per destination site.
+
 ## Privacy Considerations
 
 A primary privacy goal of the API is to make _linking identity_ between two
@@ -715,14 +723,6 @@ registration. This should be limited to 100 origins per 30 days.
 Additionally, there should be a limit of 10 reporting origins per <source site,
 destination site, 30 days>, counted for every attribution report that is
 generated.
-
-### Pending source limits
-
-There should be a limit of 1024 pending sources per source origin.
-
-### Pending report limits
-
-There should be a limit of 1024 pending reports per destination site.
 
 ### Clearing Site Data
 
