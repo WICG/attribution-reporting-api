@@ -248,7 +248,7 @@ utilize techniques like retries to minimize data loss.
   will be a hash of: `reporting_origin | source_site | destination | version`.
   Note that the true key used to track batches will be `privacy_budget_key`
   concatenated with `round_to_hour(scheduled_report_time)` and 
-  `round_to_hour(source_registration_time`. The latter two are omitted from the key
+  `source_registration_time`. The latter two are omitted from the key
   for ergonomic reasons to help keys stay consistent over time. All reports that
   share a privacy budget key should be sent to the aggregation service at the same 
   time (in any order).
