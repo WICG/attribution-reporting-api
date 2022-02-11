@@ -190,7 +190,7 @@ The report will be JSON encoded with the following scheme:
 
   // Info that the aggregation services also need encoded in JSON
   // for use with AEAD.
-  "shared_info": "{\"scheduled_report_time\":\"[timestamp in seconds]\",\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\".\"report_id\":\"[UUID]\"}",
+  "shared_info": "{\"scheduled_report_time\":\"[timestamp in seconds]\",\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\",\"report_id\":\"[UUID]\"}",
 
   // Support a list of payloads for future extensibility if multiple helpers
   // are necessary. Currently only supports a single helper configured
@@ -254,7 +254,9 @@ utilize techniques like retries to minimize data loss.
 Note: if [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
 is enabled, additional debug fields will be present in aggregatable reports,
 including the cleartext payloads, to allow downstream systems to verify that
-reports are constructed correctly.
+reports are constructed correctly. If debugging is enabled, the `shared_info` 
+will include the flag `debug_mode: 1` to allow the aggregation service to 
+support debugging functionality on debug reports.
 
 ### Contribution bounding and budgeting
 
