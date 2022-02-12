@@ -47,7 +47,7 @@ JoinedList = List[Joined]
 OutputConfig = Tuple[Tuple[int, int], ...]
 
 # For generic functions.
-T = TypeVar("T")
+T = TypeVar('T')
 
 
 class ParamConfig:
@@ -64,8 +64,8 @@ class ParamConfig:
     self.name = name
 
 
-NAV_PARAMS = ParamConfig(.5, 8, 3, 3, "navigation")
-EVENT_PARAMS = ParamConfig(.0000025, 2, 1, 1, "event")
+NAV_PARAMS = ParamConfig(.5, 8, 3, 3, 'navigation')
+EVENT_PARAMS = ParamConfig(.0000025, 2, 1, 1, 'event')
 
 
 class OutputEnumeration:
@@ -73,15 +73,15 @@ class OutputEnumeration:
   # per source event, for the purposes of debiasing the randomized response
   # privacy mechanism.
   def __init__(self, report_tuple: OutputConfig, params: ParamConfig):
-    """report_tuple must be in the form ((window_index, trigger_data),...)"""
+    '''report_tuple must be in the form ((window_index, trigger_data),...)'''
     self.output: OutputConfig = tuple(sorted(report_tuple))
     self.params = params    
 
   def __str__(self):
     def report_to_string(r):
       if r is None:
-        return "No report"
-      return {"window": r[0], "data": r[1]}
+        return 'No report'
+      return {'window': r[0], 'data': r[1]}
     return json.dumps([report_to_string(r) for r in self.output])
 
   def __repr__(self): return self.output.__repr__()
@@ -97,20 +97,20 @@ class OutputEnumeration:
 
   @classmethod
   def create_from_data(cls, source_with_reports):
-    """Create an output directly from structured data
+    '''Create an output directly from structured data
 
     source_with_reports: list of (source, [report, ...]) tuples.
     See get_conversion_counts for expected structure for sources and reports.
-    """
+    '''
     source, reports = source_with_reports
-    params = EVENT_PARAMS if source["source_type"] == "event" else NAV_PARAMS
+    params = EVENT_PARAMS if source['source_type'] == 'event' else NAV_PARAMS
     max_reports = params.max_reports
     assert len(reports) <= max_reports
 
     def parse_report(source, report: dict) -> Tuple[int, int]:
       window_index = OutputEnumeration._get_window_index_for_report(
           source, report)
-      trigger_data = int(report["report"]["trigger_data"])
+      trigger_data = int(report['report']['trigger_data'])
       return (window_index, trigger_data)
 
     return cls(tuple(parse_report(source, r) for r in reports), params)
@@ -128,8 +128,8 @@ class OutputEnumeration:
     return sorted([cls(x, params) for x in deduped])
 
   def data_histogram(self) -> numpy.ndarray:
-    """Returns the number of reports associated with this output, broken
-    out by the trigger_data"""
+    '''Returns the number of reports associated with this output, broken
+    out by the trigger_data'''
 
     histogram = numpy.zeros(self.params.data_cardinality)
     for r in self.output:
@@ -137,39 +137,39 @@ class OutputEnumeration:
     return histogram
 
   def get_report_time(self, window: int, source: Source) -> int:
-    expiry = source["registration_config"]["expiry"]
-    if self.params.name == "event":
+    expiry = source['registration_config']['expiry']
+    if self.params.name == 'event':
       return expiry
 
     # TODO(csharrison): This assumes the expiry > 7 days.
     windows = [timedelta(days=2), timedelta(days=7), timedelta(seconds=expiry)]
-    source_time = source["source_time"]
+    source_time = source['source_time']
     return int(source_time + windows[window].total_seconds())
 
   def generate_reports_for_source(self, source: Source) -> List[Report]:
-    assert self.params.name == source["source_type"]
-    source_event_id = source["registration_config"]["source_event_id"]
+    assert self.params.name == source['source_type']
+    source_event_id = source['registration_config']['source_event_id']
 
     reports: List[Report] = []
     for window, trigger_data in self.output:
       reports.append({
-          "report_time": self.get_report_time(window, source),
-          "report": {
-              "source_event_id": source_event_id,
-              "source_type": self.params.name,
-              "trigger_data": str(trigger_data)
+          'report_time': self.get_report_time(window, source),
+          'report': {
+              'source_event_id': source_event_id,
+              'source_type': self.params.name,
+              'trigger_data': str(trigger_data)
           }
       })
     return reports
 
   @staticmethod
   def _get_window_index_for_report(source: dict, report: dict) -> int:
-    if source["source_type"] == "event":
+    if source['source_type'] == 'event':
       return 0
 
-    report_time = report["report_time"]
-    source_time = source["source_time"]
-    raw_expiry = source["registration_config"]["expiry"]
+    report_time = report['report_time']
+    source_time = source['source_time']
+    raw_expiry = source['registration_config']['expiry']
     expiry = timedelta(seconds=int(raw_expiry))
     delta = timedelta(seconds=report_time - source_time)
 
@@ -188,14 +188,14 @@ class OutputEnumeration:
 # response. The estimator should be unbiased.
 def estimate_true_values(observed_values: Dict[T, int],
                          randomized_response_rate: float) -> Dict[T, float]:
-  """Returns a list of corrected counts
+  '''Returns a list of corrected counts
 
   observed_values: A map of size `k` for k-ary randomized response. Each item
                    represents a randomized response output as the key, with its
                    associated count as the value.
 
   randomized_response_rate: The probability any given output is randomized
-  """
+  '''
   n = sum(observed_values.values())
   k = len(observed_values)
   x = randomized_response_rate
@@ -213,10 +213,10 @@ def estimate_true_values(observed_values: Dict[T, int],
 
 
 def join_reports_with_sources(sources: List[Source], reports: List[Report]) -> JoinedList:
-  """Returns tuple of (source, [reports]) joined with the source_event_id"""
+  '''Returns tuple of (source, [reports]) joined with the source_event_id'''
   report_map = collections.defaultdict(list)
   for r in reports:
-    report_map[r["report"]["source_event_id"]].append(r)
+    report_map[r['report']['source_event_id']].append(r)
 
   def join(source) -> Joined:
     source_event_id = source['registration_config']['source_event_id']
@@ -227,8 +227,8 @@ def join_reports_with_sources(sources: List[Source], reports: List[Report]) -> J
 ################## AGGREGATE UTILITIES ##################
 
 def get_raw_corrected_map(joined: JoinedList, params: ParamConfig) -> Dict[OutputEnumeration, float]:
-  """Returns an aggregate map of OutputEnumeration -> float, with noise debiased
-  according to params"""
+  '''Returns an aggregate map of OutputEnumeration -> float, with noise debiased
+  according to params'''
   output_counts = {o: 0 for o in OutputEnumeration.generate_all(params)}
   for j in joined:
     output = OutputEnumeration.create_from_data(j)
@@ -239,14 +239,14 @@ def get_raw_corrected_map(joined: JoinedList, params: ParamConfig) -> Dict[Outpu
 
 
 def correct_aggregates(joined: JoinedList, params: ParamConfig) -> List[dict]:
-  """Returns debiased report counts broken out by trigger_data"""
+  '''Returns debiased report counts broken out by trigger_data'''
   corrected = get_raw_corrected_map(joined, params)
   histogram = numpy.zeros(params.data_cardinality)
   for o, c in corrected.items():
     histogram += c * o.data_histogram()
   x = 10
-  return [{"trigger_data": t,
-           "report_count": v} for t, v in enumerate(histogram)]
+  return [{'trigger_data': t,
+           'report_count': v} for t, v in enumerate(histogram)]
 
 
 ################## EVENT-LEVEL UTILITIES ##################
@@ -254,7 +254,7 @@ def correct_aggregates(joined: JoinedList, params: ParamConfig) -> List[dict]:
 def adjust_to_match_distribution(values: List[T],
                                  estimated_counts: Dict[T, float],
                                  default_value: T) -> List[T]:
-  """Given a list of values, and an aggregate map that counts all possible values,
+  '''Given a list of values, and an aggregate map that counts all possible values,
   returns a list of adjusted values to match the aggregate distribution.
 
   values: list of arbitrary objects (must be possible to place in dict/set). To
@@ -268,9 +268,9 @@ def adjust_to_match_distribution(values: List[T],
   The algorithm used in this method attempts to achieve two goals:
   1. The output values match the distribution as much as possible, minimizing
      bias.
-  2. The output maximizes "overlap" with the input. That is, satisfying (1), we
+  2. The output maximizes 'overlap' with the input. That is, satisfying (1), we
      want to minimize the number of inputs that are adjusted.
-  """
+  '''
 
   # Split the distribution into two chunks: elements with mass >= 1 and not.
   # Clamp negatives to 0. Note this introduces bias, but it seems unavoidable.
@@ -330,7 +330,7 @@ def generate_corrected_event_level(joined: JoinedList, params: ParamConfig) -> J
 
 
 def main():
-  DESCRIPTION = """\
+  DESCRIPTION = '''\
   noise_corrector.py is a command-line tool that attempts to debias the noise
   output in the Attribution Reporting API for event-level reports. It takes as
   input JSON files which represent source registrations and the resulting
@@ -339,40 +339,40 @@ def main():
 
   The noise added in the API is described at:
   https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#data-limits-and-noise
-  """
+  '''
   parser = argparse.ArgumentParser(
       description=DESCRIPTION, formatter_class=argparse.RawTextHelpFormatter)
-  SOURCE_HELP = """\
+  SOURCE_HELP = '''\
   Required path to an input file containing sources, in the following JSON
   format:
   {
     // List of zero or more sources.
-    "sources": [
+    'sources': [
       {
         // Required time at which to register the source in seconds since the
         // UNIX epoch.
-        "source_time": 123,
+        'source_time': 123,
 
-        // Required source type, either "navigation" or "event", corresponding to
+        // Required source type, either 'navigation' or 'event', corresponding to
         // whether the source is registered on click or on view, respectively.
-        "source_type": "navigation",
+        'source_type': 'navigation',
 
-        "registration_config": {
+        'registration_config': {
           // Required uint64 formatted as a base-10 string.
-          "source_event_id": "123456789",
+          'source_event_id': '123456789',
 
           // Optional int64 in milliseconds formatted as a base-10 string.
           // Defaults to 30 days.
-          "expiry": "864000000",
+          'expiry': '864000000',
         }
       },
       ...
     ]
   }
-    """
+    '''
   parser.add_argument('--source_file', dest='source_file',
                       type=open, help=SOURCE_HELP, required=True)
-  REPORT_HELP = """\
+  REPORT_HELP = '''\
   Required path to an input file containing reports, in the following JSON
   format:
   {
@@ -381,30 +381,30 @@ def main():
       {
         // Time at which the report would have been sent in seconds since the
         // UNIX epoch.
-        "report_time": 123,
+        'report_time': 123,
 
         // The report itself.
-        "report": {
-          "source_event_id": "1337",
-          "source_type": "navigation",
+        'report': {
+          'source_event_id': '1337',
+          'source_type': 'navigation',
 
           // Coarse data set in the attribution trigger registration
-          "trigger_data": "4"
+          'trigger_data': '4'
         }
       },
       ...
     ]
   }
-    """
+    '''
   parser.add_argument('--report_file', dest='report_file',
                       type=open, help=REPORT_HELP, required=True)
 
-  OUTPUT_MODE_HELP = """\
+  OUTPUT_MODE_HELP = '''\
   Optional. One of `event-level` or `aggregate`. Defaults to `aggregate`, which
   provides aggregate counts for different trigger metadata values. The
   `event-level` mode outputs synthetic sources and their associated reports
   matching the debiased aggregate data as best as possible.
-  """
+  '''
   parser.add_argument('--output_mode', dest='output_mode',
                       choices=['event-level', 'aggregate'],
                       default='aggregate', help=OUTPUT_MODE_HELP)
@@ -414,13 +414,13 @@ def main():
   source_json = json.load(args.source_file)
   report_json = json.load(args.report_file)
   joined: JoinedList = join_reports_with_sources(
-      source_json["sources"], report_json["reports"])
-  navs = [s for s in joined if s[0]["source_type"] == "navigation"]
-  events = [s for s in joined if s[0]["source_type"] == "event"]
+      source_json['sources'], report_json['reports'])
+  navs = [s for s in joined if s[0]['source_type'] == 'navigation']
+  events = [s for s in joined if s[0]['source_type'] == 'event']
   if args.output_mode == 'aggregate':
     print(json.dumps({
-        "navigation": correct_aggregates(navs, NAV_PARAMS),
-        "event": correct_aggregates(events, EVENT_PARAMS),
+        'navigation': correct_aggregates(navs, NAV_PARAMS),
+        'event': correct_aggregates(events, EVENT_PARAMS),
     }, indent=2))
 
   elif args.output_mode == 'event-level':
@@ -431,5 +431,5 @@ def main():
     print(json.dumps(combined, indent=2))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()
