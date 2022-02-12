@@ -252,17 +252,17 @@ def correct_aggregates(joined: JoinedList, params: ParamConfig) -> List[dict]:
 ################## EVENT-LEVEL UTILITIES ##################
 
 def adjust_to_match_distribution(values: List[T],
-                                 distribution: Dict[T, float],
+                                 estimated_counts: Dict[T, float],
                                  default_value: T) -> List[T]:
-  """Given a list of values, and an aggregate map that weights all possible values,
-  returns a list of adjusted values to match the distribution.
+  """Given a list of values, and an aggregate map that counts all possible values,
+  returns a list of adjusted values to match the aggregate distribution.
 
   values: list of arbitrary objects (must be possible to place in dict/set). To
           minimize bias, this list should be shuffled prior to calling this
           method.
-  distribution: map of value -> estimated count. All values in `values` must be
-                present. Note that negatives are allowed, but it will mean the
-                output of the function will be biased.
+  estimated_counts: map of value -> estimated count. All values in `values` must be
+                    present. Note that negatives are allowed, but it will mean the
+                    output of the function will be biased.
   default_value: a default / null value
 
   The algorithm used in this method attempts to achieve two goals:
@@ -274,9 +274,9 @@ def adjust_to_match_distribution(values: List[T],
 
   # Split the distribution into two chunks: elements with mass >= 1 and not.
   # Clamp negatives to 0. Note this introduces bias, but it seems unavoidable.
-  large_elts = {k: v for k, v in distribution.items() if v >= 1}
-  small_elts = {k: max(0, v) for k, v in distribution.items() if v < 1}
-  assert len(small_elts) + len(large_elts) == len(distribution)
+  large_elts = {k: v for k, v in estimated_counts.items() if v >= 1}
+  small_elts = {k: max(0, v) for k, v in estimated_counts.items() if v < 1}
+  assert len(small_elts) + len(large_elts) == len(estimated_counts)
 
   def decrement_large_elt(elt):
     large_elts[elt] -= 1
@@ -285,7 +285,7 @@ def adjust_to_match_distribution(values: List[T],
       large_elts.pop(elt)
 
   def handle_value(val):
-    assert val in distribution and (val in small_elts or val in large_elts)
+    assert val in estimated_counts and (val in small_elts or val in large_elts)
     # Do not adjust s if there is mass in the aggregate distribution for it.
     if val in large_elts:
       decrement_large_elt(val)
@@ -426,7 +426,9 @@ def main():
   elif args.output_mode == 'event-level':
     nav_corrected = generate_corrected_event_level(navs, NAV_PARAMS)
     event_corrected = generate_corrected_event_level(events, EVENT_PARAMS)
-    print(json.dumps(nav_corrected + event_corrected, indent=2))
+    combined = [{'source': s, 'reports': r}
+                for s, r in nav_corrected + event_corrected]
+    print(json.dumps(combined, indent=2))
 
 
 if __name__ == "__main__":
