@@ -7,15 +7,48 @@ import itertools
 import json
 import numpy
 import random
-from typing import List, Hashable
+from typing import Any, List, Hashable, Tuple, Dict, TypedDict, TypeVar
 
 # This file provides functionality to correct noisy data coming from the event-level reports in the Attribution Reporting API.
-
-
+#
 # Noise rate values are taken from the EVENT.md explainer:
 # https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#data-limits-and-noise
 
 ################## GENERIC UTILITIES ##################
+
+# Useful type declarations for working with JSON:
+class SourceRegistrationConfig(TypedDict):
+  source_event_id: str
+  expiry: int
+
+
+class Source(TypedDict):
+  source_time: int
+  source_type: str
+  registration_config: SourceRegistrationConfig
+
+
+class ReportRaw(TypedDict):
+  source_event_id: str
+  source_type: str
+  trigger_data: str
+
+
+class Report(TypedDict):
+  report_time: int
+  report: ReportRaw
+
+
+Joined = Tuple[Source, List[Report]]
+JoinedList = List[Joined]
+
+# Raw output configurations for correcting randomized response.
+# First int is the window index, followed by the trigger data.
+OutputConfig = Tuple[Tuple[int, int], ...]
+
+# For generic functions.
+T = TypeVar("T")
+
 
 class ParamConfig:
   def __init__(self,
@@ -39,10 +72,10 @@ class OutputEnumeration:
   # Class encapsulating logic which represents the logical output of the API
   # per source event, for the purposes of debiasing the randomized response
   # privacy mechanism.
-  def __init__(self, report_tuple, params: ParamConfig):
+  def __init__(self, report_tuple: OutputConfig, params: ParamConfig):
     """report_tuple must be in the form ((window_index, trigger_data),...)"""
-    self.output = tuple(sorted(report_tuple))
-    self.params = params
+    self.output: OutputConfig = tuple(sorted(report_tuple))
+    self.params = params    
 
   def __str__(self):
     def report_to_string(r):
@@ -73,8 +106,14 @@ class OutputEnumeration:
     params = EVENT_PARAMS if source["source_type"] == "event" else NAV_PARAMS
     max_reports = params.max_reports
     assert len(reports) <= max_reports
-    return cls(tuple(OutputEnumeration._parse_report(source, r) for r in reports),
-               params)
+
+    def parse_report(source, report: dict) -> Tuple[int, int]:
+      window_index = OutputEnumeration._get_window_index_for_report(
+          source, report)
+      trigger_data = int(report["report"]["trigger_data"])
+      return (window_index, trigger_data)
+
+    return cls(tuple(parse_report(source, r) for r in reports), params)
 
   @classmethod
   def generate_all(cls, params: ParamConfig):
@@ -88,7 +127,7 @@ class OutputEnumeration:
     deduped = set([tuple(sorted(x)) for x in all_reports_ordered])
     return sorted([cls(x, params) for x in deduped])
 
-  def data_histogram(self):
+  def data_histogram(self) -> numpy.ndarray:
     """Returns the number of reports associated with this output, broken
     out by the trigger_data"""
 
@@ -97,7 +136,7 @@ class OutputEnumeration:
       histogram[r[1]] += 1
     return histogram
 
-  def get_report_time(self, window: int, source: dict):
+  def get_report_time(self, window: int, source: Source) -> int:
     expiry = source["registration_config"]["expiry"]
     if self.params.name == "event":
       return expiry
@@ -107,11 +146,11 @@ class OutputEnumeration:
     source_time = source["source_time"]
     return int(source_time + windows[window].total_seconds())
 
-  def generate_reports_for_source(self, source: dict):
+  def generate_reports_for_source(self, source: Source) -> List[Report]:
     assert self.params.name == source["source_type"]
     source_event_id = source["registration_config"]["source_event_id"]
 
-    reports = []
+    reports: List[Report] = []
     for window, trigger_data in self.output:
       reports.append({
           "report_time": self.get_report_time(window, source),
@@ -121,17 +160,10 @@ class OutputEnumeration:
               "trigger_data": str(trigger_data)
           }
       })
-      return reports
+    return reports
 
   @staticmethod
-  def _parse_report(source, report: dict):
-    window_index = OutputEnumeration._get_window_index_for_report(
-        source, report)
-    trigger_data = int(report["report"]["trigger_data"])
-    return (window_index, trigger_data)
-
-  @staticmethod
-  def _get_window_index_for_report(source: dict, report: dict):
+  def _get_window_index_for_report(source: dict, report: dict) -> int:
     if source["source_type"] == "event":
       return 0
 
@@ -154,7 +186,8 @@ class OutputEnumeration:
 
 # Estimates the true values for data generated through k-ary randomized
 # response. The estimator should be unbiased.
-def estimate_true_values(observed_values: dict, randomized_response_rate: float):
+def estimate_true_values(observed_values: Dict[T, int],
+                         randomized_response_rate: float) -> Dict[T, float]:
   """Returns a list of corrected counts
 
   observed_values: A map of size `k` for k-ary randomized response. Each item
@@ -179,29 +212,23 @@ def estimate_true_values(observed_values: dict, randomized_response_rate: float)
   return {k: estimate(v) for k, v in observed_values.items()}
 
 
-def join_reports_with_sources(sources: dict, reports: dict):
+def join_reports_with_sources(sources: List[Source], reports: List[Report]) -> JoinedList:
   """Returns tuple of (source, [reports]) joined with the source_event_id"""
   report_map = collections.defaultdict(list)
-  for r in reports["reports"]:
+  for r in reports:
     report_map[r["report"]["source_event_id"]].append(r)
 
-  def join(source):
+  def join(source) -> Joined:
     source_event_id = source['registration_config']['source_event_id']
     return (source, report_map[source_event_id])
-  return [join(s) for s in sources['sources']]
+  return [join(s) for s in sources]
+
 
 ################## AGGREGATE UTILITIES ##################
 
-
-def print_data_histogram(hist: List[float], type: str):
-  print(f"Histogram of trigger_data for {type} sources:")
-  print("{:<20}{:<15}".format("trigger_data", "count"))
-  for i, count in enumerate(hist):
-    print(f"{i:<20}{count:.2f}")
-  print()
-
-
-def get_raw_corrected_map(joined: dict, params: ParamConfig):
+def get_raw_corrected_map(joined: JoinedList, params: ParamConfig) -> Dict[OutputEnumeration, float]:
+  """Returns an aggregate map of OutputEnumeration -> float, with noise debiased
+  according to params"""
   output_counts = {o: 0 for o in OutputEnumeration.generate_all(params)}
   for j in joined:
     output = OutputEnumeration.create_from_data(j)
@@ -211,17 +238,22 @@ def get_raw_corrected_map(joined: dict, params: ParamConfig):
   return estimate_true_values(output_counts, params.rr_rate)
 
 
-def correct_aggregates(joined: dict, params: ParamConfig):
+def correct_aggregates(joined: JoinedList, params: ParamConfig) -> List[dict]:
+  """Returns debiased report counts broken out by trigger_data"""
   corrected = get_raw_corrected_map(joined, params)
   histogram = numpy.zeros(params.data_cardinality)
   for o, c in corrected.items():
     histogram += c * o.data_histogram()
-  return histogram
+  x = 10
+  return [{"trigger_data": t,
+           "report_count": v} for t, v in enumerate(histogram)]
 
 
 ################## EVENT-LEVEL UTILITIES ##################
 
-def adjust_to_match_distribution(values: Hashable, distribution: dict, default_value):
+def adjust_to_match_distribution(values: List[T],
+                                 distribution: Dict[T, float],
+                                 default_value: T) -> List[T]:
   """Given a list of values, and an aggregate map that weights all possible values,
   returns a list of adjusted values to match the distribution.
 
@@ -276,7 +308,7 @@ def adjust_to_match_distribution(values: Hashable, distribution: dict, default_v
   return [handle_value(v) for v in values]
 
 
-def generate_corrected_event_level(joined: dict, params: ParamConfig):
+def generate_corrected_event_level(joined: JoinedList, params: ParamConfig) -> JoinedList:
   # Shuffle the input data. This is because the order of which values are
   # considered in the loop below matters, because we adjust the distribution
   # as we go. Shuffling first avoids favoring some values over others.
@@ -288,13 +320,13 @@ def generate_corrected_event_level(joined: dict, params: ParamConfig):
   adjusted_values = adjust_to_match_distribution(
       outputs, aggregates, OutputEnumeration.create_null(params))
 
-  def adjust_json(j, unadjusted, adjusted):
-    source = j[0]
-    source_event_id = source['registration_config']['source_event_id']
-    adjusted_reports = adjusted.generate_reports_for_source(source)
+  def adjust_json(j, adjusted) -> Joined:
+    source: Source = j[0]
+    adjusted_reports: List[Report] = adjusted.generate_reports_for_source(
+        source)
     return (source, adjusted_reports)
 
-  return [adjust_json(j, o, a) for j, o, a in zip(joined, outputs, adjusted_values)]
+  return [adjust_json(j, a) for j, a in zip(joined, adjusted_values)]
 
 
 def main():
@@ -381,18 +413,20 @@ def main():
 
   source_json = json.load(args.source_file)
   report_json = json.load(args.report_file)
-  joined = join_reports_with_sources(source_json, report_json)
+  joined: JoinedList = join_reports_with_sources(
+      source_json["sources"], report_json["reports"])
   navs = [s for s in joined if s[0]["source_type"] == "navigation"]
   events = [s for s in joined if s[0]["source_type"] == "event"]
   if args.output_mode == 'aggregate':
-    nav_histogram = correct_aggregates(navs, NAV_PARAMS)
-    event_histogram = correct_aggregates(events, EVENT_PARAMS)
-    print_data_histogram(nav_histogram, "navigation")
-    print_data_histogram(event_histogram, "event")
+    print(json.dumps({
+        "navigation": correct_aggregates(navs, NAV_PARAMS),
+        "event": correct_aggregates(events, EVENT_PARAMS),
+    }, indent=2))
 
   elif args.output_mode == 'event-level':
     nav_corrected = generate_corrected_event_level(navs, NAV_PARAMS)
-    print(json.dumps(nav_corrected))
+    event_corrected = generate_corrected_event_level(events, EVENT_PARAMS)
+    print(json.dumps(nav_corrected + event_corrected, indent=2))
 
 
 if __name__ == "__main__":
