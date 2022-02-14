@@ -192,7 +192,7 @@ The report will be JSON encoded with the following scheme:
 
   // Info that the aggregation services also need encoded in JSON
   // for use with AEAD.
-  "shared_info": "{\"scheduled_report_time\":[timestamp in seconds],\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\"}",
+  "shared_info": "{\"scheduled_report_time\":[timestamp in seconds],\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\",\"reporting_origin\":\"https://reporter.example\"}",
 
   // Support a list of payloads for future extensibility if multiple helpers
   // are necessary. Currently only supports a single helper configured
@@ -261,7 +261,6 @@ encoded. The map will have the following structure:
 // CBOR
 {
   "operation": "histogram",  // Allows for the service to support other operations in the future
-  "reporting_origin": "https://reporter.example",
   "data": [{"bucket": <bucket, encoded as a big-endian bytestring>, "value": <value, as an integer> }, ...]
 }
 ```
@@ -273,7 +272,9 @@ This encryption should use [AEAD](https://en.wikipedia.org/wiki/Authenticated_en
 to ensure that the information in `shared_info` is not tampered with, since the
 aggregation service will need that information to do proper replay protection.
 The authenticated data will consist of the `shared_info` string (encoded as
-UTF-8) with a constant prefix added for domain separation.
+UTF-8) with a constant prefix added for domain separation, i.e. to avoid
+ciphertexts being reused for different protocols, even if public keys are
+shared.
 
 The encryption will use public keys specified by the aggregation service. The
 browser will encrypt payloads just before the report is sent by fetching the
@@ -298,10 +299,13 @@ encoded public keys is as follows:
 }
 ```
 
-A public key endpoint should not reuse an ID string for a different key. In
-particular, IDs must be unique within a single response to be valid. In the case
-of backwards incompatible changes to this scheme (e.g. in future versions of the
-API), the endpoint URL should also change.
+To limit the impact of a single compromised key, multiple keys (up to a small
+limit) can be provided. The browser should independently pick a key uniformly at
+random for each payload it encrypts to avoid associating different reports.
+Additionally, a public key endpoint should not reuse an ID string for a
+different key. In particular, IDs must be unique within a single response to be
+valid. In the case of backwards incompatible changes to this scheme (e.g. in
+future versions of the API), the endpoint URL should also change.
 
 **Note:** The browser may need some mechanism to ensure that the same set of
 keys are delivered to different users.
