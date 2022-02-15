@@ -708,8 +708,7 @@ origins per <source site, destination site> pair, counted per source
 registration. This should be limited to 100 origins per 30 days.
 
 Additionally, there should be a limit of 10 reporting origins per <source site,
-destination site, 30 days>, counted for every attribution report that is
-generated.
+destination site, 30 days>, counted for every attribution that is generated.
 
 ### Clearing Site Data
 
@@ -722,13 +721,13 @@ browsers.
 To limit the amount of user identity leakage between a <source site,
 destination> pair, the browser should throttle the amount of total information
 sent through this API in a given time period for a user. The browser should set
-a maximum number of attribution reports per
+a maximum number of attributions per
 <source site, destination, reporting origin, user> tuple per time period. If this
 threshold is hit, the browser will stop scheduling reports the API for the
-rest of the time period for reports matching that tuple.
+rest of the time period for attributions matching that tuple.
 
 The longer the cooldown windows are, the harder it is to abuse the API and join
-identity. Ideally report thresholds should be low enough to avoid leaking too
+identity. Ideally attribution thresholds should be low enough to avoid leaking too
 much information, with cooldown windows as long as practically possible.
 
 Note that splitting these limits by the reporting origin introduces a possible
@@ -736,7 +735,7 @@ leak when multiple origins collude with each other. However, the alternative
 makes it very difficult to adopt the API if all reporting origins had to share a
 budget.
 
-Strawman rate limit: 100 reports per {source site, destination, reporting
+Strawman rate limit: 100 attributions per {source site, destination, reporting
 origin, 30 days}
 
 ### Less trigger-side data
