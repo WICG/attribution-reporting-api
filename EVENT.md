@@ -262,7 +262,7 @@ about how to treat the trigger event:
 [{
     "trigger_data": "[unsigned 64-bit integer, but the browser will sanitize it down to 3 bits]",
     "trigger_priority": "[signed 64-bit integer]",
-    "deduplication_key": "[signed 64-bit integer]"
+    "deduplication_key": "[unsigned 64-bit integer]"
 }]
 ```
 TODO: Consider moving this over to a structured header. See [issue
@@ -271,7 +271,7 @@ TODO: Consider moving this over to a structured header. See [issue
 - `trigger_data`: optional coarse-grained data to identify the triggering event.
 - `trigger_priority`: optional signed 64-bit integer representing the priority
 of this trigger compared to other triggers for the same source.
-- `deduplication_key`: optional signed 64-bit integer which will be used to
+- `deduplication_key`: optional unsigned 64-bit integer which will be used to
 deduplicate multiple triggers which contain the same deduplication_key for a
 single source.
 
@@ -339,12 +339,12 @@ browser picks the one that was stored most recently.
 
 The browser then schedules a report for the source that was picked by storing
  {`attributionsrc` origin, `destination` eTLD+1, `source_event_id`,
- [decoded](#data-encoding) `trigger_data`, `trigger_priority`, `dedup_key`} for
+ [decoded](#data-encoding) `trigger_data`, `trigger_priority`, `deduplication_key`} for
  the source. Scheduled reports will be sent as detailed in [Sending scheduled
  reports](#sending-scheduled-reports).
 
-The browser will create reports for a source only if the trigger's `dedup_key`
-has not already been associated with a report for that source.
+The browser will create reports for a source only if the trigger's
+`deduplication_key` has not already been associated with a report for that source.
 
 Each `navigation` source is allowed to schedule only a maximum of three reports,
 while each `event` source is only allowed to schedule a maximum of one.
