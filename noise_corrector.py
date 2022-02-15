@@ -8,6 +8,7 @@ import json
 import numpy
 import random
 from typing import Any, List, Hashable, Tuple, Dict, TypedDict, TypeVar
+import sys
 
 # This file provides functionality to correct noisy data coming from the event-level reports in the Attribution Reporting API.
 #
@@ -17,9 +18,9 @@ from typing import Any, List, Hashable, Tuple, Dict, TypedDict, TypeVar
 ################## GENERIC UTILITIES ##################
 
 # Useful type declarations for working with JSON:
-class SourceRegistrationConfig(TypedDict):
+class SourceRegistrationConfig(TypedDict, total=False):
   source_event_id: str
-  expiry: int
+  expiry: int # Optional
 
 
 class Source(TypedDict):
@@ -67,6 +68,7 @@ class ParamConfig:
 NAV_PARAMS = ParamConfig(.5, 8, 3, 3, 'navigation')
 EVENT_PARAMS = ParamConfig(.0000025, 2, 1, 1, 'event')
 
+DEFAULT_EXPIRY = 60 * 60 * 24 * 30
 
 class OutputEnumeration:
   # Class encapsulating logic which represents the logical output of the API
@@ -137,7 +139,7 @@ class OutputEnumeration:
     return histogram
 
   def get_report_time(self, window: int, source: Source) -> int:
-    expiry = source['registration_config']['expiry']
+    expiry = source['registration_config'].get('expiry', DEFAULT_EXPIRY)
     if self.params.name == 'event':
       return expiry
 
@@ -169,7 +171,7 @@ class OutputEnumeration:
 
     report_time = report['report_time']
     source_time = source['source_time']
-    raw_expiry = source['registration_config']['expiry']
+    raw_expiry = source['registration_config'].get('expiry', DEFAULT_EXPIRY)
     expiry = timedelta(seconds=int(raw_expiry))
     delta = timedelta(seconds=report_time - source_time)
 
@@ -261,8 +263,10 @@ def adjust_to_match_distribution(values: List[T],
           minimize bias, this list should be shuffled prior to calling this
           method.
   estimated_counts: map of value -> estimated count. All values in `values` must be
-                    present. Note that negatives are allowed, but it will mean the
-                    output of the function will be biased.
+                    present. Note that negatives are allowed, but they will be
+                    clamped to 0 internally. Note that because the we cannot
+                    assign any output less than 0, the end values will always be
+                    biased.
   default_value: a default / null value
 
   The algorithm used in this method attempts to achieve two goals:
@@ -339,43 +343,32 @@ def main():
 
   The noise added in the API is described at:
   https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#data-limits-and-noise
-  '''
-  parser = argparse.ArgumentParser(
-      description=DESCRIPTION, formatter_class=argparse.RawTextHelpFormatter)
-  SOURCE_HELP = '''\
-  Required path to an input file containing sources, in the following JSON
-  format:
+  This utility expects JSON input coming from stdin in the following format:
   {
-    // List of zero or more sources.
-    'sources': [
-      {
-        // Required time at which to register the source in seconds since the
-        // UNIX epoch.
-        'source_time': 123,
+    "input": {
+      // List of zero or more sources.
+      'sources': [
+        {
+          // Required time at which to register the source in seconds since the
+          // UNIX epoch.
+          'source_time': 123,
 
-        // Required source type, either 'navigation' or 'event', corresponding to
-        // whether the source is registered on click or on view, respectively.
-        'source_type': 'navigation',
+          // Required source type, either 'navigation' or 'event', corresponding to
+          // whether the source is registered on click or on view, respectively.
+          'source_type': 'navigation',
 
-        'registration_config': {
-          // Required uint64 formatted as a base-10 string.
-          'source_event_id': '123456789',
+          'registration_config': {
+            // Required uint64 formatted as a base-10 string.
+            'source_event_id': '123456789',
 
-          // Optional int64 in milliseconds formatted as a base-10 string.
-          // Defaults to 30 days.
-          'expiry': '864000000',
-        }
-      },
-      ...
-    ]
-  }
-    '''
-  parser.add_argument('--source_file', dest='source_file',
-                      type=open, help=SOURCE_HELP, required=True)
-  REPORT_HELP = '''\
-  Required path to an input file containing reports, in the following JSON
-  format:
-  {
+            // Optional int64 in milliseconds formatted as a base-10 string.
+            // Defaults to 30 days.
+            'expiry': '864000000',
+          }
+        },
+        ...
+      ]
+    },
     // List of zero or more reports.
     reports: [
       {
@@ -395,9 +388,20 @@ def main():
       ...
     ]
   }
-    '''
-  parser.add_argument('--report_file', dest='report_file',
-                      type=open, help=REPORT_HELP, required=True)
+  '''
+  parser = argparse.ArgumentParser(
+      description=DESCRIPTION, formatter_class=argparse.RawTextHelpFormatter)
+
+  INPUT_MODE_HELP = '''\
+  Optional. One of `single` or `multi`. Defaults to `single`, which reads all of
+  stdin as one JSON file, with the format above. `multi` mode accepts input in
+  the JSON-lines format, where every separate line of input follows the above
+  format. It is expected in `multi` mode that events from a given browser are
+  isolated in a particular line of input.
+  '''
+  parser.add_argument('--input_mode', dest='input_mode',
+                      choices=['single', 'multi'],
+                      default='single', help=INPUT_MODE_HELP)
 
   OUTPUT_MODE_HELP = '''\
   Optional. One of `event-level` or `aggregate`. Defaults to `aggregate`, which
@@ -411,12 +415,22 @@ def main():
 
   args = parser.parse_args()
 
-  source_json = json.load(args.source_file)
-  report_json = json.load(args.report_file)
-  joined: JoinedList = join_reports_with_sources(
-      source_json['sources'], report_json['reports'])
+  # TODO(csharrison): Try to avoid keeping the entire JSON in memory here
+  # in `multi` mode, especially for the `aggregate` output mode where it should
+  # be possible to do everything using a stream.
+  joined: JoinedList = []
+  if args.input_mode == 'single':
+    input = json.load(sys.stdin)
+    joined = join_reports_with_sources(
+        input['input']['sources'], input['reports'])
+  else:
+    for line in sys.stdin:
+      input = json.loads(line)
+      joined.extend(join_reports_with_sources(
+          input['input']['sources'], input['reports']))
   navs = [s for s in joined if s[0]['source_type'] == 'navigation']
   events = [s for s in joined if s[0]['source_type'] == 'event']
+
   if args.output_mode == 'aggregate':
     print(json.dumps({
         'navigation': correct_aggregates(navs, NAV_PARAMS),
