@@ -416,20 +416,28 @@ or attending a [WICG Measurement meeting](https://github.com/WICG/conversion-mea
 We intend to incorporate and iterate based on feedback.
 
 1. Who reviews and validates the open source code? What is the right
-   contribution and approval model?
+   contribution and approval model? 
+   [issues/322](https://github.com/WICG/conversion-measurement-api/issues/322)
 1. Who are appropriate parties to serve as coordinators?
+   [issues/323](https://github.com/WICG/conversion-measurement-api/issues/323)
 1. What is the right way to support debugging or error investigations
    without compromising the security of the system? 
+   [issues/324](https://github.com/WICG/conversion-measurement-api/issues/324)
 1. How can adtechs recover from failures (such as a misconfigured batch)?
+   [issues/325](https://github.com/WICG/conversion-measurement-api/issues/325)
 1. This proposal requires that the adtech works with a cloud provider
    with specific TEE capabilities. How do we balance the security needs
    of the system with the costs and implementation effort? 
+   [issues/326](https://github.com/WICG/conversion-measurement-api/issues/326)
 1. Our proposal includes one specific aggregation mechanism. There are
    many alternative, differentially private mechanisms that could support
    specific use cases or provide better quality results. How can we best
    build the system so it can support a wide range of use cases? 
+   [issues/327](https://github.com/WICG/conversion-measurement-api/issues/327)
 1. How should proposed extensions be evaluated for privacy, security and
    utility to be included in the aggregation service?
+   [issues/328](https://github.com/WICG/conversion-measurement-api/issues/328)
 1. Are there any other approaches to the security architecture that could
    work here? For example, multi-party computation (MPC) is an interesting
    approach that can be complementary.
+   [issues/330](https://github.com/WICG/conversion-measurement-api/issues/330)
