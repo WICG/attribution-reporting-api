@@ -433,18 +433,3 @@ We intend to incorporate and iterate based on feedback.
 1. Are there any other approaches to the security architecture that could
    work here? For example, multi-party computation (MPC) is an interesting
    approach that can be complementary.
-
-## Acknowledgements
-
-Many thanks for valuable feedback and advice from:
-
-* Alexandra White
-* Badih Ghazi
-* Carlos Cela
-* Chanda Patel
-* Charlie Harrison
-* Christina Ilvento
-* Claire Abu-Hakima
-* John Tobler
-* Vikas Kumar Singh
-* Vinay Goel
