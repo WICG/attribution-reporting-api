@@ -3,7 +3,6 @@
 import argparse
 import collections
 from datetime import timedelta
-import itertools
 import json
 import numpy
 import random
