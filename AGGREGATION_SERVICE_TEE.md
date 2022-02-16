@@ -83,7 +83,7 @@ throughout this proposal.
 * _Attestation_: a mechanism to authenticate software identity, usually with
   [cryptographic hashes](https://en.wikipedia.org/wiki/Cryptographic_hash_function)
   or signatures. In this proposal, attestation matches the code running in the
-  adtech-operated aggregation service with the code provided by The Privacy Sandbox team.
+  adtech-operated aggregation service with the open source code.
 * _Trusted Execution Environment (TEE)_: a dedicated, closed execution context that is
   isolated through hardware memory protection and cryptographic protection of storage. The
   TEE's contents are protected from observation and tampering by unauthorized parties,
@@ -353,8 +353,7 @@ def add_noise(raw_summary_report, declared_labels):
 
 ## Initial experiment plans
 
-The Privacy Sandbox team's initial implementation strategy for
-the aggregation service is as follows:
+The initial implementation strategy for the aggregation service is as follows:
 
 
 * The TEE based aggregation service implementation would be deployed
