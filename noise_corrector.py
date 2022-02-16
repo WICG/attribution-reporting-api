@@ -65,7 +65,7 @@ class ParamConfig:
     self.name = name
 
 
-NAV_PARAMS = ParamConfig(.5, 8, 3, 3, 'navigation')
+NAV_PARAMS = ParamConfig(.0024, 8, 3, 3, 'navigation')
 EVENT_PARAMS = ParamConfig(.0000025, 2, 1, 1, 'event')
 
 DEFAULT_EXPIRY = 60 * 60 * 24 * 30
@@ -117,26 +117,34 @@ class OutputEnumeration:
 
     return cls(tuple(parse_report(source, r) for r in reports), params)
 
+
   @classmethod
   def generate_all(cls, params: ParamConfig):
-    all_single_reports = list(itertools.product(range(params.max_windows),
-                                                range(params.data_cardinality)))
-    all_reports_ordered = []
-    for r in range(params.max_reports + 1):
-      reports = itertools.product(*(r * [all_single_reports]))
-      all_reports_ordered.extend(list(reports))
-    # Simulate shuffling within a reporting window by sorting and deduping
-    deduped = set([tuple(sorted(x)) for x in all_reports_ordered])
-    return sorted([cls(x, params) for x in deduped])
+    def gen_all(max_reports, index, report_so_far):
+      yield cls(tuple(report_so_far), params)
+      if max_reports == 0:
+        return
+
+      # Build up `report_so_far` recursively.
+      # 1. Insert the report specified by the current index
+      # 2. Recurse down to build up the remaining reports conditioned on
+      #    indices >= the current index.
+      # The condition in step 2 is important because it means we keep a constraint
+      # where `report_so_far` is increasing in indices and that we don't generate
+      # duplicate outputs like reports indexed by (1,2,3) and (3,2,1).
+      for next_index in range(index, params.data_cardinality * params.max_windows):
+        window, data = divmod(next_index, params.data_cardinality)
+        report_so_far.append((window, data))
+        yield from gen_all(max_reports - 1, index=next_index, report_so_far=report_so_far)
+        report_so_far.pop()
+    yield from gen_all(params.max_reports, 0, [])
+
 
   def data_histogram(self) -> numpy.ndarray:
     '''Returns the number of reports associated with this output, broken
     out by the trigger_data'''
 
-    histogram = numpy.zeros(self.params.data_cardinality)
-    for r in self.output:
-      histogram[r[1]] += 1
-    return histogram
+    return numpy.bincount([o[1] for o in self.output], minlength=self.params.data_cardinality)
 
   def get_report_time(self, window: int, source: Source) -> int:
     expiry = source['registration_config'].get('expiry', DEFAULT_EXPIRY)
