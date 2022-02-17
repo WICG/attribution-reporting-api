@@ -496,7 +496,7 @@ To hide the true number of reports, we could:
 - Unconditionally send a null report for every registered attribution trigger
   (thus making the count a function of only destination-side information)
 - Add noise to the number of reports by having some clients randomly add noisy
-  reports. This technique would have to assume some threshold number of
+  null reports. This technique would have to assume some threshold number of
   unattributed triggers to maintain privacy.
 
 ### More advanced contribution bounding
