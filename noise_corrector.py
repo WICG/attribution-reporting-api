@@ -14,6 +14,8 @@ import sys
 # Noise rate values are taken from the EVENT.md explainer:
 # https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#data-limits-and-noise
 
+VERSION = "noise_corrector.py 0.0.1"
+
 ################## GENERIC UTILITIES ##################
 
 # Useful type declarations for working with JSON:
@@ -43,12 +45,14 @@ Joined = Tuple[Source, List[Report]]
 JoinedList = List[Joined]
 JoinedGen  = Generator[Joined, None, None]
 # Raw output configurations for correcting randomized response.
-# First int is the window index, followed by the trigger data.
+# The first int is window_index (i.e. which reporting window the output fell in).
+# The second int is trigger_data.
 OutputConfig = Tuple[Tuple[int, int], ...]
 
 # For generic functions.
 T = TypeVar('T')
 
+OutputEnumerationGen = Generator['OutputEnumeration', None, None]
 
 class ParamConfig:
   def __init__(self,
@@ -64,9 +68,12 @@ class ParamConfig:
     self.name = name
 
 
+# https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#data-limits-and-noise
 NAV_PARAMS = ParamConfig(.0024, 8, 3, 3, 'navigation')
 EVENT_PARAMS = ParamConfig(.0000025, 2, 1, 1, 'event')
 
+# See 9.8.11
+# https://wicg.github.io/conversion-measurement-api/#obtaining-attribution-source-params
 DEFAULT_EXPIRY = 60 * 60 * 24 * 30
 
 class OutputEnumeration:
@@ -118,25 +125,27 @@ class OutputEnumeration:
 
 
   @classmethod
-  def generate_all(cls, params: ParamConfig):
-    def gen_all(max_reports, index, report_so_far):
-      yield cls(tuple(report_so_far), params)
+  def generate_all(cls, params: ParamConfig) -> OutputEnumerationGen:
+    """Generator to generate every single possible OutputEnumeration for the given `params`"""
+    def gen_all(max_reports, index, output_so_far) -> OutputEnumerationGen:
+      """Helper generator which aggregates outputs in `output_so_far` recursively"""
+      yield cls(tuple(output_so_far), params)
       if max_reports == 0:
         return
 
-      # Build up `report_so_far` recursively.
+      # Build up `output_so_far` recursively.
       # 1. Insert the report specified by the current index
       # 2. Recurse down to build up the remaining reports conditioned on
       #    indices >= the current index.
       # The condition in step 2 is important because it means we keep a constraint
-      # where `report_so_far` is increasing in indices and that we don't generate
+      # where `output_so_far` is increasing in indices and that we don't generate
       # duplicate outputs like reports indexed by (1,2,3) and (3,2,1).
       for next_index in range(index, params.data_cardinality * params.max_windows):
         window, data = divmod(next_index, params.data_cardinality)
-        report_so_far.append((window, data))
-        yield from gen_all(max_reports - 1, index=next_index, report_so_far=report_so_far)
-        report_so_far.pop()
-    yield from gen_all(params.max_reports, 0, [])
+        output_so_far.append((window, data))
+        yield from gen_all(max_reports - 1, next_index, output_so_far)
+        output_so_far.pop()
+    return gen_all(params.max_reports, 0, [])
 
 
   def data_histogram(self) -> numpy.ndarray:
@@ -146,6 +155,8 @@ class OutputEnumeration:
     return numpy.bincount([o[1] for o in self.output], minlength=self.params.data_cardinality)
 
   def get_report_time(self, window: int, source: Source) -> int:
+    """For a given Source and window index, returns the estimated report time.
+    This is used for generating synthetic event-level reports"""
     expiry = source['registration_config'].get('expiry', DEFAULT_EXPIRY)
     if self.params.name == 'event':
       return expiry
@@ -237,7 +248,8 @@ def join_reports_with_sources(sources: List[Source], reports: List[Report]) -> J
 
 def get_raw_corrected_map(joined: Iterable[Joined], params: ParamConfig) -> Dict[OutputEnumeration, float]:
   '''Returns an aggregate map of OutputEnumeration -> float, with noise debiased
-  according to params'''
+  according to params. Each returned float is an estimate count for how many times the
+  given OutputEnumeration showed up in `joined`'''
   output_counts = {o: 0 for o in OutputEnumeration.generate_all(params)}
   for j in joined:
     output = OutputEnumeration.create_from_data(j)
@@ -345,7 +357,7 @@ def main():
   noise_corrector.py is a command-line tool that attempts to debias the noise
   output in the Attribution Reporting API for event-level reports. It takes as
   input JSON files which represent source registrations and the resulting
-  event-level reports. It can provide corrected output in aggregate, or via
+  event-level reports. It can provide debiased output in aggregate, or via
   generating synthetic event-level data.
 
   The noise added in the API is described at:
@@ -404,7 +416,8 @@ def main():
   stdin as one JSON file, with the format above. `multi` mode accepts input in
   the JSON-lines format, where every separate line of input follows the above
   format. It is expected in `multi` mode that events from a given browser are
-  isolated in a particular line of input.
+  isolated in a particular line of input (i.e. the tool will treat data on
+  different lines completely independently).
   '''
   parser.add_argument('--input_mode', dest='input_mode',
                       choices=['single', 'multi'],
@@ -412,13 +425,48 @@ def main():
 
   OUTPUT_MODE_HELP = '''\
   Optional. One of `event-level` or `aggregate`. Defaults to `aggregate`, which
-  provides aggregate counts for different trigger metadata values. The
+  provides aggregate counts for different trigger data values. The
   `event-level` mode outputs synthetic sources and their associated reports
-  matching the debiased aggregate data as best as possible.
+  matching the debiased aggregate data as best as possible. In other words, the
+  tool will mutate the input reports in some way (sometimes by generating new
+  reports that were not input into the system) so that the output event-level
+  data, when aggregated, matches the data that `aggregate` mode would return.
+
+  Note: the `event-level` format is experimental. More work is needed to make
+  sure the use-cases for it are well-understood.
+
+  `aggregate` output format:
+  {
+    "navigation": [
+      {
+        "trigger_data": 0,
+        "report_count": <count>
+      },
+    ...
+    ],
+    "event": [
+      {
+        "trigger_data": 0,
+        "report_count": <count>
+      },
+      ...
+    ]
+  }
+
+  `event-level` output format:
+  [
+    {
+      "source": <source, same as input format>
+      "reports": <same as input reports format>
+    },
+    ...
+  ]
   '''
   parser.add_argument('--output_mode', dest='output_mode',
                       choices=['event-level', 'aggregate'],
                       default='aggregate', help=OUTPUT_MODE_HELP)
+
+  parser.add_argument('-v', '--version', action='version', version=VERSION)
 
   args = parser.parse_args()
 
