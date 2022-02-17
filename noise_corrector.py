@@ -6,7 +6,7 @@ from datetime import timedelta
 import json
 import numpy
 import random
-from typing import Any, List, Hashable, Tuple, Dict, TypedDict, TypeVar
+from typing import Any, List, Hashable, Tuple, Dict, TypedDict, TypeVar, Generator, Iterable
 import sys
 
 # This file provides functionality to correct noisy data coming from the event-level reports in the Attribution Reporting API.
@@ -41,7 +41,7 @@ class Report(TypedDict):
 
 Joined = Tuple[Source, List[Report]]
 JoinedList = List[Joined]
-
+JoinedGen  = Generator[Joined, None, None]
 # Raw output configurations for correcting randomized response.
 # First int is the window index, followed by the trigger data.
 OutputConfig = Tuple[Tuple[int, int], ...]
@@ -221,7 +221,7 @@ def estimate_true_values(observed_values: Dict[T, int],
   return {k: estimate(v) for k, v in observed_values.items()}
 
 
-def join_reports_with_sources(sources: List[Source], reports: List[Report]) -> JoinedList:
+def join_reports_with_sources(sources: List[Source], reports: List[Report]) -> JoinedGen:
   '''Returns tuple of (source, [reports]) joined with the source_event_id'''
   report_map = collections.defaultdict(list)
   for r in reports:
@@ -230,12 +230,12 @@ def join_reports_with_sources(sources: List[Source], reports: List[Report]) -> J
   def join(source) -> Joined:
     source_event_id = source['registration_config']['source_event_id']
     return (source, report_map[source_event_id])
-  return [join(s) for s in sources]
+  return (join(s) for s in sources)
 
 
 ################## AGGREGATE UTILITIES ##################
 
-def get_raw_corrected_map(joined: JoinedList, params: ParamConfig) -> Dict[OutputEnumeration, float]:
+def get_raw_corrected_map(joined: Iterable[Joined], params: ParamConfig) -> Dict[OutputEnumeration, float]:
   '''Returns an aggregate map of OutputEnumeration -> float, with noise debiased
   according to params'''
   output_counts = {o: 0 for o in OutputEnumeration.generate_all(params)}
@@ -247,7 +247,7 @@ def get_raw_corrected_map(joined: JoinedList, params: ParamConfig) -> Dict[Outpu
   return estimate_true_values(output_counts, params.rr_rate)
 
 
-def correct_aggregates(joined: JoinedList, params: ParamConfig) -> List[dict]:
+def correct_aggregates(joined: JoinedGen, params: ParamConfig) -> List[dict]:
   '''Returns debiased report counts broken out by trigger_data'''
   corrected = get_raw_corrected_map(joined, params)
   histogram = numpy.zeros(params.data_cardinality)
@@ -422,21 +422,18 @@ def main():
 
   args = parser.parse_args()
 
-  # TODO(csharrison): Try to avoid keeping the entire JSON in memory here
-  # in `multi` mode, especially for the `aggregate` output mode where it should
-  # be possible to do everything using a stream.
-  joined: JoinedList = []
-  if args.input_mode == 'single':
-    input = json.load(sys.stdin)
-    joined = join_reports_with_sources(
-        input['input']['sources'], input['reports'])
-  else:
-    for line in sys.stdin:
-      input = json.loads(line)
-      joined.extend(join_reports_with_sources(
-          input['input']['sources'], input['reports']))
-  navs = [s for s in joined if s[0]['source_type'] == 'navigation']
-  events = [s for s in joined if s[0]['source_type'] == 'event']
+  def gen_joined() -> JoinedGen:
+    if args.input_mode == 'single':
+      input = json.load(sys.stdin)
+      yield from join_reports_with_sources(input['input']['sources'], input['reports'])
+    else:
+      for line in sys.stdin:
+        input = json.loads(line)
+        yield from join_reports_with_sources(input['input']['sources'], input['reports'])
+
+  joined = gen_joined()
+  navs: JoinedGen = (s for s in joined if s[0]['source_type'] == 'navigation')
+  events: JoinedGen = (s for s in joined if s[0]['source_type'] == 'event')
 
   if args.output_mode == 'aggregate':
     print(json.dumps({
@@ -445,8 +442,8 @@ def main():
     }, indent=2))
 
   elif args.output_mode == 'event-level':
-    nav_corrected = generate_corrected_event_level(navs, NAV_PARAMS)
-    event_corrected = generate_corrected_event_level(events, EVENT_PARAMS)
+    nav_corrected = generate_corrected_event_level(list(navs), NAV_PARAMS)
+    event_corrected = generate_corrected_event_level(list(events), EVENT_PARAMS)
     combined = [{'source': s, 'reports': r}
                 for s, r in nav_corrected + event_corrected]
     print(json.dumps(combined, indent=2))
