@@ -366,42 +366,42 @@ def main():
   {
     "input": {
       // List of zero or more sources.
-      'sources': [
+      "sources": [
         {
           // Required time at which to register the source in seconds since the
           // UNIX epoch.
-          'source_time': 123,
+          "source_time": 123,
 
-          // Required source type, either 'navigation' or 'event', corresponding to
+          // Required source type, either "navigation" or "event", corresponding to
           // whether the source is registered on click or on view, respectively.
-          'source_type': 'navigation',
+          "source_type": "navigation",
 
-          'registration_config': {
+          "registration_config": {
             // Required uint64 formatted as a base-10 string.
-            'source_event_id': '123456789',
+            "source_event_id": "123456789",
 
             // Optional int64 in milliseconds formatted as a base-10 string.
             // Defaults to 30 days.
-            'expiry': '864000000',
+            "expiry": 864000000,
           }
         },
         ...
       ]
     },
     // List of zero or more reports.
-    reports: [
+    "reports": [
       {
         // Time at which the report would have been sent in seconds since the
         // UNIX epoch.
-        'report_time': 123,
+        "report_time": 123,
 
         // The report itself.
-        'report': {
-          'source_event_id': '1337',
-          'source_type': 'navigation',
+        "report": {
+          "source_event_id": "1337",
+          "source_type": "navigation",
 
           // Coarse data set in the attribution trigger registration
-          'trigger_data': '4'
+          "trigger_data": "4"ß
         }
       },
       ...
@@ -424,16 +424,17 @@ def main():
                       default='single', help=INPUT_MODE_HELP)
 
   OUTPUT_MODE_HELP = '''\
-  Optional. One of `event-level` or `aggregate`. Defaults to `aggregate`, which
-  provides aggregate counts for different trigger data values. The
-  `event-level` mode outputs synthetic sources and their associated reports
-  matching the debiased aggregate data as best as possible. In other words, the
-  tool will mutate the input reports in some way (sometimes by generating new
-  reports that were not input into the system) so that the output event-level
-  data, when aggregated, matches the data that `aggregate` mode would return.
+  Optional. One of `experimental-event-level` or `aggregate`. Defaults to
+  `aggregate`, which provides aggregate counts for different trigger data
+  values. The `experimental-event-level` mode outputs synthetic sources and
+  their associated reports matching the debiased aggregate data as best as
+  possible. In other words, the tool will mutate the input reports in some way
+  (sometimes by generating new reports that were not input into the system) so
+  that the output event-level data, when aggregated, matches the data that
+  `aggregate` mode would return.
 
-  Note: the `event-level` format is experimental. More work is needed to make
-  sure the use-cases for it are well-understood.
+  Note: the `experimental-event-level` format is experimental. More work is
+  needed to make sure the use-cases for it are well-understood.
 
   `aggregate` output format:
   {
@@ -453,7 +454,7 @@ def main():
     ]
   }
 
-  `event-level` output format:
+  `experimental-event-level` output format:
   [
     {
       "source": <source, same as input format>
@@ -463,7 +464,7 @@ def main():
   ]
   '''
   parser.add_argument('--output_mode', dest='output_mode',
-                      choices=['event-level', 'aggregate'],
+                      choices=['experimental-event-level', 'aggregate'],
                       default='aggregate', help=OUTPUT_MODE_HELP)
 
   parser.add_argument('-v', '--version', action='version', version=VERSION)
@@ -489,7 +490,7 @@ def main():
         'event': correct_aggregates(events, EVENT_PARAMS),
     }, indent=2))
 
-  elif args.output_mode == 'event-level':
+  elif args.output_mode == 'experimental-event-level':
     nav_corrected = generate_corrected_event_level(list(navs), NAV_PARAMS)
     event_corrected = generate_corrected_event_level(list(events), EVENT_PARAMS)
     combined = [{'source': s, 'reports': r}
