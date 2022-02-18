@@ -157,7 +157,7 @@ configures the API:
   "source_event_id": "12340873456",
   "destination": "[eTLD+1]",
   "expiry": "[64-bit signed integer]",
-  "source_priority": "[64-bit signed integer]"
+  "priority": "[64-bit signed integer]"
 }
 ```
 
@@ -172,10 +172,10 @@ limited to 64 bits of information but the value can vary.
 deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry
 can also vary between browsers. This will be rounded to the nearest day.
 
--   `source_priority`: (optional) a signed 64-bit integer used to prioritize
+-   `priority`: (optional) a signed 64-bit integer used to prioritize
 this source with respect to other matching sources. When a trigger redirect is
 received, the browser will find the matching source with highest
-`source_priority` value and generate a report. The other sources will not
+`priority` value and generate a report. The other sources will not
 generate reports.
 
 Once this header is received, the browser will proceed with [handling an
@@ -334,7 +334,7 @@ reflect a final set of parameters.
 When the browser receives an attribution trigger redirect on a URL matching the
 `destination` eTLD+1, it looks up all sources in storage that match
 <`attributionsrc` origin, `destination`> and picks the one with the greatest
-`source_priority`. If multiple sources have the greatest `source_priority`, the
+`priority`. If multiple sources have the greatest `priority`, the
 browser picks the one that was stored most recently.
 
 The browser then schedules a report for the source that was picked by storing
