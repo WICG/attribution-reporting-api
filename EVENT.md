@@ -445,7 +445,7 @@ Source registration:
   "source_event_id": "12345678",
   "destination": "https://toasters.example",
   "expiry": "604800000",
-  "source_data": {
+  "filter_data": {
     "conversion_subdomain": ["electronics.megastore"
                              "electronics2.megastore"],
     "product": ["1234"],
@@ -460,21 +460,21 @@ Trigger registration will now accept an option header
 {
   "conversion_subdomain": ["electronics.megastore"],
   // Not set on the source side, so this key is ignored
-  "directory": ["/store/electronics]" 
+  "directory": ["/store/electronics]"
 }
 ```
-If keys in the filters JSON match keys in `source_data`, the trigger is
+If keys in the filters JSON match keys in `filter_data`, the trigger is
 completely ignored if the intersection is empty.
 
 Note: A key which is present in one JSON and not the other will not be included
 in the matching logic.
 
 Note: The filter JSON does not support nested dictionaries or lists.
-`source_data` and `filters` are only allowed to have a list of values with
+`filter_data` and `filters` are only allowed to have a list of values with
 string type.
 
 The `Attribution-Reporting-Register-Event-Trigger` header can also be extended
-to do selective filtering to set `trigger_data` based on `source_data`:
+to do selective filtering to set `trigger_data` based on `filter_data`:
 ```jsonc
 // Filter by the source type to handle different bit limits.
 [{
