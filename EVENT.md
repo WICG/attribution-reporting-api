@@ -261,7 +261,7 @@ about how to treat the trigger event:
 ```jsonc
 [{
     "trigger_data": "[unsigned 64-bit integer, but the browser will sanitize it down to 3 bits]",
-    "trigger_priority": "[signed 64-bit integer]",
+    "priority": "[signed 64-bit integer]",
     "deduplication_key": "[unsigned 64-bit integer]"
 }]
 ```
@@ -269,7 +269,7 @@ TODO: Consider moving this over to a structured header. See [issue
 194](https://github.com/WICG/conversion-measurement-api/issues/194).
 
 - `trigger_data`: optional coarse-grained data to identify the triggering event.
-- `trigger_priority`: optional signed 64-bit integer representing the priority
+- `priority`: optional signed 64-bit integer representing the priority
 of this trigger compared to other triggers for the same source.
 - `deduplication_key`: optional unsigned 64-bit integer which will be used to
 deduplicate multiple triggers which contain the same deduplication_key for a
@@ -339,7 +339,7 @@ browser picks the one that was stored most recently.
 
 The browser then schedules a report for the source that was picked by storing
  {`attributionsrc` origin, `destination` eTLD+1, `source_event_id`,
- [decoded](#data-encoding) `trigger_data`, `trigger_priority`, `deduplication_key`} for
+ [decoded](#data-encoding) `trigger_data`, `priority`, `deduplication_key`} for
  the source. Scheduled reports will be sent as detailed in [Sending scheduled
  reports](#sending-scheduled-reports).
 
