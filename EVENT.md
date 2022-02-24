@@ -509,11 +509,14 @@ Source and trigger registration will accept a new parameter `debug_key`:
 }
 ```
 
-If a report is created with source+trigger debug keys, a duplicate debug report
-will be sent immediately to a `.well-known/attribution-reporting/debug`
-endpoint. The debug reports will be a JSON dictionary with both debug keys:
+If a report is created with source and trigger debug keys, a duplicate debug report
+will be sent immediately to a
+`.well-known/attribution-reporting/debug/report-attribution`
+endpoint. The debug reports will be identical to normal reports, but
+additionally contain both debug keys:
 ```jsonc
 {
+    // normal report fields...
     "source_debug_key": "[64-bit unsigned integer]",
     "trigger_debug_key": "[64-bit unsigned integer]"
 }
