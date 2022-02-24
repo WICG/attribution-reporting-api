@@ -36,6 +36,7 @@ extension on top of this.
   - [Optional attribution filters](#optional-attribution-filters)
   - [Optional: extended debugging reports](#optional-extended-debugging-reports)
   - [Noisy fake conversion example](#noisy-fake-conversion-example)
+  - [Storage limits](#storage-limits)
 - [Privacy Considerations](#privacy-considerations)
   - [Trigger Data](#trigger-data)
   - [Reporting Delay](#reporting-delay)
@@ -285,6 +286,9 @@ Controls for Attribution Source
 Declaration](#publisher-side-controls-for-attribution-source-declaration), this
 Permissions Policy will be enabled by default in the top-level context and in
 same-origin children, but disabled in cross-origin children.
+
+Navigation sources may be attributed up to 3 times. Event sources may be
+attributed up to 1 time.
 
 ### Data limits and noise
 
@@ -629,6 +633,15 @@ In the above example, the browser could have chosen to generate three reports:
 * One report with metadata “7”, sent 2 days after the click
 * One report with metadata “3”, sent 7 days after the click
 * One report with metadata “0”, also sent 7 days after the click
+
+### Storage limits
+
+The browser may apply storage limits in order to prevent excessive resource
+usage.
+
+Strawman: There should be a limit of 1024 pending sources per source origin.
+
+Strawman: There should be a limit of 1024 pending reports per destination site.
 
 ## Privacy Considerations
 
