@@ -16,6 +16,7 @@
 - [Privacy considerations](#privacy-considerations)
   - [Differential Privacy](#differential-privacy)
 - [Ideas for future iteration](#ideas-for-future-iteration)
+  - [Choosing among aggregation services](#choosing-among-aggregation-services)
   - [Worklet-based aggregation key generation](#worklet-based-aggregation-key-generation)
   - [Custom attribution models](#custom-attribution-models)
   - [Hide the true number of attribution reports](#hide-the-true-number-of-attribution-reports)
@@ -402,6 +403,26 @@ Note: there are a few caveats about a formal differential privacy claim:
   all types of reports.
 
 ## Ideas for future iteration
+
+### Choosing among aggregation services
+
+The server can respond with an optional header
+`Attribution-Reporting-Alternative-Aggregation-Mode` which accepts a string
+value.
+
+```
+Attribution-Reporting-Register-Aggregatable-Source: [{....}]
+Attribution-Reporting-Alternative-Aggregation-Mode: "experimental-poplar"
+```
+
+The optional header will allow developers to choose among different options for
+aggregation infrastructure supported by the user agent. This value will allow
+experimentation with new technologies, and allows us to try out new approaches
+without interfering with core functionality provided by the default option. The
+`"experimental-poplar"` option will implement a protocol similar to
+[poplar](https://github.com/cjpatton/vdaf/blob/main/draft-patton-cfrg-vdaf.md#poplar1-poplar1)
+VDAF in the
+[PPM Framework](https://datatracker.ietf.org/doc/draft-gpew-priv-ppm/).
 
 ### Worklet-based aggregation key generation
 
