@@ -410,7 +410,7 @@ The server can respond with an optional header
 `Attribution-Reporting-Alternative-Aggregation-Mode` which accepts a string
 value.
 
-```
+```http
 Attribution-Reporting-Register-Aggregatable-Source: [{....}]
 Attribution-Reporting-Alternative-Aggregation-Mode: "experimental-poplar"
 ```
