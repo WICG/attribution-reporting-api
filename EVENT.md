@@ -394,7 +394,7 @@ To send a report, the browser will make a non-credentialed (i.e. without session
 cookies) secure HTTP POST request to:
 
 ```
-https://<reporting origin>/.well-known/attribution-reporting/report-attribution
+https://<reporting origin>/.well-known/attribution-reporting/report-event-attribution
 ```
 
 The report data is included in the request body as a JSON object with the
@@ -511,7 +511,7 @@ Source and trigger registration will accept a new parameter `debug_key`:
 
 If a report is created with source and trigger debug keys, a duplicate debug report
 will be sent immediately to a
-`.well-known/attribution-reporting/debug/report-attribution`
+`.well-known/attribution-reporting/debug/report-event-attribution`
 endpoint. The debug reports will be identical to normal reports, but
 additionally contain both debug keys:
 ```jsonc
@@ -603,7 +603,7 @@ of the purchase value). They respond to the request with a
 The browser sees this response, and schedules a report to be sent. The report is
 associated with the 7-day deadline as the 2-day deadline has passed. Roughly 5
 days later, `ad-tech.example` receives the following HTTP POST to
-`https://ad-tech.example/.well-known/attribution-reporting/report-attribution`
+`https://ad-tech.example/.well-known/attribution-reporting/report-event-attribution`
 with the following body:
 ```jsonc
 {
