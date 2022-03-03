@@ -501,12 +501,18 @@ fully understood during roll-out and help flush out any bugs (either in browser
 or caller code), and more easily compare the performance to cookie-based
 alternatives.
 
-Source and trigger registration will accept a new parameter `debug_key`:
+Source registration will accept a new parameter `debug_key`:
 ```jsonc
 {
     ...
     "debug_key": "[64-bit unsigned integer]"
 }
+```
+
+Trigger debug keys are created using a separate header:
+
+```http
+Attribution-Reporting-Trigger-Debug-Key: [64-bit unsigned integer]
 ```
 
 If a report is created with source and trigger debug keys, a duplicate debug report
