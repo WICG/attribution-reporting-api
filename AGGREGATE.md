@@ -20,6 +20,7 @@
   - [Custom attribution models](#custom-attribution-models)
   - [Hide the true number of attribution reports](#hide-the-true-number-of-attribution-reports)
   - [More advanced contribution bounding](#more-advanced-contribution-bounding)
+  - [Choosing among aggregation services](#choosing-among-aggregation-services)
 - [Considered alternatives](#considered-alternatives)
   - [“Count” vs. “value” histograms](#count-vs-value-histograms)
   - [Binary report format](#binary-report-format)
@@ -519,6 +520,26 @@ contribution to any one bucket). Care should be taken to ensure that either:
 
 See [issue 249](https://github.com/WICG/conversion-measurement-api/issues/249)
 for more details.
+
+### Choosing among aggregation services
+
+The server can respond with an optional header
+`Attribution-Reporting-Alternative-Aggregation-Mode` which accepts a string
+value.
+
+```http
+Attribution-Reporting-Register-Aggregatable-Source: [{....}]
+Attribution-Reporting-Alternative-Aggregation-Mode: "experimental-poplar"
+```
+
+The optional header will allow developers to choose among different options for
+aggregation infrastructure supported by the user agent. This value will allow
+experimentation with new technologies, and allows us to try out new approaches
+without interfering with core functionality provided by the default option. The
+`"experimental-poplar"` option will implement a protocol similar to
+[poplar](https://github.com/cjpatton/vdaf/blob/main/draft-patton-cfrg-vdaf.md#poplar1-poplar1)
+VDAF in the
+[PPM Framework](https://datatracker.ietf.org/doc/draft-gpew-priv-ppm/).
 
 ## Considered alternatives
 
