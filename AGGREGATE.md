@@ -20,6 +20,7 @@
   - [Custom attribution models](#custom-attribution-models)
   - [Hide the true number of attribution reports](#hide-the-true-number-of-attribution-reports)
   - [More advanced contribution bounding](#more-advanced-contribution-bounding)
+  - [Choosing among aggregation services](#choosing-among-aggregation-services)
 - [Considered alternatives](#considered-alternatives)
   - [“Count” vs. “value” histograms](#count-vs-value-histograms)
   - [Binary report format](#binary-report-format)
@@ -73,31 +74,26 @@ on the response to the `attributionsrc` request:
 list.
 ```jsonc
 [{
-  // Generates a "101011001" key prefix named "campaignCounts"
+  // Generates a "0x159" key piece (low order bits of the key) named
+  // "campaignCounts"
   "id": "campaignCounts",
-  "key_piece": "101011001", // User saw ad from campaign 345 (out of 511)
-  "key_offset": 0
+  "key_piece": "0x159", // User saw ad from campaign 345 (out of 511)
 },
 {
-  // Generates a "101" key prefix named "geoValue"
+  // Generates a "0x5" key piece (low order bits of the key) named "geoValue"
   "id": "geoValue",
-  // Source-side geo region = 5 (US) but pad with 0s since the shop operates in
-  // ~100 separate countries.
-  "key_piece": "0000101",
-  "key_offset": 0
+  // Source-side geo region = 5 (US), out of a possible ~100 regions.
+  "key_piece": "0x5",
 }]
 ```
 This defines a list named histogram contributions, each with a piece of the
-aggregation key defined as a bit-string at a particular offset. The final
-histogram bucket key will be fully defined at trigger time using a combination
-of this piece and trigger-side pieces.
+aggregation key defined as a hex-string. The final histogram bucket key will be
+fully defined at trigger time using a combination (binary OR) of this piece and
+trigger-side pieces.
 
 Final keys will be restricted to a maximum of 128 bits. Keys longer than this
-will be truncated.
-
-TODO: consider it an option to use binary or decimal notation e.g. with 0b
-prefix. Also consider using a single parameter to specify the key vs. a
-string piece and an offset.
+will be truncated. This means that hex strings in the JSON should be limited to
+at most 32 digits.
 
 ### Attribution trigger registration
 
@@ -108,15 +104,19 @@ which generates aggregation keys.
 [
 // Each dict independently adds pieces to multiple source keys.
 {
-  "key_piece": "10",// Conversion type purchase = 2
-  "key_offset": 9,
-  // Apply this suffix to:
+  // Conversion type purchase = 2 at a 9 bit offset, i.e. 2 << 9.
+  // A 9 bit offset is needed because there are 511 possible campaigns, which
+  // will take up 9 bits in the resulting key.
+  "key_piece": "0x400",
+  // Apply this key piece to:
   "source_keys": ["campaignCounts"]
 },
 {
-  "key_piece": "10101",// Purchase category shirts = 21
-  "key_offset": 7,
-  // Apply this suffix to:
+  // Purchase category shirts = 21 at a 7 bit offset, i.e. 21 << 7.
+  // A 7 bit offset is needed because there are ~100 regions for the geo key,
+  // which will take up 7 bits of space in the resulting key.
+  "key_piece": "0xA80",
+  // Apply this key piece to:
   "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"]
 }
 ]
@@ -150,12 +150,12 @@ The scheme above will generate the following abstract histogram contributions:
 [
 // campaignCounts
 {
-  key: 1382, // 0b10101100110
+  key: 0x559, // = 0x159 | 0x400
   value: 32768 
 },
 // geoValue:
 {
-  key: 181, // 0b000010110101
+  key: 0xA85, // = 0x5 | 0xA80
   value: 1664
 }]
 ```
@@ -187,11 +187,10 @@ The report will be JSON encoded with the following scheme:
 {
   "source_site": "https://publisher.example",
   "attribution_destination": "https://advertiser.example",
-  "report_id": "[64 bit unsigned integer]",
 
   // Info that the aggregation services also need encoded in JSON
   // for use with AEAD.
-  "shared_info": "{\"scheduled_report_time\":[timestamp in seconds], \"source_registration_time\": \"[timestamp in seconds]\",\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\"}",
+  "shared_info": "{\"scheduled_report_time\":\"[timestamp in seconds]\",\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\",\"report_id\":\"[UUID]\",\"reporting_origin\":\"https://reporter.example\",\"source_registration_time\": \"[timestamp in seconds]\"}",
 
   // Support a list of payloads for future extensibility if multiple helpers
   // are necessary. Currently only supports a single helper configured
@@ -226,18 +225,12 @@ utilize techniques like retries to minimize data loss.
   offline devices reporting late).
 
 * The `payload` will contain the actual histogram contributions. It should be be
-  encrypted via [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/).
-  Its exact format is not specified in this doc, but it should use AEAD to
-  ensure that the information in `shared_info` is not tampered with, since the
-  aggregation service will need that information to do proper replay protection.
-  How the browser obtains the service’s public key is left as an implementation
-  detail.
+  encrypted and then base64 encoded, see [below](#encrypted-payload).
 
-* The `shared_info` will be a serialized JSON object. The authenticated data for
-  decryption will consist of this string (encoded as UTF-8) with a constant
-  prefix added for domain separation. The string therefore must be forwarded to
-  the aggregation service unmodified. The reporting origin can parse the string
-  to access the encoded fields.
+* The `shared_info` will be a serialized JSON object. This exact string is used
+  as authenticated data for decryption, see [below](#encrypted-payload). The
+  string therefore must be forwarded to the aggregation service unmodified. The
+  reporting origin can parse the string to access the encoded fields.
   
 * The `source_registration_time` within `shared_info` will represent (in seconds 
   since the Unix Epoch) the time the source event was registered, rounded to the
@@ -257,7 +250,67 @@ utilize techniques like retries to minimize data loss.
 Note: if [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
 is enabled, additional debug fields will be present in aggregatable reports,
 including the cleartext payloads, to allow downstream systems to verify that
-reports are constructed correctly.
+reports are constructed correctly. If debugging is enabled, the `shared_info` 
+will include the flag `"debug_mode": "enabled"` to allow the aggregation service
+to support debugging functionality on debug reports.
+
+#### Encrypted payload
+The `payload` should be a [CBOR](https://cbor.io) map encrypted via
+[HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/) and then base64
+encoded. The map will have the following structure:
+
+```jsonc
+// CBOR
+{
+  "operation": "histogram",  // Allows for the service to support other operations in the future
+  "data": [{"bucket": <bucket, encoded as a big-endian bytestring>, "value": <value, as an integer> }, ...]
+}
+```
+Optionally, the browser may encode multiple contributions in the same payload;
+this is only possible if all other fields in the report/payload are identical
+for the contributions.
+
+This encryption should use [AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption)
+to ensure that the information in `shared_info` is not tampered with, since the
+aggregation service will need that information to do proper replay protection.
+The authenticated data will consist of the `shared_info` string (encoded as
+UTF-8) with a constant prefix added for domain separation, i.e. to avoid
+ciphertexts being reused for different protocols, even if public keys are
+shared.
+
+The encryption will use public keys specified by the aggregation service. The
+browser will encrypt payloads just before the report is sent by fetching the
+public key endpoint with an un-credentialed request. The processing origin will
+respond with a set of keys which will be stored according to standard HTTP
+caching rules, i.e. using Cache-Control headers to dictate how long to store the
+keys for (e.g. following the [freshness
+lifetime](https://datatracker.ietf.org/doc/html/rfc7234#section-4.2)). The
+browser could enforce maximum/minimum lifetimes of stored keys to encourage
+faster key rotation and/or mitigate bandwidth usage. The scheme of the JSON
+encoded public keys is as follows:
+
+```jsonc
+{
+  "keys": [
+    {
+      "id": "[arbitrary string identifying the key (up to 128 characters)]",
+      "key": "[base64 encoded public key]"
+    },
+    // Optionally, more keys.
+  ]
+}
+```
+
+To limit the impact of a single compromised key, multiple keys (up to a small
+limit) can be provided. The browser should independently pick a key uniformly at
+random for each payload it encrypts to avoid associating different reports.
+Additionally, a public key endpoint should not reuse an ID string for a
+different key. In particular, IDs must be unique within a single response to be
+valid. In the case of backwards incompatible changes to this scheme (e.g. in
+future versions of the API), the endpoint URL should also change.
+
+**Note:** The browser may need some mechanism to ensure that the same set of
+keys are delivered to different users.
 
 ### Contribution bounding and budgeting
 
@@ -342,6 +395,13 @@ Note: there are a few caveats about a formal differential privacy claim:
   origin trial period, and our goal with this initial version is to create a
   foundation for further exploration into formally private methods for
   aggregation.
+  
+  ### Rate limits
+  
+  Various rate limits outlined in the 
+  [event-level explainer](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#reporting-cooldown--rate-limits)
+  should also apply to aggregatable reports. The limits should be shared across
+  all types of reports.
 
 ## Ideas for future iteration
 
@@ -434,10 +494,12 @@ count of reports to the reporting origin could leak something sensitive as well
 (imagine if the reporting origin only ever registered a conversion or impression
 for a single user).
 
-To hide the true number of reports, we could: Unconditionally send a null report
-for every registered attribution trigger (thus making the count a function of
-only destination-side information) Add noise to the number of reports by having
-some clients randomly add noisy reports
+To hide the true number of reports, we could: 
+- Unconditionally send a null report for every registered attribution trigger
+  (thus making the count a function of only destination-side information)
+- Add noise to the number of reports by having some clients randomly add noisy
+  null reports. This technique would have to assume some threshold number of
+  unattributed triggers to maintain privacy.
 
 ### More advanced contribution bounding
 
@@ -459,6 +521,26 @@ contribution to any one bucket). Care should be taken to ensure that either:
 
 See [issue 249](https://github.com/WICG/conversion-measurement-api/issues/249)
 for more details.
+
+### Choosing among aggregation services
+
+The server can respond with an optional header
+`Attribution-Reporting-Alternative-Aggregation-Mode` which accepts a string
+value.
+
+```http
+Attribution-Reporting-Register-Aggregatable-Source: [{....}]
+Attribution-Reporting-Alternative-Aggregation-Mode: "experimental-poplar"
+```
+
+The optional header will allow developers to choose among different options for
+aggregation infrastructure supported by the user agent. This value will allow
+experimentation with new technologies, and allows us to try out new approaches
+without interfering with core functionality provided by the default option. The
+`"experimental-poplar"` option will implement a protocol similar to
+[poplar](https://github.com/cjpatton/vdaf/blob/main/draft-patton-cfrg-vdaf.md#poplar1-poplar1)
+VDAF in the
+[PPM Framework](https://datatracker.ietf.org/doc/draft-gpew-priv-ppm/).
 
 ## Considered alternatives
 

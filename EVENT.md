@@ -36,6 +36,7 @@ extension on top of this.
   - [Optional attribution filters](#optional-attribution-filters)
   - [Optional: extended debugging reports](#optional-extended-debugging-reports)
   - [Noisy fake conversion example](#noisy-fake-conversion-example)
+  - [Storage limits](#storage-limits)
 - [Privacy Considerations](#privacy-considerations)
   - [Trigger Data](#trigger-data)
   - [Reporting Delay](#reporting-delay)
@@ -157,7 +158,7 @@ configures the API:
   "source_event_id": "12340873456",
   "destination": "[eTLD+1]",
   "expiry": "[64-bit signed integer]",
-  "source_priority": "[64-bit signed integer]"
+  "priority": "[64-bit signed integer]"
 }
 ```
 
@@ -172,10 +173,10 @@ limited to 64 bits of information but the value can vary.
 deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry
 can also vary between browsers. This will be rounded to the nearest day.
 
--   `source_priority`: (optional) a signed 64-bit integer used to prioritize
+-   `priority`: (optional) a signed 64-bit integer used to prioritize
 this source with respect to other matching sources. When a trigger redirect is
 received, the browser will find the matching source with highest
-`source_priority` value and generate a report. The other sources will not
+`priority` value and generate a report. The other sources will not
 generate reports.
 
 Once this header is received, the browser will proceed with [handling an
@@ -261,17 +262,17 @@ about how to treat the trigger event:
 ```jsonc
 [{
     "trigger_data": "[unsigned 64-bit integer, but the browser will sanitize it down to 3 bits]",
-    "trigger_priority": "[signed 64-bit integer]",
-    "deduplication_key": "[signed 64-bit integer]"
+    "priority": "[signed 64-bit integer]",
+    "deduplication_key": "[unsigned 64-bit integer]"
 }]
 ```
 TODO: Consider moving this over to a structured header. See [issue
 194](https://github.com/WICG/conversion-measurement-api/issues/194).
 
 - `trigger_data`: optional coarse-grained data to identify the triggering event.
-- `trigger_priority`: optional signed 64-bit integer representing the priority
+- `priority`: optional signed 64-bit integer representing the priority
 of this trigger compared to other triggers for the same source.
-- `deduplication_key`: optional signed 64-bit integer which will be used to
+- `deduplication_key`: optional unsigned 64-bit integer which will be used to
 deduplicate multiple triggers which contain the same deduplication_key for a
 single source.
 
@@ -285,6 +286,9 @@ Controls for Attribution Source
 Declaration](#publisher-side-controls-for-attribution-source-declaration), this
 Permissions Policy will be enabled by default in the top-level context and in
 same-origin children, but disabled in cross-origin children.
+
+Navigation sources may be attributed up to 3 times. Event sources may be
+attributed up to 1 time.
 
 ### Data limits and noise
 
@@ -334,17 +338,17 @@ reflect a final set of parameters.
 When the browser receives an attribution trigger redirect on a URL matching the
 `destination` eTLD+1, it looks up all sources in storage that match
 <`attributionsrc` origin, `destination`> and picks the one with the greatest
-`source_priority`. If multiple sources have the greatest `source_priority`, the
+`priority`. If multiple sources have the greatest `priority`, the
 browser picks the one that was stored most recently.
 
 The browser then schedules a report for the source that was picked by storing
  {`attributionsrc` origin, `destination` eTLD+1, `source_event_id`,
- [decoded](#data-encoding) `trigger_data`, `trigger_priority`, `dedup_key`} for
+ [decoded](#data-encoding) `trigger_data`, `priority`, `deduplication_key`} for
  the source. Scheduled reports will be sent as detailed in [Sending scheduled
  reports](#sending-scheduled-reports).
 
-The browser will create reports for a source only if the trigger's `dedup_key`
-has not already been associated with a report for that source.
+The browser will create reports for a source only if the trigger's
+`deduplication_key` has not already been associated with a report for that source.
 
 Each `navigation` source is allowed to schedule only a maximum of three reports,
 while each `event` source is only allowed to schedule a maximum of one.
@@ -390,7 +394,7 @@ To send a report, the browser will make a non-credentialed (i.e. without session
 cookies) secure HTTP POST request to:
 
 ```
-https://<reporting origin>/.well-known/attribution-reporting/report-attribution
+https://<reporting origin>/.well-known/attribution-reporting/report-event-attribution
 ```
 
 The report data is included in the request body as a JSON object with the
@@ -402,8 +406,8 @@ following keys:
 
 -   `trigger_data`: Coarse data set in the attribution trigger registration
 
--   `report_id`: A unique id for this report which can be used to prevent double
-    counting
+-   `report_id`: A UUID string for this report which can be used to prevent
+    double counting
 
 -   `source_type`: Either "navigation" or "event", indicates whether this source
     was associated with a navigation.
@@ -445,7 +449,7 @@ Source registration:
   "source_event_id": "12345678",
   "destination": "https://toasters.example",
   "expiry": "604800000",
-  "source_data": {
+  "filter_data": {
     "conversion_subdomain": ["electronics.megastore"
                              "electronics2.megastore"],
     "product": ["1234"],
@@ -460,21 +464,21 @@ Trigger registration will now accept an option header
 {
   "conversion_subdomain": ["electronics.megastore"],
   // Not set on the source side, so this key is ignored
-  "directory": ["/store/electronics]" 
+  "directory": ["/store/electronics]"
 }
 ```
-If keys in the filters JSON match keys in `source_data`, the trigger is
+If keys in the filters JSON match keys in `filter_data`, the trigger is
 completely ignored if the intersection is empty.
 
 Note: A key which is present in one JSON and not the other will not be included
 in the matching logic.
 
 Note: The filter JSON does not support nested dictionaries or lists.
-`source_data` and `filters` are only allowed to have a list of values with
+`filter_data` and `filters` are only allowed to have a list of values with
 string type.
 
 The `Attribution-Reporting-Register-Event-Trigger` header can also be extended
-to do selective filtering to set `trigger_data` based on `source_data`:
+to do selective filtering to set `trigger_data` based on `filter_data`:
 ```jsonc
 // Filter by the source type to handle different bit limits.
 [{
@@ -497,7 +501,7 @@ fully understood during roll-out and help flush out any bugs (either in browser
 or caller code), and more easily compare the performance to cookie-based
 alternatives.
 
-Source and trigger registration will accept a new parameter `debug_key`:
+Source registration will accept a new parameter `debug_key`:
 ```jsonc
 {
     ...
@@ -505,11 +509,20 @@ Source and trigger registration will accept a new parameter `debug_key`:
 }
 ```
 
-If a report is created with source+trigger debug keys, a duplicate debug report
-will be sent immediately to a `.well-known/attribution-reporting/debug`
-endpoint. The debug reports will be a JSON dictionary with both debug keys:
+Trigger debug keys are created using a separate header:
+
+```http
+Attribution-Reporting-Trigger-Debug-Key: [64-bit unsigned integer]
+```
+
+If a report is created with source and trigger debug keys, a duplicate debug report
+will be sent immediately to a
+`.well-known/attribution-reporting/debug/report-event-attribution`
+endpoint. The debug reports will be identical to normal reports, but
+additionally contain both debug keys:
 ```jsonc
 {
+    // normal report fields...
     "source_debug_key": "[64-bit unsigned integer]",
     "trigger_debug_key": "[64-bit unsigned integer]"
 }
@@ -596,7 +609,7 @@ of the purchase value). They respond to the request with a
 The browser sees this response, and schedules a report to be sent. The report is
 associated with the 7-day deadline as the 2-day deadline has passed. Roughly 5
 days later, `ad-tech.example` receives the following HTTP POST to
-`https://ad-tech.example/.well-known/attribution-reporting/report-attribution`
+`https://ad-tech.example/.well-known/attribution-reporting/report-event-attribution`
 with the following body:
 ```jsonc
 {
@@ -629,6 +642,15 @@ In the above example, the browser could have chosen to generate three reports:
 * One report with metadata “7”, sent 2 days after the click
 * One report with metadata “3”, sent 7 days after the click
 * One report with metadata “0”, also sent 7 days after the click
+
+### Storage limits
+
+The browser may apply storage limits in order to prevent excessive resource
+usage.
+
+Strawman: There should be a limit of 1024 pending sources per source origin.
+
+Strawman: There should be a limit of 1024 pending reports per destination site.
 
 ## Privacy Considerations
 
@@ -708,8 +730,7 @@ origins per <source site, destination site> pair, counted per source
 registration. This should be limited to 100 origins per 30 days.
 
 Additionally, there should be a limit of 10 reporting origins per <source site,
-destination site, 30 days>, counted for every attribution report that is
-generated.
+destination site, 30 days>, counted for every attribution that is generated.
 
 ### Clearing Site Data
 
@@ -722,13 +743,13 @@ browsers.
 To limit the amount of user identity leakage between a <source site,
 destination> pair, the browser should throttle the amount of total information
 sent through this API in a given time period for a user. The browser should set
-a maximum number of attribution reports per
+a maximum number of attributions per
 <source site, destination, reporting origin, user> tuple per time period. If this
 threshold is hit, the browser will stop scheduling reports the API for the
-rest of the time period for reports matching that tuple.
+rest of the time period for attributions matching that tuple.
 
 The longer the cooldown windows are, the harder it is to abuse the API and join
-identity. Ideally report thresholds should be low enough to avoid leaking too
+identity. Ideally attribution thresholds should be low enough to avoid leaking too
 much information, with cooldown windows as long as practically possible.
 
 Note that splitting these limits by the reporting origin introduces a possible
@@ -736,7 +757,7 @@ leak when multiple origins collude with each other. However, the alternative
 makes it very difficult to adopt the API if all reporting origins had to share a
 budget.
 
-Strawman rate limit: 100 reports per {source site, destination, reporting
+Strawman rate limit: 100 attributions per {source site, destination, reporting
 origin, 30 days}
 
 ### Less trigger-side data
