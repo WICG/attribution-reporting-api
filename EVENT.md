@@ -491,6 +491,14 @@ to do selective filtering to set `trigger_data` based on `filter_data`:
   "filters": {"source_type": ["event"]}
 }]
 ```
+
+If the filters do not match for any of the event triggers, the trigger data and
+priority both default to 0 and the dedup key defaults to not being set, and
+attribution proceeds normally.
+
+If the filters match for multiple event triggers, the first matching event
+trigger is used.
+
 ### Optional: extended debugging reports
 
 The Attribution Reporting API is a new and fairly complex way to do attribution
