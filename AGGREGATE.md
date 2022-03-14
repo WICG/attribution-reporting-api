@@ -263,7 +263,10 @@ encoded. The map will have the following structure:
 // CBOR
 {
   "operation": "histogram",  // Allows for the service to support other operations in the future
-  "data": [{"bucket": <bucket, encoded as a big-endian bytestring>, "value": <value, as an integer> }, ...]
+  "data": [{
+    "bucket": <bucket, encoded as a 16-byte (i.e. 128-bit) big-endian bytestring>,
+    "value": <value, encoded as a 4-byte (i.e. 32-bit) big-endian bytestring> 
+  }, ...]
 }
 ```
 Optionally, the browser may encode multiple contributions in the same payload;
