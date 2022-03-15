@@ -253,8 +253,11 @@ or JavaScript:
 window.attributionReporting.registerAttributionTrigger(
     "https://adtech.example/attribution_trigger?purchase=13")
 ```
-TODO: Finalize whether the `attributionsrc` attribute should be optional to
-support legacy HTML tags for triggers.
+
+As a stop-gap to support pre-existing conversion tags which do not include the 
+`attributionsrc` attribute, or use a different Fetch API, the browser will also 
+process trigger registration headers for all subresource requests on the page 
+where the `attribution-reporting` Permissions Policy is enabled. 
 
 Like source event registrations, these requests should respond with a new HTTP
 header `Attribution-Reporting-Register-Event-Trigger` which contains information
