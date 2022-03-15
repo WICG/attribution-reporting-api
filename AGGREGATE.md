@@ -187,10 +187,11 @@ The report will be JSON encoded with the following scheme:
 {
   "source_site": "https://publisher.example",
   "attribution_destination": "https://advertiser.example",
+  "source_registration_time": "[timestamp in seconds]",
 
   // Info that the aggregation services also need encoded in JSON
   // for use with AEAD.
-  "shared_info": "{\"scheduled_report_time\":\"[timestamp in seconds]\",\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\",\"report_id\":\"[UUID]\",\"reporting_origin\":\"https://reporter.example\",\"source_registration_time\": \"[timestamp in seconds]\"}",
+  "shared_info": "{\"scheduled_report_time\":\"[timestamp in seconds]\",\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\",\"report_id\":\"[UUID]\",\"reporting_origin\":\"https://reporter.example\"}",
 
   // Support a list of payloads for future extensibility if multiple helpers
   // are necessary. Currently only supports a single helper configured
@@ -224,6 +225,9 @@ utilize techniques like retries to minimize data loss.
   browser initially scheduled the report to be sent (to avoid noise around
   offline devices reporting late).
 
+* The `source_registration_time` will represent (in seconds since the Unix Epoch) the
+  time the source event was registered, rounded to the nearest whole day.
+
 * The `payload` will contain the actual histogram contributions. It should be be
   encrypted and then base64 encoded, see [below](#encrypted-payload).
 
@@ -238,13 +242,13 @@ utilize techniques like retries to minimize data loss.
   
 * The `privacy_budget_key` is used to define distinct batches of aggregate
   reports. It is used by the aggregation service to prevent replay attacks. It
-  will be a hash of: `reporting_origin | source_site | destination | version`.
+  will be a hash of:
+  `reporting_origin | source_site | destination | version | source_registration_time`.
   Note that the true key used to track batches will be `privacy_budget_key`
-  concatenated with `round_to_hour(scheduled_report_time)` and 
-  `source_registration_time`. The latter two are omitted from the key
-  for ergonomic reasons to help keys stay consistent over time. All reports that
-  share a privacy budget key should be sent to the aggregation service at the same 
-  time (in any order).
+  concatenated with `round_to_hour(scheduled_report_time)`. The latter is
+  omitted from the key to allow server-side recording to be time-bounded. All
+  reports that share a privacy budget key should be sent to the aggregation
+  service at the same time (in any order).
 
 
 Note: if [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
