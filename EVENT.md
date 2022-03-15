@@ -140,7 +140,7 @@ window.open(
 ```
 or via a JavaScript API:
 ```javascript
-window.attributionReporting.registerAttributionSource(
+window.attributionReporting.registerSource(
   "https://adtech.example/attribution_source?my_ad_id=123");
 ```
 
@@ -250,7 +250,7 @@ similar mechanism is used as source event registration, via HTML:
 ```
 or JavaScript:
 ```javascript
-window.attributionReporting.registerAttributionTrigger(
+window.attributionReporting.registerTrigger(
     "https://adtech.example/attribution_trigger?purchase=13")
 ```
 
