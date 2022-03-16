@@ -129,7 +129,7 @@ window.open(
  `<img>` tags with the new `attributionsrc` attribute too:
 ```html
 <!-- TODO: is view registration via an `<a>` tag necessary?
-    It requires a new attribute and a way to differentiate the requests. -->
+    It may require a new attribute and a way to differentiate the requests. -->
 
 <img src="https://advertiser.example/pixel" 
      attributionsrc="https://adtech.example/attribution_source?my_ad_id=123" />
