@@ -126,14 +126,10 @@ window.open(
 ```
 
  `event` sources do not require any user interaction and are registered via
- `<a>` or `<img>` tags with the new `attributionsrc` attribute too:
+ `<img>` tags with the new `attributionsrc` attribute too:
 ```html
-<a href="https://advertiser.example/landing"
-   registerattributionsrc
-   attributionsrc="https://adtech.example/attribution_source?my_ad_id=123" >
-</a>
 <!-- TODO: is view registration via an `<a>` tag necessary?
-    It requires a new attribute. -->
+    It requires a new attribute and a way to differentiate the requests. -->
 
 <img src="https://advertiser.example/pixel" 
      attributionsrc="https://adtech.example/attribution_source?my_ad_id=123" />
@@ -145,9 +141,7 @@ window.attributionReporting.registerSource(
 ```
 
 Each of these mechanisms will cause the browser to initiate a `keepalive` fetch
-request to the URL indicated by `attributionsrc`. The request will include a new
-HTTP header `Attribution-Reporting-Source-Info` which will include whether the
-source was a `navigation` or `event` source.
+request to the URL indicated by `attributionsrc`.
 
 The response to this request will configure the API. The browser will expect
 data in a new JSON HTTP header `Attribution-Reporting-Register-Source` which
