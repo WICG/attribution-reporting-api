@@ -226,7 +226,7 @@ utilize techniques like retries to minimize data loss.
   offline devices reporting late).
 
 * The `source_registration_time` will represent (in seconds since the Unix Epoch) the
-  time the source event was registered, rounded to the nearest whole day.
+  time the source event was registered, rounded down to whole day.
 
 * The `payload` will contain the actual histogram contributions. It should be be
   encrypted and then base64 encoded, see [below](#encrypted-payload).
@@ -236,9 +236,9 @@ utilize techniques like retries to minimize data loss.
   string therefore must be forwarded to the aggregation service unmodified. The
   reporting origin can parse the string to access the encoded fields.
   
-* The `source_registration_time` within `shared_info` will represent (in seconds 
-  since the Unix Epoch) the time the source event was registered, rounded to the
-  nearest whole day.
+* The `source_registration_time` within `shared_info` will represent (in seconds
+  since the Unix Epoch) the time the source event was registered, rounded down
+  to whole day.
   
 * The `privacy_budget_key` is used to define distinct batches of aggregate
   reports. It is used by the aggregation service to prevent replay attacks. It
