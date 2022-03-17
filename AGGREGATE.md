@@ -247,8 +247,8 @@ utilize techniques like retries to minimize data loss.
   Note that the true key used to track batches will be `privacy_budget_key`
   concatenated with `round_to_hour(scheduled_report_time)`. The latter is
   omitted from the key to allow server-side recording to be time-bounded. All
-  reports that share a privacy budget key should be sent to the aggregation
-  service at the same time (in any order).
+  reports that share a (true) privacy budget key should be sent to the
+  aggregation service at the same time (in any order).
 
 
 Note: if [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
