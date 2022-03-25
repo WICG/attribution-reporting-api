@@ -77,13 +77,13 @@ list.
   // Generates a "0x159" key piece (low order bits of the key) named
   // "campaignCounts"
   "id": "campaignCounts",
-  "key_piece": "0x159", // User saw ad from campaign 345 (out of 511)
+  "key_piece": "0x159" // User saw ad from campaign 345 (out of 511)
 },
 {
   // Generates a "0x5" key piece (low order bits of the key) named "geoValue"
   "id": "geoValue",
   // Source-side geo region = 5 (US), out of a possible ~100 regions.
-  "key_piece": "0x5",
+  "key_piece": "0x5"
 }]
 ```
 This defines a list named histogram contributions, each with a piece of the
