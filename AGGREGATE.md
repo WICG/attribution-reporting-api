@@ -198,12 +198,12 @@ The report will be JSON encoded with the following scheme:
   // by the browser.
   "aggregation_service_payloads": [
     {
-      "payload": "[base64 HPKE encrypted data readable only by the aggregation service]",
+      "payload": "[base64-encoded HPKE encrypted data readable only by the aggregation service]",
       "key_id": "[string identifying public key used to encrypt payload]",
 
       // Optional debugging information (also present in event-level reports),
       // if the cookie `ar_debug` is present.
-      "debug_cleartext_payload": "[decrypted payload]",
+      "debug_cleartext_payload": "[base64-encoded decrypted payload]",
     },
   ],
 
