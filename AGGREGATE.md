@@ -203,7 +203,7 @@ The report will be JSON encoded with the following scheme:
 
       // Optional debugging information (also present in event-level reports),
       // if the cookie `ar_debug` is present.
-      "debug_cleartext_payload": "[base64-encoded decrypted payload]",
+      "debug_cleartext_payload": "[base64-encoded unencrypted payload]",
     },
   ],
 
