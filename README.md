@@ -7,12 +7,10 @@ _This repository hosts multiple technical explainers that specify various featur
 ## Just getting started?
 
 This repository hosts detailed technical explainers.
-Before diving into these, check out these newcomer-friendly resources:
+Before diving into these, check out this [introductory article](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting).
+If you're looking to experiment with the API, head over to this [guide](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-experiment/).
 
-- For a quick overview of Attribution Reporting, head over to [Attribution Reporting in five minutes](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-event-introduction/).
-- For an in-depth introduction to the API's use cases, features, and privacy model, read [Introduction to Attribution Reporting](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-introduction/).
-
-These articles, as well as additional API guides and blogposts for this API, are listed [here](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting/).
+All developer resources for this API are listed [here](https://developer.chrome.com/docs/privacy-sandbox/#measure-digital-ads).
 
 ## Participate
 
@@ -22,7 +20,7 @@ This API is being incubated and developed in the open. Here are ways to particip
 
 * [☝️ Open an issue](https://github.com/WICG/conversion-measurement-api/issues/new) to ask questions, propose features, or discuss use cases. If you're unsure how to formulate your issue, see examples like [this issue](https://github.com/WICG/conversion-measurement-api/issues/147) and [this issue](https://github.com/WICG/conversion-measurement-api/issues/68). You can also join the conversation in [existing issues](https://github.com/WICG/conversion-measurement-api/issues).
 
-Note: If you have implementation questions, for example if you're running an **origin trial** in Chrome and have technical questions, join the [Attribution Reporting mailing list for developers](https://groups.google.com/u/1/a/chromium.org/g/attribution-reporting-api-dev) and ask your question. If you have general technical questions on your use case, consider opening an issue on the [Privacy Sandbox dev support repository](https://github.com/GoogleChromeLabs/privacy-sandbox-dev-support).
+If you have **implementation** questions, for example about your **origin trial** in Chrome, [see how to get support](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-experiment/#get-support). 
 
 ## Overview
 
@@ -46,13 +44,13 @@ All the features below are proposals under incubation. This list evolves over ti
 
 Attribute cross-site click-through or view-through conversions with reports at a per-event level. See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md).
 
-Implementation status: `Latest version not implemented yet, under development in Chrome`
+Implementation status: `Available in Chrome behind a flag.`
 
 ### Aggregatable reports (clicks and views)
 
 Attribution reports for aggregated conversions (both clicks and views). Complements the event-level reports. See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/AGGREGATE.md).
 
-Implementation status: `Under development (Chrome)`
+Implementation status: `Available in Chrome behind a flag.`
 
 ### App-to-web (clicks and views)
 
@@ -67,4 +65,4 @@ Attribute conversions occurring across distinct devices, i.e. as distinct web br
 Implementation status: `Proposal. Not implemented yet (all browsers)`
 
 ## External Documentation
-API guides and blogposts for this API are listed [here](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting/).
+All developer resources for this API are listed [here](https://developer.chrome.com/docs/privacy-sandbox/#measure-digital-ads).
