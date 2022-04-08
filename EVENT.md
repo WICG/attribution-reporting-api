@@ -520,11 +520,8 @@ Trigger debug keys are created using a separate header:
 Attribution-Reporting-Trigger-Debug-Key: [64-bit unsigned integer]
 ```
 
-If a report is created with source and trigger debug keys, a duplicate debug report
-will be sent immediately to a
-`.well-known/attribution-reporting/debug/report-event-attribution`
-endpoint. The debug reports will be identical to normal reports, but
-additionally contain both debug keys:
+Reports will include up to two new parameters which pass any specified debug keys
+from source and trigger events unaltered:
 ```jsonc
 {
     // normal report fields...
@@ -533,16 +530,12 @@ additionally contain both debug keys:
 }
 ```
 
-Normal reports will also include two new parameters which pass the debug keys
-from source and trigger events unaltered. This allows tying normal reports to the
-separate stream of debug reports.
-```jsonc
-{
-    ...
-    "source_debug_key": "[64-bit unsigned integer]",
-    "trigger_debug_key": "[64-bit unsigned integer]"
-}
-```
+If a report is created with both source and trigger debug keys, a duplicate debug
+report will be sent immediately to a
+`.well-known/attribution-reporting/debug/report-event-attribution`
+endpoint. The debug reports will be identical to normal reports, including the
+two debug key fields. Including these keys in both allows tying normal reports
+to the separate stream of debug reports.
 
 Note that event-level reports associated with false trigger events
 will not have `trigger_debug_key`s. This allows developers to more
