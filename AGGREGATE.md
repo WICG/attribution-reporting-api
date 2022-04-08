@@ -313,11 +313,12 @@ keys are delivered to different users.
 If [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
 is enabled, additional debug fields will be present in aggregatable reports.
 The `source_debug_key` and `trigger_debug_key` fields match those in the
-event-level reports. The `debug_cleartext_payload` field contains the
-base64-encoded cleartext of the encrypted payload to allow downstream systems
-to verify that reports are constructed correctly. Additionally, the `shared_info` 
-will include the flag `"debug_mode": "enabled"` to allow the aggregation service
-to support debugging functionality on debug reports.
+event-level reports. If both the source and trigger debug keys are set, there
+will be a `debug_cleartext_payload` field included in the report. It will
+contain the base64-encoded cleartext of the encrypted payload to allow downstream
+systems to verify that reports are constructed correctly. If both debug keys are
+set, the `shared_info` will also include the flag `"debug_mode": "enabled"` to
+allow the aggregation service to support debugging functionality on debug reports.
 
 Additionally, a duplicate debug report will be sent immediately (i.e. without the
 random delay) to a
