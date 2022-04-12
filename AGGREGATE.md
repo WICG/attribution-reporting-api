@@ -201,8 +201,7 @@ The report will be JSON encoded with the following scheme:
       "payload": "[base64-encoded HPKE encrypted data readable only by the aggregation service]",
       "key_id": "[string identifying public key used to encrypt payload]",
 
-      // Optional debugging information (also present in event-level reports),
-      // if the cookie `ar_debug` is present.
+      // Optional debugging information, if the cookie `ar_debug` is present.
       "debug_cleartext_payload": "[base64-encoded unencrypted payload]",
     },
   ],
@@ -246,13 +245,7 @@ utilize techniques like retries to minimize data loss.
   reports that share a (true) privacy budget key should be sent to the
   aggregation service at the same time (in any order).
 
-
-Note: if [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
-is enabled, additional debug fields will be present in aggregatable reports,
-including the cleartext payloads, to allow downstream systems to verify that
-reports are constructed correctly. If debugging is enabled, the `shared_info` 
-will include the flag `"debug_mode": "enabled"` to allow the aggregation service
-to support debugging functionality on debug reports.
+Optional debugging fields are discussed [below](#optional-extended-debugging-reports).
 
 #### Encrypted payload
 The `payload` should be a [CBOR](https://cbor.io) map encrypted via
@@ -314,6 +307,26 @@ future versions of the API), the endpoint URL should also change.
 
 **Note:** The browser may need some mechanism to ensure that the same set of
 keys are delivered to different users.
+
+#### Optional: extended debugging reports
+
+If [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
+is enabled, additional debug fields will be present in aggregatable reports.
+The `source_debug_key` and `trigger_debug_key` fields match those in the
+event-level reports. If both the source and trigger debug keys are set, there
+will be a `debug_cleartext_payload` field included in the report. It will
+contain the base64-encoded cleartext of the encrypted payload to allow downstream
+systems to verify that reports are constructed correctly. If both debug keys are
+set, the `shared_info` will also include the flag `"debug_mode": "enabled"` to
+allow the aggregation service to support debugging functionality on these reports.
+
+Additionally, a duplicate debug report will be sent immediately (i.e. without the
+random delay) to a
+`.well-known/attribution-reporting/debug/report-aggregate-attribution` endpoint.
+The debug reports should be almost identical to the normal reports, including the
+additional debug fields. However, the `payload` ciphertext will differ due to
+repeating the encryption operation and the `key_id` may differ if the previous
+key had since expired or the browser randomly chose a different valid public key.
 
 ### Contribution bounding and budgeting
 
