@@ -318,7 +318,7 @@ will be a `debug_cleartext_payload` field included in the report. It will
 contain the base64-encoded cleartext of the encrypted payload to allow downstream
 systems to verify that reports are constructed correctly. If both debug keys are
 set, the `shared_info` will also include the flag `"debug_mode": "enabled"` to
-allow the aggregation service to support debugging functionality on debug reports.
+allow the aggregation service to support debugging functionality on these reports.
 
 Additionally, a duplicate debug report will be sent immediately (i.e. without the
 random delay) to a
