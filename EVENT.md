@@ -449,7 +449,7 @@ Source registration:
   "filter_data": {
     "conversion_subdomain": ["electronics.megastore"
                              "electronics2.megastore"],
-    "product": ["1234"],
+    "product": ["1234"]
     // Note that "source_type" will be automatically generated as
     // one of {"navigation", "event"}
   }
@@ -613,7 +613,7 @@ with the following body:
 {
   "attribution_destination": "https://toasters.example",
   "source_event_id": "12345678",
-  "trigger_data": "2",
+  "trigger_data": "2"
 }
 ```
 ### Noisy fake conversion example
