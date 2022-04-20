@@ -339,6 +339,8 @@ An attribution source is a [=struct=] with the following items:
 :: An [=attribution mode=].
 : <dfn>randomized trigger rate</dfn>
 :: A number between 0 and 1 (both inclusive).
+: <dfn>debug key</dfn>
+:: Null or a non-negative 64-bit integer.
 
 </dl>
 
@@ -361,6 +363,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: Null or a 64-bit integer.
 : <dfn>priority</dfn>
 :: A 64-bit integer.
+: <dfn>debug key</dfn>
+:: Null or a non-negative 64-bit integer.
 
 </dl>
 
@@ -393,6 +397,10 @@ An attribution report is a [=struct=] with the following items:
 :: A boolean.
 : <dfn>report id</dfn>
 :: A string.
+: <dfn>source debug key</dfn>
+:: Null or a non-negative 64-bit integer.
+: <dfn>trigger debug key</dfn>
+:: Null or a non-negative 64-bit integer.
 
 </dl>
 
@@ -584,6 +592,8 @@ and an [=environment settings object=] |settings|, run the following steps:
     :: ("`truthfully`", null)
     : [=attribution source/randomized trigger rate=]
     :: 0
+    : [=attribution source/debug key=]
+    :: null
 1. Return |source|.
 
 <dfn>Max event id value</dfn> is a vendor-specific integer which controls
@@ -631,6 +641,8 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         :: null
         : [=attribution trigger/priority=]
         :: 0
+        : [=attribution trigger/debug key=]
+        :: null
     1. Let |fakeReport| be the result of running [=obtain a report=] with |source| and |fakeTrigger|.
     1. Add |fakeReport| to the [=attribution report cache=].
     1. Return.
@@ -678,6 +690,8 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
     :: |dedupKey|.
     : [=attribution trigger/priority=]
     :: |triggerPriority|.
+    : [=attribution trigger/debug key=]
+    :: null
 1. Return |trigger|.
 
 <dfn>Trigger data cardinality</dfn> is a vendor-specific integer that controls the valid range of
@@ -879,6 +893,10 @@ To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=
     :: |source|'s [=attribution source/source identifier=].
     : [=attribution report/report id=]
     :: The result of [=generating a random UUID=].
+    : [=attribution report/source debug key=]
+    :: |source|'s [=attribution source/debug key=].
+    : [=attribution report/trigger debug key=]
+    :: |trigger|'s [=attribution trigger/debug key=].
 1. Return |report|.
 
 # Report delivery # {#report-delivery}
@@ -927,6 +945,12 @@ To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following st
     : "`report_id`"
     :: |report|'s [=attribution report/report id=]
 
+1. If |report|'s [=attribution report/source debug key=] is not null, set
+    |data|["`source_debug_key`"] to |report|'s [=attribution report/source debug key=],
+    [=serialize an integer|serialized=].
+1. If |report|'s [=attribution report/trigger debug key=] is not null, set
+    |data|["`trigger_debug_key`"] to |report|'s [=attribution report/trigger debug key=],
+    [=serialize an integer|serialized=].
 1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
 
 Note: The inclusion of "`report_id`" in the report body is intended to allow the report recipient
