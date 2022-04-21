@@ -74,13 +74,13 @@ on the response to the `attributionsrc` request:
 list.
 ```jsonc
 [{
-  // Generates a "0x159" key piece (low order bits of the key) named
+  // Generates a "0x159" key piece (low order bits of the key) for the key named
   // "campaignCounts"
   "id": "campaignCounts",
   "key_piece": "0x159" // User saw ad from campaign 345 (out of 511)
 },
 {
-  // Generates a "0x5" key piece (low order bits of the key) named "geoValue"
+  // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue"
   "id": "geoValue",
   // Source-side geo region = 5 (US), out of a possible ~100 regions.
   "key_piece": "0x5"
