@@ -308,6 +308,11 @@ An attribution mode is a [=tuple=] consisting of a mode and a random trigger dat
 either "`truthfully`", "`never`", or "`falsely`". The random trigger data is a non-negative 64-bit
 integer, if the mode is "`falsely`", or null otherwise.
 
+<h3 dfn-type=dfn>Attribution filter map</h3>
+
+An attribution filter map is an [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
+[=map/value|values=] are [=ordered sets=] of [=strings=].
+
 <h3 dfn-type=dfn>Attribution source</h3>
 
 An attribution source is a [=struct=] with the following items:
@@ -339,6 +344,8 @@ An attribution source is a [=struct=] with the following items:
 :: An [=attribution mode=].
 : <dfn>randomized trigger rate</dfn>
 :: A number between 0 and 1 (both inclusive).
+: <dfn>filter data</dfn>
+:: An [=attribution filter map=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
 
@@ -363,6 +370,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: Null or a 64-bit integer.
 : <dfn>priority</dfn>
 :: A 64-bit integer.
+: <dfn>filters</dfn>
+:: An [=attribution filter map=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
 
@@ -523,7 +532,8 @@ To <dfn>obtain an event attribution source from a source</dfn> given an [=attrib
 
 1. Let |resultSource| be a shallow clone of |source|.
 1. Set |resultSource|'s [=attribution source/source identifier=] to a new unique opaque string.
-1. Set |resultSource|'s [=attribution source/source type=] to "<code>event</code>".
+1. Set |resultSource|'s [=attribution source/source type=] to "`event`".
+1. Set |resultSource|'s [=attribution source/filter data=] to «[ "`source_type`" → "`event`" ]».
 1. Round |resultSource|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
 1. Set |resultSource|'s [=attribution source/attribution mode=] to the result of
     [=obtaining a random attribution mode=] with the user agent's
@@ -587,11 +597,13 @@ and an [=environment settings object=] |settings|, run the following steps:
     : [=attribution source/source time=]
     :: |currentTime|
     : [=attribution source/source type=]
-    :: "<code>navigation</code>"
+    :: "`navigation`"
     : [=attribution source/attribution mode=]
     :: ("`truthfully`", null)
     : [=attribution source/randomized trigger rate=]
     :: 0
+    : [=attribution source/filter data=]
+    :: «[ "`source_type`" → "`navigation`" ]»
     : [=attribution source/debug key=]
     :: null
 1. Return |source|.
@@ -641,6 +653,8 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         :: null
         : [=attribution trigger/priority=]
         :: 0
+        : [=attribution trigger/filters=]
+        :: «[]»
         : [=attribution trigger/debug key=]
         :: null
     1. Let |fakeReport| be the result of running [=obtain a report=] with |source| and |fakeTrigger|.
@@ -690,6 +704,8 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
     :: |dedupKey|.
     : [=attribution trigger/priority=]
     :: |triggerPriority|.
+    : [=attribution trigger/filters=]
+    :: «[]»
     : [=attribution trigger/debug key=]
     :: null
 1. Return |trigger|.
@@ -732,6 +748,21 @@ Given a [=request=] |request|:
 1. [=Queue a task=] to [=trigger attribution=] with |trigger|.
 1. Return <strong>blocked</strong>.
 
+<h3 dfn id="does-filter-data-match">Does filter data match</h3>
+
+To <dfn>match an attribution source's filter data against an attribution trigger</dfn> given an
+[=attribution source=] |source| and [=attribution trigger=] |trigger|:
+
+1. Let |sourceData| be |source|'s [=attribution source/filter data=].
+1. [=map/iterate|For each=] |key| → |triggerValues| of |trigger|'s [=attribution trigger/filters=]:
+    1. If |sourceData|[|key|] does not [=map/exist=], [=iteration/continue=].
+    1. Let |sourceValues| be |sourceData|[|key|].
+    1. If |sourceValues| [=list/is empty=] and |triggerValues| is [=list/is empty=],
+        [=iteration/continue=].
+    1. Let |i| be the [=set/intersection=] of |sourceValues| and |triggerValues|.
+    1. If |i| [=list/is empty=], return false.
+1. Return true.
+
 <h3 dfn id="should-rate-limit-attribution">Should attribution be blocked by rate limit</h3>
 
 Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToAttribute|:
@@ -772,6 +803,9 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Let |sourceToAttribute| be the first item in |matchingSources|.
 1. Assert: |sourceToAttribute|'s [=attribution source/attribution mode=][0] is
     "`truthfully`" or "`never`".
+1. If the result of running
+    [=match an attribution source's filter data against an attribution trigger=] with
+    |sourceToAttribute| and |trigger| is false, return.
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null and |sourceToAttribute|'s
     [=attribution source/dedup keys=] [=list/contains=] it, return.
 1. Let |numMatchingReports| be the number of entries in the [=attribution report cache=] whose
