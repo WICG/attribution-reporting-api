@@ -533,6 +533,11 @@ To <dfn>obtain an event attribution source from a source</dfn> given an [=attrib
     [=randomized event-source trigger rate=].
 1. Return |resultSource|.
 
+<dfn>Randomized navigation-source trigger rate</dfn> is a vendor-specific double between 0 and 1
+(both inclusive) that controls the randomized response probability for the
+[=attribution source/attribution mode=] of an [=attribution source=] whose
+[=attribution source/source type=] is "`navigation`".
+
 <dfn>Randomized event-source trigger rate</dfn> is a vendor-specific double between 0 and 1 (both
 inclusive) that controls the randomized response probability for the
 [=attribution source/attribution mode=] of an [=attribution source=] whose
@@ -567,6 +572,9 @@ and an [=environment settings object=] |settings|, run the following steps:
 1. Let |priority| be 0.
 1. If |params|["{{AttributionSourceParams/attributionSourcePriority}}"] [=map/exists=],
     then set |priority| to that value.
+1. Let |attributionMode| be the result of [=obtaining a random attribution mode=] with the user
+    agent's [=navigation-source trigger data cardinality=] and the user agent's
+    [=randomized navigation-source trigger rate=].
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -589,9 +597,9 @@ and an [=environment settings object=] |settings|, run the following steps:
     : [=attribution source/source type=]
     :: "<code>navigation</code>"
     : [=attribution source/attribution mode=]
-    :: ("`truthfully`", null)
+    :: |attributionMode|
     : [=attribution source/randomized trigger rate=]
-    :: 0
+    :: the user agent's [=randomized navigation-source trigger rate=]
     : [=attribution source/debug key=]
     :: null
 1. Return |source|.
@@ -662,7 +670,7 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 
 1. Let |navigationSourceTriggerData| be 0.
 1. If |url|'s [=url/query=] has a "`trigger-data`" field, set |navigationSourceTriggerData| to the result of running [=parse attribution data=] with
-    the value associated with the field modulo the user agent's [=trigger data cardinality=].
+    the value associated with the field modulo the user agent's [=navigation-source trigger data cardinality=].
 1. Let |eventSourceTriggerData| be 0.
 1. If |url|'s [=url/query=] has an "`event-source-trigger-data`" field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=event-source trigger data cardinality=].
@@ -694,9 +702,9 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
     :: null
 1. Return |trigger|.
 
-<dfn>Trigger data cardinality</dfn> is a vendor-specific integer that controls the valid range of
+<dfn>Navigation-source trigger data cardinality</dfn> is a vendor-specific integer that controls the valid range of
 [=attribution trigger/navigation-source trigger data=]:
-0 <= [=attribution trigger/navigation-source trigger data=] < [=trigger data cardinality=].
+0 <= [=attribution trigger/navigation-source trigger data=] < [=navigation-source trigger data cardinality=].
 
 <dfn>Event-source trigger data cardinality</dfn> is a vendor-specific integer that controls the valid
 range of [=attribution trigger/event-source trigger data=]:
