@@ -217,7 +217,7 @@ Policy](https://w3c.github.io/webappsec-permissions-policy/):
 </iframe>
 ```
 
-The API will be diabled by default so that web site authors can turn it on only for pages
+The API will be disabled by default so that web site authors can turn it on only for pages
 where it presents an acceptable level of risk. Any script running in these contexts can declare a source with any
 reporting origin. Publishers who wish to explicitly disable the API for all
 parties can do so via an [HTTP
