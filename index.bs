@@ -785,7 +785,7 @@ the maximum number of attributions for a ([=attribution rate-limit record/source
 [=attribution rate-limit record/attribution destination=],
 [=attribution rate-limit record/reporting endpoint=]) per [=attribution rate-limit window=].
 
-<h3 dfn id="should-block-attribution-for-reporting-origin-limit">Should attribution be blocked by reporting-origin limit</h3>
+<h3 dfn id="should-block-attribution-for-reporting-endpoint-limit">Should attribution be blocked by reporting-endpoint limit</h3>
 
 Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToAttribute|:
 
@@ -795,15 +795,17 @@ Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToA
      * entry's [=attribution rate-limit record/source site=] and |sourceSite| are equal
      * entry's [=attribution rate-limit record/attribution destination=] and |trigger|'s [=attribution trigger/attribution destination=] are equal
      * entry's [=attribution rate-limit record/trigger time=] is at least [=attribution rate-limit window=] before |trigger|'s [=attribution trigger/trigger time=]
-1. Let |distinctReportingOrigins| be a new empty [=ordered set=].
+1. Let |distinctReportingEndpoints| be a new empty [=ordered set=].
 1. [=map/iterate|For each=] |record| of |matchingRateLimitRecords|, [=set/append=] |record|'s
-     [=attribution rate-limit record/reporting endpoint=] to |distinctReportingOrigins|.
-1. If |distinctReportingOrigins|'s [=list/size=] is greater than or equal to
-     [=max attribution reporting origins per rate-limit window=], return <strong>blocked</strong>.
+     [=attribution rate-limit record/reporting endpoint=] to |distinctReportingEndpoints|.
+1. If |distinctReportingEndpoints| [=list/contains=] |trigger|'s
+     [=attribution trigger/reporting endpoint=], return <strong>allowed</strong>.
+1. If |distinctReportingEndpoints|'s [=list/size=] is greater than or equal to
+     [=max attribution reporting endpoints per rate-limit window=], return <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
 
-<dfn>Max attribution reporting origins per rate-limit window</dfn> is a vendor-specific integer
-that controls the maximum number of distinct reporting origins for a
+<dfn>Max attribution reporting endpoints per rate-limit window</dfn> is a vendor-specific integer
+that controls the maximum number of distinct reporting endpoints for a
 ([=attribution rate-limit record/source site=],
 [=attribution rate-limit record/attribution destination=]) which can create [=attribution reports=] per [=attribution rate-limit window=].
 
@@ -836,7 +838,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     [=max reports per attribution destination=], return.
 1. If the result of running [=should attribution be blocked by rate limit=] with |trigger| and
     |sourceToAttribute| is <strong>blocked</strong>, return.
-1. If the result of running [=should attribution be blocked by reporting-origin limit=] with
+1. If the result of running [=should attribution be blocked by reporting-endpoint limit=] with
     |trigger| and |sourceToAttribute| is <strong>blocked</strong>, return.
 1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute| and |trigger|.
 1. If |sourceToAttribute|'s [=attribution source/number of reports=] value is equal to the
