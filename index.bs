@@ -344,7 +344,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>number of reports</dfn>
 :: Number of [=attribution reports=] created for this [=attribution source=].
 : <dfn>dedup keys</dfn>
-:: [=ordered set=] of [=attribution trigger/dedup keys=] associated with this [=attribution source=].
+:: [=ordered set=] of [=event-level trigger configuration/dedup keys=] associated with this [=attribution source=].
 : <dfn>randomized response</dfn>
 :: A [=randomized source response=].
 : <dfn>randomized trigger rate</dfn>
@@ -390,6 +390,26 @@ An attribution aggregatable trigger is a [=struct=] with the following items:
 
 </dl>
 
+<h3 dfn-type=dfn>Event-level trigger configuration</h3>
+
+An event-level trigger configuration is a [=struct=] with the following items:
+
+<dl dfn-for="event-level trigger configuration">
+: <dfn>trigger data</dfn>
+:: A non-negative 64-bit integer.
+: <dfn>dedup key</dfn>
+:: Null or a non-negative 64-bit integer.
+: <dfn>priority</dfn>
+:: A 64-bit integer.
+: <dfn>filters</dfn>
+:: An [=attribution filter map=].
+
+</dl>
+
+Issue: Add an [=attribution filter map=] field called `negated filters` to
+[=event-level trigger configuration=] and update [=trigger attribution=] to use
+it.
+
 <h3 dfn-type=dfn>Attribution trigger</h3>
 
 An attribution trigger is a [=struct=] with the following items:
@@ -397,22 +417,16 @@ An attribution trigger is a [=struct=] with the following items:
 <dl dfn-for="attribution trigger">
 : <dfn>attribution destination</dfn>
 :: A [=site=].
-: <dfn>navigation-source trigger data</dfn>
-:: A non-negative 64-bit integer.
-: <dfn>event-source trigger data</dfn>
-:: A non-negative 64-bit integer.
 : <dfn>trigger time</dfn>
 :: A point in time.
 : <dfn>reporting endpoint</dfn>
 :: An [=url/origin=].
-: <dfn>dedup key</dfn>
-:: Null or a 64-bit integer.
-: <dfn>priority</dfn>
-:: A 64-bit integer.
 : <dfn>filters</dfn>
 :: An [=attribution filter map=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
+: <dfn>event-level trigger configurations</dfn>
+:: A [=set=] of [=event-level trigger configuration=].
 : <dfn>aggregatable trigger</dfn>
 :: An [=attribution aggregatable trigger=].
 
@@ -513,8 +527,7 @@ double |randomPickRate|:
 
 <h3 algorithm id="parsing-data-fields">Parsing data fields</h3>
 
-This section defines how to parse strings into integers for
-[=attribution source/event id=], [=attribution trigger/navigation-source trigger data=], and [=attribution trigger/event-source trigger data=].
+This section defines how to parse strings into integers for [=attribution source/event id=].
 
 To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an integer
 |maxData| perform the following steps. They return a non-negative integer:
@@ -665,7 +678,7 @@ To <dfn>obtain an attribution source from params</dfn> given an
     : [=attribution source/randomized trigger rate=]
     :: |randomizedTriggerRate|
     : [=attribution source/filter data=]
-    :: «[ "`source_type`" → |sourceType| ]»
+    :: «[ "`source_type`" → « |sourceType| » ]»
     : [=attribution source/debug key=]
     :: null
 1. Return |source|.
@@ -699,27 +712,30 @@ To <dfn>maybe process a navigation attribution source</dfn> given a <a spec="HTM
 To <dfn>obtain a fake report</dfn> given an [=attribution source=] |source| and
 a [=trigger state=] |triggerState|:
 
+1. Let |fakeConfig| be a new [=event-level trigger configuration=] with the items:
+    : [=event-level trigger configuration/trigger data=]
+    :: |triggerState|'s [=trigger state/trigger data=]
+    : [=event-level trigger configuration/dedup key=]
+    :: null
+    : [=event-level trigger configuration/priority=]
+    :: 0
+    : [=event-level trigger configuration/filters=]
+    :: «[ "`source_type`" → « |source|'s [=attribution source/source type=] » ]»
 1. Let |fakeTrigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |source|'s [=attribution source/attribution destination=]
-    : [=attribution trigger/navigation-source trigger data=]
-    :: |triggerState|'s [=trigger state/trigger data=]
-    : [=attribution trigger/event-source trigger data=]
-    :: |triggerState|'s [=trigger state/trigger data=]
     : [=attribution trigger/trigger time=]
     :: |source|'s [=attribution source/source time=]
     : [=attribution trigger/reporting endpoint=]
     :: |source|'s [=attribution source/reporting endpoint=]
-    : [=attribution trigger/dedup key=]
-    :: null
-    : [=attribution trigger/priority=]
-    :: 0
     : [=attribution trigger/filters=]
     :: «[]»
     : [=attribution trigger/debug key=]
     :: null
-1. Let |fakeReport| be the result of running [=obtain a report=] with |source|
-    and |fakeTrigger|.
+    : [=attribution trigger/event-level trigger configurations=]
+    :: « |fakeConfig| »
+1. Let |fakeReport| be the result of running [=obtain a report=] with |source|,
+    |fakeTrigger|, and |fakeConfig|.
 1. Set |fakeReport|'s [=attribution report/report time=] to the result of
     running [=obtain the report time at a window=] with |source| and
     |triggerState|'s [=trigger state/report window=].
@@ -785,11 +801,13 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 [=environment settings object=] |environment|, run the following steps:
 
 1. Let |navigationSourceTriggerData| be 0.
-1. If |url|'s [=url/query=] has a "`trigger-data`" field, set |navigationSourceTriggerData| to the result of running [=parse attribution data=] with
-    the value associated with the field modulo the user agent's [=navigation-source trigger data cardinality=].
+1. If |url|'s [=url/query=] has a "`trigger-data`" field, and applying the <a spec="html">rules for
+    parsing non-negative integers</a> to the field's value results in an integer, then set
+    |navigationSourceTriggerData| to that value.
 1. Let |eventSourceTriggerData| be 0.
-1. If |url|'s [=url/query=] has an "`event-source-trigger-data`" field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
-    the value associated with the field modulo the user agent's [=event-source trigger data cardinality=].
+1. If |url|'s [=url/query=] has an "`event-source-trigger-data`" field, and applying the
+    <a spec="html">rules for parsing non-negative integers</a> to the field's value results in an
+    integer, then set |eventSourceTriggerData| to that value.
 1. Let |dedupKey| be null.
 1. If |url|'s [=url/query=] has a "`dedup-key`" field, and applying the <a spec="html">rules for
     parsing integers</a> to the field's value results in an integer, then set |dedupKey| to that
@@ -798,35 +816,48 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 1. If |url|'s [=url/query=] has a "`priority`" field, and applying the
     <a spec="html">rules for parsing integers</a> to the field's value results
     in an integer, set |triggerPriority| to that value.
+1. Let |navigationConfig| be a new [=event-level trigger configuration=] with the items:
+    : [=event-level trigger configuration/trigger data=]
+    :: |navigationSourceTriggerData|
+    : [=event-level trigger configuration/dedup key=]
+    :: |dedupKey|
+    : [=event-level trigger configuration/priority=]
+    :: |triggerPriority|
+    : [=event-level trigger configuration/filters=]
+    :: «[ "`source_type`" → « "`navigation`" » ]»
+1. Let |eventConfig| be a new [=event-level trigger configuration=] with the items:
+    : [=event-level trigger configuration/trigger data=]
+    :: |eventSourceTriggerData|
+    : [=event-level trigger configuration/dedup key=]
+    :: |dedupKey|
+    : [=event-level trigger configuration/priority=]
+    :: |triggerPriority|
+    : [=event-level trigger configuration/filters=]
+    :: «[ "`source_type`" → « "`event`" » ]»
 1. Let |trigger| be a new [=attribution trigger=] with the items:
-
     : [=attribution trigger/attribution destination=]
     :: The result of [=obtain a site|obtaining a site=] from |environment|'s [=environment/top-level origin=].
-    : [=attribution trigger/navigation-source trigger data=]
-    :: |navigationSourceTriggerData|.
-    : [=attribution trigger/event-source trigger data=]
-    :: |eventSourceTriggerData|.
     : [=attribution trigger/trigger time=]
     :: The current time.
     : [=attribution trigger/reporting endpoint=]
     :: |url|'s [=url/origin=].
-    : [=attribution trigger/dedup key=]
-    :: |dedupKey|.
-    : [=attribution trigger/priority=]
-    :: |triggerPriority|.
     : [=attribution trigger/filters=]
     :: «[]»
     : [=attribution trigger/debug key=]
     :: null
+    : [=attribution trigger/event-level trigger configurations=]
+    :: « |navigationConfig|, |eventConfig| »
 1. Return |trigger|.
 
-<dfn>Navigation-source trigger data cardinality</dfn> is a vendor-specific integer that controls the valid range of
-[=attribution trigger/navigation-source trigger data=]:
-0 <= [=attribution trigger/navigation-source trigger data=] < [=navigation-source trigger data cardinality=].
+<dfn>Navigation-source trigger data cardinality</dfn> is a vendor-specific integer that controls
+the valid range of [=event-level trigger configuration/trigger data=] for triggers that are
+attributed to an [=attribution source=] whose [=attribution source/source type=] is "`navigation`":
+0 <= [=event-level trigger configuration/trigger data=] < [=navigation-source trigger data cardinality=].
 
-<dfn>Event-source trigger data cardinality</dfn> is a vendor-specific integer that controls the valid
-range of [=attribution trigger/event-source trigger data=]:
-0 <= [=attribution trigger/event-source trigger data=] < [=event-source trigger data cardinality=].
+<dfn>Event-source trigger data cardinality</dfn> is a vendor-specific integer that controls the
+valid range of [=event-level trigger configuration/trigger data=] for triggers that are
+attributed to an [=attribution source=] whose [=attribution source/source type=] is "`event`":
+0 <= [=event-level trigger configuration/trigger data=] < [=event-source trigger data cardinality=].
 
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
@@ -860,16 +891,16 @@ Given a [=request=] |request|:
 
 <h3 dfn id="does-filter-data-match">Does filter data match</h3>
 
-To <dfn>match an attribution source's filter data against an attribution trigger</dfn> given an
-[=attribution source=] |source| and [=attribution trigger=] |trigger|:
+To <dfn>match an attribution source's filter data against filters</dfn> given an
+[=attribution source=] |source| and an [=attribution filter map=] |filters|:
 
 1. Let |sourceData| be |source|'s [=attribution source/filter data=].
-1. [=map/iterate|For each=] |key| → |triggerValues| of |trigger|'s [=attribution trigger/filters=]:
+1. [=map/iterate|For each=] |key| → |filterValues| of |filters|:
     1. If |sourceData|[|key|] does not [=map/exist=], [=iteration/continue=].
     1. Let |sourceValues| be |sourceData|[|key|].
-    1. If |sourceValues| [=list/is empty=] and |triggerValues| is [=list/is empty=],
+    1. If |sourceValues| [=list/is empty=] and |filterValues| is [=list/is empty=],
         [=iteration/continue=].
-    1. Let |i| be the [=set/intersection=] of |sourceValues| and |triggerValues|.
+    1. Let |i| be the [=set/intersection=] of |sourceValues| and |filterValues|.
     1. If |i| [=list/is empty=], return false.
 1. Return true.
 
@@ -937,7 +968,7 @@ To <dfn>create [=attribution aggregatable histograms=]</dfn> given an [=attribut
 1. Let |aggregationKeys| be |source|'s [=attribution source/aggregatable source=].
 1. Let |aggregatableTrigger| be |trigger|'s [=attribution trigger/aggregatable trigger=].
 1. [=list/iterate|For each=] |triggerData| of |aggregatableTrigger|'s [=attribution aggregatable trigger/trigger data=]:
-    1. If the result of running [=match an attribution source's filter  data against an attribution trigger=] with
+    1. If the result of running [=match an attribution source's filter data against filters=] with
         |source| and |triggerData|'s [=attribution aggregatable trigger data/filters=] is false, [=iteration/continue=].
     1. [=set/iterate|For each=] |sourceKey| of |triggerData|'s [=attribution aggregatable trigger data/source keys=]:
         1. If |aggregationKeys|[|sourceKey|] does not [=map/exist=], [=iteration/continue=].
@@ -974,10 +1005,26 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Assert: |sourceToAttribute|'s [=attribution source/randomized response=] is
     null or an [=list/is empty|empty=] [=list=].
 1. If the result of running
-    [=match an attribution source's filter data against an attribution trigger=] with
-    |sourceToAttribute| and |trigger| is false, return.
-1. If |trigger|'s [=attribution trigger/dedup key=] is not null and |sourceToAttribute|'s
-    [=attribution source/dedup keys=] [=list/contains=] it, return.
+    [=match an attribution source's filter data against filters=] with
+    |sourceToAttribute| and |trigger|'s [=attribution trigger/filters=] is false, return.
+1. Let |matchedConfig| be a new [=event-level trigger configuration=] with the items:
+    : [=event-level trigger configuration/trigger data=]
+    :: 0
+    : [=event-level trigger configuration/dedup key=]
+    :: null
+    : [=event-level trigger configuration/priority=]
+    :: 0
+    : [=event-level trigger configuration/filters=]
+    :: «[]»
+1. [=map/iterate|For each=] [=event-level trigger configuration=] |config| of |trigger|'s
+    [=attribution trigger/event-level trigger configurations=]:
+    1. If the result of running
+        [=match an attribution source's filter data against filters=] with |sourceToAttribute| and
+        |config|'s [=event-level trigger configuration/filters=] is false, [=iteration/continue=].
+    1. Set |matchedConfig| to |config|.
+    1. [=iteration/Break=].
+1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null and
+    |sourceToAttribute|'s [=attribution source/dedup keys=] [=list/contains=] it, return.
 1. Let |numMatchingReports| be the number of entries in the [=attribution report cache=] whose
     [=attribution report/attribution destination=] equals |attributionDestination|.
 1. If |numMatchingReports| is greater than or equal to the user agent's
@@ -997,7 +1044,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     :: |trigger|'s [=attribution trigger/trigger time=]
 1. If the result of running [=should processing be blocked by reporting-endpoint limit=] with
     |rateLimitRecord| is <strong>blocked</strong>, return.
-1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute| and |trigger|.
+1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute|, |trigger|,
+    and |matchedConfig|.
 1. Let |maxAttributionsPerSource| be the user agent's [=max attributions per navigation source=].
 1. If |sourceToAttribute|'s [=attribution source/source type=] is "`event`", set
     |maxAttributionsPerSource| to the user agent's [=max attributions per event source=].
@@ -1024,8 +1072,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. If |sourceToAttribute|'s [=attribution source/randomized response=] is
     null, [=set/append=] |report| to the [=attribution report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
-1. If |trigger|'s [=attribution trigger/dedup key=] is not null, [=list/append=] it to |sourceToAttribute|'s
-    [=attribution source/dedup keys=].
+1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null,
+    [=list/append=] it to |sourceToAttribute|'s [=attribution source/dedup keys=].
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] whose
     [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=]
@@ -1108,17 +1156,19 @@ To <dfn>obtain a report delivery time</dfn> given an [=attribution source=]
 
 <h3 algorithm id="obtaining-a-report">Obtaining a report</h3>
 
-To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=attribution trigger=] |trigger|:
+To <dfn>obtain a report</dfn> given an [=attribution source=] |source|, an [=attribution trigger=]
+|trigger|, and an [=event-level trigger configuration=] |config|:
 
-1. Let |triggerData| be |trigger|'s [=attribution trigger/navigation-source trigger data=].
-1. If |source|'s [=attribution source/source type=] is "`event`", set |triggerData| to |trigger|'s
-    [=attribution trigger/event-source trigger data=].
+1. Let |triggerDataCardinality| be the user agent's [=navigation-source trigger data cardinality=].
+1. If |source|'s [=attribution source/source type=] is "`event`", set |triggerDataCardinality| to
+    the user agent's [=event-source trigger data cardinality=].
 1. Let |report| be a new [=attribution report=] struct whose items are:
 
     : [=attribution report/event id=]
     :: |source|'s [=attribution source/event id=].
     : [=attribution report/trigger data=]
-    :: |triggerData|.
+    :: The remainder when dividing |config|'s [=event-level trigger configuration/trigger data=] by
+        |triggerDataCardinality|.
     : [=attribution report/randomized trigger rate=]
     :: |source|'s [=attribution source/randomized trigger rate=].
     : [=attribution report/reporting endpoint=]
@@ -1128,7 +1178,7 @@ To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=
     : [=attribution report/reporting time=]
     :: The result of running [=obtain a report delivery time=] with |source| and |trigger|'s [=attribution trigger/trigger time=].
     : [=attribution report/trigger priority=]
-    :: |trigger|'s [=attribution trigger/priority=].
+    :: |config|'s [=event-level trigger configuration/priority=].
     : [=attribution report/trigger time=]
     :: |trigger|'s [=attribution trigger/trigger time=].
     : [=attribution report/source identifier=]
