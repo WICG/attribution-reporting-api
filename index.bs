@@ -913,6 +913,9 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Remove all entries from the [=attribution rate-limit cache=] whose
     [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=]
     before the current time.
+1. If |report|'s [=attribution report/source debug key=] is not null and |report|'s
+    [=attribution report/trigger debug key=] is not null, [=queue a task=] to
+    [=attempt to deliver a debug report=] with |report|.
 
 <dfn>Max reports per attribution destination</dfn> is a vendor-specific integer which controls how
 many [=attribution reports=] can be in the [=attribution report cache=] for an
@@ -1059,7 +1062,8 @@ whether a user is online, retries might be limited in number and subject to rand
 
 <h3 id="get-report-url">Get report request URL</h3>
 
-To <dfn>generate a report URL</dfn> for a given [=attribution report=] |report|, run the following steps:
+To <dfn>generate a report URL</dfn> for a given [=attribution report=] |report| and an optional
+boolean <dfn for="generate a report URL"><var>isDebugReport</var></dfn> (default false):
 
 1. Let |reportUrl| be a new [=URL record=].
 1. Let |reportingOrigin| be |report|'s [=attribution report/reporting endpoint=].
@@ -1067,18 +1071,17 @@ To <dfn>generate a report URL</dfn> for a given [=attribution report=] |report|,
 1. Set |reportUrl|'s [=url/scheme=] to |reportingOrigin|'s [=origin/scheme=].
 1. Set |reportUrl|'s [=url/host=] to |reportingOrigin|'s [=origin/host=].
 1. Set |reportUrl|'s [=url/port=] to |reportingOrigin|'s [=origin/port=].
-1. Set |reportUrl|'s [=url/path=] to «"`.well-known`", "`attribution-reporting`", "`report-event-attribution`"».
+1. Let |path| be «"`.well-known`", "`attribution-reporting`"».
+1. If |isDebugReport| is true, [=list/append=] "`debug`" to |path|.
+1. [=list/Append=] "`report-event-attribution`" to |path|.
+1. Set |reportUrl|'s [=url/path=] to |path|.
 1. Return |reportUrl|.
 
-<h3 id="issue-report-request">Issuing a report request</h3>
+<h3 id="create-report-request">Creating a report request</h3>
 
-This algorithm constructs a [=request=] and attempts to deliver it to
-|report|'s [=attribution report/reporting endpoint=].
-
-To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report|, run the following steps:
+To <dfn>create a report request</dfn> given an [=attribution report=] |report|:
 
 1. Let |body| be the result of executing [=serialize an attribution report=] on |report|.
-1. Let |url| be the result of executing [=generate a report URL=] on |report|.
 1. Let |request| be a new [=request=] with the following properties:
     :   `method`
     ::  "`POST`"
@@ -1107,8 +1110,32 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
     ::  "`omit`"
     :   `cache mode`
     ::  "`no-store`"
+1. Return |request|.
+
+<h3 id="issue-report-request">Issuing a report request</h3>
+
+This algorithm constructs a [=request=] and attempts to deliver it to
+|report|'s [=attribution report/reporting endpoint=].
+
+To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report|, run the following steps:
+
+1. Let |url| be the result of executing [=generate a report URL=] on |report|.
+1. Let |request| be the result of executing [=create a report request=] on |report|.
 1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being these steps:
     1. [=Queue a task=] to remove |report| from the [=attribution report cache=].
+
+Issue(220): This fetch should use a network partition key for an opaque origin.
+
+A user agent MAY retry this algorithm in the event that there was an error.
+
+<h3 id="issue-debug-report-request">Issuing a debug report request</h3>
+
+To <dfn>attempt to deliver a debug report</dfn> given an [=attribution report=] |report|:
+
+1. Let |url| be the result of executing [=generate a report URL=] on |report| with
+    [=generate a report URL/isDebugReport=] set to true.
+1. Let |request| be the result of executing [=create a report request=] on |report|.
+1. [=Queue a task=] to [=fetch=] |request|.
 
 Issue(220): This fetch should use a network partition key for an opaque origin.
 
