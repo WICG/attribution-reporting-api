@@ -90,7 +90,7 @@ Add the following <a spec=html>content attributes</a> to the <{a}> element:
 : <{a/attributionsourcepriority}>
 :: The priority of this source relative to other sources when triggering attribution
 : <{a/registerattributionsource}>
-:: Registers an [=attribution source=] with a source type "<code>event</code>"
+:: Registers an [=attribution source=] with a source type "`event`"
 
 Extend the <{a}> element's <a spec=html>DOM interface</a> to include the following interface:
 
@@ -135,7 +135,7 @@ will always be attributed to the source with the highest priority value that has
 and [=attribution source/attribution destination=].
 
 The <dfn for="a" element-attr>registerattributionsource</dfn> attribute, if present, registers an
-additional source whose [=attribution source/source type=] is "<code>event</code>".
+additional source whose [=attribution source/source type=] is "`event`".
 
 Note: One simple priority scheme would be to use the current millisecond timestamp as the priority value.
 
@@ -313,6 +313,10 @@ integer, if the mode is "`falsely`", or null otherwise.
 An attribution filter map is an [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
 [=map/value|values=] are [=ordered sets=] of [=strings=].
 
+<h3 dfn-type=dfn>Source type</h3>
+
+A source type is either "`navigation`" or "`event`".
+
 <h3 dfn-type=dfn>Attribution source</h3>
 
 An attribution source is a [=struct=] with the following items:
@@ -329,7 +333,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>reporting endpoint</dfn>
 :: An [=url/origin=].
 : <dfn>source type</dfn>
-:: Either "<code>navigation</code>" or "<code>event</code>".
+:: A [=source type=].
 : <dfn>expiry</dfn>
 :: A length of time.
 : <dfn>priority</dfn>
@@ -385,7 +389,7 @@ An attribution report is a [=struct=] with the following items:
 : <dfn>event id</dfn>
 :: A non-negative 64-bit integer.
 : <dfn>source type</dfn>
-:: Either "<code>navigation</code>" or "<code>event</code>".
+:: A [=source type=].
 : <dfn>trigger data</dfn>
 :: A non-negative 64-bit integer.
 : <dfn>randomized trigger rate</dfn>
@@ -635,7 +639,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. If the [=list/size=] of |cache| is greater than or equal to the user agent's
      [=max source cache size=], return.
 1. If |source|'s [=attribution source/attribution mode=][0] is "`falsely`", then:
-    1. Assert: |source|'s [=attribution source/source type=] is "<code>event</code>".
+    1. Assert: |source|'s [=attribution source/source type=] is "`event`".
     1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
         agent's [=max report cache size=], return.
     1. Let |fakeTrigger| be a new [=attribution trigger=] with the items:
@@ -898,7 +902,7 @@ can be associated with a source event id. Larger values allow for more attributi
 To <dfn>obtain a report delivery time</dfn> given an [=attribution source=] |source| and a
 [=attribution trigger/trigger time=] |triggerTime|, perform the following steps. They
 return a point in time.
-1. If |source|'s [=attribution source/source type=] is "<code>event</code>", return |source|'s
+1. If |source|'s [=attribution source/source type=] is "`event`", return |source|'s
      [=attribution source/expiry time=] + 1 hour.
 1. Let |timeToTrigger| be the difference between
     |triggerTime| and [=attribution source/source time=].
