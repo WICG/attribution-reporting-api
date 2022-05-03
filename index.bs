@@ -259,7 +259,7 @@ add the following check to the list:
 
 * [=should internalResponse to request be blocked as attribution trigger=]
 
-# Attribution Reporting API
+# Attribution Reporting API # {#attribution-reporting-api}
 
 <pre class="idl">
 dictionary AttributionSourceParams {
@@ -293,7 +293,7 @@ method steps are:
 1. Return [=a promise resolved with=] the {{undefined}} value.
 
 Note: This function returns a promise even though the promise is always resolved or rejected by the
-time the function returns; in the future, the promise may be resolved with a value that provides
+time the function returns; in the future, the promise might be resolved with a value that provides
 finer-grained detail about other errors that occurred during the [=process an attribution source=]
 step.
 
@@ -571,15 +571,6 @@ To <dfn>obtain an attribution source from an anchor</dfn> given an <{a}> element
      :: |anchor|'s <{a/attributionsourcepriority}> attribute
 1. Return the result of running [=obtain an attribution source from params=] with |params| and
     |anchor|'s [=relevant settings object=].
-
-<h3 algorithm id="obtaining-event-attribution-source-anchor">Obtaining an event attribution source from an <code>a</code> element</h3>
-
-To <dfn>obtain an event attribution source from an anchor</dfn> given an <{a}> element |anchor|, run the following steps:
-
-1. If |anchor| does not have a <{a/registerattributionsource}> attribute, return null.
-1. Let |source| be the result of running [=obtain an attribution source from an anchor=] with |anchor|.
-1. If |source| is null, return null.
-1. Return the result of running [=obtain an event attribution source from a source=] with |source|.
 
 <h3 algorithm id="obtaining-event-attribution-source-source">Obtaining an event attribution source from a source</h3>
 
@@ -979,9 +970,9 @@ return a point in time.
 
 To <dfn>obtain a report</dfn> given an [=attribution source=] |source| and an [=attribution trigger=] |trigger|:
 
-1. Let |triggerData| be |trigger|'s [=attribution trigger/trigger data=].
+1. Let |triggerData| be |trigger|'s [=attribution trigger/navigation-source trigger data=].
 1. If |source|'s [=attribution source/source type=] is "`event`", set |triggerData| to |trigger|'s
-    [=attribution trigger/event source trigger data=].
+    [=attribution trigger/event-source trigger data=].
 1. Let |report| be a new [=attribution report=] struct whose items are:
 
     : [=attribution report/event id=]
@@ -1067,7 +1058,7 @@ To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following st
 Note: The inclusion of "`report_id`" in the report body is intended to allow the report recipient
 to perform deduplication and prevent double counting, in the event that the user agent retries
 reports on failure. To prevent the report recipient from learning additional information about
-whether a user is online, retries should be limited in number and subject to random delays.
+whether a user is online, retries might be limited in number and subject to random delays.
 
 <h3 id="get-report-url">Get report request URL</h3>
 
