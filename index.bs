@@ -477,6 +477,11 @@ To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an intege
 
 An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
 
+<h3 id="obtaining-attribution-source-site">Obtaining an attribution source's source site</h3>
+
+An [=attribution source=] |source|'s <dfn for="attribution source">source site</dfn> is the result
+of [=obtain a site|obtaining a site=] from |source|'s [=attribution source/source origin=].
+
 <h3 algorithm id="parsing-attribution-destination">Parsing an attribution destination</h3>
 
 To <dfn>parse an attribution destination</dfn> from a string |str|:
@@ -767,10 +772,8 @@ To <dfn>match an attribution source's filter data against an attribution trigger
 
 Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToAttribute|:
 
-1. Let |sourceSite| be the result of [=obtain a site|obtaining a site=] from |sourceToAttribute|'s
-    [=attribution source/source origin=].
 1. Let |matchingRateLimitRecords| be all entries in the [=attribution rate-limit cache=] where all of the following are true:
-     * entry's [=attribution rate-limit record/source site=] and |sourceSite| are equal
+     * entry's [=attribution rate-limit record/source site=] and |sourceToAttribute|'s [=attribution source/source site=] are equal
      * entry's [=attribution rate-limit record/attribution destination=] and |trigger|'s [=attribution trigger/attribution destination=] are equal
      * entry's [=attribution rate-limit record/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are equal
      * entry's [=attribution rate-limit record/trigger time=] is at least [=attribution rate-limit window=] before |trigger|'s [=attribution trigger/trigger time=]
@@ -789,10 +792,8 @@ the maximum number of attributions for a ([=attribution rate-limit record/source
 
 Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToAttribute|:
 
-1. Let |sourceSite| be the result of [=obtain a site|obtaining a site=] from |sourceToAttribute|'s
-    [=attribution source/source origin=].
 1. Let |matchingRateLimitRecords| be all entries in the [=attribution rate-limit cache=] where all of the following are true:
-     * entry's [=attribution rate-limit record/source site=] and |sourceSite| are equal
+     * entry's [=attribution rate-limit record/source site=] and |sourceToAttribute|'s [=attribution source/source site=] are equal
      * entry's [=attribution rate-limit record/attribution destination=] and |trigger|'s [=attribution trigger/attribution destination=] are equal
      * entry's [=attribution rate-limit record/trigger time=] is at least [=attribution rate-limit window=] before |trigger|'s [=attribution trigger/trigger time=]
 1. Let |distinctReportingEndpoints| be a new empty [=ordered set=].
@@ -869,7 +870,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
 
     : [=attribution rate-limit record/source site=]
-    :: The result of [=obtain a site|obtaining a site=] from |sourceToAttribute|'s [=attribution source/source origin=].
+    :: |sourceToAttribute|'s [=attribution source/source site=]
     : [=attribution rate-limit record/attribution destination=]
     :: |attributionDestination|
     : [=attribution rate-limit record/reporting endpoint=]
