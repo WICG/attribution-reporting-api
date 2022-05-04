@@ -119,6 +119,8 @@ are two types of attribution sources, `navigation` sources and `event` sources.
 or via calls to `window.open` that occur with [transient
 activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation):
 ```javascript
+// Encode the attributionsrc URL in case it contains special characters, such as '=', that will
+// cause the parameter to be improperly parsed
 const encoded = encodeURIComponent('https://adtech.example/attribution_source?my_ad_id=123');
 window.open(
   "https://advertiser.example/landing",
