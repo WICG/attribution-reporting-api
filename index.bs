@@ -293,11 +293,21 @@ This specification defines a [=policy-controlled feature=] identified by the str
 
 # Structures # {#structures}
 
-<h3 dfn-type=dfn>Attribution mode</h3>
+<h3 dfn-type=dfn>Trigger state</h3>
 
-An attribution mode is a [=tuple=] consisting of a mode and a random trigger data. The mode is
-either "`truthfully`", "`never`", or "`falsely`". The random trigger data is a non-negative 64-bit
-integer, if the mode is "`falsely`", or null otherwise.
+A trigger state is a [=struct=] with the following items:
+
+<dl dfn-for="trigger state">
+: <dfn>trigger data</dfn>
+:: A non-negative 64-bit integer.
+: <dfn>report window</dfn>
+:: A non-negative integer.
+
+</dl>
+
+<h3 dfn-type=dfn>Randomized source response</h3>
+
+A randomized source response is null or a [=set=] of [=trigger states=].
 
 <h3 dfn-type=dfn>Attribution filter map</h3>
 
@@ -335,8 +345,8 @@ An attribution source is a [=struct=] with the following items:
 :: Number of [=attribution reports=] created for this [=attribution source=].
 : <dfn>dedup keys</dfn>
 :: [=ordered set=] of [=attribution trigger/dedup keys=] associated with this [=attribution source=].
-: <dfn>attribution mode</dfn>
-:: An [=attribution mode=].
+: <dfn>randomized response</dfn>
+:: A [=randomized source response=].
 : <dfn>randomized trigger rate</dfn>
 :: A number between 0 and 1 (both inclusive).
 : <dfn>filter data</dfn>
@@ -537,16 +547,27 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
-<h3 algorithm id="obtaining-random-attribution-mode">Obtaining a random attribution mode</h3>
+<h3 algorithm id="obtaining-randomized-source-response">Obtaining a randomized source response</h3>
 
-To <dfn>obtain a random attribution mode</dfn> given a positive integer |triggerDataCardinality|
-and a double |randomPickRate|:
+To <dfn>obtain a randomized source response</dfn> given a positive integer
+|triggerDataCardinality|, a positive integer |maxAttributionsPerSource|, a positive integer
+|numReportWindows|, and a double |randomPickRate|:
 
-1. Let |possibleValues| be the [=set=] of [=attribution modes=] « (`"never"`, null) ».
-1. For each integer |i| between 0 (inclusive) and |triggerDataCardinality| (exclusive):
-    1. [=set/Append=] the [=attribution mode=] (`"falsely"`, |i|) to |possibleValues|.
-1. Return the result of [=obtaining a randomized response=] with the [=attribution mode=]
-    (`"truthfully"`, null), |possibleValues|, and |randomPickRate|.
+1. Let |possibleTriggerStates| be a new [=list/is empty|empty=] [=set=].
+1. For each integer |triggerData| between 0 (inclusive) and |triggerDataCardinality| (exclusive):
+    1. For each integer |reportWindow| between 0 (inclusive) and |numReportWindows| (exclusive):
+        1. Let |state| be a new [=trigger state=] with the items:
+            : [=trigger state/trigger data=]
+            :: |triggerData|
+            : [=trigger state/report window=]
+            :: |reportWindow|
+        1. [=set/Append=] |state| to |possibleTriggerStates|.
+1. Let |possibleValues| be a new [=list/is empty|empty=] [=set=].
+1. For each integer |attributions| between 0 (inclusive) and |maxAttributionsPerSource| (inclusive):
+    1. [=set/Append=] to |possibleValues| all distinct |attributions|-length combinations of
+        |possibleTriggerStates|.
+1. Return the result of [=obtaining a randomized response=] with null, |possibleValues|, and
+    |randomPickRate|.
 
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
@@ -600,16 +621,22 @@ To <dfn>obtain an attribution source from params</dfn> given an
 1. Let |priority| be 0.
 1. If |params|["{{AttributionSourceParams/attributionSourcePriority}}"] [=map/exists=],
     then set |priority| to that value.
-1. Let |attributionMode| be the [=attribution mode=] ("`truthfully`", null).
-1. Let |randomizedTriggerRate| be 0.
+1. Let |triggerDataCardinality| be the user agent's
+    [=navigation-source trigger data cardinality=].
+1. Let |randomizedTriggerRate| be the user agent's
+    [=randomized navigation-source trigger rate=].
+1. Let |maxAttributionsPerSource| be the user agent's
+    [=max attributions per navigation source=].
 1. If |sourceType| is "`event`":
     1. Round |expiry| away from zero to the nearest day (86400 seconds).
-    1. Set |attributionMode| to the result of
-        [=obtaining a random attribution mode=] with the user agent's
-        [=event-source trigger data cardinality=] and the user agent's
-        [=randomized event-source trigger rate=].
+    1. Set |triggerDataCardinality| to the user agent's
+        [=event-source trigger data cardinality=].
     1. Set |randomizedTriggerRate|'s to the user agent's
         [=randomized event-source trigger rate=].
+    1. Set |maxAttributionsPerSource| to the user agent's
+        [=max attributions per event source=].
+1. Let |numReportWindows| be the result of running
+    [=obtain the number of report windows=] with |sourceType|.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -631,8 +658,10 @@ To <dfn>obtain an attribution source from params</dfn> given an
     :: |currentTime|
     : [=attribution source/source type=]
     :: |sourceType|
-    : [=attribution source/attribution mode=]
-    :: |attributionMode|
+    : [=attribution source/randomized response=]
+    :: The result of [=obtaining a randomized source response=] with
+        |triggerDataCardinality|, |maxAttributionsPerSource|,
+        |numReportWindows|, and |randomizedTriggerRate|.
     : [=attribution source/randomized trigger rate=]
     :: |randomizedTriggerRate|
     : [=attribution source/filter data=]
@@ -648,10 +677,13 @@ the maximum value which can be used as an [=attribution source/event id=].
 the maximum value that can be used as an [=attribution source/expiry=]. It must
 be greater than or equal to 30 days.
 
-<dfn>Randomized event-source trigger rate</dfn> is a vendor-specific double between 0 and 1 (both
-inclusive) that controls the randomized response probability for the
-[=attribution source/attribution mode=] of an [=attribution source=] whose
-[=attribution source/source type=] is "`event`".
+<dfn>Randomized navigation-source trigger rate</dfn> is a vendor-specific double between 0 and 1
+(both inclusive) that controls the randomized response probability of an [=attribution source=]
+whose [=attribution source/source type=] is "`navigation`".
+
+<dfn>Randomized event-source trigger rate</dfn> is a vendor-specific double between 0 and 1
+(both inclusive) that controls the randomized response probability of an [=attribution source=]
+whose [=attribution source/source type=] is "`event`".
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
@@ -663,6 +695,35 @@ To <dfn>maybe process a navigation attribution source</dfn> given a <a spec="HTM
 1. If |attributionSource|'s [=attribution source/attribution destination=] is not [=same site=] to |navigationParams|'s
     <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigation-params-origin">origin</a>, return.
 1. [=Queue a task=] to [=process an attribution source=] with |attributionSource|.
+
+To <dfn>obtain a fake report</dfn> given an [=attribution source=] |source| and
+a [=trigger state=] |triggerState|:
+
+1. Let |fakeTrigger| be a new [=attribution trigger=] with the items:
+    : [=attribution trigger/attribution destination=]
+    :: |source|'s [=attribution source/attribution destination=]
+    : [=attribution trigger/navigation-source trigger data=]
+    :: |triggerState|'s [=trigger state/trigger data=]
+    : [=attribution trigger/event-source trigger data=]
+    :: |triggerState|'s [=trigger state/trigger data=]
+    : [=attribution trigger/trigger time=]
+    :: |source|'s [=attribution source/source time=]
+    : [=attribution trigger/reporting endpoint=]
+    :: |source|'s [=attribution source/reporting endpoint=]
+    : [=attribution trigger/dedup key=]
+    :: null
+    : [=attribution trigger/priority=]
+    :: 0
+    : [=attribution trigger/filters=]
+    :: «[]»
+    : [=attribution trigger/debug key=]
+    :: null
+1. Let |fakeReport| be the result of running [=obtain a report=] with |source|
+    and |fakeTrigger|.
+1. Set |fakeReport|'s [=attribution report/report time=] to the result of
+    running [=obtain the report time at a window=] with |source| and
+    |triggerState|'s [=trigger state/report window=].
+1. Return |fakeReport|.
 
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
 
@@ -699,32 +760,12 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] whose
     [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=]
     before the current time.
-1. If |source|'s [=attribution source/attribution mode=][0] is "`falsely`", then:
-    1. Assert: |source|'s [=attribution source/source type=] is "`event`".
-    1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
-        agent's [=max report cache size=], return.
-    1. Let |fakeTrigger| be a new [=attribution trigger=] with the items:
-        : [=attribution trigger/attribution destination=]
-        :: |source|'s [=attribution source/attribution destination=]
-        : [=attribution trigger/navigation-source trigger data=]
-        :: 0
-        : [=attribution trigger/event-source trigger data=]
-        :: |source|'s [=attribution source/attribution mode=][1]
-        : [=attribution trigger/trigger time=]
-        :: |source|'s [=attribution source/source time=]
-        : [=attribution trigger/reporting endpoint=]
-        :: |source|'s [=attribution source/reporting endpoint=]
-        : [=attribution trigger/dedup key=]
-        :: null
-        : [=attribution trigger/priority=]
-        :: 0
-        : [=attribution trigger/filters=]
-        :: «[]»
-        : [=attribution trigger/debug key=]
-        :: null
-    1. Let |fakeReport| be the result of running [=obtain a report=] with |source| and |fakeTrigger|.
-    1. [=set/Append=] |fakeReport| to the [=attribution report cache=].
-    1. Return.
+1. If |source|'s [=attribution source/randomized response=] is a [=list=]:
+    1. [=map/iterate|For each=] [=trigger state=] |triggerState| of |source|'s
+        [=attribution source/randomized response=]:
+        1. Let |fakeReport| be the result of running [=obtain a fake report=]
+            with |source| and |triggerState|.
+        1. [=set/Append=] |fakeReport| to the [=attribution report cache=].
 1. [=set/Append=] |source| to |cache|.
 
 Issue: Should fake reports respect the user agent's [=max reports per attribution destination=]?
@@ -745,7 +786,7 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
 
 1. Let |navigationSourceTriggerData| be 0.
 1. If |url|'s [=url/query=] has a "`trigger-data`" field, set |navigationSourceTriggerData| to the result of running [=parse attribution data=] with
-    the value associated with the field modulo the user agent's [=trigger data cardinality=].
+    the value associated with the field modulo the user agent's [=navigation-source trigger data cardinality=].
 1. Let |eventSourceTriggerData| be 0.
 1. If |url|'s [=url/query=] has an "`event-source-trigger-data`" field, set |eventSourceTriggerData| to the result of running [=parse attribution data=] with
     the value associated with the field modulo the user agent's [=event-source trigger data cardinality=].
@@ -779,9 +820,9 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
     :: null
 1. Return |trigger|.
 
-<dfn>Trigger data cardinality</dfn> is a vendor-specific integer that controls the valid range of
+<dfn>Navigation-source trigger data cardinality</dfn> is a vendor-specific integer that controls the valid range of
 [=attribution trigger/navigation-source trigger data=]:
-0 <= [=attribution trigger/navigation-source trigger data=] < [=trigger data cardinality=].
+0 <= [=attribution trigger/navigation-source trigger data=] < [=navigation-source trigger data cardinality=].
 
 <dfn>Event-source trigger data cardinality</dfn> is a vendor-specific integer that controls the valid
 range of [=attribution trigger/event-source trigger data=]:
@@ -930,8 +971,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
       * |a|'s [=attribution source/priority=] is equal to |b|'s [=attribution source/priority=] and |a|'s
          [=attribution source/source time=] is less than |b|'s [=attribution source/source time=].
 1. Let |sourceToAttribute| be the first item in |matchingSources|.
-1. Assert: |sourceToAttribute|'s [=attribution source/attribution mode=][0] is
-    "`truthfully`" or "`never`".
+1. Assert: |sourceToAttribute|'s [=attribution source/randomized response=] is
+    null or an [=list/is empty|empty=] [=list=].
 1. If the result of running
     [=match an attribution source's filter data against an attribution trigger=] with
     |sourceToAttribute| and |trigger| is false, return.
@@ -980,8 +1021,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     1. [=list/Remove=] |item| from the [=attribution source cache=].
 1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
     agent's [=max report cache size=], return.
-1. If |sourceToAttribute|'s [=attribution source/attribution mode=][0] is "`truthfully`",
-    [=set/append=] |report| to the [=attribution report cache=].
+1. If |sourceToAttribute|'s [=attribution source/randomized response=] is
+    null, [=set/append=] |report| to the [=attribution report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
 1. If |trigger|'s [=attribution trigger/dedup key=] is not null, [=list/append=] it to |sourceToAttribute|'s
     [=attribution source/dedup keys=].
@@ -1013,34 +1054,57 @@ can be associated with a source event id. Larger values allow for more attributi
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 
-To <dfn>obtain a report delivery time</dfn> given an [=attribution source=] |source| and a
-[=attribution trigger/trigger time=] |triggerTime|, perform the following steps. They
-return a point in time.
-1. If |source|'s [=attribution source/source type=] is "`event`", return |source|'s
-     [=attribution source/expiry time=] + 1 hour.
-1. Let |timeToTrigger| be the difference between
-    |triggerTime| and [=attribution source/source time=].
+To <dfn>obtain an expiry deadline</dfn> given an [=attribution source=]
+|source|:
 
-    Note: |timeToTrigger| is less than |source|'s [=attribution source/expiry=] because it is not normally possible to
-    convert an expired attribution source.
+1. Return the maximum of |source|'s [=attribution source/expiry=] and 2 days
+    (172800 seconds).
 
-1. If:
-    <dl class="switch">
-    <dt>|timeToTrigger| <= (2 days - 1 hour)</dt>
-    <dd>return [=attribution source/source time=] + 2 days.</dd>
+To <dfn>obtain early deadlines</dfn> given a [=source type=] |sourceType|:
 
-    <dt> |source|'s [=attribution source/expiry=] > (2 days - 1 hour)
-        - and |source|'s [=attribution source/expiry=] < (7 days - 1 hour)
-        - and |timeToTrigger| <= |source|'s [=attribution source/expiry=]
-    </dt>
-    <dd>return |source|'s [=attribution source/expiry time=] + 1 hour.</dd>
+1. If |sourceType| is "`event`", return «».
+1. Return « (2 days - 1 hour), (7 days - 1 hour) ».
 
-    <dt>|timeToTrigger| <= (7 days - 1 hour)</dt>
-    <dd>return [=attribution source/source time=] + 7 days.</dd>
+To <dfn>obtain the number of report windows</dfn> given a [=source type=]
+|sourceType|:
 
-    <dt>Otherwise</dt>
-    <dd>return |source|'s [=attribution source/expiry time=] + 1 hour.</dd>
-    </dl>
+1. Let |earlyDeadlines| be the result of running [=obtain early deadlines=]
+    with |sourceType|.
+1. Return the [=list/size=] of |earlyDeadlines| + 1.
+
+To <dfn>obtain a report time from deadline</dfn> given a time |sourceTime| and
+a length of time |deadline|:
+
+1. Return |sourceTime| + |deadline| + 1 hour.
+
+To <dfn>obtain the report time at a window</dfn> given an
+[=attribution source=] |source| and a non-negative integer |window|:
+
+1. Let |earlyDeadlines| be the result of running [=obtain early deadlines=]
+    with |source|'s [=attribution source/source type=].
+1. Let |deadline| be the result of running [=obtain an expiry deadline=] with
+    |source|.
+1. If |earlyDeadlines|[|window|] [=list/exists=], set |deadline| to it.
+1. Return the result of running [=obtain a report time from deadline=] with
+    |source|'s [=attribution source/source time=] and |deadline|.
+
+To <dfn>obtain a report delivery time</dfn> given an [=attribution source=]
+|source| and a time |triggerTime|:
+
+1. Let |deadlineToUse| be the result of running [=obtain an expiry deadline=]
+    with |source|.
+1. Let |earlyDeadlines| be the result of running [=obtain early deadlines=]
+    with |source|'s [=attribution source/source type=].
+1. [=list/iterate|For each=] |earlyDeadline| of |earlyDeadlines|:
+    1. Let |time| be |source|'s [=attribution source/source time=] +
+        |earlyDeadline|.
+    1. If |time| is less than |triggerTime|, [=iteration/continue=].
+    1. If |earlyDeadline| is greater than or equal to |deadlineToUse|,
+        [=iteration/continue=].
+    1. Set |deadlineToUse| to |earlyDeadline|.
+    1. [=iteration/Break=].
+1. Return the result of running [=obtain a report time from deadline=] with
+    |source|'s [=attribution source/source time=] and |deadlineToUse|.
 
 <h3 algorithm id="obtaining-a-report">Obtaining a report</h3>
 
