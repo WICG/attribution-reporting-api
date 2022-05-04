@@ -557,8 +557,9 @@ If a cookie of this form is not present, debugging information will be ignored.
 cross-origin iframe to host the third party advertisement for
 `toasters.example`.
 
-Within the iframe, `toasters.example` code annotates their anchor tags to use
-the `ad-tech.example` reporting origin.
+Within the iframe, `ad-tech-3p.example` code annotates their anchor tags to use
+the `ad-tech.example` reporting origin, and sets the `attributionsrc` attribute
+based on the ad that was served (e.g. some ad with id 123456).
 
 ```html
 <iframe src="https://ad-tech-3p.example/show-some-ad" 
