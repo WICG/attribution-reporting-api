@@ -37,7 +37,7 @@ for cross-site identifiers like third-party cookies.
 
 Pages/embedded sites are given the ability to register [=attribution sources=] and
 [=attribution triggers=], which can be linked by the User Agent to generate and
-send [=attribution reports=] containing information from both of those events.
+send [=event-level reports=] containing information from both of those events.
 
 A reporter `https://reporter.example` embedded on `https://source.example` is able to
 measure whether an iteraction on the page lead to an action on `https://destination.example`
@@ -53,7 +53,7 @@ the User Agent attempts to match the trigger to previously registered source eve
 where the sources/triggers were registered and configurations provided by the reporter.
 
 If the User Agent is able to attribute the trigger to a source, it will generate and
-send an [=attribution report=] to the reporter via an HTTP POST request at a later point
+send an [=event-level report=] to the reporter via an HTTP POST request at a later point
 in time.
 
 # HTML monkeypatches # {#html-monkeypatches}
@@ -278,8 +278,8 @@ An attribution source is a [=struct=] with the following items:
 :: A 64-bit integer.
 : <dfn>source time</dfn>
 :: A point in time.
-: <dfn>number of reports</dfn>
-:: Number of [=attribution reports=] created for this [=attribution source=].
+: <dfn>number of event-level reports</dfn>
+:: Number of [=event-level reports=] created for this [=attribution source=].
 : <dfn>dedup keys</dfn>
 :: [=ordered set=] of [=event-level trigger configuration/dedup keys=] associated with this [=attribution source=].
 : <dfn>randomized response</dfn>
@@ -369,11 +369,11 @@ An attribution trigger is a [=struct=] with the following items:
 
 </dl>
 
-<h3 dfn-type=dfn>Attribution report</h3>
+<h3 dfn-type=dfn>Event-level report</h3>
 
-An attribution report is a [=struct=] with the following items:
+An evnet-level report is a [=struct=] with the following items:
 
-<dl dfn-for="attribution report">
+<dl dfn-for="event-level report">
 : <dfn>event id</dfn>
 :: A non-negative 64-bit integer.
 : <dfn>source type</dfn>
@@ -439,7 +439,7 @@ An attribution rate-limit record is a [=struct=] with the following items:
 
 A user agent holds an <dfn>attribution source cache</dfn>, which is an [=ordered set=] of [=attribution sources=].
 
-A user agent holds an <dfn>attribution report cache</dfn>, which is an [=ordered set=] of [=attribution reports=].
+A user agent holds an <dfn>event-level report cache</dfn>, which is an [=ordered set=] of [=event-level reports=].
 
 A user agent holds an <dfn>attribution rate-limit cache</dfn>, which is an [=ordered set=] of [=attribution rate-limit records=].
 
@@ -664,9 +664,9 @@ a [=trigger state=] |triggerState|:
     :: null
     : [=attribution trigger/event-level trigger configurations=]
     :: « |fakeConfig| »
-1. Let |fakeReport| be the result of running [=obtain a report=] with |source|,
+1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
-1. Set |fakeReport|'s [=attribution report/report time=] to the result of
+1. Set |fakeReport|'s [=event-level report/report time=] to the result of
     running [=obtain the report time at a window=] with |source| and
     |triggerState|'s [=trigger state/report window=].
 1. Return |fakeReport|.
@@ -677,7 +677,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. [=list/Remove=] all entries in |cache| where all of the following are true:
     * the entry's [=attribution source/attribution destination=] and |source|'s [=attribution source/attribution destination=] are equal.
     * the entry's [=attribution source/reporting endpoint=] is [=same origin=] with |source|'s [=attribution source/reporting endpoint=].
-    * the entry's [=attribution source/number of reports=] value is greater than 0.
+    * the entry's [=attribution source/number of event-level reports=] value is greater than 0.
 
     Note: This causes the user agent to favor triggering newer [=attribution sources=] over sources that have already been triggered.
 1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry time=] is less than the current time.
@@ -711,7 +711,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         [=attribution source/randomized response=]:
         1. Let |fakeReport| be the result of running [=obtain a fake report=]
             with |source| and |triggerState|.
-        1. [=set/Append=] |fakeReport| to the [=attribution report cache=].
+        1. [=set/Append=] |fakeReport| to the [=event-level report cache=].
     1. If |source|'s [=attribution source/randomized response=] is not [=set/is empty|empty=], return.
 1. [=set/Append=] |source| to |cache|.
 
@@ -888,7 +888,7 @@ per [=attribution rate-limit window=].
 that controls the maximum number of distinct
 [=attribution trigger/reporting endpoint|reporting endpoints=] for a
 ([=attribution rate-limit record/source site=],
-[=attribution rate-limit record/attribution destination=]) that can create [=attribution reports=]
+[=attribution rate-limit record/attribution destination=]) that can create [=event-level reports=]
 per [=attribution rate-limit window=].
 
 <h3 algorithm id="creating-aggregatable-histograms">Creating aggregatable histograms</h3>
@@ -956,8 +956,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     1. [=iteration/Break=].
 1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null and
     |sourceToAttribute|'s [=attribution source/dedup keys=] [=list/contains=] it, return.
-1. Let |numMatchingReports| be the number of entries in the [=attribution report cache=] whose
-    [=attribution report/attribution destination=] equals |attributionDestination|.
+1. Let |numMatchingReports| be the number of entries in the [=event-level report cache=] whose
+    [=event-level report/attribution destination=] equals |attributionDestination|.
 1. If |numMatchingReports| is greater than or equal to the user agent's
     [=max reports per attribution destination=], return.
 1. If the result of running [=should attribution be blocked by rate limit=] with |trigger| and
@@ -975,58 +975,58 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     :: |trigger|'s [=attribution trigger/trigger time=]
 1. If the result of running [=should processing be blocked by reporting-endpoint limit=] with
     |rateLimitRecord| is <strong>blocked</strong>, return.
-1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute|, |trigger|,
+1. Let |report| be the result of running [=obtain an event-level report=] with |sourceToAttribute|, |trigger|,
     and |matchedConfig|.
 1. Let |maxAttributionsPerSource| be the user agent's [=max attributions per navigation source=].
 1. If |sourceToAttribute|'s [=attribution source/source type=] is "`event`", set
     |maxAttributionsPerSource| to the user agent's [=max attributions per event source=].
-1. If |sourceToAttribute|'s [=attribution source/number of reports=] value is equal to
+1. If |sourceToAttribute|'s [=attribution source/number of event-level reports=] value is equal to
     |maxAttributionsPerSource|, then:
-    1. Let |matchingReports| be all entries in the [=attribution report cache=] where all of the following are true:
-         * entry's [=attribution report/report time=] and |report|'s [=attribution report/report time=] are equal.
-         * entry's [=attribution report/source identifier=] [=string/is=] |report|'s [=attribution report/source identifier=]
+    1. Let |matchingReports| be all entries in the [=event-level report cache=] where all of the following are true:
+         * entry's [=event-level report/report time=] and |report|'s [=event-level report/report time=] are equal.
+         * entry's [=event-level report/source identifier=] [=string/is=] |report|'s [=event-level report/source identifier=]
     1. If |matchingReports| is empty, then [=list/remove=] |sourceToAttribute| from the [=attribution source cache=] and return.
     1. Set |matchingReports| to the result of [=list/sort in ascending order|sorting=] |matchingReports|
         in ascending order, with |a| being less than |b| if any of the following are true:
-             * |a|'s [=attribution report/trigger priority=] is less than |b|'s [=attribution report/trigger priority=].
-             * |a|'s [=attribution report/trigger priority=] is equal to |b|'s [=attribution report/trigger priority=]
-                and |a|'s [=attribution report/trigger time=] is greater than |b|'s [=attribution report/trigger time=].
+             * |a|'s [=event-level report/trigger priority=] is less than |b|'s [=event-level report/trigger priority=].
+             * |a|'s [=event-level report/trigger priority=] is equal to |b|'s [=event-level report/trigger priority=]
+                and |a|'s [=event-level report/trigger time=] is greater than |b|'s [=event-level report/trigger time=].
     1. Let |lowestPriorityReport| be the first item in |matchingReports|.
-    1. If |report|'s [=attribution report/trigger priority=] is less than or equal to |lowestPriorityReport|'s [=attribution report/trigger priority=], return.
-    1. [=list/Remove=] |lowestPriorityReport| from the [=attribution report cache=].
-    1. Decrement |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
+    1. If |report|'s [=event-level report/trigger priority=] is less than or equal to |lowestPriorityReport|'s [=event-level report/trigger priority=], return.
+    1. [=list/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
+    1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
 1. For each |item| of |matchingSources|:
     1. [=list/Remove=] |item| from the [=attribution source cache=].
-1. If the [=list/size=] of the [=attribution report cache=] is greater than or equal to the user
+1. If the [=list/size=] of the [=event-level report cache=] is greater than or equal to the user
     agent's [=max report cache size=], return.
 1. If |sourceToAttribute|'s [=attribution source/randomized response=] is
-    null, [=set/append=] |report| to the [=attribution report cache=].
-1. Increment |sourceToAttribute|'s [=attribution source/number of reports=] value by 1.
+    null, [=set/append=] |report| to the [=event-level report cache=].
+1. Increment |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
 1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null,
     [=list/append=] it to |sourceToAttribute|'s [=attribution source/dedup keys=].
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] whose
     [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=]
     before the current time.
-1. If |report|'s [=attribution report/source debug key=] is not null and |report|'s
-    [=attribution report/trigger debug key=] is not null, [=queue a task=] to
+1. If |report|'s [=event-level report/source debug key=] is not null and |report|'s
+    [=event-level report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
 
 <dfn>Max reports per attribution destination</dfn> is a vendor-specific integer which controls how
-many [=attribution reports=] can be in the [=attribution report cache=] for an
-[=attribution report/attribution destination=].
+many [=event-level reports=] can be in the [=event-level report cache=] for an
+[=event-level report/attribution destination=].
 
 <dfn>Max attributions per navigation source</dfn> is a vendor-specific integer that controls how
 many times a single [=attribution source=] whose [=attribution source/source type=] is
-"`navigation`" can be attributed.
+"`navigation`" can be attributed on event-level.
 
 <dfn>Max attributions per event source</dfn> is a vendor-specific integer that controls how
 many times a single [=attribution source=] whose [=attribution source/source type=] is "`event`"
-can be attributed.
+can be attributed on event-level.
 
 <dfn>Max report cache size</dfn> is a vendor-specific integer which controls how many
-[=attribution reports=] can be in the [=attribution report cache=].
+[=event-level reports=] can be in the [=event-level report cache=].
 
 Note: This parameter represents a privacy/utility tradeoff. Lower values mean that less trigger-side data
 can be associated with a source event id. Larger values allow for more attribution triggers to be reported.
@@ -1067,7 +1067,7 @@ To <dfn>obtain the report time at a window</dfn> given an
 1. Return the result of running [=obtain a report time from deadline=] with
     |source|'s [=attribution source/source time=] and |deadline|.
 
-To <dfn>obtain a report delivery time</dfn> given an [=attribution source=]
+To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution source=]
 |source| and a time |triggerTime|:
 
 1. Let |deadlineToUse| be the result of running [=obtain an expiry deadline=]
@@ -1085,56 +1085,56 @@ To <dfn>obtain a report delivery time</dfn> given an [=attribution source=]
 1. Return the result of running [=obtain a report time from deadline=] with
     |source|'s [=attribution source/source time=] and |deadlineToUse|.
 
-<h3 algorithm id="obtaining-a-report">Obtaining a report</h3>
+<h3 algorithm id="obtaining-an-event-level-report">Obtaining an event-level report</h3>
 
-To <dfn>obtain a report</dfn> given an [=attribution source=] |source|, an [=attribution trigger=]
+To <dfn>obtain an event-level report</dfn> given an [=attribution source=] |source|, an [=attribution trigger=]
 |trigger|, and an [=event-level trigger configuration=] |config|:
 
 1. Let |triggerDataCardinality| be the user agent's [=navigation-source trigger data cardinality=].
 1. If |source|'s [=attribution source/source type=] is "`event`", set |triggerDataCardinality| to
     the user agent's [=event-source trigger data cardinality=].
-1. Let |report| be a new [=attribution report=] struct whose items are:
+1. Let |report| be a new [=event-level report=] struct whose items are:
 
-    : [=attribution report/event id=]
+    : [=event-level report/event id=]
     :: |source|'s [=attribution source/event id=].
-    : [=attribution report/trigger data=]
+    : [=event-level report/trigger data=]
     :: The remainder when dividing |config|'s [=event-level trigger configuration/trigger data=] by
         |triggerDataCardinality|.
-    : [=attribution report/randomized trigger rate=]
+    : [=event-level report/randomized trigger rate=]
     :: |source|'s [=attribution source/randomized trigger rate=].
-    : [=attribution report/reporting endpoint=]
+    : [=event-level report/reporting endpoint=]
     :: |source|'s [=attribution source/reporting endpoint=].
-    : [=attribution report/attribution destination=]
+    : [=event-level report/attribution destination=]
     :: |source|'s [=attribution source/attribution destination=].
-    : [=attribution report/reporting time=]
-    :: The result of running [=obtain a report delivery time=] with |source| and |trigger|'s [=attribution trigger/trigger time=].
-    : [=attribution report/trigger priority=]
+    : [=event-level report/reporting time=]
+    :: The result of running [=obtain an event-level report delivery time=] with |source| and |trigger|'s [=attribution trigger/trigger time=].
+    : [=event-level report/trigger priority=]
     :: |config|'s [=event-level trigger configuration/priority=].
-    : [=attribution report/trigger time=]
+    : [=event-level report/trigger time=]
     :: |trigger|'s [=attribution trigger/trigger time=].
-    : [=attribution report/source identifier=]
+    : [=event-level report/source identifier=]
     :: |source|'s [=attribution source/source identifier=].
-    : [=attribution report/report id=]
+    : [=event-level report/report id=]
     :: The result of [=generating a random UUID=].
-    : [=attribution report/source debug key=]
+    : [=event-level report/source debug key=]
     :: |source|'s [=attribution source/debug key=].
-    : [=attribution report/trigger debug key=]
+    : [=event-level report/trigger debug key=]
     :: |trigger|'s [=attribution trigger/debug key=].
 1. Return |report|.
 
 # Report delivery # {#report-delivery}
 
-The user agent MUST periodically [=set/iterate=] over its [=attribution report cache=] and run [=queue a report for delivery=] on each item.
+The user agent MUST periodically [=set/iterate=] over its [=event-level report cache=] and run [=queue a report for delivery=] on each item.
 
-To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report|, run the following steps [=in parallel=]:
+To <dfn>queue a report for delivery</dfn> given an [=event-level report=] |report|, run the following steps [=in parallel=]:
 
-1. If |report|'s [=attribution report/delivered=] value is true, return.
-1. Set |report|'s [=attribution report/delivered=] value to true.
-1. If |report|'s [=attribution report/report time=] is less than the current time, add an [=implementation-defined=] random amount to report time.
+1. If |report|'s [=event-level report/delivered=] value is true, return.
+1. Set |report|'s [=event-level report/delivered=] value to true.
+1. If |report|'s [=event-level report/report time=] is less than the current time, add an [=implementation-defined=] random amount to report time.
 
     Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
      closed. Adding random delay prevents temporal joining of reports from different [=attribution source/source origin=]s.
-1. Wait until |report|'s [=attribution report/report time=] is the current time.
+1. Wait until |report|'s [=event-level report/report time=] is the current time.
 1. Optionally, wait a further [=implementation-defined=] length of time.
 
     Note: This is intended to allow user agents to optimize device resource usage.
@@ -1149,30 +1149,30 @@ Issue: This would ideally be replaced by a more descriptive algorithm in Infra. 
 
 <h3 id="serialize-report-body">Serialize attribution report body</h3>
 
-To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following steps:
+To <dfn>serialize an [=event-level report=]</dfn> |report|, run the following steps:
 
-1. Let |destination| be |report|'s [=attribution report/attribution destination=].
+1. Let |destination| be |report|'s [=event-level report/attribution destination=].
 1. Assert: |destination| is not an [=opaque origin=].
 1. Let |data| be a [=map=] of the following key/value pairs:
 
     : "`attribution_destination`"
     :: |destination|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
     : "`randomized_trigger_rate`"
-    :: |report|'s [=attribution report/randomized trigger rate=]
+    :: |report|'s [=event-level report/randomized trigger rate=]
     : "`source_type`"
-    :: |report|'s [=attribution report/source type=]
+    :: |report|'s [=event-level report/source type=]
     : "`source_event_id`"
-    :: |report|'s [=attribution report/event id=], [=serialize an integer|serialized=]
+    :: |report|'s [=event-level report/event id=], [=serialize an integer|serialized=]
     : "`trigger_data`"
-    :: |report|'s [=attribution report/trigger data=], [=serialize an integer|serialized=]
+    :: |report|'s [=event-level report/trigger data=], [=serialize an integer|serialized=]
     : "`report_id`"
-    :: |report|'s [=attribution report/report id=]
+    :: |report|'s [=event-level report/report id=]
 
-1. If |report|'s [=attribution report/source debug key=] is not null, set
-    |data|["`source_debug_key`"] to |report|'s [=attribution report/source debug key=],
+1. If |report|'s [=event-level report/source debug key=] is not null, set
+    |data|["`source_debug_key`"] to |report|'s [=event-level report/source debug key=],
     [=serialize an integer|serialized=].
-1. If |report|'s [=attribution report/trigger debug key=] is not null, set
-    |data|["`trigger_debug_key`"] to |report|'s [=attribution report/trigger debug key=],
+1. If |report|'s [=event-level report/trigger debug key=] is not null, set
+    |data|["`trigger_debug_key`"] to |report|'s [=event-level report/trigger debug key=],
     [=serialize an integer|serialized=].
 1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
 
@@ -1183,11 +1183,11 @@ whether a user is online, retries might be limited in number and subject to rand
 
 <h3 id="get-report-url">Get report request URL</h3>
 
-To <dfn>generate a report URL</dfn> given a [=attribution report=] |report| and an optional
+To <dfn>generate a report URL</dfn> given a [=event-level report=] |report| and an optional
 [=boolean=] <dfn for="generate a report URL"><var>isDebugReport</var></dfn> (default false):
 
 1. Let |reportUrl| be a new [=URL record=].
-1. Let |reportingOrigin| be |report|'s [=attribution report/reporting endpoint=].
+1. Let |reportingOrigin| be |report|'s [=event-level report/reporting endpoint=].
 1. Assert: |reportingOrigin| is not an [=opaque origin=].
 1. Set |reportUrl|'s [=url/scheme=] to |reportingOrigin|'s [=origin/scheme=].
 1. Set |reportUrl|'s [=url/host=] to |reportingOrigin|'s [=origin/host=].
@@ -1200,9 +1200,9 @@ To <dfn>generate a report URL</dfn> given a [=attribution report=] |report| and 
 
 <h3 id="create-report-request">Creating a report request</h3>
 
-To <dfn>create a report request</dfn> given an [=attribution report=] |report|:
+To <dfn>create a report request</dfn> given an [=event-level report=] |report|:
 
-1. Let |body| be the result of executing [=serialize an attribution report=] on |report|.
+1. Let |body| be the result of executing [=serialize an event-level report=] on |report|.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
     ::  "`POST`"
@@ -1236,14 +1236,14 @@ To <dfn>create a report request</dfn> given an [=attribution report=] |report|:
 <h3 id="issue-report-request">Issuing a report request</h3>
 
 This algorithm constructs a [=request=] and attempts to deliver it to
-|report|'s [=attribution report/reporting endpoint=].
+|report|'s [=event-level report/reporting endpoint=].
 
-To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report|, run the following steps:
+To <dfn>attempt to deliver a report</dfn> given an [=event-level report=] |report|, run the following steps:
 
 1. Let |url| be the result of executing [=generate a report URL=] on |report|.
 1. Let |request| be the result of executing [=create a report request=] on |report|.
 1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being these steps:
-    1. [=Queue a task=] to [=list/remove=] |report| from the [=attribution report cache=].
+    1. [=Queue a task=] to [=list/remove=] |report| from the [=event-level report cache=].
 
 Issue(220): This fetch should use a network partition key for an opaque origin.
 
@@ -1251,7 +1251,7 @@ A user agent MAY retry this algorithm in the event that there was an error.
 
 <h3 id="issue-debug-report-request">Issuing a debug report request</h3>
 
-To <dfn>attempt to deliver a debug report</dfn> given an [=attribution report=] |report|:
+To <dfn>attempt to deliver a debug report</dfn> given an [=event-level report=] |report|:
 
 1. Let |url| be the result of executing [=generate a report URL=] on |report| with
     [=generate a report URL/isDebugReport=] set to true.
@@ -1273,7 +1273,7 @@ TODO
 A user agent's [=attribution caches=] contain data about a user's web activity. When a user agent clears an origin's storage,
 it MUST also [=list/remove=] entries in the [=attribution caches=] whose [=attribution source/source origin=],
 [=attribution source/attribution destination=], [=attribution source/reporting endpoint=],
-[=attribution report/attribution destination=], or [=attribution report/reporting endpoint=]
+[=event-level report/attribution destination=], or [=event-level report/reporting endpoint=]
 is the [=same origin|same=] as the cleared origin.
 
 A user agent MAY clear [=attribution cache=] entries at other times. For example, when a user agent clears
