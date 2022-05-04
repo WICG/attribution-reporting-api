@@ -554,9 +554,8 @@ aggregation infrastructure supported by the user agent. This value will allow
 experimentation with new technologies, and allows us to try out new approaches
 without interfering with core functionality provided by the default option. The
 `"experimental-poplar"` option will implement a protocol similar to
-[poplar](https://github.com/cjpatton/vdaf/blob/main/draft-patton-cfrg-vdaf.md#poplar1-poplar1)
-VDAF in the
-[PPM Framework](https://datatracker.ietf.org/doc/draft-gpew-priv-ppm/).
+[poplar VDAF](https://github.com/cfrg/draft-irtf-cfrg-vdaf/blob/main/draft-irtf-cfrg-vdaf.md#poplar1-poplar1)
+in the [PPM Framework](https://datatracker.ietf.org/doc/draft-gpew-priv-ppm/).
 
 ## Considered alternatives
 
