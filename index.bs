@@ -883,8 +883,11 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. If the result of running [=should attribution be blocked by reporting-endpoint limit=] with
     |trigger| and |sourceToAttribute| is <strong>blocked</strong>, return.
 1. Let |report| be the result of running [=obtain a report=] with |sourceToAttribute| and |trigger|.
-1. If |sourceToAttribute|'s [=attribution source/number of reports=] value is equal to the
-    user agent's [=max reports per source=] value, then:
+1. Let |maxAttributionsPerSource| be the user agent's [=max attributions per navigation source=].
+1. If |sourceToAttribute|'s [=attribution source/source type=] is "`event`", set
+    |maxAttributionsPerSource| to the user agent's [=max attributions per event source=].
+1. If |sourceToAttribute|'s [=attribution source/number of reports=] value is equal to
+    |maxAttributionsPerSource|, then:
     1. Let |matchingReports| be all entries in the [=attribution report cache=] where all of the following are true:
          * entry's [=attribution report/report time=] and |report|'s [=attribution report/report time=] are equal.
          * entry's [=attribution report/source identifier=] [=string/is=] |report|'s [=attribution report/source identifier=]
@@ -927,7 +930,13 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 many [=attribution reports=] can be in the [=attribution report cache=] for an
 [=attribution report/attribution destination=].
 
-<dfn>Max reports per source</dfn> is a vendor-specific integer which controls how many [=attribution reports=] can be created for an [=attribution source=].
+<dfn>Max attributions per navigation source</dfn> is a vendor-specific integer that controls how
+many times a single [=attribution source=] whose [=attribution source/source type=] is
+"`navigation`" can be attributed.
+
+<dfn>Max attributions per event source</dfn> is a vendor-specific integer that controls how
+many times a single [=attribution source=] whose [=attribution source/source type=] is "`event`"
+can be attributed.
 
 <dfn>Max report cache size</dfn> is a vendor-specific integer which controls how many
 [=attribution reports=] can be in the [=attribution report cache=].
