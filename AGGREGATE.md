@@ -215,8 +215,9 @@ The report will be JSON encoded with the following scheme:
 
 Reports will not be delayed to the same extent as they are for event level
 reports. The browser will delay them with a random delay between 10 minutes to
-1 hour, or with a small delay after the browser next starts up. The browser is
-free to utilize techniques like retries to minimize data loss.
+1 hour, or with a small delay after the browser next starts up. The mininum 10
+minutes delay allows regretful users to have a chance to delete the reports.
+The browser is free to utilize techniques like retries to minimize data loss.
 
 * The `scheduled_report_time` will be the number of seconds since the Unix Epoch
   (1970-01-01T00:00:00Z, ignoring leap seconds) to align with
