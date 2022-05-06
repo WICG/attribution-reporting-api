@@ -587,7 +587,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Attribution Reporting</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-05-05">5 May 2022</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-05-06">6 May 2022</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -696,7 +696,9 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#serialize-integer"><span class="secno">11.1</span> <span class="content">Serialize an integer</span></a>
       <li><a href="#serialize-report-body"><span class="secno">11.2</span> <span class="content">Serialize attribution report body</span></a>
       <li><a href="#get-report-url"><span class="secno">11.3</span> <span class="content">Get report request URL</span></a>
-      <li><a href="#issue-report-request"><span class="secno">11.4</span> <span class="content">Issuing a report request</span></a>
+      <li><a href="#create-report-request"><span class="secno">11.4</span> <span class="content">Creating a report request</span></a>
+      <li><a href="#issue-report-request"><span class="secno">11.5</span> <span class="content">Issuing a report request</span></a>
+      <li><a href="#issue-debug-report-request"><span class="secno">11.6</span> <span class="content">Issuing a debug report request</span></a>
      </ol>
     <li><a href="#security-considerations"><span class="secno">12</span> <span class="content">Security considerations</span></a>
     <li>
@@ -1065,7 +1067,7 @@ integer, if the mode is "<code>falsely</code>", or null otherwise.</p>
     <dd data-md>
      <p>Null or a non-negative 64-bit integer.</p>
    </dl>
-   <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="6.6" data-lt="Attribution report" data-noexport id="attribution-report"><span class="secno">6.6. </span><span class="content">Attribution report</span><a class="self-link" href="#attribution-report" id="ref-for-attribution-report①②"></a></h3>
+   <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="6.6" data-lt="Attribution report" data-noexport id="attribution-report"><span class="secno">6.6. </span><span class="content">Attribution report</span><a class="self-link" href="#attribution-report" id="ref-for-attribution-report①④"></a></h3>
    <p>An attribution report is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#struct" id="ref-for-struct②">struct</a> with the following items:</p>
    <dl>
     <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution report" data-dfn-type="dfn" data-noexport id="attribution-report-event-id">event id</dfn>
@@ -1757,6 +1759,8 @@ add <var>report</var> to the <a data-link-type="dfn" href="#attribution-report-c
      <p>Add <var>rateLimitRecord</var> to the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache④">attribution rate-limit cache</a>.</p>
     <li data-md>
      <p>Remove all entries from the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache⑤">attribution rate-limit cache</a> whose <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time⑥">time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window⑥">attribution rate-limit window</a> before the current time.</p>
+    <li data-md>
+     <p>If <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-source-debug-key" id="ref-for-attribution-report-source-debug-key">source debug key</a> is not null and <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-trigger-debug-key" id="ref-for-attribution-report-trigger-debug-key">trigger debug key</a> is not null, <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task" id="ref-for-queue-a-task③">queue a task</a> to <a data-link-type="dfn" href="#attempt-to-deliver-a-debug-report" id="ref-for-attempt-to-deliver-a-debug-report">attempt to deliver a debug report</a> with <var>report</var>.</p>
    </ol>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-reports-per-attribution-destination">Max reports per attribution destination</dfn> is a vendor-specific integer which controls how
 many <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report⑤">attribution reports</a> can be in the <a data-link-type="dfn" href="#attribution-report-cache" id="ref-for-attribution-report-cache⑦">attribution report cache</a> for an <a data-link-type="dfn" href="#attribution-report-attribution-destination" id="ref-for-attribution-report-attribution-destination①">attribution destination</a>.</p>
@@ -1839,10 +1843,10 @@ convert an expired attribution source.</p>
       <dt data-md><a data-link-type="dfn" href="#attribution-report-report-id" id="ref-for-attribution-report-report-id">report id</a>
       <dd data-md>
        <p>The result of <a data-link-type="dfn" href="https://wicg.github.io/uuid/#dfn-generate-a-random-uuid" id="ref-for-dfn-generate-a-random-uuid">generating a random UUID</a>.</p>
-      <dt data-md><a data-link-type="dfn" href="#attribution-report-source-debug-key" id="ref-for-attribution-report-source-debug-key">source debug key</a>
+      <dt data-md><a data-link-type="dfn" href="#attribution-report-source-debug-key" id="ref-for-attribution-report-source-debug-key①">source debug key</a>
       <dd data-md>
        <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-debug-key" id="ref-for-attribution-source-debug-key①">debug key</a>.</p>
-      <dt data-md><a data-link-type="dfn" href="#attribution-report-trigger-debug-key" id="ref-for-attribution-report-trigger-debug-key">trigger debug key</a>
+      <dt data-md><a data-link-type="dfn" href="#attribution-report-trigger-debug-key" id="ref-for-attribution-report-trigger-debug-key①">trigger debug key</a>
       <dd data-md>
        <p><var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-debug-key" id="ref-for-attribution-trigger-debug-key②">debug key</a>.</p>
      </dl>
@@ -1902,9 +1906,9 @@ convert an expired attribution source.</p>
        <p><var>report</var>’s <a data-link-type="dfn" href="#attribution-report-report-id" id="ref-for-attribution-report-report-id①">report id</a></p>
      </dl>
     <li data-md>
-     <p>If <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-source-debug-key" id="ref-for-attribution-report-source-debug-key①">source debug key</a> is not null, set <var>data</var>["<code>source_debug_key</code>"] to <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-source-debug-key" id="ref-for-attribution-report-source-debug-key②">source debug key</a>, <a data-link-type="dfn" href="#serialize-an-integer" id="ref-for-serialize-an-integer②">serialized</a>.</p>
+     <p>If <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-source-debug-key" id="ref-for-attribution-report-source-debug-key②">source debug key</a> is not null, set <var>data</var>["<code>source_debug_key</code>"] to <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-source-debug-key" id="ref-for-attribution-report-source-debug-key③">source debug key</a>, <a data-link-type="dfn" href="#serialize-an-integer" id="ref-for-serialize-an-integer②">serialized</a>.</p>
     <li data-md>
-     <p>If <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-trigger-debug-key" id="ref-for-attribution-report-trigger-debug-key①">trigger debug key</a> is not null, set <var>data</var>["<code>trigger_debug_key</code>"] to <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-trigger-debug-key" id="ref-for-attribution-report-trigger-debug-key②">trigger debug key</a>, <a data-link-type="dfn" href="#serialize-an-integer" id="ref-for-serialize-an-integer③">serialized</a>.</p>
+     <p>If <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-trigger-debug-key" id="ref-for-attribution-report-trigger-debug-key②">trigger debug key</a> is not null, set <var>data</var>["<code>trigger_debug_key</code>"] to <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-trigger-debug-key" id="ref-for-attribution-report-trigger-debug-key③">trigger debug key</a>, <a data-link-type="dfn" href="#serialize-an-integer" id="ref-for-serialize-an-integer③">serialized</a>.</p>
     <li data-md>
      <p>Return the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#byte-sequence" id="ref-for-byte-sequence">byte sequence</a> resulting from executing <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#serialize-an-infra-value-to-json-bytes" id="ref-for-serialize-an-infra-value-to-json-bytes">serialize an infra value to JSON bytes</a> on <var>data</var>.</p>
    </ol>
@@ -1913,7 +1917,8 @@ to perform deduplication and prevent double counting, in the event that the user
 reports on failure. To prevent the report recipient from learning additional information about
 whether a user is online, retries might be limited in number and subject to random delays.</p>
    <h3 class="heading settled" data-level="11.3" id="get-report-url"><span class="secno">11.3. </span><span class="content">Get report request URL</span><a class="self-link" href="#get-report-url"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="generate-a-report-url">generate a report URL</dfn> for a given <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report①⓪">attribution report</a> <var>report</var>, run the following steps:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="generate-a-report-url">generate a report URL</dfn> given a <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report①⓪">attribution report</a> <var>report</var> and an optional
+boolean <dfn class="dfn-paneled" data-dfn-for="generate a report URL" data-dfn-type="dfn" data-noexport id="generate-a-report-url-isdebugreport"><var>isDebugReport</var></dfn> (default false):</p>
    <ol>
     <li data-md>
      <p>Let <var>reportUrl</var> be a new <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url" id="ref-for-concept-url②">URL record</a>.</p>
@@ -1928,20 +1933,23 @@ whether a user is online, retries might be limited in number and subject to rand
     <li data-md>
      <p>Set <var>reportUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-port" id="ref-for-concept-url-port">port</a> to <var>reportingOrigin</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-port" id="ref-for-concept-origin-port">port</a>.</p>
     <li data-md>
-     <p>Set <var>reportUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-path" id="ref-for-concept-url-path①">path</a> to «"<code>.well-known</code>", "<code>attribution-reporting</code>", "<code>report-event-attribution</code>"».</p>
+     <p>Let <var>path</var> be «"<code>.well-known</code>", "<code>attribution-reporting</code>"».</p>
+    <li data-md>
+     <p>If <var>isDebugReport</var> is true, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①">append</a> "<code>debug</code>" to <var>path</var>.</p>
+    <li data-md>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append②">Append</a> "<code>report-event-attribution</code>" to <var>path</var>.</p>
+    <li data-md>
+     <p>Set <var>reportUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-path" id="ref-for-concept-url-path①">path</a> to <var>path</var>.</p>
     <li data-md>
      <p>Return <var>reportUrl</var>.</p>
    </ol>
-   <h3 class="heading settled" data-level="11.4" id="issue-report-request"><span class="secno">11.4. </span><span class="content">Issuing a report request</span><a class="self-link" href="#issue-report-request"></a></h3>
-   <p>This algorithm constructs a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request" id="ref-for-concept-request①">request</a> and attempts to deliver it to <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-reporting-endpoint" id="ref-for-attribution-report-reporting-endpoint②">reporting endpoint</a>.</p>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attempt-to-deliver-a-report">attempt to deliver a report</dfn> given an <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report①①">attribution report</a> <var>report</var>, run the following steps:</p>
+   <h3 class="heading settled" data-level="11.4" id="create-report-request"><span class="secno">11.4. </span><span class="content">Creating a report request</span><a class="self-link" href="#create-report-request"></a></h3>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="create-a-report-request">create a report request</dfn> given an <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report①①">attribution report</a> <var>report</var>:</p>
    <ol>
     <li data-md>
      <p>Let <var>body</var> be the result of executing <a data-link-type="dfn" href="#serialize-an-attribution-report" id="ref-for-serialize-an-attribution-report">serialize an attribution report</a> on <var>report</var>.</p>
     <li data-md>
-     <p>Let <var>url</var> be the result of executing <a data-link-type="dfn" href="#generate-a-report-url" id="ref-for-generate-a-report-url">generate a report URL</a> on <var>report</var>.</p>
-    <li data-md>
-     <p>Let <var>request</var> be a new <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request" id="ref-for-concept-request②">request</a> with the following properties:</p>
+     <p>Let <var>request</var> be a new <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request" id="ref-for-concept-request①">request</a> with the following properties:</p>
      <dl>
       <dt data-md><code>method</code>
       <dd data-md>
@@ -1985,13 +1993,36 @@ whether a user is online, retries might be limited in number and subject to rand
        <p>"<code>no-store</code>"</p>
      </dl>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task" id="ref-for-queue-a-task③">Queue a task</a> to <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-fetch" id="ref-for-concept-fetch">fetch</a> <var>request</var> with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#process-response" id="ref-for-process-response">processResponse</a> being these steps:</p>
+     <p>Return <var>request</var>.</p>
+   </ol>
+   <h3 class="heading settled" data-level="11.5" id="issue-report-request"><span class="secno">11.5. </span><span class="content">Issuing a report request</span><a class="self-link" href="#issue-report-request"></a></h3>
+   <p>This algorithm constructs a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-request" id="ref-for-concept-request②">request</a> and attempts to deliver it to <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-reporting-endpoint" id="ref-for-attribution-report-reporting-endpoint②">reporting endpoint</a>.</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attempt-to-deliver-a-report">attempt to deliver a report</dfn> given an <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report①②">attribution report</a> <var>report</var>, run the following steps:</p>
+   <ol>
+    <li data-md>
+     <p>Let <var>url</var> be the result of executing <a data-link-type="dfn" href="#generate-a-report-url" id="ref-for-generate-a-report-url">generate a report URL</a> on <var>report</var>.</p>
+    <li data-md>
+     <p>Let <var>request</var> be the result of executing <a data-link-type="dfn" href="#create-a-report-request" id="ref-for-create-a-report-request">create a report request</a> on <var>report</var>.</p>
+    <li data-md>
+     <p><a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task" id="ref-for-queue-a-task④">Queue a task</a> to <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-fetch" id="ref-for-concept-fetch">fetch</a> <var>request</var> with <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#process-response" id="ref-for-process-response">processResponse</a> being these steps:</p>
      <ol>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task" id="ref-for-queue-a-task④">Queue a task</a> to remove <var>report</var> from the <a data-link-type="dfn" href="#attribution-report-cache" id="ref-for-attribution-report-cache①⓪">attribution report cache</a>.</p>
+       <p><a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task" id="ref-for-queue-a-task⑤">Queue a task</a> to remove <var>report</var> from the <a data-link-type="dfn" href="#attribution-report-cache" id="ref-for-attribution-report-cache①⓪">attribution report cache</a>.</p>
      </ol>
    </ol>
    <p class="issue" id="issue-c8706ee1"><a class="self-link" href="#issue-c8706ee1"></a> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/conversion-measurement-api/issues/220">[Issue #220]</a></p>
+   <p>A user agent MAY retry this algorithm in the event that there was an error.</p>
+   <h3 class="heading settled" data-level="11.6" id="issue-debug-report-request"><span class="secno">11.6. </span><span class="content">Issuing a debug report request</span><a class="self-link" href="#issue-debug-report-request"></a></h3>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attempt-to-deliver-a-debug-report">attempt to deliver a debug report</dfn> given an <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report①③">attribution report</a> <var>report</var>:</p>
+   <ol>
+    <li data-md>
+     <p>Let <var>url</var> be the result of executing <a data-link-type="dfn" href="#generate-a-report-url" id="ref-for-generate-a-report-url①">generate a report URL</a> on <var>report</var> with <a data-link-type="dfn" href="#generate-a-report-url-isdebugreport" id="ref-for-generate-a-report-url-isdebugreport">isDebugReport</a> set to true.</p>
+    <li data-md>
+     <p>Let <var>request</var> be the result of executing <a data-link-type="dfn" href="#create-a-report-request" id="ref-for-create-a-report-request①">create a report request</a> on <var>report</var>.</p>
+    <li data-md>
+     <p><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-fetch" id="ref-for-concept-fetch①">Fetch</a> <var>request</var>.</p>
+   </ol>
+   <p class="issue" id="issue-c8706ee1①"><a class="self-link" href="#issue-c8706ee1①"></a> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/conversion-measurement-api/issues/220">[Issue #220]</a></p>
    <p>A user agent MAY retry this algorithm in the event that there was an error.</p>
    <h2 class="heading settled" data-level="12" id="security-considerations"><span class="secno">12. </span><span class="content">Security considerations</span><a class="self-link" href="#security-considerations"></a></h2>
     TODO 
@@ -2048,7 +2079,8 @@ an origin from a user’s browsing history.</p>
   <h2 class="no-num no-ref heading settled" id="index"><span class="content">Index</span><a class="self-link" href="#index"></a></h2>
   <h3 class="no-num no-ref heading settled" id="index-defined-here"><span class="content">Terms defined by this specification</span><a class="self-link" href="#index-defined-here"></a></h3>
   <ul class="index">
-   <li><a href="#attempt-to-deliver-a-report">attempt to deliver a report</a><span>, in § 11.4</span>
+   <li><a href="#attempt-to-deliver-a-debug-report">attempt to deliver a debug report</a><span>, in § 11.6</span>
+   <li><a href="#attempt-to-deliver-a-report">attempt to deliver a report</a><span>, in § 11.5</span>
    <li><a href="#attribution-caches">attribution caches</a><span>, in § 7</span>
    <li>
     attribution destination
@@ -2109,6 +2141,7 @@ an origin from a user’s browsing history.</p>
     </ul>
    <li><a href="#element-attrdef-a-attributionsourcepriority">attributionsourcepriority</a><span>, in § 2.2</span>
    <li><a href="#attribution-trigger">Attribution trigger</a><span>, in § 6.4</span>
+   <li><a href="#create-a-report-request">create a report request</a><span>, in § 11.4</span>
    <li>
     debug key
     <ul>
@@ -2132,6 +2165,7 @@ an origin from a user’s browsing history.</p>
    <li><a href="#attribution-source-filter-data">filter data</a><span>, in § 6.4</span>
    <li><a href="#attribution-trigger-filters">filters</a><span>, in § 6.5</span>
    <li><a href="#generate-a-report-url">generate a report URL</a><span>, in § 11.3</span>
+   <li><a href="#generate-a-report-url-isdebugreport">isDebugReport</a><span>, in § 11.3</span>
    <li><a href="#limited-to-only-non-negative-numbers">limited to only non-negative numbers</a><span>, in § 2.1</span>
    <li><a href="#match-an-attribution-sources-filter-data-against-an-attribution-trigger">match an attribution source’s filter data against an attribution trigger</a><span>, in § 10.3</span>
    <li><a href="#max-attribution-reporting-endpoints-per-rate-limit-window">Max attribution reporting endpoints per rate-limit window</a><span>, in § 10.5</span>
@@ -2228,7 +2262,7 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-concept-body">
    <a href="https://fetch.spec.whatwg.org/#concept-body">https://fetch.spec.whatwg.org/#concept-body</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-concept-body">11.4. Issuing a report request</a>
+    <li><a href="#ref-for-concept-body">11.4. Creating a report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-request-current-url">
@@ -2240,19 +2274,20 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-concept-fetch">
    <a href="https://fetch.spec.whatwg.org/#concept-fetch">https://fetch.spec.whatwg.org/#concept-fetch</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-concept-fetch">11.4. Issuing a report request</a>
+    <li><a href="#ref-for-concept-fetch">11.5. Issuing a report request</a>
+    <li><a href="#ref-for-concept-fetch①">11.6. Issuing a debug report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-header">
    <a href="https://fetch.spec.whatwg.org/#concept-header">https://fetch.spec.whatwg.org/#concept-header</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-concept-header">11.4. Issuing a report request</a>
+    <li><a href="#ref-for-concept-header">11.4. Creating a report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-header-list">
    <a href="https://fetch.spec.whatwg.org/#concept-header-list">https://fetch.spec.whatwg.org/#concept-header-list</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-concept-header-list">11.4. Issuing a report request</a>
+    <li><a href="#ref-for-concept-header-list">11.4. Creating a report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-main-fetch">
@@ -2264,7 +2299,7 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-process-response">
    <a href="https://fetch.spec.whatwg.org/#process-response">https://fetch.spec.whatwg.org/#process-response</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-process-response">11.4. Issuing a report request</a>
+    <li><a href="#ref-for-process-response">11.5. Issuing a report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-request-redirect-count">
@@ -2277,13 +2312,14 @@ an origin from a user’s browsing history.</p>
    <a href="https://fetch.spec.whatwg.org/#concept-request">https://fetch.spec.whatwg.org/#concept-request</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-concept-request">10.2. Should internalResponse to request be blocked as attribution trigger</a>
-    <li><a href="#ref-for-concept-request①">11.4. Issuing a report request</a> <a href="#ref-for-concept-request②">(2)</a>
+    <li><a href="#ref-for-concept-request①">11.4. Creating a report request</a>
+    <li><a href="#ref-for-concept-request②">11.5. Issuing a report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-body-source">
    <a href="https://fetch.spec.whatwg.org/#concept-body-source">https://fetch.spec.whatwg.org/#concept-body-source</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-concept-body-source">11.4. Issuing a report request</a>
+    <li><a href="#ref-for-concept-body-source">11.4. Creating a report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-concept-request-url-list">
@@ -2449,7 +2485,8 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-queue-a-task">4. Attribution Reporting API</a>
     <li><a href="#ref-for-queue-a-task①">9.8. Processing an attribution source</a>
     <li><a href="#ref-for-queue-a-task②">10.2. Should internalResponse to request be blocked as attribution trigger</a>
-    <li><a href="#ref-for-queue-a-task③">11.4. Issuing a report request</a> <a href="#ref-for-queue-a-task④">(2)</a>
+    <li><a href="#ref-for-queue-a-task③">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-queue-a-task④">11.5. Issuing a report request</a> <a href="#ref-for-queue-a-task⑤">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-reflect">
@@ -3080,6 +3117,7 @@ an origin from a user’s browsing history.</p>
    <div class="issue"> Formalize how to parse the query similar to URLSearchParams. <a class="issue-return" href="#issue-9d1372db" title="Jump to section">↵</a></div>
    <div class="issue"> This would ideally be replaced by a more descriptive algorithm in Infra. See <a href="https://github.com/whatwg/infra/issues/201">infra/201</a> <a class="issue-return" href="#issue-ccb90c6c" title="Jump to section">↵</a></div>
    <div class="issue"> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/conversion-measurement-api/issues/220">[Issue #220]</a> <a class="issue-return" href="#issue-c8706ee1" title="Jump to section">↵</a></div>
+   <div class="issue"> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/conversion-measurement-api/issues/220">[Issue #220]</a> <a class="issue-return" href="#issue-c8706ee1①" title="Jump to section">↵</a></div>
   </div>
   <aside class="dfn-panel" data-for="limited-to-only-non-negative-numbers">
    <b><a href="#limited-to-only-non-negative-numbers">#limited-to-only-non-negative-numbers</a></b><b>Referenced in:</b>
@@ -3528,7 +3566,9 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-report⑧">11. Report delivery</a>
     <li><a href="#ref-for-attribution-report⑨">11.2. Serialize attribution report body</a>
     <li><a href="#ref-for-attribution-report①⓪">11.3. Get report request URL</a>
-    <li><a href="#ref-for-attribution-report①①">11.4. Issuing a report request</a>
+    <li><a href="#ref-for-attribution-report①①">11.4. Creating a report request</a>
+    <li><a href="#ref-for-attribution-report①②">11.5. Issuing a report request</a>
+    <li><a href="#ref-for-attribution-report①③">11.6. Issuing a debug report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-report-event-id">
@@ -3563,7 +3603,7 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-attribution-report-reporting-endpoint">10.8. Obtaining a report</a>
     <li><a href="#ref-for-attribution-report-reporting-endpoint①">11.3. Get report request URL</a>
-    <li><a href="#ref-for-attribution-report-reporting-endpoint②">11.4. Issuing a report request</a>
+    <li><a href="#ref-for-attribution-report-reporting-endpoint②">11.5. Issuing a report request</a>
     <li><a href="#ref-for-attribution-report-reporting-endpoint③">13.1. Clearing attribution storage</a>
    </ul>
   </aside>
@@ -3621,15 +3661,17 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="attribution-report-source-debug-key">
    <b><a href="#attribution-report-source-debug-key">#attribution-report-source-debug-key</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-report-source-debug-key">10.8. Obtaining a report</a>
-    <li><a href="#ref-for-attribution-report-source-debug-key①">11.2. Serialize attribution report body</a> <a href="#ref-for-attribution-report-source-debug-key②">(2)</a>
+    <li><a href="#ref-for-attribution-report-source-debug-key">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-report-source-debug-key①">10.8. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report-source-debug-key②">11.2. Serialize attribution report body</a> <a href="#ref-for-attribution-report-source-debug-key③">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-report-trigger-debug-key">
    <b><a href="#attribution-report-trigger-debug-key">#attribution-report-trigger-debug-key</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-report-trigger-debug-key">10.8. Obtaining a report</a>
-    <li><a href="#ref-for-attribution-report-trigger-debug-key①">11.2. Serialize attribution report body</a> <a href="#ref-for-attribution-report-trigger-debug-key②">(2)</a>
+    <li><a href="#ref-for-attribution-report-trigger-debug-key">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-report-trigger-debug-key①">10.8. Obtaining a report</a>
+    <li><a href="#ref-for-attribution-report-trigger-debug-key②">11.2. Serialize attribution report body</a> <a href="#ref-for-attribution-report-trigger-debug-key③">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-rate-limit-record">
@@ -3701,7 +3743,7 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-attribution-report-cache">9.8. Processing an attribution source</a> <a href="#ref-for-attribution-report-cache①">(2)</a>
     <li><a href="#ref-for-attribution-report-cache②">10.6. Triggering attribution</a> <a href="#ref-for-attribution-report-cache③">(2)</a> <a href="#ref-for-attribution-report-cache④">(3)</a> <a href="#ref-for-attribution-report-cache⑤">(4)</a> <a href="#ref-for-attribution-report-cache⑥">(5)</a> <a href="#ref-for-attribution-report-cache⑦">(6)</a> <a href="#ref-for-attribution-report-cache⑧">(7)</a>
     <li><a href="#ref-for-attribution-report-cache⑨">11. Report delivery</a>
-    <li><a href="#ref-for-attribution-report-cache①⓪">11.4. Issuing a report request</a>
+    <li><a href="#ref-for-attribution-report-cache①⓪">11.5. Issuing a report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-rate-limit-cache">
@@ -3951,19 +3993,39 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="serialize-an-attribution-report">
    <b><a href="#serialize-an-attribution-report">#serialize-an-attribution-report</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-serialize-an-attribution-report">11.4. Issuing a report request</a>
+    <li><a href="#ref-for-serialize-an-attribution-report">11.4. Creating a report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="generate-a-report-url">
    <b><a href="#generate-a-report-url">#generate-a-report-url</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-generate-a-report-url">11.4. Issuing a report request</a>
+    <li><a href="#ref-for-generate-a-report-url">11.5. Issuing a report request</a>
+    <li><a href="#ref-for-generate-a-report-url①">11.6. Issuing a debug report request</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="generate-a-report-url-isdebugreport">
+   <b><a href="#generate-a-report-url-isdebugreport">#generate-a-report-url-isdebugreport</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-generate-a-report-url-isdebugreport">11.6. Issuing a debug report request</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="create-a-report-request">
+   <b><a href="#create-a-report-request">#create-a-report-request</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-create-a-report-request">11.5. Issuing a report request</a>
+    <li><a href="#ref-for-create-a-report-request①">11.6. Issuing a debug report request</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attempt-to-deliver-a-report">
    <b><a href="#attempt-to-deliver-a-report">#attempt-to-deliver-a-report</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attempt-to-deliver-a-report">11. Report delivery</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="attempt-to-deliver-a-debug-report">
+   <b><a href="#attempt-to-deliver-a-debug-report">#attempt-to-deliver-a-debug-report</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-attempt-to-deliver-a-debug-report">10.6. Triggering attribution</a>
    </ul>
   </aside>
 <script>/* script-dfn-panel */
