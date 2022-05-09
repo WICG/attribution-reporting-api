@@ -576,6 +576,9 @@ and an [=environment settings object=] |settings|, run the following steps:
 1. Let |expiry| be 30 days.
 1. If |params|["{{AttributionSourceParams/attributionExpiry}}"] [=map/exists=],
     then set |expiry| to that value.
+1. If |expiry| is less than 1 day, set |expiry| to 1 day.
+1. If |expiry| is greater than the user agent's [=max source expiry=], set
+    |expiry| to that value.
 1. Let |priority| be 0.
 1. If |params|["{{AttributionSourceParams/attributionSourcePriority}}"] [=map/exists=],
     then set |priority| to that value.
@@ -612,6 +615,10 @@ and an [=environment settings object=] |settings|, run the following steps:
 
 <dfn>Max event id value</dfn> is a vendor-specific integer which controls
 the maximum value which can be used as an [=attribution source/event id=].
+
+<dfn>Max source expiry</dfn> is a vendor-specific length of time that controls
+the maximum value that can be used as an [=attribution source/expiry=]. It must
+be greater than or equal to 30 days.
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
