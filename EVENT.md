@@ -162,7 +162,7 @@ configures the API:
 -   `destination`: an origin whose eTLD+1 is where attribution will be triggered
 for this source.
 
--   `source_event_id`: A DOMString encoding a 64-bit unsigned integer which
+-   `source_event_id`: A string encoding a 64-bit unsigned integer which
 represents the event-level data associated with this source. This will be
 limited to 64 bits of information but the value can vary.
 
