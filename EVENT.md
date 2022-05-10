@@ -652,7 +652,8 @@ usage.
 
 Strawman: There should be a limit of 1024 pending sources per source origin.
 
-Strawman: There should be a limit of 1024 pending reports per destination site.
+Strawman: There should be a limit of 1024 pending event-level reports per
+destination site.
 
 ## Privacy Considerations
 
