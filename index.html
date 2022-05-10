@@ -1292,6 +1292,10 @@ not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/iframe-
      <p>If <var>params</var>["<code class="idl"><a data-link-type="idl" href="#dom-attributionsourceparams-attributionexpiry" id="ref-for-dom-attributionsourceparams-attributionexpiry①">attributionExpiry</a></code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②">exists</a>,
 then set <var>expiry</var> to that value.</p>
     <li data-md>
+     <p>If <var>expiry</var> is less than 1 day, set <var>expiry</var> to 1 day.</p>
+    <li data-md>
+     <p>If <var>expiry</var> is greater than the user agent’s <a data-link-type="dfn" href="#max-source-expiry" id="ref-for-max-source-expiry">max source expiry</a>, set <var>expiry</var> to that value.</p>
+    <li data-md>
      <p>Let <var>priority</var> be 0.</p>
     <li data-md>
      <p>If <var>params</var>["<code class="idl"><a data-link-type="idl" href="#dom-attributionsourceparams-attributionsourcepriority" id="ref-for-dom-attributionsourceparams-attributionsourcepriority①">attributionSourcePriority</a></code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③">exists</a>,
@@ -1344,6 +1348,9 @@ then set <var>priority</var> to that value.</p>
    </ol>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-event-id-value">Max event id value</dfn> is a vendor-specific integer which controls
 the maximum value which can be used as an <a data-link-type="dfn" href="#attribution-source-event-id" id="ref-for-attribution-source-event-id②">event id</a>.</p>
+   <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-source-expiry">Max source expiry</dfn> is a vendor-specific length of time that controls
+the maximum value that can be used as an <a data-link-type="dfn" href="#attribution-source-expiry" id="ref-for-attribution-source-expiry③">expiry</a>. It must
+be greater than or equal to 30 days.</p>
    <h3 class="heading settled" data-level="9.8" id="processing-an-attribution-source"><span class="secno">9.8. </span><span class="content">Processing an attribution source</span><a class="self-link" href="#processing-an-attribution-source"></a></h3>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="maybe-process-a-navigation-attribution-source">maybe process a navigation attribution source</dfn> given a <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigation-params" id="ref-for-navigation-params①">navigation params</a> <var>navigationParams</var> and <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#browsing-context" id="ref-for-browsing-context">browsing context</a> <var>browsingContext</var>, run the following steps:</p>
    <ol>
@@ -1780,7 +1787,7 @@ return a point in time.</p>
      <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑧">source type</a> is "<code>event</code>", return <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time②">expiry time</a> + 1 hour.</p>
     <li data-md>
      <p>Let <var>timeToTrigger</var> be the difference between <var>triggerTime</var> and <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑥">source time</a>.</p>
-     <p class="note" role="note"><span>Note:</span> <var>timeToTrigger</var> is less than <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry" id="ref-for-attribution-source-expiry③">expiry</a> because it is not normally possible to
+     <p class="note" role="note"><span>Note:</span> <var>timeToTrigger</var> is less than <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry" id="ref-for-attribution-source-expiry④">expiry</a> because it is not normally possible to
 convert an expired attribution source.</p>
     <li data-md>
      <p>If:</p>
@@ -1788,12 +1795,12 @@ convert an expired attribution source.</p>
       <dt><var>timeToTrigger</var> &lt;= (2 days - 1 hour)
       <dd>return <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑦">source time</a> + 2 days.
       <dt>
-        <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry" id="ref-for-attribution-source-expiry④">expiry</a> > (2 days - 1 hour) 
+        <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry" id="ref-for-attribution-source-expiry⑤">expiry</a> > (2 days - 1 hour) 
        <ul>
         <li data-md>
-         <p>and <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry" id="ref-for-attribution-source-expiry⑤">expiry</a> &lt; (7 days - 1 hour)</p>
+         <p>and <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry" id="ref-for-attribution-source-expiry⑥">expiry</a> &lt; (7 days - 1 hour)</p>
         <li data-md>
-         <p>and <var>timeToTrigger</var> &lt;= <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry" id="ref-for-attribution-source-expiry⑥">expiry</a></p>
+         <p>and <var>timeToTrigger</var> &lt;= <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry" id="ref-for-attribution-source-expiry⑦">expiry</a></p>
        </ul>
       <dd>return <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time③">expiry time</a> + 1 hour.
       <dt><var>timeToTrigger</var> &lt;= (7 days - 1 hour)
@@ -2174,6 +2181,7 @@ an origin from a user’s browsing history.</p>
    <li><a href="#max-report-cache-size">Max report cache size</a><span>, in § 10.6</span>
    <li><a href="#max-reports-per-attribution-destination">Max reports per attribution destination</a><span>, in § 10.6</span>
    <li><a href="#max-source-cache-size">Max source cache size</a><span>, in § 9.8</span>
+   <li><a href="#max-source-expiry">Max source expiry</a><span>, in § 9.7</span>
    <li><a href="#max-source-reporting-endpoints-per-rate-limit-window">Max source reporting endpoints per rate-limit window</a><span>, in § 10.5</span>
    <li><a href="#maybe-process-a-navigation-attribution-source">maybe process a navigation attribution source</a><span>, in § 9.8</span>
    <li><a href="#attribution-trigger-navigation-source-trigger-data">navigation-source trigger data</a><span>, in § 6.5</span>
@@ -3400,8 +3408,8 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-attribution-source-expiry">9.1. Obtaining an attribution source’s expiry time</a>
     <li><a href="#ref-for-attribution-source-expiry①">9.6. Obtaining an event attribution source from a source</a>
-    <li><a href="#ref-for-attribution-source-expiry②">9.7. Obtaining an attribution source from AttributionSourceParams</a>
-    <li><a href="#ref-for-attribution-source-expiry③">10.7. Establishing report delivery time</a> <a href="#ref-for-attribution-source-expiry④">(2)</a> <a href="#ref-for-attribution-source-expiry⑤">(3)</a> <a href="#ref-for-attribution-source-expiry⑥">(4)</a>
+    <li><a href="#ref-for-attribution-source-expiry②">9.7. Obtaining an attribution source from AttributionSourceParams</a> <a href="#ref-for-attribution-source-expiry③">(2)</a>
+    <li><a href="#ref-for-attribution-source-expiry④">10.7. Establishing report delivery time</a> <a href="#ref-for-attribution-source-expiry⑤">(2)</a> <a href="#ref-for-attribution-source-expiry⑥">(3)</a> <a href="#ref-for-attribution-source-expiry⑦">(4)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-priority">
@@ -3842,6 +3850,12 @@ an origin from a user’s browsing history.</p>
    <b><a href="#max-event-id-value">#max-event-id-value</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-max-event-id-value">9.7. Obtaining an attribution source from AttributionSourceParams</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="max-source-expiry">
+   <b><a href="#max-source-expiry">#max-source-expiry</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-max-source-expiry">9.7. Obtaining an attribution source from AttributionSourceParams</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="maybe-process-a-navigation-attribution-source">
