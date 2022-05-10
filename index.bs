@@ -352,6 +352,40 @@ An attribution source is a [=struct=] with the following items:
 :: An [=attribution filter map=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
+: <dfn>aggregatable source</dfn>
+:: An [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose [=map/value|values=] are
+    non-negative 128-bit integers.
+
+</dl>
+
+<h3 dfn-type=dfn>Attribution aggregatable trigger data</h3>
+
+An attribution aggregatable trigger data is a [=struct=] with the following items:
+
+<dl dfn-for="attribution aggregatable trigger data">
+: <dfn>key piece</dfn>
+:: A non-negative 128-bit integer.
+: <dfn>source keys</dfn>
+:: An [=ordered set=] of [=strings=].
+: <dfn>filters</dfn>
+:: An [=attribution filter map=].
+: <dfn>negated filters</dfn>
+:: An [=attribution filter map=].
+
+</dl>
+
+Issue: Use [=attribution aggregatable trigger data/negated filters=] in [=create attribution aggregatable histograms=].
+
+<h3 dfn-type=dfn>Attribution aggregatable trigger</h3>
+
+An attribution aggregatable trigger is a [=struct=] with the following items:
+
+<dl dfn-for="attribution aggregatable trigger">
+: <dfn>trigger data</dfn>
+:: A [=list=] of [=attribution aggregatable trigger data=].
+: <dfn>values</dfn>
+:: An [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose [=map/value|values=] are
+    non-negative 32-bit integers.
 
 </dl>
 
@@ -378,6 +412,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: An [=attribution filter map=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
+: <dfn>aggregatable trigger</dfn>
+:: An [=attribution aggregatable trigger=].
 
 </dl>
 
@@ -414,6 +450,18 @@ An attribution report is a [=struct=] with the following items:
 :: Null or a non-negative 64-bit integer.
 : <dfn>trigger debug key</dfn>
 :: Null or a non-negative 64-bit integer.
+
+</dl>
+
+<h3 dfn-type=dfn>Attribution aggregatable histogram</h3>
+
+An attribution aggregatable histogram is a [=struct=] with the following items:
+
+<dl dfn-for="attribution aggregatable histogram">
+: <dfn>key</dfn>
+:: A non-negative 128-bit integer.
+: <dfn>value</dfn>
+:: A non-negative 32-bit integer.
 
 </dl>
 
@@ -844,6 +892,32 @@ that controls the maximum number of distinct
 ([=attribution rate-limit record/source site=],
 [=attribution rate-limit record/attribution destination=]) that can create [=attribution reports=]
 per [=attribution rate-limit window=].
+
+<h3 algorithm id="creating-aggregatable-histograms">Creating aggregatable histograms</h3>
+
+To <dfn>create [=attribution aggregatable histograms=]</dfn> given an [=attribution source=] |source| and an
+ [=attribution trigger=] |trigger|, run the following steps:
+
+1. Let |aggregationKeys| be |source|'s [=attribution source/aggregatable source=].
+1. Let |aggregatableTrigger| be |trigger|'s [=attribution trigger/aggregatable trigger=].
+1. [=list/iterate|For each=] |triggerData| of |aggregatableTrigger|'s [=attribution aggregatable trigger/trigger data=]:
+    1. If the result of running [=match an attribution source's filter  data against an attribution trigger=] with
+        |source| and |triggerData|'s [=attribution aggregatable trigger data/filters=] is false, [=iteration/continue=].
+    1. [=set/iterate|For each=] |sourceKey| of |triggerData|'s [=attribution aggregatable trigger data/source keys=]:
+        1. If |aggregationKeys|[|sourceKey|] does not [=map/exist=], [=iteration/continue=].
+        1. Set |aggregationKeys|[|sourceKey|] to |aggregationKeys|[|sourceKey|] XOR |triggerData|'s
+            [=attribution aggregatable trigger data/key piece=].
+1. Let |aggregatableValues| be |aggregatableTrigger|'s [=attribution aggregatable trigger/values=].
+1. Let |histograms| be a new empty [=list=].
+1. [=map/iterate|For each=] |id| → |key| of |aggregationKeys|:
+    1. If |aggregatableValues|[|id|] does not [=map/exist=], [=iteration/continue=].
+    1. Let |histogram| be a new [=attribution aggregatable histogram=] with the items:
+        : [=attribution aggregatable histogram/key=]
+        :: |key|
+        : [=attribution aggregatable histogram/value=]
+        :: |aggregatableValues|[|id|]
+    1. [=list/Append=] |histogram| to |histograms|.
+1. Return |histograms|.
 
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
