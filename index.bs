@@ -40,10 +40,6 @@ A page can register an [=attribution source=] on a site by providing
 When such an <{a}> element is clicked, and the resulting navigation commits in a document within the [=same site=] as
 the <{a/attributiondestination}>, the [=attribution source=] is stored in UA storage.
 
-Alternatively, a page can register an [=attribution source=] on a site by providing a
-<{a/registerattributionsource}> attribute on an <{a}> element. When such an <{a}> element is added
-to the page, the [=attribution source=] is stored in UA storage.
-
 At a later point, the <{a/attributiondestination}> site may fire an HTTP request to
 trigger attribution, which matches an [=attribution trigger=] with any previously
 stored sources. If a matching source exists, it is scheduled to be
@@ -89,8 +85,6 @@ Add the following <a spec=html>content attributes</a> to the <{a}> element:
 :: Length of time the attribution souce is valid
 : <{a/attributionsourcepriority}>
 :: The priority of this source relative to other sources when triggering attribution
-: <{a/registerattributionsource}>
-:: Registers an [=attribution source=] with a source type "`event`"
 
 Extend the <{a}> element's <a spec=html>DOM interface</a> to include the following interface:
 
@@ -101,14 +95,14 @@ partial interface HTMLAnchorElement {
     [CEReactions] attribute USVString attributionReportTo;
     [CEReactions] attribute long long attributionExpiry;
     [CEReactions] attribute long long attributionSourcePriority;
-    [CEReactions] attribute boolean registerAttributionSource;
 };
 </pre>
 
-The IDL attributes {{HTMLAnchorElement/attributionDestination}}, {{HTMLAnchorElement/attributionSourceEventId}},
-{{HTMLAnchorElement/attributionReportTo}}, {{HTMLAnchorElement/attributionSourcePriority}},
-{{HTMLAnchorElement/registerAttributionSource}} must <a spec=html>reflect</a> the respective
-content attributes of the same name.
+The IDL attributes {{HTMLAnchorElement/attributionDestination}},
+{{HTMLAnchorElement/attributionSourceEventId}},
+{{HTMLAnchorElement/attributionReportTo}}, and
+{{HTMLAnchorElement/attributionSourcePriority}} must <a spec=html>reflect</a>
+the respective content attributes of the same name.
 
 The IDL attribute {{HTMLAnchorElement/attributionExpiry}} must reflect the <{a/attributionexpiry}>
 content attribute, [=limited to only non-negative numbers=].
@@ -133,9 +127,6 @@ priority of a source relative to other sources when triggering attribution. If n
 priority. An [=attribution trigger=] with a given [=attribution trigger/reporting endpoint=] and [=attribution trigger/attribution destination=]
 will always be attributed to the source with the highest priority value that has the same [=attribution source/reporting endpoint=]
 and [=attribution source/attribution destination=].
-
-The <dfn for="a" element-attr>registerattributionsource</dfn> attribute, if present, registers an
-additional source whose [=attribution source/source type=] is "`event`".
 
 Note: One simple priority scheme would be to use the current millisecond timestamp as the priority value.
 
@@ -285,10 +276,10 @@ The
 <dfn method for=AttributionReporting><code>registerAttributionSource(<var>params</var>)</code></dfn>
 method steps are:
 
-1. Let |source| be the result of running [=obtain an attribution source from params=] with |params|
+1. Let |source| be the result of running
+    [=obtain an attribution source from params=] with |params|, "`event`",
     and the [=relevant settings object=] of [=this=].
 1. If |source| is null, return [=a promise rejected with=] the {{undefined}} value.
-1. Set |source| to the result of running [=obtain an event attribution source from a source=] with |source|.
 1. [=Queue a task=] to [=process an attribution source=] with |source|.
 1. Return [=a promise resolved with=] the {{undefined}} value.
 
@@ -573,35 +564,14 @@ To <dfn>obtain an attribution source from an anchor</dfn> given an <{a}> element
      :: |anchor|'s <{a/attributionexpiry}> attribute
      : {{AttributionSourceParams/attributionSourcePriority}}
      :: |anchor|'s <{a/attributionsourcepriority}> attribute
-1. Return the result of running [=obtain an attribution source from params=] with |params| and
-    |anchor|'s [=relevant settings object=].
-
-<h3 algorithm id="obtaining-event-attribution-source-source">Obtaining an event attribution source from a source</h3>
-
-To <dfn>obtain an event attribution source from a source</dfn> given an [=attribution source=] |source|, run the following steps:
-
-1. Let |resultSource| be a shallow clone of |source|.
-1. Set |resultSource|'s [=attribution source/source identifier=] to a new unique opaque string.
-1. Set |resultSource|'s [=attribution source/source type=] to "`event`".
-1. Set |resultSource|'s [=attribution source/filter data=] to «[ "`source_type`" → "`event`" ]».
-1. Round |resultSource|'s [=attribution source/expiry=] away from zero to the nearest day (86400 seconds).
-1. Set |resultSource|'s [=attribution source/attribution mode=] to the result of
-    [=obtaining a random attribution mode=] with the user agent's
-    [=event-source trigger data cardinality=] and the user agent's
-    [=randomized event-source trigger rate=].
-1. Set |resultSource|'s [=attribution source/randomized trigger rate=] to the user agent's
-    [=randomized event-source trigger rate=].
-1. Return |resultSource|.
-
-<dfn>Randomized event-source trigger rate</dfn> is a vendor-specific double between 0 and 1 (both
-inclusive) that controls the randomized response probability for the
-[=attribution source/attribution mode=] of an [=attribution source=] whose
-[=attribution source/source type=] is "`event`".
+1. Return the result of running [=obtain an attribution source from params=]
+    with |params|, "`navigation`", and |anchor|'s [=relevant settings object=].
 
 <h3 algorithm id="obtaining-attribution-source-params">Obtaining an attribution source from {{AttributionSourceParams}}</h3>
 
-To <dfn>obtain an attribution source from params</dfn> given an {{AttributionSourceParams}} |params|
-and an [=environment settings object=] |settings|, run the following steps:
+To <dfn>obtain an attribution source from params</dfn> given an
+{{AttributionSourceParams}} |params|, a [=source type=] |sourceType|, and an
+[=environment settings object=] |settings|, run the following steps:
 
 1. Let |sourceIdentifier| be a new unique string.
 1. Let |currentTime| be the current time.
@@ -630,6 +600,16 @@ and an [=environment settings object=] |settings|, run the following steps:
 1. Let |priority| be 0.
 1. If |params|["{{AttributionSourceParams/attributionSourcePriority}}"] [=map/exists=],
     then set |priority| to that value.
+1. Let |attributionMode| be the [=attribution mode=] ("`truthfully`", null).
+1. Let |randomizedTriggerRate| be 0.
+1. If |sourceType| is "`event`":
+    1. Round |expiry| away from zero to the nearest day (86400 seconds).
+    1. Set |attributionMode| to the result of
+        [=obtaining a random attribution mode=] with the user agent's
+        [=event-source trigger data cardinality=] and the user agent's
+        [=randomized event-source trigger rate=].
+    1. Set |randomizedTriggerRate|'s to the user agent's
+        [=randomized event-source trigger rate=].
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -650,13 +630,13 @@ and an [=environment settings object=] |settings|, run the following steps:
     : [=attribution source/source time=]
     :: |currentTime|
     : [=attribution source/source type=]
-    :: "`navigation`"
+    :: |sourceType|
     : [=attribution source/attribution mode=]
-    :: ("`truthfully`", null)
+    :: |attributionMode|
     : [=attribution source/randomized trigger rate=]
-    :: 0
+    :: |randomizedTriggerRate|
     : [=attribution source/filter data=]
-    :: «[ "`source_type`" → "`navigation`" ]»
+    :: «[ "`source_type`" → |sourceType| ]»
     : [=attribution source/debug key=]
     :: null
 1. Return |source|.
@@ -667,6 +647,11 @@ the maximum value which can be used as an [=attribution source/event id=].
 <dfn>Max source expiry</dfn> is a vendor-specific length of time that controls
 the maximum value that can be used as an [=attribution source/expiry=]. It must
 be greater than or equal to 30 days.
+
+<dfn>Randomized event-source trigger rate</dfn> is a vendor-specific double between 0 and 1 (both
+inclusive) that controls the randomized response probability for the
+[=attribution source/attribution mode=] of an [=attribution source=] whose
+[=attribution source/source type=] is "`event`".
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
