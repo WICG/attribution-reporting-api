@@ -363,7 +363,7 @@ Strawman: There should be a limit of 1024 pending aggregatable reports per
 destination site.
 
 Note: The storage limits for event-level and aggregatable reports are enforced
-independent of each other.
+independently of each other.
 
 ## Data processing through a Secure Aggregation Service
 
