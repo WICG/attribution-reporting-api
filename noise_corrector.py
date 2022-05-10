@@ -157,23 +157,23 @@ class OutputEnumeration:
   def get_report_time(self, window: int, source: Source) -> int:
     """For a given Source and window index, returns the estimated report time.
     This is used for generating synthetic event-level reports"""
-    expiry = source['registration_config'].get('expiry', DEFAULT_EXPIRY)
+    expiry = source['Attribution-Reporting-Register-Source'].get('expiry', DEFAULT_EXPIRY)
     if self.params.name == 'event':
       return expiry
 
     # TODO(csharrison): This assumes the expiry > 7 days.
     windows = [timedelta(days=2), timedelta(days=7), timedelta(seconds=expiry)]
-    source_time = source['source_time']
+    source_time = int(source['timestamp'])
     return int(source_time + windows[window].total_seconds())
 
   def generate_reports_for_source(self, source: Source) -> List[Report]:
     assert self.params.name == source['source_type']
-    source_event_id = source['registration_config']['source_event_id']
+    source_event_id = source['Attribution-Reporting-Register-Source']['source_event_id']
 
     reports: List[Report] = []
     for window, trigger_data in self.output:
       reports.append({
-          'report_time': self.get_report_time(window, source),
+          'report_time': str(self.get_report_time(window, source)),
           'report': {
               'source_event_id': source_event_id,
               'source_type': self.params.name,
@@ -187,9 +187,9 @@ class OutputEnumeration:
     if source['source_type'] == 'event':
       return 0
 
-    report_time = report['report_time']
-    source_time = source['source_time']
-    raw_expiry = source['registration_config'].get('expiry', DEFAULT_EXPIRY)
+    report_time = int(report['report_time'])
+    source_time = int(source['timestamp'])
+    raw_expiry = source['Attribution-Reporting-Register-Source'].get('expiry', DEFAULT_EXPIRY)
     expiry = timedelta(seconds=int(raw_expiry))
     delta = timedelta(seconds=report_time - source_time)
 
@@ -239,7 +239,7 @@ def join_reports_with_sources(sources: List[Source], reports: List[Report]) -> J
     report_map[r['report']['source_event_id']].append(r)
 
   def join(source) -> Joined:
-    source_event_id = source['registration_config']['source_event_id']
+    source_event_id = source['Attribution-Reporting-Register-Source']['source_event_id']
     return (source, report_map[source_event_id])
   return (join(s) for s in sources)
 
@@ -370,19 +370,19 @@ def main():
         {
           // Required time at which to register the source in seconds since the
           // UNIX epoch.
-          "source_time": 123,
+          "timestamp": "123",
 
           // Required source type, either "navigation" or "event", corresponding to
           // whether the source is registered on click or on view, respectively.
           "source_type": "navigation",
 
-          "registration_config": {
+          "Attribution-Reporting-Register-Source": {
             // Required uint64 formatted as a base-10 string.
             "source_event_id": "123456789",
 
             // Optional int64 in milliseconds formatted as a base-10 string.
             // Defaults to 30 days.
-            "expiry": 864000000,
+            "expiry": "864000000"
           }
         },
         ...
@@ -393,7 +393,7 @@ def main():
       {
         // Time at which the report would have been sent in seconds since the
         // UNIX epoch.
-        "report_time": 123,
+        "report_time": "123",
 
         // The report itself.
         "report": {
@@ -401,7 +401,7 @@ def main():
           "source_type": "navigation",
 
           // Coarse data set in the attribution trigger registration
-          "trigger_data": "4"ß
+          "trigger_data": "4"
         }
       },
       ...
@@ -474,11 +474,11 @@ def main():
   def gen_joined() -> JoinedGen:
     if args.input_mode == 'single':
       input = json.load(sys.stdin)
-      yield from join_reports_with_sources(input['input']['sources'], input['reports'])
+      yield from join_reports_with_sources(input['input']['sources'], input['event_level_reports'])
     else:
       for line in sys.stdin:
         input = json.loads(line)
-        yield from join_reports_with_sources(input['input']['sources'], input['reports'])
+        yield from join_reports_with_sources(input['input']['sources'], input['event_level_reports'])
 
   joined = gen_joined()
   navs: JoinedGen = (s for s in joined if s[0]['source_type'] == 'navigation')
