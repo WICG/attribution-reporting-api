@@ -676,6 +676,12 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry time=] is less than the current time.
 1. If the [=list/size=] of |cache| is greater than or equal to the user agent's
      [=max source cache size=], return.
+1. Let |pendingSourcesForSourceOrigin| be the [=set=] of all
+    [=attribution sources=] |pendingSource| of |cache| where |pendingSource|'s
+    [=attribution source/source origin=] and |source|'s
+    [=attribution source/source origin=] are [=same origin=].
+1. If |pendingSourcesForSourceOrigin|'s [=list/size=] is greater than or equal
+    to the user agent's [=max pending sources per source origin=], return.
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
     : [=attribution rate-limit record/scope=]
     :: "`source`"
@@ -725,6 +731,10 @@ Issue: Should fake reports respect the user agent's [=max reports per attributio
 
 <dfn>Max source cache size</dfn> is a vendor-specific integer which controls how many
 [=attribution sources=] can be in the [=attribution source cache=].
+
+<dfn>Max pending sources per source origin</dfn> is a vendor-specific integer
+that controls how many [=attribution sources=] can be in the
+[=attribution source cache=] per [=attribution source/source origin=].
 
 # Triggering Algorithms # {#trigger-algorithms}
 
