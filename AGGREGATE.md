@@ -12,6 +12,7 @@
   - [Attribution trigger registration](#attribution-trigger-registration)
   - [Aggregatable reports](#aggregatable-reports)
   - [Contribution bounding and budgeting](#contribution-bounding-and-budgeting)
+  - [Storage limits](#storage-limits)
 - [Data processing through a Secure Aggregation Service](#data-processing-through-a-secure-aggregation-service)
 - [Privacy considerations](#privacy-considerations)
   - [Differential Privacy](#differential-privacy)
@@ -352,6 +353,17 @@ equally between two keys, one for the number of conversions per campaign and the
 other representing the conversion dollar value per geography. This budgeting
 mechanism is highly flexible and can support many different aggregation
 strategies as long as the appropriate scaling is performed on the outputs. 
+
+### Storage limits
+
+The browser may apply storage limits in order to prevent excessive resource
+usage.
+
+Strawman: There should be a limit of 1024 pending aggregatable reports per
+destination site.
+
+Note: The storage limits for event-level and aggregatable reports are enforced
+independently of each other.
 
 ## Data processing through a Secure Aggregation Service
 
