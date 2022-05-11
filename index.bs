@@ -56,87 +56,54 @@ If the User Agent is able to attribute the trigger to a source, it will generate
 send an [=attribution report=] to the reporter via an HTTP POST request at a later point
 in time.
 
-
 # HTML monkeypatches # {#html-monkeypatches}
-
-<h3 id="longlong-reflection"> long long reflection </h3>
-
-Add the following rules for <a spec=html>reflecting</a> <a spec=html>content attributes</a>:
-
-If a reflecting IDL attribute has a signed integer type ({{long long}}) then, on getting, the content attribute must be
-parsed according to the <a spec="html">rules for parsing integers</a>, and if that is successful, and the value is in the
-range of the IDL attribute's type, the resulting value must be returned. If, on the other hand, it fails or returns
-an out of range value, or if the attribute is absent, then the default value must be returned instead, or 0 if there
-is no default value. On setting, the given value must be converted to the shortest possible string representing the
-number as a valid integer and then that string must be used as the new content attribute value.
-
-If a reflecting IDL attribute has a signed integer type ({{long long}}) that is <dfn>limited to only non-negative numbers</dfn> then,
-on getting, the content attribute must be parsed according to the <a spec="html">rules for parsing non-negative integers</a>, and if
-that is successful, and the value is in the range of the IDL attribute's type, the resulting value must be returned.
-If, on the other hand, it fails or returns an out of range value, or if the attribute is absent, the default value
-must be returned instead, or −1 if there is no default value. On setting, if the value is negative, the user agent
-must throw an {{"IndexSizeError"}} {{DOMException}}. Otherwise, the given value must be converted to the shortest possible
-string representing the number as a valid non-negative integer and then that string must be used as the new content
-attribute value.
 
 <h3 id="monkeypatch-anchor">&lt;a&gt; element</h3>
 
 Add the following <a spec=html>content attributes</a> to the <{a}> element:
 
-: <{a/attributionsourceeventid}>
-:: Identifies the declared attribution source
-: <{a/attributiondestination}>
-:: Site which can attribute an event to the declared attribution source
-: <{a/attributionreportto}>
-:: [=url/origin=] to receive attribution reports
-: <{a/attributionexpiry}>
-:: Length of time the attribution souce is valid
-: <{a/attributionsourcepriority}>
-:: The priority of this source relative to other sources when triggering attribution
+: <{a/attributionsrc}>
+:: The [=URL=] of the resource that will register an [=attribution source=].
 
-Extend the <{a}> element's <a spec=html>DOM interface</a> to include the following interface:
+Extend the <{a}> element's <a spec=html>DOM interface</a> to include the
+following interface:
 
 <pre class="idl">
 partial interface HTMLAnchorElement {
-    [CEReactions] attribute USVString attributionDestination;
-    [CEReactions] attribute DOMString attributionSourceEventId;
-    [CEReactions] attribute USVString attributionReportTo;
-    [CEReactions] attribute long long attributionExpiry;
-    [CEReactions] attribute long long attributionSourcePriority;
+    [CEReactions] attribute USVString attributionSrc;
 };
 </pre>
 
-The IDL attributes {{HTMLAnchorElement/attributionDestination}},
-{{HTMLAnchorElement/attributionSourceEventId}},
-{{HTMLAnchorElement/attributionReportTo}}, and
-{{HTMLAnchorElement/attributionSourcePriority}} must <a spec=html>reflect</a>
-the respective content attributes of the same name.
+The IDL attribute {{HTMLAnchorElement/attributionSrc}} must
+<a spec=html>reflect</a> the respective content attribute of the same name.
 
-The IDL attribute {{HTMLAnchorElement/attributionExpiry}} must reflect the <{a/attributionexpiry}>
-content attribute, [=limited to only non-negative numbers=].
+The <dfn for="a" element-attr>attributionsrc</dfn> attribute is a string
+representing the [=URL=] of the resource that will register an
+[=attribution source=] when the <{a}> is navigated.
 
-The <dfn for="a" element-attr>attributiondestination</dfn> attribute is a string
-representing an [=url/origin=] that is intended to be [=same site=] with the origin
-of the final navigation URL resulting from running <a spec="html">follow the hyperlink</a>
-with the <{a}> element.
+<h3 id="monkeypatch-image">&lt;img&gt; element</h3>
 
-The <dfn for="a" element-attr>attributionsourceeventid</dfn> attribute is a string
-containing information about the `attribution source` and will be supplied in the
-[=attribution report=].
+Add the following <a spec=html>content attributes</a> to the <{img}> element:
 
-The <dfn for="a" element-attr>attributionreportto</dfn> attribute optionally declares the
-[=origin=] to send the [=attribution report=] for this source.
+: <{img/attributionsrc}>
+:: The [=URL=] of the resource that will register an [=attribution source=] or
+    [=attribution trigger=].
 
-The <dfn for="a" element-attr>attributionexpiry</dfn> attribute optionally defines the amount
-of time in milliseconds the attribution source should be considered for reporting.
+Extend the <{img}> element's <a spec=html>DOM interface</a> to include the
+following interface:
 
-The <dfn for="a" element-attr>attributionsourcepriority</dfn> attribute optionally defines the
-priority of a source relative to other sources when triggering attribution. If not specified, 0 is used as the
-priority. An [=attribution trigger=] with a given [=attribution trigger/reporting endpoint=] and [=attribution trigger/attribution destination=]
-will always be attributed to the source with the highest priority value that has the same [=attribution source/reporting endpoint=]
-and [=attribution source/attribution destination=].
+<pre class="idl">
+partial interface HTMLImageElement {
+    [CEReactions] attribute USVString attributionSrc;
+};
+</pre>
 
-Note: One simple priority scheme would be to use the current millisecond timestamp as the priority value.
+The IDL attribute {{HTMLImageElement/attributionSrc}} must
+<a spec=html>reflect</a> the respective content attribute of the same name.
+
+The <dfn for="img" element-attr>attributionsrc</dfn> attribute is a string
+representing the [=URL=] of the resource that will register an
+[=attribution source=] or [=attribution trigger=] when set.
 
 <h3 id="monkeypatch-navigation">Navigation</h3>
 
@@ -257,18 +224,6 @@ In <a spec="FETCH">main fetch</a>, within the step:
 add the following check to the list:
 
 * [=should internalResponse to request be blocked as attribution trigger=]
-
-# Attribution Reporting API # {#attribution-reporting-api}
-
-<pre class="idl">
-dictionary AttributionSourceParams {
-  required USVString attributionDestination;
-  required DOMString attributionSourceEventId;
-  USVString attributionReportTo;
-  long long attributionExpiry;
-  long long attributionSourcePriority;
-};
-</pre>
 
 # Permissions Policy integration # {#permission-policy-integration}
 This specification defines a [=policy-controlled feature=] identified by the string "<code><dfn>attribution-reporting</dfn></code>". Its [=default allowlist=] is *.
@@ -507,20 +462,6 @@ double |randomPickRate|:
     probability.
 1. Otherwise, return |trueValue|.
 
-<h3 algorithm id="parsing-data-fields">Parsing data fields</h3>
-
-This section defines how to parse strings into integers for [=attribution source/event id=].
-
-To <dfn>parse attribution data</dfn> given a [=string=] |input| modulo an integer
-|maxData| perform the following steps. They return a non-negative integer:
-
-1. Let |decodedInput| be the result of applying the
-    <a spec="html">rules for parsing non-negative integers</a> to |input|.
-1. If |decodedInput| is an error, return zero.
-1. If |decodedInput| is greater than 2<sup>64</sup>, return zero.
-1. Let |clampedDecodedInput| be the remainder when dividing |decodedInput| by |maxData|.
-1. Return |clampedDecodedInput|.
-
 # Source Algorithms # {#source-algorithms}
 
 <h3 id="obtaining-attribution-source-expiry-time">Obtaining an attribution source's expiry time</h3>
@@ -538,7 +479,8 @@ To <dfn>parse an attribution destination</dfn> from a string |str|:
 1. Let |url| be the result of running the [=URL parser=] on the value of
     the |str|.
 1. If |url| is failure or null, return null.
-1. If |url|'s [=url/origin=] is an [=opaque origin=], return null.
+1. If |url|'s [=url/origin=] is not a [=potentially trustworthy origin=],
+    return null.
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
@@ -568,54 +510,53 @@ To <dfn>obtain a randomized source response</dfn> given a positive integer
 
 To <dfn>obtain an attribution source from an anchor</dfn> given an <{a}> element |anchor|:
 
-1. If anchor does not have both an <{a/attributiondestination}> attribute and an <{a/attributionsourceeventid}> attribute, return null.
-1. Let |params| be an {{AttributionSourceParams}} with the following key/value pairs:
-     : {{AttributionSourceParams/attributionDestination}}
-     :: |anchor|'s <{a/attributiondestination}> attribute
-     : {{AttributionSourceParams/attributionSourceEventId}}
-     :: |anchor|'s <{a/attributionsourceeventid}> attribute
-     : {{AttributionSourceParams/attributionReportTo}}
-     :: |anchor|'s <{a/attributionreportto}> attribute
-     : {{AttributionSourceParams/attributionExpiry}}
-     :: |anchor|'s <{a/attributionexpiry}> attribute
-     : {{AttributionSourceParams/attributionSourcePriority}}
-     :: |anchor|'s <{a/attributionsourcepriority}> attribute
-1. Return the result of running [=obtain an attribution source from params=]
-    with |params|, "`navigation`", and |anchor|'s [=relevant settings object=].
+1. If |anchor| does not have an <{a/attributionsrc}> attribute, return null.
+1. Return null.
 
-<h3 algorithm id="obtaining-attribution-source-params">Obtaining an attribution source from {{AttributionSourceParams}}</h3>
+Issue: Specify the steps for making attributionsrc request.
 
-To <dfn>obtain an attribution source from params</dfn> given an
-{{AttributionSourceParams}} |params|, a [=source type=] |sourceType|, and an
-[=environment settings object=] |settings|, run the following steps:
+<h3 algorithm id="parsing-source-registration">Parsing source-registration JSON</h3>
 
-1. Let |sourceIdentifier| be a new unique string.
-1. Let |currentTime| be the current time.
-1. Assert: |params|["{{AttributionSourceParams/attributionDestination}}"] and
-    |params|["{{AttributionSourceParams/attributionSourceEventId}}"] [=map/exist=].
-1. If |settings|'s [=relevant global object=]'s [=associated Document=] is
-    not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=], return null.
+To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
+|json|, an [=origin=] |sourceOrigin|, an [=origin=] |reportingOrigin|, and a
+[=source type=] |sourceType|:
+
+1. Assert: |sourceOrigin| is a [=potentially trustworthy origin=].
+1. Assert: |reportingOrigin| is a [=potentially trustworthy origin=].
+1. Let |value| be the result of running
+    [=parse a JSON string to an Infra value=] with |json|.
+1. If |value| is not a [=map=], return null.
+1. If |value|["`source_event_id`"] does not [=map/exists|exist=] or is not a
+    [=string=], return null.
+1. Let |sourceEventId| be the result of applying the
+    <a spec="html">rules for parsing non-negative integers</a> to
+    |value|["`source_event_id`"].
+1. If |sourceEventId| is an error, return null.
+1. If |value|["`destination`"] does not [=map/exists|exist=] or is not a
+    [=string=], return null.
 1. Let |attributionDestination| be the result of running
-    [=parse an attribution destination=] with |params|["{{AttributionSourceParams/attributionDestination}}"].
+    [=parse an attribution destination=] with |value|["`destination`"].
 1. If |attributionDestination| is null, return null.
-1. Let |sourceOrigin| be |settings|'s [=environment/top-level origin=].
-1. If |sourceOrigin| is an [=opaque origin=], return null.
-1. Let |reportingOrigin| be |sourceOrigin|.
-1. If |params|["{{AttributionSourceParams/attributionReportTo}}"] [=map/exists=], then:
-    1. Let |reportingUrl| be the result of running the
-        [=URL parser=] with |params|["{{AttributionSourceParams/attributionReportTo}}"].
-    1. If |reportingUrl| is failure or null, return null.
-    1. If |reportingUrl|'s [=url/origin=] is an [=opaque origin=], return null.
-    1. Set |reportingOrigin| to |reportingUrl|'s [=url/origin=].
 1. Let |expiry| be 30 days.
-1. If |params|["{{AttributionSourceParams/attributionExpiry}}"] [=map/exists=],
-    then set |expiry| to that value.
-1. If |expiry| is less than 1 day, set |expiry| to 1 day.
-1. If |expiry| is greater than the user agent's [=max source expiry=], set
-    |expiry| to that value.
+1. If |value|["`expiry`"] [=map/exists=] and is a [=string=]:
+    1. Let |expirySeconds| be the result of applying the
+        <a spec="html">rules for parsing integers</a> to |value|["`expiry`"].
+    1. If |expirySeconds| is an error, set |expiry| to 30 days.
+    1. Otherwise, set |expiry| to |expirySeconds| seconds.
+    1. If |expiry| is less than 1 day, set |expiry| to 1 day.
+    1. If |expiry| is greater than the user agent's [=max source expiry=], set
+        |expiry| to that value.
 1. Let |priority| be 0.
-1. If |params|["{{AttributionSourceParams/attributionSourcePriority}}"] [=map/exists=],
-    then set |priority| to that value.
+1. If |value|["`priority`"] [=map/exists=] and is a [=string=]:
+    1. Set |priority| to the result of applying the
+        <a spec="html">rules for parsing integers</a> to |value|["`priority`"].
+    1. If |priority| is an error, set |priority| to 0.
+1. Let |debugKey| be null.
+1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
+    1. Set |debugKey| to the result of applying the
+        <a spec="html">rules for parsing non-negative integers</a> to
+        |value|["`debug_key`"].
+    1. If |debugKey| is an error, set |debugKey| to null.
 1. Let |triggerDataCardinality| be the user agent's
     [=navigation-source trigger data cardinality=].
 1. Let |randomizedTriggerRate| be the user agent's
@@ -635,12 +576,11 @@ To <dfn>obtain an attribution source from params</dfn> given an
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
-    :: |sourceIdentifier|
+    :: A new unique [=string=]
     : [=attribution source/source origin=]
     :: |sourceOrigin|
     : [=attribution source/event id=]
-    :: The result of running [=parse attribution data=] with
-        |params|["{{AttributionSourceParams/attributionSourceEventId}}"] modulo [=max event id value=].
+    :: |sourceEventId|
     : [=attribution source/attribution destination=]
     :: |attributionDestination|
     : [=attribution source/reporting endpoint=]
@@ -650,7 +590,7 @@ To <dfn>obtain an attribution source from params</dfn> given an
     : [=attribution source/priority=]
     :: |priority|
     : [=attribution source/source time=]
-    :: |currentTime|
+    :: The current time
     : [=attribution source/source type=]
     :: |sourceType|
     : [=attribution source/randomized response=]
@@ -662,11 +602,12 @@ To <dfn>obtain an attribution source from params</dfn> given an
     : [=attribution source/filter data=]
     :: «[ "`source_type`" → « |sourceType| » ]»
     : [=attribution source/debug key=]
-    :: null
+    :: |debugKey|
 1. Return |source|.
 
-<dfn>Max event id value</dfn> is a vendor-specific integer which controls
-the maximum value which can be used as an [=attribution source/event id=].
+Issue: Ensure that |attributionDestination|'s [=origin/scheme=] is HTTP/HTTPS.
+
+Issue: Parse |value|["`filter_data`"].
 
 <dfn>Max source expiry</dfn> is a vendor-specific length of time that controls
 the maximum value that can be used as an [=attribution source/expiry=]. It must
