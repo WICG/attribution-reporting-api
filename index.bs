@@ -35,18 +35,26 @@ for cross-site identifiers like third-party cookies.
 
 ## Overview ## {#overview}
 
-A page can register an [=attribution source=] on a site by providing
- <{a/attributionsourceeventid}> and <{a/attributiondestination}> attributes on an <{a}> element.
-When such an <{a}> element is clicked, and the resulting navigation commits in a document within the [=same site=] as
-the <{a/attributiondestination}>, the [=attribution source=] is stored in UA storage.
+Pages/embedded sites are given the ability to register [=attribution sources=] and 
+[=attribution triggers=] can be linked by the User Agent to generate and 
+send [=attribution reports=] which contain information from both of those
+events.
 
-At a later point, the <{a/attributiondestination}> site may fire an HTTP request to
-trigger attribution, which matches an [=attribution trigger=] with any previously
-stored sources. If a matching source exists, it is scheduled to be
-reported at a later time, possibly multiple days in the future.
+A reporter, `https://reporter.example` embedded on `https://source.example` is able to
+measure whether an iteraction on the page lead to an action on `https://destination.example` 
+by registering an [=attribution source=] with a [=attribution source/destination=] of 
+`https://destination.example`. Reporters are able to register sources through a varity
+of surfaces, but ultimately requires the reporter to provide the User Agent with a
+HTTP-response header which starts attribution.
 
-Reports are sent to reporting endpoints that are configured in the attribution source
-and attribution trigger.
+At a later point in time, the reporter, now embedded on `https://destination.example`
+may register an [=attribution trigger=]. Internally, the User Agent attempts to match
+the trigger to previously regsitered source events based on where the sources/triggers were 
+registered and configurations provided by the reporter.
+
+If the User Agent is able to attribute the trigger to a source, it will generate and
+send an [=attribution report=] to the reporter via an HTTP POST request.
+
 
 
 # HTML monkeypatches # {#html-monkeypatches}
