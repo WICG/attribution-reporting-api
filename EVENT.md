@@ -250,11 +250,7 @@ similar mechanism is used as source event registration, via HTML:
 ```
 or JavaScript:
 ```javascript
-const headers = {
-  'Attribution-Reporting-Eligible': 'true'
-};
-window.fetch("https://adtech.example/attribution_trigger?purchase=13",
-             { headers });
+window.fetch("https://adtech.example/attribution_trigger?purchase=13");
 ```
 
 As a stop-gap to support pre-existing conversion tags which do not include the 
