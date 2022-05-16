@@ -139,8 +139,11 @@ window.open(
 ```
 or via a JavaScript API:
 ```javascript
-window.attributionReporting.registerSource(
-  "https://adtech.example/attribution_source?my_ad_id=123");
+const headers = {
+  'Attribution-Reporting-Eligible': 'true'
+};
+window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
+             { headers });
 ```
 
 Each of these mechanisms will cause the browser to initiate a `keepalive` fetch
@@ -247,8 +250,11 @@ similar mechanism is used as source event registration, via HTML:
 ```
 or JavaScript:
 ```javascript
-window.attributionReporting.registerTrigger(
-    "https://adtech.example/attribution_trigger?purchase=13")
+const headers = {
+  'Attribution-Reporting-Eligible': 'true'
+};
+window.fetch("https://adtech.example/attribution_trigger?purchase=13",
+             { headers });
 ```
 
 As a stop-gap to support pre-existing conversion tags which do not include the 
