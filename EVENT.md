@@ -149,8 +149,8 @@ window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
 Each of these mechanisms will cause the browser to initiate a `keepalive` fetch
 request to the URL indicated by `attributionsrc`.
 
-Response headers will be processed for any request which includes the
-`Attributtion-Reporting-Eligble` request header, not just ones initiated via
+Response headers will be processed for any request that includes the
+`Attribution-Reporting-Eligble` request header, not just ones initiated via
 `window.fetch`. For example, responses will also be processed for
 `XmlHttpRequest` if the header was present on the corresponding request.
 
