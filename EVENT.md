@@ -139,12 +139,20 @@ window.open(
 ```
 or via a JavaScript API:
 ```javascript
-window.attributionReporting.registerSource(
-  "https://adtech.example/attribution_source?my_ad_id=123");
+const headers = {
+  'Attribution-Reporting-Eligible': 'true'
+};
+window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
+             { headers });
 ```
 
 Each of these mechanisms will cause the browser to initiate a `keepalive` fetch
 request to the URL indicated by `attributionsrc`.
+
+Response headers will be processed for any request that includes the
+`Attribution-Reporting-Eligble` request header, not just ones initiated via
+`window.fetch`. For example, responses will also be processed for
+`XmlHttpRequest` if the header was present on the corresponding request.
 
 The response to this request will configure the API. The browser will expect
 data in a new JSON HTTP header `Attribution-Reporting-Register-Source` which
@@ -247,8 +255,11 @@ similar mechanism is used as source event registration, via HTML:
 ```
 or JavaScript:
 ```javascript
-window.attributionReporting.registerTrigger(
-    "https://adtech.example/attribution_trigger?purchase=13")
+const headers = {
+  'Attribution-Reporting-Eligible': 'true'
+};
+window.fetch("https://adtech.example/attribution_trigger?purchase=13",
+             { headers });
 ```
 
 As a stop-gap to support pre-existing conversion tags which do not include the 
