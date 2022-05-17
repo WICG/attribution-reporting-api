@@ -150,7 +150,7 @@ Each of these mechanisms will cause the browser to initiate a `keepalive` fetch
 request to the URL indicated by `attributionsrc`.
 
 Response headers will be processed for any request that includes the
-`Attribution-Reporting-Eligble` request header, not just ones initiated via
+`Attribution-Reporting-Eligible` request header, not just ones initiated via
 `window.fetch`. For example, responses will also be processed for
 `XmlHttpRequest` if the header was present on the corresponding request.
 
