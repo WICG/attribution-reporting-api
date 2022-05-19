@@ -36,31 +36,39 @@ These two report types can be used simultaneously. They're complementary.
 
 ## API features (proposals)
 
-🕙 Last updated: January 2022
+🕙 Last updated: May 2022
 
 All the features below are proposals under incubation. This list evolves over time.
 
 ### Event-Level reports (clicks and views)
 
-Attribute cross-site click-through or view-through conversions with reports at a per-event level. See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md).
+Attribute cross-site click-through or view-through conversions with reports at a per-event level. 
 
-Implementation status: `Available in Chrome behind a flag.`
+See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md).
+
+Implementation status: `Available in Chrome as an origin trial`
 
 ### Aggregatable reports (clicks and views)
 
-Attribution reports for aggregated conversions (both clicks and views). Complements the event-level reports. See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/AGGREGATE.md).
+Attribution reports for aggregated conversions (both clicks and views). Complements the event-level reports. 
 
-Implementation status: `Available in Chrome behind a flag.`
+See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/AGGREGATE.md).
+
+Implementation status: `Available in Chrome as an origin trial`
 
 ### App-to-web (clicks and views)
 
-Attribution reports for web conversions for ad clicks (touches) or views that occurred within an Android app. See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/app_to_web.md).
+Attribution reports for web conversions for ad clicks (touches) or views that occurred within an Android app. 
+
+See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/app_to_web.md).
 
 Implementation status: `Proposal. Not implemented yet (all browsers)`
 
 ### Cross-device (clicks and views)
 
-Attribute conversions occurring across distinct devices, i.e. as distinct web browser instances. See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/cross_device.md).
+Attribute conversions occurring across distinct devices, i.e. as distinct web browser instances. 
+
+See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/cross_device.md).
 
 Implementation status: `Proposal. Not implemented yet (all browsers)`
 
