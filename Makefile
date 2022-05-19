@@ -21,3 +21,5 @@ $(OUT_DIR):
 
 clean:
 	@ rm -rf $(OUT_DIR)
+
+test:
