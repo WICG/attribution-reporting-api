@@ -69,25 +69,30 @@ example an ad-tech will use the API to collect:
 * Aggregate purchase values at a per geo level 
 ### Attribution source registration
 
-Registering sources eligible for aggregate reporting entails adding a new header
-on the response to the `attributionsrc` request:
-`Attribution-Reporting-Register-Aggregatable-Source`, in the form of a JSON
-list.
+Registering sources eligible for aggregate reporting entails adding a new
+`aggregatable_source` list field to the JSON dictionary of the
+[`Attribution-Reporting-Register-Source` header](EVENT.md#registering-attribution-sources):
 ```jsonc
-[{
-  // Generates a "0x159" key piece (low order bits of the key) for the key named
-  // "campaignCounts"
-  "id": "campaignCounts",
-  "key_piece": "0x159" // User saw ad from campaign 345 (out of 511)
-},
 {
-  // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue"
-  "id": "geoValue",
-  // Source-side geo region = 5 (US), out of a possible ~100 regions.
-  "key_piece": "0x5"
-}]
+  ... // existing fields, such as `source_event_id` and `destination`
+
+  "aggregatable_source": [
+    {
+      // Generates a "0x159" key piece (low order bits of the key) for the key named
+      // "campaignCounts"
+      "id": "campaignCounts",
+      "key_piece": "0x159" // User saw ad from campaign 345 (out of 511)
+    },
+    {
+      // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue"
+      "id": "geoValue",
+      // Source-side geo region = 5 (US), out of a possible ~100 regions.
+      "key_piece": "0x5"
+    }
+  ]
+}
 ```
-This defines a list named histogram contributions, each with a piece of the
+This defines a list of histogram contributions, each with a piece of the
 aggregation key defined as a hex-string. The final histogram bucket key will be
 fully defined at trigger time using a combination (binary OR) of this piece and
 trigger-side pieces.
@@ -558,7 +563,7 @@ The server can respond with an optional header
 value.
 
 ```http
-Attribution-Reporting-Register-Aggregatable-Source: [{....}]
+Attribution-Reporting-Register-Source: [{..., "aggregatable_source": ...}]
 Attribution-Reporting-Alternative-Aggregation-Mode: "experimental-poplar"
 ```
 
