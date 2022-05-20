@@ -186,7 +186,6 @@ The report will be JSON encoded with the following scheme:
 
 ```jsonc
 {
-  "source_site": "https://publisher.example",
   "attribution_destination": "https://advertiser.example",
   "source_registration_time": "[timestamp in seconds]",
 
@@ -240,7 +239,7 @@ The browser is free to utilize techniques like retries to minimize data loss.
 * The `privacy_budget_key` is used to define distinct batches of aggregate
   reports. It is used by the aggregation service to prevent replay attacks. It
   will be a hash of:
-  `reporting_origin | source_site | destination | version | source_registration_time`.
+  `reporting_origin | destination | version | source_registration_time`.
   Note that the true key used to track batches will be `privacy_budget_key`
   concatenated with `round_to_hour(scheduled_report_time)`. The latter is
   omitted from the key to allow server-side recording to be time-bounded. All
