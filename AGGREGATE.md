@@ -71,7 +71,7 @@ example an ad-tech will use the API to collect:
 
 Registering sources eligible for aggregate reporting entails adding a new
 `aggregatable_source` list field to the JSON dictionary of the
-[`Attribution-Reporting-Register-Source` header](EVENT.md#registering-attribution-sources):
+[`Attribution-Reporting-Register-Source` header](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#registering-attribution-sources):
 ```jsonc
 {
   ... // existing fields, such as `source_event_id` and `destination`
