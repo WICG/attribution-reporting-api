@@ -76,7 +76,7 @@ Registering sources eligible for aggregate reporting entails adding a new
 {
   ... // existing fields, such as `source_event_id` and `destination`
 
-  "aggregatable_source": [
+  "aggregation_keys": [
     {
       // Generates a "0x159" key piece (low order bits of the key) for the key named
       // "campaignCounts"
@@ -563,7 +563,7 @@ The server can respond with an optional header
 value.
 
 ```http
-Attribution-Reporting-Register-Source: [{..., "aggregatable_source": ...}]
+Attribution-Reporting-Register-Source: [{..., "aggregation_keys": ...}]
 Attribution-Reporting-Alternative-Aggregation-Mode: "experimental-poplar"
 ```
 
