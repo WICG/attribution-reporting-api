@@ -131,9 +131,6 @@ window.open(
 `event` sources do not require any user interaction and are registered via
 `<img>` tags with the new `attributionsrc` attribute too:
 ```html
-<!-- TODO: is view registration via an `<a>` tag necessary?
-    It may require a new attribute and a way to differentiate the requests. -->
-
 <img src="https://advertiser.example/pixel"
      attributionsrc="https://adtech.example/attribution_source?my_ad_id=123">
 ```
@@ -275,8 +272,6 @@ about how to treat the trigger event:
   "deduplication_key": "[unsigned 64-bit integer]"
 }]
 ```
-TODO: Consider moving this over to a structured header. See [issue
-194](https://github.com/WICG/conversion-measurement-api/issues/194).
 
 - `trigger_data`: optional coarse-grained data to identify the triggering event.
 - `priority`: optional signed 64-bit integer representing the priority
