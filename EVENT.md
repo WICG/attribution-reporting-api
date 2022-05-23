@@ -26,6 +26,7 @@ extension on top of this.
   - [Publisher-side Controls for Attribution Source
     Declaration](#publisher-side-controls-for-attribution-source-declaration)
   - [Triggering Attribution](#triggering-attribution)
+  - [Registration requests](registration-requests)
   - [Data limits and noise](#data-limits-and-noise)
   - [Trigger attribution algorithm](#trigger-attribution-algorithm)
   - [Multiple sources for the same trigger
@@ -137,7 +138,7 @@ window.open(
 or via a JavaScript API:
 ```javascript
 const headers = {
-  'Attribution-Reporting-Eligible': 'true'
+  'Attribution-Reporting-Eligible': 'event-source'
 };
 window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
              { headers });
@@ -149,7 +150,8 @@ initiate a `keepalive` fetch request to the URL indicated by `attributionsrc`.
 Response headers will be processed for any request that includes the
 `Attribution-Reporting-Eligible` request header, not just ones initiated via
 `window.fetch`. For example, responses will also be processed for
-`XmlHttpRequest` if the header was present on the corresponding request.
+`XmlHttpRequest` if the header was present on the corresponding request. See
+[Registration requests](#registration-requests) for details.
 
 The response to this request will configure the API. The browser will expect
 data in a new JSON HTTP header `Attribution-Reporting-Register-Source` which
@@ -251,7 +253,7 @@ similar mechanism is used as source event registration, via HTML:
 or JavaScript:
 ```javascript
 const headers = {
-  'Attribution-Reporting-Eligible': 'true'
+  'Attribution-Reporting-Eligible': 'trigger'
 };
 window.fetch("https://adtech.example/attribution_trigger?purchase=13",
              { headers });
@@ -293,6 +295,69 @@ same-origin children, but disabled in cross-origin children.
 
 Navigation sources may be attributed up to 3 times. Event sources may be
 attributed up to 1 time.
+
+### Registration requests
+
+Depending on the context in which it was made, requests may be eligible to
+register sources, triggers, source or triggers, or nothing, as indicated in the
+`Attribution-Reporting-Eligible` request header, which is a [structured
+dictionary](https://www.rfc-editor.org/rfc/rfc8941.html#name-dictionaries).
+
+The reporting origin may use the value of this header to determine which
+registrations, if any, to include in its response. The browser will likewise
+ignore invalid registrations:
+
+1. Requests made from `<a attributionsrc="...">` and `window.open(...,
+   "attributionsrc=...)` will contain
+   `Attribution-Reporting-Eligible: navigation-source` and are only eligible to
+   register sources.
+2. Requests made from `<img attributionsrc="..."> will contain
+   `Attribution-Reporting-Eligible: event-source, trigger` and are eligible to
+   register either sources or triggers.
+3. All other requests by default do not contain the
+   `Attribution-Reporting-Eligible` header at all, which the browser treats *as
+   if* the request contained `Attribution-Reporting-Eligible: trigger`, meaning
+   that only triggers may be registered.
+4. Requests made from JavaScript, e.g. `window.fetch` or `XmlHttpRequest`, can
+   set this header to explicitly allow or disallow registration:
+
+   ```javascript
+   // Allows the request to register only sources.
+   const headers = {
+     'Attribution-Reporting-Eligible': 'event-source'
+   };
+   window.fetch('...', {headers});
+   ```
+
+   ```javascript
+   // Allows the request to register only triggers. Equivalent to omitting the
+   // header entirely.
+   const headers = {
+     'Attribution-Reporting-Eligible': 'trigger'
+   };
+   window.fetch('...', {headers});
+   ```
+
+   ```javascript
+   // Allows the request to register sources or triggers.
+   const headers = {
+     'Attribution-Reporting-Eligible': 'event-source, trigger'
+   };
+   window.fetch('...', {headers});
+   ```
+
+   ```javascript
+   // Suppresses the default behavior, allowing neither sources nor triggers to
+   be registered.
+   const headers = {
+     'Attribution-Reporting-Eligible': ''
+   };
+   window.fetch('...', {headers});
+   ```
+
+   It is an error for such requests to specify `navigation-source`; only
+   requests made automatically by the browser via `<a attributionsrc="..."`> or
+   `window.open(..., 'attributionsrc=...')` will do so.
 
 ### Data limits and noise
 
