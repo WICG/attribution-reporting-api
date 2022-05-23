@@ -249,7 +249,7 @@ the eTLD+1 of the site provided in `destination`. To trigger attribution, a
 similar mechanism is used as source event registration, via HTML:
 ```html
 <img src="https://ad-tech.example/conversionpixel"
-     attributionsrc=”https://adtech.example/attribution_trigger?purchase=13”>
+     attributionsrc="https://adtech.example/attribution_trigger?purchase=13">
 ```
 or JavaScript:
 ```javascript
@@ -494,7 +494,7 @@ to do selective filtering to set `trigger_data` based on `filter_data`:
 [
   {
     "trigger_data": "2",
-    // Note that “not_filters” which filters with a negation is also supported.
+    // Note that "not_filters" which filters with a negation is also supported.
     "filters": {"source_type": ["navigation"]}
   },
   {
@@ -607,12 +607,12 @@ triggers attribution on the few different ad-tech companies it buys ads on,
 including `ad-tech.example`, by adding conversion pixels:
 
 ```html
-<img src="...” attributionsrc=”https://ad-tech.example/trigger-attribution?model=toastmaster3000&price=$49.99&...">
+<img src="..." attributionsrc="https://ad-tech.example/trigger-attribution?model=toastmaster3000&price=$49.99&...">
 ```
 
 `ad-tech.example` receives this request, and decides to trigger attribution on
 `toasters.example`. They must compress all of the data into 3 bits, so
-`ad-tech.example` chooses to encode the value as “2" (e.g. some bucketed version
+`ad-tech.example` chooses to encode the value as "2" (e.g. some bucketed version
 of the purchase value). They respond to the request with a
 `Attribution-Reporting-Register-Event-Trigger` header:
 ```jsonc
@@ -644,9 +644,9 @@ completely fake data for the source event. This occurs with some probability
 To generate fake events, the browser considers all possible outputs for a given
 source event:
 * No reports at all
-* One report with metadata “0” at the first reporting window
-* One report with metadata “1” at the first reporting window and one report with
-  metadata “3” at the second reporting window
+* One report with metadata "0" at the first reporting window
+* One report with metadata "1" at the first reporting window and one report with
+  metadata "3" at the second reporting window
 * etc. etc. etc.
 
 After enumerating all possible outputs of the API for a given source event, the
@@ -655,9 +655,9 @@ trigger events that would be attributed to the source event are completely
 ignored.
 
 In the above example, the browser could have chosen to generate three reports:
-* One report with metadata “7”, sent 2 days after the click
-* One report with metadata “3”, sent 7 days after the click
-* One report with metadata “0”, also sent 7 days after the click
+* One report with metadata "7", sent 2 days after the click
+* One report with metadata "3", sent 7 days after the click
+* One report with metadata "0", also sent 7 days after the click
 
 ### Storage limits
 
@@ -752,7 +752,7 @@ destination site, 30 days>, counted for every attribution that is generated.
 ### Clearing Site Data
 
 Attribution source data and attribution reports in browser storage should be
-clearable using existing “clear browsing data" functionality offered by
+clearable using existing "clear browsing data" functionality offered by
 browsers.
 
 ### Reporting cooldown / rate limits
@@ -858,7 +858,7 @@ source’s true output should be well protected by the randomized response
 mechanism.
 
 Note that the number of all possible output states k in the above design is:
-- 2925 for click sources. This results from a particular “stars and bars”
+- 2925 for click sources. This results from a particular "stars and bars"
   counting method which derives `k = (num_reporting_windows * num_trigger_data +
   num_reports choose num_reports) = (3 * 8 + 3 choose 3)`. TODO: outline why this
   is the case.
