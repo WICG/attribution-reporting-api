@@ -151,7 +151,7 @@ and without a value, existing requests made via `src`/`href` attributes or
 header. Each of these requests will be able to register attribution sources.
 
 `event` sources can also be registered using existing JavaScript request 
-APIs by setting the `Attribution-Reporting-Eligible` header:
+APIs by setting the `Attribution-Reporting-Eligible` header manually:
 
 ```javascript
 const headers = {
