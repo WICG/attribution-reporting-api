@@ -106,14 +106,14 @@ Protocol](https://github.com/brave/brave-browser/wiki/Security-and-privacy-model
 
 ### Registering attribution sources
 
-Attribution sources are events which future triggers can be attributed to. There
-are two types of attribution sources, `navigation` sources and `event` sources.
+Attribution sources are events which future triggers can be attributed to.
 
 Sources are registered by returning a new HTTP response header on requests which
-eligible for attribution. A request is eligible as long as it has the
+are eligible for attribution. A request is eligible as long as it has the
 `Attribution-Reporting-Eligible` request header.
 
-
+There are two types of attribution sources, `navigation` sources and `event`
+sources.
 
 `navigation` sources are registered via clicks on anchor tags:
 ```html
@@ -134,13 +134,13 @@ window.open(
   `attributionsrc=${encoded}`);
 ```
 
-`event` sources do not require any user interaction and are registered via
+`event` sources do not require any user interaction can be registered via
 `<img>` tags with the new `attributionsrc` attribute too:
 ```html
 <img src="https://advertiser.example/pixel"
      attributionsrc="https://adtech.example/attribution_source?my_ad_id=123">
 ```
-or via a JavaScript API:
+or via JavaScript:
 ```javascript
 const headers = {
   'Attribution-Reporting-Eligible': 'true'
@@ -150,20 +150,19 @@ window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
 ```
 
 Specifying a URL value for `attributionsrc` within `<a>`, `<img>`, or `window.open`
-will cause the browser to initiate a `keepalive` fetch request that is eligible for
-attribution.
+will cause the browser to initiate a `keepalive` fetch request which includes the
+`Attribution-Reporting-Eligible` request header.
 
 When the `attributionsrc` attribute is present in these surfaces/APIs, both with and
-without a value, existing requests made via `src`, `href`, or `window.open` will
-include the `Attribution-Reporting-Eligible` request header. Each of these
+without a value, existing requests made via `src`/`href` attributes, or `window.open` will
+now include the `Attribution-Reporting-Eligible` request header. Each of these
 requests will be able to register attribution sources.
 
-Other requests APIs which allow specifying header, such as `XmlHttpRequest`, are
-able to use this as well.
+Other requests APIs which allow specifying headers (e.g. `XmlHttpRequest`) can also
+register sources.
 
-The response to these requests will configure the API. The browser will expect
-data in a new JSON HTTP header `Attribution-Reporting-Register-Source` which
-configures the API:
+The response to these requests will configure the API via a new JSON HTTP
+header `Attribution-Reporting-Register-Source` of the form:
 
 ```jsonc
 {
