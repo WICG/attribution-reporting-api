@@ -307,57 +307,14 @@ The reporting origin may use the value of this header to determine which
 registrations, if any, to include in its response. The browser will likewise
 ignore invalid registrations:
 
-1. Requests made from `<a attributionsrc="...">` and `window.open(...,
-   'attributionsrc=...')` will contain
-   `Attribution-Reporting-Eligible: navigation-source` and are only eligible to
-   register sources.
-2. Requests made from `<img attributionsrc="...">` will contain
-   `Attribution-Reporting-Eligible: event-source, trigger` and are eligible to
-   register either sources or triggers.
-3. All other requests by default do not contain the
-   `Attribution-Reporting-Eligible` header at all, which the browser treats *as
-   if* the request contained `Attribution-Reporting-Eligible: trigger`, meaning
-   that only triggers may be registered.
-4. Requests made from JavaScript, e.g. `window.fetch` or `XmlHttpRequest`, can
-   set this header to explicitly allow or disallow registration:
-
-   ```javascript
-   // Allows the request to register only sources.
-   const headers = {
-     'Attribution-Reporting-Eligible': 'event-source'
-   };
-   window.fetch('...', {headers});
-   ```
-
-   ```javascript
-   // Allows the request to register only triggers. Equivalent to omitting the
-   // header entirely.
-   const headers = {
-     'Attribution-Reporting-Eligible': 'trigger'
-   };
-   window.fetch('...', {headers});
-   ```
-
-   ```javascript
-   // Allows the request to register sources or triggers.
-   const headers = {
-     'Attribution-Reporting-Eligible': 'event-source, trigger'
-   };
-   window.fetch('...', {headers});
-   ```
-
-   ```javascript
-   // Suppresses the default behavior, allowing neither sources nor triggers to
-   // be registered.
-   const headers = {
-     'Attribution-Reporting-Eligible': ''
-   };
-   window.fetch('...', {headers});
-   ```
-
-   It is an error for such requests to specify `navigation-source`; only
-   requests made automatically by the browser via `<a attributionsrc="...">` or
-   `window.open(..., 'attributionsrc=...')` will do so.
+1. `<a>` and `window.open` will have `navigation-source`
+2. Other APIs that automatically set `Attribution-Reporting-Eligible` (like
+   `<img>`) will contain `event-source, trigger`.
+3. Requests from JavaScript, e.g. `window.fetch`, can set this header manually,
+   but it is an error for such requests to specify `navigation-source`.
+4. All other requests will not have the `Attribution-Reporting-Eligible`
+   header. For those requests the browser will permit trigger registration
+   only.
 
 ### Data limits and noise
 
