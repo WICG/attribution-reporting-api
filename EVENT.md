@@ -298,7 +298,7 @@ attributed up to 1 time.
 
 ### Registration requests
 
-Depending on the context in which it was made, requests may be eligible to
+Depending on the context in which it was made, a request is eligible to
 register sources, triggers, source or triggers, or nothing, as indicated in the
 `Attribution-Reporting-Eligible` request header, which is a [structured
 dictionary](https://www.rfc-editor.org/rfc/rfc8941.html#name-dictionaries).
@@ -311,7 +311,7 @@ ignore invalid registrations:
    "attributionsrc=...)` will contain
    `Attribution-Reporting-Eligible: navigation-source` and are only eligible to
    register sources.
-2. Requests made from `<img attributionsrc="..."> will contain
+2. Requests made from `<img attributionsrc="...">` will contain
    `Attribution-Reporting-Eligible: event-source, trigger` and are eligible to
    register either sources or triggers.
 3. All other requests by default do not contain the
@@ -348,7 +348,7 @@ ignore invalid registrations:
 
    ```javascript
    // Suppresses the default behavior, allowing neither sources nor triggers to
-   be registered.
+   // be registered.
    const headers = {
      'Attribution-Reporting-Eligible': ''
    };
