@@ -70,7 +70,7 @@ example an ad-tech will use the API to collect:
 ### Attribution source registration
 
 Registering sources eligible for aggregate reporting entails adding a new
-`aggregatable_source` list field to the JSON dictionary of the
+`aggregation_keys`
 [`Attribution-Reporting-Register-Source` header](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#registering-attribution-sources):
 ```jsonc
 {
