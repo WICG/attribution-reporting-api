@@ -612,7 +612,7 @@ including `ad-tech.example`, by adding conversion pixels:
 `ad-tech.example` receives this request, and decides to trigger attribution on
 `toasters.example`. They must compress all of the data into 3 bits, so
 `ad-tech.example` chooses to encode the value as "2" (e.g. some bucketed version
-of the purchase value). They respond to the request with a
+of the purchase value). They respond to the request with an
 `Attribution-Reporting-Register-Trigger` header:
 ```jsonc
 {
