@@ -273,7 +273,9 @@ about how to treat the trigger event:
 }]
 ```
 
-- `trigger_data`: optional coarse-grained data to identify the triggering event.
+- `trigger_data`: optional coarse-grained data to identify the triggering
+  event. The value will be limited to either 3 bits or 1 bit [depending on the
+  attributed source type](#data-limits-and-noise).
 - `priority`: optional signed 64-bit integer representing the priority
 of this trigger compared to other triggers for the same source.
 - `deduplication_key`: optional unsigned 64-bit integer which will be used to
