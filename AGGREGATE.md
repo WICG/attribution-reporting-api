@@ -558,7 +558,7 @@ for more details.
 
 ### Choosing among aggregation services
 
-The server can add with an optional `alternative_aggregation_mode` string field:
+The server can add an optional `alternative_aggregation_mode` string field:
 
 ```http
 Attribution-Reporting-Register-Source: {..., "aggregation_keys": ..., "alternative_aggregation_mode": "experimental-poplar"}
