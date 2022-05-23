@@ -356,7 +356,7 @@ ignore invalid registrations:
    ```
 
    It is an error for such requests to specify `navigation-source`; only
-   requests made automatically by the browser via `<a attributionsrc="..."`> or
+   requests made automatically by the browser via `<a attributionsrc="...">` or
    `window.open(..., 'attributionsrc=...')` will do so.
 
 ### Data limits and noise
