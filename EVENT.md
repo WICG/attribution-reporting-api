@@ -154,7 +154,7 @@ Specifying a URL value for `attributionsrc` within `<a>`, `<img>`, or
 request which includes the `Attribution-Reporting-Eligible` request header.
 
 When the `attributionsrc` attribute is present in these surfaces/APIs, both with
-and without a value, existing requests made via `src`/`href` attributes, or
+and without a value, existing requests made via `src`/`href` attributes or
 `window.open` will now include the `Attribution-Reporting-Eligible` request
 header. Each of these requests will be able to register attribution sources.
 
