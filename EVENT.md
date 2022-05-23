@@ -146,8 +146,8 @@ window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
              { headers });
 ```
 
-Each of these mechanisms will cause the browser to initiate a `keepalive` fetch
-request to the URL indicated by `attributionsrc`.
+The `<a>`, `<img>`, and `window.open` mechanisms will cause the browser to
+initiate a `keepalive` fetch request to the URL indicated by `attributionsrc`.
 
 Response headers will be processed for any request that includes the
 `Attribution-Reporting-Eligible` request header, not just ones initiated via
