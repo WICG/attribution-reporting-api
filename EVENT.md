@@ -299,8 +299,8 @@ attributed up to 1 time.
 ### Registration requests
 
 Depending on the context in which it was made, a request is eligible to
-register sources, triggers, source or triggers, or nothing, as indicated in the
-`Attribution-Reporting-Eligible` request header, which is a [structured
+register sources, triggers, sources or triggers, or nothing, as indicated in
+the `Attribution-Reporting-Eligible` request header, which is a [structured
 dictionary](https://www.rfc-editor.org/rfc/rfc8941.html#name-dictionaries).
 
 The reporting origin may use the value of this header to determine which
