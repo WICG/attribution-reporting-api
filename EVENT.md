@@ -108,9 +108,9 @@ Protocol](https://github.com/brave/brave-browser/wiki/Security-and-privacy-model
 
 Attribution sources are events which future triggers can be attributed to.
 
-Sources are registered by returning a new HTTP response header on requests which
-are eligible for attribution. A request is eligible as long as it has the
-`Attribution-Reporting-Eligible` request header.
+Sources are registered by returning a new HTTP response header on requests
+which are eligible for attribution. A request is eligible as long as it has
+the `Attribution-Reporting-Eligible` request header.
 
 There are two types of attribution sources, `navigation` sources and `event`
 sources.
@@ -149,17 +149,17 @@ window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
              { headers });
 ```
 
-Specifying a URL value for `attributionsrc` within `<a>`, `<img>`, or `window.open`
-will cause the browser to initiate a separate `keepalive` fetch request which includes the
-`Attribution-Reporting-Eligible` request header.
+Specifying a URL value for `attributionsrc` within `<a>`, `<img>`, or
+`window.open` will cause the browser to initiate a separate `keepalive` fetch
+request which includes the `Attribution-Reporting-Eligible` request header.
 
-When the `attributionsrc` attribute is present in these surfaces/APIs, both with and
-without a value, existing requests made via `src`/`href` attributes, or `window.open` will
-now include the `Attribution-Reporting-Eligible` request header. Each of these
-requests will be able to register attribution sources.
+When the `attributionsrc` attribute is present in these surfaces/APIs, both with
+and without a value, existing requests made via `src`/`href` attributes, or
+`window.open` will now include the `Attribution-Reporting-Eligible` request
+header. Each of these requests will be able to register attribution sources.
 
-Other requests APIs which allow specifying headers (e.g. `XMLHttpRequest`) can also
-register sources.
+Other requests APIs which allow specifying headers (e.g. `XMLHttpRequest`) can
+also register sources.
 
 The response to these requests will configure the API via a new JSON HTTP
 header `Attribution-Reporting-Register-Source` of the form:
