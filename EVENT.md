@@ -267,7 +267,7 @@ header `Attribution-Reporting-Register-Event-Trigger` which contains information
 about how to treat the trigger event:
 ```jsonc
 [{
-  "trigger_data": "[unsigned 64-bit integer, but the browser will sanitize it down to 3 bits]",
+  "trigger_data": "[unsigned 64-bit integer]",
   "priority": "[signed 64-bit integer]",
   "deduplication_key": "[unsigned 64-bit integer]"
 }]
