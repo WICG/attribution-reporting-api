@@ -500,8 +500,7 @@ to do selective filtering to set `trigger_data` based on `filter_data`:
 ```
 
 If the filters do not match for any of the event triggers, no event-level report
-will be created. Note that this still allows an aggregatable report to be
-created [if requested](https://github.com/WICG/conversion-measurement-api/blob/main/AGGREGATE.md#attribution-trigger-registration).
+will be created.
 
 If the filters match for multiple event triggers, the first matching event
 trigger is used.
