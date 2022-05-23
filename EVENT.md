@@ -308,7 +308,7 @@ registrations, if any, to include in its response. The browser will likewise
 ignore invalid registrations:
 
 1. Requests made from `<a attributionsrc="...">` and `window.open(...,
-   "attributionsrc=...)` will contain
+   'attributionsrc=...')` will contain
    `Attribution-Reporting-Eligible: navigation-source` and are only eligible to
    register sources.
 2. Requests made from `<img attributionsrc="...">` will contain
