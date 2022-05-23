@@ -240,10 +240,13 @@ A trigger state is a [=struct=] with the following items:
 
 A randomized source response is null or a [=set=] of [=trigger states=].
 
+<h3 dfn-type=dfn>Attribution filter value</h3>
+An attribution filter value is an [=ordered set=] of [=strings=].
+
 <h3 dfn-type=dfn>Attribution filter map</h3>
 
 An attribution filter map is an [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
-[=map/value|values=] are [=ordered sets=] of [=strings=].
+[=map/value|values=] are [=attribution filter values=].
 
 <h3 dfn-type=dfn>Source type</h3>
 
@@ -306,8 +309,6 @@ An attribution aggregatable trigger data is a [=struct=] with the following item
 
 </dl>
 
-Issue: Use [=attribution aggregatable trigger data/negated filters=] in [=create aggregatable contributions=].
-
 <h3 dfn-type=dfn>Event-level trigger configuration</h3>
 
 An event-level trigger configuration is a [=struct=] with the following items:
@@ -325,9 +326,6 @@ An event-level trigger configuration is a [=struct=] with the following items:
 :: An [=attribution filter map=].
 
 </dl>
-
-Issue: Update [=trigger attribution=] to use
-[=event-level trigger configuration/negated filters=].
 
 <h3 dfn-type=dfn>Attribution trigger</h3>
 
@@ -864,17 +862,29 @@ Issue: Parse aggregatable trigger fields.
 
 <h3 dfn id="does-filter-data-match">Does filter data match</h3>
 
+To <dfn>match two [=attribution filter value|filter values=]</dfn> |a| and |b| given a [=boolean=] |isNegated|:
+
+1. If |b| [=list/is empty=] and |isNegated| is false, then:
+    1. If |a| [=list/is empty=], then return true.
+    1. Otherwise, return false.
+1. If |b| [=list/is empty=] and |isNegated| is true, then:
+    1. If |a| is not [=list/is empty|empty=], then return true.
+    1. Otherwise, return false.
+1. Let |i| be the [=set/intersection=] of |a| and |b|.
+1. If |isNegated| is false and |i| [=list/is empty=], then return false.
+1. If |isNegated| is true and |i| is not [=list/is empty|empty=], then return false.
+1. Return true.
+
 To <dfn>match an attribution source's filter data against filters</dfn> given an
-[=attribution source=] |source| and an [=attribution filter map=] |filters|:
+[=attribution source=] |source|, an [=attribution filter map=] |filters| and a [=boolean=]
+<dfn for="match an attribution source's filter data against filters"><var>isNegated</var></dfn>:
 
 1. Let |sourceData| be |source|'s [=attribution source/filter data=].
 1. [=map/iterate|For each=] |key| → |filterValues| of |filters|:
     1. If |sourceData|[|key|] does not [=map/exist=], [=iteration/continue=].
     1. Let |sourceValues| be |sourceData|[|key|].
-    1. If |sourceValues| [=list/is empty=] and |filterValues| is [=list/is empty=],
-        [=iteration/continue=].
-    1. Let |i| be the [=set/intersection=] of |sourceValues| and |filterValues|.
-    1. If |i| [=list/is empty=], return false.
+    1. If the result of running [=match two filter values=] with |sourceValues|, |filterValues| and |isNegated|
+        is false, return false.
 1. Return true.
 
 <h3 dfn id="should-rate-limit-attribution">Should attribution be blocked by rate limit</h3>
@@ -919,7 +929,11 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
 1. Let |aggregationKeys| be |source|'s [=attribution source/aggregation keys=].
 1. [=list/iterate|For each=] |triggerData| of |trigger|'s [=attribution trigger/aggregatable trigger data=]:
     1. If the result of running [=match an attribution source's filter data against filters=] with
-        |source| and |triggerData|'s [=attribution aggregatable trigger data/filters=] is false, [=iteration/continue=].
+        |source|, |triggerData|'s [=attribution aggregatable trigger data/filters=] and
+        [=match an attribution source's filter data against filters/isNegated=] set to false is false, [=iteration/continue=].
+    1. If the result of running [=match an attribution source's filter data against filters=] with
+        |source|, |triggerData|'s [=attribution aggregatable trigger data/negated filters=] and
+        [=match an attribution source's filter data against filters/isNegated=] set to true is false, [=iteration/continue=].
     1. [=set/iterate|For each=] |sourceKey| of |triggerData|'s [=attribution aggregatable trigger data/source keys=]:
         1. If |aggregationKeys|[|sourceKey|] does not [=map/exist=], [=iteration/continue=].
         1. Set |aggregationKeys|[|sourceKey|] to |aggregationKeys|[|sourceKey|] XOR |triggerData|'s
@@ -935,6 +949,8 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
         :: |aggregatableValues|[|id|]
     1. [=list/Append=] |contribution| to |contributions|.
 1. Return |contributions|.
+
+Issue: Use [=create attribution aggregatable histograms=] in [=trigger attribution=].
 
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
@@ -956,13 +972,19 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     null or an [=set/is empty|empty=] [=set=].
 1. If the result of running
     [=match an attribution source's filter data against filters=] with
-    |sourceToAttribute| and |trigger|'s [=attribution trigger/filters=] is false, return.
+    |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=] and
+    [=match an attribution source's filter data against filters/isNegated=] set to false is false, return.
 1. Let |matchedConfig| be null.
 1. [=map/iterate|For each=] [=event-level trigger configuration=] |config| of |trigger|'s
     [=attribution trigger/event-level trigger configurations=]:
     1. If the result of running
-        [=match an attribution source's filter data against filters=] with |sourceToAttribute| and
-        |config|'s [=event-level trigger configuration/filters=] is false, [=iteration/continue=].
+        [=match an attribution source's filter data against filters=] with |sourceToAttribute|,
+        |config|'s [=event-level trigger configuration/filters=] and
+        [=match an attribution source's filter data against filters/isNegated=] set to false is false, [=iteration/continue=].
+    1. If the result of running
+        [=match an attribution source's filter data against filters=] with |sourceToAttribute|,
+        |config|'s [=event-level trigger configuration/negated filters=] and
+        [=match an attribution source's filter data against filters/isNegated=] set to true is false, [=iteration/continue=].
     1. Set |matchedConfig| to |config|.
     1. [=iteration/Break=].
 1. If |matchedConfig| is null, return.
