@@ -134,7 +134,7 @@ window.open(
   `attributionsrc=${encoded}`);
 ```
 
-`event` sources do not require any user interaction can be registered via
+`event` sources do not require any user interaction and can be registered via
 `<img>` tags with the new `attributionsrc` attribute too:
 ```html
 <img src="https://advertiser.example/pixel"
