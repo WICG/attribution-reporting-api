@@ -524,7 +524,7 @@ fully understood during roll-out and help flush out any bugs (either in browser
 or caller code), and more easily compare the performance to cookie-based
 alternatives.
 
-Source and trigger registrations will both accept a new parameter `debug_key`:
+Source and trigger registrations will both accept a new field `debug_key`:
 ```jsonc
 {
   ...

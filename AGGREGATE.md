@@ -98,7 +98,7 @@ at most 32 digits.
 
 ### Attribution trigger registration
 
-Trigger registration will also adds two new fields to the JSON dictionary of the
+Trigger registration will also add two new fields to the JSON dictionary of the
 [`Attribution-Reporting-Register-Trigger`
 header](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#triggering-attribution):
 ```jsonc
