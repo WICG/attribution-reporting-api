@@ -558,16 +558,13 @@ for more details.
 
 ### Choosing among aggregation services
 
-The server can respond with an optional header
-`Attribution-Reporting-Alternative-Aggregation-Mode` which accepts a string
-value.
+The server can add with an optional `alternative_aggregation_mode` string field:
 
 ```http
-Attribution-Reporting-Register-Source: [{..., "aggregation_keys": ...}]
-Attribution-Reporting-Alternative-Aggregation-Mode: "experimental-poplar"
+Attribution-Reporting-Register-Source: {..., "aggregation_keys": ..., "alternative_aggregation_mode": "experimental-poplar"}
 ```
 
-The optional header will allow developers to choose among different options for
+The optional field will allow developers to choose among different options for
 aggregation infrastructure supported by the user agent. This value will allow
 experimentation with new technologies, and allows us to try out new approaches
 without interfering with core functionality provided by the default option. The
