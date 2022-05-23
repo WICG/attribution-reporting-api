@@ -128,14 +128,14 @@ window.open(
   `attributionsrc=${encoded}`);
 ```
 
- `event` sources do not require any user interaction and are registered via
- `<img>` tags with the new `attributionsrc` attribute too:
+`event` sources do not require any user interaction and are registered via
+`<img>` tags with the new `attributionsrc` attribute too:
 ```html
 <!-- TODO: is view registration via an `<a>` tag necessary?
     It may require a new attribute and a way to differentiate the requests. -->
 
-<img src="https://advertiser.example/pixel" 
-     attributionsrc="https://adtech.example/attribution_source?my_ad_id=123" />
+<img src="https://advertiser.example/pixel"
+     attributionsrc="https://adtech.example/attribution_source?my_ad_id=123">
 ```
 or via a JavaScript API:
 ```javascript
@@ -167,18 +167,18 @@ configures the API:
 }
 ```
 
--   `destination`: an origin whose eTLD+1 is where attribution will be triggered
+- `destination`: an origin whose eTLD+1 is where attribution will be triggered
 for this source.
 
--   `source_event_id`: A string encoding a 64-bit unsigned integer which
+- `source_event_id`: A string encoding a 64-bit unsigned integer which
 represents the event-level data associated with this source. This will be
 limited to 64 bits of information but the value can vary.
 
--   `expiry`: (optional) expiry in seconds for when the source should be
+- `expiry`: (optional) expiry in seconds for when the source should be
 deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry
 can also vary between browsers. This will be rounded to the nearest day.
 
--   `priority`: (optional) a signed 64-bit integer used to prioritize
+- `priority`: (optional) a signed 64-bit integer used to prioritize
 this source with respect to other matching sources. When a trigger redirect is
 received, the browser will find the matching source with highest
 `priority` value and generate a report. The other sources will not
@@ -197,8 +197,7 @@ since it is the origin that will end up receiving attribution reports.
 A `navigation` attribution source event will be logged to storage if the
 resulting document being navigated to ends up sharing an eTLD+1 with the
 `destination` origin. Additionally, the navigation needs occur with [transient
-user
-activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation).
+user activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation).
 
 `event` sources don’t require any of the above constraints to be logged.
 
@@ -212,7 +211,6 @@ An attribution source will be eligible for reporting if any page on the
 `destination` eTLD+1 (advertiser site) triggers attribution for the associated
 reporting origin.
 
-
 ### Publisher-side Controls for Attribution Source Declaration
 
 In order to prevent arbitrary third parties from registering sources without the
@@ -223,7 +221,7 @@ Policy](https://w3c.github.io/webappsec-permissions-policy/):
 ```html
 <iframe src="https://advertiser.example" allow="attribution-reporting 'src'">
 
-<a … id="..." attributionsrc="https://ad-tech.example?..."></a>
+<a … attributionsrc="https://ad-tech.example?..."></a>
 
 </iframe>
 ```
@@ -247,11 +245,11 @@ issue](https://github.com/w3c/webappsec-permissions-policy/issues/252).
 ### Triggering Attribution
 
 Attribution can only be triggered for a source on a page whose eTLD+1 matches
- the eTLD+1 of the site provided in `destination`. To trigger attribution, a
+the eTLD+1 of the site provided in `destination`. To trigger attribution, a
 similar mechanism is used as source event registration, via HTML:
 ```html
-<img src="https://ad-tech.example/conversionpixel" 
-     attributionsrc=”https://adtech.example/attribution_trigger?purchase=13” />
+<img src="https://ad-tech.example/conversionpixel"
+     attributionsrc="https://adtech.example/attribution_trigger?purchase=13">
 ```
 or JavaScript:
 ```javascript
@@ -262,19 +260,19 @@ window.fetch("https://adtech.example/attribution_trigger?purchase=13",
              { headers });
 ```
 
-As a stop-gap to support pre-existing conversion tags which do not include the 
-`attributionsrc` attribute, or use a different Fetch API, the browser will also 
-process trigger registration headers for all subresource requests on the page 
-where the `attribution-reporting` Permissions Policy is enabled. 
+As a stop-gap to support pre-existing conversion tags which do not include the
+`attributionsrc` attribute, or use a different Fetch API, the browser will also
+process trigger registration headers for all subresource requests on the page
+where the `attribution-reporting` Permissions Policy is enabled.
 
 Like source event registrations, these requests should respond with a new HTTP
 header `Attribution-Reporting-Register-Event-Trigger` which contains information
 about how to treat the trigger event:
 ```jsonc
 [{
-    "trigger_data": "[unsigned 64-bit integer, but the browser will sanitize it down to 3 bits]",
-    "priority": "[signed 64-bit integer]",
-    "deduplication_key": "[unsigned 64-bit integer]"
+  "trigger_data": "[unsigned 64-bit integer, but the browser will sanitize it down to 3 bits]",
+  "priority": "[signed 64-bit integer]",
+  "deduplication_key": "[unsigned 64-bit integer]"
 }]
 ```
 TODO: Consider moving this over to a structured header. See [issue
@@ -284,7 +282,7 @@ TODO: Consider moving this over to a structured header. See [issue
 - `priority`: optional signed 64-bit integer representing the priority
 of this trigger compared to other triggers for the same source.
 - `deduplication_key`: optional unsigned 64-bit integer which will be used to
-deduplicate multiple triggers which contain the same deduplication_key for a
+deduplicate multiple triggers which contain the same `deduplication_key` for a
 single source.
 
 When this header is received, the browser will schedule an attribution report as
@@ -344,6 +342,7 @@ Note that these initial strawman parameters were chosen as a way to ease
 adoption of the API without negatively impacting utility substantially. They are
 subject to change in the future with additional feedback and do not necessarily
 reflect a final set of parameters.
+
 ### Trigger attribution algorithm
 
 When the browser receives an attribution trigger redirect on a URL matching the
@@ -353,10 +352,10 @@ When the browser receives an attribution trigger redirect on a URL matching the
 browser picks the one that was stored most recently.
 
 The browser then schedules a report for the source that was picked by storing
- {`attributionsrc` origin, `destination` eTLD+1, `source_event_id`,
- [decoded](#data-encoding) `trigger_data`, `priority`, `deduplication_key`} for
- the source. Scheduled reports will be sent as detailed in [Sending scheduled
- reports](#sending-scheduled-reports).
+{`attributionsrc` origin, `destination` eTLD+1, `source_event_id`,
+[decoded](#data-encoding) `trigger_data`, `priority`, `deduplication_key`} for
+the source. Scheduled reports will be sent as detailed in [Sending scheduled
+reports](#sending-scheduled-reports).
 
 The browser will create reports for a source only if the trigger's
 `deduplication_key` has not already been associated with a report for that source.
@@ -382,6 +381,7 @@ rules-based attribution models. However, it isn’t clear the benefits outweigh
 the additional complexity. Additionally, models other than last-click
 potentially leak more cross-site information if sources are clicked across
 different sites.
+
 ### Sending Scheduled Reports
 
 Reports for `event` sources will be sent 1 hour after the source expires at its
@@ -461,8 +461,7 @@ Source registration:
   "destination": "https://toasters.example",
   "expiry": "604800000",
   "filter_data": {
-    "conversion_subdomain": ["electronics.megastore"
-                             "electronics2.megastore"],
+    "conversion_subdomain": ["electronics.megastore", "electronics2.megastore"],
     "product": ["1234"]
     // Note that "source_type" will be automatically generated as
     // one of {"navigation", "event"}
@@ -492,15 +491,17 @@ The `Attribution-Reporting-Register-Event-Trigger` header can also be extended
 to do selective filtering to set `trigger_data` based on `filter_data`:
 ```jsonc
 // Filter by the source type to handle different bit limits.
-[{
-  "trigger_data": "2",
-  // Note that “not_filters” which filters with a negation is also supported.
-  "filters": {"source_type": ["navigation"]}
-},
-{
-  "trigger_data": "1",
-  "filters": {"source_type": ["event"]}
-}]
+[
+  {
+    "trigger_data": "2",
+    // Note that "not_filters" which filters with a negation is also supported.
+    "filters": {"source_type": ["navigation"]}
+  },
+  {
+    "trigger_data": "1",
+    "filters": {"source_type": ["event"]}
+  }
+]
 ```
 
 If the filters do not match for any of the event triggers, the trigger data and
@@ -523,8 +524,8 @@ alternatives.
 Source registration will accept a new parameter `debug_key`:
 ```jsonc
 {
-    ...
-    "debug_key": "[64-bit unsigned integer]"
+  ...
+  "debug_key": "[64-bit unsigned integer]"
 }
 ```
 
@@ -538,9 +539,9 @@ Reports will include up to two new parameters which pass any specified debug key
 from source and trigger events unaltered:
 ```jsonc
 {
-    // normal report fields...
-    "source_debug_key": "[64-bit unsigned integer]",
-    "trigger_debug_key": "[64-bit unsigned integer]"
+  // normal report fields...
+  "source_debug_key": "[64-bit unsigned integer]",
+  "trigger_debug_key": "[64-bit unsigned integer]"
 }
 ```
 
@@ -564,6 +565,7 @@ set by the reporting origin:
 Set-Cookie: ar_debug=1; SameSite=None; Secure; HttpOnly
 ```
 If a cookie of this form is not present, debugging information will be ignored.
+
 ## Sample Usage
 
 `publisher.example` wants to show ads on their site, so they contract out to
@@ -576,10 +578,10 @@ the `ad-tech.example` reporting origin, and sets the `attributionsrc` attribute
 based on the ad that was served (e.g. some ad with id 123456).
 
 ```html
-<iframe src="https://ad-tech-3p.example/show-some-ad" 
+<iframe src="https://ad-tech-3p.example/show-some-ad"
         allow="attribution-reporting">
 ...
-<a 
+<a
   href="https://toasters.example/purchase"
   attributionsrc="https://ad-tech.example?adid=123456">
   click me!
@@ -605,17 +607,17 @@ triggers attribution on the few different ad-tech companies it buys ads on,
 including `ad-tech.example`, by adding conversion pixels:
 
 ```html
-<img src="...” attributionsrc=”https://ad-tech.example/trigger-attribution?model=toastmaster3000&price=$49.99&..." />
+<img src="..." attributionsrc="https://ad-tech.example/trigger-attribution?model=toastmaster3000&price=$49.99&...">
 ```
 
 `ad-tech.example` receives this request, and decides to trigger attribution on
 `toasters.example`. They must compress all of the data into 3 bits, so
-`ad-tech.example` chooses to encode the value as “2" (e.g. some bucketed version
+`ad-tech.example` chooses to encode the value as "2" (e.g. some bucketed version
 of the purchase value). They respond to the request with a
 `Attribution-Reporting-Register-Event-Trigger` header:
 ```jsonc
 [{
-    "trigger_data": "2"
+  "trigger_data": "2"
 }]
 ```
 
@@ -631,6 +633,7 @@ with the following body:
   "trigger_data": "2"
 }
 ```
+
 ### Noisy fake conversion example
 
 Assume the caller uses the same inputs as in the above example, however, the
@@ -641,9 +644,9 @@ completely fake data for the source event. This occurs with some probability
 To generate fake events, the browser considers all possible outputs for a given
 source event:
 * No reports at all
-* One report with metadata “0” at the first reporting window
-* One report with metadata “1” at the first reporting window and one report with
-  metadata “3” at the second reporting window
+* One report with metadata "0" at the first reporting window
+* One report with metadata "1" at the first reporting window and one report with
+  metadata "3" at the second reporting window
 * etc. etc. etc.
 
 After enumerating all possible outputs of the API for a given source event, the
@@ -652,9 +655,9 @@ trigger events that would be attributed to the source event are completely
 ignored.
 
 In the above example, the browser could have chosen to generate three reports:
-* One report with metadata “7”, sent 2 days after the click
-* One report with metadata “3”, sent 7 days after the click
-* One report with metadata “0”, also sent 7 days after the click
+* One report with metadata "7", sent 2 days after the click
+* One report with metadata "3", sent 7 days after the click
+* One report with metadata "0", also sent 7 days after the click
 
 ### Storage limits
 
@@ -706,14 +709,14 @@ clicks/views) to join identity between sites with high confidence.
 
 Note that this noise still allows for aggregate measurement of bucket sizes with
 an unbiased estimator (assuming rate-limits are not hit) See generic approaches
- of dealing with [Randomized
+of dealing with [Randomized
 response](https://en.wikipedia.org/wiki/Randomized_response) for a starting
 point.
 
 TODO: Update this script to account for the more complicated randomized response
 approach.
 
-### Reporting Delay 
+### Reporting Delay
 
 By bucketing reports within a small number reporting deadlines, it becomes
 harder to associate a report with the identity of the user on the advertiser’s
@@ -721,7 +724,7 @@ site via timing side channels.
 
 Reports within the same reporting window occur within an anonymity set with all
 others during that time period. For example, if we didn’t bucket reports with a
- delay (and instead sent them immediately after a trigger event), the reports
+delay (and instead sent them immediately after a trigger event), the reports
 (which contain publisher IDs) could be easily joined up with the advertiser’s
 first-party information via correlating timestamps.
 
@@ -749,7 +752,7 @@ destination site, 30 days>, counted for every attribution that is generated.
 ### Clearing Site Data
 
 Attribution source data and attribution reports in browser storage should be
-clearable using existing “clear browsing data" functionality offered by
+clearable using existing "clear browsing data" functionality offered by
 browsers.
 
 ### Reporting cooldown / rate limits
@@ -792,6 +795,7 @@ The number of reporting windows is another vector which can contain trigger-side
 information. By restricting to a [single window](#single-reporting-window), a
 `reportingorigin` does not receive any additional information on when in the
 attribution window a source was triggered.
+
 ### Browsing history reconstruction
 
 Reporting attribution without a pre-existing navigation allows the
@@ -801,6 +805,7 @@ because the `reportingorigin` knows a priori the user was navigating to
 `destination`.
 
 This new threat is be mitigated in a number of ways:
+
 #### Adding noise to whether a trigger is genuine
 
 By adding noise to whether an attribute source gets
@@ -848,17 +853,17 @@ space, and flip probability p, the k-randomized response algorithm:
 - Otherwise return v
 
 k-randomized response is an algorithm that is epsilon differentially private if
-p = k / (k + exp(epsilon) - 1). For low enough values of epsilon, a given
+`p = k / (k + exp(epsilon) - 1)`. For low enough values of epsilon, a given
 source’s true output should be well protected by the randomized response
 mechanism.
 
 Note that the number of all possible output states k in the above design is:
-- 2925 for click sources. This results from a particular “stars and bars”
-  counting method which derives k = (num_reporting_windows * num_trigger_data +
-  num_reports choose num_reports) = (3 * 8 + 3 choose 3). TODO: outline why this
+- 2925 for click sources. This results from a particular "stars and bars"
+  counting method which derives `k = (num_reporting_windows * num_trigger_data +
+  num_reports choose num_reports) = (3 * 8 + 3 choose 3)`. TODO: outline why this
   is the case.
 - 3 for event-sources (no attribution, attribution with trigger data 1,
-  attribution with trigger data 0). This also follows from (1 * 2 + 1 choose 1).
+  attribution with trigger data 0). This also follows from `(1 * 2 + 1 choose 1)`.
 
 Note that the scope of privacy in the current design is not user-level, but
 rather source-level. This follows from the fact that noise is added
