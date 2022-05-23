@@ -150,7 +150,7 @@ window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
 ```
 
 Specifying a URL value for `attributionsrc` within `<a>`, `<img>`, or `window.open`
-will cause the browser to initiate a `keepalive` fetch request which includes the
+will cause the browser to initiate a separate `keepalive` fetch request which includes the
 `Attribution-Reporting-Eligible` request header.
 
 When the `attributionsrc` attribute is present in these surfaces/APIs, both with and
@@ -158,7 +158,7 @@ without a value, existing requests made via `src`/`href` attributes, or `window.
 now include the `Attribution-Reporting-Eligible` request header. Each of these
 requests will be able to register attribution sources.
 
-Other requests APIs which allow specifying headers (e.g. `XmlHttpRequest`) can also
+Other requests APIs which allow specifying headers (e.g. `XMLHttpRequest`) can also
 register sources.
 
 The response to these requests will configure the API via a new JSON HTTP
