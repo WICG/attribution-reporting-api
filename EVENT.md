@@ -307,7 +307,7 @@ The reporting origin may use the value of this header to determine which
 registrations, if any, to include in its response. The browser will likewise
 ignore invalid registrations:
 
-1. `<a>` and `window.open` will have `navigation-source`
+1. `<a>` and `window.open` will have `navigation-source`.
 2. Other APIs that automatically set `Attribution-Reporting-Eligible` (like
    `<img>`) will contain `event-source, trigger`.
 3. Requests from JavaScript, e.g. `window.fetch`, can set this header manually,
