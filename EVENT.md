@@ -109,6 +109,12 @@ Protocol](https://github.com/brave/brave-browser/wiki/Security-and-privacy-model
 Attribution sources are events which future triggers can be attributed to. There
 are two types of attribution sources, `navigation` sources and `event` sources.
 
+Sources are registered by returning a new HTTP response header on requests which
+eligible for attribution. A request is eligible as long as it has the
+`Attribution-Reporting-Eligible` request header.
+
+
+
 `navigation` sources are registered via clicks on anchor tags:
 ```html
 <a href="https://advertiser.example/landing"
@@ -143,15 +149,19 @@ window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
              { headers });
 ```
 
-The `<a>`, `<img>`, and `window.open` mechanisms will cause the browser to
-initiate a `keepalive` fetch request to the URL indicated by `attributionsrc`.
+Specifying a URL value for `attributionsrc` within `<a>`, `<img>`, or `window.open`
+will cause the browser to initiate a `keepalive` fetch request that is eligible for
+attribution.
 
-Response headers will be processed for any request that includes the
-`Attribution-Reporting-Eligible` request header, not just ones initiated via
-`window.fetch`. For example, responses will also be processed for
-`XmlHttpRequest` if the header was present on the corresponding request.
+When the `attributionsrc` attribute is present in these surfaces/APIs, both with and
+without a value, existing requests made via `src`, `href`, or `window.open` will
+include the `Attribution-Reporting-Eligible` request header. Each of these
+requests will be able to register attribution sources.
 
-The response to this request will configure the API. The browser will expect
+Other requests APIs which allow specifying header, such as `XmlHttpRequest`, are
+able to use this as well.
+
+The response to these requests will configure the API. The browser will expect
 data in a new JSON HTTP header `Attribution-Reporting-Register-Source` which
 configures the API:
 
