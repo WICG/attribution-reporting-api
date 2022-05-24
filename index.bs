@@ -517,6 +517,22 @@ Issue: Specify the steps for making attributionsrc request.
 
 <h3 algorithm id="parsing-source-registration">Parsing source-registration JSON</h3>
 
+To <dfn>obtain a source expiry</dfn> given an [=ordered map=] |value|:
+
+1. If |value|["`expiry`"] does not [=map/exists|exist=] or is not a [=string=],
+     return 30 days.
+1. Let |expirySeconds| be the result of applying the
+    <a spec="html">rules for parsing integers</a> to |value|["`expiry`"].
+1. If |expirySeconds| is an error, return 30 days.
+1. Let |expiry| be |expirySeconds| seconds.
+1. If |expiry| is less than 1 day, set |expiry| to 1 day.
+1. If |expiry| is greater than the user agent's [=max source expiry=], set
+    |expiry| to that value.
+
+<dfn>Max source expiry</dfn> is a vendor-specific length of time that controls
+the maximum value that can be used as an [=attribution source/expiry=]. It must
+be greater than or equal to 30 days.
+
 To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 |json|, an [=origin=] |sourceOrigin|, an [=origin=] |reportingOrigin|, and a
 [=source type=] |sourceType|:
@@ -537,15 +553,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 1. Let |attributionDestination| be the result of running
     [=parse an attribution destination=] with |value|["`destination`"].
 1. If |attributionDestination| is null, return null.
-1. Let |expiry| be 30 days.
-1. If |value|["`expiry`"] [=map/exists=] and is a [=string=]:
-    1. Let |expirySeconds| be the result of applying the
-        <a spec="html">rules for parsing integers</a> to |value|["`expiry`"].
-    1. If |expirySeconds| is an error, set |expiry| to 30 days.
-    1. Otherwise, set |expiry| to |expirySeconds| seconds.
-    1. If |expiry| is less than 1 day, set |expiry| to 1 day.
-    1. If |expiry| is greater than the user agent's [=max source expiry=], set
-        |expiry| to that value.
+1. Let |expiry| be the result of running [=obtain a source expiry=] on |value|.
 1. Let |priority| be 0.
 1. If |value|["`priority`"] [=map/exists=] and is a [=string=]:
     1. Set |priority| to the result of applying the
@@ -611,10 +619,6 @@ Issue: Parse |value|["`filter_data`"].
 
 <dfn>Max event id value</dfn> is a vendor-specific integer which controls
 the maximum value which can be used as an [=attribution source/event id=].
-
-<dfn>Max source expiry</dfn> is a vendor-specific length of time that controls
-the maximum value that can be used as an [=attribution source/expiry=]. It must
-be greater than or equal to 30 days.
 
 <dfn>Randomized navigation-source trigger rate</dfn> is a vendor-specific double between 0 and 1
 (both inclusive) that controls the randomized response probability of an [=attribution source=]
