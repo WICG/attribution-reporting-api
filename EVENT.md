@@ -139,8 +139,9 @@ or via a JavaScript API:
 const headers = {
   'Attribution-Reporting-Eligible': 'true'
 };
+// Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
-             { headers });
+             { headers, keepalive: true });
 ```
 
 The `<a>`, `<img>`, and `window.open` mechanisms will cause the browser to
@@ -253,8 +254,9 @@ or JavaScript:
 const headers = {
   'Attribution-Reporting-Eligible': 'true'
 };
+// Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_trigger?purchase=13",
-             { headers });
+             { headers, keepalive: true });
 ```
 
 As a stop-gap to support pre-existing conversion tags which do not include the
