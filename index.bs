@@ -449,6 +449,86 @@ shared among all [=environment settings objects=].
 Note: This would ideally use <a spec=storage>storage bottles</a> to provide access to the attribution caches.
 However attribution data is inherently cross-site, and operations on storage would need to span across all storage bottle maps.
 
+# Vendor-Specific Values # {#vendor-specific-values}
+
+<dfn>Source event ID cardinality</dfn> is a positive integer that controls the
+maximum value that can be used as an [=attribution source/event id=].
+
+<dfn>Max source expiry</dfn> is a positive length of time that controls the
+maximum value that can be used as an [=attribution source/expiry=]. It must be
+greater than or equal to 30 days.
+
+<dfn>Max pending sources per source origin</dfn> is a positive integer that
+controls how many [=attribution sources=] can be in the
+[=attribution source cache=] per [=attribution source/source origin=].
+
+<dfn>Navigation-source trigger data cardinality</dfn> is a positive integer
+that controls the valid range of
+[=event-level trigger configuration/trigger data=] for triggers that are
+attributed to an [=attribution source=] whose
+[=attribution source/source type=] is "`navigation`":
+0 <= [=event-level trigger configuration/trigger data=] < [=navigation-source trigger data cardinality=].
+
+<dfn>Event-source trigger data cardinality</dfn> is a positive integer that
+controls the valid range of [=event-level trigger configuration/trigger data=]
+for triggers that are attributed to an [=attribution source=] whose
+[=attribution source/source type=] is "`event`":
+0 <= [=event-level trigger configuration/trigger data=] < [=event-source trigger data cardinality=].
+
+<dfn>Randomized navigation-source trigger rate</dfn> is a double between 0 and
+1 (both inclusive) that controls the randomized response probability of an
+[=attribution source=] whose [=attribution source/source type=] is
+"`navigation`".
+
+<dfn>Randomized event-source trigger rate</dfn> is a double between 0 and 1
+(both inclusive) that controls the randomized response probability of an
+[=attribution source=] whose [=attribution source/source type=] is "`event`".
+
+<dfn>Max reports per attribution destination</dfn> is a positive integer that
+controls how many [=event-level reports=] can be in the
+[=event-level report cache=] per
+[=event-level report/attribution destination=].
+
+<dfn>Max attributions per navigation source</dfn> is a positive integer that
+controls how many times a single [=attribution source=] whose
+[=attribution source/source type=] is "`navigation`" can create an
+[=event-level report=].
+
+<dfn>Max attributions per event source</dfn> is a positive integer that
+controls how many times a single [=attribution source=] whose
+[=attribution source/source type=] is "`event`" can create an
+[=event-level report=].
+
+<dfn>Attribution rate-limit window</dfn> is a positive length of time thatr
+controls the rate-limiting window for attribution.
+
+<dfn>Max source reporting endpoints per rate-limit window</dfn> is a positive
+integer that controls the maximum number of distinct
+[=attribution source/reporting endpoint|reporting endpoints=] for a
+([=attribution rate-limit record/source site=],
+[=attribution rate-limit record/attribution destination=]) that can create
+[=attribution sources=] per [=attribution rate-limit window=].
+
+<dfn>Max attribution reporting endpoints per rate-limit window</dfn> is a
+positive integer that controls the maximum number of distinct
+[=attribution trigger/reporting endpoint|reporting endpoints=] for a
+([=attribution rate-limit record/source site=],
+[=attribution rate-limit record/attribution destination=]) that can create
+[=event-level reports=] per [=attribution rate-limit window=].
+
+<dfn>Max attributions per rate-limit window</dfn> is a positive integer that
+controls the maximum number of attributions for a
+([=attribution rate-limit record/source site=],
+[=attribution rate-limit record/attribution destination=],
+[=attribution rate-limit record/reporting endpoint=]) per
+[=attribution rate-limit window=].
+
+<dfn>Max source cache size</dfn> is a positive integer that controls how many
+[=attribution sources=] can be in the [=attribution source cache=].
+
+<dfn>Max report cache size</dfn> is a positive integer that controls how many
+[=event-level reports=] can be in the [=event-level report cache=].
+
 # General Algorithms # {#general-algorithms}
 
 <h3 id="obtaining-randomized-response">Obtaining a randomized response</h3>
@@ -529,10 +609,6 @@ To <dfn>obtain a source expiry</dfn> given an [=ordered map=] |value|:
 1. If |expiry| is greater than the user agent's [=max source expiry=], set
     |expiry| to that value.
 
-<dfn>Max source expiry</dfn> is a vendor-specific length of time that controls
-the maximum value that can be used as an [=attribution source/expiry=]. It must
-be greater than or equal to 30 days.
-
 To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 |json|, an [=origin=] |sourceOrigin|, an [=origin=] |reportingOrigin|, and a
 [=source type=] |sourceType|:
@@ -546,7 +622,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     [=string=], return null.
 1. Let |sourceEventId| be the result of applying the
     <a spec="html">rules for parsing non-negative integers</a> to
-    |value|["`source_event_id`"] modulo [=max event ID value=].
+    |value|["`source_event_id`"] modulo the user agent's
+    [=source event ID cardinality=].
 1. If |sourceEventId| is an error, return null.
 1. If |value|["`destination`"] does not [=map/exists|exist=] or is not a
     [=string=], return null.
@@ -616,17 +693,6 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 Issue: Ensure that |attributionDestination|'s [=origin/scheme=] is HTTP/HTTPS.
 
 Issue: Parse |value|["`filter_data`"].
-
-<dfn>Max event ID value</dfn> is a vendor-specific integer which controls
-the maximum value which can be used as an [=attribution source/event ID=].
-
-<dfn>Randomized navigation-source trigger rate</dfn> is a vendor-specific double between 0 and 1
-(both inclusive) that controls the randomized response probability of an [=attribution source=]
-whose [=attribution source/source type=] is "`navigation`".
-
-<dfn>Randomized event-source trigger rate</dfn> is a vendor-specific double between 0 and 1
-(both inclusive) that controls the randomized response probability of an [=attribution source=]
-whose [=attribution source/source type=] is "`event`".
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
@@ -717,13 +783,6 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 
 Issue: Should fake reports respect the user agent's [=max reports per attribution destination=]?
 
-<dfn>Max source cache size</dfn> is a vendor-specific integer which controls how many
-[=attribution sources=] can be in the [=attribution source cache=].
-
-<dfn>Max pending sources per source origin</dfn> is a vendor-specific integer
-that controls how many [=attribution sources=] can be in the
-[=attribution source cache=] per [=attribution source/source origin=].
-
 # Triggering Algorithms # {#trigger-algorithms}
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
@@ -779,16 +838,6 @@ To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
     : [=attribution trigger/event-level trigger configurations=]
     :: « |navigationConfig|, |eventConfig| »
 1. Return |trigger|.
-
-<dfn>Navigation-source trigger data cardinality</dfn> is a vendor-specific integer that controls
-the valid range of [=event-level trigger configuration/trigger data=] for triggers that are
-attributed to an [=attribution source=] whose [=attribution source/source type=] is "`navigation`":
-0 <= [=event-level trigger configuration/trigger data=] < [=navigation-source trigger data cardinality=].
-
-<dfn>Event-source trigger data cardinality</dfn> is a vendor-specific integer that controls the
-valid range of [=event-level trigger configuration/trigger data=] for triggers that are
-attributed to an [=attribution source=] whose [=attribution source/source type=] is "`event`":
-0 <= [=event-level trigger configuration/trigger data=] < [=event-source trigger data cardinality=].
 
 Issue: Formalize how to parse the query similar to URLSearchParams.
 
@@ -848,14 +897,6 @@ Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToA
 1. If |matchingRateLimitRecords|'s [=list/size=] is greater than or equal to [=max attributions per rate-limit window=], return <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
 
-<dfn>Attribution rate-limit window</dfn> is a vendor-specific duration that controls the
-rate-limiting window for attribution.
-
-<dfn>Max attributions per rate-limit window</dfn> is a vendor-specific integer that controls
-the maximum number of attributions for a ([=attribution rate-limit record/source site=],
-[=attribution rate-limit record/attribution destination=],
-[=attribution rate-limit record/reporting endpoint=]) per [=attribution rate-limit window=].
-
 <h3 dfn id="should-block-processing-for-reporting-endpoint-limit">Should processing be blocked by reporting-endpoint limit</h3>
 
 Given an [=attribution rate-limit record=] |newRecord|:
@@ -876,20 +917,6 @@ Given an [=attribution rate-limit record=] |newRecord|:
 1. If |distinctReportingEndpoints|'s [=list/size=] is greater than or equal to |max|, return
     <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
-
-<dfn>Max source reporting endpoints per rate-limit window</dfn> is a vendor-specific integer
-that controls the maximum number of distinct
-[=attribution source/reporting endpoint|reporting endpoints=] for a
-([=attribution rate-limit record/source site=],
-[=attribution rate-limit record/attribution destination=]) that can create [=attribution sources=]
-per [=attribution rate-limit window=].
-
-<dfn>Max attribution reporting endpoints per rate-limit window</dfn> is a vendor-specific integer
-that controls the maximum number of distinct
-[=attribution trigger/reporting endpoint|reporting endpoints=] for a
-([=attribution rate-limit record/source site=],
-[=attribution rate-limit record/attribution destination=]) that can create [=event-level reports=]
-per [=attribution rate-limit window=].
 
 <h3 algorithm id="creating-aggregatable-histograms">Creating aggregatable histograms</h3>
 
@@ -1012,24 +1039,6 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. If |report|'s [=event-level report/source debug key=] is not null and |report|'s
     [=event-level report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
-
-<dfn>Max reports per attribution destination</dfn> is a vendor-specific integer which controls how
-many [=event-level reports=] can be in the [=event-level report cache=] for an
-[=event-level report/attribution destination=].
-
-<dfn>Max attributions per navigation source</dfn> is a vendor-specific integer that controls how
-many times a single [=attribution source=] whose [=attribution source/source type=] is
-"`navigation`" can create an [=event-level report=].
-
-<dfn>Max attributions per event source</dfn> is a vendor-specific integer that controls how
-many times a single [=attribution source=] whose [=attribution source/source type=] is "`event`"
-can create an [=event-level report=].
-
-<dfn>Max report cache size</dfn> is a vendor-specific integer which controls how many
-[=event-level reports=] can be in the [=event-level report cache=].
-
-Note: This parameter represents a privacy/utility tradeoff. Lower values mean that less trigger-side data
-can be associated with a source event ID. Larger values allow for more attribution triggers to be reported.
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 
