@@ -241,6 +241,7 @@ A trigger state is a [=struct=] with the following items:
 A randomized source response is null or a [=set=] of [=trigger states=].
 
 <h3 id="attribution-filtering">Attribution filtering</h3>
+
 A <dfn>filter value</dfn> is an [=ordered set=] of [=strings=].
 
 A <dfn>filter map</dfn> is an [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
@@ -870,14 +871,14 @@ To <dfn>match [=filter values=]</dfn> given a [=filter value=] |a| and a [=filte
 
 To <dfn>match [=filter values=] with negation</dfn> given a [=filter value=] |a| and a [=filter value=] |b|:
 1. If |b| [=list/is empty=], then:
-    1. If |a| is not [=list/is empty|empty=], then return  true.
+    1. If |a| is not [=list/is empty|empty=], then return true.
     1. Otherwise, return false.
 1. Let |i| be the [=set/intersection=] of |a| and |b|.
 1. If |i| is not [=list/is empty|empty=], then return false.
 1. Return true.
 
 To <dfn>match an attribution source's filter data against filters</dfn> given an
-[=attribution source=] |source|, an [=filter map=] |filters| and a [=boolean=]
+[=attribution source=] |source|, a [=filter map=] |filters|, and a [=boolean=]
 <dfn for="match an attribution source's filter data against filters"><var>isNegated</var></dfn>:
 
 1. Let |sourceData| be |source|'s [=attribution source/filter data=].
@@ -934,10 +935,10 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
 1. Let |aggregationKeys| be |source|'s [=attribution source/aggregation keys=].
 1. [=list/iterate|For each=] |triggerData| of |trigger|'s [=attribution trigger/aggregatable trigger data=]:
     1. If the result of running [=match an attribution source's filter data against filters=] with
-        |source|, |triggerData|'s [=attribution aggregatable trigger data/filters=] and
+        |source|, |triggerData|'s [=attribution aggregatable trigger data/filters=], and
         [=match an attribution source's filter data against filters/isNegated=] set to false is false, [=iteration/continue=].
     1. If the result of running [=match an attribution source's filter data against filters=] with
-        |source|, |triggerData|'s [=attribution aggregatable trigger data/negated filters=] and
+        |source|, |triggerData|'s [=attribution aggregatable trigger data/negated filters=], and
         [=match an attribution source's filter data against filters/isNegated=] set to true is false, [=iteration/continue=].
     1. [=set/iterate|For each=] |sourceKey| of |triggerData|'s [=attribution aggregatable trigger data/source keys=]:
         1. If |aggregationKeys|[|sourceKey|] does not [=map/exist=], [=iteration/continue=].
@@ -977,18 +978,18 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     null or an [=set/is empty|empty=] [=set=].
 1. If the result of running
     [=match an attribution source's filter data against filters=] with
-    |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=] and
+    |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=], and
     [=match an attribution source's filter data against filters/isNegated=] set to false is false, return.
 1. Let |matchedConfig| be null.
 1. [=map/iterate|For each=] [=event-level trigger configuration=] |config| of |trigger|'s
     [=attribution trigger/event-level trigger configurations=]:
     1. If the result of running
         [=match an attribution source's filter data against filters=] with |sourceToAttribute|,
-        |config|'s [=event-level trigger configuration/filters=] and
+        |config|'s [=event-level trigger configuration/filters=], and
         [=match an attribution source's filter data against filters/isNegated=] set to false is false, [=iteration/continue=].
     1. If the result of running
         [=match an attribution source's filter data against filters=] with |sourceToAttribute|,
-        |config|'s [=event-level trigger configuration/negated filters=] and
+        |config|'s [=event-level trigger configuration/negated filters=], and
         [=match an attribution source's filter data against filters/isNegated=] set to true is false, [=iteration/continue=].
     1. Set |matchedConfig| to |config|.
     1. [=iteration/Break=].
