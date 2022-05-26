@@ -26,6 +26,7 @@ extension on top of this.
   - [Publisher-side Controls for Attribution Source
     Declaration](#publisher-side-controls-for-attribution-source-declaration)
   - [Triggering Attribution](#triggering-attribution)
+  - [Registration requests](registration-requests)
   - [Data limits and noise](#data-limits-and-noise)
   - [Trigger attribution algorithm](#trigger-attribution-algorithm)
   - [Multiple sources for the same trigger
@@ -137,7 +138,7 @@ window.open(
 or via a JavaScript API:
 ```javascript
 const headers = {
-  'Attribution-Reporting-Eligible': 'true'
+  'Attribution-Reporting-Eligible': 'event-source'
 };
 // Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
@@ -150,7 +151,8 @@ initiate a `keepalive` fetch request to the URL indicated by `attributionsrc`.
 Response headers will be processed for any request that includes the
 `Attribution-Reporting-Eligible` request header, not just ones initiated via
 `window.fetch`. For example, responses will also be processed for
-`XmlHttpRequest` if the header was present on the corresponding request.
+`XmlHttpRequest` if the header was present on the corresponding request. See
+[Registration requests](#registration-requests) for details.
 
 The response to this request will configure the API. The browser will expect
 data in a new JSON HTTP header `Attribution-Reporting-Register-Source` which
@@ -252,7 +254,7 @@ similar mechanism is used as source event registration, via HTML:
 or JavaScript:
 ```javascript
 const headers = {
-  'Attribution-Reporting-Eligible': 'true'
+  'Attribution-Reporting-Eligible': 'trigger'
 };
 // Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_trigger?purchase=13",
@@ -297,6 +299,26 @@ same-origin children, but disabled in cross-origin children.
 
 Navigation sources may be attributed up to 3 times. Event sources may be
 attributed up to 1 time.
+
+### Registration requests
+
+Depending on the context in which it was made, a request is eligible to
+register sources, triggers, sources or triggers, or nothing, as indicated in
+the `Attribution-Reporting-Eligible` request header, which is a [structured
+dictionary](https://www.rfc-editor.org/rfc/rfc8941.html#name-dictionaries).
+
+The reporting origin may use the value of this header to determine which
+registrations, if any, to include in its response. The browser will likewise
+ignore invalid registrations:
+
+1. `<a>` and `window.open` will have `navigation-source`.
+2. Other APIs that automatically set `Attribution-Reporting-Eligible` (like
+   `<img>`) will contain `event-source, trigger`.
+3. Requests from JavaScript, e.g. `window.fetch`, can set this header manually,
+   but it is an error for such requests to specify `navigation-source`.
+4. All other requests will not have the `Attribution-Reporting-Eligible`
+   header. For those requests the browser will permit trigger registration
+   only.
 
 ### Data limits and noise
 
