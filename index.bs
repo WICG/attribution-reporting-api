@@ -216,17 +216,11 @@ to call <a spec="html">navigate</a> with |attributionSource| set to |attribution
 
 # Fetch monkeypatches # {#fetch-monkeypatches}
 
-In <a spec="FETCH">main fetch</a>, within the step:
-
-> 17. If response is not a network error and any of the following returns blocked
->     ...
-
-add the following check to the list:
-
-* [=should internalResponse to request be blocked as attribution trigger=]
+Issue: Specify monkeypatches for source/trigger registration.
 
 # Permissions Policy integration # {#permission-policy-integration}
-This specification defines a [=policy-controlled feature=] identified by the string "<code><dfn>attribution-reporting</dfn></code>". Its [=default allowlist=] is *.
+
+This specification defines a [=policy-controlled feature=] identified by the string "<code><dfn noexport>attribution-reporting</dfn></code>". Its [=default allowlist=] is *.
 
 # Structures # {#structures}
 
@@ -340,12 +334,13 @@ An event-level trigger configuration is a [=struct=] with the following items:
 :: A 64-bit integer.
 : <dfn>filters</dfn>
 :: An [=attribution filter map=].
+: <dfn>negated filters</dfn>
+:: An [=attribution filter map=].
 
 </dl>
 
-Issue: Add an [=attribution filter map=] field called `negated filters` to
-[=event-level trigger configuration=] and update [=trigger attribution=] to use
-it.
+Issue: Update [=trigger attribution=] to use
+[=event-level trigger configuration/negated filters=].
 
 <h3 dfn-type=dfn>Attribution trigger</h3>
 
@@ -787,87 +782,95 @@ Issue: Should fake reports respect the user agent's [=max reports per attributio
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
-To <dfn>obtain an attribution trigger</dfn> given a [=URL=] |url| and an
-[=environment settings object=] |environment|, run the following steps:
+To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
 
-1. Let |navigationSourceTriggerData| be 0.
-1. If |url|'s [=url/query=] has a "`trigger-data`" field, and applying the <a spec="html">rules for
-    parsing non-negative integers</a> to the field's value results in an integer, then set
-    |navigationSourceTriggerData| to that value.
-1. Let |eventSourceTriggerData| be 0.
-1. If |url|'s [=url/query=] has an "`event-source-trigger-data`" field, and applying the
-    <a spec="html">rules for parsing non-negative integers</a> to the field's value results in an
-    integer, then set |eventSourceTriggerData| to that value.
-1. Let |dedupKey| be null.
-1. If |url|'s [=url/query=] has a "`dedup-key`" field, and applying the <a spec="html">rules for
-    parsing integers</a> to the field's value results in an integer, then set |dedupKey| to that
-    value.
-1. Let |triggerPriority| be 0.
-1. If |url|'s [=url/query=] has a "`priority`" field, and applying the
-    <a spec="html">rules for parsing integers</a> to the field's value results
-    in an integer, set |triggerPriority| to that value.
-1. Let |navigationConfig| be a new [=event-level trigger configuration=] with the items:
-    : [=event-level trigger configuration/trigger data=]
-    :: |navigationSourceTriggerData|
-    : [=event-level trigger configuration/dedup key=]
-    :: |dedupKey|
-    : [=event-level trigger configuration/priority=]
-    :: |triggerPriority|
-    : [=event-level trigger configuration/filters=]
-    :: «[ "`source_type`" → « "`navigation`" » ]»
-1. Let |eventConfig| be a new [=event-level trigger configuration=] with the items:
-    : [=event-level trigger configuration/trigger data=]
-    :: |eventSourceTriggerData|
-    : [=event-level trigger configuration/dedup key=]
-    :: |dedupKey|
-    : [=event-level trigger configuration/priority=]
-    :: |triggerPriority|
-    : [=event-level trigger configuration/filters=]
-    :: «[ "`source_type`" → « "`event`" » ]»
+1. Let |eventTriggers| be a new [=set=].
+1. If |map|["`event_trigger_data`"] does not [=map/exists|exist=], return
+    |eventTriggers|.
+1. Let |values| be |map|["`event_trigger_data`"].
+1. If |values| is not a [=list=], return null.
+1. [=list/iterate|For each=] |value| of |values|:
+    1. If |value| is not an [=ordered map=], return null.
+    1. If |value|["`trigger_data`"] does not [=map/exists|exist=] or is not a
+        [=string=], return null.
+    1. Let |triggerData| be the result of applying the
+        <a spec="html">rules for parsing non-negative integers</a> to
+        |value|["`trigger_data`"].
+    1. If |triggerData| is an error, set |triggerData| to 0.
+    1. Let |dedupKey| be null.
+    1. If |value|["`deduplication_key`"] [=map/exists=] and is a [=string=]:
+        1. Set |dedupKey| to the result of applying the
+            <a spec="html">rules for parsing non-negative integers</a> to
+            |value|["`deduplication_key`"].
+        1. If |dedupKey| is an error, set |dedupKey| to null.
+    1. Let |priority| be 0.
+    1. If |value|["`priority`"] [=map/exists=] and is a [=string=]:
+        1. Set |priority| to the result of applying the
+            <a spec="html">rules for parsing integers</a> to
+            |value|["`priority`"].
+        1. If |priority| is an error, set |priority| to 0.
+    1. Let |eventTrigger| be a new [=event-level trigger configuration=] with
+        the items:
+        : [=event-level trigger configuration/trigger data=]
+        :: |triggerData|
+        : [=event-level trigger configuration/dedup key=]
+        :: |dedupKey|
+        : [=event-level trigger configuration/priority=]
+        :: |priority|
+        : [=event-level trigger configuration/filters=]
+        :: «[]»
+        : [=event-level trigger configuration/negated filters=]
+        :: «[]»
+    1. [=set/Append=] |eventTrigger| to |eventTriggers|.
+1. Return |eventTriggers|.
+
+Issue: Parse filters and negated filters.
+
+Issue: Allow the user agent to return null if |values|'s [=list/size=] is
+greater than some constant.
+
+To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
+|json|, a [=site=] |destination|, and an [=origin=] |reportingOrigin|:
+
+1. Assert: |reportingOrigin| is a [=potentially trustworthy origin=].
+1. Let |value| be the result of running
+    [=parse a JSON string to an Infra value=] with |json|.
+1. If |value| is not an [=ordered map=], return null.
+1. Let |eventTriggers| be the result of running [=parse event triggers=]
+    with |value|.
+1. If |eventTriggers| is null, return null.
+1. Let |debugKey| be null.
+1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
+    1. Set |debugKey| to the result of applying the
+        <a spec="html">rules for parsing non-negative integers</a> to
+        |value|["`debug_key`"].
+    1. If |debugKey| is an error, set |debugKey| to null.
+1. Let |aggregatableTrigger| be an [=attribution aggregatable trigger=] with
+    the items:
+    : [=attribution aggregatable trigger/trigger data=]
+    :: «»
+    : [=attribution aggregatable trigger/values=]
+    :: «[]»
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
-    :: The result of [=obtain a site|obtaining a site=] from |environment|'s [=environment/top-level origin=].
+    :: |destination|
     : [=attribution trigger/trigger time=]
     :: The current time.
     : [=attribution trigger/reporting endpoint=]
-    :: |url|'s [=url/origin=].
+    :: |reportingOrigin|
     : [=attribution trigger/filters=]
     :: «[]»
     : [=attribution trigger/debug key=]
-    :: null
+    :: |debugKey|
     : [=attribution trigger/event-level trigger configurations=]
-    :: « |navigationConfig|, |eventConfig| »
+    :: |eventTriggers|
+    : [=attribution trigger/aggregatable trigger=]
+    :: |aggregatableTrigger|
 1. Return |trigger|.
 
-Issue: Formalize how to parse the query similar to URLSearchParams.
+Issue: Parse top-level filters.
 
-<h3 dfn id="should-block-response">Should internalResponse to request be blocked as attribution trigger</h3>
-
-Given a [=request=] |request|:
-
-1. If |request|'s [=request/current URL's=] [=url/origin=] is an [=opaque origin=], return <strong>allowed</strong>.
-1. If |request|'s [=request/current URL's=] [=url/path=] is not equal to « ".well-known","attribution-reporting","trigger-attribution" »,
-    return <strong>allowed</strong>.
-1. Let |environment| be |request|'s [=request/window=].
-1. If |environment| is not an [=environment settings object=], return <strong>allowed</strong>.
-1. If |environment|'s [=relevant global object=]'s [=associated Document=] is not [=allowed to use=] the [=attribution-reporting=] [=policy-controlled feature=],
-    return <strong>allowed</strong>.
-1. If |environment|'s [=environment settings object/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
-1. If |environment|'s [=environment/top-level origin=] is an [=opaque origin=], return <strong>allowed</strong>.
-1. If |environment|'s [=environment/top-level origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
-1. If |request|'s [=request/current URL's=] [=url/origin=] is not a [=potentially trustworthy origin=], return <strong>allowed</strong>.
-1. If |request|'s [=request/redirect count=] is less than 1, return <strong>allowed</strong>.
-1. Let |previousUrl| be the second to last [=URL=] in |request|'s
-    [=request/URL list=].
-1. If |request|'s [=request/current URL's=] [=url/origin=] is not [=same origin=] with
-    |previousUrl|'s [=url/origin=], return <strong>allowed</strong>.
-
-    Note: The restriction to require a redirect is necessary to ensure that the
-     request's origin is aware and in control of the conversion registration. This could also be done with a
-     <a href="https://github.com/WICG/attribution-reporting-api/issues/91">header-based mechanism</a>.
-1. Let |trigger| be the result of running [=obtain an attribution trigger=] with |request|'s [=request/current URL=] and |environment|.
-1. [=Queue a task=] to [=trigger attribution=] with |trigger|.
-1. Return <strong>blocked</strong>.
+Issue: Parse aggregatable trigger fields.
 
 <h3 dfn id="does-filter-data-match">Does filter data match</h3>
 
