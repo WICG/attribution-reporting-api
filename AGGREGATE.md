@@ -70,29 +70,23 @@ example an ad-tech will use the API to collect:
 ### Attribution source registration
 
 Registering sources eligible for aggregate reporting entails adding a new
-`aggregation_keys` list field to the JSON dictionary of the
+`aggregation_keys` dictionary field to the JSON dictionary of the
 [`Attribution-Reporting-Register-Source` header](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#registering-attribution-sources):
 ```jsonc
 {
   ... // existing fields, such as `source_event_id` and `destination`
 
-  "aggregation_keys": [
-    {
-      // Generates a "0x159" key piece (low order bits of the key) for the key named
-      // "campaignCounts"
-      "id": "campaignCounts",
-      "key_piece": "0x159" // User saw ad from campaign 345 (out of 511)
-    },
-    {
-      // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue"
-      "id": "geoValue",
-      // Source-side geo region = 5 (US), out of a possible ~100 regions.
-      "key_piece": "0x5"
-    }
-  ]
+  "aggregation_keys": {
+    // Generates a "0x159" key piece (low order bits of the key) for the key named
+    // "campaignCounts".
+    "campaignCounts": "0x159", // User saw ad from campaign 345 (out of 511)
+
+    // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue".
+    "geoValue": "0x5" // Source-side geo region = 5 (US), out of a possible ~100 regions
+  }
 }
 ```
-This defines a list of histogram contributions, each with a piece of the
+This defines a dictionary of named aggregation keys, each with a piece of the
 aggregation key defined as a hex-string. The final histogram bucket key will be
 fully defined at trigger time using a combination (binary OR) of this piece and
 trigger-side pieces.
