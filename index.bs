@@ -240,13 +240,11 @@ A trigger state is a [=struct=] with the following items:
 
 A randomized source response is null or a [=set=] of [=trigger states=].
 
-<h3 dfn-type=dfn>Attribution filter value</h3>
-An attribution filter value is an [=ordered set=] of [=strings=].
+<h3 id="attribution-filtering">Attribution filtering</h3>
+A <dfn>filter value</dfn> is an [=ordered set=] of [=strings=].
 
-<h3 dfn-type=dfn>Attribution filter map</h3>
-
-An attribution filter map is an [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
-[=map/value|values=] are [=attribution filter values=].
+A <dfn>filter map</dfn> is an [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
+[=map/value|values=] are [=filter values=].
 
 <h3 dfn-type=dfn>Source type</h3>
 
@@ -284,7 +282,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>randomized trigger rate</dfn>
 :: A number between 0 and 1 (both inclusive).
 : <dfn>filter data</dfn>
-:: An [=attribution filter map=].
+:: An [=filter map=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
 : <dfn>aggregation keys</dfn>
@@ -303,9 +301,9 @@ An attribution aggregatable trigger data is a [=struct=] with the following item
 : <dfn>source keys</dfn>
 :: An [=ordered set=] of [=strings=].
 : <dfn>filters</dfn>
-:: An [=attribution filter map=].
+:: An [=filter map=].
 : <dfn>negated filters</dfn>
-:: An [=attribution filter map=].
+:: An [=filter map=].
 
 </dl>
 
@@ -321,9 +319,9 @@ An event-level trigger configuration is a [=struct=] with the following items:
 : <dfn>priority</dfn>
 :: A 64-bit integer.
 : <dfn>filters</dfn>
-:: An [=attribution filter map=].
+:: An [=filter map=].
 : <dfn>negated filters</dfn>
-:: An [=attribution filter map=].
+:: An [=filter map=].
 
 </dl>
 
@@ -339,7 +337,7 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>reporting endpoint</dfn>
 :: An [=url/origin=].
 : <dfn>filters</dfn>
-:: An [=attribution filter map=].
+:: An [=filter map=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
 : <dfn>event-level trigger configurations</dfn>
@@ -862,29 +860,36 @@ Issue: Parse aggregatable trigger fields.
 
 <h3 dfn id="does-filter-data-match">Does filter data match</h3>
 
-To <dfn>match two [=attribution filter value|filter values=]</dfn> |a| and |b| given a [=boolean=] |isNegated|:
-
-1. If |b| [=list/is empty=] and |isNegated| is false, then:
+To <dfn>match [=filter values=]</dfn> given a [=filter value=] |a| and a [=filter value=] |b|:
+1. If |b| [=list/is empty=], then:
     1. If |a| [=list/is empty=], then return true.
     1. Otherwise, return false.
-1. If |b| [=list/is empty=] and |isNegated| is true, then:
-    1. If |a| is not [=list/is empty|empty=], then return true.
+1. Let |i| be the [=set/intersection=] of |a| and |b|.
+1. If |i| [=list/is empty=], then return false.
+1. Return true.
+
+To <dfn>match [=filter values=] with negation</dfn> given a [=filter value=] |a| and a [=filter value=] |b|:
+1. If |b| [=list/is empty=], then:
+    1. If |a| is not [=list/is empty|empty=], then return  true.
     1. Otherwise, return false.
 1. Let |i| be the [=set/intersection=] of |a| and |b|.
-1. If |isNegated| is false and |i| [=list/is empty=], then return false.
-1. If |isNegated| is true and |i| is not [=list/is empty|empty=], then return false.
+1. If |i| is not [=list/is empty|empty=], then return false.
 1. Return true.
 
 To <dfn>match an attribution source's filter data against filters</dfn> given an
-[=attribution source=] |source|, an [=attribution filter map=] |filters| and a [=boolean=]
+[=attribution source=] |source|, an [=filter map=] |filters| and a [=boolean=]
 <dfn for="match an attribution source's filter data against filters"><var>isNegated</var></dfn>:
 
 1. Let |sourceData| be |source|'s [=attribution source/filter data=].
 1. [=map/iterate|For each=] |key| → |filterValues| of |filters|:
     1. If |sourceData|[|key|] does not [=map/exist=], [=iteration/continue=].
     1. Let |sourceValues| be |sourceData|[|key|].
-    1. If the result of running [=match two filter values=] with |sourceValues|, |filterValues| and |isNegated|
-        is false, return false.
+    1. If |isNegated| is false, then:
+        1. If the result of running [=match filter values=] with |sourceValues| and |filterValues|
+            is false, return false.
+    1. If |isNegated| is true, then:
+        1. If the result of running [=match filter values with negation=] with |sourceValues| and
+            |filterValues| is false, return false.
 1. Return true.
 
 <h3 dfn id="should-rate-limit-attribution">Should attribution be blocked by rate limit</h3>
