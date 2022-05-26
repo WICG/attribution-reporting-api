@@ -267,14 +267,16 @@ process trigger registration headers for all subresource requests on the page
 where the `attribution-reporting` Permissions Policy is enabled.
 
 Like source event registrations, these requests should respond with a new HTTP
-header `Attribution-Reporting-Register-Event-Trigger` which contains information
+header `Attribution-Reporting-Register-Trigger` which contains information
 about how to treat the trigger event:
 ```jsonc
-[{
-  "trigger_data": "[unsigned 64-bit integer]",
-  "priority": "[signed 64-bit integer]",
-  "deduplication_key": "[unsigned 64-bit integer]"
-}]
+{
+  "event_trigger_data": [{
+    "trigger_data": "[unsigned 64-bit integer]",
+    "priority": "[signed 64-bit integer]",
+    "deduplication_key": "[unsigned 64-bit integer]"
+  }]
+}
 ```
 
 - `trigger_data`: optional coarse-grained data to identify the triggering
@@ -489,13 +491,17 @@ Source registration:
   }
 }
 ```
-Trigger registration will now accept an option header
-`Attribution-Reporting-Filters`:
+
+Trigger registration:
 ```jsonc
 {
-  "conversion_subdomain": ["electronics.megastore"],
-  // Not set on the source side, so this key is ignored
-  "directory": ["/store/electronics]"
+  ... // existing fields, such as `event_trigger_data`
+
+  "filters": {
+    "conversion_subdomain": ["electronics.megastore"],
+    // Not set on the source side, so this key is ignored
+    "directory": ["/store/electronics]"
+  }
 }
 ```
 If keys in the filters JSON match keys in `filter_data`, the trigger is
@@ -508,21 +514,23 @@ Note: The filter JSON does not support nested dictionaries or lists.
 `filter_data` and `filters` are only allowed to have a list of values with
 string type.
 
-The `Attribution-Reporting-Register-Event-Trigger` header can also be extended
-to do selective filtering to set `trigger_data` based on `filter_data`:
+The `event_trigger_data` field can also be extended to do selective filtering
+to set `trigger_data` based on `filter_data`:
 ```jsonc
 // Filter by the source type to handle different bit limits.
-[
-  {
-    "trigger_data": "2",
-    // Note that "not_filters" which filters with a negation is also supported.
-    "filters": {"source_type": ["navigation"]}
-  },
-  {
-    "trigger_data": "1",
-    "filters": {"source_type": ["event"]}
-  }
-]
+{
+  "event_trigger_data": [
+    {
+      "trigger_data": "2",
+      // Note that "not_filters" which filters with a negation is also supported.
+      "filters": {"source_type": ["navigation"]}
+    },
+    {
+      "trigger_data": "1",
+      "filters": {"source_type": ["event"]}
+    }
+  ]
+}
 ```
 
 If the filters do not match for any of the event triggers, no event-level report
@@ -541,18 +549,12 @@ fully understood during roll-out and help flush out any bugs (either in browser
 or caller code), and more easily compare the performance to cookie-based
 alternatives.
 
-Source registration will accept a new parameter `debug_key`:
+Source and trigger registrations will both accept a new field `debug_key`:
 ```jsonc
 {
   ...
   "debug_key": "[64-bit unsigned integer]"
 }
-```
-
-Trigger debug keys are created using a separate header:
-
-```http
-Attribution-Reporting-Trigger-Debug-Key: [64-bit unsigned integer]
 ```
 
 Reports will include up to two new parameters which pass any specified debug keys
@@ -633,12 +635,14 @@ including `ad-tech.example`, by adding conversion pixels:
 `ad-tech.example` receives this request, and decides to trigger attribution on
 `toasters.example`. They must compress all of the data into 3 bits, so
 `ad-tech.example` chooses to encode the value as "2" (e.g. some bucketed version
-of the purchase value). They respond to the request with a
-`Attribution-Reporting-Register-Event-Trigger` header:
+of the purchase value). They respond to the request with an
+`Attribution-Reporting-Register-Trigger` header:
 ```jsonc
-[{
-  "trigger_data": "2"
-}]
+{
+  "event_trigger_data": [{
+    "trigger_data": "2"
+  }]
+}
 ```
 
 The browser sees this response, and schedules a report to be sent. The report is

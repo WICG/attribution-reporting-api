@@ -97,39 +97,33 @@ at most 32 digits.
 
 ### Attribution trigger registration
 
-Trigger registration will also include two new headers:
-`Attribution-Reporting-Register-Aggregatable-Trigger-Data` is a list of dict
-which generates aggregation keys.
+Trigger registration will also add two new fields to the JSON dictionary of the
+[`Attribution-Reporting-Register-Trigger`
+header](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#triggering-attribution):
 ```jsonc
-[
-// Each dict independently adds pieces to multiple source keys.
 {
-  // Conversion type purchase = 2 at a 9 bit offset, i.e. 2 << 9.
-  // A 9 bit offset is needed because there are 511 possible campaigns, which
-  // will take up 9 bits in the resulting key.
-  "key_piece": "0x400",
-  // Apply this key piece to:
-  "source_keys": ["campaignCounts"]
-},
-{
-  // Purchase category shirts = 21 at a 7 bit offset, i.e. 21 << 7.
-  // A 7 bit offset is needed because there are ~100 regions for the geo key,
-  // which will take up 7 bits of space in the resulting key.
-  "key_piece": "0xA80",
-  // Apply this key piece to:
-  "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"]
-}
-]
-```
-The other new header `Attribution-Reporting-Register-Aggregatable-Values` lists
-an amount of an abstract "value" to contribute to each key, which can be
-integers in [1, 2^16). These are attached to aggregation keys in the order they
-are generated. See the [contribution
-budgeting](#contribution-bounding-and-budgeting) section for more details on how
-to allocate these contribution values.
+  ... // existing fields, such as `event_trigger_data`
 
-```jsonc
-{
+  "aggregatable_trigger_data": [
+    // Each dict independently adds pieces to multiple source keys.
+    {
+      // Conversion type purchase = 2 at a 9 bit offset, i.e. 2 << 9.
+      // A 9 bit offset is needed because there are 511 possible campaigns, which
+      // will take up 9 bits in the resulting key.
+      "key_piece": "0x400",
+      // Apply this key piece to:
+      "source_keys": ["campaignCounts"]
+    },
+    {
+      // Purchase category shirts = 21 at a 7 bit offset, i.e. 21 << 7.
+      // A 7 bit offset is needed because there are ~100 regions for the geo key,
+      // which will take up 7 bits of space in the resulting key.
+      "key_piece": "0xA80",
+      // Apply this key piece to:
+      "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"]
+    }
+  ],
+  "aggregatable_values": {
     // Each source event can contribute a maximum of L1 = 2^16 to the aggregate
     // histogram. In this example, use this whole budget on a single trigger,
     // evenly allocating this "budget" across two measurements. Note that this
@@ -140,10 +134,19 @@ to allocate these contribution values.
 
     // Purchase was for $52. The site's max value is $1024.
     // $1 = (L1 / 2) / 1024.
-    // $52 = 52 * (L1 / 2) / 1024 = 1664 
+    // $52 = 52 * (L1 / 2) / 1024 = 1664
     "geoValue": 1664
+  }
 }
 ```
+The `aggregatable_trigger_data` field is a list of dict which generates
+aggregation keys.
+
+The `aggregatable_values` field lists an amount of an abstract "value" to
+contribute to each key, which can be integers in [1, 2^16). These are attached
+to aggregation keys in the order they are generated. See the [contribution
+budgeting](#contribution-bounding-and-budgeting) section for more details on how
+to allocate these contribution values.
 
 The scheme above will generate the following abstract histogram contributions:
 ```jsonc
@@ -151,7 +154,7 @@ The scheme above will generate the following abstract histogram contributions:
 // campaignCounts
 {
   key: 0x559, // = 0x159 | 0x400
-  value: 32768 
+  value: 32768
 },
 // geoValue:
 {
@@ -159,9 +162,9 @@ The scheme above will generate the following abstract histogram contributions:
   value: 1664
 }]
 ```
-Note: `Attribution-Reporting-Filters` will still apply to aggregatable reports,
-and each dict in `Attribution-Reporting-Register-Aggregatable-Trigger-Data` can
-still optionally have filters applied to it just like for event-level reports.
+Note: The `filters` field will still apply to aggregatable reports, and each
+dict in `aggregatable_trigger_data` can still optionally have filters applied
+to it just like for event-level reports.
 
 Note: the above scheme was used to maximize the [contribution
 budget](#contribution-bounding-and-budgeting) and optimize utility in the face
