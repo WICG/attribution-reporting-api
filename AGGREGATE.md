@@ -69,25 +69,30 @@ example an ad-tech will use the API to collect:
 * Aggregate purchase values at a per geo level 
 ### Attribution source registration
 
-Registering sources eligible for aggregate reporting entails adding a new header
-on the response to the `attributionsrc` request:
-`Attribution-Reporting-Register-Aggregatable-Source`, in the form of a JSON
-list.
+Registering sources eligible for aggregate reporting entails adding a new
+`aggregation_keys` list field to the JSON dictionary of the
+[`Attribution-Reporting-Register-Source` header](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#registering-attribution-sources):
 ```jsonc
-[{
-  // Generates a "0x159" key piece (low order bits of the key) for the key named
-  // "campaignCounts"
-  "id": "campaignCounts",
-  "key_piece": "0x159" // User saw ad from campaign 345 (out of 511)
-},
 {
-  // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue"
-  "id": "geoValue",
-  // Source-side geo region = 5 (US), out of a possible ~100 regions.
-  "key_piece": "0x5"
-}]
+  ... // existing fields, such as `source_event_id` and `destination`
+
+  "aggregation_keys": [
+    {
+      // Generates a "0x159" key piece (low order bits of the key) for the key named
+      // "campaignCounts"
+      "id": "campaignCounts",
+      "key_piece": "0x159" // User saw ad from campaign 345 (out of 511)
+    },
+    {
+      // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue"
+      "id": "geoValue",
+      // Source-side geo region = 5 (US), out of a possible ~100 regions.
+      "key_piece": "0x5"
+    }
+  ]
+}
 ```
-This defines a list named histogram contributions, each with a piece of the
+This defines a list of histogram contributions, each with a piece of the
 aggregation key defined as a hex-string. The final histogram bucket key will be
 fully defined at trigger time using a combination (binary OR) of this piece and
 trigger-side pieces.
@@ -556,16 +561,13 @@ for more details.
 
 ### Choosing among aggregation services
 
-The server can respond with an optional header
-`Attribution-Reporting-Alternative-Aggregation-Mode` which accepts a string
-value.
+The server can add an optional `alternative_aggregation_mode` string field:
 
 ```http
-Attribution-Reporting-Register-Aggregatable-Source: [{....}]
-Attribution-Reporting-Alternative-Aggregation-Mode: "experimental-poplar"
+Attribution-Reporting-Register-Source: {..., "aggregation_keys": ..., "alternative_aggregation_mode": "experimental-poplar"}
 ```
 
-The optional header will allow developers to choose among different options for
+The optional field will allow developers to choose among different options for
 aggregation infrastructure supported by the user agent. This value will allow
 experimentation with new technologies, and allows us to try out new approaches
 without interfering with core functionality provided by the default option. The
