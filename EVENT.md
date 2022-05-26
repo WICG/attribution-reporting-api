@@ -503,9 +503,8 @@ to do selective filtering to set `trigger_data` based on `filter_data`:
 ]
 ```
 
-If the filters do not match for any of the event triggers, the trigger data and
-priority both default to 0 and the dedup key defaults to not being set, and
-attribution proceeds normally.
+If the filters do not match for any of the event triggers, no event-level report
+will be created.
 
 If the filters match for multiple event triggers, the first matching event
 trigger is used.

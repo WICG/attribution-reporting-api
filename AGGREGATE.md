@@ -172,6 +172,10 @@ L1 = 1 << 16
 true_agg_campaign_counts = raw_agg_campaign_counts / (L1 / 2)
 true_agg_geo_value = 1024 * raw_agg_geo_value / (L1 / 2)
 ```
+
+Note that aggregatable trigger registration is independent of event-level
+trigger registration.
+
 ### Aggregatable reports
 
 Aggregatable reports will look very similar to event-level reports. They will be
