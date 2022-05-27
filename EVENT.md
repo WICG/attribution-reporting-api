@@ -135,13 +135,16 @@ window.open(
 ```
 
 `event` sources do not require any user interaction and can be registered via
-`<img>` tags with the new `attributionsrc` attribute:
+`<img>` or `<script>` tags with the new `attributionsrc` attribute:
 ```html
 <img src="https://advertiser.example/pixel"
      attributionsrc="https://adtech.example/attribution_source?my_ad_id=123">
+
+<script src="https://advertiser.example/register-view"
+        attributionsrc="https://adtech.example/attribution_source?my_ad_id=123">
 ```
 
-Specifying a URL value for `attributionsrc` within `<a>`, `<img>`, or
+Specifying a URL value for `attributionsrc` within `<a>`, `<img>`, `<script>` or
 `window.open` will cause the browser to initiate a separate `keepalive` fetch
 request which includes the `Attribution-Reporting-Eligible` request header.
 
