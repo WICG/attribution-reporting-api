@@ -26,6 +26,7 @@ extension on top of this.
   - [Publisher-side Controls for Attribution Source
     Declaration](#publisher-side-controls-for-attribution-source-declaration)
   - [Triggering Attribution](#triggering-attribution)
+  - [Registration requests](registration-requests)
   - [Data limits and noise](#data-limits-and-noise)
   - [Trigger attribution algorithm](#trigger-attribution-algorithm)
   - [Multiple sources for the same trigger
@@ -158,10 +159,11 @@ APIs by setting the `Attribution-Reporting-Eligible` header manually:
 
 ```javascript
 const headers = {
-  'Attribution-Reporting-Eligible': 'true'
+  'Attribution-Reporting-Eligible': 'event-source'
 };
+// Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
-             { headers });
+             { headers, keepalive: true });
 ```
 
 Other requests APIs which allow specifying headers (e.g. `XMLHttpRequest`)
@@ -266,10 +268,11 @@ similar mechanism is used as source event registration, via HTML:
 or JavaScript:
 ```javascript
 const headers = {
-  'Attribution-Reporting-Eligible': 'true'
+  'Attribution-Reporting-Eligible': 'trigger'
 };
+// Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_trigger?purchase=13",
-             { headers });
+             { headers, keepalive: true });
 ```
 
 As a stop-gap to support pre-existing conversion tags which do not include the
@@ -278,14 +281,16 @@ process trigger registration headers for all subresource requests on the page
 where the `attribution-reporting` Permissions Policy is enabled.
 
 Like source event registrations, these requests should respond with a new HTTP
-header `Attribution-Reporting-Register-Event-Trigger` which contains information
+header `Attribution-Reporting-Register-Trigger` which contains information
 about how to treat the trigger event:
 ```jsonc
-[{
-  "trigger_data": "[unsigned 64-bit integer]",
-  "priority": "[signed 64-bit integer]",
-  "deduplication_key": "[unsigned 64-bit integer]"
-}]
+{
+  "event_trigger_data": [{
+    "trigger_data": "[unsigned 64-bit integer]",
+    "priority": "[signed 64-bit integer]",
+    "deduplication_key": "[unsigned 64-bit integer]"
+  }]
+}
 ```
 
 - `trigger_data`: optional coarse-grained data to identify the triggering
@@ -310,6 +315,26 @@ same-origin children, but disabled in cross-origin children.
 
 Navigation sources may be attributed up to 3 times. Event sources may be
 attributed up to 1 time.
+
+### Registration requests
+
+Depending on the context in which it was made, a request is eligible to
+register sources, triggers, sources or triggers, or nothing, as indicated in
+the `Attribution-Reporting-Eligible` request header, which is a [structured
+dictionary](https://www.rfc-editor.org/rfc/rfc8941.html#name-dictionaries).
+
+The reporting origin may use the value of this header to determine which
+registrations, if any, to include in its response. The browser will likewise
+ignore invalid registrations:
+
+1. `<a>` and `window.open` will have `navigation-source`.
+2. Other APIs that automatically set `Attribution-Reporting-Eligible` (like
+   `<img>`) will contain `event-source, trigger`.
+3. Requests from JavaScript, e.g. `window.fetch`, can set this header manually,
+   but it is an error for such requests to specify `navigation-source`.
+4. All other requests will not have the `Attribution-Reporting-Eligible`
+   header. For those requests the browser will permit trigger registration
+   only.
 
 ### Data limits and noise
 
@@ -480,13 +505,17 @@ Source registration:
   }
 }
 ```
-Trigger registration will now accept an option header
-`Attribution-Reporting-Filters`:
+
+Trigger registration:
 ```jsonc
 {
-  "conversion_subdomain": ["electronics.megastore"],
-  // Not set on the source side, so this key is ignored
-  "directory": ["/store/electronics]"
+  ... // existing fields, such as `event_trigger_data`
+
+  "filters": {
+    "conversion_subdomain": ["electronics.megastore"],
+    // Not set on the source side, so this key is ignored
+    "directory": ["/store/electronics]"
+  }
 }
 ```
 If keys in the filters JSON match keys in `filter_data`, the trigger is
@@ -499,26 +528,27 @@ Note: The filter JSON does not support nested dictionaries or lists.
 `filter_data` and `filters` are only allowed to have a list of values with
 string type.
 
-The `Attribution-Reporting-Register-Event-Trigger` header can also be extended
-to do selective filtering to set `trigger_data` based on `filter_data`:
+The `event_trigger_data` field can also be extended to do selective filtering
+to set `trigger_data` based on `filter_data`:
 ```jsonc
 // Filter by the source type to handle different bit limits.
-[
-  {
-    "trigger_data": "2",
-    // Note that "not_filters" which filters with a negation is also supported.
-    "filters": {"source_type": ["navigation"]}
-  },
-  {
-    "trigger_data": "1",
-    "filters": {"source_type": ["event"]}
-  }
-]
+{
+  "event_trigger_data": [
+    {
+      "trigger_data": "2",
+      // Note that "not_filters" which filters with a negation is also supported.
+      "filters": {"source_type": ["navigation"]}
+    },
+    {
+      "trigger_data": "1",
+      "filters": {"source_type": ["event"]}
+    }
+  ]
+}
 ```
 
-If the filters do not match for any of the event triggers, the trigger data and
-priority both default to 0 and the dedup key defaults to not being set, and
-attribution proceeds normally.
+If the filters do not match for any of the event triggers, no event-level report
+will be created.
 
 If the filters match for multiple event triggers, the first matching event
 trigger is used.
@@ -533,18 +563,12 @@ fully understood during roll-out and help flush out any bugs (either in browser
 or caller code), and more easily compare the performance to cookie-based
 alternatives.
 
-Source registration will accept a new parameter `debug_key`:
+Source and trigger registrations will both accept a new field `debug_key`:
 ```jsonc
 {
   ...
   "debug_key": "[64-bit unsigned integer]"
 }
-```
-
-Trigger debug keys are created using a separate header:
-
-```http
-Attribution-Reporting-Trigger-Debug-Key: [64-bit unsigned integer]
 ```
 
 Reports will include up to two new parameters which pass any specified debug keys
@@ -625,12 +649,14 @@ including `ad-tech.example`, by adding conversion pixels:
 `ad-tech.example` receives this request, and decides to trigger attribution on
 `toasters.example`. They must compress all of the data into 3 bits, so
 `ad-tech.example` chooses to encode the value as "2" (e.g. some bucketed version
-of the purchase value). They respond to the request with a
-`Attribution-Reporting-Register-Event-Trigger` header:
+of the purchase value). They respond to the request with an
+`Attribution-Reporting-Register-Trigger` header:
 ```jsonc
-[{
-  "trigger_data": "2"
-}]
+{
+  "event_trigger_data": [{
+    "trigger_data": "2"
+  }]
+}
 ```
 
 The browser sees this response, and schedules a report to be sent. The report is

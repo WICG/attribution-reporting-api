@@ -69,25 +69,24 @@ example an ad-tech will use the API to collect:
 * Aggregate purchase values at a per geo level 
 ### Attribution source registration
 
-Registering sources eligible for aggregate reporting entails adding a new header
-on the response to the `attributionsrc` request:
-`Attribution-Reporting-Register-Aggregatable-Source`, in the form of a JSON
-list.
+Registering sources eligible for aggregate reporting entails adding a new
+`aggregation_keys` dictionary field to the JSON dictionary of the
+[`Attribution-Reporting-Register-Source` header](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#registering-attribution-sources):
 ```jsonc
-[{
-  // Generates a "0x159" key piece (low order bits of the key) for the key named
-  // "campaignCounts"
-  "id": "campaignCounts",
-  "key_piece": "0x159" // User saw ad from campaign 345 (out of 511)
-},
 {
-  // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue"
-  "id": "geoValue",
-  // Source-side geo region = 5 (US), out of a possible ~100 regions.
-  "key_piece": "0x5"
-}]
+  ... // existing fields, such as `source_event_id` and `destination`
+
+  "aggregation_keys": {
+    // Generates a "0x159" key piece (low order bits of the key) for the key named
+    // "campaignCounts".
+    "campaignCounts": "0x159", // User saw ad from campaign 345 (out of 511)
+
+    // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue".
+    "geoValue": "0x5" // Source-side geo region = 5 (US), out of a possible ~100 regions
+  }
+}
 ```
-This defines a list named histogram contributions, each with a piece of the
+This defines a dictionary of named aggregation keys, each with a piece of the
 aggregation key defined as a hex-string. The final histogram bucket key will be
 fully defined at trigger time using a combination (binary OR) of this piece and
 trigger-side pieces.
@@ -98,39 +97,33 @@ at most 32 digits.
 
 ### Attribution trigger registration
 
-Trigger registration will also include two new headers:
-`Attribution-Reporting-Register-Aggregatable-Trigger-Data` is a list of dict
-which generates aggregation keys.
+Trigger registration will also add two new fields to the JSON dictionary of the
+[`Attribution-Reporting-Register-Trigger`
+header](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#triggering-attribution):
 ```jsonc
-[
-// Each dict independently adds pieces to multiple source keys.
 {
-  // Conversion type purchase = 2 at a 9 bit offset, i.e. 2 << 9.
-  // A 9 bit offset is needed because there are 511 possible campaigns, which
-  // will take up 9 bits in the resulting key.
-  "key_piece": "0x400",
-  // Apply this key piece to:
-  "source_keys": ["campaignCounts"]
-},
-{
-  // Purchase category shirts = 21 at a 7 bit offset, i.e. 21 << 7.
-  // A 7 bit offset is needed because there are ~100 regions for the geo key,
-  // which will take up 7 bits of space in the resulting key.
-  "key_piece": "0xA80",
-  // Apply this key piece to:
-  "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"]
-}
-]
-```
-The other new header `Attribution-Reporting-Register-Aggregatable-Values` lists
-an amount of an abstract "value" to contribute to each key, which can be
-integers in [1, 2^16). These are attached to aggregation keys in the order they
-are generated. See the [contribution
-budgeting](#contribution-bounding-and-budgeting) section for more details on how
-to allocate these contribution values.
+  ... // existing fields, such as `event_trigger_data`
 
-```jsonc
-{
+  "aggregatable_trigger_data": [
+    // Each dict independently adds pieces to multiple source keys.
+    {
+      // Conversion type purchase = 2 at a 9 bit offset, i.e. 2 << 9.
+      // A 9 bit offset is needed because there are 511 possible campaigns, which
+      // will take up 9 bits in the resulting key.
+      "key_piece": "0x400",
+      // Apply this key piece to:
+      "source_keys": ["campaignCounts"]
+    },
+    {
+      // Purchase category shirts = 21 at a 7 bit offset, i.e. 21 << 7.
+      // A 7 bit offset is needed because there are ~100 regions for the geo key,
+      // which will take up 7 bits of space in the resulting key.
+      "key_piece": "0xA80",
+      // Apply this key piece to:
+      "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"]
+    }
+  ],
+  "aggregatable_values": {
     // Each source event can contribute a maximum of L1 = 2^16 to the aggregate
     // histogram. In this example, use this whole budget on a single trigger,
     // evenly allocating this "budget" across two measurements. Note that this
@@ -141,10 +134,19 @@ to allocate these contribution values.
 
     // Purchase was for $52. The site's max value is $1024.
     // $1 = (L1 / 2) / 1024.
-    // $52 = 52 * (L1 / 2) / 1024 = 1664 
+    // $52 = 52 * (L1 / 2) / 1024 = 1664
     "geoValue": 1664
+  }
 }
 ```
+The `aggregatable_trigger_data` field is a list of dict which generates
+aggregation keys.
+
+The `aggregatable_values` field lists an amount of an abstract "value" to
+contribute to each key, which can be integers in [1, 2^16). These are attached
+to aggregation keys in the order they are generated. See the [contribution
+budgeting](#contribution-bounding-and-budgeting) section for more details on how
+to allocate these contribution values.
 
 The scheme above will generate the following abstract histogram contributions:
 ```jsonc
@@ -152,7 +154,7 @@ The scheme above will generate the following abstract histogram contributions:
 // campaignCounts
 {
   key: 0x559, // = 0x159 | 0x400
-  value: 32768 
+  value: 32768
 },
 // geoValue:
 {
@@ -160,9 +162,9 @@ The scheme above will generate the following abstract histogram contributions:
   value: 1664
 }]
 ```
-Note: `Attribution-Reporting-Filters` will still apply to aggregatable reports,
-and each dict in `Attribution-Reporting-Register-Aggregatable-Trigger-Data` can
-still optionally have filters applied to it just like for event-level reports.
+Note: The `filters` field will still apply to aggregatable reports, and each
+dict in `aggregatable_trigger_data` can still optionally have filters applied
+to it just like for event-level reports.
 
 Note: the above scheme was used to maximize the [contribution
 budget](#contribution-bounding-and-budgeting) and optimize utility in the face
@@ -172,6 +174,10 @@ L1 = 1 << 16
 true_agg_campaign_counts = raw_agg_campaign_counts / (L1 / 2)
 true_agg_geo_value = 1024 * raw_agg_geo_value / (L1 / 2)
 ```
+
+Note that aggregatable trigger registration is independent of event-level
+trigger registration.
+
 ### Aggregatable reports
 
 Aggregatable reports will look very similar to event-level reports. They will be
@@ -186,7 +192,6 @@ The report will be JSON encoded with the following scheme:
 
 ```jsonc
 {
-  "source_site": "https://publisher.example",
   "attribution_destination": "https://advertiser.example",
   "source_registration_time": "[timestamp in seconds]",
 
@@ -240,7 +245,7 @@ The browser is free to utilize techniques like retries to minimize data loss.
 * The `privacy_budget_key` is used to define distinct batches of aggregate
   reports. It is used by the aggregation service to prevent replay attacks. It
   will be a hash of:
-  `reporting_origin | source_site | destination | version | source_registration_time`.
+  `reporting_origin | destination | version | source_registration_time`.
   Note that the true key used to track batches will be `privacy_budget_key`
   concatenated with `round_to_hour(scheduled_report_time)`. The latter is
   omitted from the key to allow server-side recording to be time-bounded. All
@@ -553,16 +558,13 @@ for more details.
 
 ### Choosing among aggregation services
 
-The server can respond with an optional header
-`Attribution-Reporting-Alternative-Aggregation-Mode` which accepts a string
-value.
+The server can add an optional `alternative_aggregation_mode` string field:
 
 ```http
-Attribution-Reporting-Register-Aggregatable-Source: [{....}]
-Attribution-Reporting-Alternative-Aggregation-Mode: "experimental-poplar"
+Attribution-Reporting-Register-Source: {..., "aggregation_keys": ..., "alternative_aggregation_mode": "experimental-poplar"}
 ```
 
-The optional header will allow developers to choose among different options for
+The optional field will allow developers to choose among different options for
 aggregation infrastructure supported by the user agent. This value will allow
 experimentation with new technologies, and allows us to try out new approaches
 without interfering with core functionality provided by the default option. The
