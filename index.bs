@@ -957,15 +957,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. If the result of running
     [=match an attribution source's filter data against filters=] with
     |sourceToAttribute| and |trigger|'s [=attribution trigger/filters=] is false, return.
-1. Let |matchedConfig| be a new [=event-level trigger configuration=] with the items:
-    : [=event-level trigger configuration/trigger data=]
-    :: 0
-    : [=event-level trigger configuration/dedup key=]
-    :: null
-    : [=event-level trigger configuration/priority=]
-    :: 0
-    : [=event-level trigger configuration/filters=]
-    :: «[]»
+1. Let |matchedConfig| be null.
 1. [=map/iterate|For each=] [=event-level trigger configuration=] |config| of |trigger|'s
     [=attribution trigger/event-level trigger configurations=]:
     1. If the result of running
@@ -973,6 +965,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
         |config|'s [=event-level trigger configuration/filters=] is false, [=iteration/continue=].
     1. Set |matchedConfig| to |config|.
     1. [=iteration/Break=].
+1. If |matchedConfig| is null, return.
 1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null and
     |sourceToAttribute|'s [=attribution source/dedup keys=] [=list/contains=] it, return.
 1. Let |numMatchingReports| be the number of entries in the [=event-level report cache=] whose
