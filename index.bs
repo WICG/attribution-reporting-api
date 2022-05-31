@@ -306,7 +306,7 @@ An attribution aggregatable trigger data is a [=struct=] with the following item
 
 </dl>
 
-Issue: Use [=attribution aggregatable trigger data/negated filters=] in [=create attribution aggregatable histograms=].
+Issue: Use [=attribution aggregatable trigger data/negated filters=] in [=create aggregatable contributions=].
 
 <h3 dfn-type=dfn>Event-level trigger configuration</h3>
 
@@ -390,11 +390,11 @@ An event-level report is a [=struct=] with the following items:
 
 </dl>
 
-<h3 dfn-type=dfn>Attribution aggregatable histogram</h3>
+<h3 dfn-type=dfn>Aggregatable contribution</h3>
 
-An attribution aggregatable histogram is a [=struct=] with the following items:
+An aggregatable contribution is a [=struct=] with the following items:
 
-<dl dfn-for="attribution aggregatable histogram">
+<dl dfn-for="aggregatable contribution">
 : <dfn>key</dfn>
 :: A non-negative 128-bit integer.
 : <dfn>value</dfn>
@@ -911,9 +911,9 @@ Given an [=attribution rate-limit record=] |newRecord|:
     <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
 
-<h3 algorithm id="creating-aggregatable-histograms">Creating aggregatable histograms</h3>
+<h3 algorithm id="creating-aggregatable-contributions">Creating aggregatable contributions</h3>
 
-To <dfn>create [=attribution aggregatable histograms=]</dfn> given an [=attribution source=] |source| and an
+To <dfn>create an [=aggregatable contribution=]</dfn> given an [=attribution source=] |source| and an
  [=attribution trigger=] |trigger|, run the following steps:
 
 1. Let |aggregationKeys| be |source|'s [=attribution source/aggregation keys=].
@@ -925,16 +925,16 @@ To <dfn>create [=attribution aggregatable histograms=]</dfn> given an [=attribut
         1. Set |aggregationKeys|[|sourceKey|] to |aggregationKeys|[|sourceKey|] XOR |triggerData|'s
             [=attribution aggregatable trigger data/key piece=].
 1. Let |aggregatableValues| be |trigger|'s [=attribution trigger/aggregatable values=].
-1. Let |histograms| be a new empty [=list=].
+1. Let |contributions| be a new empty [=list=].
 1. [=map/iterate|For each=] |id| → |key| of |aggregationKeys|:
     1. If |aggregatableValues|[|id|] does not [=map/exist=], [=iteration/continue=].
-    1. Let |histogram| be a new [=attribution aggregatable histogram=] with the items:
-        : [=attribution aggregatable histogram/key=]
+    1. Let |contribution| be a new [=aggregatable contribution=] with the items:
+        : [=aggregatable contribution/key=]
         :: |key|
-        : [=attribution aggregatable histogram/value=]
+        : [=aggregatable contribution/value=]
         :: |aggregatableValues|[|id|]
-    1. [=list/Append=] |histogram| to |histograms|.
-1. Return |histograms|.
+    1. [=list/Append=] |contribution| to |contributions|.
+1. Return |contributions|.
 
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
