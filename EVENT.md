@@ -26,7 +26,7 @@ extension on top of this.
   - [Publisher-side Controls for Attribution Source
     Declaration](#publisher-side-controls-for-attribution-source-declaration)
   - [Triggering Attribution](#triggering-attribution)
-  - [Registration requests](registration-requests)
+  - [Registration requests](#registration-requests)
   - [Data limits and noise](#data-limits-and-noise)
   - [Trigger attribution algorithm](#trigger-attribution-algorithm)
   - [Multiple sources for the same trigger
