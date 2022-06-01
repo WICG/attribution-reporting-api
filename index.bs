@@ -443,6 +443,12 @@ maximum value that can be used as an [=attribution source/event id=].
 maximum value that can be used as an [=attribution source/expiry=]. It must be
 greater than or equal to 30 days.
 
+<dfn>Max entries per attribution filter map</dfn> is a positive integer that
+controls the maximum [=map/size=] of an [=attribution filter map=].
+
+<dfn>Max values per attribution filter entry</dfn> is a positive integer that
+controls the maximum [=set/size=] of an [=attribution filter map=] entry.
+
 <dfn>Max pending sources per source origin</dfn> is a positive integer that
 controls how many [=attribution sources=] can be in the
 [=attribution source cache=] per [=attribution source/source origin=].
@@ -515,6 +521,30 @@ controls the maximum number of attributions for a
 [=event-level reports=] can be in the [=event-level report cache=].
 
 # General Algorithms # {#general-algorithms}
+
+<h3 id="parsing-filter-data">Parsing filter data</h3>
+
+To <dfn>parse filter data</dfn> given a |value| and an optional [=boolean=]
+<dfn for="parse filter data"><var>forSource</var></dfn> (default false):
+
+1. If |value| is not a [=map=], return null.
+1. If |forSource| is true and |value|["`source_type`"] [=map/exists=], return
+    null.
+1. If |value|'s [=map/size=] is greater than the user agent's
+    [=max entries per attribution filter map=], return null.
+1. Let |result| be a new [=attribution filter map=].
+1. [=map/iterate|For each=] |filter| → |data| of |value|:
+    1. If |data| is not a [=list=], return null.
+    1. Let |set| be a new [=ordered set=].
+    1. [=list/iterate|For each=] |d| of |data|:
+        1. [=set/Append=] |d| to |set|.
+    1. If |set|'s [=set/size=] is greater than the user agent's
+        [=max values per attribution filter entry=], return null.
+    1. [=map/Set=] |result|[|filter|] to |set|.
+1. Return |result|.
+
+Issue: Determine whether to limit [=string/length=] or
+[=string/code point length=] for |filter| and |d| above.
 
 <h3 id="obtaining-randomized-response">Obtaining a randomized response</h3>
 
@@ -621,6 +651,12 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     1. Set |priority| to the result of applying the
         <a spec="html">rules for parsing integers</a> to |value|["`priority`"].
     1. If |priority| is an error, set |priority| to 0.
+1. Let |filterData| be «[]».
+1. If |value|["`filter_data`"] [=map/exists=]:
+    1. Set |filterData| to the result of running [=parse filter data=] with
+        |value|["`filter_data`"] and [=parse filter data/forSource=] set to
+        true.
+    1. If |filterData| is null, return null.
 1. Let |debugKey| be null.
 1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
     1. Set |debugKey| to the result of applying the
@@ -643,6 +679,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
         [=max attributions per event source=].
 1. Let |numReportWindows| be the result of running
     [=obtain the number of report windows=] with |sourceType|.
+1. [=map/Set=] |filterData|["`source_type`"] to « |sourceType| ».
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -670,7 +707,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     : [=attribution source/randomized trigger rate=]
     :: |randomizedTriggerRate|
     : [=attribution source/filter data=]
-    :: «[ "`source_type`" → « |sourceType| » ]»
+    :: |filterData|
     : [=attribution source/debug key=]
     :: |debugKey|
     : [=attribution source/aggregation keys=]
@@ -678,8 +715,6 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 1. Return |source|.
 
 Issue: Ensure that |attributionDestination|'s [=origin/scheme=] is HTTP/HTTPS.
-
-Issue: Parse |value|["`filter_data`"].
 
 Issue: Parse |value|["`aggregation_keys`"].
 
@@ -803,6 +838,16 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
             <a spec="html">rules for parsing integers</a> to
             |value|["`priority`"].
         1. If |priority| is an error, set |priority| to 0.
+    1. Let |filters| be a new [=attribution filter map=].
+    1. If |value|["`filters`"] [=map/exists=]:
+        1. Set |filters| to the result of running [=parse filter data=] with
+            |value|["`filters`"].
+        1. If |filters| is null, return null.
+    1. Let |negatedFilters| be a new [=attribution filter map=].
+    1. If |value|["`not_filters`"] [=map/exists=]:
+        1. Set |negatedFilters| to the result of running [=parse filter data=]
+            with |value|["`not_filters`"].
+        1. If |negatedFilters| is null, return null.
     1. Let |eventTrigger| be a new [=event-level trigger configuration=] with
         the items:
         : [=event-level trigger configuration/trigger data=]
@@ -812,13 +857,11 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
         : [=event-level trigger configuration/priority=]
         :: |priority|
         : [=event-level trigger configuration/filters=]
-        :: «[]»
+        :: |filters|
         : [=event-level trigger configuration/negated filters=]
-        :: «[]»
+        :: |negatedFilters|
     1. [=set/Append=] |eventTrigger| to |eventTriggers|.
 1. Return |eventTriggers|.
-
-Issue: Parse filters and negated filters.
 
 Issue: Allow the user agent to return null if |values|'s [=list/size=] is
 greater than some constant.
@@ -839,6 +882,11 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
         <a spec="html">rules for parsing non-negative integers</a> to
         |value|["`debug_key`"].
     1. If |debugKey| is an error, set |debugKey| to null.
+1. Let |filters| be a new [=attribution filter map=].
+1. If |value|["`filters`"] exists:
+    1. Set |filters| to the result of running [=parse filter data=] with
+        |value|["`filters`"].
+    1. If |filters| is null, return null.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -847,7 +895,7 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
     : [=attribution trigger/reporting endpoint=]
     :: |reportingOrigin|
     : [=attribution trigger/filters=]
-    :: «[]»
+    :: |filters|
     : [=attribution trigger/debug key=]
     :: |debugKey|
     : [=attribution trigger/event-level trigger configurations=]
@@ -857,8 +905,6 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
     : [=attribution trigger/aggregatable values=]
     :: «[]»
 1. Return |trigger|.
-
-Issue: Parse top-level filters.
 
 Issue: Parse aggregatable trigger fields.
 
