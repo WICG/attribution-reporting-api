@@ -17,6 +17,7 @@ Assume Explicit For: on
 </pre>
 <pre class=link-defaults>
 spec:html; type:element; text:a
+spec:html; type:element; text:script
 </pre>
 <pre class="anchors">
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
@@ -58,52 +59,44 @@ in time.
 
 # HTML monkeypatches # {#html-monkeypatches}
 
-<h3 id="monkeypatch-anchor">&lt;a&gt; element</h3>
-
-Add the following <a spec=html>content attributes</a> to the <{a}> element:
-
-: <{a/attributionsrc}>
-:: The [=URL=] of the resource that will register an [=attribution source=].
-
-Extend the <{a}> element's <a spec=html>DOM interface</a> to include the
-following interface:
+<h3 id="monkeypatch-attributionsrc">API for elements</h3>
 
 <pre class="idl">
-partial interface HTMLAnchorElement {
+interface mixin HTMLAttributionSrcElementUtils {
     [CEReactions] attribute USVString attributionSrc;
 };
+
+HTMLAnchorElement includes HTMLAttributionSrcElementUtils;
+HTMLImageElement includes HTMLAttributionSrcElementUtils;
+HTMLScriptElement includes HTMLAttributionSrcElementUtils;
 </pre>
 
-The IDL attribute {{HTMLAnchorElement/attributionSrc}} must
-<a spec=html>reflect</a> the respective content attribute of the same name.
+Add the following <a spec=html>content attributes</a>:
 
-The <dfn for="a" element-attr>attributionsrc</dfn> attribute is a string
-representing the [=URL=] of the resource that will register an
-[=attribution source=] when the <{a}> is navigated.
+: <{a}>
+:: `attributionsrc` - [=URL=] for attribution registration
+: <{img}>
+:: `attributionsrc` - [=URL=] for attribution registration
+: <{script}>
+:: `attributionsrc` - [=URL=] for attribution registration
 
-<h3 id="monkeypatch-image">&lt;img&gt; element</h3>
+Add the following content attribute descriptions:
+: <{a}>
+:: The <dfn for="a" element-attr>attributionsrc</dfn> attribute is a [=string=]
+    representing the [=URL=] of the resource that will register an
+    [=attribution source=] when the <{a}> is navigated.
+: <{img}>
+:: The <dfn for="img" element-attr>attributionsrc</dfn> attribute is a
+    [=string=] representing the [=URL=] of the resource that will register an
+    [=attribution source=] or [=attribution trigger=] when set.
+: <{script}>
+:: The <dfn for="script" element-attr>attributionsrc</dfn> attribute is a
+    [=string=] representing the [=URL=] of the resource that will register an
+    [=attribution source=] or [=attribution trigger=] when set.
 
-Add the following <a spec=html>content attributes</a> to the <{img}> element:
-
-: <{img/attributionsrc}>
-:: The [=URL=] of the resource that will register an [=attribution source=] or
-    [=attribution trigger=].
-
-Extend the <{img}> element's <a spec=html>DOM interface</a> to include the
-following interface:
-
-<pre class="idl">
-partial interface HTMLImageElement {
-    [CEReactions] attribute USVString attributionSrc;
-};
-</pre>
-
-The IDL attribute {{HTMLImageElement/attributionSrc}} must
-<a spec=html>reflect</a> the respective content attribute of the same name.
-
-The <dfn for="img" element-attr>attributionsrc</dfn> attribute is a string
-representing the [=URL=] of the resource that will register an
-[=attribution source=] or [=attribution trigger=] when set.
+The IDL attribute {{HTMLAttributionSrcElementUtils/attributionSrc}}
+must <a spec=html>reflect</a> the respective content attribute of the same
+name.
 
 <h3 id="monkeypatch-navigation">Navigation</h3>
 
