@@ -308,11 +308,11 @@ An attribution source is a [=struct=] with the following items:
 
 </dl>
 
-<h3 dfn-type=dfn>Attribution aggregatable trigger data</h3>
+<h3 dfn-type=dfn>Aggregatable trigger data</h3>
 
-An attribution aggregatable trigger data is a [=struct=] with the following items:
+An aggregatable trigger data is a [=struct=] with the following items:
 
-<dl dfn-for="attribution aggregatable trigger data">
+<dl dfn-for="aggregatable trigger data">
 : <dfn>key piece</dfn>
 :: A non-negative 128-bit integer.
 : <dfn>source keys</dfn>
@@ -362,7 +362,7 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>event-level trigger configurations</dfn>
 :: A [=set=] of [=event-level trigger configuration=].
 : <dfn>aggregatable trigger data</dfn>
-:: A [=list=] of [=attribution aggregatable trigger data=].
+:: A [=set=] of [=aggregatable trigger data=].
 : <dfn>aggregatable values</dfn>
 :: An [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
     [=map/value|values=] are non-negative 32-bit integers.
@@ -463,6 +463,17 @@ maximum [=map/size=] of a [=filter map=].
 
 <dfn>Max values per filter entry</dfn> is a positive integer that
 controls the maximum [=set/size=] of a [=filter map=] entry.
+
+<dfn>Max aggregation keys per attribution</dfn> is a positive integer that
+controls the maximum [=map/size=] of an [=attribution source=]'s
+[=attribution source/aggregation keys=], the maximum [=set/size=] of an
+[=aggregatable trigger data=]'s [=aggregatable trigger data/source keys=],
+and the maximum [=map/size=] of an [=attribution trigger=]'s
+[=attribution trigger/aggregatable values=].
+
+<dfn>Max aggregatable trigger data per trigger</dfn> is a positive integer that
+controls the maximum [=set/size=] of an [=attribution trigger=]'s
+[=attribution trigger/aggregatable trigger data=].
 
 <dfn>Max pending sources per source origin</dfn> is a positive integer that
 controls how many [=attribution sources=] can be in the
@@ -590,6 +601,19 @@ double |randomPickRate|:
     probability.
 1. Otherwise, return |trueValue|.
 
+<h3 algorithm id="parsing-aggregation-key-piece">Parsing aggregation key piece</h3>
+
+To <dfn>parse aggregation key piece</dfn> given a [=string=] |input| peform the following steps.
+This algorithm will return either a non-negative 128-bit integer or an error.
+
+1. If |input|'s [=string/code point length=] is not between 3 and 34 (both inclusive), return an error.
+1. If the first character is not a U+0030 DIGIT ZERO (0), return an error.
+1. If the second character is not a U+0058 LATIN CAPITAL LETTER X character (X) and not a
+    U+0078 LATIN SMALL LETTER X character (x), return an error.
+1. Let |value| be the [=code point substring=] from 2 to the end of |input|.
+1. If the characters within |value| are not all [=ASCII hex digits=], return an error.
+1. Interpret |value| as a hexadecimal number and return as a non-negative 128-bit integer.
+
 # Source Algorithms # {#source-algorithms}
 
 <h3 id="obtaining-attribution-source-expiry-time">Obtaining an attribution source's expiry time</h3>
@@ -670,6 +694,20 @@ To <dfn>obtain a source expiry</dfn> given an [=ordered map=] |value|:
 1. If |expiry| is greater than the user agent's [=max source expiry=], set
     |expiry| to that value.
 
+To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
+1. Let |aggregationKeys| be a new [=ordered map=].
+1. If |map|["`aggregation_keys`"] does not [=map/exist=], return |aggregationKeys|.
+1. Let |values| be |map|["`aggregation_keys`"].
+1. If |values| is not an [=ordered map=], return null.
+1. If |values|'s [=map/size=] is greater than the user agent's
+    [=max aggregation keys per attribution=], return null.
+1. [=map/iterate|For each=] |key| → |value| of |values|:
+    1. If |value| is not a [=string=], return null.
+    1. Let |keyPiece| be the result of running [=parse aggregation key piece=] with |value|.
+    1. If |keyPiece| is an error, return null.
+    1. [=map/Set the value=] of |aggregationKeys|[|key|] to |keyPiece|.
+1. Return |aggregationKeys|.
+
 To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 |json|, an [=origin=] |sourceOrigin|, an [=origin=] |reportingOrigin|, and a
 [=source type=] |sourceType|:
@@ -712,6 +750,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     1. If |debugKey| is an error, set |debugKey| to null.
     1. If the result of running [=check if a debug key is allowed=] with
         |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
+1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
+1. If |aggregationKeys| is null, return null.
 1. Let |triggerDataCardinality| be the user agent's
     [=navigation-source trigger data cardinality=].
 1. Let |randomizedTriggerRate| be the user agent's
@@ -759,12 +799,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     : [=attribution source/debug key=]
     :: |debugKey|
     : [=attribution source/aggregation keys=]
-    :: «[]»
+    :: |aggregationKeys|
 1. Return |source|.
 
 Issue: Ensure that |attributionDestination|'s [=origin/scheme=] is HTTP/HTTPS.
-
-Issue: Parse |value|["`aggregation_keys`"].
 
 <h3 id="check-pending-destination-limit">Checking pending destination limit</h3>
 
@@ -940,6 +978,52 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
 Issue: Allow the user agent to return null if |values|'s [=list/size=] is
 greater than some constant.
 
+To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
+
+1. Let |aggregatableTriggerData| be a new [=set=].
+1. If |map|["`aggregatable_trigger_data`"] does not [=map/exist=], return |aggregatableTriggerData|.
+1. Let |values| be |map|["`aggregatable_trigger_data`"].
+1. If |values| is not a [=list=], return null.
+1. If |values|'s [=list/size=] is greater than the user agent's
+    [=max aggregatable trigger data per trigger=], return null.
+1. [=list/iterate|For each=] |value| of |values|:
+    1. If |value| is not an [=ordered map=], return null.
+    1. If |value|["`key_piece`"] does not [=map/exist=] or is not a [=string=], return null.
+    1. Let |keyPiece| be the result of running [=parse aggregation key piece=] with |value|["`key_piece`"].
+    1. If |keyPiece| is an error, return null.
+    1. If |value|["`source_keys`"] does not [=map/exist=] or is not a [=list=], return null.
+    1. If |value|["`source_keys`"]'s [=list/size=] is greater than the user agent's
+        [=max aggregation keys per attribution=], return null.
+    1. Let |sourceKeys| be a new [=set=].
+    1. [=list/iterate|For each=] |sourceKey| of |value|["`source_keys`"]:
+        1. If |sourceKey| is not a [=string=], return null.
+        1. [=set/Append=] |sourceKey| to |sourceKeys|.
+    1. Let |aggregatableTrigger| be a new [=aggregatable trigger data=] with the items:
+        : [=aggregatable trigger data/key piece=]
+        :: |keyPiece|
+        : [=aggregatable trigger data/source keys=]
+        :: |sourceKeys|
+        : [=aggregatable trigger data/filters=]
+        :: «[]»
+        : [=aggregatable trigger data/negated filters=]
+        :: «[]»
+    1. [=set/Append=] |aggregatableTrigger| to |aggregatableTriggerData|.
+1. Return |aggregatableTriggerData|.
+
+Issue: Parse filters and negated filters.
+
+To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
+
+1. If |map|["`aggregatable_values`"] does not [=map/exist=], return «[]».
+1. Let |values| be |map|["`aggregatable_values`"].
+1. If |values| is not an [=ordered map=], return null.
+1. If |values|'s [=map/size=] is great than the user agent's
+    [=max aggregation keys per attribution=], return null.
+1. [=map/iterate|For each=] <var ignore=''>key</var> → |value| of |values|:
+     1. If |value| is not an integer, return null.
+     1. If |value| is less than or equal to 0, return null.
+1. Return |values|.
+
 To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
 |json|, a [=site=] |destination|, and an [=origin=] |reportingOrigin|:
 
@@ -950,6 +1034,11 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
 1. Let |eventTriggers| be the result of running [=parse event triggers=]
     with |value|.
 1. If |eventTriggers| is null, return null.
+1. Let |aggregatableTriggerData| be the result of running [=parse aggregatable trigger data=]
+    with |value|.
+1. If |aggregatableTriggerData| is null, return null.
+1. Let |aggregatableValues| be the result of running [=parse aggregatable values=] with |value|.
+1. If |aggregatableValues| is null, return null.
 1. Let |debugKey| be null.
 1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
     1. Set |debugKey| to the result of applying the
@@ -986,12 +1075,10 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
     : [=attribution trigger/event-level trigger configurations=]
     :: |eventTriggers|
     : [=attribution trigger/aggregatable trigger data=]
-    :: «»
+    :: |aggregatableTriggerData|
     : [=attribution trigger/aggregatable values=]
-    :: «[]»
+    :: |aggregatableValues|
 1. Return |trigger|.
-
-Issue: Parse aggregatable trigger fields.
 
 <h3 dfn id="does-filter-data-match">Does filter data match</h3>
 
@@ -1071,17 +1158,17 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
  [=attribution trigger=] |trigger|, run the following steps:
 
 1. Let |aggregationKeys| be |source|'s [=attribution source/aggregation keys=].
-1. [=list/iterate|For each=] |triggerData| of |trigger|'s [=attribution trigger/aggregatable trigger data=]:
+1. [=set/iterate|For each=] |triggerData| of |trigger|'s [=attribution trigger/aggregatable trigger data=]:
     1. If the result of running [=match an attribution source's filter data against filters=] with
-        |source|, |triggerData|'s [=attribution aggregatable trigger data/filters=], and
+        |source|, |triggerData|'s [=aggregatable trigger data/filters=], and
         [=match an attribution source's filter data against filters/isNegated=] set to false is false, [=iteration/continue=].
     1. If the result of running [=match an attribution source's filter data against filters=] with
-        |source|, |triggerData|'s [=attribution aggregatable trigger data/negated filters=], and
+        |source|, |triggerData|'s [=aggregatable trigger data/negated filters=], and
         [=match an attribution source's filter data against filters/isNegated=] set to true is false, [=iteration/continue=].
-    1. [=set/iterate|For each=] |sourceKey| of |triggerData|'s [=attribution aggregatable trigger data/source keys=]:
+    1. [=set/iterate|For each=] |sourceKey| of |triggerData|'s [=aggregatable trigger data/source keys=]:
         1. If |aggregationKeys|[|sourceKey|] does not [=map/exist=], [=iteration/continue=].
         1. Set |aggregationKeys|[|sourceKey|] to |aggregationKeys|[|sourceKey|] XOR |triggerData|'s
-            [=attribution aggregatable trigger data/key piece=].
+            [=aggregatable trigger data/key piece=].
 1. Let |aggregatableValues| be |trigger|'s [=attribution trigger/aggregatable values=].
 1. Let |contributions| be a new empty [=list=].
 1. [=map/iterate|For each=] |id| → |key| of |aggregationKeys|:
