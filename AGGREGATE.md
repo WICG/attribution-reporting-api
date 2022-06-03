@@ -364,9 +364,9 @@ information on the data flow from reporter → processing origins shortly, but
 what follows is a high-level summary.
 
 As the browser sends individual aggregatable reports to the reporting origin,
-the reporting origin organizes them into batches (e.g. each batch having the
-same `privacy_budget_key`). They can send these batches to the aggregation
-service `origin` specified in the report.
+the reporting origin organizes them into
+[batches](AGGREGATION_SERVICE_TEE.md#disjoint-batches). They can send these
+batches to the aggregation service `origin` specified in the report.
 
 The aggregation service will aggregate reports within a certain batch, and
 respond back with an aggregate histogram, i.e. a list of keys with associated
