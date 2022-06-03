@@ -101,7 +101,7 @@ name.
 <h3 id="monkeypatch-navigation">Navigation</h3>
 
 This section ensures that an [=attribution source=] associated with a navigation
-results in a top-level navigation whose final URL is [=same site=] with the
+results in a top-level navigation whose final URL equals the
 [=attribution source/attribution destination=].
 
 <h4 id="monkeypatch-navigation-params">Navigation Params</h4>
@@ -683,7 +683,7 @@ To <dfn>maybe process a navigation attribution source</dfn> given a <a spec="HTM
 1. If |browsingContext| is not a <a spec="html">top-level browsing context</a>, return.
 1. Let <var>attributionSource</var> be |navigationParams|'s [=navigation params/attribution source=].
 1. If |attributionSource| is null, return.
-1. If |attributionSource|'s [=attribution source/attribution destination=] is not [=same site=] to |navigationParams|'s
+1. If |attributionSource|'s [=attribution source/attribution destination=] does not equal |navigationParams|'s
     <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigation-params-origin">origin</a>, return.
 1. [=Queue a task=] to [=process an attribution source=] with |attributionSource|.
 
@@ -723,7 +723,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 
 1. Let |cache| be the user agent's [=attribution source cache=].
 1. [=list/Remove=] all entries in |cache| where all of the following are true:
-    * the entry's [=attribution source/attribution destination=] is [=same site=] with |source|'s [attribution source/attribution destination].
+    * the entry's [=attribution source/attribution destination=] and |source|'s [=attribution source/attribution destination=] are equal.
     * the entry's [=attribution source/reporting endpoint=] is [=same origin=] with |source|'s [=attribution source/reporting endpoint=].
     * the entry's [=attribution source/number of event-level reports=] value is greater than 0.
 
@@ -876,8 +876,8 @@ Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToA
 
 1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| of [=attribution rate-limit cache=] where all of the following are true:
      * |record|'s [=attribution rate-limit record/scope=] is "`attribution`"
-     * |record|'s [=attribution rate-limit record/source site=] and |sourceToAttribute|'s [=attribution source/source site=] are [=same site=]
-     * |record|'s [=attribution rate-limit record/attribution destination=] and |trigger|'s [=attribution trigger/attribution destination=] are [=same site=]
+     * |record|'s [=attribution rate-limit record/source site=] and |sourceToAttribute|'s [=attribution source/source site=] are equal
+     * |record|'s [=attribution rate-limit record/attribution destination=] and |trigger|'s [=attribution trigger/attribution destination=] are equal
      * |record|'s [=attribution rate-limit record/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are [=same origin=]
      * |record|'s [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=] before |trigger|'s [=attribution trigger/trigger time=]
 1. If |matchingRateLimitRecords|'s [=list/size=] is greater than or equal to [=max attributions per rate-limit window=], return <strong>blocked</strong>.
@@ -892,8 +892,8 @@ Given an [=attribution rate-limit record=] |newRecord|:
      [=max attribution reporting endpoints per rate-limit window=].
 1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
      * |record|'s [=attribution rate-limit record/scope=] and |newRecord|'s [=attribution rate-limit record/scope=] are equal
-     * |record|'s [=attribution rate-limit record/source site=] and |newRecord|'s [=attribution rate-limit record/source site=] are [=same site=]
-     * |record|'s [=attribution rate-limit record/attribution destination=] and |newRecord|'s [=attribution rate-limit record/attribution destination=] are [=same site=]
+     * |record|'s [=attribution rate-limit record/source site=] and |newRecord|'s [=attribution rate-limit record/source site=] are equal
+     * |record|'s [=attribution rate-limit record/attribution destination=] and |newRecord|'s [=attribution rate-limit record/attribution destination=] are equal
      * |record|'s [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=] before |newRecord|'s [=attribution rate-limit record/time=]
 1. Let |distinctReportingEndpoints| be a new empty [=ordered set=].
 1. [=map/iterate|For each=] |record| of |matchingRateLimitRecords|, [=set/append=] |record|'s
@@ -935,7 +935,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 
 1. Let |attributionDestination| be |trigger|'s [=attribution trigger/attribution destination=].
 1. Let |matchingSources| be all entries in the [=attribution source cache=] where all of the following are true:
-     * entry's [=attribution source/attribution destination=] and |attributionDestination| are [=same site=].
+     * entry's [=attribution source/attribution destination=] and |attributionDestination| are equal.
      * entry's [=attribution source/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are [=same origin=].
      * entry's [=attribution source/expiry time=] is greater than the current time.
 1. If |matchingSources| is empty, return.
@@ -962,7 +962,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null and
     |sourceToAttribute|'s [=attribution source/dedup keys=] [=list/contains=] it, return.
 1. Let |numMatchingReports| be the number of entries in the [=event-level report cache=] whose
-    [=event-level report/attribution destination=] and |attributionDestination| are [=same site=].
+    [=event-level report/attribution destination=] equals |attributionDestination|.
 1. If |numMatchingReports| is greater than or equal to the user agent's
     [=max reports per attribution destination=], return.
 1. If the result of running [=should attribution be blocked by rate limit=] with |trigger| and
