@@ -533,6 +533,11 @@ controls the maximum number of attributions for a
 <dfn>Max report cache size</dfn> is a positive integer that controls how many
 [=event-level reports=] can be in the [=event-level report cache=].
 
+<dfn>Max destinations covered by pending sources</dfn> is a positive
+integer that controls the maximum number of distinct [=attribution source/attribution destinations=]
+for a ([=attribution source/source site=], [=attribution source/reporting endpoint=]) covered by
+pending [=attribution sources=].
+
 # General Algorithms # {#general-algorithms}
 
 <h3 id="parsing-filter-data">Parsing filter data</h3>
@@ -759,6 +764,27 @@ Issue: Ensure that |attributionDestination|'s [=origin/scheme=] is HTTP/HTTPS.
 
 Issue: Parse |value|["`aggregation_keys`"].
 
+<h3 dfn id="should-block-processing-for-destination-limit">Should processing be blocked by destination limit</h3>
+
+Given an [=attribution source=] |source|:
+1. Let |pendingSources| be all entries in the [=attribution source cache=] where all of the following are true:
+     * entry's [=attribution source/source site=] and |source|'s [=attribution source/source site=]
+        are [=same site=].
+     * entry's [=attribution source/reporting endpoint=] and |source|'s
+        [=attribution source/reporting endpoint=] are [=same origin=].
+     * entry's [=attribution source/number of event-level reports=] is equal to 0.
+1. Let |distinctDestinations| be a new [=set/empty=] [=set=].
+1. For each [=attribution source=] |pendingSource| of |pendingSources|:
+    1. If |source|'s [=attribution source/attribution destination=] and |pendingSource|'s
+        [=attribution source/attribution destination=] are [=same site=], then return true.
+    1. If |distinctDestinations| [=set/contains=] |pendingSource|'s
+        [=attribution source/attribution destination=], [=iteration/continue=].
+    1. [=set/Append=] |pendingSource|'s [=attribution source/attribution destination=] to
+        |distinctDestinations|.
+1. If |distinctDestinations|'s [=set/size=] is greater than or equal to
+    the user agent's [=max destinations covered by pending sources=], then return false.
+1. Return true.
+
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
 To <dfn>maybe process a navigation attribution source</dfn> given a <a spec="HTML">navigation params</a>
@@ -820,6 +846,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     [=attribution source/source origin=] are [=same origin=].
 1. If |pendingSourcesForSourceOrigin|'s [=list/size=] is greater than or equal
     to the user agent's [=max pending sources per source origin=], return.
+1. If the result of running [=should processing be blocked by destination limit=] with |source| is false, return.
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
     : [=attribution rate-limit record/scope=]
     :: "`source`"
