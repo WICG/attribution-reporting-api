@@ -192,12 +192,9 @@ The report will be JSON encoded with the following scheme:
 
 ```jsonc
 {
-  "attribution_destination": "https://advertiser.example",
-  "source_registration_time": "[timestamp in seconds]",
-
   // Info that the aggregation services also need encoded in JSON
   // for use with AEAD.
-  "shared_info": "{\"scheduled_report_time\":\"[timestamp in seconds]\",\"privacy_budget_key\":\"[string]\",\"version\":\"[api version]\",\"report_id\":\"[UUID]\",\"reporting_origin\":\"https://reporter.example\"}",
+  "shared_info": "{\"attribution_destination\":\"https://advertiser.example\",\"report_id\":\"[UUID]\",\"reporting_origin\":\"https://reporter.example\",\"scheduled_report_time\":\"[timestamp in seconds]\",\"source_registration_time\":\"[timestamp in seconds]\",\"version\":\"[api version]\"}",
 
   // Support a list of payloads for future extensibility if multiple helpers
   // are necessary. Currently only supports a single helper configured
@@ -225,6 +222,11 @@ reports. The browser will delay them with a random delay between 10 minutes to
 minutes delay allows regretful users to have a chance to delete the reports.
 The browser is free to utilize techniques like retries to minimize data loss.
 
+* The `shared_info` will be a serialized JSON object. This exact string is used
+  as authenticated data for decryption, see [below](#encrypted-payload). The
+  string therefore must be forwarded to the aggregation service unmodified. The
+  reporting origin can parse the string to access the encoded fields.
+
 * The `scheduled_report_time` will be the number of seconds since the Unix Epoch
   (1970-01-01T00:00:00Z, ignoring leap seconds) to align with
   [DOMTimestamp](https://heycam.github.io/webidl/#DOMTimeStamp) until the
@@ -236,21 +238,6 @@ The browser is free to utilize techniques like retries to minimize data loss.
 
 * The `payload` will contain the actual histogram contributions. It should be be
   encrypted and then base64 encoded, see [below](#encrypted-payload).
-
-* The `shared_info` will be a serialized JSON object. This exact string is used
-  as authenticated data for decryption, see [below](#encrypted-payload). The
-  string therefore must be forwarded to the aggregation service unmodified. The
-  reporting origin can parse the string to access the encoded fields.
-
-* The `privacy_budget_key` is used to define distinct batches of aggregate
-  reports. It is used by the aggregation service to prevent replay attacks. It
-  will be a hash of:
-  `reporting_origin | destination | version | source_registration_time`.
-  Note that the true key used to track batches will be `privacy_budget_key`
-  concatenated with `round_to_hour(scheduled_report_time)`. The latter is
-  omitted from the key to allow server-side recording to be time-bounded. All
-  reports that share a (true) privacy budget key should be sent to the
-  aggregation service at the same time (in any order).
 
 Optional debugging fields are discussed [below](#optional-extended-debugging-reports).
 
@@ -377,9 +364,9 @@ information on the data flow from reporter → processing origins shortly, but
 what follows is a high-level summary.
 
 As the browser sends individual aggregatable reports to the reporting origin,
-the reporting origin organizes them into batches (e.g. each batch having the
-same `privacy_budget_key`). They can send these batches to the aggregation
-service `origin` specified in the report.
+the reporting origin organizes them into
+[batches](AGGREGATION_SERVICE_TEE.md#disjoint-batches). They can send these
+batches to the aggregation service `origin` specified in the report.
 
 The aggregation service will aggregate reports within a certain batch, and
 respond back with an aggregate histogram, i.e. a list of keys with associated
