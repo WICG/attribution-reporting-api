@@ -667,7 +667,8 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
     <li>
      <a href="#general-algorithms"><span class="secno">8</span> <span class="content">General Algorithms</span></a>
      <ol class="toc">
-      <li><a href="#obtaining-randomized-response"><span class="secno">8.1</span> <span class="content">Obtaining a randomized response</span></a>
+      <li><a href="#parsing-filter-data"><span class="secno">8.1</span> <span class="content">Parsing filter data</span></a>
+      <li><a href="#obtaining-randomized-response"><span class="secno">8.2</span> <span class="content">Obtaining a randomized response</span></a>
      </ol>
     <li>
      <a href="#source-algorithms"><span class="secno">9</span> <span class="content">Source Algorithms</span></a>
@@ -999,7 +1000,7 @@ the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsin
      <p>A number between 0 and 1 (both inclusive).</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution source" data-dfn-type="dfn" data-noexport id="attribution-source-filter-data">filter data</dfn>
     <dd data-md>
-     <p>An <a data-link-type="dfn" href="#attribution-filter-map" id="ref-for-attribution-filter-map⑦">attribution filter map</a>.</p>
+     <p>An <a data-link-type="dfn" href="#attribution-filter-map" id="ref-for-attribution-filter-map①④">attribution filter map</a>.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution source" data-dfn-type="dfn" data-noexport id="attribution-source-debug-key">debug key</dfn>
     <dd data-md>
      <p>Null or a non-negative 64-bit integer.</p>
@@ -1162,6 +1163,10 @@ maximum value that can be used as an <a data-link-type="dfn" href="#attribution-
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-source-expiry">Max source expiry</dfn> is a positive length of time that controls the
 maximum value that can be used as an <a data-link-type="dfn" href="#attribution-source-expiry" id="ref-for-attribution-source-expiry">expiry</a>. It must be
 greater than or equal to 30 days.</p>
+   <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-entries-per-attribution-filter-map">Max entries per attribution filter map</dfn> is a positive integer that
+controls the maximum <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-size" id="ref-for-map-size">size</a> of an <a data-link-type="dfn" href="#attribution-filter-map" id="ref-for-attribution-filter-map⑥">attribution filter map</a>.</p>
+   <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-values-per-attribution-filter-entry">Max values per attribution filter entry</dfn> is a positive integer that
+controls the maximum <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size">size</a> of an <a data-link-type="dfn" href="#attribution-filter-map" id="ref-for-attribution-filter-map⑦">attribution filter map</a> entry.</p>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-pending-sources-per-source-origin">Max pending sources per source origin</dfn> is a positive integer that
 controls how many <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source①②">attribution sources</a> can be in the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache">attribution source cache</a> per <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin">source origin</a>.</p>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="navigation-source-trigger-data-cardinality">Navigation-source trigger data cardinality</dfn> is a positive integer
@@ -1196,8 +1201,45 @@ controls the maximum number of attributions for a
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-source-cache-size">Max source cache size</dfn> is a positive integer that controls how many <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⓪">attribution sources</a> can be in the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache①">attribution source cache</a>.</p>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-report-cache-size">Max report cache size</dfn> is a positive integer that controls how many <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report⑧">event-level reports</a> can be in the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache①">event-level report cache</a>.</p>
    <h2 class="heading settled" data-level="8" id="general-algorithms"><span class="secno">8. </span><span class="content">General Algorithms</span><a class="self-link" href="#general-algorithms"></a></h2>
-   <h3 class="heading settled" data-level="8.1" id="obtaining-randomized-response"><span class="secno">8.1. </span><span class="content">Obtaining a randomized response</span><a class="self-link" href="#obtaining-randomized-response"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-randomized-response">obtain a randomized response</dfn> given <var>trueValue</var>, a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set⑧">set</a> <var>possibleValues</var>, and a
+   <h3 class="heading settled" data-level="8.1" id="parsing-filter-data"><span class="secno">8.1. </span><span class="content">Parsing filter data</span><a class="self-link" href="#parsing-filter-data"></a></h3>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-filter-data">parse filter data</dfn> given a <var>value</var> and a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⓪">string</a> <var>registrationType</var>:</p>
+   <ol>
+    <li data-md>
+     <p class="assertion">Assert: <var>registrationType</var> is either "<code>source</code>" or "<code>trigger</code>".</p>
+    <li data-md>
+     <p>If <var>value</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③">map</a>, return null.</p>
+    <li data-md>
+     <p>If <var>registrationType</var> is "<code>source</code>" and <var>value</var>["<code>source_type</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists">exists</a>, return null.</p>
+    <li data-md>
+     <p>If <var>value</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-size" id="ref-for-map-size①">size</a> is greater than the user agent’s <a data-link-type="dfn" href="#max-entries-per-attribution-filter-map" id="ref-for-max-entries-per-attribution-filter-map">max entries per attribution filter map</a>, return null.</p>
+    <li data-md>
+     <p>Let <var>result</var> be a new <a data-link-type="dfn" href="#attribution-filter-map" id="ref-for-attribution-filter-map⑧">attribution filter map</a>.</p>
+    <li data-md>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate">For each</a> <var>filter</var> → <var>data</var> of <var>value</var>:</p>
+     <ol>
+      <li data-md>
+       <p>If <var>data</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list①">list</a>, return null.</p>
+      <li data-md>
+       <p>Let <var>set</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set⑧">ordered set</a>.</p>
+      <li data-md>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate">For each</a> <var>d</var> of <var>data</var>:</p>
+       <ol>
+        <li data-md>
+         <p>If <var>d</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①①">string</a>, return null.</p>
+        <li data-md>
+         <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append">Append</a> <var>d</var> to <var>set</var>.</p>
+       </ol>
+      <li data-md>
+       <p>If <var>set</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size①">size</a> is greater than the user agent’s <a data-link-type="dfn" href="#max-values-per-attribution-filter-entry" id="ref-for-max-values-per-attribution-filter-entry">max values per attribution filter entry</a>, return null.</p>
+      <li data-md>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-set" id="ref-for-map-set">Set</a> <var>result</var>[<var>filter</var>] to <var>set</var>.</p>
+     </ol>
+    <li data-md>
+     <p>Return <var>result</var>.</p>
+   </ol>
+   <p class="issue" id="issue-5c232164"><a class="self-link" href="#issue-5c232164"></a> Determine whether to limit <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-length" id="ref-for-string-length">length</a> or <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-code-point-length" id="ref-for-string-code-point-length">code point length</a> for <var>filter</var> and <var>d</var> above.</p>
+   <h3 class="heading settled" data-level="8.2" id="obtaining-randomized-response"><span class="secno">8.2. </span><span class="content">Obtaining a randomized response</span><a class="self-link" href="#obtaining-randomized-response"></a></h3>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-randomized-response">obtain a randomized response</dfn> given <var>trueValue</var>, a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set⑨">set</a> <var>possibleValues</var>, and a
 double <var>randomPickRate</var>:</p>
    <ol>
     <li data-md>
@@ -1234,7 +1276,7 @@ return null.</p>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-randomized-source-response">obtain a randomized source response</dfn> given a positive integer <var>triggerDataCardinality</var>, a positive integer <var>maxAttributionsPerSource</var>, a positive integer <var>numReportWindows</var>, and a double <var>randomPickRate</var>:</p>
    <ol>
     <li data-md>
-     <p>Let <var>possibleTriggerStates</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set⑨">set</a>.</p>
+     <p>Let <var>possibleTriggerStates</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⓪">set</a>.</p>
     <li data-md>
      <p>For each integer <var>triggerData</var> between 0 (inclusive) and <var>triggerDataCardinality</var> (exclusive):</p>
      <ol>
@@ -1252,16 +1294,16 @@ return null.</p>
            <p><var>reportWindow</var></p>
          </dl>
         <li data-md>
-         <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append">Append</a> <var>state</var> to <var>possibleTriggerStates</var>.</p>
+         <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append①">Append</a> <var>state</var> to <var>possibleTriggerStates</var>.</p>
        </ol>
      </ol>
     <li data-md>
-     <p>Let <var>possibleValues</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty①">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⓪">set</a>.</p>
+     <p>Let <var>possibleValues</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty①">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①①">set</a>.</p>
     <li data-md>
      <p>For each integer <var>attributions</var> between 0 (inclusive) and <var>maxAttributionsPerSource</var> (inclusive):</p>
      <ol>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append①">Append</a> to <var>possibleValues</var> all distinct <var>attributions</var>-length combinations of <var>possibleTriggerStates</var>.</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append②">Append</a> to <var>possibleValues</var> all distinct <var>attributions</var>-length combinations of <var>possibleTriggerStates</var>.</p>
      </ol>
     <li data-md>
      <p>Return the result of <a data-link-type="dfn" href="#obtain-a-randomized-response" id="ref-for-obtain-a-randomized-response">obtaining a randomized response</a> with null, <var>possibleValues</var>, and <var>randomPickRate</var>.</p>
@@ -1276,10 +1318,10 @@ return null.</p>
    </ol>
    <p class="issue" id="issue-45c98580"><a class="self-link" href="#issue-45c98580"></a> Specify the steps for making attributionsrc request.</p>
    <h3 class="heading settled algorithm" data-algorithm="Obtaining an attribution source from window features" data-level="9.6" id="obtaining-attribution-source-window-features"><span class="secno">9.6. </span><span class="content">Obtaining an attribution source from window features</span><a class="self-link" href="#obtaining-attribution-source-window-features"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-an-attribution-source-from-window-features">obtain an attribution source from window features</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③">ordered map</a> <var>tokenizedFeatures</var> and a <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#browsing-context" id="ref-for-browsing-context">browsing context</a> <var>sourceBrowsingContext</var>:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-an-attribution-source-from-window-features">obtain an attribution source from window features</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④">ordered map</a> <var>tokenizedFeatures</var> and a <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#browsing-context" id="ref-for-browsing-context">browsing context</a> <var>sourceBrowsingContext</var>:</p>
    <ol>
     <li data-md>
-     <p>If <var>tokenizedFeatures</var>["attributionsrc"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists">exist</a>, return null.</p>
+     <p>If <var>tokenizedFeatures</var>["attributionsrc"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①">exist</a>, return null.</p>
     <li data-md>
      <p>If <var>sourceBrowsingContext</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#active-window" id="ref-for-active-window">active window</a> does not have <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/interaction.html#transient-activation" id="ref-for-transient-activation">transient activation</a>, return null.</p>
     <li data-md>
@@ -1291,10 +1333,10 @@ return null.</p>
    </ol>
    <p class="issue" id="issue-1f7755b7"><a class="self-link" href="#issue-1f7755b7"></a> Specify the steps for making an attributionsrc request with <var>decodedSrc</var>.</p>
    <h3 class="heading settled algorithm" data-algorithm="Parsing source-registration JSON" data-level="9.7" id="parsing-source-registration"><span class="secno">9.7. </span><span class="content">Parsing source-registration JSON</span><a class="self-link" href="#parsing-source-registration"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-source-expiry">obtain a source expiry</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④">ordered map</a> <var>value</var>:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-source-expiry">obtain a source expiry</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑤">ordered map</a> <var>value</var>:</p>
    <ol>
     <li data-md>
-     <p>If <var>value</var>["<code>expiry</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①">exist</a> or is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⓪">string</a>,
+     <p>If <var>value</var>["<code>expiry</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②">exist</a> or is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①②">string</a>,
  return 30 days.</p>
     <li data-md>
      <p>Let <var>expirySeconds</var> be the result of applying the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-integers" id="ref-for-rules-for-parsing-integers">rules for parsing integers</a> to <var>value</var>["<code>expiry</code>"].</p>
@@ -1307,7 +1349,7 @@ return null.</p>
     <li data-md>
      <p>If <var>expiry</var> is greater than the user agent’s <a data-link-type="dfn" href="#max-source-expiry" id="ref-for-max-source-expiry">max source expiry</a>, set <var>expiry</var> to that value.</p>
    </ol>
-   <p>To <dfn data-dfn-type="dfn" data-noexport id="parse-source-registration-json">parse source-registration JSON<a class="self-link" href="#parse-source-registration-json"></a></dfn> given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①①">string</a> <var>json</var>, an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin" id="ref-for-concept-origin">origin</a> <var>sourceOrigin</var>, an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin" id="ref-for-concept-origin①">origin</a> <var>reportingOrigin</var>, and a <a data-link-type="dfn" href="#source-type" id="ref-for-source-type②">source type</a> <var>sourceType</var>:</p>
+   <p>To <dfn data-dfn-type="dfn" data-noexport id="parse-source-registration-json">parse source-registration JSON<a class="self-link" href="#parse-source-registration-json"></a></dfn> given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①③">string</a> <var>json</var>, an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin" id="ref-for-concept-origin">origin</a> <var>sourceOrigin</var>, an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin" id="ref-for-concept-origin①">origin</a> <var>reportingOrigin</var>, and a <a data-link-type="dfn" href="#source-type" id="ref-for-source-type②">source type</a> <var>sourceType</var>:</p>
    <ol>
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#assert" id="ref-for-assert①">Assert</a>: <var>sourceOrigin</var> is a <a data-link-type="dfn" href="https://w3c.github.io/webappsec-secure-contexts/#potentially-trustworthy-origin" id="ref-for-potentially-trustworthy-origin①">potentially trustworthy origin</a>.</p>
@@ -1316,15 +1358,15 @@ return null.</p>
     <li data-md>
      <p>Let <var>value</var> be the result of running <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#parse-a-json-string-to-an-infra-value" id="ref-for-parse-a-json-string-to-an-infra-value">parse a JSON string to an Infra value</a> with <var>json</var>.</p>
     <li data-md>
-     <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑤">ordered map</a>, return null.</p>
+     <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑥">ordered map</a>, return null.</p>
     <li data-md>
-     <p>If <var>value</var>["<code>source_event_id</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②">exist</a> or is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①②">string</a>, return null.</p>
+     <p>If <var>value</var>["<code>source_event_id</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③">exist</a> or is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①④">string</a>, return null.</p>
     <li data-md>
      <p>Let <var>sourceEventId</var> be the result of applying the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-non-negative-integers" id="ref-for-rules-for-parsing-non-negative-integers">rules for parsing non-negative integers</a> to <var>value</var>["<code>source_event_id</code>"] modulo the user agent’s <a data-link-type="dfn" href="#source-event-id-cardinality" id="ref-for-source-event-id-cardinality">source event ID cardinality</a>.</p>
     <li data-md>
      <p>If <var>sourceEventId</var> is an error, return null.</p>
     <li data-md>
-     <p>If <var>value</var>["<code>destination</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③">exist</a> or is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①③">string</a>, return null.</p>
+     <p>If <var>value</var>["<code>destination</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④">exist</a> or is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑤">string</a>, return null.</p>
     <li data-md>
      <p>Let <var>attributionDestination</var> be the result of running <a data-link-type="dfn" href="#parse-an-attribution-destination" id="ref-for-parse-an-attribution-destination">parse an attribution destination</a> with <var>value</var>["<code>destination</code>"].</p>
     <li data-md>
@@ -1334,7 +1376,7 @@ return null.</p>
     <li data-md>
      <p>Let <var>priority</var> be 0.</p>
     <li data-md>
-     <p>If <var>value</var>["<code>priority</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①④">string</a>:</p>
+     <p>If <var>value</var>["<code>priority</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑤">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑥">string</a>:</p>
      <ol>
       <li data-md>
        <p>Set <var>priority</var> to the result of applying the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-integers" id="ref-for-rules-for-parsing-integers①">rules for parsing integers</a> to <var>value</var>["<code>priority</code>"].</p>
@@ -1342,9 +1384,21 @@ return null.</p>
        <p>If <var>priority</var> is an error, set <var>priority</var> to 0.</p>
      </ol>
     <li data-md>
+     <p>Let <var>filterData</var> be a new <a data-link-type="dfn" href="#attribution-filter-map" id="ref-for-attribution-filter-map⑨">attribution filter map</a>.</p>
+    <li data-md>
+     <p>If <var>value</var>["<code>filter_data</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑥">exists</a>:</p>
+     <ol>
+      <li data-md>
+       <p>Set <var>filterData</var> to the result of running <a data-link-type="dfn" href="#parse-filter-data" id="ref-for-parse-filter-data">parse filter data</a> with <var>value</var>["<code>filter_data</code>"] and "<code>source</code>".</p>
+      <li data-md>
+       <p>If <var>filterData</var> is null, return null.</p>
+     </ol>
+    <li data-md>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-set" id="ref-for-map-set①">Set</a> <var>filterData</var>["<code>source_type</code>"] to « <var>sourceType</var> ».</p>
+    <li data-md>
      <p>Let <var>debugKey</var> be null.</p>
     <li data-md>
-     <p>If <var>value</var>["<code>debug_key</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑤">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑤">string</a>:</p>
+     <p>If <var>value</var>["<code>debug_key</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑦">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑦">string</a>:</p>
      <ol>
       <li data-md>
        <p>Set <var>debugKey</var> to the result of applying the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-non-negative-integers" id="ref-for-rules-for-parsing-non-negative-integers①">rules for parsing non-negative integers</a> to <var>value</var>["<code>debug_key</code>"].</p>
@@ -1376,7 +1430,7 @@ return null.</p>
      <dl>
       <dt data-md><a data-link-type="dfn" href="#attribution-source-source-identifier" id="ref-for-attribution-source-source-identifier">source identifier</a>
       <dd data-md>
-       <p>A new unique <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑥">string</a></p>
+       <p>A new unique <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑧">string</a></p>
       <dt data-md><a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin②">source origin</a>
       <dd data-md>
        <p><var>sourceOrigin</var></p>
@@ -1409,7 +1463,7 @@ return null.</p>
        <p><var>randomizedTriggerRate</var></p>
       <dt data-md><a data-link-type="dfn" href="#attribution-source-filter-data" id="ref-for-attribution-source-filter-data">filter data</a>
       <dd data-md>
-       <p>«[ "<code>source_type</code>" → « <var>sourceType</var> » ]»</p>
+       <p><var>filterData</var></p>
       <dt data-md><a data-link-type="dfn" href="#attribution-source-debug-key" id="ref-for-attribution-source-debug-key">debug key</a>
       <dd data-md>
        <p><var>debugKey</var></p>
@@ -1421,7 +1475,6 @@ return null.</p>
      <p>Return <var>source</var>.</p>
    </ol>
    <p class="issue" id="issue-e0364022"><a class="self-link" href="#issue-e0364022"></a> Ensure that <var>attributionDestination</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-scheme" id="ref-for-concept-origin-scheme">scheme</a> is HTTP/HTTPS.</p>
-   <p class="issue" id="issue-3750781c"><a class="self-link" href="#issue-3750781c"></a> Parse <var>value</var>["<code>filter_data</code>"].</p>
    <p class="issue" id="issue-12e7ace0"><a class="self-link" href="#issue-12e7ace0"></a> Parse <var>value</var>["<code>aggregation_keys</code>"].</p>
    <h3 class="heading settled" data-level="9.8" id="processing-an-attribution-source"><span class="secno">9.8. </span><span class="content">Processing an attribution source</span><a class="self-link" href="#processing-an-attribution-source"></a></h3>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="maybe-process-a-navigation-attribution-source">maybe process a navigation attribution source</dfn> given a <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigation-params" id="ref-for-navigation-params①">navigation params</a> <var>navigationParams</var> and <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#browsing-context" id="ref-for-browsing-context①">browsing context</a> <var>browsingContext</var>, run the following steps:</p>
@@ -1504,11 +1557,11 @@ running <a data-link-type="dfn" href="#obtain-the-report-time-at-a-window" id="r
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove①">Remove</a> all entries in <var>cache</var> where the entry’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time">expiry time</a> is less than the current time.</p>
     <li data-md>
-     <p>If the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size">size</a> of <var>cache</var> is greater than or equal to the user agent’s <a data-link-type="dfn" href="#max-source-cache-size" id="ref-for-max-source-cache-size">max source cache size</a>, return.</p>
+     <p>If the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size②">size</a> of <var>cache</var> is greater than or equal to the user agent’s <a data-link-type="dfn" href="#max-source-cache-size" id="ref-for-max-source-cache-size">max source cache size</a>, return.</p>
     <li data-md>
-     <p>Let <var>pendingSourcesForSourceOrigin</var> be the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①①">set</a> of all <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⑦">attribution sources</a> <var>pendingSource</var> of <var>cache</var> where <var>pendingSource</var>’s <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin③">source origin</a> and <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin④">source origin</a> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin①">same origin</a>.</p>
+     <p>Let <var>pendingSourcesForSourceOrigin</var> be the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①②">set</a> of all <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⑦">attribution sources</a> <var>pendingSource</var> of <var>cache</var> where <var>pendingSource</var>’s <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin③">source origin</a> and <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin④">source origin</a> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin①">same origin</a>.</p>
     <li data-md>
-     <p>If <var>pendingSourcesForSourceOrigin</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size①">size</a> is greater than or equal
+     <p>If <var>pendingSourcesForSourceOrigin</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size③">size</a> is greater than or equal
 to the user agent’s <a data-link-type="dfn" href="#max-pending-sources-per-source-origin" id="ref-for-max-pending-sources-per-source-origin">max pending sources per source origin</a>, return.</p>
     <li data-md>
      <p>Let <var>rateLimitRecord</var> be a new <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record①">attribution rate-limit record</a> with the items:</p>
@@ -1532,46 +1585,46 @@ to the user agent’s <a data-link-type="dfn" href="#max-pending-sources-per-sou
     <li data-md>
      <p>If the result of running <a data-link-type="dfn" href="#should-block-processing-for-reporting-endpoint-limit" id="ref-for-should-block-processing-for-reporting-endpoint-limit">should processing be blocked by reporting-endpoint limit</a> with <var>rateLimitRecord</var> is <strong>blocked</strong>, return.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append②">Append</a> <var>rateLimitRecord</var> to the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache">attribution rate-limit cache</a>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append③">Append</a> <var>rateLimitRecord</var> to the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache">attribution rate-limit cache</a>.</p>
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove②">Remove</a> all entries from the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache①">attribution rate-limit cache</a> whose <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time①">time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window③">attribution rate-limit window</a> before the current time.</p>
     <li data-md>
-     <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response①">randomized response</a> is not null and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①②">set</a>:</p>
+     <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response①">randomized response</a> is not null and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①③">set</a>:</p>
      <ol>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate">For each</a> <a data-link-type="dfn" href="#trigger-state" id="ref-for-trigger-state③">trigger state</a> <var>triggerState</var> of <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response②">randomized response</a>:</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate①">For each</a> <a data-link-type="dfn" href="#trigger-state" id="ref-for-trigger-state③">trigger state</a> <var>triggerState</var> of <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response②">randomized response</a>:</p>
        <ol>
         <li data-md>
          <p>Let <var>fakeReport</var> be the result of running <a data-link-type="dfn" href="#obtain-a-fake-report" id="ref-for-obtain-a-fake-report">obtain a fake report</a> with <var>source</var> and <var>triggerState</var>.</p>
         <li data-md>
-         <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append③">Append</a> <var>fakeReport</var> to the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache②">event-level report cache</a>.</p>
+         <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append④">Append</a> <var>fakeReport</var> to the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache②">event-level report cache</a>.</p>
        </ol>
       <li data-md>
        <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response③">randomized response</a> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty②">empty</a>, return.</p>
      </ol>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append④">Append</a> <var>source</var> to <var>cache</var>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑤">Append</a> <var>source</var> to <var>cache</var>.</p>
    </ol>
    <p class="issue" id="issue-82e83119"><a class="self-link" href="#issue-82e83119"></a> Should fake reports respect the user agent’s <a data-link-type="dfn" href="#max-reports-per-attribution-destination" id="ref-for-max-reports-per-attribution-destination">max reports per attribution destination</a>?</p>
    <h2 class="heading settled" data-level="10" id="trigger-algorithms"><span class="secno">10. </span><span class="content">Triggering Algorithms</span><a class="self-link" href="#trigger-algorithms"></a></h2>
    <h3 class="heading settled algorithm" data-algorithm="Creating an attribution trigger" data-level="10.1" id="attribution-trigger-creation"><span class="secno">10.1. </span><span class="content">Creating an attribution trigger</span><a class="self-link" href="#attribution-trigger-creation"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-event-triggers">parse event triggers</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑥">ordered map</a> <var>map</var>:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-event-triggers">parse event triggers</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑦">ordered map</a> <var>map</var>:</p>
    <ol>
     <li data-md>
-     <p>Let <var>eventTriggers</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①③">set</a>.</p>
+     <p>Let <var>eventTriggers</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①④">set</a>.</p>
     <li data-md>
-     <p>If <var>map</var>["<code>event_trigger_data</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑥">exist</a>, return <var>eventTriggers</var>.</p>
+     <p>If <var>map</var>["<code>event_trigger_data</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑧">exist</a>, return <var>eventTriggers</var>.</p>
     <li data-md>
      <p>Let <var>values</var> be <var>map</var>["<code>event_trigger_data</code>"].</p>
     <li data-md>
-     <p>If <var>values</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list①">list</a>, return null.</p>
+     <p>If <var>values</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list②">list</a>, return null.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate">For each</a> <var>value</var> of <var>values</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①">For each</a> <var>value</var> of <var>values</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑦">ordered map</a>, return null.</p>
+       <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑧">ordered map</a>, return null.</p>
       <li data-md>
-       <p>If <var>value</var>["<code>trigger_data</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑦">exist</a> or is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑦">string</a>, return null.</p>
+       <p>If <var>value</var>["<code>trigger_data</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑨">exist</a> or is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑨">string</a>, return null.</p>
       <li data-md>
        <p>Let <var>triggerData</var> be the result of applying the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-non-negative-integers" id="ref-for-rules-for-parsing-non-negative-integers②">rules for parsing non-negative integers</a> to <var>value</var>["<code>trigger_data</code>"].</p>
       <li data-md>
@@ -1579,7 +1632,7 @@ to the user agent’s <a data-link-type="dfn" href="#max-pending-sources-per-sou
       <li data-md>
        <p>Let <var>dedupKey</var> be null.</p>
       <li data-md>
-       <p>If <var>value</var>["<code>deduplication_key</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑧">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑧">string</a>:</p>
+       <p>If <var>value</var>["<code>deduplication_key</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①⓪">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string②⓪">string</a>:</p>
        <ol>
         <li data-md>
          <p>Set <var>dedupKey</var> to the result of applying the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-non-negative-integers" id="ref-for-rules-for-parsing-non-negative-integers③">rules for parsing non-negative integers</a> to <var>value</var>["<code>deduplication_key</code>"].</p>
@@ -1589,12 +1642,32 @@ to the user agent’s <a data-link-type="dfn" href="#max-pending-sources-per-sou
       <li data-md>
        <p>Let <var>priority</var> be 0.</p>
       <li data-md>
-       <p>If <var>value</var>["<code>priority</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑨">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑨">string</a>:</p>
+       <p>If <var>value</var>["<code>priority</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①①">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string②①">string</a>:</p>
        <ol>
         <li data-md>
          <p>Set <var>priority</var> to the result of applying the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-integers" id="ref-for-rules-for-parsing-integers②">rules for parsing integers</a> to <var>value</var>["<code>priority</code>"].</p>
         <li data-md>
          <p>If <var>priority</var> is an error, set <var>priority</var> to 0.</p>
+       </ol>
+      <li data-md>
+       <p>Let <var>filters</var> be a new <a data-link-type="dfn" href="#attribution-filter-map" id="ref-for-attribution-filter-map①⓪">attribution filter map</a>.</p>
+      <li data-md>
+       <p>If <var>value</var>["<code>filters</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①②">exists</a>:</p>
+       <ol>
+        <li data-md>
+         <p>Set <var>filters</var> to the result of running <a data-link-type="dfn" href="#parse-filter-data" id="ref-for-parse-filter-data①">parse filter data</a> with <var>value</var>["<code>filters</code>"] and "<code>trigger</code>".</p>
+        <li data-md>
+         <p>If <var>filters</var> is null, return null.</p>
+       </ol>
+      <li data-md>
+       <p>Let <var>negatedFilters</var> be a new <a data-link-type="dfn" href="#attribution-filter-map" id="ref-for-attribution-filter-map①①">attribution filter map</a>.</p>
+      <li data-md>
+       <p>If <var>value</var>["<code>not_filters</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①③">exists</a>:</p>
+       <ol>
+        <li data-md>
+         <p>Set <var>negatedFilters</var> to the result of running <a data-link-type="dfn" href="#parse-filter-data" id="ref-for-parse-filter-data②">parse filter data</a> with <var>value</var>["<code>not_filters</code>"] and "<code>trigger</code>".</p>
+        <li data-md>
+         <p>If <var>negatedFilters</var> is null, return null.</p>
        </ol>
       <li data-md>
        <p>Let <var>eventTrigger</var> be a new <a data-link-type="dfn" href="#event-level-trigger-configuration" id="ref-for-event-level-trigger-configuration②">event-level trigger configuration</a> with
@@ -1611,28 +1684,27 @@ the items:</p>
          <p><var>priority</var></p>
         <dt data-md><a data-link-type="dfn" href="#event-level-trigger-configuration-filters" id="ref-for-event-level-trigger-configuration-filters①">filters</a>
         <dd data-md>
-         <p>«[]»</p>
+         <p><var>filters</var></p>
         <dt data-md><a data-link-type="dfn" href="#event-level-trigger-configuration-negated-filters" id="ref-for-event-level-trigger-configuration-negated-filters①">negated filters</a>
         <dd data-md>
-         <p>«[]»</p>
+         <p><var>negatedFilters</var></p>
        </dl>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑤">Append</a> <var>eventTrigger</var> to <var>eventTriggers</var>.</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑥">Append</a> <var>eventTrigger</var> to <var>eventTriggers</var>.</p>
      </ol>
     <li data-md>
      <p>Return <var>eventTriggers</var>.</p>
    </ol>
-   <p class="issue" id="issue-9de2e556"><a class="self-link" href="#issue-9de2e556"></a> Parse filters and negated filters.</p>
-   <p class="issue" id="issue-4950c7c2"><a class="self-link" href="#issue-4950c7c2"></a> Allow the user agent to return null if <var>values</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size②">size</a> is
+   <p class="issue" id="issue-4950c7c2"><a class="self-link" href="#issue-4950c7c2"></a> Allow the user agent to return null if <var>values</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size④">size</a> is
 greater than some constant.</p>
-   <p>To <dfn data-dfn-type="dfn" data-noexport id="parse-trigger-registration-json">parse trigger-registration JSON<a class="self-link" href="#parse-trigger-registration-json"></a></dfn> given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string②⓪">string</a> <var>json</var>, a <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#site" id="ref-for-site⑤">site</a> <var>destination</var>, and an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin" id="ref-for-concept-origin②">origin</a> <var>reportingOrigin</var>:</p>
+   <p>To <dfn data-dfn-type="dfn" data-noexport id="parse-trigger-registration-json">parse trigger-registration JSON<a class="self-link" href="#parse-trigger-registration-json"></a></dfn> given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string②②">string</a> <var>json</var>, a <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#site" id="ref-for-site⑤">site</a> <var>destination</var>, and an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin" id="ref-for-concept-origin②">origin</a> <var>reportingOrigin</var>:</p>
    <ol>
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#assert" id="ref-for-assert③">Assert</a>: <var>reportingOrigin</var> is a <a data-link-type="dfn" href="https://w3c.github.io/webappsec-secure-contexts/#potentially-trustworthy-origin" id="ref-for-potentially-trustworthy-origin③">potentially trustworthy origin</a>.</p>
     <li data-md>
      <p>Let <var>value</var> be the result of running <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#parse-a-json-string-to-an-infra-value" id="ref-for-parse-a-json-string-to-an-infra-value①">parse a JSON string to an Infra value</a> with <var>json</var>.</p>
     <li data-md>
-     <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑧">ordered map</a>, return null.</p>
+     <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑨">ordered map</a>, return null.</p>
     <li data-md>
      <p>Let <var>eventTriggers</var> be the result of running <a data-link-type="dfn" href="#parse-event-triggers" id="ref-for-parse-event-triggers">parse event triggers</a> with <var>value</var>.</p>
     <li data-md>
@@ -1640,12 +1712,22 @@ greater than some constant.</p>
     <li data-md>
      <p>Let <var>debugKey</var> be null.</p>
     <li data-md>
-     <p>If <var>value</var>["<code>debug_key</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①⓪">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string②①">string</a>:</p>
+     <p>If <var>value</var>["<code>debug_key</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①④">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string②③">string</a>:</p>
      <ol>
       <li data-md>
        <p>Set <var>debugKey</var> to the result of applying the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-non-negative-integers" id="ref-for-rules-for-parsing-non-negative-integers④">rules for parsing non-negative integers</a> to <var>value</var>["<code>debug_key</code>"].</p>
       <li data-md>
        <p>If <var>debugKey</var> is an error, set <var>debugKey</var> to null.</p>
+     </ol>
+    <li data-md>
+     <p>Let <var>filters</var> be a new <a data-link-type="dfn" href="#attribution-filter-map" id="ref-for-attribution-filter-map①②">attribution filter map</a>.</p>
+    <li data-md>
+     <p>If <var>value</var>["<code>filters</code>"] exists:</p>
+     <ol>
+      <li data-md>
+       <p>Set <var>filters</var> to the result of running <a data-link-type="dfn" href="#parse-filter-data" id="ref-for-parse-filter-data③">parse filter data</a> with <var>value</var>["<code>filters</code>"] and "<code>trigger</code>".</p>
+      <li data-md>
+       <p>If <var>filters</var> is null, return null.</p>
      </ol>
     <li data-md>
      <p>Let <var>trigger</var> be a new <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-trigger⑤">attribution trigger</a> with the items:</p>
@@ -1661,7 +1743,7 @@ greater than some constant.</p>
        <p><var>reportingOrigin</var></p>
       <dt data-md><a data-link-type="dfn" href="#attribution-trigger-filters" id="ref-for-attribution-trigger-filters①">filters</a>
       <dd data-md>
-       <p>«[]»</p>
+       <p><var>filters</var></p>
       <dt data-md><a data-link-type="dfn" href="#attribution-trigger-debug-key" id="ref-for-attribution-trigger-debug-key①">debug key</a>
       <dd data-md>
        <p><var>debugKey</var></p>
@@ -1678,18 +1760,17 @@ greater than some constant.</p>
     <li data-md>
      <p>Return <var>trigger</var>.</p>
    </ol>
-   <p class="issue" id="issue-67eb48e3"><a class="self-link" href="#issue-67eb48e3"></a> Parse top-level filters.</p>
    <p class="issue" id="issue-541f4427"><a class="self-link" href="#issue-541f4427"></a> Parse aggregatable trigger fields.</p>
    <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="10.2" data-lt="Does filter data match" data-noexport id="does-filter-data-match"><span class="secno">10.2. </span><span class="content">Does filter data match</span><a class="self-link" href="#does-filter-data-match" id="ref-for-does-filter-data-match"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="match-an-attribution-sources-filter-data-against-filters">match an attribution source’s filter data against filters</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⑧">attribution source</a> <var>source</var> and an <a data-link-type="dfn" href="#attribution-filter-map" id="ref-for-attribution-filter-map⑥">attribution filter map</a> <var>filters</var>:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="match-an-attribution-sources-filter-data-against-filters">match an attribution source’s filter data against filters</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⑧">attribution source</a> <var>source</var> and an <a data-link-type="dfn" href="#attribution-filter-map" id="ref-for-attribution-filter-map①③">attribution filter map</a> <var>filters</var>:</p>
    <ol>
     <li data-md>
      <p>Let <var>sourceData</var> be <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-filter-data" id="ref-for-attribution-source-filter-data①">filter data</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate①">For each</a> <var>key</var> → <var>filterValues</var> of <var>filters</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate②">For each</a> <var>key</var> → <var>filterValues</var> of <var>filters</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>sourceData</var>[<var>key</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①①">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue">continue</a>.</p>
+       <p>If <var>sourceData</var>[<var>key</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①⑤">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue">continue</a>.</p>
       <li data-md>
        <p>Let <var>sourceValues</var> be <var>sourceData</var>[<var>key</var>].</p>
       <li data-md>
@@ -1720,7 +1801,7 @@ greater than some constant.</p>
        <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time②">time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window④">attribution rate-limit window</a> before <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time②">trigger time</a></p>
      </ul>
     <li data-md>
-     <p>If <var>matchingRateLimitRecords</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size③">size</a> is greater than or equal to <a data-link-type="dfn" href="#max-attributions-per-rate-limit-window" id="ref-for-max-attributions-per-rate-limit-window">max attributions per rate-limit window</a>, return <strong>blocked</strong>.</p>
+     <p>If <var>matchingRateLimitRecords</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size⑤">size</a> is greater than or equal to <a data-link-type="dfn" href="#max-attributions-per-rate-limit-window" id="ref-for-max-attributions-per-rate-limit-window">max attributions per rate-limit window</a>, return <strong>blocked</strong>.</p>
     <li data-md>
      <p>Return <strong>allowed</strong>.</p>
    </ol>
@@ -1744,13 +1825,13 @@ greater than some constant.</p>
        <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time③">time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window⑤">attribution rate-limit window</a> before <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time④">time</a></p>
      </ul>
     <li data-md>
-     <p>Let <var>distinctReportingEndpoints</var> be a new empty <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①④">ordered set</a>.</p>
+     <p>Let <var>distinctReportingEndpoints</var> be a new empty <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⑤">ordered set</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate②">For each</a> <var>record</var> of <var>matchingRateLimitRecords</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑥">append</a> <var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint③">reporting endpoint</a> to <var>distinctReportingEndpoints</var>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate③">For each</a> <var>record</var> of <var>matchingRateLimitRecords</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑦">append</a> <var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint③">reporting endpoint</a> to <var>distinctReportingEndpoints</var>.</p>
     <li data-md>
      <p>If <var>distinctReportingEndpoints</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain">contains</a> <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint④">reporting endpoint</a>, return <strong>allowed</strong>.</p>
     <li data-md>
-     <p>If <var>distinctReportingEndpoints</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size④">size</a> is greater than or equal to <var>max</var>, return <strong>blocked</strong>.</p>
+     <p>If <var>distinctReportingEndpoints</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size⑥">size</a> is greater than or equal to <var>max</var>, return <strong>blocked</strong>.</p>
     <li data-md>
      <p>Return <strong>allowed</strong>.</p>
    </ol>
@@ -1760,15 +1841,15 @@ greater than some constant.</p>
     <li data-md>
      <p>Let <var>aggregationKeys</var> be <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-aggregation-keys" id="ref-for-attribution-source-aggregation-keys①">aggregation keys</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①">For each</a> <var>triggerData</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-aggregatable-trigger-data" id="ref-for-attribution-trigger-aggregatable-trigger-data①">aggregatable trigger data</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②">For each</a> <var>triggerData</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-aggregatable-trigger-data" id="ref-for-attribution-trigger-aggregatable-trigger-data①">aggregatable trigger data</a>:</p>
      <ol>
       <li data-md>
        <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters">match an attribution source’s filter data against filters</a> with <var>source</var> and <var>triggerData</var>’s <a data-link-type="dfn" href="#attribution-aggregatable-trigger-data-filters" id="ref-for-attribution-aggregatable-trigger-data-filters">filters</a> is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue②">continue</a>.</p>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②">For each</a> <var>sourceKey</var> of <var>triggerData</var>’s <a data-link-type="dfn" href="#attribution-aggregatable-trigger-data-source-keys" id="ref-for-attribution-aggregatable-trigger-data-source-keys">source keys</a>:</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate③">For each</a> <var>sourceKey</var> of <var>triggerData</var>’s <a data-link-type="dfn" href="#attribution-aggregatable-trigger-data-source-keys" id="ref-for-attribution-aggregatable-trigger-data-source-keys">source keys</a>:</p>
        <ol>
         <li data-md>
-         <p>If <var>aggregationKeys</var>[<var>sourceKey</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①②">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue③">continue</a>.</p>
+         <p>If <var>aggregationKeys</var>[<var>sourceKey</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①⑥">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue③">continue</a>.</p>
         <li data-md>
          <p>Set <var>aggregationKeys</var>[<var>sourceKey</var>] to <var>aggregationKeys</var>[<var>sourceKey</var>] XOR <var>triggerData</var>’s <a data-link-type="dfn" href="#attribution-aggregatable-trigger-data-key-piece" id="ref-for-attribution-aggregatable-trigger-data-key-piece">key piece</a>.</p>
        </ol>
@@ -1776,12 +1857,12 @@ greater than some constant.</p>
     <li data-md>
      <p>Let <var>aggregatableValues</var> be <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-aggregatable-values" id="ref-for-attribution-trigger-aggregatable-values①">aggregatable values</a>.</p>
     <li data-md>
-     <p>Let <var>contributions</var> be a new empty <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list②">list</a>.</p>
+     <p>Let <var>contributions</var> be a new empty <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list③">list</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate③">For each</a> <var>id</var> → <var>key</var> of <var>aggregationKeys</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate④">For each</a> <var>id</var> → <var>key</var> of <var>aggregationKeys</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>aggregatableValues</var>[<var>id</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①③">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue④">continue</a>.</p>
+       <p>If <var>aggregatableValues</var>[<var>id</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①⑦">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue④">continue</a>.</p>
       <li data-md>
        <p>Let <var>contribution</var> be a new <a data-link-type="dfn" href="#aggregatable-contribution" id="ref-for-aggregatable-contribution①">aggregatable contribution</a> with the items:</p>
        <dl>
@@ -1827,13 +1908,13 @@ greater than some constant.</p>
      <p>Let <var>sourceToAttribute</var> be the first item in <var>matchingSources</var>.</p>
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#assert" id="ref-for-assert④">Assert</a>: <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response④">randomized response</a> is
-null or an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑥">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⑤">set</a>.</p>
+null or an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑥">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⑥">set</a>.</p>
     <li data-md>
      <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters①">match an attribution source’s filter data against filters</a> with <var>sourceToAttribute</var> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-filters" id="ref-for-attribution-trigger-filters②">filters</a> is false, return.</p>
     <li data-md>
      <p>Let <var>matchedConfig</var> be null.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate④">For each</a> <a data-link-type="dfn" href="#event-level-trigger-configuration" id="ref-for-event-level-trigger-configuration③">event-level trigger configuration</a> <var>config</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-event-level-trigger-configurations" id="ref-for-attribution-trigger-event-level-trigger-configurations②">event-level trigger configurations</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate⑤">For each</a> <a data-link-type="dfn" href="#event-level-trigger-configuration" id="ref-for-event-level-trigger-configuration③">event-level trigger configuration</a> <var>config</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-event-level-trigger-configurations" id="ref-for-attribution-trigger-event-level-trigger-configurations②">event-level trigger configurations</a>:</p>
      <ol>
       <li data-md>
        <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters②">match an attribution source’s filter data against filters</a> with <var>sourceToAttribute</var> and <var>config</var>’s <a data-link-type="dfn" href="#event-level-trigger-configuration-filters" id="ref-for-event-level-trigger-configuration-filters②">filters</a> is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑤">continue</a>.</p>
@@ -1919,17 +2000,17 @@ and <var>matchedConfig</var>.</p>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove⑥">Remove</a> <var>item</var> from the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache⑤">attribution source cache</a>.</p>
      </ol>
     <li data-md>
-     <p>If the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size⑤">size</a> of the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑥">event-level report cache</a> is greater than or equal to the user
+     <p>If the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size⑦">size</a> of the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑥">event-level report cache</a> is greater than or equal to the user
 agent’s <a data-link-type="dfn" href="#max-report-cache-size" id="ref-for-max-report-cache-size">max report cache size</a>, return.</p>
     <li data-md>
      <p>If <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response⑤">randomized response</a> is
-null, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑦">append</a> <var>report</var> to the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑦">event-level report cache</a>.</p>
+null, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑧">append</a> <var>report</var> to the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑦">event-level report cache</a>.</p>
     <li data-md>
      <p>Increment <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-number-of-event-level-reports" id="ref-for-attribution-source-number-of-event-level-reports③">number of event-level reports</a> value by 1.</p>
     <li data-md>
      <p>If <var>matchedConfig</var>’s <a data-link-type="dfn" href="#event-level-trigger-configuration-dedup-key" id="ref-for-event-level-trigger-configuration-dedup-key④">dedup key</a> is not null, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①">append</a> it to <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-dedup-keys" id="ref-for-attribution-source-dedup-keys①">dedup keys</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑧">Append</a> <var>rateLimitRecord</var> to the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache④">attribution rate-limit cache</a>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑨">Append</a> <var>rateLimitRecord</var> to the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache④">attribution rate-limit cache</a>.</p>
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove⑦">Remove</a> all entries from the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache⑤">attribution rate-limit cache</a> whose <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time⑥">time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window⑥">attribution rate-limit window</a> before the current time.</p>
     <li data-md>
@@ -1954,7 +2035,7 @@ null, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" i
     <li data-md>
      <p>Let <var>earlyDeadlines</var> be the result of running <a data-link-type="dfn" href="#obtain-early-deadlines" id="ref-for-obtain-early-deadlines">obtain early deadlines</a> with <var>sourceType</var>.</p>
     <li data-md>
-     <p>Return the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size⑥">size</a> of <var>earlyDeadlines</var> + 1.</p>
+     <p>Return the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size⑧">size</a> of <var>earlyDeadlines</var> + 1.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-report-time-from-deadline">obtain a report time from deadline</dfn> given a time <var>sourceTime</var> and
 a length of time <var>deadline</var>:</p>
@@ -1980,7 +2061,7 @@ a length of time <var>deadline</var>:</p>
     <li data-md>
      <p>Let <var>earlyDeadlines</var> be the result of running <a data-link-type="dfn" href="#obtain-early-deadlines" id="ref-for-obtain-early-deadlines②">obtain early deadlines</a> with <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type①⓪">source type</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate③">For each</a> <var>earlyDeadline</var> of <var>earlyDeadlines</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate④">For each</a> <var>earlyDeadline</var> of <var>earlyDeadlines</var>:</p>
      <ol>
       <li data-md>
        <p>Let <var>time</var> be <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑦">source time</a> + <var>earlyDeadline</var>.</p>
@@ -2048,7 +2129,7 @@ the user agent’s <a data-link-type="dfn" href="#event-source-trigger-data-card
      <p>Return <var>report</var>.</p>
    </ol>
    <h2 class="heading settled" data-level="11" id="report-delivery"><span class="secno">11. </span><span class="content">Report delivery</span><a class="self-link" href="#report-delivery"></a></h2>
-   <p>The user agent MUST periodically <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate④">iterate</a> over its <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑧">event-level report cache</a> and run <a data-link-type="dfn" href="#queue-a-report-for-delivery" id="ref-for-queue-a-report-for-delivery">queue a report for delivery</a> on each item.</p>
+   <p>The user agent MUST periodically <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑤">iterate</a> over its <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑧">event-level report cache</a> and run <a data-link-type="dfn" href="#queue-a-report-for-delivery" id="ref-for-queue-a-report-for-delivery">queue a report for delivery</a> on each item.</p>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="queue-a-report-for-delivery">queue a report for delivery</dfn> given an <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report①⓪">event-level report</a> <var>report</var>, run the following steps <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel" id="ref-for-in-parallel">in parallel</a>:</p>
    <ol>
     <li data-md>
@@ -2078,7 +2159,7 @@ the user agent’s <a data-link-type="dfn" href="#event-source-trigger-data-card
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#assert" id="ref-for-assert⑤">Assert</a>: <var>destination</var> is not an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque" id="ref-for-concept-origin-opaque">opaque origin</a>.</p>
     <li data-md>
-     <p>Let <var>data</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑨">map</a> of the following key/value pairs:</p>
+     <p>Let <var>data</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map①⓪">map</a> of the following key/value pairs:</p>
      <dl>
       <dt data-md>"<code>attribution_destination</code>"
       <dd data-md>
@@ -2100,9 +2181,9 @@ the user agent’s <a data-link-type="dfn" href="#event-source-trigger-data-card
        <p><var>report</var>’s <a data-link-type="dfn" href="#event-level-report-report-id" id="ref-for-event-level-report-report-id①">report ID</a></p>
      </dl>
     <li data-md>
-     <p>If <var>report</var>’s <a data-link-type="dfn" href="#event-level-report-source-debug-key" id="ref-for-event-level-report-source-debug-key②">source debug key</a> is not null, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-set" id="ref-for-map-set">set</a> <var>data</var>["<code>source_debug_key</code>"] to <var>report</var>’s <a data-link-type="dfn" href="#event-level-report-source-debug-key" id="ref-for-event-level-report-source-debug-key③">source debug key</a>, <a data-link-type="dfn" href="#serialize-an-integer" id="ref-for-serialize-an-integer②">serialized</a>.</p>
+     <p>If <var>report</var>’s <a data-link-type="dfn" href="#event-level-report-source-debug-key" id="ref-for-event-level-report-source-debug-key②">source debug key</a> is not null, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-set" id="ref-for-map-set②">set</a> <var>data</var>["<code>source_debug_key</code>"] to <var>report</var>’s <a data-link-type="dfn" href="#event-level-report-source-debug-key" id="ref-for-event-level-report-source-debug-key③">source debug key</a>, <a data-link-type="dfn" href="#serialize-an-integer" id="ref-for-serialize-an-integer②">serialized</a>.</p>
     <li data-md>
-     <p>If <var>report</var>’s <a data-link-type="dfn" href="#event-level-report-trigger-debug-key" id="ref-for-event-level-report-trigger-debug-key②">trigger debug key</a> is not null, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-set" id="ref-for-map-set①">set</a> <var>data</var>["<code>trigger_debug_key</code>"] to <var>report</var>’s <a data-link-type="dfn" href="#event-level-report-trigger-debug-key" id="ref-for-event-level-report-trigger-debug-key③">trigger debug key</a>, <a data-link-type="dfn" href="#serialize-an-integer" id="ref-for-serialize-an-integer③">serialized</a>.</p>
+     <p>If <var>report</var>’s <a data-link-type="dfn" href="#event-level-report-trigger-debug-key" id="ref-for-event-level-report-trigger-debug-key②">trigger debug key</a> is not null, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-set" id="ref-for-map-set③">set</a> <var>data</var>["<code>trigger_debug_key</code>"] to <var>report</var>’s <a data-link-type="dfn" href="#event-level-report-trigger-debug-key" id="ref-for-event-level-report-trigger-debug-key③">trigger debug key</a>, <a data-link-type="dfn" href="#serialize-an-integer" id="ref-for-serialize-an-integer③">serialized</a>.</p>
     <li data-md>
      <p>Return the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#byte-sequence" id="ref-for-byte-sequence">byte sequence</a> resulting from executing <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#serialize-an-infra-value-to-json-bytes" id="ref-for-serialize-an-infra-value-to-json-bytes">serialize an infra value to JSON bytes</a> on <var>data</var>.</p>
    </ol>
@@ -2348,12 +2429,14 @@ an origin from a user’s browsing history.</p>
    <li><a href="#max-attributions-per-event-source">Max attributions per event source</a><span>, in § 7</span>
    <li><a href="#max-attributions-per-navigation-source">Max attributions per navigation source</a><span>, in § 7</span>
    <li><a href="#max-attributions-per-rate-limit-window">Max attributions per rate-limit window</a><span>, in § 7</span>
+   <li><a href="#max-entries-per-attribution-filter-map">Max entries per attribution filter map</a><span>, in § 7</span>
    <li><a href="#max-pending-sources-per-source-origin">Max pending sources per source origin</a><span>, in § 7</span>
    <li><a href="#max-report-cache-size">Max report cache size</a><span>, in § 7</span>
    <li><a href="#max-reports-per-attribution-destination">Max reports per attribution destination</a><span>, in § 7</span>
    <li><a href="#max-source-cache-size">Max source cache size</a><span>, in § 7</span>
    <li><a href="#max-source-expiry">Max source expiry</a><span>, in § 7</span>
    <li><a href="#max-source-reporting-endpoints-per-rate-limit-window">Max source reporting endpoints per rate-limit window</a><span>, in § 7</span>
+   <li><a href="#max-values-per-attribution-filter-entry">Max values per attribution filter entry</a><span>, in § 7</span>
    <li><a href="#maybe-process-a-navigation-attribution-source">maybe process a navigation attribution source</a><span>, in § 9.8</span>
    <li><a href="#navigation-source-trigger-data-cardinality">Navigation-source trigger data cardinality</a><span>, in § 7</span>
    <li>
@@ -2369,7 +2452,7 @@ an origin from a user’s browsing history.</p>
    <li><a href="#obtain-an-event-level-report">obtain an event-level report</a><span>, in § 10.8</span>
    <li><a href="#obtain-an-event-level-report-delivery-time">obtain an event-level report delivery time</a><span>, in § 10.7</span>
    <li><a href="#obtain-an-expiry-deadline">obtain an expiry deadline</a><span>, in § 10.7</span>
-   <li><a href="#obtain-a-randomized-response">obtain a randomized response</a><span>, in § 8.1</span>
+   <li><a href="#obtain-a-randomized-response">obtain a randomized response</a><span>, in § 8.2</span>
    <li><a href="#obtain-a-randomized-source-response">obtain a randomized source response</a><span>, in § 9.4</span>
    <li><a href="#obtain-a-report-time-from-deadline">obtain a report time from deadline</a><span>, in § 10.7</span>
    <li><a href="#obtain-a-source-expiry">obtain a source expiry</a><span>, in § 9.7</span>
@@ -2378,6 +2461,7 @@ an origin from a user’s browsing history.</p>
    <li><a href="#obtain-the-report-time-at-a-window">obtain the report time at a window</a><span>, in § 10.7</span>
    <li><a href="#parse-an-attribution-destination">parse an attribution destination</a><span>, in § 9.3</span>
    <li><a href="#parse-event-triggers">parse event triggers</a><span>, in § 10.1</span>
+   <li><a href="#parse-filter-data">parse filter data</a><span>, in § 8.1</span>
    <li><a href="#parse-source-registration-json">parse source-registration JSON</a><span>, in § 9.7</span>
    <li><a href="#parse-trigger-registration-json">parse trigger-registration JSON</a><span>, in § 10.1</span>
    <li>
@@ -2810,17 +2894,18 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-set-append">
    <a href="https://infra.spec.whatwg.org/#set-append">https://infra.spec.whatwg.org/#set-append</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-set-append">9.4. Obtaining a randomized source response</a> <a href="#ref-for-set-append①">(2)</a>
-    <li><a href="#ref-for-set-append②">9.8. Processing an attribution source</a> <a href="#ref-for-set-append③">(2)</a> <a href="#ref-for-set-append④">(3)</a>
-    <li><a href="#ref-for-set-append⑤">10.1. Creating an attribution trigger</a>
-    <li><a href="#ref-for-set-append⑥">10.4. Should processing be blocked by reporting-endpoint limit</a>
-    <li><a href="#ref-for-set-append⑦">10.6. Triggering attribution</a> <a href="#ref-for-set-append⑧">(2)</a>
+    <li><a href="#ref-for-set-append">8.1. Parsing filter data</a>
+    <li><a href="#ref-for-set-append①">9.4. Obtaining a randomized source response</a> <a href="#ref-for-set-append②">(2)</a>
+    <li><a href="#ref-for-set-append③">9.8. Processing an attribution source</a> <a href="#ref-for-set-append④">(2)</a> <a href="#ref-for-set-append⑤">(3)</a>
+    <li><a href="#ref-for-set-append⑥">10.1. Creating an attribution trigger</a>
+    <li><a href="#ref-for-set-append⑦">10.4. Should processing be blocked by reporting-endpoint limit</a>
+    <li><a href="#ref-for-set-append⑧">10.6. Triggering attribution</a> <a href="#ref-for-set-append⑨">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-assert">
    <a href="https://infra.spec.whatwg.org/#assert">https://infra.spec.whatwg.org/#assert</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-assert">8.1. Obtaining a randomized response</a>
+    <li><a href="#ref-for-assert">8.2. Obtaining a randomized response</a>
     <li><a href="#ref-for-assert①">9.7. Parsing source-registration JSON</a> <a href="#ref-for-assert②">(2)</a>
     <li><a href="#ref-for-assert③">10.1. Creating an attribution trigger</a>
     <li><a href="#ref-for-assert④">10.6. Triggering attribution</a>
@@ -2848,6 +2933,12 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-byte-sequence">11.2. Serialize attribution report body</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="term-for-string-code-point-length">
+   <a href="https://infra.spec.whatwg.org/#string-code-point-length">https://infra.spec.whatwg.org/#string-code-point-length</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-string-code-point-length">8.1. Parsing filter data</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="term-for-list-contain">
    <a href="https://infra.spec.whatwg.org/#list-contain">https://infra.spec.whatwg.org/#list-contain</a><b>Referenced in:</b>
    <ul>
@@ -2868,11 +2959,12 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-map-exists">
    <a href="https://infra.spec.whatwg.org/#map-exists">https://infra.spec.whatwg.org/#map-exists</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-map-exists">9.6. Obtaining an attribution source from window features</a>
-    <li><a href="#ref-for-map-exists①">9.7. Parsing source-registration JSON</a> <a href="#ref-for-map-exists②">(2)</a> <a href="#ref-for-map-exists③">(3)</a> <a href="#ref-for-map-exists④">(4)</a> <a href="#ref-for-map-exists⑤">(5)</a>
-    <li><a href="#ref-for-map-exists⑥">10.1. Creating an attribution trigger</a> <a href="#ref-for-map-exists⑦">(2)</a> <a href="#ref-for-map-exists⑧">(3)</a> <a href="#ref-for-map-exists⑨">(4)</a> <a href="#ref-for-map-exists①⓪">(5)</a>
-    <li><a href="#ref-for-map-exists①①">10.2. Does filter data match</a>
-    <li><a href="#ref-for-map-exists①②">10.5. Creating aggregatable contributions</a> <a href="#ref-for-map-exists①③">(2)</a>
+    <li><a href="#ref-for-map-exists">8.1. Parsing filter data</a>
+    <li><a href="#ref-for-map-exists①">9.6. Obtaining an attribution source from window features</a>
+    <li><a href="#ref-for-map-exists②">9.7. Parsing source-registration JSON</a> <a href="#ref-for-map-exists③">(2)</a> <a href="#ref-for-map-exists④">(3)</a> <a href="#ref-for-map-exists⑤">(4)</a> <a href="#ref-for-map-exists⑥">(5)</a> <a href="#ref-for-map-exists⑦">(6)</a>
+    <li><a href="#ref-for-map-exists⑧">10.1. Creating an attribution trigger</a> <a href="#ref-for-map-exists⑨">(2)</a> <a href="#ref-for-map-exists①⓪">(3)</a> <a href="#ref-for-map-exists①①">(4)</a> <a href="#ref-for-map-exists①②">(5)</a> <a href="#ref-for-map-exists①③">(6)</a> <a href="#ref-for-map-exists①④">(7)</a>
+    <li><a href="#ref-for-map-exists①⑤">10.2. Does filter data match</a>
+    <li><a href="#ref-for-map-exists①⑥">10.5. Creating aggregatable contributions</a> <a href="#ref-for-map-exists①⑦">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-implementation-defined">
@@ -2905,11 +2997,12 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-map-iterate">
    <a href="https://infra.spec.whatwg.org/#map-iterate">https://infra.spec.whatwg.org/#map-iterate</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-map-iterate">9.8. Processing an attribution source</a>
-    <li><a href="#ref-for-map-iterate①">10.2. Does filter data match</a>
-    <li><a href="#ref-for-map-iterate②">10.4. Should processing be blocked by reporting-endpoint limit</a>
-    <li><a href="#ref-for-map-iterate③">10.5. Creating aggregatable contributions</a>
-    <li><a href="#ref-for-map-iterate④">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-map-iterate">8.1. Parsing filter data</a>
+    <li><a href="#ref-for-map-iterate①">9.8. Processing an attribution source</a>
+    <li><a href="#ref-for-map-iterate②">10.2. Does filter data match</a>
+    <li><a href="#ref-for-map-iterate③">10.4. Should processing be blocked by reporting-endpoint limit</a>
+    <li><a href="#ref-for-map-iterate④">10.5. Creating aggregatable contributions</a>
+    <li><a href="#ref-for-map-iterate⑤">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-map-key">
@@ -2920,12 +3013,19 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-map-key②">5.8. Attribution trigger</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="term-for-string-length">
+   <a href="https://infra.spec.whatwg.org/#string-length">https://infra.spec.whatwg.org/#string-length</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-string-length">8.1. Parsing filter data</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="term-for-list">
    <a href="https://infra.spec.whatwg.org/#list">https://infra.spec.whatwg.org/#list</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-list">5.8. Attribution trigger</a>
-    <li><a href="#ref-for-list①">10.1. Creating an attribution trigger</a>
-    <li><a href="#ref-for-list②">10.5. Creating aggregatable contributions</a>
+    <li><a href="#ref-for-list①">8.1. Parsing filter data</a>
+    <li><a href="#ref-for-list②">10.1. Creating an attribution trigger</a>
+    <li><a href="#ref-for-list③">10.5. Creating aggregatable contributions</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-ordered-map">
@@ -2934,10 +3034,11 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-ordered-map">5.3. Attribution filter map</a>
     <li><a href="#ref-for-ordered-map①">5.5. Attribution source</a>
     <li><a href="#ref-for-ordered-map②">5.8. Attribution trigger</a>
-    <li><a href="#ref-for-ordered-map③">9.6. Obtaining an attribution source from window features</a>
-    <li><a href="#ref-for-ordered-map④">9.7. Parsing source-registration JSON</a> <a href="#ref-for-ordered-map⑤">(2)</a>
-    <li><a href="#ref-for-ordered-map⑥">10.1. Creating an attribution trigger</a> <a href="#ref-for-ordered-map⑦">(2)</a> <a href="#ref-for-ordered-map⑧">(3)</a>
-    <li><a href="#ref-for-ordered-map⑨">11.2. Serialize attribution report body</a>
+    <li><a href="#ref-for-ordered-map③">8.1. Parsing filter data</a>
+    <li><a href="#ref-for-ordered-map④">9.6. Obtaining an attribution source from window features</a>
+    <li><a href="#ref-for-ordered-map⑤">9.7. Parsing source-registration JSON</a> <a href="#ref-for-ordered-map⑥">(2)</a>
+    <li><a href="#ref-for-ordered-map⑦">10.1. Creating an attribution trigger</a> <a href="#ref-for-ordered-map⑧">(2)</a> <a href="#ref-for-ordered-map⑨">(3)</a>
+    <li><a href="#ref-for-ordered-map①⓪">11.2. Serialize attribution report body</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-ordered-map">
@@ -2946,10 +3047,11 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-ordered-map">5.3. Attribution filter map</a>
     <li><a href="#ref-for-ordered-map①">5.5. Attribution source</a>
     <li><a href="#ref-for-ordered-map②">5.8. Attribution trigger</a>
-    <li><a href="#ref-for-ordered-map③">9.6. Obtaining an attribution source from window features</a>
-    <li><a href="#ref-for-ordered-map④">9.7. Parsing source-registration JSON</a> <a href="#ref-for-ordered-map⑤">(2)</a>
-    <li><a href="#ref-for-ordered-map⑥">10.1. Creating an attribution trigger</a> <a href="#ref-for-ordered-map⑦">(2)</a> <a href="#ref-for-ordered-map⑧">(3)</a>
-    <li><a href="#ref-for-ordered-map⑨">11.2. Serialize attribution report body</a>
+    <li><a href="#ref-for-ordered-map③">8.1. Parsing filter data</a>
+    <li><a href="#ref-for-ordered-map④">9.6. Obtaining an attribution source from window features</a>
+    <li><a href="#ref-for-ordered-map⑤">9.7. Parsing source-registration JSON</a> <a href="#ref-for-ordered-map⑥">(2)</a>
+    <li><a href="#ref-for-ordered-map⑦">10.1. Creating an attribution trigger</a> <a href="#ref-for-ordered-map⑧">(2)</a> <a href="#ref-for-ordered-map⑨">(3)</a>
+    <li><a href="#ref-for-ordered-map①⓪">11.2. Serialize attribution report body</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-ordered-set">
@@ -2961,12 +3063,13 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-ordered-set③">5.6. Attribution aggregatable trigger data</a>
     <li><a href="#ref-for-ordered-set④">5.8. Attribution trigger</a>
     <li><a href="#ref-for-ordered-set⑤">6. Storage</a> <a href="#ref-for-ordered-set⑥">(2)</a> <a href="#ref-for-ordered-set⑦">(3)</a>
-    <li><a href="#ref-for-ordered-set⑧">8.1. Obtaining a randomized response</a>
-    <li><a href="#ref-for-ordered-set⑨">9.4. Obtaining a randomized source response</a> <a href="#ref-for-ordered-set①⓪">(2)</a>
-    <li><a href="#ref-for-ordered-set①①">9.8. Processing an attribution source</a> <a href="#ref-for-ordered-set①②">(2)</a>
-    <li><a href="#ref-for-ordered-set①③">10.1. Creating an attribution trigger</a>
-    <li><a href="#ref-for-ordered-set①④">10.4. Should processing be blocked by reporting-endpoint limit</a>
-    <li><a href="#ref-for-ordered-set①⑤">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-ordered-set⑧">8.1. Parsing filter data</a>
+    <li><a href="#ref-for-ordered-set⑨">8.2. Obtaining a randomized response</a>
+    <li><a href="#ref-for-ordered-set①⓪">9.4. Obtaining a randomized source response</a> <a href="#ref-for-ordered-set①①">(2)</a>
+    <li><a href="#ref-for-ordered-set①②">9.8. Processing an attribution source</a> <a href="#ref-for-ordered-set①③">(2)</a>
+    <li><a href="#ref-for-ordered-set①④">10.1. Creating an attribution trigger</a>
+    <li><a href="#ref-for-ordered-set①⑤">10.4. Should processing be blocked by reporting-endpoint limit</a>
+    <li><a href="#ref-for-ordered-set①⑥">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-parse-a-json-string-to-an-infra-value">
@@ -2994,18 +3097,16 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-map-set">
    <a href="https://infra.spec.whatwg.org/#map-set">https://infra.spec.whatwg.org/#map-set</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-map-set">11.2. Serialize attribution report body</a> <a href="#ref-for-map-set①">(2)</a>
+    <li><a href="#ref-for-map-set">8.1. Parsing filter data</a>
+    <li><a href="#ref-for-map-set①">9.7. Parsing source-registration JSON</a>
+    <li><a href="#ref-for-map-set②">11.2. Serialize attribution report body</a> <a href="#ref-for-map-set③">(2)</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="term-for-list-size">
-   <a href="https://infra.spec.whatwg.org/#list-size">https://infra.spec.whatwg.org/#list-size</a><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="term-for-map-size">
+   <a href="https://infra.spec.whatwg.org/#map-size">https://infra.spec.whatwg.org/#map-size</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-list-size">9.8. Processing an attribution source</a> <a href="#ref-for-list-size①">(2)</a>
-    <li><a href="#ref-for-list-size②">10.1. Creating an attribution trigger</a>
-    <li><a href="#ref-for-list-size③">10.3. Should attribution be blocked by rate limit</a>
-    <li><a href="#ref-for-list-size④">10.4. Should processing be blocked by reporting-endpoint limit</a>
-    <li><a href="#ref-for-list-size⑤">10.6. Triggering attribution</a>
-    <li><a href="#ref-for-list-size⑥">10.7. Establishing report delivery time</a>
+    <li><a href="#ref-for-map-size">7. Vendor-Specific Values</a>
+    <li><a href="#ref-for-map-size①">8.1. Parsing filter data</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-list-sort-in-ascending-order">
@@ -3029,8 +3130,9 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-string⑦">5.6. Attribution aggregatable trigger data</a>
     <li><a href="#ref-for-string⑧">5.8. Attribution trigger</a>
     <li><a href="#ref-for-string⑨">5.9. Event-level report</a>
-    <li><a href="#ref-for-string①⓪">9.7. Parsing source-registration JSON</a> <a href="#ref-for-string①①">(2)</a> <a href="#ref-for-string①②">(3)</a> <a href="#ref-for-string①③">(4)</a> <a href="#ref-for-string①④">(5)</a> <a href="#ref-for-string①⑤">(6)</a> <a href="#ref-for-string①⑥">(7)</a>
-    <li><a href="#ref-for-string①⑦">10.1. Creating an attribution trigger</a> <a href="#ref-for-string①⑧">(2)</a> <a href="#ref-for-string①⑨">(3)</a> <a href="#ref-for-string②⓪">(4)</a> <a href="#ref-for-string②①">(5)</a>
+    <li><a href="#ref-for-string①⓪">8.1. Parsing filter data</a> <a href="#ref-for-string①①">(2)</a>
+    <li><a href="#ref-for-string①②">9.7. Parsing source-registration JSON</a> <a href="#ref-for-string①③">(2)</a> <a href="#ref-for-string①④">(3)</a> <a href="#ref-for-string①⑤">(4)</a> <a href="#ref-for-string①⑥">(5)</a> <a href="#ref-for-string①⑦">(6)</a> <a href="#ref-for-string①⑧">(7)</a>
+    <li><a href="#ref-for-string①⑨">10.1. Creating an attribution trigger</a> <a href="#ref-for-string②⓪">(2)</a> <a href="#ref-for-string②①">(3)</a> <a href="#ref-for-string②②">(4)</a> <a href="#ref-for-string②③">(5)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-struct">
@@ -3228,6 +3330,7 @@ an origin from a user’s browsing history.</p>
      <li><span class="dfn-paneled" id="term-for-boolean">boolean</span>
      <li><span class="dfn-paneled" id="term-for-iteration-break">break</span>
      <li><span class="dfn-paneled" id="term-for-byte-sequence">byte sequence</span>
+     <li><span class="dfn-paneled" id="term-for-string-code-point-length">code point length</span>
      <li><span class="dfn-paneled" id="term-for-list-contain">contain</span>
      <li><span class="dfn-paneled" id="term-for-iteration-continue">continue</span>
      <li><span class="dfn-paneled" id="term-for-map-exists">exist <small>(for map)</small></span>
@@ -3237,6 +3340,7 @@ an origin from a user’s browsing history.</p>
      <li><span class="dfn-paneled" id="term-for-list-is-empty">is empty</span>
      <li><span class="dfn-paneled" id="term-for-map-iterate">iterate <small>(for map)</small></span>
      <li><span class="dfn-paneled" id="term-for-map-key">key</span>
+     <li><span class="dfn-paneled" id="term-for-string-length">length</span>
      <li><span class="dfn-paneled" id="term-for-list">list</span>
      <li><span class="dfn-paneled" id="term-for-ordered-map">map</span>
      <li><span class="dfn-paneled" id="term-for-ordered-map①">ordered map</span>
@@ -3245,7 +3349,7 @@ an origin from a user’s browsing history.</p>
      <li><span class="dfn-paneled" id="term-for-list-remove">remove</span>
      <li><span class="dfn-paneled" id="term-for-serialize-an-infra-value-to-json-bytes">serialize an infra value to json bytes</span>
      <li><span class="dfn-paneled" id="term-for-map-set">set <small>(for map)</small></span>
-     <li><span class="dfn-paneled" id="term-for-list-size">size</span>
+     <li><span class="dfn-paneled" id="term-for-map-size">size <small>(for map)</small></span>
      <li><span class="dfn-paneled" id="term-for-list-sort-in-ascending-order">sort in ascending order</span>
      <li><span class="dfn-paneled" id="term-for-list-sort-in-descending-order">sort in descending order</span>
      <li><span class="dfn-paneled" id="term-for-string">string</span>
@@ -3334,16 +3438,14 @@ an origin from a user’s browsing history.</p>
    <div class="issue"> Specify monkeypatches for source/trigger registration. <a class="issue-return" href="#issue-963bda2b" title="Jump to section">↵</a></div>
    <div class="issue"> Use <a data-link-type="dfn" href="#attribution-aggregatable-trigger-data-negated-filters">negated filters</a> in <a data-link-type="dfn" href="#create-aggregatable-contributions">create aggregatable contributions</a>. <a class="issue-return" href="#issue-ac4e571e" title="Jump to section">↵</a></div>
    <div class="issue"> Update <a data-link-type="dfn" href="#trigger-attribution">trigger attribution</a> to use <a data-link-type="dfn" href="#event-level-trigger-configuration-negated-filters">negated filters</a>. <a class="issue-return" href="#issue-32136933" title="Jump to section">↵</a></div>
+   <div class="issue"> Determine whether to limit <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-length">length</a> or <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-code-point-length">code point length</a> for <var>filter</var> and <var>d</var> above. <a class="issue-return" href="#issue-5c232164" title="Jump to section">↵</a></div>
    <div class="issue"> Specify the steps for making attributionsrc request. <a class="issue-return" href="#issue-45c98580" title="Jump to section">↵</a></div>
    <div class="issue"> Specify the steps for making an attributionsrc request with <var>decodedSrc</var>. <a class="issue-return" href="#issue-1f7755b7" title="Jump to section">↵</a></div>
    <div class="issue"> Ensure that <var>attributionDestination</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-scheme">scheme</a> is HTTP/HTTPS. <a class="issue-return" href="#issue-e0364022" title="Jump to section">↵</a></div>
-   <div class="issue"> Parse <var>value</var>["<code>filter_data</code>"]. <a class="issue-return" href="#issue-3750781c" title="Jump to section">↵</a></div>
    <div class="issue"> Parse <var>value</var>["<code>aggregation_keys</code>"]. <a class="issue-return" href="#issue-12e7ace0" title="Jump to section">↵</a></div>
    <div class="issue"> Should fake reports respect the user agent’s <a data-link-type="dfn" href="#max-reports-per-attribution-destination">max reports per attribution destination</a>? <a class="issue-return" href="#issue-82e83119" title="Jump to section">↵</a></div>
-   <div class="issue"> Parse filters and negated filters. <a class="issue-return" href="#issue-9de2e556" title="Jump to section">↵</a></div>
    <div class="issue"> Allow the user agent to return null if <var>values</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size">size</a> is
 greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title="Jump to section">↵</a></div>
-   <div class="issue"> Parse top-level filters. <a class="issue-return" href="#issue-67eb48e3" title="Jump to section">↵</a></div>
    <div class="issue"> Parse aggregatable trigger fields. <a class="issue-return" href="#issue-541f4427" title="Jump to section">↵</a></div>
    <div class="issue"> This would ideally be replaced by a more descriptive algorithm in Infra. See <a href="https://github.com/whatwg/infra/issues/201">infra/201</a> <a class="issue-return" href="#issue-ccb90c6c" title="Jump to section">↵</a></div>
    <div class="issue"> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/attribution-reporting-api/issues/220">[Issue #220]</a> <a class="issue-return" href="#issue-c8706ee1" title="Jump to section">↵</a></div>
@@ -3413,7 +3515,11 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
     <li><a href="#ref-for-attribution-filter-map①">5.6. Attribution aggregatable trigger data</a> <a href="#ref-for-attribution-filter-map②">(2)</a>
     <li><a href="#ref-for-attribution-filter-map③">5.7. Event-level trigger configuration</a> <a href="#ref-for-attribution-filter-map④">(2)</a>
     <li><a href="#ref-for-attribution-filter-map⑤">5.8. Attribution trigger</a>
-    <li><a href="#ref-for-attribution-filter-map⑥">10.2. Does filter data match</a>
+    <li><a href="#ref-for-attribution-filter-map⑥">7. Vendor-Specific Values</a> <a href="#ref-for-attribution-filter-map⑦">(2)</a>
+    <li><a href="#ref-for-attribution-filter-map⑧">8.1. Parsing filter data</a>
+    <li><a href="#ref-for-attribution-filter-map⑨">9.7. Parsing source-registration JSON</a>
+    <li><a href="#ref-for-attribution-filter-map①⓪">10.1. Creating an attribution trigger</a> <a href="#ref-for-attribution-filter-map①①">(2)</a> <a href="#ref-for-attribution-filter-map①②">(3)</a>
+    <li><a href="#ref-for-attribution-filter-map①③">10.2. Does filter data match</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="source-type">
@@ -3995,6 +4101,18 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
     <li><a href="#ref-for-max-source-expiry">9.7. Parsing source-registration JSON</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="max-entries-per-attribution-filter-map">
+   <b><a href="#max-entries-per-attribution-filter-map">#max-entries-per-attribution-filter-map</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-max-entries-per-attribution-filter-map">8.1. Parsing filter data</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="max-values-per-attribution-filter-entry">
+   <b><a href="#max-values-per-attribution-filter-entry">#max-values-per-attribution-filter-entry</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-max-values-per-attribution-filter-entry">8.1. Parsing filter data</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="max-pending-sources-per-source-origin">
    <b><a href="#max-pending-sources-per-source-origin">#max-pending-sources-per-source-origin</a></b><b>Referenced in:</b>
    <ul>
@@ -4088,6 +4206,13 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
    <b><a href="#max-report-cache-size">#max-report-cache-size</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-max-report-cache-size">10.6. Triggering attribution</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="parse-filter-data">
+   <b><a href="#parse-filter-data">#parse-filter-data</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-parse-filter-data">9.7. Parsing source-registration JSON</a>
+    <li><a href="#ref-for-parse-filter-data①">10.1. Creating an attribution trigger</a> <a href="#ref-for-parse-filter-data②">(2)</a> <a href="#ref-for-parse-filter-data③">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="obtain-a-randomized-response">
