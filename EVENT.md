@@ -511,6 +511,7 @@ Trigger registration:
 {
   ... // existing fields, such as `event_trigger_data`
 
+  // Note that "not_filters", which filters with a negation, is also supported.
   "filters": {
     "conversion_subdomain": ["electronics.megastore"],
     // Not set on the source side, so this key is ignored
@@ -536,7 +537,7 @@ to set `trigger_data` based on `filter_data`:
   "event_trigger_data": [
     {
       "trigger_data": "2",
-      // Note that "not_filters" which filters with a negation is also supported.
+      // Note that "not_filters", which filters with a negation, is also supported.
       "filters": {"source_type": ["navigation"]}
     },
     {

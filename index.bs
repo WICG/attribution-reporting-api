@@ -353,6 +353,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: An [=url/origin=].
 : <dfn>filters</dfn>
 :: A [=filter map=].
+: <dfn>negated filters</dfn>
+:: A [=filter map=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
 : <dfn>event-level trigger configurations</dfn>
@@ -364,6 +366,9 @@ An attribution trigger is a [=struct=] with the following items:
     [=map/value|values=] are non-negative 32-bit integers.
 
 </dl>
+
+Issue: Update [=trigger attribution=] to use
+[=attribution trigger/negated filters=].
 
 <h3 dfn-type=dfn>Event-level report</h3>
 
@@ -928,6 +933,11 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
     1. Set |filters| to the result of running [=parse filter data=] with
         |value|["`filters`"] and "`trigger`".
     1. If |filters| is null, return null.
+1. Let |negatedFilters| be a new [=filter map=].
+1. If |value|["`not_filters`"] exists:
+    1. Set |negatedFilters| to the result of running [=parse filter data=] with
+        |value|["`not_filters`"] and "`trigger`".
+    1. If |negatedFilters| is null, return null.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -937,6 +947,8 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
     :: |reportingOrigin|
     : [=attribution trigger/filters=]
     :: |filters|
+    : [=attribution trigger/negated filters=]
+    :: |negatedFilters|
     : [=attribution trigger/debug key=]
     :: |debugKey|
     : [=attribution trigger/event-level trigger configurations=]
