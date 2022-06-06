@@ -524,12 +524,13 @@ controls the maximum number of attributions for a
 
 <h3 id="parsing-filter-data">Parsing filter data</h3>
 
-To <dfn>parse filter data</dfn> given a |value| and an optional [=boolean=]
-<dfn for="parse filter data"><var>forSource</var></dfn> (default false):
+To <dfn>parse filter data</dfn> given a |value| and a [=string=]
+|registrationType|:
 
+1. Assert: |registrationType| is either "`source`" or "`trigger`".
 1. If |value| is not a [=map=], return null.
-1. If |forSource| is true and |value|["`source_type`"] [=map/exists=], return
-    null.
+1. If |registrationType| is "`source`" and |value|["`source_type`"]
+    [=map/exists=], return null.
 1. If |value|'s [=map/size=] is greater than the user agent's
     [=max entries per attribution filter map=], return null.
 1. Let |result| be a new [=attribution filter map=].
@@ -655,8 +656,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 1. Let |filterData| be a new [=attribution filter map=].
 1. If |value|["`filter_data`"] [=map/exists=]:
     1. Set |filterData| to the result of running [=parse filter data=] with
-        |value|["`filter_data`"] and [=parse filter data/forSource=] set to
-        true.
+        |value|["`filter_data`"] and "`source`".
     1. If |filterData| is null, return null.
 1. [=map/Set=] |filterData|["`source_type`"] to « |sourceType| ».
 1. Let |debugKey| be null.
@@ -842,12 +842,12 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
     1. Let |filters| be a new [=attribution filter map=].
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filter data=] with
-            |value|["`filters`"].
+            |value|["`filters`"] and "`trigger`".
         1. If |filters| is null, return null.
     1. Let |negatedFilters| be a new [=attribution filter map=].
     1. If |value|["`not_filters`"] [=map/exists=]:
         1. Set |negatedFilters| to the result of running [=parse filter data=]
-            with |value|["`not_filters`"].
+            with |value|["`not_filters`"] and "`trigger`".
         1. If |negatedFilters| is null, return null.
     1. Let |eventTrigger| be a new [=event-level trigger configuration=] with
         the items:
@@ -886,7 +886,7 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
 1. Let |filters| be a new [=attribution filter map=].
 1. If |value|["`filters`"] exists:
     1. Set |filters| to the result of running [=parse filter data=] with
-        |value|["`filters`"].
+        |value|["`filters`"] and "`trigger`".
     1. If |filters| is null, return null.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
