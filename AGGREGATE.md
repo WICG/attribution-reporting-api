@@ -91,9 +91,8 @@ aggregation key defined as a hex-string. The final histogram bucket key will be
 fully defined at trigger time using a combination (binary OR) of this piece and
 trigger-side pieces.
 
-Final keys will be restricted to a maximum of 128 bits. Keys longer than this
-will be truncated. This means that hex strings in the JSON should be limited to
-at most 32 digits.
+Final keys will be restricted to a maximum of 128 bits. This means that hex
+strings in the JSON should be limited to at most 32 digits.
 
 ### Attribution trigger registration
 
