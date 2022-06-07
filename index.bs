@@ -562,6 +562,18 @@ To <dfn>parse filter data</dfn> given a |value| and a [=string=]
 Issue: Determine whether to limit [=string/length=] or
 [=string/code point length=] for |filter| and |d| above.
 
+<h3 id="debug-keys">Debug keys</h3>
+
+To <dfn>check if a debug key is allowed</dfn> given an [=origin=]
+|reportingOrigin|:
+
+1. [=Assert=]: |reportingOrigin| is a [=potentially trustworthy origin=].
+1. Return <strong>blocked</strong>.
+
+Issue: Check for "`ar_debug`" cookie on |reportingOrigin| and return
+<strong>allowed</strong> if it exists, is `Secure`, is `HttpOnly`, and is
+`SameSite=None`.
+
 <h3 id="obtaining-randomized-response">Obtaining a randomized response</h3>
 
 To <dfn>obtain a randomized response</dfn> given |trueValue|, a [=set=] |possibleValues|, and a
@@ -692,6 +704,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
         <a spec="html">rules for parsing non-negative integers</a> to
         |value|["`debug_key`"].
     1. If |debugKey| is an error, set |debugKey| to null.
+    1. If the result of running [=check if a debug key is allowed=] with
+        |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |triggerDataCardinality| be the user agent's
     [=navigation-source trigger data cardinality=].
 1. Let |randomizedTriggerRate| be the user agent's
@@ -910,6 +924,8 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
         <a spec="html">rules for parsing non-negative integers</a> to
         |value|["`debug_key`"].
     1. If |debugKey| is an error, set |debugKey| to null.
+    1. If the result of running [=check if a debug key is allowed=] with
+        |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |filters| be a new [=attribution filter map=].
 1. If |value|["`filters`"] exists:
     1. Set |filters| to the result of running [=parse filter data=] with
