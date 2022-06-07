@@ -435,7 +435,7 @@ An aggregatable contribution is a [=struct=] with the following items:
 
 <h3 dfn-type=dfn>Aggregatable report</h3>
 
-An aggregatable report is an [=attribution report=] with the following items:
+An aggregatable report is an [=attribution report=] with the following additional items:
 
 <dl dfn-for="aggregatable report">
 : <dfn>source time</dfn>
@@ -443,7 +443,7 @@ An aggregatable report is an [=attribution report=] with the following items:
 : <dfn>original report time</dfn>
 :: A point in time.
 : <dfn>contributions</dfn>
-:: An [=list=] of [=aggregatable contributions=].
+:: A [=list=] of [=aggregatable contributions=].
 
 </dl>
 
@@ -542,8 +542,8 @@ controls how many [=event-level reports=] can be in the
 [=event-level report cache=] per
 [=event-level report/attribution destination=].
 
-<dfn>Max aggregatable reports per attribution destination</dfn> is a vendor-specific integer which controls how
-many [=aggregatable reports=] can be in the [=aggregatable report cache=] for an
+<dfn>Max aggregatable reports per attribution destination</dfn> is a positive integer that controls how
+many [=aggregatable reports=] can be in the [=aggregatable report cache=] per
 [=aggregatable report/attribution destination=].
 
 <dfn>Max attributions per navigation source</dfn> is a positive integer that
@@ -590,18 +590,18 @@ controls the maximum number of attributions for a
 <dfn>Max event-level report cache size</dfn> is a positive integer that controls how many
 [=event-level reports=] can be in the [=event-level report cache=].
 
-<dfn>Max aggregatable report cache size</dfn> is a vendor-specific integer which controls how many
+<dfn>Max aggregatable report cache size</dfn> is a positive integer that controls how many
 [=aggregatable reports=] can be in the [=aggregatable report cache=].
 
-<dfn>Allowed aggregatable budget per source</dfn> is a vendor-specific integer that controls the total
+<dfn>Allowed aggregatable budget per source</dfn> is a positive integer that controls the total
 [=aggregatable report/required aggregatable budget=] of all [=aggregatable reports=] created for
 an [=attribution source=].
 
 <dfn>Min aggregatable report delay</dfn> is a non-negative length of time that controls the minimum
-delay to deliver an aggregatable report.
+delay to deliver an [=aggregatable report=].
 
 <dfn>Randomized aggregatable report delay</dfn> is a positive length of time that controls the
-random delay to deliver an aggregatable report.
+random delay to deliver an [=aggregatable report=].
 
 # General Algorithms # {#general-algorithms}
 
@@ -1270,6 +1270,7 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
 <h3 dfn id="can-source-create-aggregatable-contributions">Can source create aggregatable contributions</h3>
 
 Given an [=aggregatable report=] |report| and an [=attribution source=] |sourceToAttribute|:
+
 1. Let |remainingAggregatableBudget| be [=allowed aggregatable budget per source=] minus |sourceToAttribute|'s
     [=attribution source/aggregatable budget consumed=].
 1. Assert: |remainingAggregatableBudget| is greater than or equal to 0.
@@ -1280,7 +1281,7 @@ Given an [=aggregatable report=] |report| and an [=attribution source=] |sourceT
 <h3 algorithm id="triggering-event-level-attribution">Triggering event-level attribution</h3>
 
 To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |trigger| and an
-[=attribution source=] |sourceToAttribute| run the following steps:
+[=attribution source=] |sourceToAttribute|, run the following steps:
 
 1. If |sourceToAttribute|'s [=attribution source/event-level attributable=] value is false, return <strong>dropped</strong>.
 1. Assert: |sourceToAttribute|'s [=attribution source/randomized response=] is
@@ -1342,7 +1343,8 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 <h3 algorithm id="triggering-aggregatable-attribution">Triggering aggregatable attribution</h3>
 
 To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] |trigger| and an
-[=attribution source=] |sourceToAttribute| run the following steps:
+[=attribution source=] |sourceToAttribute|, run the following steps:
+
 1. Let |report| be the result of running [=obtain an aggregatable report=] with |sourceToAttribute| and |trigger|.
 1. If |report|'s [=aggregatable report/contributions=] [=list/is empty=], return <strong>dropped</strong>.
 1. Let |numMatchingReports| be the number of entries in the [=aggregatable report cache=] whose
@@ -1362,14 +1364,14 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
-To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run the following steps:
+To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger|, run the following steps:
 
 1. Let |attributionDestination| be |trigger|'s [=attribution trigger/attribution destination=].
 1. Let |matchingSources| be all entries in the [=attribution source cache=] where all of the following are true:
      * entry's [=attribution source/attribution destination=] and |attributionDestination| are equal.
      * entry's [=attribution source/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are [=same origin=].
      * entry's [=attribution source/expiry time=] is greater than the current time.
-1. If |matchingSources| is empty, return.
+1. If |matchingSources| [=set/is empty=], return.
 1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources|
     in descending order, with |a| being less than |b| if any of the following are true:
       * |a|'s [=attribution source/priority=] is less than |b|'s [=attribution source/priority=].
@@ -1406,7 +1408,7 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. If both |eventLevelResult| and |aggregatableResult| are <strong>dropped</strong>, return.
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
 1. For each |item| of |matchingSources|:
-    1. [=list/Remove=] |item| from the [=attribution source cache=].
+    1. [=set/Remove=] |item| from the [=attribution source cache=].
 1. If neither |eventLevelResult| nor |aggregatableResult| is <strong>attributed</strong>, return.
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] if the result of running
@@ -1466,8 +1468,9 @@ To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution 
 1. Return the result of running [=obtain a report time from deadline=] with
     |source|'s [=attribution source/source time=] and |deadlineToUse|.
 
-To <dfn>obtain an aggregatable report delivery time</dfn> given a [=attribution trigger/trigger time=]
+To <dfn>obtain an aggregatable report delivery time</dfn> given a point in time
 |triggerTime|, perform the following steps. They return a point in time.
+
 1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive) with uniform probability.
 1. Return |triggerTime| + [=min aggregatable report delay=] + |r| * [=randomized aggregatable report delay=].
 
