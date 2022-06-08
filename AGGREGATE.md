@@ -193,7 +193,7 @@ The report will be JSON encoded with the following scheme:
 {
   // Info that the aggregation services also need encoded in JSON
   // for use with AEAD.
-  "shared_info": "{\"attribution_destination\":\"https://advertiser.example\",\"report_id\":\"[UUID]\",\"reporting_origin\":\"https://reporter.example\",\"scheduled_report_time\":\"[timestamp in seconds]\",\"source_registration_time\":\"[timestamp in seconds]\",\"version\":\"[api version]\"}",
+  "shared_info": "{\"api\":\"attribution-reporting\",\"attribution_destination\":\"https://advertiser.example\",\"report_id\":\"[UUID]\",\"reporting_origin\":\"https://reporter.example\",\"scheduled_report_time\":\"[timestamp in seconds]\",\"source_registration_time\":\"[timestamp in seconds]\",\"version\":\"[api version]\"}",
 
   // Support a list of payloads for future extensibility if multiple helpers
   // are necessary. Currently only supports a single helper configured
@@ -225,6 +225,9 @@ The browser is free to utilize techniques like retries to minimize data loss.
   as authenticated data for decryption, see [below](#encrypted-payload). The
   string therefore must be forwarded to the aggregation service unmodified. The
   reporting origin can parse the string to access the encoded fields.
+  
+* The `api` field is a string enum identifying the API that triggered the report.
+  This allows the aggregation service to extend support to other APIs in the future. 
 
 * The `scheduled_report_time` will be the number of seconds since the Unix Epoch
   (1970-01-01T00:00:00Z, ignoring leap seconds) to align with
