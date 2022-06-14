@@ -454,11 +454,11 @@ maximum value that can be used as an [=attribution source/event id=].
 maximum value that can be used as an [=attribution source/expiry=]. It must be
 greater than or equal to 30 days.
 
-<dfn>Max entries per attribution filter map</dfn> is a positive integer that
-controls the maximum [=map/size=] of an [=attribution filter map=].
+<dfn>Max entries per filter map</dfn> is a positive integer that controls the
+maximum [=map/size=] of a [=filter map=].
 
-<dfn>Max values per attribution filter entry</dfn> is a positive integer that
-controls the maximum [=set/size=] of an [=attribution filter map=] entry.
+<dfn>Max values per filter entry</dfn> is a positive integer that
+controls the maximum [=set/size=] of a [=filter map=] entry.
 
 <dfn>Max pending sources per source origin</dfn> is a positive integer that
 controls how many [=attribution sources=] can be in the
@@ -543,8 +543,8 @@ To <dfn>parse filter data</dfn> given a |value| and a [=string=]
 1. If |registrationType| is "`source`" and |value|["`source_type`"]
     [=map/exists=], return null.
 1. If |value|'s [=map/size=] is greater than the user agent's
-    [=max entries per attribution filter map=], return null.
-1. Let |result| be a new [=attribution filter map=].
+    [=max entries per filter map=], return null.
+1. Let |result| be a new [=filter map=].
 1. [=map/iterate|For each=] |filter| → |data| of |value|:
     1. If |data| is not a [=list=], return null.
     1. Let |set| be a new [=ordered set=].
@@ -552,7 +552,7 @@ To <dfn>parse filter data</dfn> given a |value| and a [=string=]
         1. If |d| is not a [=string=], return null.
         1. [=set/Append=] |d| to |set|.
     1. If |set|'s [=set/size=] is greater than the user agent's
-        [=max values per attribution filter entry=], return null.
+        [=max values per filter entry=], return null.
     1. [=map/Set=] |result|[|filter|] to |set|.
 1. Return |result|.
 
@@ -689,7 +689,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     1. Set |priority| to the result of applying the
         <a spec="html">rules for parsing integers</a> to |value|["`priority`"].
     1. If |priority| is an error, set |priority| to 0.
-1. Let |filterData| be a new [=attribution filter map=].
+1. Let |filterData| be a new [=filter map=].
 1. If |value|["`filter_data`"] [=map/exists=]:
     1. Set |filterData| to the result of running [=parse filter data=] with
         |value|["`filter_data`"] and "`source`".
@@ -877,12 +877,12 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
             <a spec="html">rules for parsing integers</a> to
             |value|["`priority`"].
         1. If |priority| is an error, set |priority| to 0.
-    1. Let |filters| be a new [=attribution filter map=].
+    1. Let |filters| be a new [=filter map=].
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filter data=] with
             |value|["`filters`"] and "`trigger`".
         1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a new [=attribution filter map=].
+    1. Let |negatedFilters| be a new [=filter map=].
     1. If |value|["`not_filters`"] [=map/exists=]:
         1. Set |negatedFilters| to the result of running [=parse filter data=]
             with |value|["`not_filters`"] and "`trigger`".
@@ -923,7 +923,7 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
     1. If |debugKey| is an error, set |debugKey| to null.
     1. If the result of running [=check if a debug key is allowed=] with
         |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
-1. Let |filters| be a new [=attribution filter map=].
+1. Let |filters| be a new [=filter map=].
 1. If |value|["`filters`"] exists:
     1. Set |filters| to the result of running [=parse filter data=] with
         |value|["`filters`"] and "`trigger`".
