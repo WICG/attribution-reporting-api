@@ -54,7 +54,7 @@ Chromium's implementation assigns the following values:
 [100](https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_storage_delegate_impl.cc;l=116;drc=0eeaeb3261fd1ba378c57779245d5875121ab431)
 
 # [Max source cache size](https://wicg.github.io/attribution-reporting-api/#max-source-cache-size)
-\infty
+∞
 
 # [Max report cache size](https://wicg.github.io/attribution-reporting-api/#max-report-cache-size)
-\infty
+∞
