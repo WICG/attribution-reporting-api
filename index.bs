@@ -765,7 +765,7 @@ Issue: Parse |value|["`aggregation_keys`"].
 
 <h3 id="check-pending-destination-limit">Checking pending destination limit</h3>
 
-To <dfn>check if an [=attribution source=] meets the pending destination limit</dfn> given an
+To <dfn>check if an [=attribution source=] exceeds the pending destination limit</dfn> given an
 [=attribution source=] |source|, run the following steps:
 
 1. Let |pendingSources| be all entries in the [=attribution source cache=] where all of the following are true:
@@ -777,14 +777,16 @@ To <dfn>check if an [=attribution source=] meets the pending destination limit</
 1. Let |distinctDestinations| be a new [=set/is empty|empty=] [=set=].
 1. For each [=attribution source=] |pendingSource| of |pendingSources|:
     1. If |source|'s [=attribution source/attribution destination=] and |pendingSource|'s
-        [=attribution source/attribution destination=] are equal, then return true.
+        [=attribution source/attribution destination=] are equal, then return false.
     1. If |distinctDestinations| [=set/contains=] |pendingSource|'s
         [=attribution source/attribution destination=], [=iteration/continue=].
     1. [=set/Append=] |pendingSource|'s [=attribution source/attribution destination=] to
         |distinctDestinations|.
 1. If |distinctDestinations|'s [=set/size=] is greater than or equal to
-    the user agent's [=max destinations covered by pending sources=], then return false.
-1. Return true.
+    the user agent's [=max destinations covered by pending sources=], then return true.
+1. Return false.
+
+Issue: See <a href="https://github.com/WICG/attribution-reporting-api/issues/482">Source event limits should be time bounded</a>.
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
