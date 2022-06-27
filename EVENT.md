@@ -206,9 +206,6 @@ redirects (though these multiple sources may not set distinct destinations).
 Note that we sometimes call the `attributionsrc`'s origin the "reporting origin"
 since it is the origin that will end up receiving attribution reports.
 
-You can validate the header JSON using the [Attribution Reporting Header
-Validation form](validate-json.html).
-
 ### Handling an attribution source event
 
 A `navigation` attribution source event will be logged to storage if the
@@ -318,9 +315,6 @@ same-origin children, but disabled in cross-origin children.
 
 Navigation sources may be attributed up to 3 times. Event sources may be
 attributed up to 1 time.
-
-You can validate the header JSON using the [Attribution Reporting Header
-Validation form](validate-json.html?header=trigger).
 
 ### Registration requests
 
