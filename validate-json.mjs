@@ -92,7 +92,7 @@ function list(f = () => {}) {
 
 const uint64 = string((state, value) => {
   if (!uint64Regex.test(value)) {
-    state.error(`must match ${uint64Regex}`);
+    state.error(`must be a uint64 (must match ${uint64Regex})`);
     return;
   }
 
