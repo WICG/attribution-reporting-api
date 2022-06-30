@@ -119,7 +119,7 @@ const int64 = string((state, value) => {
 
 const hex128 = string((state, value) => {
   if (!hex128Regex.test(value)) {
-    return state.error(`must match ${hex128Regex}`);
+    return state.error(`must be a hex128 (must match ${hex128Regex})`);
   }
 });
 
