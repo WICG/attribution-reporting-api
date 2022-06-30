@@ -184,32 +184,3 @@ const invalidSourceHeaders = [
 // Test source headers validation
 logHeaderListValidation(validSourceHeaders, validateSource);
 logHeaderListValidation(invalidSourceHeaders, validateSource);
-
-// OK DONE aggregation_keys: optional(aggregationKeys),
-// OK DONE debug_key: optional(uint64),
-// OK DONE destination: required(destination),
-// OK DONE filter_data: optional(filters(/*allowSourceType=*/ false)),
-// OK DONE priority: optional(int64),
-// OK DONE source_event_id: required(uint64),
-
-// const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/;
-
-// "aggregation_keys": {
-//   // Generates a "0x159" key piece (low order bits of the key) for the key named
-//   // "campaignCounts".
-//   "campaignCounts": "0x159", // User saw ad from campaign 345 (out of 511)
-
-//   // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue".
-//   "geoValue": "0x5" // Source-side geo region = 5 (US), out of a possible ~100 regions
-// }
-
-// filters is not a list
-// filters is a list but not of strings
-// filters contains source_type
-// TODO multiple filter errors
-
-// filter_data: { conversion_subdomain: [ 123 ] }
-// }
-// ----------------------------------------------
-// ❌ 1 ERROR(S):
-// must be a string: ["filter_data"]["conversion_subdomain"][0]
