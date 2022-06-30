@@ -112,7 +112,7 @@ const int64 = string((state, value) => {
 
   const max = 2n ** (64n - 1n) - 1n;
   const min = (-2n) ** (64n - 1n);
-  if (val < min || val > max) {
+  if (value < min || value > max) {
     state.error('must fit in a signed 64-bit integer');
   }
 });
