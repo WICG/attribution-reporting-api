@@ -104,7 +104,7 @@ const uint64 = string((state, value) => {
 
 const int64 = string((state, value) => {
   if (!int64Regex.test(value)) {
-    state.error(`must match ${int64Regex}`);
+  state.error(`must be a uint64 (must match ${uint64Regex})`);
     return;
   }
 
