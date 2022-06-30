@@ -141,7 +141,7 @@ const destination = string((state, url) => {
     state.warn('contains a path that will be ignored');
   }
 
-  if (url.searchParams !== '') {
+  if (url.search !== '') {
     state.warn('contains a query string that will be ignored');
   }
 
