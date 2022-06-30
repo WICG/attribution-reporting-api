@@ -33,7 +33,7 @@ class State {
 
     Object.keys(obj).forEach(key => {
       if (!(key in checks)) {
-        this.scope(key, () => this.warn('is an unknown field'));
+        this.scope(key, () => this.warn('unknown field'));
       }
     });
   }
