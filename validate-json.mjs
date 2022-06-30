@@ -223,3 +223,18 @@ export function validateJSON(json, f) {
   }
   return f(value);
 }
+
+export function formatIssue({msg, path}) {
+  if (path === undefined) {
+    return msg;
+  }
+
+  let context;
+  if (path.length === 0) {
+    context = 'JSON root';
+  } else {
+    context = path.map(p => typeof p === 'number' ? `[${p}]` : `["${p}"]`).join('');
+  }
+
+  return `${msg}: ${context}`;
+}
