@@ -45,7 +45,7 @@ function required(f = () => {}) {
       f(state, object[key]);
       return;
     }
-    state.error('must be present');
+    state.error('missing required field');
   };
 }
 
