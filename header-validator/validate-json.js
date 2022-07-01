@@ -2,6 +2,39 @@ const uint64Regex = /^[0-9]+$/
 const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
+const sourceFields = Object.freeze({
+  AGGREGATION_KEYS: 'aggregation_keys',
+  DEBUG_KEY: 'debug_key',
+  DESTINATION: 'destination',
+  FILTER_DATA: 'filter_data',
+  PRIORITY: 'priority',
+  SOURCE_EVENT_ID: 'source_event_id',
+})
+
+const triggerFields = Object.freeze({
+  AGG_TRIGGER_DATA: 'aggregatable_trigger_data',
+  AGG_VALUES: 'aggregatable_values',
+  DEBUG_KEY: 'debug_key',
+  EVENT_TRIGGER_DATA: 'event_trigger_data',
+  FILTERS: 'filters',
+  NOT_FILTERS: 'not_filters',
+})
+
+const eventTriggerDataFields = Object.freeze({
+  DEDUP_KEY: 'deduplication_key',
+  FILTERS: 'filters',
+  NOT_FILTERS: 'not_filters',
+  PRIORITY: 'priority',
+  TRIGGER_DATA: 'trigger_data',
+})
+
+const aggregatableTriggerDataFields = Object.freeze({
+  FILTERS: 'filters',
+  KEY_PIECE: 'key_piece',
+  NOT_FILTERS: 'not_filters',
+  SOURCE_KEYS: 'source_keys',
+})
+
 class State {
   constructor() {
     this.path = []
@@ -34,7 +67,11 @@ class State {
 
     Object.keys(obj).forEach((key) => {
       if (!(key in checks)) {
-        this.scope(key, () => this.warn('unknown field'))
+        this.scope(key, () =>
+          this.warn(
+            `unknown field. Field must be one of ${Object.keys(checks)}`
+          )
+        )
       }
     })
   }
@@ -46,7 +83,7 @@ function required(f = () => {}) {
       f(state, object[key])
       return
     }
-    state.error('missing required field')
+    state.error('must be present')
   }
 }
 
@@ -145,15 +182,15 @@ const destination = string((state, url) => {
   }
 
   if (url.pathname !== '/') {
-    state.warn('contains a path that will be ignored')
+    state.warn(`contains a path (${url.pathname}) that will be ignored`)
   }
 
   if (url.search !== '') {
-    state.warn('contains a query string that will be ignored')
+    state.warn(`contains a query string (${url.search}) that will be ignored`)
   }
 
   if (url.hash !== '') {
-    state.warn('contains a fragment that will be ignored')
+    state.warn(`contains a fragment (${url.hash}) that will be ignored`)
   }
 })
 
@@ -176,22 +213,24 @@ const aggregationKeys = object((state, key, value) => {
 export function validateSource(source) {
   const state = new State()
   state.validate(source, {
-    aggregation_keys: optional(aggregationKeys),
-    debug_key: optional(uint64),
-    destination: required(destination),
-    filter_data: optional(filters(/*allowSourceType=*/ false)),
-    priority: optional(int64),
-    source_event_id: required(uint64),
+    [sourceFields.AGGREGATION_KEYS]: optional(aggregationKeys),
+    [sourceFields.DEBUG_KEY]: optional(uint64),
+    [sourceFields.DESTINATION]: required(destination),
+    [sourceFields.FILTER_DATA]: optional(filters(/*allowSourceType=*/ false)),
+    [sourceFields.PRIORITY]: optional(int64),
+    [sourceFields.SOURCE_EVENT_ID]: required(uint64),
   })
   return state.result()
 }
 
 const aggregatableTriggerData = list((state, value) =>
   state.validate(value, {
-    filters: optional(filters()),
-    key_piece: required(hex128),
-    not_filters: optional(filters()),
-    source_keys: required(list(string())),
+    [aggregatableTriggerDataFields.FILTERS]: optional(filters()),
+    [aggregatableTriggerDataFields.KEY_PIECE]: required(hex128),
+    [aggregatableTriggerDataFields.FILTERS.NOT_FILTERS]: optional(filters()),
+    [aggregatableTriggerDataFields.FILTERS.SOURCE_KEYS]: required(
+      list(string())
+    ),
   })
 )
 
@@ -205,23 +244,23 @@ const aggregatableValues = object((state, key, value) => {
 
 const eventTriggerData = list((state, value) =>
   state.validate(value, {
-    deduplication_key: optional(uint64),
-    filters: optional(filters()),
-    not_filters: optional(filters()),
-    priority: optional(int64),
-    trigger_data: required(uint64),
+    [eventTriggerDataFields.DEDUP_KEY]: optional(uint64),
+    [eventTriggerDataFields.FILTERS]: optional(filters()),
+    [eventTriggerDataFields.NOT_FILTERS]: optional(filters()),
+    [eventTriggerDataFields.PRIORITY]: optional(int64),
+    [eventTriggerDataFields.TRIGGER_DATA]: required(uint64),
   })
 )
 
 export function validateTrigger(trigger) {
   const state = new State()
   state.validate(trigger, {
-    aggregatable_trigger_data: optional(aggregatableTriggerData),
-    aggregatable_values: optional(aggregatableValues),
-    debug_key: optional(uint64),
-    event_trigger_data: optional(eventTriggerData),
-    filters: optional(filters()),
-    not_filters: optional(filters()),
+    [triggerFields.AGG_TRIGGER_DATA]: optional(aggregatableTriggerData),
+    [triggerFields.AGG_VALUES]: optional(aggregatableValues),
+    [triggerFields.DEBUG_KEY]: optional(uint64),
+    [triggerFields.EVENT_TRIGGER_DATA]: optional(eventTriggerData),
+    [triggerFields.FILTERS]: optional(filters()),
+    [triggerFields.NOT_FILTERS]: optional(filters()),
   })
   return state.result()
 }
@@ -246,9 +285,14 @@ export function formatIssue({ msg, path }) {
     context = 'JSON root'
   } else {
     context = path
-      .map((p) => (typeof p === 'number' ? `[${p}]` : `["${p}"]`))
-      .join('')
+      .map((p, idx) =>
+        // For non-nested individual values, this displays field x
+        // For nested individual values, this displays fieldx > field y
+        // For values within arrays, this displays array[idx]
+        typeof p === 'number' ? `${path[idx - 1]}[${p}]` : `${p}`
+      )
+      .join(' > ')
   }
 
-  return `${msg}: ${context}`
+  return `${context} ${msg}`
 }
