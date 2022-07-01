@@ -1,5 +1,5 @@
-import { validateSource } from './validate-json.js';
-import { logHeaderListValidation } from './logger.js';
+import { validateSource } from './validate-json.js'
+import { logHeaderListValidation } from './logger.js'
 
 const validSourceHeaders = [
   {
@@ -16,7 +16,7 @@ const validSourceHeaders = [
       geoValue: '0x5',
     },
   },
-];
+]
 
 const invalidSourceHeaders = [
   // ❌ ❌ ❌  ERRORS ❌ ❌ ❌
@@ -179,8 +179,8 @@ const invalidSourceHeaders = [
     source_event_id: '12340873456',
     destination: 'https://example.com#foo',
   },
-];
+]
 
 // Test source headers validation
-logHeaderListValidation(validSourceHeaders, validateSource);
-logHeaderListValidation(invalidSourceHeaders, validateSource);
+logHeaderListValidation(validSourceHeaders, validateSource)
+logHeaderListValidation(invalidSourceHeaders, validateSource)
