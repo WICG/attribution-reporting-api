@@ -36,7 +36,7 @@ function logIssues(issues, issuesType) {
   console.log(
     `${symbol}  ${issuesCount} ${issuesType}${issuesCount > 1 ? 'S' : ''}:`
   );
-  const issuesFormatted = issues.map((issue) => formatIssue(issue));
+  const issuesFormatted = issues.map(formatIssue);
   issuesFormatted.forEach((issueFormatted) =>
     console.log(color, issueFormatted)
   );
