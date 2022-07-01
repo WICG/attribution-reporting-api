@@ -1,7 +1,4 @@
-import { validateSource } from './validate-json.js'
-import { logHeaderListValidation } from './logger.js'
-
-const validSourceHeaders = [
+export const validSourceHeaders = [
   {
     source_event_id: '12340873456',
     destination: 'https://example.com',
@@ -18,7 +15,7 @@ const validSourceHeaders = [
   },
 ]
 
-const invalidSourceHeaders = [
+export const invalidSourceHeaders = [
   // ❌ ❌ ❌  ERRORS ❌ ❌ ❌
   // Source ID not a string
   {
@@ -180,7 +177,3 @@ const invalidSourceHeaders = [
     destination: 'https://example.com#foo',
   },
 ]
-
-// Test source headers validation
-logHeaderListValidation(validSourceHeaders, validateSource)
-logHeaderListValidation(invalidSourceHeaders, validateSource)
