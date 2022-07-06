@@ -28,6 +28,10 @@ class State {
   }
 
   validate(obj, checks) {
+    if (!object()(this, obj)) {
+      return
+    }
+
     Object.entries(checks).forEach(([key, check]) =>
       this.scope(key, () => check(this, obj, key))
     )
