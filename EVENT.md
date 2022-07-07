@@ -606,10 +606,10 @@ order to allow debug keys to be registered.
 
 ### Optional: error reports
 
-We also introduce a non-cookie based debugging framework to allow developers to
+We also introduce a non-cookie-based debugging framework to allow developers to
 monitor certain failures in the attribution registrations.
 
-The browser will send error reports in the following source registration failure
+The browser will send error reports in the following source-registration failure
 modes:
 
 * a source is rejected due to the [reporting origin
@@ -617,13 +617,12 @@ modes:
 * a source is rejected due to the [destination
   limits](#limiting-the-number-of-unique-destinations-covered-by-pending-sources)
 
-The browser will send non-credentialed secure HTTP POST requests to the
+The browser will send non-credentialed secure HTTP `POST` requests to the
 reporting endpoints, see [below](#reporting-endpoints). The report data is
 included in the request body as a JSON object:
 ```jsonc
 {
-  "type": "<report type>", // could be "unattributed-reporting-origin-limit" or
-  "source-destination-limit"
+  "type": "<report type>", // could be "unattributed-reporting-origin-limit" or "source-destination-limit"
   "body": {
     "limit": 100, // a constant integer
     "source_event_id": "<source event id in the source registration>",
@@ -638,18 +637,18 @@ These error reports will be sent immediately upon the error occuring during
 source registration.
 
 Note that if other failures are reported using this framework, the browser may
-enforce a random small delay and drop some data (e.g. `source_event_id`) to
-avoid the page being identifiable.
+enforce a random small delay and omit some data (e.g. `source_event_id`) to
+preserve privacy.
 
 #### Reporting endpoints
 
-The reporting origins may opt in to receive error reports by adding a new
+The reporting origins may opt in to receiving error reports by adding a new
 `error_reporting` dictionary field to the `Attribution-Reporting-Register-Source` header:
 ```jsonc
 {
-  ... // exsiting fields
+  ... // existing fields
 
-  "error_reporting": true // default to false if not present
+  "error_reporting": true // defaults to false if not present
 }
 ```
 
@@ -658,8 +657,8 @@ The error reports will be sent to a new endpoint:
 https://<reporting origin>/.well-known/attribution-reporting/error
 ```
 
-The top-level sites may opt in to receive error reports by declaring a reporting
-endpoint via a HTTP header in the top-level document response:
+The top-level sites may opt in to receiving error reports by declaring a reporting
+endpoint via an HTTP header in the top-level document response:
 ```
 Attribution-Error-Reporting-Endpoint: <reporting endpoint>
 ```
