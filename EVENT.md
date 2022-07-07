@@ -657,13 +657,8 @@ The error reports will be sent to a new endpoint:
 https://<reporting origin>/.well-known/attribution-reporting/error
 ```
 
-The top-level sites may opt in to receiving error reports by declaring a reporting
-endpoint via an HTTP header in the top-level document response:
-```
-Attribution-Reporting-Error-Endpoint: https://example.com/reports
-```
-
-The specified reporting endpoint can be an arbitrary URL.
+TODO: Consider adding support for the top-level site to opt in to receiving
+error reports without cross-site leak.
 
 ## Sample Usage
 
