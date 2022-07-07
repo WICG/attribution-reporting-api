@@ -624,7 +624,7 @@ included in the request body as a JSON object:
 {
   "type": "<report type>", // could be "unattributed-reporting-origin-limit" or "source-destination-limit"
   "body": {
-    "limit": 100, // a constant integer
+    "limit": 100, // the browser's limit
     "source_event_id": "<source event id in the source registration>",
     "source_site": "https://source.example",
     "destination_site": "https://destination.example",
@@ -660,7 +660,8 @@ https://<reporting origin>/.well-known/attribution-reporting/error
 The top-level sites may opt in to receiving error reports by declaring a reporting
 endpoint via an HTTP header in the top-level document response:
 ```
-Attribution-Error-Reporting-Endpoint: <reporting endpoint>
+Attribution-Reporting-Error-Endpoint: https://example.com/reports // an
+arbitrary URL
 ```
 
 ## Sample Usage
