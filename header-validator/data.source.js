@@ -1,4 +1,4 @@
-export const validSourceHeaders = [
+export const validSourceHeadersAsObjects = [
   {
     source_event_id: '12340873456',
     destination: 'https://example.com',
@@ -15,7 +15,11 @@ export const validSourceHeaders = [
   },
 ]
 
-export const invalidSourceHeaders = [
+export const validSourceHeadersAsJSON = validSourceHeadersAsObjects.map(
+  JSON.stringify
+)
+
+export const invalidSourceHeadersAsObjects = [
   // ❌ ❌ ❌  ERRORS ❌ ❌ ❌
   // Source ID not a string
   {
@@ -176,4 +180,11 @@ export const invalidSourceHeaders = [
     source_event_id: '12340873456',
     destination: 'https://example.com#foo',
   },
+]
+
+export const invalidSourceHeadersAsJSON = [
+  // same invalid headers as above, but as JSON
+  ...invalidSourceHeadersAsObjects.map(JSON.stringify),
+  // additionally, one invalid JSON example: missing value
+  '{"source_event_id":"12340873456","destination"}',
 ]

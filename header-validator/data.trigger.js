@@ -1,4 +1,4 @@
-export const validTriggerHeaders = [
+export const validTriggerHeadersAsObjects = [
   {
     event_trigger_data: [
       {
@@ -43,7 +43,11 @@ export const validTriggerHeaders = [
   },
 ]
 
-export const invalidTriggerHeaders = [
+export const validTriggerHeadersAsJSON = validTriggerHeadersAsObjects.map(
+  JSON.stringify
+)
+
+export const invalidTriggerHeadersAsObjects = [
   // ❌ ERRORS
   // Event trigger data not a string
   {
@@ -98,4 +102,11 @@ export const invalidTriggerHeaders = [
   {
     foo: '3',
   },
+]
+
+export const invalidTriggerHeadersAsJSON = [
+  // same invalid headers as above, but as JSON
+  ...invalidTriggerHeadersAsObjects.map(JSON.stringify),
+  // additionally, one invalid JSON example: `` = wrong quotes
+  '{"event_trigger_data":[{"trigger_data":`99`}]}',
 ]

@@ -1,7 +1,26 @@
-import { validateTrigger } from './validate-json.js'
+import { validateTrigger, validateJSON } from './validate-json.js'
 import { logHeaderListValidation } from './logger.js'
-import { validTriggerHeaders, invalidTriggerHeaders } from './data.trigger.js'
+import {
+  validTriggerHeadersAsObjects,
+  invalidTriggerHeadersAsObjects,
+  validTriggerHeadersAsJSON,
+  invalidTriggerHeadersAsJSON,
+} from './data.trigger.js'
 
 // Test trigger headers validation
-logHeaderListValidation(validTriggerHeaders, validateTrigger)
-logHeaderListValidation(invalidTriggerHeaders, validateTrigger)
+
+// Validate as JSON strings
+logHeaderListValidation(
+  validTriggerHeadersAsJSON,
+  validateTrigger,
+  validateJSON
+)
+logHeaderListValidation(
+  invalidTriggerHeadersAsJSON,
+  validateTrigger,
+  validateJSON
+)
+
+// Validate as objects
+logHeaderListValidation(validTriggerHeadersAsObjects, validateTrigger)
+logHeaderListValidation(invalidTriggerHeadersAsObjects, validateTrigger)
