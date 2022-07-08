@@ -1,4 +1,4 @@
-import { validateSource } from './validate-json.js'
+import { validateSource, validateTrigger } from './validate-json.js'
 import { logHeaderListValidation } from './logger.js'
 
 const validSourceHeaders = [
@@ -184,3 +184,12 @@ const invalidSourceHeaders = [
 // Test source headers validation
 logHeaderListValidation(validSourceHeaders, validateSource)
 logHeaderListValidation(invalidSourceHeaders, validateSource)
+
+const invalidTriggerHeaders = [
+  {
+    event_trigger_data: ['2343']
+  }
+]
+
+// Test trigger headers validation
+logHeaderListValidation(invalidTriggerHeaders, validateTrigger)
