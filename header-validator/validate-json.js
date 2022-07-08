@@ -287,7 +287,7 @@ export function formatIssue({ msg, path }) {
     context = path
       .map((p, idx) =>
         // For non-nested individual values, this displays field x
-        // For nested individual values, this displays fieldx > field y
+        // For nested individual values, this displays field x > field y
         // For values within arrays, this displays array[idx]
         typeof p === 'number' ? `${path[idx - 1]}[${p}]` : `${p}`
       )
