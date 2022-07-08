@@ -1,7 +1,4 @@
-import { validateSource, validateTrigger } from './validate-json.js'
-import { logHeaderListValidation } from './logger.js'
-
-const validSourceHeaders = [
+export const validSourceHeadersAsObjects = [
   {
     source_event_id: '12340873456',
     destination: 'https://example.com',
@@ -18,7 +15,11 @@ const validSourceHeaders = [
   },
 ]
 
-const invalidSourceHeaders = [
+export const validSourceHeadersAsJSON = validSourceHeadersAsObjects.map(
+  JSON.stringify
+)
+
+export const invalidSourceHeadersAsObjects = [
   // ❌ ❌ ❌  ERRORS ❌ ❌ ❌
   // Source ID not a string
   {
@@ -181,15 +182,9 @@ const invalidSourceHeaders = [
   },
 ]
 
-// Test source headers validation
-logHeaderListValidation(validSourceHeaders, validateSource)
-logHeaderListValidation(invalidSourceHeaders, validateSource)
-
-const invalidTriggerHeaders = [
-  {
-    event_trigger_data: ['2343']
-  }
+export const invalidSourceHeadersAsJSON = [
+  // same invalid headers as above, but as JSON
+  ...invalidSourceHeadersAsObjects.map(JSON.stringify),
+  // additionally, one invalid JSON example: missing value
+  '{"source_event_id":"12340873456","destination"}',
 ]
-
-// Test trigger headers validation
-logHeaderListValidation(invalidTriggerHeaders, validateTrigger)

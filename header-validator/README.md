@@ -1,3 +1,5 @@
-# How to run tests
+# Run tests
 
-`node ./index.js`
+`npm run test`
+`npm run test-source`
+`npm run test-trigger`

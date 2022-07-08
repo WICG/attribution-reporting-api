@@ -42,12 +42,14 @@ function logIssues(issues, issuesType) {
   )
 }
 
-export function logValidation(header, validationFunction) {
+export function logValidation(header, validationFunction, validateJSON) {
   // Log header
   logHeader(header)
 
   // Validate
-  const { errors, warnings } = validationFunction(header)
+  const { errors, warnings } = validateJSON
+    ? validateJSON(header, validationFunction)
+    : validationFunction(header)
 
   // Log validation output
   if (errors.length === 0 && warnings.length === 0) {
@@ -61,8 +63,12 @@ export function logValidation(header, validationFunction) {
   }
 }
 
-export function logHeaderListValidation(headers, validationFunction) {
+export function logHeaderListValidation(
+  headers,
+  validationFunction,
+  validateJSON
+) {
   headers.forEach((header) => {
-    logValidation(header, validationFunction)
+    logValidation(header, validationFunction, validateJSON)
   })
 }
