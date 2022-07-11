@@ -71,6 +71,7 @@ textarea {
         <p>Warnings:
         <ul id=warnings></ul>
       </output>
+      <button id=linkify>Copy Link</button>
     </fieldset>
   </div>
 </form>
@@ -110,8 +111,10 @@ const makeLi = ({path, msg}) => {
   return li;
 };
 
+const header = () => form.elements['header'].value;
+
 form.addEventListener('input', () => {
-  const validate = form.elements['header'].value === 'source'
+  const validate = header() === 'source'
     ? validateSource
     : validateTrigger;
 
@@ -119,6 +122,13 @@ form.addEventListener('input', () => {
 
   errorList.replaceChildren(...result.errors.map(makeLi));
   warningList.replaceChildren(...result.warnings.map(makeLi));
+});
+
+document.querySelector('#linkify').addEventListener('click', async () => {
+  const url = new URL('.', location);
+  url.searchParams.set('header', header());
+  url.searchParams.set('json', input.value);
+  await navigator.clipboard.writeText(url.toString());
 });
 
 const params = new URLSearchParams(location.search);
