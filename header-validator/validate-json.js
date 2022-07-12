@@ -183,6 +183,7 @@ export function validateSource(source) {
     aggregation_keys: optional(aggregationKeys),
     debug_key: optional(uint64),
     destination: required(destination),
+    expiry: optional(int64),
     filter_data: optional(filters(/*allowSourceType=*/ false)),
     priority: optional(int64),
     source_event_id: required(uint64),
