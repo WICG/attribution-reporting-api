@@ -184,9 +184,9 @@ header `Attribution-Reporting-Register-Source` of the form:
 - `destination`: an origin whose eTLD+1 is where attribution will be triggered
 for this source.
 
-- `source_event_id`: A string encoding a 64-bit unsigned integer which
+- `source_event_id`: (optional) A string encoding a 64-bit unsigned integer which
 represents the event-level data associated with this source. This will be
-limited to 64 bits of information but the value can vary.
+limited to 64 bits of information but the value can vary. Defaults to 0.
 
 - `expiry`: (optional) expiry in seconds for when the source should be
 deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry

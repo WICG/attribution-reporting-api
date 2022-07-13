@@ -677,13 +677,13 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 1. Let |value| be the result of running
     [=parse a JSON string to an Infra value=] with |json|.
 1. If |value| is not an [=ordered map=], return null.
-1. If |value|["`source_event_id`"] does not [=map/exists|exist=] or is not a
-    [=string=], return null.
-1. Let |sourceEventId| be the result of applying the
-    <a spec="html">rules for parsing non-negative integers</a> to
-    |value|["`source_event_id`"] modulo the user agent's
-    [=source event ID cardinality=].
-1. If |sourceEventId| is an error, return null.
+1. Let |sourceEventId| be 0.
+1. If |value|["`source_event_id`"] [=map/exists=] and is a [=string=]:
+    1. Set |sourceEventId| to the result of applying the
+        <a spec="html">rules for parsing non-negative integers</a> to
+        |value|["`source_event_id`"] modulo the user agent's
+        [=source event ID cardinality=].
+    1. If |sourceEventId| is an error, set |sourceEventId| to 0.
 1. If |value|["`destination`"] does not [=map/exists|exist=] or is not a
     [=string=], return null.
 1. Let |attributionDestination| be the result of running
