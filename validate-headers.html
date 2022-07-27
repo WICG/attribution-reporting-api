@@ -67,6 +67,7 @@ textarea {
       <legend>Validation Result</legend>
       <button type=button id=linkify>Copy Link</button>
       <output>
+        <div id=success></div>
         <p>Errors:
         <ul id=errors></ul>
         <p>Warnings:
@@ -85,6 +86,7 @@ const form = document.querySelector('form');
 const input = form.querySelector('textarea');
 const errorList = document.querySelector('#errors');
 const warningList = document.querySelector('#warnings');
+const successDiv = document.querySelector('#success');
 
 const pathfulTmpl = document.querySelector('#pathful-issue');
 
@@ -119,6 +121,14 @@ form.addEventListener('input', () => {
     : validateTrigger;
 
   const result = validateJSON(input.value, validate);
+
+  const successEl = document.createElement('div');
+  if (result?.errors?.length === 0 && result?.warnings?.length === 0) {
+    successEl.textContent = 'The header is valid.';
+  } else {
+    successEl.textContent = '';
+  }
+  successDiv.replaceChildren(successEl);
 
   errorList.replaceChildren(...result.errors.map(makeLi));
   warningList.replaceChildren(...result.warnings.map(makeLi));
