@@ -67,7 +67,7 @@ textarea {
       <legend>Validation Result</legend>
       <button type=button id=linkify>Copy Link</button>
       <output>
-        <ul id=success></ul>
+        <div id=success></div>
         <p>Errors:
         <ul id=errors></ul>
         <p>Warnings:
@@ -121,12 +121,15 @@ form.addEventListener('input', () => {
     : validateTrigger;
 
   const result = validateJSON(input.value, validate);
-  
+
+  const successEl = document.createElement('div');
   if (result?.errors?.length === 0 && result?.warnings?.length === 0) {
-    const successEl = document.createElement('div');
-    successEl.textContent = "The header is valid";
-    successDiv.replaceChildren(successEl);
+    successEl.textContent = "The header is valid.";
+  } else {
+    successEl.textContent = "";
   }
+  successDiv.replaceChildren(successEl);
+
   errorList.replaceChildren(...result.errors.map(makeLi));
   warningList.replaceChildren(...result.warnings.map(makeLi));
 });
