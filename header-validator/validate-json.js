@@ -186,7 +186,7 @@ export function validateSource(source) {
     expiry: optional(int64),
     filter_data: optional(filters(/*allowSourceType=*/ false)),
     priority: optional(int64),
-    source_event_id: required(uint64),
+    source_event_id: optional(uint64),
   })
   return state.result()
 }

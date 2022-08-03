@@ -88,10 +88,6 @@ export const invalidSourceHeadersAsObjects = [
     source_event_id: '12340873456',
     destination: 'http://example.com',
   },
-  // Missing required field Source event ID
-  {
-    destination: 'https://example.com',
-  },
   // Missing required field Destination
   {
     source_event_id: '12340873456',
@@ -157,7 +153,7 @@ export const invalidSourceHeadersAsObjects = [
   // Multiple errors
   {
     destination: 'foo',
-    priority: '-12340873456',
+    priority: 'bar',
   },
   // ⚠️ ⚠️ ⚠️ WARNINGS ⚠️ ⚠️ ⚠️
   // Unknown field `foo`
