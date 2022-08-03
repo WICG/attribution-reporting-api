@@ -181,6 +181,44 @@ export const invalidSourceHeadersAsObjects = [
     source_event_id: '12340873456',
     destination: 'https://example.com#foo',
   },
+  // Too many filters
+  {
+    source_event_id: '0',
+    destination: 'https://example.com',
+    filter_data: (function () {
+      const obj = {}
+      for (let i = 0; i < 51; i++) {
+        obj[`${i}`] = []
+      }
+      return obj
+    })(),
+  },
+  // Too many filter values
+  {
+    source_event_id: '0',
+    destination: 'https://example.com',
+    filter_data: {
+      x: (function () {
+        const arr = []
+        for (let i = 0; i < 51; i++) {
+          arr.push(`${i}`)
+        }
+        return arr
+      })(),
+    },
+  },
+  // Too many aggregation keys
+  {
+    source_event_id: '0',
+    destination: 'https://example.com',
+    aggregation_keys: (function () {
+      const obj = {}
+      for (let i = 0; i < 51; i++) {
+        obj[`${i}`] = '0x1'
+      }
+      return obj
+    })(),
+  },
 ]
 
 export const invalidSourceHeadersAsJSON = [

@@ -102,6 +102,26 @@ export const invalidTriggerHeadersAsObjects = [
   {
     foo: '3',
   },
+  // Too many event trigger data
+  {
+    event_trigger_data: (function () {
+      const arr = []
+      for (let i = 0; i < 11; i++) {
+        arr.push({ trigger_data: '0' })
+      }
+      return arr
+    })(),
+  },
+  // Too many aggregatable trigger data
+  {
+    aggregatable_trigger_data: (function () {
+      const arr = []
+      for (let i = 0; i < 51; i++) {
+        arr.push({ key_piece: '0x1', source_keys: [] })
+      }
+      return arr
+    })(),
+  },
 ]
 
 export const invalidTriggerHeadersAsJSON = [
