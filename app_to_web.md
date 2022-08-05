@@ -1,4 +1,4 @@
-# Android Cross App and Web Attribution Measurement
+# Cross App and Web Attribution Measurement
 
 ## Authors:
 *   Charlie Harrison
@@ -14,214 +14,75 @@ Please file [GitHub issues](https://github.com/WICG/conversion-measurement-api/i
 
 Currently, the [Attribution Reporting API](https://github.com/WICG/conversion-measurement-api) supports attributing events within a single browser instance. This proposal expands the scope of attribution to allow attributing conversions that happen on the web to events that happen off the browser, within other applications.
 
-Any browser on Android could implement this API. This proposal was inspired by Safari's [App-to-web support in Private Click Measurement](https://webkit.org/blog/11529/introducing-private-click-measurement-pcm/#:~:text=App-to-Web).
+This proposal was inspired by Safari's [App-to-web support in Private Click Measurement](https://webkit.org/blog/11529/introducing-private-click-measurement-pcm/#:~:text=App-to-Web) and the [Android Privacy Sandbox](https://developer.android.com/design-for-safety/privacy-sandbox/attribution) proposal.
 
+The proposal here takes advantage of OS-level support for attribution. In particular, it gives the developer an option to allow events on the mobile web to be joinable with events in [Android’s Privacy Sandbox](https://developer.android.com/design-for-safety/privacy-sandbox/attribution), although support for other platforms could also be implemented.
 
 ## Goals
 
-*   Support measurement of ads that show up within apps that later convert in the browser
-*   Support measurement of ads within embedded webview that later convert in the browser
+*   Support measurement of ads that show up within apps that later convert on the web
+*   Support measurement of ads that show up within the browser that later convert on the web or in an app / app install
 *   Support both clicks and views
-
+*   Proposal is generic enough to be implemented by any browser
+*   While focusing initially on Android support, the proposal should be generic enough to be supported on other platforms
 
 ## API changes
+See Android's [Attribution reporting: cross app and web measurement proposal](https://developer.android.com/design-for-safety/privacy-sandbox/attribution-app-to-web) for one example of an OS API that a browser can integrate with to do cross app and web measurement.
 
-
-### Existing Web API (for reference)
-
-See [explainer](https://github.com/WICG/conversion-measurement-api/blob/main/event_attribution_reporting_clicks.md#registering-attribution-sources-for-anchor-tag-navigations).
+The existing API involves sending requests to the reporting origin to register events. These requests will have a new request header `Attribution-Reporting-Eligible`. On requests with this header, the browser will additionally broadcast possible OS-level support for attribution to the reporting origin’s server via a new [request header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.6):
 ```
-<!-- Click-through attributions: -->
-<a 
-  href="https://advertiser.example/buy-shoes"
-  attributionsourceeventid="123456"
-  attributionreportto="https://reporter.example"
-  attributiondestination="https://advertiser.example"
-  attributionexpiry=604800000>
-  Click me!
-</a>
+Attribution-Reporting-Support: os=?1; web=?1
+```
+If this header indicates OS support, the reporting origin can optionally respond to the request with a [string structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.3) that indicates a desire to use the OS’s attribution API instead of the browser’s. Note that the API also allows browsers to only support OS-level attribution if they choose.
+```
+// Registers a source against a native OS attribution API
+Attribution-Reporting-Register-OS-Source: “https://adtech.example/register-android-source?...”; os-destination=<os destination>; web-destination=<web destination>
+
 ```
 
+Note that we still require the response to declare a destination for clicks and views to the browser even when registering with the OS level attribution API. This allows the browser to help enforce destination matching for web destinations. The OS destination will be a platform-specific application name (e.g. an Android package name), the web destination will be a scheme + eTLD+1.
 
-TODO: Design for view-through attribution is still TBD, with some initial API surface [here](https://github.com/WICG/conversion-measurement-api/blob/main/AGGREGATE.md#view-through-conversions-1) for aggregate. There is an [open issue](https://github.com/WICG/conversion-measurement-api/issues/98) for support in the event-level API.
-
-
-### Registering clicks from apps
-
-To register clicks from apps, we can send an ACTION_VIEW Intent with some extra parameters to configure the API. The extra parameters are embedded within a [PendingIntent](https://developer.android.com/reference/android/app/PendingIntent) the browser will self-fire.
-
-```java
-// After an ad click, in response to some InputEvent `inputEvent`
-
-// Craft the inner Intent which the user's browser will self-fire. For browsers not
-// supporting attributions, this inner Intent will simply be ignored.
-
-// TODO: which namespace should the APP_ATTRIBUTION Action live in?
-Intent innerIntent = new Intent("android.web.action.APP_ATTRIBUTION");
-
-// Required for the PendingIntent to launch Chrome.
-innerIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-// Set the attribution parameters.
-Bundle innerBundle = new Bundle();
-innerBundle.putString("attributionSourceEventId", "123456");
-innerBundle.putString("attributionReportTo", "https://reporter.example");
-innerBundle.putString("attributionDestination", "https://advertiser.example");
-innerBundle.putLong("attributionExpiry", 604800000);
-
-// Put the input event that triggered the ad click in the bundle. The browser will
-// verify this with the system on Android 11+.
-// To be sure that the input event will verify on the browser side, apps could
-// pre-verify by calling InputManger.verifyInputEvent here.
-innerBundle.putParcelable(inputEvent);
-innerIntent.putExtras(innerBundle);
-
-// Choose a browser and set the Package on the Intent to ensure the inner Intent is sent to
-// the same browser as the outer Intent. Note that choosing a browser may be difficult to
-// implement correctly in the case where the user has not set a default handler for VIEW
-// Intents, and is not covered here. When possible the default browser should be used.
-String browserPackage = getbrowserPackageName();
-innerIntent.setPackage(browserPackage);
-
-// Create a PendingIntent for the Intent so that the browser can verify the source of the
-// attribution parameters.
-PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, innerIntent,
-        PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ONE_SHOT);
-
-// Craft the outer Intent which will actually start the browser activity and
-// navigate to a URL, adding the PendingIntent as an Extra.
-Intent outerIntent = new Intent(Intent.ACTION_VIEW);
-outerIntent.setData(Uri.parse("https://advertiser.example/buy-shoes"));
-
-Bundle outerBundle = new Bundle();
-outerBundle.putParcelable("android.web.extra.CONVERSION_INTENT", pendingIntent);
-outerIntent.putExtras(outerBundle);
-outerIntent.setPackage(browserPackage);
-context.startActivity(outerIntent);
+Trigger registrations will accept a new response header as well:
+```
+// Registers a trigger against a native OS attribution API
+Attribution-Reporting-Register-OS-Trigger: “https://adtech.example/register-android-trigger?...”
 ```
 
+After receiving these headers, the browser will pass these URLs into the underlying OS API with any additional information including:
+the context on which the event occurs (source / destination site)
+the InputEvent in the event of a click/navigation source, for platform verification
+ 
+Normal attribution logic in the browser will be halted.
 
+For a site to enable App<->Web attribution after integrating with the Web API, they will only need to make server side changes.
 
-### Registering views from apps
-
-Views won't necessarily start the browser with an Intent, so we can use a [ContentProvider](https://developer.android.com/reference/android/content/ContentProvider) to communicate events the browser.
-
-```java
-// One-time setup
-
-// Choose a browser to send the attribution event to. Note that choosing a browser may be difficult to
-// implement correctly in the case where the user has not set a default handler for VIEW
-// Intents, and is not covered here. When possible the default browser should be used.
-String browserPackage = getbrowserPackageName();
-
-String authority = browserPackage + ".AttributionReporting/";
-Uri providerUri = Uri.parse("content://" + authority);
-
-
-// Sending the attribution after an ad view. Parameters for event-level API only.
-
-// The client may be held onto for the duration of a session where multiple attributions may be
-// reported.
-ContentProviderClient client = context.getContentResolver().acquireContentProviderClient(providerUri);
-
-ContentValues attributionValues = new ContentValues();
-attributionValues.put("attributionSourceEventId", "123456");
-attributionValues.put("attributionReportTo", "https://reporter.example");
-attributionValues.put("attributionDestination", "https://advertiser.example");
-attributionValues.put("attributionExpiry", 604800000);
-
-try {
-  client.insert(providerUri, attributionValues);
-} catch (Exception e) {
-  // Always catch exceptions thrown by ContentProviders so an error in the browser cannot crash your app.
-}
-
-// The client should be closed when no longer needed (eg. your app is no longer foreground).
-client.close();
-```
-
-
-
-### Unifying events from Webviews with the browser
-
-When the Attribution Reporting API is used in web content within a WebView, it could (via some new opt-in WebView API) internally use these techniques in the background to communicate with the browser and unify events.
-
-However, we cannot directly unify events in WebView "as if" they happened in the browser, due to the fact that Webviews (even the system WebView) are inherently controlled by their embedders.
-
-As such, we cannot trust a WebView to accurately report things like the source origin of an event. For WebView the best we can do without major architectural changes (e.g. cross process rendering) is to attribute events to the embedding APK like any other app.
-
-Any other suggested solutions to this problem are appreciated!
-
-## Computing Origins from Apps
-
-An Origin will be constructed from the Package Name of the app reporting the events, and will take the form: android-app://<packageName>
-
-
+A reporting origin responding with one of the `Attribution-Reporting-Register-OS-X` headers while `Attribution-Reporting-OS-Support` is false will not forward any information to the underlying OS. Normal Attribution-Reporting headers in this case will work normally.
 ## Privacy considerations
 
-This proposal explicitly links data from app and web contexts, which is a new form of data that the web platform has not had explicit access to before. It enables apps to learn coarse user behavior patterns in the browser in the same way that the existing Attribution Reporting API allows websites to learn coarse user behavior patterns in the browser. In other words, we can safely think of an app as a particular "kind of website", and we can share data to apps that we’d be comfortable sharing to a (cross-site) website.
+This proposal explicitly links data from the web with data from apps. It enables apps to learn coarse user behavior patterns in the browser in the same way that the existing Attribution Reporting API allows websites to learn coarse user behavior patterns in the browser. In other words, we can safely think of an app as a particular "kind of website", and we can share data to apps that we’d be comfortable sharing to a (cross-site) website.
 
-Additionally, depending on implementation decisions, browsers may add new, temporary storage to collect app events before unifying them with the browser’s collection of events produced by websites. Any new storage should be cleared when the user deletes their site data for the site of any of the source, attributionDestination, or reportTo origins.
+However, there are some “privacy budget” / rate-limit consequences to expanding support to the OS. In particular, if the OS maintains a separate budget than the browser, an adversary could in theory consume both the browser-local budget and the OS system budget, leaking more than if only the browser-local budget were used. Mitigations for this issue include stricter budgets overall, or being more restrictive about entities that can register both OS-level events and browser-local events.
 
+Additionally, this proposal sends user information from the browser to the operating system. The OS will be responsible for integrating with browser user controls such as those for clearing browsing history.
 
-### **Verifying Clicks**
+### New fingerprint vector
+The new request header we would add to the API, `Attribution-Reporting-OS-Support: ?1` adds an additional fingerprinting vector letting an adversary know if the underlying platform supports attribution reporting.
 
-One important piece of the existing API is gating some API features on [transient user activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation), since they are initiated by explicit user actions. Where possible, the system can attempt to replicate this functionality by using <code>[VerifiedInputEvents](https://developer.android.com/reference/android/view/VerifiedInputEvent)</code>. On OS versions without VerifiedInputEvents, we could allow these features if they open the browser in the foreground, as a proxy for user engagement.
-
+### User Control
+Attribution between two websites within the browser doesn't require specific OS support. However, attribution of web to app or app to web will require (1) that a user's device supports both a valid version of the browser and a valid version of the operating system and (2) that the user has not disabled the Attribution Reporting API for either the browser or the platform. If the user has opted out of the API in either the browser or at the OS level, app to web or web to app attribution will not be enabled.
 
 ## Security considerations
 
+This design places trust in the OS to process potentially sensitive user data. Additionally, it requires the OS to place trust in the browser.
 
-### API threat model: protection on uncompromised systems
+Further discussion on the Android-specific measurement APIs security considerations can be [found here](https://developer.android.com/design-for-safety/privacy-sandbox/attribution-app-to-web#apps-privacy-security).
 
-We assume an attacking app is not hosted on a completely compromised device, but can run arbitrary code otherwise.
+# Appendix
+## Alternative design considered: Sending app events directly to browsers
 
-We are aiming for protection from the following threats:
+A previous iteration of this design involved sending app events to “the browser” using Android Intents. This design was not ideal due to scalability issues when there were multiple browsers on a user’s device, since it put the singular browser in the center of attribution, in control of everything. If there were multiple browsers, an app would be forced to send things like view Intents to all the registered browsers on the device at once.
 
-*   Malicious apps sending fake clicks without real user interaction
-    *   Protected / mitigated by verified input events on Android 11+
-*   Malicious apps sending messages (clicks / views) on behalf of other apps, without their permission
-    *   Protected by properly using [PendingIntents](https://developer.android.com/reference/android/app/PendingIntent) for clicks and [ContentProvider](https://developer.android.com/reference/android/content/ContentProvider) for views which reliably indicate the message sender
-*   Malicious apps sending events associated with reporting origins (ad-tech) that don’t want to receive the events
-    *   Potentially protected the same way as web, by optionally allowing private authentication flows (see [issues](https://github.com/WICG/conversion-measurement-api/issues?q=is%3Aissue+is%3Aopen+fraud+label%3A%22anti-fraud+%2F+auth%22))
-
-
-Note we are explicitly _not_ adding protection from:
-
-*   Apps sending fake views without the user actually seeing the ad. This matches our web API which offers no viewability guarantees from the browser
-*   Apps sending fake “ad clicks” when the user performs a verified input without actually seeing / clicking on the ad itself.
-
-
-###  API threat model: protection on compromised system
-
-For a completely compromised system, we will rely exclusively on some of the “blind-signature” style private authentication proposals that are being explored in the API (see [issues](https://github.com/WICG/conversion-measurement-api/issues?q=is%3Aissue+is%3Aopen+fraud+label%3A%22anti-fraud+%2F+auth%22)). These ideas are compatible with app attribution.
-
-
-### Platform click verification
-
-There are a few reasons we’d want to validate clicks with the Android system before sending them to the browser.
-
-
-1. For privacy, we ideally want to privilege only ads engagement with explicit user interaction
-2. Ads want some assurance that clicks actually happened and were not spam. Verification from the system protects against many spam attacks short of a completely compromised system
-3. Alignment with Safari’s Private Click Measurement App-to-web implementation.
-
-In Android 11+, there are <code>[VerifiedInputEvents](https://developer.android.com/reference/android/view/VerifiedInputEvent)</code> which are verified by the system. Normal <code>[InputEvents](https://developer.android.com/reference/android/view/InputEvent)</code> can be verified by the system by calling <code>[InputManager.verifyInputEvent(InputEvent)](https://developer.android.com/reference/android/hardware/input/InputManager#verifyInputEvent(android.view.InputEvent))</code>.
-
-The browser can verify clicks by having an API surface that receives parceled InputEvents in the view Intent, and subsequently calling `InputManager.verifyInputEvent(InputEvent)`. This design allows the API to be backward compatible, and verify events on a best-effort basis.
-
-**Note: It is a non-goal to attempt to verify clicks from a compromised system.**
-
-
-## Appendix
-
-
-## Scalability with many browsers
-
-In the current API proposal, view messages could be sent to any number of browsers that support the API on the system, which could grow to be difficult to manage.
-
-If this API proves itself to be useful, we could attempt to get platform level support in the future to have a unified interface for cross app attribution measurement.
-
+With platform-level support, this kind of architecture is not necessary.
 
 ## References & acknowledgements
 
