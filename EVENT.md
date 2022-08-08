@@ -612,8 +612,6 @@ monitor certain failures in the attribution registrations.
 The browser will send error reports in the following source-registration failure
 modes:
 
-* a source is rejected due to the [reporting origin
-  limits](#reporting-origin-limits)
 * a source is rejected due to the [destination
   limits](#limiting-the-number-of-unique-destinations-covered-by-pending-sources)
 
@@ -622,13 +620,12 @@ reporting endpoints, see [below](#reporting-endpoints). The report data is
 included in the request body as a JSON object:
 ```jsonc
 {
-  "type": "<report type>", // could be "unattributed-reporting-origin-limit" or "source-destination-limit"
+  "type": "<report type>", // "source-destination-limit"
   "body": {
     "limit": 100, // the browser's limit
     "source_event_id": "<source event id in the source registration>",
     "source_site": "https://source.example",
-    "destination_site": "https://destination.example",
-    "reporting_origin": "https://reporting.example.com"
+    "attribution_destination": "https://destination.example"
   }
 }
 ```
