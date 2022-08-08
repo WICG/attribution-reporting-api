@@ -620,7 +620,7 @@ reporting endpoints, see [below](#reporting-endpoints). The report data is
 included in the request body as a JSON object:
 ```jsonc
 {
-  "type": "<report type>", // "source-destination-limit"
+  "type": "<report type>", // e.g. "source-destination-limit"
   "body": {
     "limit": 100, // the browser's limit
     "source_event_id": "<source event id in the source registration>",
@@ -634,7 +634,7 @@ These error reports will be sent immediately upon the error occuring during
 source registration.
 
 Note that if other failures are reported using this framework, the browser may
-enforce a random small delay and omit some data (e.g. `source_event_id`) to
+enforce a small random delay and omit some data (e.g. `source_event_id`) to
 preserve privacy.
 
 #### Reporting endpoints
