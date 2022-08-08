@@ -36,7 +36,7 @@ Attribution-Reporting-Support: os=?1; web=?1
 If this header indicates OS support, the reporting origin can optionally respond to the request with a [string structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.3) that indicates a desire to use the OS’s attribution API instead of the browser’s. Note that the API also allows browsers to only support OS-level attribution if they choose.
 ```
 // Registers a source against a native OS attribution API
-Attribution-Reporting-Register-OS-Source: “https://adtech.example/register-android-source?...”; os-destination=<os destination>; web-destination=<web destination>
+Attribution-Reporting-Register-OS-Source: "https://adtech.example/register-android-source?..."; os-destination=<os destination>; web-destination=<web destination>
 
 ```
 
@@ -45,7 +45,7 @@ Note that we still require the response to declare a destination for clicks and 
 Trigger registrations will accept a new response header as well:
 ```
 // Registers a trigger against a native OS attribution API
-Attribution-Reporting-Register-OS-Trigger: “https://adtech.example/register-android-trigger?...”
+Attribution-Reporting-Register-OS-Trigger: "https://adtech.example/register-android-trigger?..."
 ```
 
 After receiving these headers, the browser will pass these URLs into the underlying OS API with any additional information including:
