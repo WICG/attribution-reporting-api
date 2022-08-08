@@ -51,12 +51,13 @@ Attribution-Reporting-Register-OS-Trigger: "https://adtech.example/register-andr
 After receiving these headers, the browser will pass these URLs into the underlying OS API with any additional information including:
 the context on which the event occurs (source / destination site)
 the InputEvent in the event of a click/navigation source, for platform verification
- 
+
 Normal attribution logic in the browser will be halted.
 
 For a site to enable App<->Web attribution after integrating with the Web API, they will only need to make server side changes.
 
-A reporting origin responding with one of the `Attribution-Reporting-Register-OS-X` headers while `Attribution-Reporting-OS-Support` is false will not forward any information to the underlying OS. Normal Attribution-Reporting headers in this case will work normally.
+A reporting origin responding with the `Attribution-Reporting-Register-OS-Source` or `Attribution-Reporting-Register-OS-Trigger` headers while `Attribution-Reporting-OS-Support` is false will not forward any information to the underlying OS. Normal Attribution-Reporting headers in this case will work normally.
+
 ## Privacy considerations
 
 This proposal explicitly links data from the web with data from apps. It enables apps to learn coarse user behavior patterns in the browser in the same way that the existing Attribution Reporting API allows websites to learn coarse user behavior patterns in the browser. In other words, we can safely think of an app as a particular "kind of website", and we can share data to apps that we’d be comfortable sharing to a (cross-site) website.
