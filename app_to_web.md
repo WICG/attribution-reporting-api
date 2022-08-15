@@ -29,9 +29,9 @@ The proposal here takes advantage of OS-level support for attribution. In partic
 ## API changes
 See Android's [Attribution reporting: cross app and web measurement proposal](https://developer.android.com/design-for-safety/privacy-sandbox/attribution-app-to-web) for one example of an OS API that a browser can integrate with to do cross app and web measurement.
 
-The existing API involves sending requests to the reporting origin to register events. These requests will have a new request header `Attribution-Reporting-Eligible`. On requests with this header, the browser will additionally broadcast possible OS-level support for attribution to the reporting origin’s server via a new [request header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.6):
+The existing API involves sending requests to the reporting origin to register events. These requests will have a new request header `Attribution-Reporting-Eligible`. On requests with this header, the browser will additionally broadcast possible OS-level support for attribution to the reporting origin’s server via a new [dictionary structured request header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.2):
 ```
-Attribution-Reporting-Support: os=?1; web=?1
+Attribution-Reporting-Support: os, web
 ```
 If this header indicates OS support, the reporting origin can optionally respond to the request with a [string structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.3) that indicates a desire to use the OS’s attribution API instead of the browser’s. Note that the API also allows browsers to only support OS-level attribution if they choose.
 ```
