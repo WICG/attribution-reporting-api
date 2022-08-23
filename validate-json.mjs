@@ -235,7 +235,7 @@ const eventTriggerData = list(
       filters: optional(filters()),
       not_filters: optional(filters()),
       priority: optional(int64),
-      trigger_data: required(uint64),
+      trigger_data: optional(uint64),
     }),
   limits.maxEventTriggerData
 )
