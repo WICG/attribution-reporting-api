@@ -56,7 +56,7 @@ Normal attribution logic in the browser will be halted.
 
 For a site to enable App<->Web attribution after integrating with the Web API, they will only need to make server side changes.
 
-A reporting origin responding with the `Attribution-Reporting-Register-OS-Source` or `Attribution-Reporting-Register-OS-Trigger` headers while `Attribution-Reporting-OS-Support` is false will not forward any information to the underlying OS. Normal Attribution-Reporting headers in this case will work normally.
+A reporting origin responding with the `Attribution-Reporting-Register-OS-Source` or `Attribution-Reporting-Register-OS-Trigger` headers while `Attribution-Reporting-Support` does not contain `os` will not forward any information to the underlying OS. Normal Attribution-Reporting headers in this case will work normally.
 
 ## Privacy considerations
 
@@ -67,7 +67,7 @@ However, there are some “privacy budget” / rate-limit consequences to expand
 Additionally, this proposal sends user information from the browser to the operating system. The OS will be responsible for integrating with browser user controls such as those for clearing browsing history.
 
 ### New fingerprint vector
-The new request header we would add to the API, `Attribution-Reporting-OS-Support: ?1` adds an additional fingerprinting vector letting an adversary know if the underlying platform supports attribution reporting.
+The new request header we would add to the API, `Attribution-Reporting-Support` adds an additional fingerprinting vector letting an adversary know if the underlying platform supports attribution reporting.
 
 ### User Control
 Attribution between two websites within the browser doesn't require specific OS support. However, attribution of web to app or app to web will require (1) that a user's device supports both a valid version of the browser and a valid version of the operating system and (2) that the user has not disabled the Attribution Reporting API for either the browser or the platform. If the user has opted out of the API in either the browser or at the OS level, app to web or web to app attribution will not be enabled.
