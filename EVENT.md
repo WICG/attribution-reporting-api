@@ -215,12 +215,6 @@ user activation](https://html.spec.whatwg.org/multipage/interaction.html#transie
 
 `event` sources don’t require any of the above constraints to be logged.
 
-When a source is logged for <`attributionsrc` origin, `destination`> pair,
-existing sources matching this pair will be looked up in storage. If the
-matching sources have been triggered at least once (i.e. have scheduled a
-report), they will be removed from browser storage and will not be eligible for
-further reporting. Any pending reports for these sources will still be sent.
-
 An attribution source will be eligible for reporting if any page on the
 `destination` eTLD+1 (advertiser site) triggers attribution for the associated
 reporting origin.
