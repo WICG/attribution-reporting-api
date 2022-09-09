@@ -250,6 +250,8 @@ Policy prevents the need for these hacks. This is inline with the classification
 of powerful features as discussed on [this
 issue](https://github.com/w3c/webappsec-permissions-policy/issues/252).
 
+**NOTE**: For the [Chromium Origin Trial](https://developer.chrome.com/blog/privacy-sandbox-unified-origin-trial/), the Chromium implementation of the Attribution Reporting API will temporarily ship with a Permissions Policy [default](https://w3c.github.io/webappsec-permissions-policy/#default-allowlists) of `*`, which bypasses the need for top-level documents to delegate permission to cross-origin iframes.
+
 ### Triggering Attribution
 
 Attribution can only be triggered for a source on a page whose eTLD+1 matches
