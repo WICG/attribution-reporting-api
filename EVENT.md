@@ -630,7 +630,7 @@ included in the request body as a JSON object:
 }
 ```
 
-These error reports will be sent immediately upon the error occuring during
+These error reports will be sent immediately upon the error occurring during
 source registration.
 
 Note that if other failures are reported using this framework, the browser may
