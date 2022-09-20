@@ -254,9 +254,8 @@ found, these batches may be rejected or duplicates may be filtered out.
 It is not technically practical to keep track of every single aggregatable
 report submitted for aggregation to check for batch disjointness, that is,
 that batches are not overlapping. Instead, each aggregatable report will
-be assigned a shared ID. This ID is generated from the combined data
-points: reporting origin, target site, and scheduled report transmission
-time, rounded down to the hour. 
+be assigned a shared ID. This ID is generated from the combined data points: API version, reporting origin, destination site, source registration time and scheduled report time. 
+These data points come from the report's [shared_info](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#aggregatable-reports) field. 
 
 The aggregation service will enforce that all aggregatable reports with
 the same ID must be included in the same batch. Conversely, if more than
