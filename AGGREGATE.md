@@ -69,8 +69,8 @@ example an ad-tech will use the API to collect:
 * Aggregate purchase values at a per geo level 
 ### Attribution source registration
 
-Registering sources eligible for aggregate reporting entails adding a new
-`aggregation_keys` dictionary field to the JSON dictionary of the
+Registering sources eligible for aggregate reporting entails adding new
+`aggregation_keys` and `aggregatable_expiry` dictionary fields to the JSON dictionary of the
 [`Attribution-Reporting-Register-Source` header](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#registering-attribution-sources):
 ```jsonc
 {
@@ -83,7 +83,9 @@ Registering sources eligible for aggregate reporting entails adding a new
 
     // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue".
     "geoValue": "0x5" // Source-side geo region = 5 (US), out of a possible ~100 regions
-  }
+  },
+
+  "aggregatable_expiry": "[64-bit signed integer]"
 }
 ```
 This defines a dictionary of named aggregation keys, each with a piece of the
@@ -93,6 +95,11 @@ trigger-side pieces.
 
 Final keys will be restricted to a maximum of 128 bits. This means that hex
 strings in the JSON must be limited to at most 32 digits.
+
+`aggregatable_expiry` is an optional string field containing a signed 64-bit
+integer representing the number of seconds for which the source is eligible for
+aggregatable attribution. If omitted, the field defaults to the value specified
+in the `expiry` field.
 
 ### Attribution trigger registration
 
