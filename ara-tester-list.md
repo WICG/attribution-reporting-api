@@ -37,5 +37,5 @@ The usefulness of this page depends on testers sharing information and updates; 
 
 ## Table
 
-| Company / Party | Industry or vertical | Est. Testing Timeframe | Link to testing plan and/or learnings | How to contact you |
+| Company / Party | Industry or vertical | Est. Testing Timeframe | Link to testing plan and/or learnings (optional) | How to contact you (optional) |
 | --------------- | -------------------- | ---------------------- | ------------------------------------- | ------------------ |
