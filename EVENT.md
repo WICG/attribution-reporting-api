@@ -599,6 +599,10 @@ Set-Cookie: ar_debug=1; SameSite=None; Secure; HttpOnly
 ```
 If a cookie of this form is not present, debugging information will be ignored.
 
+Note that in the context of proposals such as
+[CHIPS](https://github.com/privacycg/CHIPS), the cookie must be unpartitioned in
+order to allow debug keys to be registered.
+
 ## Sample Usage
 
 `publisher.example` wants to show ads on their site, so they contract out to
