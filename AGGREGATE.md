@@ -181,6 +181,22 @@ true_agg_campaign_counts = raw_agg_campaign_counts / (L1 / 2)
 true_agg_geo_value = 1024 * raw_agg_geo_value / (L1 / 2)
 ```
 
+Trigger registration will accept an optional field
+`aggregatable_deduplication_key` which will be used to deduplicate multiple
+triggers containing the same `aggregatable_deduplication_key` for a single
+source.
+
+```jsonc
+{
+  ...
+  "aggregatable_deduplication_key": "[unsigned 64-bit integer]"
+}
+```
+
+The browser will create aggregatable reports for a source only if the trigger's
+`aggregatable_deduplication_key` has not already been associated with an
+aggregatable report for that source.
+
 Note that aggregatable trigger registration is independent of event-level
 trigger registration.
 
