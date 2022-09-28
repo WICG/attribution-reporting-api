@@ -39,3 +39,4 @@ The usefulness of this page depends on testers sharing information and updates; 
 
 | Company / Party | Industry or vertical | Est. Testing Timeframe | Link to testing plan and/or learnings (optional) | How to contact you (optional) |
 | --------------- | -------------------- | ---------------------- | ------------------------------------- | ------------------ |
+| Criteo | Ad tech services |  |  | privacy-sandbox-testing@criteo.com | 
