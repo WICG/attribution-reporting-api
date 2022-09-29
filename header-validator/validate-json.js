@@ -250,6 +250,7 @@ export function validateTrigger(trigger) {
     event_trigger_data: optional(eventTriggerData),
     filters: optional(filters()),
     not_filters: optional(filters()),
+    aggregatable_deduplication_key: optional(uint64),
   })
   return state.result()
 }
