@@ -36,6 +36,7 @@ extension on top of this.
   - [Data Encoding](#data-encoding)
   - [Optional attribution filters](#optional-attribution-filters)
   - [Optional: extended debugging reports](#optional-extended-debugging-reports)
+  - [Optional: error reports](#optional-error-reports)
   - [Noisy fake conversion example](#noisy-fake-conversion-example)
   - [Storage limits](#storage-limits)
 - [Privacy Considerations](#privacy-considerations)
@@ -602,6 +603,66 @@ If a cookie of this form is not present, debugging information will be ignored.
 Note that in the context of proposals such as
 [CHIPS](https://github.com/privacycg/CHIPS), the cookie must be unpartitioned in
 order to allow debug keys to be registered.
+
+### Optional: error reports
+
+We also introduce a non-cookie based debugging framework to allow developers to
+monitor certain failures in the attribution registrations.
+
+The browser will send error reports in the following source registration failure
+modes:
+
+* a source is rejected due to the [reporting origin
+  limits](#reporting-origin-limits)
+* a source is rejected due to the [destination
+  limits](#limiting-the-number-of-unique-destinations-covered-by-pending-sources)
+
+The browser will send non-credentialed secure HTTP POST requests to the
+reporting endpoints, see [below](#reporting-endpoints). The report data is
+included in the request body as a JSON object:
+```jsonc
+{
+  "type": "<report type>", // could be "unattributed-reporting-origin-limit" or
+  "source-destination-limit"
+  "body": {
+    "limit": 100, // a constant integer
+    "source_event_id": "<source event id in the source registration>",
+    "source_site": "https://source.example",
+    "destination_site": "https://destination.example",
+    "reporting_origin": "https://reporting.example.com"
+  }
+}
+```
+
+These error reports will be sent immediately upon the error occuring during
+source registration.
+
+Note that if other failures are reported using this framework, the browser may
+enforce a random small delay and drop some data (e.g. `source_event_id`) to
+avoid the page being identifiable.
+
+#### Reporting endpoints
+
+The reporting origins may opt in to receive error reports by adding a new
+`error_reporting` dictionary field to the `Attribution-Reporting-Register-Source` header:
+```jsonc
+{
+  ... // exsiting fields
+
+  "error_reporting": true // default to false if not present
+}
+```
+
+The error reports will be sent to a new endpoint:
+```
+https://<reporting origin>/.well-known/attribution-reporting/error
+```
+
+The top-level sites may opt in to receive error reports by declaring a reporting
+endpoint via a HTTP header in the top-level document response:
+```
+Attribution-Error-Reporting-Endpoint: <reporting endpoint>
+```
 
 ## Sample Usage
 
