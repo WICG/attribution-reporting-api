@@ -40,6 +40,7 @@ export const validTriggerHeadersAsObjects = [
     not_filters: {
       conversion_subdomain: ['foo.megastore'],
     },
+    aggregatable_deduplication_key: '345678656789',
   },
 ]
 
