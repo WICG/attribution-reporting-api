@@ -48,8 +48,8 @@ extension on top of this.
   - [Browsing history reconstruction](#browsing-history-reconstruction)
     - [Adding noise to whether a trigger is
       genuine](#adding-noise-to-whether-a-trigger-is-genuine)
-    - [Limiting the number of unique destinations covered by pending
-      sources](#limiting-the-number-of-unique-destinations-covered-by-pending-sources)
+    - [Limiting the number of unique destinations covered by unexpired
+      sources](#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources)
   - [Differential privacy](#differential-privacy)
   - [Speculative: Limits based on first party
     storage](#speculative-limits-based-on-first-party-storage)
@@ -852,15 +852,15 @@ By adding noise to whether an attribute source gets
 absolute certainty whether a particular ad view led to a site visit. See
 [Differential privacy](#differential-privacy).
 
-#### Limiting the number of unique destinations covered by pending sources
+#### Limiting the number of unique destinations covered by unexpired sources
 
 To limit the breadth of `destination` sites that a reporting origin may be
 trying to measure user visits on, the browser can limit the number `destination`
-eTLD+1s represented by pending sources for a source-site.
+eTLD+1s represented by unexpired sources for a source-site.
 
-The browser can place a limit on the number of a source site's pending source's
+The browser can place a limit on the number of a source site's unexpired source's
 unique `destination`s. When an attribution source is registered for an eTLD+1
-that is not already in the pending sources and a source site is at its limit,
+that is not already in the unexpired sources and a source site is at its limit,
 the browser will drop the new source.
 
 The lower this value, the harder it is for a reporting origin to use the API to
@@ -872,13 +872,11 @@ Because this limit is per source site, it is possible for different reporting
 origin on a site to push the other attribution sources out of the browser. See
 the [denial of service](#denial-of-service) for more details. To prevent this
 attack, the browser should maintain these limits per reporting origin. This
-effectively limits the number of unique sites covered by pending sources from
+effectively limits the number of unique sites covered by unexpired sources from
 any one reporting origin.
 
 Strawman: 100 distinct destination sites per-{source site, reporting origin},
-applied to all pending sources regardless of type.
-
-TODO: should this be applied over a time period?
+applied to all unexpired sources regardless of type at source time.
 
 ### Differential privacy
 
