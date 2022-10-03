@@ -686,17 +686,17 @@ Issue: Specify the steps for making an attributionsrc request with |decodedSrc|.
 
 <h3 algorithm id="parsing-source-registration">Parsing source-registration JSON</h3>
 
-To <dfn>obtain a source expiry</dfn> given an [=ordered map=] |value|:
+To <dfn>obtain a source expiry</dfn> given a |value|:
 
-1. If |value|["`expiry`"] does not [=map/exists|exist=] or is not a [=string=],
-     return 30 days.
+1. If |value| is not a [=string=], return null.
 1. Let |expirySeconds| be the result of applying the
-    <a spec="html">rules for parsing integers</a> to |value|["`expiry`"].
-1. If |expirySeconds| is an error, return 30 days.
+    <a spec="html">rules for parsing integers</a> to |value|.
+1. If |expirySeconds| is an error, return null.
 1. Let |expiry| be |expirySeconds| seconds.
 1. If |expiry| is less than 1 day, set |expiry| to 1 day.
 1. If |expiry| is greater than the user agent's [=max source expiry=], set
     |expiry| to that value.
+1. Return |expiry|.
 
 To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
 
@@ -734,7 +734,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 1. Let |attributionDestination| be the result of running
     [=parse an attribution destination=] with |value|["`destination`"].
 1. If |attributionDestination| is null, return null.
-1. Let |expiry| be the result of running [=obtain a source expiry=] on |value|.
+1. Let |expiry| be the result of running [=obtain a source expiry=] on |value|["`expiry`"].
+1. If |expiry| is null, set |expiry| to 30 days.
 1. Let |priority| be 0.
 1. If |value|["`priority`"] [=map/exists=] and is a [=string=]:
     1. Set |priority| to the result of applying the
@@ -757,6 +758,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
         |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
 1. If |aggregationKeys| is null, return null.
+1. Let |aggregatableExpiry| be the result of running [=obtain a source expiry=] on |value|["`aggregatable_expiry`"].
+1. If |aggregatableExpiry| is null, set |aggregatableExpiry| to |expiry|.
 1. Let |triggerDataCardinality| be the user agent's
     [=navigation-source trigger data cardinality=].
 1. Let |randomizedTriggerRate| be the user agent's
@@ -805,11 +808,11 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     :: |debugKey|
     : [=attribution source/aggregation keys=]
     :: |aggregationKeys|
+    : [=attribution source/aggregatable expiry=]
+    :: |aggregatableExpiry|
 1. Return |source|.
 
 Issue: Ensure that |attributionDestination|'s [=origin/scheme=] is HTTP/HTTPS.
-
-TODO: Parse [=attribution source/aggregatable expiry=].
 
 <h3 id="check-pending-destination-limit">Checking pending destination limit</h3>
 
@@ -1054,6 +1057,12 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
 1. If |aggregatableTriggerData| is null, return null.
 1. Let |aggregatableValues| be the result of running [=parse aggregatable values=] with |value|.
 1. If |aggregatableValues| is null, return null.
+1. Let |aggregatableDedupKey| be null.
+1. If |value|["`aggregatable_deduplication_key`"] [=map/exists=] and is a [=string=]:
+    1. Set |aggregatableDedupKey| to the result of applying the
+        <a spec="html">rules for parsing non-negative integers</a> to
+        |value|["`aggregatable_deduplication_key`"].
+    1. If |aggregatableDedupKey| is an error, set |aggregatableDedupKey| to null.
 1. Let |debugKey| be null.
 1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
     1. Set |debugKey| to the result of applying the
@@ -1093,9 +1102,9 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
     :: |aggregatableTriggerData|
     : [=attribution trigger/aggregatable values=]
     :: |aggregatableValues|
+    : [=attribution trigger/aggregatable dedup key=]
+    :: |aggregatableDedupKey|
 1. Return |trigger|.
-
-TODO: Parse [=attribution trigger/aggregatable dedup key=].
 
 <h3 dfn id="does-filter-data-match">Does filter data match</h3>
 
