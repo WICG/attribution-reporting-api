@@ -41,3 +41,4 @@ The usefulness of this page depends on testers sharing information and updates; 
 | --------------- | -------------------- | ---------------------- | ------------------------------------- | ------------------ |
 | Criteo | Ad tech services |  |  | privacy-sandbox-testing@criteo.com | 
 | SMN | Ad tech services |  |  | privacy-sandbox-testing@so-netmedia.jp |
+| Yahoo! JAPAN | Ad tech services | 2022-2023 | [Report](https://github.com/WICG/attribution-reporting-api/issues/201) |  | 
