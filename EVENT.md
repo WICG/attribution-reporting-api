@@ -614,7 +614,7 @@ The browser will send error reports in the following source-registration failure
 modes:
 
 * a source is rejected due to the [destination
-  limits](#limiting-the-number-of-unique-destinations-covered-by-pending-sources)
+  limits](#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources)
 
 The browser will send non-credentialed secure HTTP `POST` requests to the
 reporting endpoints, see [below](#reporting-endpoints). The report data is
