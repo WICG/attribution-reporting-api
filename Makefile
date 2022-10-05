@@ -23,6 +23,9 @@ $(OUT_DIR)/validate-headers.html: validate-headers.html $(OUT_DIR)
 
 $(OUT_DIR)/validate-json.mjs: header-validator/validate-json.js $(OUT_DIR)
 	@ cp $< $@
+	
+$(OUT_DIR)/validate-json.mjs: header-validator/validate-eligible.js $(OUT_DIR)
+	@ cp $< $@
 
 $(OUT_DIR):
 	@ mkdir -p $@
