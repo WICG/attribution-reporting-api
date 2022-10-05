@@ -436,6 +436,8 @@ An attribution rate-limit record is a [=struct=] with the following items:
 :: An [=url/origin=].
 : <dfn>time</dfn>
 :: A point in time.
+:: <dfn>expiry time</dfn>
+:: Null or a point in time.
 
 </dl>
 
@@ -520,9 +522,9 @@ controls how many times a single [=attribution source=] whose
 [=attribution source/source type=] is "`event`" can create an
 [=event-level report=].
 
-<dfn>Max destinations covered by pending sources</dfn> is a positive
+<dfn>Max destinations covered by unexpired sources</dfn> is a positive
 integer that controls the maximum number of distinct [=attribution source/attribution destinations=]
-for pending [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting endpoint=]).
+for unexpired [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting endpoint=]).
 
 <dfn>Attribution rate-limit window</dfn> is a positive length of time that
 controls the rate-limiting window for attribution.
@@ -617,6 +619,14 @@ This algorithm will return either a non-negative 128-bit integer or an error.
 1. Let |value| be the [=code point substring=] from 2 to the end of |input|.
 1. If the characters within |value| are not all [=ASCII hex digits=], return an error.
 1. Interpret |value| as a hexadecimal number and return as a non-negative 128-bit integer.
+
+<h3 dfn id="can-attribution-rate-limit-record-be-removed">Can attribution rate-limit record be removed</h3>
+
+Given an [=attribution rate-limit record=] |record|:
+1. If |record|'s [=attribution rate-limit record|time=] is after the current time, return false.
+1. If |record|'s [=attribution rate-limit record/scope=] equals `"attribution"`, return true.
+1. If |record|'s [=attribution rate-limit record/expiry time=] is after the current time, return false.
+1. Return true.
 
 # Source Algorithms # {#source-algorithms}
 
@@ -814,31 +824,26 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 
 Issue: Ensure that |attributionDestination|'s [=origin/scheme=] is HTTP/HTTPS.
 
-<h3 id="check-pending-destination-limit">Checking pending destination limit</h3>
+<h3 id="check-unexpired-destination-limit">Checking unexpired destination limit</h3>
 
-To <dfn>check if an [=attribution source=] exceeds the pending destination limit</dfn> given an
+To <dfn>check if an [=attribution source=] exceeds the unexpired destination limit</dfn> given an
 [=attribution source=] |source|, run the following steps:
 
-1. Let |pendingSources| be all entries in the [=attribution source cache=] where all of the following are true:
-     * entry's [=attribution source/source site=] and |source|'s [=attribution source/source site=]
-        are equal.
-     * entry's [=attribution source/reporting endpoint=] and |source|'s
-        [=attribution source/reporting endpoint=] are [=same origin=].
-     * entry's [=attribution source/number of event-level reports=] is equal to 0.
-1. Let |distinctDestinations| be a new [=set/is empty|empty=] [=set=].
-1. For each [=attribution source=] |pendingSource| of |pendingSources|:
-    1. If |source|'s [=attribution source/attribution destination=] and |pendingSource|'s
+1. Let |unexpiredSources| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
+     * |record|'s [=attribution rate-limit record/scope=] equals "`source`"
+     * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
+     * |record|'s [=attribution rate-limit record/reporting endpoint=] and |source|'s [=attribution source/reporting endpoint=] are equal
+     * |record|'s [=attribution rate-limit record/expiry time=] is greater than |source|'s [=attribution source/source time=]
+1. For each [=attribution source=] |unexpiredSource| of |unexpiredSources|:
+    1. If |source|'s [=attribution source/attribution destination=] and |unexpiredSource|'s
         [=attribution source/attribution destination=] are equal, then return false.
-    1. If |distinctDestinations| [=set/contains=] |pendingSource|'s
+    1. If |distinctDestinations| [=set/contains=] |unexpiredSource|'s
         [=attribution source/attribution destination=], [=iteration/continue=].
-    1. [=set/Append=] |pendingSource|'s [=attribution source/attribution destination=] to
+    1. [=set/Append=] |unexpiredSource|'s [=attribution source/attribution destination=] to
         |distinctDestinations|.
 1. If |distinctDestinations|'s [=set/size=] is greater than or equal to
-    the user agent's [=max destinations covered by pending sources=], then return true.
+    the user agent's [=max destinations covered by unexpired sources=], then return true.
 1. Return false.
-
-Issue: Determine whether to change this limit to be time boudned, see
-<a href="https://github.com/WICG/attribution-reporting-api/issues/482">Source event limits should be time bounded</a>.
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
@@ -897,7 +902,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     [=attribution source/source origin=] are [=same origin=].
 1. If |pendingSourcesForSourceOrigin|'s [=list/size=] is greater than or equal
     to the user agent's [=max pending sources per source origin=], return.
-1. If the result of running [=check if an attribution source exceeds the pending destination limit=]
+1. If the result of running [=check if an attribution source exceeds the unexpired destination limit=]
     with |source| is true, return.
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
     : [=attribution rate-limit record/scope=]
@@ -910,12 +915,13 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     :: |source|'s [=attribution source/reporting endpoint=]
     : [=attribution rate-limit record/time=]
     :: |source|'s [=attribution source/source time=]
+    : [=attribution rate-limit record/expiry time=]
+    :: |source|'s [=attribution source/expiry time=]
 1. If the result of running [=should processing be blocked by reporting-endpoint limit=] with
     |rateLimitRecord| is <strong>blocked</strong>, return.
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
-1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] whose
-    [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=]
-    before the current time.
+1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] if the result of running
+    [=can attribution rate-limit record be removed=] with the entry is true.
 1. If |source|'s [=attribution source/randomized response=] is not null and is a [=set=]:
     1. [=map/iterate|For each=] [=trigger state=] |triggerState| of |source|'s
         [=attribution source/randomized response=]:
@@ -1268,6 +1274,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     :: |sourceToAttribute|'s [=attribution source/reporting endpoint=]
     : [=attribution rate-limit record/time=]
     :: |trigger|'s [=attribution trigger/trigger time=]
+    : [=attribution rate-limit record/expiry time=]
+    :: Null
 1. If the result of running [=should processing be blocked by reporting-endpoint limit=] with
     |rateLimitRecord| is <strong>blocked</strong>, return.
 1. Let |report| be the result of running [=obtain an event-level report=] with |sourceToAttribute|, |trigger|,
@@ -1301,9 +1309,8 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
 1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null,
     [=list/append=] it to |sourceToAttribute|'s [=attribution source/dedup keys=].
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
-1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] whose
-    [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=]
-    before the current time.
+1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] if the result of running
+    [=can attribution rate-limit record be removed=] with the entry is true.
 1. If |report|'s [=event-level report/source debug key=] is not null and |report|'s
     [=event-level report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
