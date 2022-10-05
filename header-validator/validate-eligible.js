@@ -1,4 +1,5 @@
-import { parseDictionary } from 'structured-headers'
+import { structuredHeader } from './third_party/structured-headers.min.js';
+const { parseDictionary } = structuredHeader
 
 export function validateEligible(str) {
   const errors = []
