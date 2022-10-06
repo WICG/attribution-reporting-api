@@ -189,9 +189,12 @@ for this source.
 represents the event-level data associated with this source. This will be
 limited to 64 bits of information but the value can vary. Defaults to 0.
 
-- `expiry`: (optional) expiry in seconds for when the source should be
-deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry
-can also vary between browsers. This will be rounded to the nearest day.
+- `expiry`: (optional) expiry in seconds for when the source is eligible for
+event-level attribution. Default is 30 days, with a maximum value of 30 days.
+The maximum expiry can also vary between browsers. This will be rounded to the
+nearest day. Note that if [`aggregatable_expiry`](https://github.com/WICG/conversion-measurement-api/blob/main/AGGREGATE.md#attribution-source-registration)
+is greater than `expiry`, the source may still be eligible for attribution and
+create aggregatable reports, but event-level reports will be dropped.
 
 - `priority`: (optional) a signed 64-bit integer used to prioritize
 this source with respect to other matching sources. When a trigger redirect is

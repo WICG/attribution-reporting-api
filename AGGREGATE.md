@@ -99,7 +99,9 @@ strings in the JSON must be limited to at most 32 digits.
 `aggregatable_expiry` is an optional string field containing a signed 64-bit
 integer representing the number of seconds for which the source is eligible for
 aggregatable attribution. If omitted, the field defaults to the value specified
-in the `expiry` field.
+in the `expiry` field. Note that if `expiry` is greater than
+`aggregatable_expiry`, the source may still be eligible for attribution and
+create event-level reports, but aggregatable reports will be dropped.
 
 ### Attribution trigger registration
 
