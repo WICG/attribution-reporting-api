@@ -178,7 +178,8 @@ header `Attribution-Reporting-Register-Source` of the form:
   "source_event_id": "12340873456",
   "destination": "[eTLD+1]",
   "expiry": "[64-bit signed integer]",
-  "priority": "[64-bit signed integer]"
+  "priority": "[64-bit signed integer]",
+  "event_report_window": "[64-bit signed integer]"
 }
 ```
 
@@ -198,6 +199,11 @@ this source with respect to other matching sources. When a trigger redirect is
 received, the browser will find the matching source with highest
 `priority` value and generate a report. The other sources will not
 generate reports.
+
+- `event_report_window`: (optional) time in seconds relative to the source
+where event reports may be created for this source. Also controls the last
+window where reports will be sent.
+
 
 Once this header is received, the browser will proceed with [handling an
 attribution source event](#handling-an-attribution-source-event). Note that it
@@ -419,11 +425,10 @@ different sites.
 
 ### Sending Scheduled Reports
 
-Reports for `event` sources will be sent 1 hour after the source expires at its
-`expiry`.
+Reports for `event` sources will be sent 1 hour after the sources `event_report_window`.
 
 Reports for `navigation` sources may be reported earlier than the source's
-`expiry`, at specified points in time relative to when the source event was
+`event_report_window`, at specified points in time relative to when the source event was
 registered. See
 [here](https://wicg.github.io/conversion-measurement-api/#delivery-time) for the
 precise algorithm.
