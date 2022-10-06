@@ -57,7 +57,7 @@ textarea {
 <form>
   <noscript>JavaScript is required to use this form.</noscript>
   <fieldset id=input>
-    <legend>JSON</legend>
+    <legend>Value</legend>
     <textarea></textarea>
   </fieldset>
   <div id="right">
@@ -65,6 +65,7 @@ textarea {
       <legend>Header</legend>
       <p><label><input type=radio name=header value=source><code>Attribution-Reporting-Register-Source</code></label>
       <p><label><input type=radio name=header value=trigger><code>Attribution-Reporting-Register-Trigger</code></label>
+      <p><label><input type=radio name=header value=eligible><code>Attribution-Reporting-Eligible</code></label>
     </fieldset>
     <fieldset id=output>
       <legend>Validation Result</legend>
@@ -86,8 +87,6 @@ textarea {
 <script defer type=module>
 import { validateJSON, validateSource, validateTrigger } from './validate-json.js';
 import { validateEligible } from './validate-eligible.js';
-
-console.log("Eligible header check:", JSON.stringify(validateEligible('hi')));
 
 const form = document.querySelector('form');
 const input = form.querySelector('textarea');
@@ -123,9 +122,20 @@ const makeLi = ({path, msg}) => {
 const header = () => form.elements['header'].value;
 
 form.addEventListener('input', () => {
-  const validate = header() === 'source'
-    ? validateSource
-    : validateTrigger;
+  let validate;
+  switch (header()) {
+  case 'source':
+    validate = validateSource;
+    break;
+  case 'trigger':
+    validate = validateTrigger;
+    break;
+  case 'eligible':
+    validate = validateEligible;
+    break;
+  default:
+    return;
+  }
 
   const result = validateJSON(input.value, validate);
 
@@ -157,6 +167,9 @@ if (json) {
 }
 
 switch (params.get('header')) {
+case 'eligible':
+  form.querySelector('input[value=eligible']).click();
+  break;
 case 'trigger':
   form.querySelector('input[value=trigger]').click();
   break;
