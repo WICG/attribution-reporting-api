@@ -3,7 +3,7 @@ OUT_DIR ?= out
 
 .PHONY: all clean validator
 
-all: $(OUT_DIR)/index.html $(OUT_DIR)/validate-headers.html $(OUT_DIR)/validate-json.mjs
+all: $(OUT_DIR)/index.html $(OUT_DIR)/validate-headers.html $(OUT_DIR)/validate-json.js
 
 $(OUT_DIR)/index.html: index.bs $(OUT_DIR)
 	@ (HTTP_STATUS=$$(curl https://api.csswg.org/bikeshed/ \
@@ -21,7 +21,10 @@ $(OUT_DIR)/index.html: index.bs $(OUT_DIR)
 $(OUT_DIR)/validate-headers.html: validate-headers.html $(OUT_DIR)
 	@ cp $< $@
 
-$(OUT_DIR)/validate-json.mjs: header-validator/validate-json.js $(OUT_DIR)
+$(OUT_DIR)/validate-json.js: header-validator/validate-json.js $(OUT_DIR)
+	@ cp $< $@
+
+$(OUT_DIR)/validate-eligible.js: header-validator/validate-eligible.js $(OUT_DIR)
 	@ cp $< $@
 
 $(OUT_DIR):
