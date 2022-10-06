@@ -3,7 +3,7 @@ OUT_DIR ?= out
 
 .PHONY: all clean validator
 
-all: $(OUT_DIR)/index.html $(OUT_DIR)/validate-headers.html $(OUT_DIR)/validate-json.js
+all: $(OUT_DIR)/index.html $(OUT_DIR)/validate-headers.html $(OUT_DIR)/validate-json.js $(OUT_DIR)/validate-eligible.js
 
 $(OUT_DIR)/index.html: index.bs $(OUT_DIR)
 	@ (HTTP_STATUS=$$(curl https://api.csswg.org/bikeshed/ \
