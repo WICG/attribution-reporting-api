@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <title>Attribution Reporting Header Validation</title>
-<script type=module src="validate-json.mjs"></script>
+<link
+  rel="icon"
+  href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔷</text></svg>"
+/>
 <style>
 * {
   box-sizing: border-box;
@@ -54,7 +57,7 @@ textarea {
 <form>
   <noscript>JavaScript is required to use this form.</noscript>
   <fieldset id=input>
-    <legend>JSON</legend>
+    <legend>Value</legend>
     <textarea></textarea>
   </fieldset>
   <div id="right">
@@ -62,6 +65,7 @@ textarea {
       <legend>Header</legend>
       <p><label><input type=radio name=header value=source><code>Attribution-Reporting-Register-Source</code></label>
       <p><label><input type=radio name=header value=trigger><code>Attribution-Reporting-Register-Trigger</code></label>
+      <p><label><input type=radio name=header value=eligible><code>Attribution-Reporting-Eligible</code></label>
     </fieldset>
     <fieldset id=output>
       <legend>Validation Result</legend>
@@ -79,8 +83,10 @@ textarea {
 <template id="pathful-issue">
   <li><code></code> <span></span></li>
 </template>
-<script type=module>
-import {validateJSON, validateSource, validateTrigger} from './validate-json.mjs';
+<script src="https://cdn.jsdelivr.net/npm/structured-headers@0.5.0/browser/structured-header.min.js"></script>
+<script defer type=module>
+import { validateJSON, validateSource, validateTrigger } from './validate-json.js';
+import { validateEligible } from './validate-eligible.js';
 
 const form = document.querySelector('form');
 const input = form.querySelector('textarea');
@@ -116,11 +122,20 @@ const makeLi = ({path, msg}) => {
 const header = () => form.elements['header'].value;
 
 form.addEventListener('input', () => {
-  const validate = header() === 'source'
-    ? validateSource
-    : validateTrigger;
-
-  const result = validateJSON(input.value, validate);
+  let result;
+  switch (header()) {
+  case 'source':
+    result = validateJSON(input.value, validateSource);
+    break;
+  case 'trigger':
+    result = validateJSON(input.value, validateTrigger);
+    break;
+  case 'eligible':
+    validate = validateEligible(input.value);
+    break;
+  default:
+    return;
+  }
 
   const successEl = document.createElement('div');
   if (result?.errors?.length === 0 && result?.warnings?.length === 0) {
@@ -150,6 +165,9 @@ if (json) {
 }
 
 switch (params.get('header')) {
+case 'eligible':
+  form.querySelector('input[value=eligible]').click();
+  break;
 case 'trigger':
   form.querySelector('input[value=trigger]').click();
   break;
