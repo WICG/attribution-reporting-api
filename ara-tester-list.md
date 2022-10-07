@@ -43,3 +43,4 @@ The usefulness of this page depends on testers sharing information and updates; 
 | SMN | Ad tech services |  |  | privacy-sandbox-testing@so-netmedia.jp |
 | Yahoo! JAPAN | Ad tech services | 2022-2023 | [Report](https://github.com/WICG/attribution-reporting-api/issues/201) |  | 
 | NextRoll | Demand-side platform (DSP) | | | privacysandbox@nextroll.com |
+| RTB House | Demand-side platform (DSP) | | | privacysandbox@rtbhouse.com |
