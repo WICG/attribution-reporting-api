@@ -200,9 +200,9 @@ received, the browser will find the matching source with highest
 `priority` value and generate a report. The other sources will not
 generate reports.
 
-- `event_report_window`: (optional) time in seconds relative to the source
-where event reports may be created for this source. Also controls the last
-window where reports will be sent.
+- `event_report_window`: (optional) duration in seconds relative to the source
+during which event reports may be created for this source. Also controls the last
+window in which reports will be sent.
 
 
 Once this header is received, the browser will proceed with [handling an
