@@ -9,7 +9,6 @@ export const validSourceHeadersAsObjects = [
     priority: '4567898765678',
     debug_key: '9876786543456',
     expiry: '123',
-    aggregatable_expiry: '456',
     aggregation_keys: {
       campaignCounts: '0x159',
       geoValue: '0x5',
