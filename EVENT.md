@@ -627,8 +627,7 @@ extensibility:
   "body": {
     "limit": 100, // the browser's limit
     "source_event_id": "<source event id in the source registration>",
-    "source_site": "https://source.example", // omitted if registered inside a
-    fenced frame truee
+    "source_site": "https://source.example", // omitted if registered inside a fenced frame tree
     "attribution_destination": "https://destination.example"
   }
 }]
