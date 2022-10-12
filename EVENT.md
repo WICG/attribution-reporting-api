@@ -642,7 +642,7 @@ preserve privacy.
 
 #### Reporting endpoints
 
-The reporting origins may opt in to receiving error reports by adding a new
+The reporting origins may opt in to receiving debugging reports by adding a new
 `debug_reporting` dictionary field to the `Attribution-Reporting-Register-Source` header:
 ```jsonc
 {
