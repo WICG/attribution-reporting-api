@@ -311,6 +311,8 @@ An attribution source is a [=struct=] with the following items:
 :: A length of time.
 : <dfn>aggregatable budget consumed</dfn>
 :: A non-negative integer, total [=aggregatable contribution/value=] of all [=aggregatable contributions=] created with this [=attribution source=].
+: <dfn>aggregatable dedup keys</dfn>
+:: [=ordered set=] of [=attribution trigger/aggregatable dedup keys=] associated with this [=attribution source=].
 
 </dl>
 
@@ -1351,6 +1353,9 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 
 1. Let |report| be the result of running [=obtain an aggregatable report=] with |sourceToAttribute| and |trigger|.
 1. If |report|'s [=aggregatable report/contributions=] [=list/is empty=], return <strong>dropped</strong>.
+1. If |trigger|'s [=attribution trigger/aggregatable dedup key=] is not null and
+    |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=]
+    [=list/contains=] it, return <strong>dropped</strong>.
 1. Let |numMatchingReports| be the number of entries in the [=aggregatable report cache=] whose
     [=aggregatable report/attribution destination=] equals |trigger|'s [=attribution trigger/attribution destination=].
 1. If |numMatchingReports| is greater than or equal to the user agent's
@@ -1362,12 +1367,12 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. Add |report| to the [=aggregatable report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/aggregatable budget consumed=] value by
     |report|'s [=aggregatable report/required aggregatable budget=].
+1. If |trigger|'s [=attribution trigger/aggregatable dedup key=] is not null,
+    [=list/append=] it to |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=].
 1. If |report|'s [=aggregatable report/source debug key=] is not null and |report|'s
     [=aggregatable report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
 1. Return <strong>attributed</strong>.
-
-TODO: Specify aggregatable deduplication key feature.
 
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
