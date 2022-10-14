@@ -4,7 +4,7 @@
   <title>Attribution Reporting</title>
   <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
-  <meta content="Bikeshed version 11cdbd324, updated Fri Oct 7 18:14:16 2022 -0700" name="generator">
+  <meta content="Bikeshed version b0de3432c, updated Thu Oct 13 09:16:59 2022 -0700" name="generator">
   <link href="https://wicg.github.io/attribution-reporting-api" rel="canonical">
 <style>/* style-autolinks */
 
@@ -587,7 +587,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Attribution Reporting</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-10-10">10 October 2022</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2022-10-14">14 October 2022</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -671,6 +671,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#debug-keys"><span class="secno">8.2</span> <span class="content">Debug keys</span></a>
       <li><a href="#obtaining-randomized-response"><span class="secno">8.3</span> <span class="content">Obtaining a randomized response</span></a>
       <li><a href="#parsing-aggregation-key-piece"><span class="secno">8.4</span> <span class="content">Parsing aggregation key piece</span></a>
+      <li><a href="#can-attribution-rate-limit-record-be-removed"><span class="secno">8.5</span> <span class="content">Can attribution rate-limit record be removed</span></a>
      </ol>
     <li>
      <a href="#source-algorithms"><span class="secno">9</span> <span class="content">Source Algorithms</span></a>
@@ -682,7 +683,7 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#obtaining-attribution-source-anchor"><span class="secno">9.5</span> <span class="content">Obtaining an attribution source from an <code>a</code> element</span></a>
       <li><a href="#obtaining-attribution-source-window-features"><span class="secno">9.6</span> <span class="content">Obtaining an attribution source from window features</span></a>
       <li><a href="#parsing-source-registration"><span class="secno">9.7</span> <span class="content">Parsing source-registration JSON</span></a>
-      <li><a href="#check-pending-destination-limit"><span class="secno">9.8</span> <span class="content">Checking pending destination limit</span></a>
+      <li><a href="#check-unexpired-destination-limit"><span class="secno">9.8</span> <span class="content">Checking unexpired destination limit</span></a>
       <li><a href="#processing-an-attribution-source"><span class="secno">9.9</span> <span class="content">Processing an attribution source</span></a>
      </ol>
     <li>
@@ -1160,11 +1161,15 @@ non-negative 128-bit integers.</p>
     <dt data-md><dfn class="dfn-paneled" data-dfn-for="attribution rate-limit record" data-dfn-type="dfn" data-noexport id="attribution-rate-limit-record-time">time</dfn>
     <dd data-md>
      <p>A point in time.</p>
+    <dd data-md>
+     <p><dfn class="dfn-paneled" data-dfn-for="attribution rate-limit record" data-dfn-type="dfn" data-noexport id="attribution-rate-limit-record-expiry-time">expiry time</dfn></p>
+    <dd data-md>
+     <p>Null or a point in time.</p>
    </dl>
    <h2 class="heading settled" data-level="6" id="storage"><span class="secno">6. </span><span class="content">Storage</span><a class="self-link" href="#storage"></a></h2>
    <p>A user agent holds an <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attribution-source-cache">attribution source cache</dfn>, which is an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set⑤">ordered set</a> of <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source①①">attribution sources</a>.</p>
    <p>A user agent holds an <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="event-level-report-cache">event-level report cache</dfn>, which is an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set⑥">ordered set</a> of <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report③">event-level reports</a>.</p>
-   <p>A user agent holds an <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attribution-rate-limit-cache">attribution rate-limit cache</dfn>, which is an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set⑦">ordered set</a> of <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record⑥">attribution rate-limit records</a>.</p>
+   <p>A user agent holds an <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attribution-rate-limit-cache">attribution rate-limit cache</dfn>, which is an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set⑦">ordered set</a> of <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record⑨">attribution rate-limit records</a>.</p>
    <p>The above caches are collectively known as the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attribution-caches">attribution caches</dfn>. The <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches">attribution caches</a> are
 shared among all <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object" id="ref-for-environment-settings-object">environment settings objects</a>.</p>
    <p class="note" role="note"><span>Note:</span> This would ideally use <a data-link-type="dfn" href="https://storage.spec.whatwg.org/#storage-bottle" id="ref-for-storage-bottle">storage bottles</a> to provide access to the attribution caches.
@@ -1204,8 +1209,8 @@ controls how many <a data-link-type="dfn" href="#event-level-report" id="ref-for
 controls how many times a single <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source①⑧">attribution source</a> whose <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type④">source type</a> is "<code>navigation</code>" can create an <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report⑤">event-level report</a>.</p>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-attributions-per-event-source">Max attributions per event source</dfn> is a positive integer that
 controls how many times a single <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source①⑨">attribution source</a> whose <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑤">source type</a> is "<code>event</code>" can create an <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report⑥">event-level report</a>.</p>
-   <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-destinations-covered-by-pending-sources">Max destinations covered by pending sources</dfn> is a positive
-integer that controls the maximum number of distinct <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination③">attribution destinations</a> for pending <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⓪">attribution sources</a> with a given (<a data-link-type="dfn" href="#attribution-source-source-site" id="ref-for-attribution-source-source-site">source site</a>, <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint">reporting endpoint</a>).</p>
+   <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-destinations-covered-by-unexpired-sources">Max destinations covered by unexpired sources</dfn> is a positive
+integer that controls the maximum number of distinct <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination③">attribution destinations</a> for unexpired <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⓪">attribution sources</a> with a given (<a data-link-type="dfn" href="#attribution-source-source-site" id="ref-for-attribution-source-source-site">source site</a>, <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint">reporting endpoint</a>).</p>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attribution-rate-limit-window">Attribution rate-limit window</dfn> is a positive length of time that
 controls the rate-limiting window for attribution.</p>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="max-source-reporting-endpoints-per-rate-limit-window">Max source reporting endpoints per rate-limit window</dfn> is a positive
@@ -1297,6 +1302,18 @@ U+0078 LATIN SMALL LETTER X character (x), return an error.</p>
      <p>If the characters within <var>value</var> are not all <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ascii-hex-digit" id="ref-for-ascii-hex-digit">ASCII hex digits</a>, return an error.</p>
     <li data-md>
      <p>Interpret <var>value</var> as a hexadecimal number and return as a non-negative 128-bit integer.</p>
+   </ol>
+   <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="8.5" data-lt="Can attribution rate-limit record be removed" data-noexport id="can-attribution-rate-limit-record-be-removed"><span class="secno">8.5. </span><span class="content">Can attribution rate-limit record be removed</span><a class="self-link" href="#can-attribution-rate-limit-record-be-removed" id="ref-for-can-attribution-rate-limit-record-be-removed"></a></h3>
+   <p>Given an <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record①">attribution rate-limit record</a> <var>record</var>:</p>
+   <ol>
+    <li data-md>
+     <p>If <var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record②">time</a> is after the current time, return false.</p>
+    <li data-md>
+     <p>If <var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope">scope</a> equals <code>"attribution"</code>, return true.</p>
+    <li data-md>
+     <p>If <var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-expiry-time" id="ref-for-attribution-rate-limit-record-expiry-time">expiry time</a> is after the current time, return false.</p>
+    <li data-md>
+     <p>Return true.</p>
    </ol>
    <h2 class="heading settled" data-level="9" id="source-algorithms"><span class="secno">9. </span><span class="content">Source Algorithms</span><a class="self-link" href="#source-algorithms"></a></h2>
    <h3 class="heading settled" data-level="9.1" id="obtaining-attribution-source-expiry-time"><span class="secno">9.1. </span><span class="content">Obtaining an attribution source’s expiry time</span><a class="self-link" href="#obtaining-attribution-source-expiry-time"></a></h3>
@@ -1569,38 +1586,37 @@ to "<code>source</code>".</p>
      <p>Return <var>source</var>.</p>
    </ol>
    <p class="issue" id="issue-e0364022"><a class="self-link" href="#issue-e0364022"></a> Ensure that <var>attributionDestination</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-scheme" id="ref-for-concept-origin-scheme">scheme</a> is HTTP/HTTPS.</p>
-   <h3 class="heading settled" data-level="9.8" id="check-pending-destination-limit"><span class="secno">9.8. </span><span class="content">Checking pending destination limit</span><a class="self-link" href="#check-pending-destination-limit"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="check-if-an-attribution-source-exceeds-the-pending-destination-limit">check if an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⑥">attribution source</a> exceeds the pending destination limit</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⑦">attribution source</a> <var>source</var>, run the following steps:</p>
+   <h3 class="heading settled" data-level="9.8" id="check-unexpired-destination-limit"><span class="secno">9.8. </span><span class="content">Checking unexpired destination limit</span><a class="self-link" href="#check-unexpired-destination-limit"></a></h3>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="check-if-an-attribution-source-exceeds-the-unexpired-destination-limit">check if an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⑥">attribution source</a> exceeds the unexpired destination limit</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⑦">attribution source</a> <var>source</var>, run the following steps:</p>
    <ol>
     <li data-md>
-     <p>Let <var>pendingSources</var> be all entries in the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache②">attribution source cache</a> where all of the following are true:</p>
+     <p>Let <var>unexpiredSources</var> be all <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record③">attribution rate-limit records</a> <var>record</var> in the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache">attribution rate-limit cache</a> where all of the following are true:</p>
      <ul>
       <li data-md>
-       <p>entry’s <a data-link-type="dfn" href="#attribution-source-source-site" id="ref-for-attribution-source-source-site①">source site</a> and <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-site" id="ref-for-attribution-source-source-site②">source site</a> are equal.</p>
+       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope①">scope</a> equals "<code>source</code>"</p>
       <li data-md>
-       <p>entry’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint③">reporting endpoint</a> and <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint④">reporting endpoint</a> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin">same origin</a>.</p>
+       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site③">source site</a> and <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-site" id="ref-for-attribution-source-source-site①">source site</a> are equal</p>
       <li data-md>
-       <p>entry’s <a data-link-type="dfn" href="#attribution-source-number-of-event-level-reports" id="ref-for-attribution-source-number-of-event-level-reports">number of event-level reports</a> is equal to 0.</p>
+       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint①">reporting endpoint</a> and <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint③">reporting endpoint</a> are equal</p>
+      <li data-md>
+       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-expiry-time" id="ref-for-attribution-rate-limit-record-expiry-time①">expiry time</a> is greater than <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time②">source time</a></p>
      </ul>
     <li data-md>
-     <p>Let <var>distinctDestinations</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty②">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①②">set</a>.</p>
-    <li data-md>
-     <p>For each <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⑧">attribution source</a> <var>pendingSource</var> of <var>pendingSources</var>:</p>
+     <p>For each <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source②⑧">attribution source</a> <var>unexpiredSource</var> of <var>unexpiredSources</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination⑤">attribution destination</a> and <var>pendingSource</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination⑥">attribution destination</a> are equal, then return false.</p>
+       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination⑤">attribution destination</a> and <var>unexpiredSource</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination⑥">attribution destination</a> are equal, then return false.</p>
       <li data-md>
-       <p>If <var>distinctDestinations</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain">contains</a> <var>pendingSource</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination⑦">attribution destination</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue">continue</a>.</p>
+       <p>If <var>distinctDestinations</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain">contains</a> <var>unexpiredSource</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination⑦">attribution destination</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue">continue</a>.</p>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append③">Append</a> <var>pendingSource</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination⑧">attribution destination</a> to <var>distinctDestinations</var>.</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append③">Append</a> <var>unexpiredSource</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination⑧">attribution destination</a> to <var>distinctDestinations</var>.</p>
      </ol>
     <li data-md>
      <p>If <var>distinctDestinations</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size④">size</a> is greater than or equal to
-the user agent’s <a data-link-type="dfn" href="#max-destinations-covered-by-pending-sources" id="ref-for-max-destinations-covered-by-pending-sources">max destinations covered by pending sources</a>, then return true.</p>
+the user agent’s <a data-link-type="dfn" href="#max-destinations-covered-by-unexpired-sources" id="ref-for-max-destinations-covered-by-unexpired-sources">max destinations covered by unexpired sources</a>, then return true.</p>
     <li data-md>
      <p>Return false.</p>
    </ol>
-   <p class="issue" id="issue-1ffadd57"><a class="self-link" href="#issue-1ffadd57"></a> Determine whether to change this limit to be time boudned, see <a href="https://github.com/WICG/attribution-reporting-api/issues/482">Source event limits should be time bounded</a>.</p>
    <h3 class="heading settled" data-level="9.9" id="processing-an-attribution-source"><span class="secno">9.9. </span><span class="content">Processing an attribution source</span><a class="self-link" href="#processing-an-attribution-source"></a></h3>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="maybe-process-a-navigation-attribution-source">maybe process a navigation attribution source</dfn> given a <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigation-params" id="ref-for-navigation-params①">navigation params</a> <var>navigationParams</var> and <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#browsing-context" id="ref-for-browsing-context①">browsing context</a> <var>browsingContext</var>, run the following steps:</p>
    <ol>
@@ -1644,10 +1660,10 @@ a <a data-link-type="dfn" href="#trigger-state" id="ref-for-trigger-state②">tr
        <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination①⓪">attribution destination</a></p>
       <dt data-md><a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time">trigger time</a>
       <dd data-md>
-       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time②">source time</a></p>
+       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time③">source time</a></p>
       <dt data-md><a data-link-type="dfn" href="#attribution-trigger-reporting-endpoint" id="ref-for-attribution-trigger-reporting-endpoint①">reporting endpoint</a>
       <dd data-md>
-       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑤">reporting endpoint</a></p>
+       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint④">reporting endpoint</a></p>
       <dt data-md><a data-link-type="dfn" href="#attribution-trigger-filters" id="ref-for-attribution-trigger-filters">filters</a>
       <dd data-md>
        <p>«[]»</p>
@@ -1669,45 +1685,48 @@ running <a data-link-type="dfn" href="#obtain-the-report-time-at-a-window" id="r
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="process-an-attribution-source">process an attribution source</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source③⓪">attribution source</a> <var>source</var>:</p>
    <ol>
     <li data-md>
-     <p>Let <var>cache</var> be the user agent’s <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache③">attribution source cache</a>.</p>
+     <p>Let <var>cache</var> be the user agent’s <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache②">attribution source cache</a>.</p>
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove">Remove</a> all entries in <var>cache</var> where the entry’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time">expiry time</a> is less than the current time.</p>
     <li data-md>
      <p>If the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size⑤">size</a> of <var>cache</var> is greater than or equal to the user agent’s <a data-link-type="dfn" href="#max-source-cache-size" id="ref-for-max-source-cache-size">max source cache size</a>, return.</p>
     <li data-md>
-     <p>Let <var>pendingSourcesForSourceOrigin</var> be the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①③">set</a> of all <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source③①">attribution sources</a> <var>pendingSource</var> of <var>cache</var> where <var>pendingSource</var>’s <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin③">source origin</a> and <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin④">source origin</a> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin①">same origin</a>.</p>
+     <p>Let <var>pendingSourcesForSourceOrigin</var> be the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①②">set</a> of all <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source③①">attribution sources</a> <var>pendingSource</var> of <var>cache</var> where <var>pendingSource</var>’s <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin③">source origin</a> and <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin④">source origin</a> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin">same origin</a>.</p>
     <li data-md>
      <p>If <var>pendingSourcesForSourceOrigin</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size⑥">size</a> is greater than or equal
 to the user agent’s <a data-link-type="dfn" href="#max-pending-sources-per-source-origin" id="ref-for-max-pending-sources-per-source-origin">max pending sources per source origin</a>, return.</p>
     <li data-md>
-     <p>If the result of running <a data-link-type="dfn" href="#check-if-an-attribution-source-exceeds-the-pending-destination-limit" id="ref-for-check-if-an-attribution-source-exceeds-the-pending-destination-limit">check if an attribution source exceeds the pending destination limit</a> with <var>source</var> is true, return.</p>
+     <p>If the result of running <a data-link-type="dfn" href="#check-if-an-attribution-source-exceeds-the-unexpired-destination-limit" id="ref-for-check-if-an-attribution-source-exceeds-the-unexpired-destination-limit">check if an attribution source exceeds the unexpired destination limit</a> with <var>source</var> is true, return.</p>
     <li data-md>
-     <p>Let <var>rateLimitRecord</var> be a new <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record①">attribution rate-limit record</a> with the items:</p>
+     <p>Let <var>rateLimitRecord</var> be a new <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record④">attribution rate-limit record</a> with the items:</p>
      <dl>
-      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope">scope</a>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope②">scope</a>
       <dd data-md>
        <p>"<code>source</code>"</p>
-      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site③">source site</a>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site④">source site</a>
       <dd data-md>
-       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-site" id="ref-for-attribution-source-source-site③">source site</a></p>
+       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-site" id="ref-for-attribution-source-source-site②">source site</a></p>
       <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-attribution-destination" id="ref-for-attribution-rate-limit-record-attribution-destination③">attribution destination</a>
       <dd data-md>
        <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination①①">attribution destination</a></p>
-      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint①">reporting endpoint</a>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint②">reporting endpoint</a>
       <dd data-md>
-       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑥">reporting endpoint</a></p>
+       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑤">reporting endpoint</a></p>
       <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time">time</a>
       <dd data-md>
-       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time③">source time</a></p>
+       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time④">source time</a></p>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-expiry-time" id="ref-for-attribution-rate-limit-record-expiry-time②">expiry time</a>
+      <dd data-md>
+       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time①">expiry time</a></p>
      </dl>
     <li data-md>
      <p>If the result of running <a data-link-type="dfn" href="#should-block-processing-for-reporting-endpoint-limit" id="ref-for-should-block-processing-for-reporting-endpoint-limit">should processing be blocked by reporting-endpoint limit</a> with <var>rateLimitRecord</var> is <strong>blocked</strong>, return.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append④">Append</a> <var>rateLimitRecord</var> to the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache">attribution rate-limit cache</a>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append④">Append</a> <var>rateLimitRecord</var> to the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache①">attribution rate-limit cache</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove①">Remove</a> all entries from the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache①">attribution rate-limit cache</a> whose <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time①">time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window③">attribution rate-limit window</a> before the current time.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove①">Remove</a> all entries from the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache②">attribution rate-limit cache</a> if the result of running <a data-link-type="dfn" href="#can-attribution-rate-limit-record-be-removed" id="ref-for-can-attribution-rate-limit-record-be-removed②">can attribution rate-limit record be removed</a> with the entry is true.</p>
     <li data-md>
-     <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response①">randomized response</a> is not null and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①④">set</a>:</p>
+     <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response①">randomized response</a> is not null and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①③">set</a>:</p>
      <ol>
       <li data-md>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate②">For each</a> <a data-link-type="dfn" href="#trigger-state" id="ref-for-trigger-state③">trigger state</a> <var>triggerState</var> of <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response②">randomized response</a>:</p>
@@ -1718,7 +1737,7 @@ to the user agent’s <a data-link-type="dfn" href="#max-pending-sources-per-sou
          <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑤">Append</a> <var>fakeReport</var> to the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache②">event-level report cache</a>.</p>
        </ol>
       <li data-md>
-       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response③">randomized response</a> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty③">empty</a>, return.</p>
+       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response③">randomized response</a> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty②">empty</a>, return.</p>
      </ol>
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑥">Append</a> <var>source</var> to <var>cache</var>.</p>
@@ -1729,7 +1748,7 @@ to the user agent’s <a data-link-type="dfn" href="#max-pending-sources-per-sou
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-event-triggers">parse event triggers</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑨">ordered map</a> <var>map</var>:</p>
    <ol>
     <li data-md>
-     <p>Let <var>eventTriggers</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⑤">set</a>.</p>
+     <p>Let <var>eventTriggers</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①④">set</a>.</p>
     <li data-md>
      <p>If <var>map</var>["<code>event_trigger_data</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑧">exist</a>, return <var>eventTriggers</var>.</p>
     <li data-md>
@@ -1848,7 +1867,7 @@ greater than some constant.</p>
       <li data-md>
        <p>If <var>value</var>["<code>source_keys</code>"]'s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size⑨">size</a> is greater than the user agent’s <a data-link-type="dfn" href="#max-aggregation-keys-per-attribution" id="ref-for-max-aggregation-keys-per-attribution①">max aggregation keys per attribution</a>, return null.</p>
       <li data-md>
-       <p>Let <var>sourceKeys</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⑥">set</a>.</p>
+       <p>Let <var>sourceKeys</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⑤">set</a>.</p>
       <li data-md>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate③">For each</a> <var>sourceKey</var> of <var>value</var>["<code>source_keys</code>"]:</p>
        <ol>
@@ -2025,34 +2044,34 @@ to "<code>trigger</code>".</p>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="match-filter-values">match <a data-link-type="dfn" href="#filter-value" id="ref-for-filter-value①">filter values</a></dfn> given a <a data-link-type="dfn" href="#filter-value" id="ref-for-filter-value②">filter value</a> <var>a</var> and a <a data-link-type="dfn" href="#filter-value" id="ref-for-filter-value③">filter value</a> <var>b</var>:</p>
    <ol>
     <li data-md>
-     <p>If <var>b</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty④">is empty</a>, then:</p>
+     <p>If <var>b</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty③">is empty</a>, then:</p>
      <ol>
       <li data-md>
-       <p>If <var>a</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑤">is empty</a>, then return true.</p>
+       <p>If <var>a</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty④">is empty</a>, then return true.</p>
       <li data-md>
        <p>Otherwise, return false.</p>
      </ol>
     <li data-md>
      <p>Let <var>i</var> be the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-intersection" id="ref-for-set-intersection">intersection</a> of <var>a</var> and <var>b</var>.</p>
     <li data-md>
-     <p>If <var>i</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑥">is empty</a>, then return false.</p>
+     <p>If <var>i</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑤">is empty</a>, then return false.</p>
     <li data-md>
      <p>Return true.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="match-filter-values-with-negation">match <a data-link-type="dfn" href="#filter-value" id="ref-for-filter-value④">filter values</a> with negation</dfn> given a <a data-link-type="dfn" href="#filter-value" id="ref-for-filter-value⑤">filter value</a> <var>a</var> and a <a data-link-type="dfn" href="#filter-value" id="ref-for-filter-value⑥">filter value</a> <var>b</var>:</p>
    <ol>
     <li data-md>
-     <p>If <var>b</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑦">is empty</a>, then:</p>
+     <p>If <var>b</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑥">is empty</a>, then:</p>
      <ol>
       <li data-md>
-       <p>If <var>a</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑧">empty</a>, then return true.</p>
+       <p>If <var>a</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑦">empty</a>, then return true.</p>
       <li data-md>
        <p>Otherwise, return false.</p>
      </ol>
     <li data-md>
      <p>Let <var>i</var> be the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-intersection" id="ref-for-set-intersection①">intersection</a> of <var>a</var> and <var>b</var>.</p>
     <li data-md>
-     <p>If <var>i</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑨">empty</a>, then return false.</p>
+     <p>If <var>i</var> is not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑧">empty</a>, then return false.</p>
     <li data-md>
      <p>Return true.</p>
    </ol>
@@ -2083,18 +2102,18 @@ to "<code>trigger</code>".</p>
    <p>Given an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-trigger⑧">attribution trigger</a> <var>trigger</var> and <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source③③">attribution source</a> <var>sourceToAttribute</var>:</p>
    <ol>
     <li data-md>
-     <p>Let <var>matchingRateLimitRecords</var> be all <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record②">attribution rate-limit records</a> <var>record</var> of <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache②">attribution rate-limit cache</a> where all of the following are true:</p>
+     <p>Let <var>matchingRateLimitRecords</var> be all <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record⑤">attribution rate-limit records</a> <var>record</var> of <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache③">attribution rate-limit cache</a> where all of the following are true:</p>
      <ul>
       <li data-md>
-       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope①">scope</a> is "<code>attribution</code>"</p>
+       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope③">scope</a> is "<code>attribution</code>"</p>
       <li data-md>
-       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site④">source site</a> and <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-source-site" id="ref-for-attribution-source-source-site④">source site</a> are equal</p>
+       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site⑤">source site</a> and <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-source-site" id="ref-for-attribution-source-source-site③">source site</a> are equal</p>
       <li data-md>
        <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-attribution-destination" id="ref-for-attribution-rate-limit-record-attribution-destination④">attribution destination</a> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-attribution-destination" id="ref-for-attribution-trigger-attribution-destination②">attribution destination</a> are equal</p>
       <li data-md>
-       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint②">reporting endpoint</a> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-reporting-endpoint" id="ref-for-attribution-trigger-reporting-endpoint③">reporting endpoint</a> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin②">same origin</a></p>
+       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint③">reporting endpoint</a> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-reporting-endpoint" id="ref-for-attribution-trigger-reporting-endpoint③">reporting endpoint</a> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin①">same origin</a></p>
       <li data-md>
-       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time②">time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window④">attribution rate-limit window</a> before <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time②">trigger time</a></p>
+       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time①">time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window③">attribution rate-limit window</a> before <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time②">trigger time</a></p>
      </ul>
     <li data-md>
      <p>If <var>matchingRateLimitRecords</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size①⓪">size</a> is greater than or equal to <a data-link-type="dfn" href="#max-attributions-per-rate-limit-window" id="ref-for-max-attributions-per-rate-limit-window">max attributions per rate-limit window</a>, return <strong>blocked</strong>.</p>
@@ -2102,30 +2121,30 @@ to "<code>trigger</code>".</p>
      <p>Return <strong>allowed</strong>.</p>
    </ol>
    <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="10.4" data-lt="Should processing be blocked by reporting-endpoint limit" data-noexport id="should-block-processing-for-reporting-endpoint-limit"><span class="secno">10.4. </span><span class="content">Should processing be blocked by reporting-endpoint limit</span><a class="self-link" href="#should-block-processing-for-reporting-endpoint-limit" id="ref-for-should-block-processing-for-reporting-endpoint-limit②"></a></h3>
-   <p>Given an <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record③">attribution rate-limit record</a> <var>newRecord</var>:</p>
+   <p>Given an <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record⑥">attribution rate-limit record</a> <var>newRecord</var>:</p>
    <ol>
     <li data-md>
      <p>Let <var>max</var> be <a data-link-type="dfn" href="#max-source-reporting-endpoints-per-rate-limit-window" id="ref-for-max-source-reporting-endpoints-per-rate-limit-window">max source reporting endpoints per rate-limit window</a>.</p>
     <li data-md>
-     <p>If <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope②">scope</a> is "<code>attribution</code>", set <var>max</var> to <a data-link-type="dfn" href="#max-attribution-reporting-endpoints-per-rate-limit-window" id="ref-for-max-attribution-reporting-endpoints-per-rate-limit-window">max attribution reporting endpoints per rate-limit window</a>.</p>
+     <p>If <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope④">scope</a> is "<code>attribution</code>", set <var>max</var> to <a data-link-type="dfn" href="#max-attribution-reporting-endpoints-per-rate-limit-window" id="ref-for-max-attribution-reporting-endpoints-per-rate-limit-window">max attribution reporting endpoints per rate-limit window</a>.</p>
     <li data-md>
-     <p>Let <var>matchingRateLimitRecords</var> be all <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record④">attribution rate-limit records</a> <var>record</var> in the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache③">attribution rate-limit cache</a> where all of the following are true:</p>
+     <p>Let <var>matchingRateLimitRecords</var> be all <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record⑦">attribution rate-limit records</a> <var>record</var> in the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache④">attribution rate-limit cache</a> where all of the following are true:</p>
      <ul>
       <li data-md>
-       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope③">scope</a> and <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope④">scope</a> are equal</p>
+       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope⑤">scope</a> and <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope⑥">scope</a> are equal</p>
       <li data-md>
-       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site⑤">source site</a> and <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site⑥">source site</a> are equal</p>
+       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site⑥">source site</a> and <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site⑦">source site</a> are equal</p>
       <li data-md>
        <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-attribution-destination" id="ref-for-attribution-rate-limit-record-attribution-destination⑤">attribution destination</a> and <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-attribution-destination" id="ref-for-attribution-rate-limit-record-attribution-destination⑥">attribution destination</a> are equal</p>
       <li data-md>
-       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time③">time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window⑤">attribution rate-limit window</a> before <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time④">time</a></p>
+       <p><var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time②">time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window④">attribution rate-limit window</a> before <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time③">time</a></p>
      </ul>
     <li data-md>
-     <p>Let <var>distinctReportingEndpoints</var> be a new empty <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⑦">ordered set</a>.</p>
+     <p>Let <var>distinctReportingEndpoints</var> be a new empty <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⑥">ordered set</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate⑤">For each</a> <var>record</var> of <var>matchingRateLimitRecords</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑨">append</a> <var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint③">reporting endpoint</a> to <var>distinctReportingEndpoints</var>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate⑤">For each</a> <var>record</var> of <var>matchingRateLimitRecords</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑨">append</a> <var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint④">reporting endpoint</a> to <var>distinctReportingEndpoints</var>.</p>
     <li data-md>
-     <p>If <var>distinctReportingEndpoints</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain①">contains</a> <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint④">reporting endpoint</a>, return <strong>allowed</strong>.</p>
+     <p>If <var>distinctReportingEndpoints</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain①">contains</a> <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint⑤">reporting endpoint</a>, return <strong>allowed</strong>.</p>
     <li data-md>
      <p>If <var>distinctReportingEndpoints</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size①①">size</a> is greater than or equal to <var>max</var>, return <strong>blocked</strong>.</p>
     <li data-md>
@@ -2184,14 +2203,14 @@ to "<code>trigger</code>".</p>
     <li data-md>
      <p>Let <var>attributionDestination</var> be <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-attribution-destination" id="ref-for-attribution-trigger-attribution-destination③">attribution destination</a>.</p>
     <li data-md>
-     <p>Let <var>matchingSources</var> be all entries in the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache④">attribution source cache</a> where all of the following are true:</p>
+     <p>Let <var>matchingSources</var> be all entries in the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache③">attribution source cache</a> where all of the following are true:</p>
      <ul>
       <li data-md>
        <p>entry’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination①②">attribution destination</a> and <var>attributionDestination</var> are equal.</p>
       <li data-md>
-       <p>entry’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑦">reporting endpoint</a> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-reporting-endpoint" id="ref-for-attribution-trigger-reporting-endpoint④">reporting endpoint</a> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin③">same origin</a>.</p>
+       <p>entry’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑥">reporting endpoint</a> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-reporting-endpoint" id="ref-for-attribution-trigger-reporting-endpoint④">reporting endpoint</a> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin②">same origin</a>.</p>
       <li data-md>
-       <p>entry’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time①">expiry time</a> is greater than the current time.</p>
+       <p>entry’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time②">expiry time</a> is greater than the current time.</p>
      </ul>
     <li data-md>
      <p>If <var>matchingSources</var> is empty, return.</p>
@@ -2201,13 +2220,13 @@ to "<code>trigger</code>".</p>
       <li data-md>
        <p><var>a</var>’s <a data-link-type="dfn" href="#attribution-source-priority" id="ref-for-attribution-source-priority①">priority</a> is less than <var>b</var>’s <a data-link-type="dfn" href="#attribution-source-priority" id="ref-for-attribution-source-priority②">priority</a>.</p>
       <li data-md>
-       <p><var>a</var>’s <a data-link-type="dfn" href="#attribution-source-priority" id="ref-for-attribution-source-priority③">priority</a> is equal to <var>b</var>’s <a data-link-type="dfn" href="#attribution-source-priority" id="ref-for-attribution-source-priority④">priority</a> and <var>a</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time④">source time</a> is less than <var>b</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑤">source time</a>.</p>
+       <p><var>a</var>’s <a data-link-type="dfn" href="#attribution-source-priority" id="ref-for-attribution-source-priority③">priority</a> is equal to <var>b</var>’s <a data-link-type="dfn" href="#attribution-source-priority" id="ref-for-attribution-source-priority④">priority</a> and <var>a</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑤">source time</a> is less than <var>b</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑥">source time</a>.</p>
      </ul>
     <li data-md>
      <p>Let <var>sourceToAttribute</var> be the first item in <var>matchingSources</var>.</p>
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#assert" id="ref-for-assert⑤">Assert</a>: <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response④">randomized response</a> is
-null or an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty①⓪">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⑧">set</a>.</p>
+null or an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty⑨">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①⑦">set</a>.</p>
     <li data-md>
      <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters②">match an attribution source’s filter data against filters</a> with <var>sourceToAttribute</var>, <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-filters" id="ref-for-attribution-trigger-filters②">filters</a>, and <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters-isnegated" id="ref-for-match-an-attribution-sources-filter-data-against-filters-isnegated②">isNegated</a> set to false is false, return.</p>
     <li data-md>
@@ -2237,23 +2256,26 @@ null or an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-
     <li data-md>
      <p>If the result of running <a data-link-type="dfn" href="#should-rate-limit-attribution" id="ref-for-should-rate-limit-attribution①">should attribution be blocked by rate limit</a> with <var>trigger</var> and <var>sourceToAttribute</var> is <strong>blocked</strong>, return.</p>
     <li data-md>
-     <p>Let <var>rateLimitRecord</var> be a new <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record⑤">attribution rate-limit record</a> with the items:</p>
+     <p>Let <var>rateLimitRecord</var> be a new <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record⑧">attribution rate-limit record</a> with the items:</p>
      <dl>
-      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope⑤">scope</a>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope⑦">scope</a>
       <dd data-md>
        <p>"<code>attribution</code>"</p>
-      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site⑦">source site</a>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-source-site" id="ref-for-attribution-rate-limit-record-source-site⑧">source site</a>
       <dd data-md>
-       <p><var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-source-site" id="ref-for-attribution-source-source-site⑤">source site</a></p>
+       <p><var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-source-site" id="ref-for-attribution-source-source-site④">source site</a></p>
       <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-attribution-destination" id="ref-for-attribution-rate-limit-record-attribution-destination⑦">attribution destination</a>
       <dd data-md>
        <p><var>attributionDestination</var></p>
-      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint⑤">reporting endpoint</a>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint⑥">reporting endpoint</a>
       <dd data-md>
-       <p><var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑧">reporting endpoint</a></p>
-      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time⑤">time</a>
+       <p><var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑦">reporting endpoint</a></p>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time④">time</a>
       <dd data-md>
        <p><var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time③">trigger time</a></p>
+      <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-expiry-time" id="ref-for-attribution-rate-limit-record-expiry-time③">expiry time</a>
+      <dd data-md>
+       <p>null</p>
      </dl>
     <li data-md>
      <p>If the result of running <a data-link-type="dfn" href="#should-block-processing-for-reporting-endpoint-limit" id="ref-for-should-block-processing-for-reporting-endpoint-limit①">should processing be blocked by reporting-endpoint limit</a> with <var>rateLimitRecord</var> is <strong>blocked</strong>, return.</p>
@@ -2265,7 +2287,7 @@ and <var>matchedConfig</var>.</p>
     <li data-md>
      <p>If <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑧">source type</a> is "<code>event</code>", set <var>maxAttributionsPerSource</var> to the user agent’s <a data-link-type="dfn" href="#max-attributions-per-event-source" id="ref-for-max-attributions-per-event-source①">max attributions per event source</a>.</p>
     <li data-md>
-     <p>If <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-number-of-event-level-reports" id="ref-for-attribution-source-number-of-event-level-reports①">number of event-level reports</a> value is equal to <var>maxAttributionsPerSource</var>, then:</p>
+     <p>If <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-number-of-event-level-reports" id="ref-for-attribution-source-number-of-event-level-reports">number of event-level reports</a> value is equal to <var>maxAttributionsPerSource</var>, then:</p>
      <ol>
       <li data-md>
        <p>Let <var>matchingReports</var> be all entries in the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache④">event-level report cache</a> where all of the following are true:</p>
@@ -2276,7 +2298,7 @@ and <var>matchedConfig</var>.</p>
          <p>entry’s <a data-link-type="dfn" href="#event-level-report-source-identifier" id="ref-for-event-level-report-source-identifier">source identifier</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-is" id="ref-for-string-is">is</a> <var>report</var>’s <a data-link-type="dfn" href="#event-level-report-source-identifier" id="ref-for-event-level-report-source-identifier①">source identifier</a></p>
        </ul>
       <li data-md>
-       <p>If <var>matchingReports</var> is empty, then <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove②">remove</a> <var>sourceToAttribute</var> from the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache⑤">attribution source cache</a> and return.</p>
+       <p>If <var>matchingReports</var> is empty, then <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove②">remove</a> <var>sourceToAttribute</var> from the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache④">attribution source cache</a> and return.</p>
       <li data-md>
        <p>Set <var>matchingReports</var> to the result of <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-sort-in-ascending-order" id="ref-for-list-sort-in-ascending-order">sorting</a> <var>matchingReports</var> in ascending order, with <var>a</var> being less than <var>b</var> if any of the following are true:</p>
        <ul>
@@ -2292,7 +2314,7 @@ and <var>matchedConfig</var>.</p>
       <li data-md>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove③">Remove</a> <var>lowestPriorityReport</var> from the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑤">event-level report cache</a>.</p>
       <li data-md>
-       <p>Decrement <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-number-of-event-level-reports" id="ref-for-attribution-source-number-of-event-level-reports②">number of event-level reports</a> value by 1.</p>
+       <p>Decrement <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-number-of-event-level-reports" id="ref-for-attribution-source-number-of-event-level-reports①">number of event-level reports</a> value by 1.</p>
      </ol>
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove④">Remove</a> <var>sourceToAttribute</var> from <var>matchingSources</var>.</p>
@@ -2300,7 +2322,7 @@ and <var>matchedConfig</var>.</p>
      <p>For each <var>item</var> of <var>matchingSources</var>:</p>
      <ol>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove⑤">Remove</a> <var>item</var> from the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache⑥">attribution source cache</a>.</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove⑤">Remove</a> <var>item</var> from the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache⑤">attribution source cache</a>.</p>
      </ol>
     <li data-md>
      <p>If the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size①②">size</a> of the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑥">event-level report cache</a> is greater than or equal to the user
@@ -2309,13 +2331,13 @@ agent’s <a data-link-type="dfn" href="#max-report-cache-size" id="ref-for-max-
      <p>If <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response⑤">randomized response</a> is
 null, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append①⓪">append</a> <var>report</var> to the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑦">event-level report cache</a>.</p>
     <li data-md>
-     <p>Increment <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-number-of-event-level-reports" id="ref-for-attribution-source-number-of-event-level-reports③">number of event-level reports</a> value by 1.</p>
+     <p>Increment <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-number-of-event-level-reports" id="ref-for-attribution-source-number-of-event-level-reports②">number of event-level reports</a> value by 1.</p>
     <li data-md>
      <p>If <var>matchedConfig</var>’s <a data-link-type="dfn" href="#event-level-trigger-configuration-dedup-key" id="ref-for-event-level-trigger-configuration-dedup-key④">dedup key</a> is not null, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append②">append</a> it to <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-dedup-keys" id="ref-for-attribution-source-dedup-keys①">dedup keys</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append①①">Append</a> <var>rateLimitRecord</var> to the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache④">attribution rate-limit cache</a>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append①①">Append</a> <var>rateLimitRecord</var> to the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache⑤">attribution rate-limit cache</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove⑥">Remove</a> all entries from the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache⑤">attribution rate-limit cache</a> whose <a data-link-type="dfn" href="#attribution-rate-limit-record-time" id="ref-for-attribution-rate-limit-record-time⑥">time</a> is at least <a data-link-type="dfn" href="#attribution-rate-limit-window" id="ref-for-attribution-rate-limit-window⑥">attribution rate-limit window</a> before the current time.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove⑥">Remove</a> all entries from the <a data-link-type="dfn" href="#attribution-rate-limit-cache" id="ref-for-attribution-rate-limit-cache⑥">attribution rate-limit cache</a> if the result of running <a data-link-type="dfn" href="#can-attribution-rate-limit-record-be-removed" id="ref-for-can-attribution-rate-limit-record-be-removed①">can attribution rate-limit record be removed</a> with the entry is true.</p>
     <li data-md>
      <p>If <var>report</var>’s <a data-link-type="dfn" href="#event-level-report-source-debug-key" id="ref-for-event-level-report-source-debug-key">source debug key</a> is not null and <var>report</var>’s <a data-link-type="dfn" href="#event-level-report-trigger-debug-key" id="ref-for-event-level-report-trigger-debug-key">trigger debug key</a> is not null, <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task" id="ref-for-queue-a-task①">queue a task</a> to <a data-link-type="dfn" href="#attempt-to-deliver-a-debug-report" id="ref-for-attempt-to-deliver-a-debug-report">attempt to deliver a debug report</a> with <var>report</var>.</p>
    </ol>
@@ -2355,7 +2377,7 @@ a length of time <var>deadline</var>:</p>
     <li data-md>
      <p>If <var>earlyDeadlines</var>[<var>window</var>] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain③">exists</a>, set <var>deadline</var> to it.</p>
     <li data-md>
-     <p>Return the result of running <a data-link-type="dfn" href="#obtain-a-report-time-from-deadline" id="ref-for-obtain-a-report-time-from-deadline">obtain a report time from deadline</a> with <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑥">source time</a> and <var>deadline</var>.</p>
+     <p>Return the result of running <a data-link-type="dfn" href="#obtain-a-report-time-from-deadline" id="ref-for-obtain-a-report-time-from-deadline">obtain a report time from deadline</a> with <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑦">source time</a> and <var>deadline</var>.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-an-event-level-report-delivery-time">obtain an event-level report delivery time</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source③⑦">attribution source</a> <var>source</var> and a time <var>triggerTime</var>:</p>
    <ol>
@@ -2367,7 +2389,7 @@ a length of time <var>deadline</var>:</p>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑥">For each</a> <var>earlyDeadline</var> of <var>earlyDeadlines</var>:</p>
      <ol>
       <li data-md>
-       <p>Let <var>time</var> be <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑦">source time</a> + <var>earlyDeadline</var>.</p>
+       <p>Let <var>time</var> be <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑧">source time</a> + <var>earlyDeadline</var>.</p>
       <li data-md>
        <p>If <var>time</var> is less than <var>triggerTime</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑧">continue</a>.</p>
       <li data-md>
@@ -2378,7 +2400,7 @@ a length of time <var>deadline</var>:</p>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-break" id="ref-for-iteration-break①">Break</a>.</p>
      </ol>
     <li data-md>
-     <p>Return the result of running <a data-link-type="dfn" href="#obtain-a-report-time-from-deadline" id="ref-for-obtain-a-report-time-from-deadline①">obtain a report time from deadline</a> with <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑧">source time</a> and <var>deadlineToUse</var>.</p>
+     <p>Return the result of running <a data-link-type="dfn" href="#obtain-a-report-time-from-deadline" id="ref-for-obtain-a-report-time-from-deadline①">obtain a report time from deadline</a> with <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time⑨">source time</a> and <var>deadlineToUse</var>.</p>
    </ol>
    <h3 class="heading settled algorithm" data-algorithm="Obtaining an event-level report" data-level="10.8" id="obtaining-an-event-level-report"><span class="secno">10.8. </span><span class="content">Obtaining an event-level report</span><a class="self-link" href="#obtaining-an-event-level-report"></a></h3>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-an-event-level-report">obtain an event-level report</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source③⑧">attribution source</a> <var>source</var>, an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-trigger①①">attribution trigger</a> <var>trigger</var>, and an <a data-link-type="dfn" href="#event-level-trigger-configuration" id="ref-for-event-level-trigger-configuration④">event-level trigger configuration</a> <var>config</var>:</p>
@@ -2402,7 +2424,7 @@ the user agent’s <a data-link-type="dfn" href="#event-source-trigger-data-card
        <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-trigger-rate" id="ref-for-attribution-source-randomized-trigger-rate①">randomized trigger rate</a>.</p>
       <dt data-md><a data-link-type="dfn" href="#event-level-report-reporting-endpoint" id="ref-for-event-level-report-reporting-endpoint">reporting endpoint</a>
       <dd data-md>
-       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑨">reporting endpoint</a>.</p>
+       <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑧">reporting endpoint</a>.</p>
       <dt data-md><a data-link-type="dfn" href="#event-level-report-attribution-destination" id="ref-for-event-level-report-attribution-destination②">attribution destination</a>
       <dd data-md>
        <p><var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination①③">attribution destination</a>.</p>
@@ -2607,7 +2629,7 @@ whether a user is online, retries might be limited in number and subject to rand
     TODO 
    <h3 class="heading settled" data-level="13.1" id="clearing-attribution-storage"><span class="secno">13.1. </span><span class="content">Clearing attribution storage</span><a class="self-link" href="#clearing-attribution-storage"></a></h3>
    <p>A user agent’s <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches①">attribution caches</a> contain data about a user’s web activity. When a user agent clears an origin’s storage,
-it MUST also <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove⑧">remove</a> entries in the <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches②">attribution caches</a> whose <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin⑥">source origin</a>, <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination①④">attribution destination</a>, <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint①⓪">reporting endpoint</a>, <a data-link-type="dfn" href="#event-level-report-attribution-destination" id="ref-for-event-level-report-attribution-destination④">attribution destination</a>, or <a data-link-type="dfn" href="#event-level-report-reporting-endpoint" id="ref-for-event-level-report-reporting-endpoint③">reporting endpoint</a> is the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin④">same</a> as the cleared origin.</p>
+it MUST also <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove⑧">remove</a> entries in the <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches②">attribution caches</a> whose <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin⑥">source origin</a>, <a data-link-type="dfn" href="#attribution-source-attribution-destination" id="ref-for-attribution-source-attribution-destination①④">attribution destination</a>, <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑨">reporting endpoint</a>, <a data-link-type="dfn" href="#event-level-report-attribution-destination" id="ref-for-event-level-report-attribution-destination④">attribution destination</a>, or <a data-link-type="dfn" href="#event-level-report-reporting-endpoint" id="ref-for-event-level-report-reporting-endpoint③">reporting endpoint</a> is the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#same-origin" id="ref-for-same-origin③">same</a> as the cleared origin.</p>
    <p>A user agent MAY clear <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches③">attribution cache</a> entries at other times. For example, when a user agent clears
 an origin from a user’s browsing history.</p>
   </main>
@@ -2690,8 +2712,9 @@ an origin from a user’s browsing history.</p>
      <li><a href="#element-attrdef-script-attributionsrc">element-attr for script</a><span>, in § 2.1</span>
     </ul>
    <li><a href="#attribution-trigger">Attribution trigger</a><span>, in § 5.7</span>
+   <li><a href="#can-attribution-rate-limit-record-be-removed">Can attribution rate-limit record be removed</a><span>, in § 8.4</span>
    <li><a href="#check-if-a-debug-key-is-allowed">check if a debug key is allowed</a><span>, in § 8.2</span>
-   <li><a href="#check-if-an-attribution-source-exceeds-the-pending-destination-limit">check if an attribution source exceeds the pending destination limit</a><span>, in § 9.8</span>
+   <li><a href="#check-if-an-attribution-source-exceeds-the-unexpired-destination-limit">check if an attribution source exceeds the unexpired destination limit</a><span>, in § 9.8</span>
    <li><a href="#create-aggregatable-contributions">create aggregatable contributions</a><span>, in § 10.5</span>
    <li><a href="#create-a-report-request">create a report request</a><span>, in § 11.4</span>
    <li>
@@ -2716,7 +2739,12 @@ an origin from a user’s browsing history.</p>
    <li><a href="#attribution-trigger-event-level-trigger-configurations">event-level trigger configurations</a><span>, in § 5.8</span>
    <li><a href="#event-source-trigger-data-cardinality">Event-source trigger data cardinality</a><span>, in § 7</span>
    <li><a href="#attribution-source-expiry">expiry</a><span>, in § 5.5</span>
-   <li><a href="#attribution-source-expiry-time">expiry time</a><span>, in § 9.1</span>
+   <li>
+    expiry time
+    <ul>
+     <li><a href="#attribution-rate-limit-record-expiry-time">dfn for attribution rate-limit record</a><span>, in § 5.11</span>
+     <li><a href="#attribution-source-expiry-time">dfn for attribution source</a><span>, in § 9.1</span>
+    </ul>
    <li><a href="#attribution-source-filter-data">filter data</a><span>, in § 5.5</span>
    <li><a href="#filter-map">filter map</a><span>, in § 5.3</span>
    <li>
@@ -2742,7 +2770,7 @@ an origin from a user’s browsing history.</p>
    <li><a href="#max-attributions-per-event-source">Max attributions per event source</a><span>, in § 7</span>
    <li><a href="#max-attributions-per-navigation-source">Max attributions per navigation source</a><span>, in § 7</span>
    <li><a href="#max-attributions-per-rate-limit-window">Max attributions per rate-limit window</a><span>, in § 7</span>
-   <li><a href="#max-destinations-covered-by-pending-sources">Max destinations covered by pending sources</a><span>, in § 7</span>
+   <li><a href="#max-destinations-covered-by-unexpired-sources">Max destinations covered by unexpired sources</a><span>, in § 7</span>
    <li><a href="#max-entries-per-filter-map">Max entries per filter map</a><span>, in § 7</span>
    <li><a href="#max-pending-sources-per-source-origin">Max pending sources per source origin</a><span>, in § 7</span>
    <li><a href="#max-report-cache-size">Max report cache size</a><span>, in § 7</span>
@@ -3165,11 +3193,10 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-same-origin">
    <a href="https://html.spec.whatwg.org/multipage/origin.html#same-origin">https://html.spec.whatwg.org/multipage/origin.html#same-origin</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-same-origin">9.8. Checking pending destination limit</a>
-    <li><a href="#ref-for-same-origin①">9.9. Processing an attribution source</a>
-    <li><a href="#ref-for-same-origin②">10.3. Should attribution be blocked by rate limit</a>
-    <li><a href="#ref-for-same-origin③">10.6. Triggering attribution</a>
-    <li><a href="#ref-for-same-origin④">13.1. Clearing attribution storage</a>
+    <li><a href="#ref-for-same-origin">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-same-origin①">10.3. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-same-origin②">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-same-origin③">13.1. Clearing attribution storage</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-same-site">
@@ -3241,7 +3268,7 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-set-append">8.1. Parsing filter data</a>
     <li><a href="#ref-for-set-append①">9.4. Obtaining a randomized source response</a> <a href="#ref-for-set-append②">(2)</a>
-    <li><a href="#ref-for-set-append③">9.8. Checking pending destination limit</a>
+    <li><a href="#ref-for-set-append③">9.8. Checking unexpired destination limit</a>
     <li><a href="#ref-for-set-append④">9.9. Processing an attribution source</a> <a href="#ref-for-set-append⑤">(2)</a> <a href="#ref-for-set-append⑥">(3)</a>
     <li><a href="#ref-for-set-append⑦">10.1. Creating an attribution trigger</a> <a href="#ref-for-set-append⑧">(2)</a>
     <li><a href="#ref-for-set-append⑨">10.4. Should processing be blocked by reporting-endpoint limit</a>
@@ -3303,7 +3330,7 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-list-contain">
    <a href="https://infra.spec.whatwg.org/#list-contain">https://infra.spec.whatwg.org/#list-contain</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-list-contain">9.8. Checking pending destination limit</a>
+    <li><a href="#ref-for-list-contain">9.8. Checking unexpired destination limit</a>
     <li><a href="#ref-for-list-contain①">10.4. Should processing be blocked by reporting-endpoint limit</a>
     <li><a href="#ref-for-list-contain②">10.6. Triggering attribution</a>
     <li><a href="#ref-for-list-contain③">10.7. Establishing report delivery time</a>
@@ -3312,7 +3339,7 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-iteration-continue">
    <a href="https://infra.spec.whatwg.org/#iteration-continue">https://infra.spec.whatwg.org/#iteration-continue</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-iteration-continue">9.8. Checking pending destination limit</a>
+    <li><a href="#ref-for-iteration-continue">9.8. Checking unexpired destination limit</a>
     <li><a href="#ref-for-iteration-continue①">10.2. Does filter data match</a>
     <li><a href="#ref-for-iteration-continue②">10.5. Creating aggregatable contributions</a> <a href="#ref-for-iteration-continue③">(2)</a> <a href="#ref-for-iteration-continue④">(3)</a> <a href="#ref-for-iteration-continue⑤">(4)</a>
     <li><a href="#ref-for-iteration-continue⑥">10.6. Triggering attribution</a> <a href="#ref-for-iteration-continue⑦">(2)</a>
@@ -3322,7 +3349,7 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-list-contain">
    <a href="https://infra.spec.whatwg.org/#list-contain">https://infra.spec.whatwg.org/#list-contain</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-list-contain">9.8. Checking pending destination limit</a>
+    <li><a href="#ref-for-list-contain">9.8. Checking unexpired destination limit</a>
     <li><a href="#ref-for-list-contain①">10.4. Should processing be blocked by reporting-endpoint limit</a>
     <li><a href="#ref-for-list-contain②">10.6. Triggering attribution</a>
     <li><a href="#ref-for-list-contain③">10.7. Establishing report delivery time</a>
@@ -3361,10 +3388,9 @@ an origin from a user’s browsing history.</p>
    <a href="https://infra.spec.whatwg.org/#list-is-empty">https://infra.spec.whatwg.org/#list-is-empty</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-list-is-empty">9.4. Obtaining a randomized source response</a> <a href="#ref-for-list-is-empty①">(2)</a>
-    <li><a href="#ref-for-list-is-empty②">9.8. Checking pending destination limit</a>
-    <li><a href="#ref-for-list-is-empty③">9.9. Processing an attribution source</a>
-    <li><a href="#ref-for-list-is-empty④">10.2. Does filter data match</a> <a href="#ref-for-list-is-empty⑤">(2)</a> <a href="#ref-for-list-is-empty⑥">(3)</a> <a href="#ref-for-list-is-empty⑦">(4)</a> <a href="#ref-for-list-is-empty⑧">(5)</a> <a href="#ref-for-list-is-empty⑨">(6)</a>
-    <li><a href="#ref-for-list-is-empty①⓪">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-list-is-empty②">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-list-is-empty③">10.2. Does filter data match</a> <a href="#ref-for-list-is-empty④">(2)</a> <a href="#ref-for-list-is-empty⑤">(3)</a> <a href="#ref-for-list-is-empty⑥">(4)</a> <a href="#ref-for-list-is-empty⑦">(5)</a> <a href="#ref-for-list-is-empty⑧">(6)</a>
+    <li><a href="#ref-for-list-is-empty⑨">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-list-iterate">
@@ -3451,11 +3477,10 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-ordered-set⑧">8.1. Parsing filter data</a>
     <li><a href="#ref-for-ordered-set⑨">8.3. Obtaining a randomized response</a>
     <li><a href="#ref-for-ordered-set①⓪">9.4. Obtaining a randomized source response</a> <a href="#ref-for-ordered-set①①">(2)</a>
-    <li><a href="#ref-for-ordered-set①②">9.8. Checking pending destination limit</a>
-    <li><a href="#ref-for-ordered-set①③">9.9. Processing an attribution source</a> <a href="#ref-for-ordered-set①④">(2)</a>
-    <li><a href="#ref-for-ordered-set①⑤">10.1. Creating an attribution trigger</a> <a href="#ref-for-ordered-set①⑥">(2)</a>
-    <li><a href="#ref-for-ordered-set①⑦">10.4. Should processing be blocked by reporting-endpoint limit</a>
-    <li><a href="#ref-for-ordered-set①⑧">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-ordered-set①②">9.9. Processing an attribution source</a> <a href="#ref-for-ordered-set①③">(2)</a>
+    <li><a href="#ref-for-ordered-set①④">10.1. Creating an attribution trigger</a> <a href="#ref-for-ordered-set①⑤">(2)</a>
+    <li><a href="#ref-for-ordered-set①⑥">10.4. Should processing be blocked by reporting-endpoint limit</a>
+    <li><a href="#ref-for-ordered-set①⑦">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-parse-a-json-string-to-an-infra-value">
@@ -3492,11 +3517,10 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-ordered-set⑧">8.1. Parsing filter data</a>
     <li><a href="#ref-for-ordered-set⑨">8.3. Obtaining a randomized response</a>
     <li><a href="#ref-for-ordered-set①⓪">9.4. Obtaining a randomized source response</a> <a href="#ref-for-ordered-set①①">(2)</a>
-    <li><a href="#ref-for-ordered-set①②">9.8. Checking pending destination limit</a>
-    <li><a href="#ref-for-ordered-set①③">9.9. Processing an attribution source</a> <a href="#ref-for-ordered-set①④">(2)</a>
-    <li><a href="#ref-for-ordered-set①⑤">10.1. Creating an attribution trigger</a> <a href="#ref-for-ordered-set①⑥">(2)</a>
-    <li><a href="#ref-for-ordered-set①⑦">10.4. Should processing be blocked by reporting-endpoint limit</a>
-    <li><a href="#ref-for-ordered-set①⑧">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-ordered-set①②">9.9. Processing an attribution source</a> <a href="#ref-for-ordered-set①③">(2)</a>
+    <li><a href="#ref-for-ordered-set①④">10.1. Creating an attribution trigger</a> <a href="#ref-for-ordered-set①⑤">(2)</a>
+    <li><a href="#ref-for-ordered-set①⑥">10.4. Should processing be blocked by reporting-endpoint limit</a>
+    <li><a href="#ref-for-ordered-set①⑦">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-map-set">
@@ -3512,7 +3536,7 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-list-size">7. Vendor-Specific Values</a> <a href="#ref-for-list-size①">(2)</a> <a href="#ref-for-list-size②">(3)</a>
     <li><a href="#ref-for-list-size③">8.1. Parsing filter data</a>
-    <li><a href="#ref-for-list-size④">9.8. Checking pending destination limit</a>
+    <li><a href="#ref-for-list-size④">9.8. Checking unexpired destination limit</a>
     <li><a href="#ref-for-list-size⑤">9.9. Processing an attribution source</a> <a href="#ref-for-list-size⑥">(2)</a>
     <li><a href="#ref-for-list-size⑦">10.1. Creating an attribution trigger</a> <a href="#ref-for-list-size⑧">(2)</a> <a href="#ref-for-list-size⑨">(3)</a>
     <li><a href="#ref-for-list-size①⓪">10.3. Should attribution be blocked by rate limit</a>
@@ -3873,7 +3897,6 @@ an origin from a user’s browsing history.</p>
    <div class="issue"> Specify the steps for making attributionsrc request. <a class="issue-return" href="#issue-45c98580" title="Jump to section">↵</a></div>
    <div class="issue"> Specify the steps for making an attributionsrc request with <var>decodedSrc</var>. <a class="issue-return" href="#issue-1f7755b7" title="Jump to section">↵</a></div>
    <div class="issue"> Ensure that <var>attributionDestination</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/origin.html#concept-origin-scheme">scheme</a> is HTTP/HTTPS. <a class="issue-return" href="#issue-e0364022" title="Jump to section">↵</a></div>
-   <div class="issue"> Determine whether to change this limit to be time boudned, see <a href="https://github.com/WICG/attribution-reporting-api/issues/482">Source event limits should be time bounded</a>. <a class="issue-return" href="#issue-1ffadd57" title="Jump to section">↵</a></div>
    <div class="issue"> Should fake reports respect the user agent’s <a data-link-type="dfn" href="#max-reports-per-attribution-destination">max reports per attribution destination</a>? <a class="issue-return" href="#issue-82e83119" title="Jump to section">↵</a></div>
    <div class="issue"> Allow the user agent to return null if <var>values</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size">size</a> is
 greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title="Jump to section">↵</a></div>
@@ -3984,7 +4007,7 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
     <li><a href="#ref-for-attribution-source②③">9.1. Obtaining an attribution source’s expiry time</a>
     <li><a href="#ref-for-attribution-source②④">9.2. Obtaining an attribution source’s source site</a>
     <li><a href="#ref-for-attribution-source②⑤">9.7. Parsing source-registration JSON</a>
-    <li><a href="#ref-for-attribution-source②⑥">9.8. Checking pending destination limit</a> <a href="#ref-for-attribution-source②⑦">(2)</a> <a href="#ref-for-attribution-source②⑧">(3)</a>
+    <li><a href="#ref-for-attribution-source②⑥">9.8. Checking unexpired destination limit</a> <a href="#ref-for-attribution-source②⑦">(2)</a> <a href="#ref-for-attribution-source②⑧">(3)</a>
     <li><a href="#ref-for-attribution-source②⑨">9.9. Processing an attribution source</a> <a href="#ref-for-attribution-source③⓪">(2)</a> <a href="#ref-for-attribution-source③①">(3)</a>
     <li><a href="#ref-for-attribution-source③②">10.2. Does filter data match</a>
     <li><a href="#ref-for-attribution-source③③">10.3. Should attribution be blocked by rate limit</a>
@@ -4027,7 +4050,7 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
     <li><a href="#ref-for-attribution-source-attribution-destination②">2.2.4. Document creation</a>
     <li><a href="#ref-for-attribution-source-attribution-destination③">7. Vendor-Specific Values</a>
     <li><a href="#ref-for-attribution-source-attribution-destination④">9.7. Parsing source-registration JSON</a>
-    <li><a href="#ref-for-attribution-source-attribution-destination⑤">9.8. Checking pending destination limit</a> <a href="#ref-for-attribution-source-attribution-destination⑥">(2)</a> <a href="#ref-for-attribution-source-attribution-destination⑦">(3)</a> <a href="#ref-for-attribution-source-attribution-destination⑧">(4)</a>
+    <li><a href="#ref-for-attribution-source-attribution-destination⑤">9.8. Checking unexpired destination limit</a> <a href="#ref-for-attribution-source-attribution-destination⑥">(2)</a> <a href="#ref-for-attribution-source-attribution-destination⑦">(3)</a> <a href="#ref-for-attribution-source-attribution-destination⑧">(4)</a>
     <li><a href="#ref-for-attribution-source-attribution-destination⑨">9.9. Processing an attribution source</a> <a href="#ref-for-attribution-source-attribution-destination①⓪">(2)</a> <a href="#ref-for-attribution-source-attribution-destination①①">(3)</a>
     <li><a href="#ref-for-attribution-source-attribution-destination①②">10.6. Triggering attribution</a>
     <li><a href="#ref-for-attribution-source-attribution-destination①③">10.8. Obtaining an event-level report</a>
@@ -4039,11 +4062,11 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
    <ul>
     <li><a href="#ref-for-attribution-source-reporting-endpoint">7. Vendor-Specific Values</a> <a href="#ref-for-attribution-source-reporting-endpoint①">(2)</a>
     <li><a href="#ref-for-attribution-source-reporting-endpoint②">9.7. Parsing source-registration JSON</a>
-    <li><a href="#ref-for-attribution-source-reporting-endpoint③">9.8. Checking pending destination limit</a> <a href="#ref-for-attribution-source-reporting-endpoint④">(2)</a>
-    <li><a href="#ref-for-attribution-source-reporting-endpoint⑤">9.9. Processing an attribution source</a> <a href="#ref-for-attribution-source-reporting-endpoint⑥">(2)</a>
-    <li><a href="#ref-for-attribution-source-reporting-endpoint⑦">10.6. Triggering attribution</a> <a href="#ref-for-attribution-source-reporting-endpoint⑧">(2)</a>
-    <li><a href="#ref-for-attribution-source-reporting-endpoint⑨">10.8. Obtaining an event-level report</a>
-    <li><a href="#ref-for-attribution-source-reporting-endpoint①⓪">13.1. Clearing attribution storage</a>
+    <li><a href="#ref-for-attribution-source-reporting-endpoint③">9.8. Checking unexpired destination limit</a>
+    <li><a href="#ref-for-attribution-source-reporting-endpoint④">9.9. Processing an attribution source</a> <a href="#ref-for-attribution-source-reporting-endpoint⑤">(2)</a>
+    <li><a href="#ref-for-attribution-source-reporting-endpoint⑥">10.6. Triggering attribution</a> <a href="#ref-for-attribution-source-reporting-endpoint⑦">(2)</a>
+    <li><a href="#ref-for-attribution-source-reporting-endpoint⑧">10.8. Obtaining an event-level report</a>
+    <li><a href="#ref-for-attribution-source-reporting-endpoint⑨">13.1. Clearing attribution storage</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-source-type">
@@ -4078,16 +4101,16 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
    <ul>
     <li><a href="#ref-for-attribution-source-source-time">9.1. Obtaining an attribution source’s expiry time</a>
     <li><a href="#ref-for-attribution-source-source-time①">9.7. Parsing source-registration JSON</a>
-    <li><a href="#ref-for-attribution-source-source-time②">9.9. Processing an attribution source</a> <a href="#ref-for-attribution-source-source-time③">(2)</a>
-    <li><a href="#ref-for-attribution-source-source-time④">10.6. Triggering attribution</a> <a href="#ref-for-attribution-source-source-time⑤">(2)</a>
-    <li><a href="#ref-for-attribution-source-source-time⑥">10.7. Establishing report delivery time</a> <a href="#ref-for-attribution-source-source-time⑦">(2)</a> <a href="#ref-for-attribution-source-source-time⑧">(3)</a>
+    <li><a href="#ref-for-attribution-source-source-time②">9.8. Checking unexpired destination limit</a>
+    <li><a href="#ref-for-attribution-source-source-time③">9.9. Processing an attribution source</a> <a href="#ref-for-attribution-source-source-time④">(2)</a>
+    <li><a href="#ref-for-attribution-source-source-time⑤">10.6. Triggering attribution</a> <a href="#ref-for-attribution-source-source-time⑥">(2)</a>
+    <li><a href="#ref-for-attribution-source-source-time⑦">10.7. Establishing report delivery time</a> <a href="#ref-for-attribution-source-source-time⑧">(2)</a> <a href="#ref-for-attribution-source-source-time⑨">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-number-of-event-level-reports">
    <b><a href="#attribution-source-number-of-event-level-reports">#attribution-source-number-of-event-level-reports</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-source-number-of-event-level-reports">9.8. Checking pending destination limit</a>
-    <li><a href="#ref-for-attribution-source-number-of-event-level-reports①">10.6. Triggering attribution</a> <a href="#ref-for-attribution-source-number-of-event-level-reports②">(2)</a> <a href="#ref-for-attribution-source-number-of-event-level-reports③">(3)</a>
+    <li><a href="#ref-for-attribution-source-number-of-event-level-reports">10.6. Triggering attribution</a> <a href="#ref-for-attribution-source-number-of-event-level-reports①">(2)</a> <a href="#ref-for-attribution-source-number-of-event-level-reports②">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-dedup-keys">
@@ -4472,29 +4495,34 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
    <ul>
     <li><a href="#ref-for-attribution-rate-limit-record">5.11. Attribution rate-limit record</a>
     <li><a href="#ref-for-attribution-rate-limit-record">6. Storage</a>
-    <li><a href="#ref-for-attribution-rate-limit-record①">9.9. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-rate-limit-record②">10.3. Should attribution be blocked by rate limit</a>
-    <li><a href="#ref-for-attribution-rate-limit-record③">10.4. Should processing be blocked by reporting-endpoint limit</a> <a href="#ref-for-attribution-rate-limit-record④">(2)</a>
-    <li><a href="#ref-for-attribution-rate-limit-record⑤">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-rate-limit-record①">8.5. Can attribution rate-limit record be removed</a> <a href="#ref-for-attribution-rate-limit-record②">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-record③">9.8. Checking unexpired destination limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-record④">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-attribution-rate-limit-record⑤">10.3. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-record⑥">10.4. Should processing be blocked by reporting-endpoint limit</a> <a href="#ref-for-attribution-rate-limit-record⑦">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-record⑧">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-rate-limit-record-scope">
    <b><a href="#attribution-rate-limit-record-scope">#attribution-rate-limit-record-scope</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-rate-limit-record-scope">9.9. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-scope①">10.3. Should attribution be blocked by rate limit</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-scope②">10.4. Should processing be blocked by reporting-endpoint limit</a> <a href="#ref-for-attribution-rate-limit-record-scope③">(2)</a> <a href="#ref-for-attribution-rate-limit-record-scope④">(3)</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-scope⑤">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-scope">8.5. Can attribution rate-limit record be removed</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-scope①">9.8. Checking unexpired destination limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-scope②">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-scope③">10.3. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-scope④">10.4. Should processing be blocked by reporting-endpoint limit</a> <a href="#ref-for-attribution-rate-limit-record-scope⑤">(2)</a> <a href="#ref-for-attribution-rate-limit-record-scope⑥">(3)</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-scope⑦">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-rate-limit-record-source-site">
    <b><a href="#attribution-rate-limit-record-source-site">#attribution-rate-limit-record-source-site</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-rate-limit-record-source-site">7. Vendor-Specific Values</a> <a href="#ref-for-attribution-rate-limit-record-source-site①">(2)</a> <a href="#ref-for-attribution-rate-limit-record-source-site②">(3)</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-source-site③">9.9. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-source-site④">10.3. Should attribution be blocked by rate limit</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-source-site⑤">10.4. Should processing be blocked by reporting-endpoint limit</a> <a href="#ref-for-attribution-rate-limit-record-source-site⑥">(2)</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-source-site⑦">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-source-site③">9.8. Checking unexpired destination limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-source-site④">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-source-site⑤">10.3. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-source-site⑥">10.4. Should processing be blocked by reporting-endpoint limit</a> <a href="#ref-for-attribution-rate-limit-record-source-site⑦">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-source-site⑧">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-rate-limit-record-attribution-destination">
@@ -4511,28 +4539,37 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
    <b><a href="#attribution-rate-limit-record-reporting-endpoint">#attribution-rate-limit-record-reporting-endpoint</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-rate-limit-record-reporting-endpoint">7. Vendor-Specific Values</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-reporting-endpoint①">9.9. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-reporting-endpoint②">10.3. Should attribution be blocked by rate limit</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-reporting-endpoint③">10.4. Should processing be blocked by reporting-endpoint limit</a> <a href="#ref-for-attribution-rate-limit-record-reporting-endpoint④">(2)</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-reporting-endpoint⑤">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-reporting-endpoint①">9.8. Checking unexpired destination limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-reporting-endpoint②">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-reporting-endpoint③">10.3. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-reporting-endpoint④">10.4. Should processing be blocked by reporting-endpoint limit</a> <a href="#ref-for-attribution-rate-limit-record-reporting-endpoint⑤">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-reporting-endpoint⑥">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-rate-limit-record-time">
    <b><a href="#attribution-rate-limit-record-time">#attribution-rate-limit-record-time</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-rate-limit-record-time">9.9. Processing an attribution source</a> <a href="#ref-for-attribution-rate-limit-record-time①">(2)</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-time②">10.3. Should attribution be blocked by rate limit</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-time③">10.4. Should processing be blocked by reporting-endpoint limit</a> <a href="#ref-for-attribution-rate-limit-record-time④">(2)</a>
-    <li><a href="#ref-for-attribution-rate-limit-record-time⑤">10.6. Triggering attribution</a> <a href="#ref-for-attribution-rate-limit-record-time⑥">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-time">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-time①">10.3. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-time②">10.4. Should processing be blocked by reporting-endpoint limit</a> <a href="#ref-for-attribution-rate-limit-record-time③">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-time④">10.6. Triggering attribution</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="attribution-rate-limit-record-expiry-time">
+   <b><a href="#attribution-rate-limit-record-expiry-time">#attribution-rate-limit-record-expiry-time</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-attribution-rate-limit-record-expiry-time">8.5. Can attribution rate-limit record be removed</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-expiry-time①">9.8. Checking unexpired destination limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-expiry-time②">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-attribution-rate-limit-record-expiry-time③">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-cache">
    <b><a href="#attribution-source-cache">#attribution-source-cache</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-source-cache">7. Vendor-Specific Values</a> <a href="#ref-for-attribution-source-cache①">(2)</a>
-    <li><a href="#ref-for-attribution-source-cache②">9.8. Checking pending destination limit</a>
-    <li><a href="#ref-for-attribution-source-cache③">9.9. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-source-cache④">10.6. Triggering attribution</a> <a href="#ref-for-attribution-source-cache⑤">(2)</a> <a href="#ref-for-attribution-source-cache⑥">(3)</a>
+    <li><a href="#ref-for-attribution-source-cache②">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-attribution-source-cache③">10.6. Triggering attribution</a> <a href="#ref-for-attribution-source-cache④">(2)</a> <a href="#ref-for-attribution-source-cache⑤">(3)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="event-level-report-cache">
@@ -4548,10 +4585,11 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
   <aside class="dfn-panel" data-for="attribution-rate-limit-cache">
    <b><a href="#attribution-rate-limit-cache">#attribution-rate-limit-cache</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-rate-limit-cache">9.9. Processing an attribution source</a> <a href="#ref-for-attribution-rate-limit-cache①">(2)</a>
-    <li><a href="#ref-for-attribution-rate-limit-cache②">10.3. Should attribution be blocked by rate limit</a>
-    <li><a href="#ref-for-attribution-rate-limit-cache③">10.4. Should processing be blocked by reporting-endpoint limit</a>
-    <li><a href="#ref-for-attribution-rate-limit-cache④">10.6. Triggering attribution</a> <a href="#ref-for-attribution-rate-limit-cache⑤">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-cache">9.8. Checking unexpired destination limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-cache①">9.9. Processing an attribution source</a> <a href="#ref-for-attribution-rate-limit-cache②">(2)</a>
+    <li><a href="#ref-for-attribution-rate-limit-cache③">10.3. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-cache④">10.4. Should processing be blocked by reporting-endpoint limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-cache⑤">10.6. Triggering attribution</a> <a href="#ref-for-attribution-rate-limit-cache⑥">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-caches">
@@ -4653,20 +4691,18 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
     <li><a href="#ref-for-max-attributions-per-event-source①">10.6. Triggering attribution</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="max-destinations-covered-by-pending-sources">
-   <b><a href="#max-destinations-covered-by-pending-sources">#max-destinations-covered-by-pending-sources</a></b><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="max-destinations-covered-by-unexpired-sources">
+   <b><a href="#max-destinations-covered-by-unexpired-sources">#max-destinations-covered-by-unexpired-sources</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-max-destinations-covered-by-pending-sources">9.8. Checking pending destination limit</a>
+    <li><a href="#ref-for-max-destinations-covered-by-unexpired-sources">9.8. Checking unexpired destination limit</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-rate-limit-window">
    <b><a href="#attribution-rate-limit-window">#attribution-rate-limit-window</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-rate-limit-window">7. Vendor-Specific Values</a> <a href="#ref-for-attribution-rate-limit-window①">(2)</a> <a href="#ref-for-attribution-rate-limit-window②">(3)</a>
-    <li><a href="#ref-for-attribution-rate-limit-window③">9.9. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-rate-limit-window④">10.3. Should attribution be blocked by rate limit</a>
-    <li><a href="#ref-for-attribution-rate-limit-window⑤">10.4. Should processing be blocked by reporting-endpoint limit</a>
-    <li><a href="#ref-for-attribution-rate-limit-window⑥">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-rate-limit-window③">10.3. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-rate-limit-window④">10.4. Should processing be blocked by reporting-endpoint limit</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="max-source-reporting-endpoints-per-rate-limit-window">
@@ -4733,21 +4769,29 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
     <li><a href="#ref-for-parse-an-aggregation-key-piece①">10.1. Creating an attribution trigger</a>
    </ul>
   </aside>
+  <aside class="dfn-panel" data-for="can-attribution-rate-limit-record-be-removed">
+   <b><a href="#can-attribution-rate-limit-record-be-removed">#can-attribution-rate-limit-record-be-removed</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-can-attribution-rate-limit-record-be-removed">8.5. Can attribution rate-limit record be removed</a>
+    <li><a href="#ref-for-can-attribution-rate-limit-record-be-removed">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-can-attribution-rate-limit-record-be-removed①">10.6. Triggering attribution</a>
+   </ul>
+  </aside>
   <aside class="dfn-panel" data-for="attribution-source-expiry-time">
    <b><a href="#attribution-source-expiry-time">#attribution-source-expiry-time</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-attribution-source-expiry-time">9.9. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-source-expiry-time①">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-source-expiry-time">9.9. Processing an attribution source</a> <a href="#ref-for-attribution-source-expiry-time①">(2)</a>
+    <li><a href="#ref-for-attribution-source-expiry-time②">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="attribution-source-source-site">
    <b><a href="#attribution-source-source-site">#attribution-source-source-site</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-source-source-site">7. Vendor-Specific Values</a>
-    <li><a href="#ref-for-attribution-source-source-site①">9.8. Checking pending destination limit</a> <a href="#ref-for-attribution-source-source-site②">(2)</a>
-    <li><a href="#ref-for-attribution-source-source-site③">9.9. Processing an attribution source</a>
-    <li><a href="#ref-for-attribution-source-source-site④">10.3. Should attribution be blocked by rate limit</a>
-    <li><a href="#ref-for-attribution-source-source-site⑤">10.6. Triggering attribution</a>
+    <li><a href="#ref-for-attribution-source-source-site①">9.8. Checking unexpired destination limit</a>
+    <li><a href="#ref-for-attribution-source-source-site②">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-attribution-source-source-site③">10.3. Should attribution be blocked by rate limit</a>
+    <li><a href="#ref-for-attribution-source-source-site④">10.6. Triggering attribution</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="parse-an-attribution-destination">
@@ -4786,10 +4830,10 @@ greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title
     <li><a href="#ref-for-parse-aggregation-keys">9.7. Parsing source-registration JSON</a>
    </ul>
   </aside>
-  <aside class="dfn-panel" data-for="check-if-an-attribution-source-exceeds-the-pending-destination-limit">
-   <b><a href="#check-if-an-attribution-source-exceeds-the-pending-destination-limit">#check-if-an-attribution-source-exceeds-the-pending-destination-limit</a></b><b>Referenced in:</b>
+  <aside class="dfn-panel" data-for="check-if-an-attribution-source-exceeds-the-unexpired-destination-limit">
+   <b><a href="#check-if-an-attribution-source-exceeds-the-unexpired-destination-limit">#check-if-an-attribution-source-exceeds-the-unexpired-destination-limit</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-check-if-an-attribution-source-exceeds-the-pending-destination-limit">9.9. Processing an attribution source</a>
+    <li><a href="#ref-for-check-if-an-attribution-source-exceeds-the-unexpired-destination-limit">9.9. Processing an attribution source</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="maybe-process-a-navigation-attribution-source">
