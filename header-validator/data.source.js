@@ -14,6 +14,7 @@ export const validSourceHeadersAsObjects = [
       campaignCounts: '0x159',
       geoValue: '0x5',
     },
+    debug_reporting: true
   },
 ]
 
@@ -215,6 +216,11 @@ export const invalidSourceHeadersAsObjects = [
       }
       return obj
     })(),
+  },
+  // Invalid debug_reporting
+  {
+    destination: 'https://example.com',
+    debug_reporting: 'true',
   },
 ]
 
