@@ -1559,17 +1559,18 @@ an [=attribution trigger=] |trigger|:
 
 # Report delivery # {#report-delivery}
 
-The user agent MUST periodically [=set/iterate=] over its [=event-level report cache=] and run [=queue a report for delivery=] on each item.
+The user agent MUST periodically [=set/iterate=] over its [=event-level report cache=] and
+[=aggregatable report cache=]  and run [=queue a report for delivery=] on each item.
 
-To <dfn>queue a report for delivery</dfn> given an [=event-level report=] |report|, run the following steps [=in parallel=]:
+To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report|, run the following steps [=in parallel=]:
 
-1. If |report|'s [=event-level report/delivered=] value is true, return.
-1. Set |report|'s [=event-level report/delivered=] value to true.
-1. If |report|'s [=event-level report/report time=] is less than the current time, add an [=implementation-defined=] random amount to report time.
+1. If |report|'s [=attribution report/delivered=] value is true, return.
+1. Set |report|'s [=attribution report/delivered=] value to true.
+1. If |report|'s [=attribution report/report time=] is less than the current time, add an [=implementation-defined=] random amount to report time.
 
     Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
      closed. Adding random delay prevents temporal joining of reports from different [=attribution source/source origin=]s.
-1. Wait until |report|'s [=event-level report/report time=] is the current time.
+1. Wait until |report|'s [=attribution report/report time=] is the current time.
 1. Optionally, wait a further [=implementation-defined=] length of time.
 
     Note: This is intended to allow user agents to optimize device resource usage.
@@ -1586,12 +1587,10 @@ Issue: This would ideally be replaced by a more descriptive algorithm in Infra. 
 
 To <dfn>serialize an [=event-level report=]</dfn> |report|, run the following steps:
 
-1. Let |destination| be |report|'s [=event-level report/attribution destination=].
-1. [=Assert=]: |destination| is not an [=opaque origin=].
 1. Let |data| be a [=map=] of the following key/value pairs:
 
     : "`attribution_destination`"
-    :: |destination|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
+    :: |report|'s [=event-level report/attribution destination=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
     : "`randomized_trigger_rate`"
     :: |report|'s [=event-level report/randomized trigger rate=]
     : "`source_type`"
@@ -1611,6 +1610,37 @@ To <dfn>serialize an [=event-level report=]</dfn> |report|, run the following st
     [=serialize an integer|serialized=].
 1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
 
+To <dfn>serialize an [=aggregatable report=] </dfn> |report|, run the following steps:
+
+1. Let |data| be a [=map=] of the following key/value pairs:
+
+    : "`shared_info`"
+    :: ""
+    : "`aggregation_service_payloads`"
+    :: ""
+
+1. If |report|'s [=aggregatable report/source debug key=] is not null, [=map/set=]
+    |data|["`source_debug_key`"] to |report|'s [=aggregatable report/source debug key=],
+    [=serialize an integer|serialized=].
+1. If |report|'s [=aggregatable report/trigger debug key=] is not null, [=map/set=]
+    |data|["`trigger_debug_key`"] to |report|'s [=aggregatable report/trigger debug key=],
+    [=serialize an integer|serialized=].
+1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
+
+Issue: Spec |data|["`shared_info`"] and |data|["`aggregation_service_payloads`"].
+
+To <dfn> serialize an [=attribution report=]</dfn> |report|, run the following steps:
+
+1. [=Assert=]: |report|'s [=attribution report/attribution destination=] is not an [=opaque origin=].
+1. If |report| is an:
+    <dl class="switch">
+    <dt>[=event-level report=]</dt>
+    <dd>Return the result of running [=serialize an event-level report=] with |report|.</dd>
+
+    <dt>[=aggregatable report=]</dt>
+    <dd>Return the result of running [=serialize an aggregatable report=] with |report|.</dd>
+    <dl>
+
 Note: The inclusion of "`report_id`" in the report body is intended to allow the report recipient
 to perform deduplication and prevent double counting, in the event that the user agent retries
 reports on failure. To prevent the report recipient from learning additional information about
@@ -1618,26 +1648,33 @@ whether a user is online, retries might be limited in number and subject to rand
 
 <h3 id="get-report-url">Get report request URL</h3>
 
-To <dfn>generate a report URL</dfn> given a [=event-level report=] |report| and an optional
+To <dfn>generate a report URL</dfn> given an [=attribution report=] |report| and an optional
 [=boolean=] <dfn for="generate a report URL"><var>isDebugReport</var></dfn> (default false):
 
 1. Let |reportUrl| be a new [=URL record=].
-1. Let |reportingOrigin| be |report|'s [=event-level report/reporting endpoint=].
+1. Let |reportingOrigin| be |report|'s [=attribution report/reporting endpoint=].
 1. [=Assert=]: |reportingOrigin| is not an [=opaque origin=].
 1. Set |reportUrl|'s [=url/scheme=] to |reportingOrigin|'s [=origin/scheme=].
 1. Set |reportUrl|'s [=url/host=] to |reportingOrigin|'s [=origin/host=].
 1. Set |reportUrl|'s [=url/port=] to |reportingOrigin|'s [=origin/port=].
 1. Let |path| be «"`.well-known`", "`attribution-reporting`"».
 1. If |isDebugReport| is true, [=list/append=] "`debug`" to |path|.
-1. [=list/Append=] "`report-event-attribution`" to |path|.
+1. If |report| is an:
+    <dl class="switch">
+    <dt>[=event-level report=]</dt>
+    <dd>[=list/Append=] "`report-event-attribution`" to |path|.</dd>
+
+    <dt>[=aggregatable report=]</dt>
+    <dd>[=list/Append=] "`report-aggregate-attribution`" to |path|.</dd>
+    </dl>
 1. Set |reportUrl|'s [=url/path=] to |path|.
 1. Return |reportUrl|.
 
 <h3 id="create-report-request">Creating a report request</h3>
 
-To <dfn>create a report request</dfn> given an [=event-level report=] |report|:
+To <dfn>create a report request</dfn> given an [=attribution report=] |report|:
 
-1. Let |body| be the result of executing [=serialize an event-level report=] on |report|.
+1. Let |body| be the result of executing [=serialize an attribution report=] on |report|.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
     ::  "`POST`"
@@ -1673,12 +1710,19 @@ To <dfn>create a report request</dfn> given an [=event-level report=] |report|:
 This algorithm constructs a [=request=] and attempts to deliver it to
 |report|'s [=event-level report/reporting endpoint=].
 
-To <dfn>attempt to deliver a report</dfn> given an [=event-level report=] |report|, run the following steps:
+To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report|, run the following steps:
 
 1. Let |url| be the result of executing [=generate a report URL=] on |report|.
 1. Let |request| be the result of executing [=create a report request=] on |report|.
 1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being these steps:
-    1. [=Queue a task=] to [=list/remove=] |report| from the [=event-level report cache=].
+    1. If |report| is an:
+        <dl class="switch">
+        <dt>[=event-level report=]</dt>
+        <dd>[=Queue a task=] to [=list/remove=] |report| from the [=event-level report cache=].</dd>
+
+        <dt>[=aggregatable report=]</dt>
+        <dd>[=Queue a task=] to [=list/remove=] |report| from the [=aggregatable report cache=].</dd>
+        </dl>
 
 Issue(220): This fetch should use a network partition key for an opaque origin.
 
@@ -1686,7 +1730,7 @@ A user agent MAY retry this algorithm in the event that there was an error.
 
 <h3 id="issue-debug-report-request">Issuing a debug report request</h3>
 
-To <dfn>attempt to deliver a debug report</dfn> given an [=event-level report=] |report|:
+To <dfn>attempt to deliver a debug report</dfn> given an [=attribution report=] |report|:
 
 1. Let |url| be the result of executing [=generate a report URL=] on |report| with
     [=generate a report URL/isDebugReport=] set to true.
