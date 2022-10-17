@@ -80,6 +80,13 @@ function string(f = () => {}) {
   }
 }
 
+function bool(state, value) {
+  if (typeof value === 'boolean') {
+    return
+  }
+  state.error('must be a boolean')
+}
+
 function object(f = () => {}, maxKeys = Infinity) {
   return (state, value) => {
     if (typeof value === 'object' && value.constructor === Object) {
@@ -201,6 +208,7 @@ export function validateSource(source) {
     aggregatable_expiry: optional(int64),
     aggregation_keys: optional(aggregationKeys),
     debug_key: optional(uint64),
+    debug_reporting: optional(bool),
     destination: required(destination),
     expiry: optional(int64),
     filter_data: optional(filters(/*allowSourceType=*/ false)),
