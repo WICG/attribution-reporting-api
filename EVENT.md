@@ -606,19 +606,20 @@ order to allow debug keys to be registered.
 
 ### Optional: verbose debugging reports
 
-We also introduce a non-cookie-based debugging framework to allow developers to
-monitor certain failures in the attribution registrations.
+We also introduce a debugging framework to allow developers to monitor certain
+failures in the attribution registrations.
 
-The browser will send verbose debugging reports in the following source-registration
-failure modes:
-
-* a source is rejected due to the [destination
-  limits](#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources)
+Similar to extended debugging reports(#optional-extended-debugging-reports),
+failure modes that may enable cross-site tracking are only reported in a
+transitional phase while third-party cookies are available and the browser will
+check for the presence of the `ar_debug` cookie set by the reporting origin.
+Failure modes that are privacy neutral (e.g.
+a source is rejected due to the [destination limits](#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources))
+are reported regardless the presence of third-party cookies.
 
 The browser will send non-credentialed secure HTTP `POST` requests to the
 reporting endpoints, see [below](#reporting-endpoints). The report data is
-included in the request body as a JSON list of objects to allow for future
-extensibility:
+included in the request body as a JSON list of objects, e.g.:
 
 ```jsonc
 [{
@@ -632,12 +633,12 @@ extensibility:
 }]
 ```
 
-These debugging reports will be sent immediately upon the error occurring
-during source registration.
+Each object has:
+ - `type`: a string that indicates the category of report.
+ - `body`: the contents of the report as defined by the `type`.
 
-Note that if other failures are reported using this framework, the browser may
-enforce a small random delay and omit some data (e.g. `source_event_id`) to
-preserve privacy.
+These debugging reports will be sent immediately upon the error occurring
+during attribution registrations.
 
 #### Reporting endpoints
 
@@ -657,7 +658,7 @@ https://<reporting origin>/.well-known/attribution-reporting/debug/verbose
 ```
 
 TODO: Consider adding support for the top-level site to opt in to receiving
-error reports without cross-site leak.
+debug reports without cross-site leak.
 
 ## Sample Usage
 
