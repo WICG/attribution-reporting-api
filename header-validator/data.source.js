@@ -13,6 +13,8 @@ export const validSourceHeadersAsObjects = [
       campaignCounts: '0x159',
       geoValue: '0x5',
     },
+    aggregatable_report_window: '86400',
+    event_report_window: '86400',
   },
 ]
 
