@@ -573,7 +573,7 @@ for more details.
 The server can add an optional `alternative_aggregation_mode` string field:
 
 ```http
-Attribution-Reporting-Register-Source: {..., "aggregation_keys": ..., "alternative_aggregation_mode": "experimental-poplar"}
+Attribution-Reporting-Register-Trigger: {..., "aggregatable_trigger_data": ..., "aggregatable_values": ..., "alternative_aggregation_mode": "experimental-poplar"}
 ```
 
 The optional field will allow developers to choose among different options for
