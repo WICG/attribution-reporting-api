@@ -43,7 +43,6 @@ const osSourceTests = [
 
 logHeaderListValidation(osSourceTests, validateRegisterOsSource)
 
-/*
 const osTriggerTests = [
   // Valid
   '"https://a.test/"',
@@ -67,4 +66,3 @@ const osTriggerTests = [
 ]
 
 logHeaderListValidation(osTriggerTests, validateRegisterOsTrigger)
-*/
