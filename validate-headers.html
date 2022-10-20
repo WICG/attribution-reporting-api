@@ -65,6 +65,8 @@ textarea {
       <legend>Header</legend>
       <p><label><input type=radio name=header value=source><code>Attribution-Reporting-Register-Source</code></label>
       <p><label><input type=radio name=header value=trigger><code>Attribution-Reporting-Register-Trigger</code></label>
+      <p><label><input type=radio name=header value=os-source><code>Attribution-Reporting-Register-OS-Source</code></label>
+      <p><label><input type=radio name=header value=os-trigger><code>Attribution-Reporting-Register-OS-Trigger</code></label>
       <p><label><input type=radio name=header value=eligible><code>Attribution-Reporting-Eligible</code></label>
     </fieldset>
     <fieldset id=output>
@@ -87,6 +89,7 @@ textarea {
 <script defer type=module>
 import { validateJSON, validateSource, validateTrigger } from './validate-json.js';
 import { validateEligible } from './validate-eligible.js';
+import { validateRegisterOsSource, validateRegisterOsTrigger } from './validate-os.js';
 
 const form = document.querySelector('form');
 const input = form.querySelector('textarea');
@@ -130,6 +133,12 @@ form.addEventListener('input', () => {
   case 'trigger':
     result = validateJSON(input.value, validateTrigger);
     break;
+  case 'os-source':
+    result = validateRegisterOsSource(input.value);
+    break;
+  case 'os-trigger':
+    result = validateRegisterOsTrigger(input.value);
+    break;
   case 'eligible':
     result = validateEligible(input.value);
     break;
@@ -167,6 +176,12 @@ if (json) {
 switch (params.get('header')) {
 case 'eligible':
   form.querySelector('input[value=eligible]').click();
+  break;
+case 'os-source':
+  form.querySelector('input[value=os-source]').click();
+  break;
+case 'os-trigger':
+  form.querySelector('input[value=os-trigger]').click();
   break;
 case 'trigger':
   form.querySelector('input[value=trigger]').click();
