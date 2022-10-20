@@ -15,6 +15,7 @@ export const validSourceHeadersAsObjects = [
     },
     aggregatable_report_window: '86400',
     event_report_window: '86400',
+    debug_reporting: true
   },
 ]
 
@@ -216,6 +217,11 @@ export const invalidSourceHeadersAsObjects = [
       }
       return obj
     })(),
+  },
+  // Invalid debug_reporting
+  {
+    destination: 'https://example.com',
+    debug_reporting: 'true',
   },
 ]
 

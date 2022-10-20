@@ -36,7 +36,7 @@ extension on top of this.
   - [Data Encoding](#data-encoding)
   - [Optional attribution filters](#optional-attribution-filters)
   - [Optional: extended debugging reports](#optional-extended-debugging-reports)
-  - [Optional: error reports](#optional-error-reports)
+  - [Optional: verbose debugging reports](#optional-verbose-debugging-reports)
   - [Noisy fake conversion example](#noisy-fake-conversion-example)
   - [Storage limits](#storage-limits)
 - [Privacy Considerations](#privacy-considerations)
@@ -609,34 +609,36 @@ Note that in the context of proposals such as
 [CHIPS](https://github.com/privacycg/CHIPS), the cookie must be unpartitioned in
 order to allow debug keys to be registered.
 
-### Optional: error reports
+### Optional: verbose debugging reports
 
 We also introduce a non-cookie-based debugging framework to allow developers to
 monitor certain failures in the attribution registrations.
 
-The browser will send error reports in the following source-registration failure
-modes:
+The browser will send verbose debugging reports in the following source-registration
+failure modes:
 
 * a source is rejected due to the [destination
   limits](#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources)
 
 The browser will send non-credentialed secure HTTP `POST` requests to the
 reporting endpoints, see [below](#reporting-endpoints). The report data is
-included in the request body as a JSON object:
+included in the request body as a JSON list of objects to allow for future
+extensibility:
+
 ```jsonc
-{
+[{
   "type": "<report type>", // e.g. "source-destination-limit"
   "body": {
     "limit": 100, // the browser's limit
     "source_event_id": "<source event id in the source registration>",
-    "source_site": "https://source.example",
+    "source_site": "https://source.example", // omitted if registered inside a fenced frame tree
     "attribution_destination": "https://destination.example"
   }
-}
+}]
 ```
 
-These error reports will be sent immediately upon the error occurring during
-source registration.
+These debugging reports will be sent immediately upon the error occurring
+during source registration.
 
 Note that if other failures are reported using this framework, the browser may
 enforce a small random delay and omit some data (e.g. `source_event_id`) to
@@ -644,19 +646,19 @@ preserve privacy.
 
 #### Reporting endpoints
 
-The reporting origins may opt in to receiving error reports by adding a new
-`error_reporting` dictionary field to the `Attribution-Reporting-Register-Source` header:
+The reporting origins may opt in to receiving debugging reports by adding a new
+`debug_reporting` dictionary field to the `Attribution-Reporting-Register-Source` header:
 ```jsonc
 {
   ... // existing fields
 
-  "error_reporting": true // defaults to false if not present
+  "debug_reporting": true // defaults to false if not present
 }
 ```
 
-The error reports will be sent to a new endpoint:
+The debugging reports will be sent to a new endpoint:
 ```
-https://<reporting origin>/.well-known/attribution-reporting/error
+https://<reporting origin>/.well-known/attribution-reporting/debug/verbose
 ```
 
 TODO: Consider adding support for the top-level site to opt in to receiving

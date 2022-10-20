@@ -38,7 +38,7 @@ for cross-site identifiers like third-party cookies.
 
 Pages/embedded sites are given the ability to register [=attribution sources=] and
 [=attribution triggers=], which can be linked by the User Agent to generate and
-send [=event-level reports=] containing information from both of those events.
+send [=attribution reports=] containing information from both of those events.
 
 A reporter `https://reporter.example` embedded on `https://source.example` is able to
 measure whether an iteraction on the page lead to an action on `https://destination.example`
@@ -54,7 +54,7 @@ the User Agent attempts to match the trigger to previously registered source eve
 where the sources/triggers were registered and configurations provided by the reporter.
 
 If the User Agent is able to attribute the trigger to a source, it will generate and
-send an [=event-level report=] to the reporter via an HTTP POST request at a later point
+send an [=attribution report=] to the reporter via an HTTP POST request at a later point
 in time.
 
 # HTML monkeypatches # {#html-monkeypatches}
@@ -288,12 +288,16 @@ An attribution source is a [=struct=] with the following items:
 :: A length of time.
 : <dfn>event report window</dfn>
 :: A length of time.
+: <dfn>aggregatable report window</dfn>
+:: A length of time.
 : <dfn>priority</dfn>
 :: A 64-bit integer.
 : <dfn>source time</dfn>
 :: A point in time.
 : <dfn>number of event-level reports</dfn>
 :: Number of [=event-level reports=] created for this [=attribution source=].
+: <dfn>event-level attributable</dfn> (default true)
+:: A [=boolean=].
 : <dfn>dedup keys</dfn>
 :: [=ordered set=] of [=event-level trigger configuration/dedup keys=] associated with this [=attribution source=].
 : <dfn>randomized response</dfn>
@@ -307,6 +311,10 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>aggregation keys</dfn>
 :: An [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose [=map/value|values=] are
     non-negative 128-bit integers.
+: <dfn>aggregatable budget consumed</dfn>
+:: A non-negative integer, total [=aggregatable contribution/value=] of all [=aggregatable contributions=] created with this [=attribution source=].
+: <dfn>aggregatable dedup keys</dfn>
+:: [=ordered set=] of [=attribution trigger/aggregatable dedup keys=] associated with this [=attribution source=].
 
 </dl>
 
@@ -373,9 +381,31 @@ An attribution trigger is a [=struct=] with the following items:
 
 </dl>
 
+<h3 dfn-type=dfn>Attribution report</h3>
+
+An attribution report is a [=struct=] with the following items:
+
+<dl dfn-for="attribution report, aggregatable report, event-level report">
+: <dfn>reporting endpoint</dfn>
+:: An [=url/origin=].
+: <dfn>attribution destination</dfn>
+:: A [=site=].
+: <dfn>report time</dfn>
+:: A point in time.
+: <dfn>delivered</dfn> (default false)
+:: A [=boolean=].
+: <dfn>report ID</dfn>
+:: A [=string=].
+: <dfn>source debug key</dfn>
+:: Null or a non-negative 64-bit integer.
+: <dfn>trigger debug key</dfn>
+:: Null or a non-negative 64-bit integer.
+
+</dl>
+
 <h3 dfn-type=dfn>Event-level report</h3>
 
-An event-level report is a [=struct=] with the following items:
+An event-level report is an [=attribution report=] with the following additional items:
 
 <dl dfn-for="event-level report">
 : <dfn>event ID</dfn>
@@ -386,26 +416,12 @@ An event-level report is a [=struct=] with the following items:
 :: A non-negative 64-bit integer.
 : <dfn>randomized trigger rate</dfn>
 :: A number between 0 and 1 (both inclusive).
-: <dfn>reporting endpoint</dfn>
-:: An [=url/origin=].
-: <dfn>attribution destination</dfn>
-:: A [=site=].
-: <dfn>report time</dfn>
-:: A point in time.
 : <dfn>trigger priority</dfn>
 :: A 64-bit integer.
 : <dfn>trigger time</dfn>
 :: A point in time.
 : <dfn>source identifier</dfn>
 :: A string.
-: <dfn>delivered</dfn> (default false)
-:: A [=boolean=].
-: <dfn>report ID</dfn>
-:: A [=string=].
-: <dfn>source debug key</dfn>
-:: Null or a non-negative 64-bit integer.
-: <dfn>trigger debug key</dfn>
-:: Null or a non-negative 64-bit integer.
 
 </dl>
 
@@ -420,6 +436,22 @@ An aggregatable contribution is a [=struct=] with the following items:
 :: A non-negative 32-bit integer.
 
 </dl>
+
+<h3 dfn-type=dfn>Aggregatable report</h3>
+
+An aggregatable report is an [=attribution report=] with the following additional items:
+
+<dl dfn-for="aggregatable report">
+: <dfn>source time</dfn>
+:: A point in time.
+: <dfn>original report time</dfn>
+:: A point in time.
+: <dfn>contributions</dfn>
+:: A [=list=] of [=aggregatable contributions=].
+
+</dl>
+
+Issue: Use [=aggregatable report/delivered=] in [=queue a report for delivery=].
 
 <h3 dfn-type=dfn>Attribution rate-limit record</h3>
 
@@ -436,6 +468,8 @@ An attribution rate-limit record is a [=struct=] with the following items:
 :: An [=url/origin=].
 : <dfn>time</dfn>
 :: A point in time.
+:: <dfn>expiry time</dfn>
+:: Null or a point in time.
 
 </dl>
 
@@ -444,6 +478,8 @@ An attribution rate-limit record is a [=struct=] with the following items:
 A user agent holds an <dfn>attribution source cache</dfn>, which is an [=ordered set=] of [=attribution sources=].
 
 A user agent holds an <dfn>event-level report cache</dfn>, which is an [=ordered set=] of [=event-level reports=].
+
+A user agent holds an <dfn>aggregatable report cache</dfn>, which is an [=ordered set=] of [=aggregatable reports=].
 
 A user agent holds an <dfn>attribution rate-limit cache</dfn>, which is an [=ordered set=] of [=attribution rate-limit records=].
 
@@ -505,10 +541,14 @@ for triggers that are attributed to an [=attribution source=] whose
 (both inclusive) that controls the randomized response probability of an
 [=attribution source=] whose [=attribution source/source type=] is "`event`".
 
-<dfn>Max reports per attribution destination</dfn> is a positive integer that
+<dfn>Max event-level reports per attribution destination</dfn> is a positive integer that
 controls how many [=event-level reports=] can be in the
 [=event-level report cache=] per
 [=event-level report/attribution destination=].
+
+<dfn>Max aggregatable reports per attribution destination</dfn> is a positive integer that controls how
+many [=aggregatable reports=] can be in the [=aggregatable report cache=] per
+[=aggregatable report/attribution destination=].
 
 <dfn>Max attributions per navigation source</dfn> is a positive integer that
 controls how many times a single [=attribution source=] whose
@@ -520,9 +560,9 @@ controls how many times a single [=attribution source=] whose
 [=attribution source/source type=] is "`event`" can create an
 [=event-level report=].
 
-<dfn>Max destinations covered by pending sources</dfn> is a positive
+<dfn>Max destinations covered by unexpired sources</dfn> is a positive
 integer that controls the maximum number of distinct [=attribution source/attribution destinations=]
-for pending [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting endpoint=]).
+for unexpired [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting endpoint=]).
 
 <dfn>Attribution rate-limit window</dfn> is a positive length of time that
 controls the rate-limiting window for attribution.
@@ -551,8 +591,21 @@ controls the maximum number of attributions for a
 <dfn>Max source cache size</dfn> is a positive integer that controls how many
 [=attribution sources=] can be in the [=attribution source cache=].
 
-<dfn>Max report cache size</dfn> is a positive integer that controls how many
+<dfn>Max event-level report cache size</dfn> is a positive integer that controls how many
 [=event-level reports=] can be in the [=event-level report cache=].
+
+<dfn>Max aggregatable report cache size</dfn> is a positive integer that controls how many
+[=aggregatable reports=] can be in the [=aggregatable report cache=].
+
+<dfn>Allowed aggregatable budget per source</dfn> is a positive integer that controls the total
+[=aggregatable report/required aggregatable budget=] of all [=aggregatable reports=] created for
+an [=attribution source=].
+
+<dfn>Min aggregatable report delay</dfn> is a non-negative length of time that controls the minimum
+delay to deliver an [=aggregatable report=].
+
+<dfn>Randomized aggregatable report delay</dfn> is a positive length of time that controls the
+random delay to deliver an [=aggregatable report=].
 
 # General Algorithms # {#general-algorithms}
 
@@ -618,6 +671,14 @@ This algorithm will return either a non-negative 128-bit integer or an error.
 1. If the characters within |value| are not all [=ASCII hex digits=], return an error.
 1. Interpret |value| as a hexadecimal number and return as a non-negative 128-bit integer.
 
+<h3 dfn id="can-attribution-rate-limit-record-be-removed">Can attribution rate-limit record be removed</h3>
+
+Given an [=attribution rate-limit record=] |record|:
+1. If |record|'s [=attribution rate-limit record|time=] is after the current time, return false.
+1. If |record|'s [=attribution rate-limit record/scope=] equals `"attribution"`, return true.
+1. If |record|'s [=attribution rate-limit record/expiry time=] is after the current time, return false.
+1. Return true.
+
 # Source Algorithms # {#source-algorithms}
 
 <h3 id="obtaining-attribution-source-expiry-time">Obtaining an attribution source's expiry time</h3>
@@ -626,7 +687,11 @@ An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</
 
 <h3 id="obtaining-attribution-source-event-report-window-time">Obtaining an attribution source's event report window time</h3>
 
-An [=attribution source=] |source|'s <dfn for="attribution source">event report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/event report window=].	
+An [=attribution source=] |source|'s <dfn for="attribution source">event report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/event report window=].
+
+<h3 id="obtaining-attribution-source-aggregatable-report-window-time">Obtaining an attribution source's aggregatable report window time</h3>
+
+An [=attribution source=] |source|'s <dfn for="attribution source">aggregatable report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/aggregatable report window=].	
 	
 <h3 id="obtaining-attribution-source-site">Obtaining an attribution source's source site</h3>
 
@@ -742,6 +807,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 1. If |expiry| is null, set |expiry| to 30 days.
 1. Let |eventReportWindow| be the result of running [=obtain a source expiry=] on |value|["`event_report_window`"].
 1. If |eventReportWindow| is null, set |eventReportWindow| to |expiry|.
+1. Let |aggregatableReportWindow| be the result of running [=obtain a source expiry=] on |value|["`aggregatable_report_window`"].
+1. If |aggregatableReportWindow| is null, set |aggregatableReportWindow| to |expiry|.
 1. Let |priority| be 0.
 1. If |value|["`priority`"] [=map/exists=] and is a [=string=]:
     1. Set |priority| to the result of applying the
@@ -797,6 +864,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     :: |expiry|
     : [=attribution source/event report window=]
     :: |eventReportWindow|
+    : [=attribution source/aggregatable report window=]
+    :: |aggregatableReportWindow|
     : [=attribution source/priority=]
     :: |priority|
     : [=attribution source/source time=]
@@ -815,35 +884,32 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     :: |debugKey|
     : [=attribution source/aggregation keys=]
     :: |aggregationKeys|
+    : [=attribution source/aggregatable budget consumed=]
+    :: 0
 1. Return |source|.
 
 Issue: Ensure that |attributionDestination|'s [=origin/scheme=] is HTTP/HTTPS.
 
-<h3 id="check-pending-destination-limit">Checking pending destination limit</h3>
+<h3 id="check-unexpired-destination-limit">Checking unexpired destination limit</h3>
 
-To <dfn>check if an [=attribution source=] exceeds the pending destination limit</dfn> given an
+To <dfn>check if an [=attribution source=] exceeds the unexpired destination limit</dfn> given an
 [=attribution source=] |source|, run the following steps:
 
-1. Let |pendingSources| be all entries in the [=attribution source cache=] where all of the following are true:
-     * entry's [=attribution source/source site=] and |source|'s [=attribution source/source site=]
-        are equal.
-     * entry's [=attribution source/reporting endpoint=] and |source|'s
-        [=attribution source/reporting endpoint=] are [=same origin=].
-     * entry's [=attribution source/number of event-level reports=] is equal to 0.
-1. Let |distinctDestinations| be a new [=set/is empty|empty=] [=set=].
-1. For each [=attribution source=] |pendingSource| of |pendingSources|:
-    1. If |source|'s [=attribution source/attribution destination=] and |pendingSource|'s
+1. Let |unexpiredSources| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
+     * |record|'s [=attribution rate-limit record/scope=] equals "`source`"
+     * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
+     * |record|'s [=attribution rate-limit record/reporting endpoint=] and |source|'s [=attribution source/reporting endpoint=] are equal
+     * |record|'s [=attribution rate-limit record/expiry time=] is greater than |source|'s [=attribution source/source time=]
+1. For each [=attribution source=] |unexpiredSource| of |unexpiredSources|:
+    1. If |source|'s [=attribution source/attribution destination=] and |unexpiredSource|'s
         [=attribution source/attribution destination=] are equal, then return false.
-    1. If |distinctDestinations| [=set/contains=] |pendingSource|'s
+    1. If |distinctDestinations| [=set/contains=] |unexpiredSource|'s
         [=attribution source/attribution destination=], [=iteration/continue=].
-    1. [=set/Append=] |pendingSource|'s [=attribution source/attribution destination=] to
+    1. [=set/Append=] |unexpiredSource|'s [=attribution source/attribution destination=] to
         |distinctDestinations|.
 1. If |distinctDestinations|'s [=set/size=] is greater than or equal to
-    the user agent's [=max destinations covered by pending sources=], then return true.
+    the user agent's [=max destinations covered by unexpired sources=], then return true.
 1. Return false.
-
-Issue: Determine whether to change this limit to be time boudned, see
-<a href="https://github.com/WICG/attribution-reporting-api/issues/482">Source event limits should be time bounded</a>.
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
@@ -883,6 +949,12 @@ a [=trigger state=] |triggerState|:
     :: null
     : [=attribution trigger/event-level trigger configurations=]
     :: « |fakeConfig| »
+    : [=attribution trigger/aggregatable trigger data=]
+    :: «»
+    : [=attribution trigger/aggregatable values=]
+    :: «[]»
+    : [=attribution trigger/aggregatable dedup key=]
+    :: null
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
 1. Set |fakeReport|'s [=event-level report/report time=] to the result of
@@ -902,7 +974,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     [=attribution source/source origin=] are [=same origin=].
 1. If |pendingSourcesForSourceOrigin|'s [=list/size=] is greater than or equal
     to the user agent's [=max pending sources per source origin=], return.
-1. If the result of running [=check if an attribution source exceeds the pending destination limit=]
+1. If the result of running [=check if an attribution source exceeds the unexpired destination limit=]
     with |source| is true, return.
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
     : [=attribution rate-limit record/scope=]
@@ -915,22 +987,24 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     :: |source|'s [=attribution source/reporting endpoint=]
     : [=attribution rate-limit record/time=]
     :: |source|'s [=attribution source/source time=]
+    : [=attribution rate-limit record/expiry time=]
+    :: |source|'s [=attribution source/expiry time=]
 1. If the result of running [=should processing be blocked by reporting-endpoint limit=] with
     |rateLimitRecord| is <strong>blocked</strong>, return.
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
-1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] whose
-    [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=]
-    before the current time.
+1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] if the result of running
+    [=can attribution rate-limit record be removed=] with the entry is true.
 1. If |source|'s [=attribution source/randomized response=] is not null and is a [=set=]:
     1. [=map/iterate|For each=] [=trigger state=] |triggerState| of |source|'s
         [=attribution source/randomized response=]:
         1. Let |fakeReport| be the result of running [=obtain a fake report=]
             with |source| and |triggerState|.
         1. [=set/Append=] |fakeReport| to the [=event-level report cache=].
-    1. If |source|'s [=attribution source/randomized response=] is not [=set/is empty|empty=], return.
+    1. If |source|'s [=attribution source/randomized response=] is not [=set/is empty|empty=],
+        then set |source|'s [=attribution source/event-level attributable=] value to false.
 1. [=set/Append=] |source| to |cache|.
 
-Issue: Should fake reports respect the user agent's [=max reports per attribution destination=]?
+Issue: Should fake reports respect the user agent's [=max event-level reports per attribution destination=]?
 
 # Triggering Algorithms # {#trigger-algorithms}
 
@@ -1198,7 +1272,7 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
         [=match an attribution source's filter data against filters/isNegated=] set to true is false, [=iteration/continue=].
     1. [=set/iterate|For each=] |sourceKey| of |triggerData|'s [=aggregatable trigger data/source keys=]:
         1. If |aggregationKeys|[|sourceKey|] does not [=map/exist=], [=iteration/continue=].
-        1. Set |aggregationKeys|[|sourceKey|] to |aggregationKeys|[|sourceKey|] XOR |triggerData|'s
+        1. Set |aggregationKeys|[|sourceKey|] to |aggregationKeys|[|sourceKey|] OR |triggerData|'s
             [=aggregatable trigger data/key piece=].
 1. Let |aggregatableValues| be |trigger|'s [=attribution trigger/aggregatable values=].
 1. Let |contributions| be a new empty [=list=].
@@ -1212,35 +1286,28 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
     1. [=list/Append=] |contribution| to |contributions|.
 1. Return |contributions|.
 
-Issue: Use [=create aggregatable contributions=] in [=trigger attribution=].
+<h3 id="can-source-create-aggregatable-contributions">Can source create aggregatable contributions</h3>
 
-<h3 algorithm id="triggering-attribution">Triggering attribution</h3>
+To <dfn>check if an [=attribution source=] can create [=aggregatable contributions=]</dfn> given an
+[=aggregatable report=] |report| and an [=attribution source=] |sourceToAttribute|, run the following steps:
 
-To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run the following steps:
 
-1. Let |attributionDestination| be |trigger|'s [=attribution trigger/attribution destination=].
-1. Let |matchingSources| be all entries in the [=attribution source cache=] where all of the following are true:
-     * entry's [=attribution source/attribution destination=] and |attributionDestination| are equal.
-     * entry's [=attribution source/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are [=same origin=].
-     * entry's [=attribution source/expiry time=] is greater than the current time.
-1. If |matchingSources| is empty, return.
-1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources|
-    in descending order, with |a| being less than |b| if any of the following are true:
-      * |a|'s [=attribution source/priority=] is less than |b|'s [=attribution source/priority=].
-      * |a|'s [=attribution source/priority=] is equal to |b|'s [=attribution source/priority=] and |a|'s
-         [=attribution source/source time=] is less than |b|'s [=attribution source/source time=].
-1. Let |sourceToAttribute| be the first item in |matchingSources|.
-1. [=Assert=]: |sourceToAttribute|'s [=attribution source/randomized response=] is
+1. Let |remainingAggregatableBudget| be [=allowed aggregatable budget per source=] minus |sourceToAttribute|'s
+    [=attribution source/aggregatable budget consumed=].
+1. Assert: |remainingAggregatableBudget| is greater than or equal to 0.
+1. If |report|'s [=aggregatable report/required aggregatable budget=] is greater than
+    |remainingAggregatableBudget|, return false.
+1. Return true.
+
+<h3 algorithm id="triggering-event-level-attribution">Triggering event-level attribution</h3>
+
+To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |trigger| and an
+[=attribution source=] |sourceToAttribute|, run the following steps:
+
+1. If |sourceToAttribute|'s [=attribution source/event-level attributable=] value is false, return <strong>dropped</strong>.
+1. Assert: |sourceToAttribute|'s [=attribution source/randomized response=] is
     null or an [=set/is empty|empty=] [=set=].
 1. If |sourceToAttribute|'s [=attribution source/event report window time=] is less than the current time, return. 
-1. If the result of running
-    [=match an attribution source's filter data against filters=] with
-    |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=], and
-    [=match an attribution source's filter data against filters/isNegated=] set to false is false, return.
-1. If the result of running
-    [=match an attribution source's filter data against filters=] with
-    |sourceToAttribute|, |trigger|'s [=attribution trigger/negated filters=], and
-    [=match an attribution source's filter data against filters/isNegated=] set to true is false, return.
 1. Let |matchedConfig| be null.
 1. [=map/iterate|For each=] [=event-level trigger configuration=] |config| of |trigger|'s
     [=attribution trigger/event-level trigger configurations=]:
@@ -1254,13 +1321,100 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
         [=match an attribution source's filter data against filters/isNegated=] set to true is false, [=iteration/continue=].
     1. Set |matchedConfig| to |config|.
     1. [=iteration/Break=].
-1. If |matchedConfig| is null, return.
+1. If |matchedConfig| is null, return <strong>dropped</strong>.
 1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null and
-    |sourceToAttribute|'s [=attribution source/dedup keys=] [=list/contains=] it, return.
+    |sourceToAttribute|'s [=attribution source/dedup keys=] [=list/contains=] it, return <strong>dropped</strong>.
 1. Let |numMatchingReports| be the number of entries in the [=event-level report cache=] whose
-    [=event-level report/attribution destination=] equals |attributionDestination|.
+    [=event-level report/attribution destination=] equals |trigger|'s [=attribution trigger/attribution destination=].
+1. If |numMatchingReports| is greater than or equal to the user agent's [=max event-level reports per attribution destination=],
+    return <strong>dropped</strong>.
+1. Let |report| be the result of running [=obtain an event-level report=] with |sourceToAttribute|, |trigger|,
+    and |matchedConfig|.
+1. Let |maxAttributionsPerSource| be the user agent's [=max attributions per navigation source=].
+1. If |sourceToAttribute|'s [=attribution source/source type=] is "`event`", set
+    |maxAttributionsPerSource| to the user agent's [=max attributions per event source=].
+1. If |sourceToAttribute|'s [=attribution source/number of event-level reports=] value is equal to
+    |maxAttributionsPerSource|, then:
+    1. Let |matchingReports| be all entries in the [=event-level report cache=] where all of the following are true:
+         * entry's [=event-level report/report time=] and |report|'s [=event-level report/report time=] are equal.
+         * entry's [=event-level report/source identifier=] [=string/is=] |report|'s [=event-level report/source identifier=]
+    1. If |matchingReports| is empty, then set |sourceToAttribute|'s [=attribution source/event-level attributable=] value to false
+        and return <strong>dropped</strong>.
+    1. Set |matchingReports| to the result of [=list/sort in ascending order|sorting=] |matchingReports|
+        in ascending order, with |a| being less than |b| if any of the following are true:
+             * |a|'s [=event-level report/trigger priority=] is less than |b|'s [=event-level report/trigger priority=].
+             * |a|'s [=event-level report/trigger priority=] is equal to |b|'s [=event-level report/trigger priority=]
+                and |a|'s [=event-level report/trigger time=] is greater than |b|'s [=event-level report/trigger time=].
+    1. Let |lowestPriorityReport| be the first item in |matchingReports|.
+    1. If |report|'s [=event-level report/trigger priority=] is less than or equal to
+        |lowestPriorityReport|'s [=event-level report/trigger priority=], return <strong>dropped</strong>.
+    1. [=list/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
+    1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
+1. If the [=list/size=] of the [=event-level report cache=] is greater than or equal to the user
+    agent's [=max event-level report cache size=], return <strong>cache full</strong>.
+1. If |sourceToAttribute|'s [=attribution source/randomized response=] is
+    null, [=set/append=] |report| to the [=event-level report cache=].
+1. Increment |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
+1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null,
+    [=list/append=] it to |sourceToAttribute|'s [=attribution source/dedup keys=].
+1. If |report|'s [=event-level report/source debug key=] is not null and |report|'s
+    [=event-level report/trigger debug key=] is not null, [=queue a task=] to
+    [=attempt to deliver a debug report=] with |report|.
+1. Return <strong>attributed</strong>.
+
+<h3 algorithm id="triggering-aggregatable-attribution">Triggering aggregatable attribution</h3>
+
+To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] |trigger| and an
+[=attribution source=] |sourceToAttribute|, run the following steps:
+
+1. If |sourceToAttribute|'s [=attribution source/aggregatable report window time=] is less than the current time, return. 
+1. Let |report| be the result of running [=obtain an aggregatable report=] with |sourceToAttribute| and |trigger|.
+1. If |report|'s [=aggregatable report/contributions=] [=list/is empty=], return <strong>dropped</strong>.
+1. If |trigger|'s [=attribution trigger/aggregatable dedup key=] is not null and
+    |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=]
+    [=list/contains=] it, return <strong>dropped</strong>.
+1. Let |numMatchingReports| be the number of entries in the [=aggregatable report cache=] whose
+    [=aggregatable report/attribution destination=] equals |trigger|'s [=attribution trigger/attribution destination=].
 1. If |numMatchingReports| is greater than or equal to the user agent's
-    [=max reports per attribution destination=], return.
+    [=max aggregatable reports per attribution destination=], return <strong>dropped</strong>.
+1. If the result of running [=check if an attribution source can create aggregatable contributions=]
+    with |report| and |sourceToAttribute| is false, return <strong>dropped</strong>.
+1. If the [=list/size=] of the [=aggregatable report cache=] is greater than or equal to the user
+    agent's [=max aggregatable report cache size=], return <strong>cache full</strong>.
+1. Add |report| to the [=aggregatable report cache=].
+1. Increment |sourceToAttribute|'s [=attribution source/aggregatable budget consumed=] value by
+    |report|'s [=aggregatable report/required aggregatable budget=].
+1. If |trigger|'s [=attribution trigger/aggregatable dedup key=] is not null,
+    [=list/append=] it to |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=].
+1. If |report|'s [=aggregatable report/source debug key=] is not null and |report|'s
+    [=aggregatable report/trigger debug key=] is not null, [=queue a task=] to
+    [=attempt to deliver a debug report=] with |report|.
+1. Return <strong>attributed</strong>.
+
+<h3 algorithm id="triggering-attribution">Triggering attribution</h3>
+
+To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |trigger|, run the following steps:
+
+1. Let |attributionDestination| be |trigger|'s [=attribution trigger/attribution destination=].
+1. Let |matchingSources| be all entries in the [=attribution source cache=] where all of the following are true:
+     * entry's [=attribution source/attribution destination=] and |attributionDestination| are equal.
+     * entry's [=attribution source/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are [=same origin=].
+     * entry's [=attribution source/expiry time=] is greater than the current time.
+1. If |matchingSources| [=set/is empty=], return.
+1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources|
+    in descending order, with |a| being less than |b| if any of the following are true:
+      * |a|'s [=attribution source/priority=] is less than |b|'s [=attribution source/priority=].
+      * |a|'s [=attribution source/priority=] is equal to |b|'s [=attribution source/priority=] and |a|'s
+         [=attribution source/source time=] is less than |b|'s [=attribution source/source time=].
+1. Let |sourceToAttribute| be the first item in |matchingSources|.
+1. If the result of running
+    [=match an attribution source's filter data against filters=] with
+    |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=], and
+    [=match an attribution source's filter data against filters/isNegated=] set to false is false, return.
+1. If the result of running
+    [=match an attribution source's filter data against filters=] with
+    |sourceToAttribute|, |trigger|'s [=attribution trigger/negated filters=], and
+    [=match an attribution source's filter data against filters/isNegated=] set to true is false, return.
 1. If the result of running [=should attribution be blocked by rate limit=] with |trigger| and
     |sourceToAttribute| is <strong>blocked</strong>, return.
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
@@ -1274,45 +1428,20 @@ To <dfn>trigger attribution</dfn> given an [=attribution trigger=] |trigger| run
     :: |sourceToAttribute|'s [=attribution source/reporting endpoint=]
     : [=attribution rate-limit record/time=]
     :: |trigger|'s [=attribution trigger/trigger time=]
+    : [=attribution rate-limit record/expiry time=]
+    :: null
 1. If the result of running [=should processing be blocked by reporting-endpoint limit=] with
     |rateLimitRecord| is <strong>blocked</strong>, return.
-1. Let |report| be the result of running [=obtain an event-level report=] with |sourceToAttribute|, |trigger|,
-    and |matchedConfig|.
-1. Let |maxAttributionsPerSource| be the user agent's [=max attributions per navigation source=].
-1. If |sourceToAttribute|'s [=attribution source/source type=] is "`event`", set
-    |maxAttributionsPerSource| to the user agent's [=max attributions per event source=].
-1. If |sourceToAttribute|'s [=attribution source/number of event-level reports=] value is equal to
-    |maxAttributionsPerSource|, then:
-    1. Let |matchingReports| be all entries in the [=event-level report cache=] where all of the following are true:
-         * entry's [=event-level report/report time=] and |report|'s [=event-level report/report time=] are equal.
-         * entry's [=event-level report/source identifier=] [=string/is=] |report|'s [=event-level report/source identifier=]
-    1. If |matchingReports| is empty, then [=list/remove=] |sourceToAttribute| from the [=attribution source cache=] and return.
-    1. Set |matchingReports| to the result of [=list/sort in ascending order|sorting=] |matchingReports|
-        in ascending order, with |a| being less than |b| if any of the following are true:
-             * |a|'s [=event-level report/trigger priority=] is less than |b|'s [=event-level report/trigger priority=].
-             * |a|'s [=event-level report/trigger priority=] is equal to |b|'s [=event-level report/trigger priority=]
-                and |a|'s [=event-level report/trigger time=] is greater than |b|'s [=event-level report/trigger time=].
-    1. Let |lowestPriorityReport| be the first item in |matchingReports|.
-    1. If |report|'s [=event-level report/trigger priority=] is less than or equal to |lowestPriorityReport|'s [=event-level report/trigger priority=], return.
-    1. [=list/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
-    1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
+1. Let |eventLevelResult| be the result of running [=trigger event-level attribution=].
+1. Let |aggregatableResult| be the result of running [=trigger aggregatable attribution=].
+1. If both |eventLevelResult| and |aggregatableResult| are <strong>dropped</strong>, return.
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
 1. For each |item| of |matchingSources|:
-    1. [=list/Remove=] |item| from the [=attribution source cache=].
-1. If the [=list/size=] of the [=event-level report cache=] is greater than or equal to the user
-    agent's [=max report cache size=], return.
-1. If |sourceToAttribute|'s [=attribution source/randomized response=] is
-    null, [=set/append=] |report| to the [=event-level report cache=].
-1. Increment |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
-1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null,
-    [=list/append=] it to |sourceToAttribute|'s [=attribution source/dedup keys=].
+    1. [=set/Remove=] |item| from the [=attribution source cache=].
+1. If neither |eventLevelResult| nor |aggregatableResult| is <strong>attributed</strong>, return.
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
-1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] whose
-    [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=]
-    before the current time.
-1. If |report|'s [=event-level report/source debug key=] is not null and |report|'s
-    [=event-level report/trigger debug key=] is not null, [=queue a task=] to
-    [=attempt to deliver a debug report=] with |report|.
+1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] if the result of running
+    [=can attribution rate-limit record be removed=] with the entry is true.
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 
@@ -1360,6 +1489,12 @@ To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution 
 1. Return the result of running [=obtain a report time from deadline=] with
     |source|'s [=attribution source/source time=] and |deadlineToUse|.
 
+To <dfn>obtain an aggregatable report delivery time</dfn> given a point in time
+|triggerTime|, perform the following steps. They return a point in time.
+
+1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive) with uniform probability.
+1. Return |triggerTime| + [=min aggregatable report delay=] + |r| * [=randomized aggregatable report delay=].
+
 <h3 algorithm id="obtaining-an-event-level-report">Obtaining an event-level report</h3>
 
 To <dfn>obtain an event-level report</dfn> given an [=attribution source=] |source|, an [=attribution trigger=]
@@ -1397,19 +1532,54 @@ To <dfn>obtain an event-level report</dfn> given an [=attribution source=] |sour
     :: |trigger|'s [=attribution trigger/debug key=].
 1. Return |report|.
 
+<h3 id="obtaining-required-aggregatable-budget">Obtaining an aggregatable report's required budget</h3>
+
+An [=aggregatable report=] |report|'s <dfn for="aggregatable report">
+required aggregatable budget</dfn> is the total [=aggregatable contribution/value=] of |report|'s
+[=aggregatable report/contributions=].
+
+<h3 algorithm id="obtaining-an-aggregatable-report">Obtaining an aggregatable report</h3>
+
+To <dfn>obtain an aggregatable report</dfn> given an [=attribution source=] |source| and
+an [=attribution trigger=] |trigger|:
+
+1. Let |reportTime| be the result of running [=obtain an aggregatable report delivery time=] with |trigger|'s [=attribution trigger/trigger time=].
+1. Let |report| be a new [=aggregatable report=] struct whose items are:
+
+    : [=aggregatable report/reporting endpoint=]
+    :: |source|'s [=attribution source/reporting endpoint=].
+    : [=aggregatable report/attribution destination=]
+    :: |source|'s [=attribution source/attribution destination=].
+    : [=aggregatable report/source time=]
+    :: |source|'s [=attribution source/source time=].
+    : [=aggregatable report/original report time=]
+    :: |reportTime|.
+    : [=aggregatable report/report time=]
+    :: |reportTime|.
+    : [=aggregatable report/report id=]
+    :: The result of [=generating a random UUID=].
+    : [=aggregatable report/source debug key=]
+    :: |source|'s [=attribution source/debug key=].
+    : [=aggregatable report/trigger debug key=]
+    :: |trigger|'s [=attribution trigger/debug key=].
+    : [=aggregatable report/contributions=]
+    :: The result of running [=create aggregatable contributions=] with |source| and |trigger|.
+1. Return |report|.
+
 # Report delivery # {#report-delivery}
 
-The user agent MUST periodically [=set/iterate=] over its [=event-level report cache=] and run [=queue a report for delivery=] on each item.
+The user agent MUST periodically [=set/iterate=] over its [=event-level report cache=] and
+[=aggregatable report cache=]  and run [=queue a report for delivery=] on each item.
 
-To <dfn>queue a report for delivery</dfn> given an [=event-level report=] |report|, run the following steps [=in parallel=]:
+To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report|, run the following steps [=in parallel=]:
 
-1. If |report|'s [=event-level report/delivered=] value is true, return.
-1. Set |report|'s [=event-level report/delivered=] value to true.
-1. If |report|'s [=event-level report/report time=] is less than the current time, add an [=implementation-defined=] random amount to report time.
+1. If |report|'s [=attribution report/delivered=] value is true, return.
+1. Set |report|'s [=attribution report/delivered=] value to true.
+1. If |report|'s [=attribution report/report time=] is less than the current time, add an [=implementation-defined=] random amount to report time.
 
     Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
      closed. Adding random delay prevents temporal joining of reports from different [=attribution source/source origin=]s.
-1. Wait until |report|'s [=event-level report/report time=] is the current time.
+1. Wait until |report|'s [=attribution report/report time=] is the current time.
 1. Optionally, wait a further [=implementation-defined=] length of time.
 
     Note: This is intended to allow user agents to optimize device resource usage.
@@ -1426,12 +1596,10 @@ Issue: This would ideally be replaced by a more descriptive algorithm in Infra. 
 
 To <dfn>serialize an [=event-level report=]</dfn> |report|, run the following steps:
 
-1. Let |destination| be |report|'s [=event-level report/attribution destination=].
-1. [=Assert=]: |destination| is not an [=opaque origin=].
 1. Let |data| be a [=map=] of the following key/value pairs:
 
     : "`attribution_destination`"
-    :: |destination|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
+    :: |report|'s [=event-level report/attribution destination=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
     : "`randomized_trigger_rate`"
     :: |report|'s [=event-level report/randomized trigger rate=]
     : "`source_type`"
@@ -1451,6 +1619,37 @@ To <dfn>serialize an [=event-level report=]</dfn> |report|, run the following st
     [=serialize an integer|serialized=].
 1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
 
+To <dfn>serialize an [=aggregatable report=] </dfn> |report|, run the following steps:
+
+1. Let |data| be a [=map=] of the following key/value pairs:
+
+    : "`shared_info`"
+    :: ""
+    : "`aggregation_service_payloads`"
+    :: ""
+
+1. If |report|'s [=aggregatable report/source debug key=] is not null, [=map/set=]
+    |data|["`source_debug_key`"] to |report|'s [=aggregatable report/source debug key=],
+    [=serialize an integer|serialized=].
+1. If |report|'s [=aggregatable report/trigger debug key=] is not null, [=map/set=]
+    |data|["`trigger_debug_key`"] to |report|'s [=aggregatable report/trigger debug key=],
+    [=serialize an integer|serialized=].
+1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
+
+Issue: Spec |data|["`shared_info`"] and |data|["`aggregation_service_payloads`"].
+
+To <dfn> serialize an [=attribution report=]</dfn> |report|, run the following steps:
+
+1. [=Assert=]: |report|'s [=attribution report/attribution destination=] is not an [=opaque origin=].
+1. If |report| is an:
+    <dl class="switch">
+    <dt>[=event-level report=]</dt>
+    <dd>Return the result of running [=serialize an event-level report=] with |report|.</dd>
+
+    <dt>[=aggregatable report=]</dt>
+    <dd>Return the result of running [=serialize an aggregatable report=] with |report|.</dd>
+    <dl>
+
 Note: The inclusion of "`report_id`" in the report body is intended to allow the report recipient
 to perform deduplication and prevent double counting, in the event that the user agent retries
 reports on failure. To prevent the report recipient from learning additional information about
@@ -1458,26 +1657,33 @@ whether a user is online, retries might be limited in number and subject to rand
 
 <h3 id="get-report-url">Get report request URL</h3>
 
-To <dfn>generate a report URL</dfn> given a [=event-level report=] |report| and an optional
+To <dfn>generate a report URL</dfn> given an [=attribution report=] |report| and an optional
 [=boolean=] <dfn for="generate a report URL"><var>isDebugReport</var></dfn> (default false):
 
 1. Let |reportUrl| be a new [=URL record=].
-1. Let |reportingOrigin| be |report|'s [=event-level report/reporting endpoint=].
+1. Let |reportingOrigin| be |report|'s [=attribution report/reporting endpoint=].
 1. [=Assert=]: |reportingOrigin| is not an [=opaque origin=].
 1. Set |reportUrl|'s [=url/scheme=] to |reportingOrigin|'s [=origin/scheme=].
 1. Set |reportUrl|'s [=url/host=] to |reportingOrigin|'s [=origin/host=].
 1. Set |reportUrl|'s [=url/port=] to |reportingOrigin|'s [=origin/port=].
 1. Let |path| be «"`.well-known`", "`attribution-reporting`"».
 1. If |isDebugReport| is true, [=list/append=] "`debug`" to |path|.
-1. [=list/Append=] "`report-event-attribution`" to |path|.
+1. If |report| is an:
+    <dl class="switch">
+    <dt>[=event-level report=]</dt>
+    <dd>[=list/Append=] "`report-event-attribution`" to |path|.</dd>
+
+    <dt>[=aggregatable report=]</dt>
+    <dd>[=list/Append=] "`report-aggregate-attribution`" to |path|.</dd>
+    </dl>
 1. Set |reportUrl|'s [=url/path=] to |path|.
 1. Return |reportUrl|.
 
 <h3 id="create-report-request">Creating a report request</h3>
 
-To <dfn>create a report request</dfn> given an [=event-level report=] |report|:
+To <dfn>create a report request</dfn> given an [=attribution report=] |report|:
 
-1. Let |body| be the result of executing [=serialize an event-level report=] on |report|.
+1. Let |body| be the result of executing [=serialize an attribution report=] on |report|.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
     ::  "`POST`"
@@ -1513,12 +1719,19 @@ To <dfn>create a report request</dfn> given an [=event-level report=] |report|:
 This algorithm constructs a [=request=] and attempts to deliver it to
 |report|'s [=event-level report/reporting endpoint=].
 
-To <dfn>attempt to deliver a report</dfn> given an [=event-level report=] |report|, run the following steps:
+To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report|, run the following steps:
 
 1. Let |url| be the result of executing [=generate a report URL=] on |report|.
 1. Let |request| be the result of executing [=create a report request=] on |report|.
 1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being these steps:
-    1. [=Queue a task=] to [=list/remove=] |report| from the [=event-level report cache=].
+    1. If |report| is an:
+        <dl class="switch">
+        <dt>[=event-level report=]</dt>
+        <dd>[=Queue a task=] to [=list/remove=] |report| from the [=event-level report cache=].</dd>
+
+        <dt>[=aggregatable report=]</dt>
+        <dd>[=Queue a task=] to [=list/remove=] |report| from the [=aggregatable report cache=].</dd>
+        </dl>
 
 Issue(220): This fetch should use a network partition key for an opaque origin.
 
@@ -1526,12 +1739,14 @@ A user agent MAY retry this algorithm in the event that there was an error.
 
 <h3 id="issue-debug-report-request">Issuing a debug report request</h3>
 
-To <dfn>attempt to deliver a debug report</dfn> given an [=event-level report=] |report|:
+To <dfn>attempt to deliver a debug report</dfn> given an [=attribution report=] |report|:
 
 1. Let |url| be the result of executing [=generate a report URL=] on |report| with
     [=generate a report URL/isDebugReport=] set to true.
 1. Let |request| be the result of executing [=create a report request=] on |report|.
 1. [=Fetch=] |request|.
+
+Issue: Update for [=aggregatable report=].
 
 Issue(220): This fetch should use a network partition key for an opaque origin.
 
