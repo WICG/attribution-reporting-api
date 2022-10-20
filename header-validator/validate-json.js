@@ -198,6 +198,8 @@ const aggregationKeys = object((state, key, value) => {
 export function validateSource(source) {
   const state = new State()
   state.validate(source, {
+    aggregatable_report_window: optional(int64),
+    event_report_window: optional(int64),
     aggregation_keys: optional(aggregationKeys),
     debug_key: optional(uint64),
     destination: required(destination),
