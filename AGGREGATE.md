@@ -84,6 +84,8 @@ Registering sources eligible for aggregate reporting entails adding a new
     // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue".
     "geoValue": "0x5" // Source-side geo region = 5 (US), out of a possible ~100 regions
   }
+  
+  "aggregatable_report_window": 86400
 }
 ```
 This defines a dictionary of named aggregation keys, each with a piece of the
@@ -93,6 +95,10 @@ trigger-side pieces.
 
 Final keys will be restricted to a maximum of 128 bits. This means that hex
 strings in the JSON must be limited to at most 32 digits.
+
+There is also a new optional field, `aggregatable_report_window`, which is the duration 
+in seconds after source registration during which aggregatable reports may be created 
+for this source.
 
 ### Attribution trigger registration
 
