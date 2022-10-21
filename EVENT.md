@@ -643,7 +643,8 @@ during attribution registrations.
 #### Reporting endpoints
 
 The reporting origins may opt in to receiving debugging reports by adding a new
-`debug_reporting` dictionary field to the `Attribution-Reporting-Register-Source` header:
+`debug_reporting` dictionary field to the `Attribution-Reporting-Register-Source`
+and `Attribution-Reporting-Register-Trigger` headers:
 ```jsonc
 {
   ... // existing fields
