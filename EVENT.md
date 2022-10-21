@@ -609,7 +609,7 @@ order to allow debug keys to be registered.
 We also introduce a debugging framework to allow developers to monitor certain
 failures in the attribution registrations.
 
-Similar to extended debugging reports(#optional-extended-debugging-reports),
+Similar to [extended debugging reports](#optional-extended-debugging-reports),
 failure modes that may enable cross-site tracking are only reported in a
 transitional phase while third-party cookies are available and the browser will
 check for the presence of the `ar_debug` cookie set by the reporting origin.
