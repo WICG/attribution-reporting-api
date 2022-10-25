@@ -83,9 +83,9 @@ Registering sources eligible for aggregate reporting entails adding a new
 
     // Generates a "0x5" key piece (low order bits of the key) for the key named "geoValue".
     "geoValue": "0x5" // Source-side geo region = 5 (US), out of a possible ~100 regions
-  }
-  
-  "aggregatable_report_window": 86400
+  },
+
+  "aggregatable_report_window": "86400"
 }
 ```
 This defines a dictionary of named aggregation keys, each with a piece of the

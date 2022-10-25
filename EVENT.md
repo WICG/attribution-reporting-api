@@ -424,7 +424,7 @@ different sites.
 
 ### Sending Scheduled Reports
 
-Reports for `event` sources will be sent 1 hour after the sources `event_report_window`.
+Reports for `event` sources will be sent 1 hour after the source's `event_report_window`.
 
 Reports for `navigation` sources may be reported earlier than the source's
 `event_report_window`, at specified points in time relative to when the source event was
