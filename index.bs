@@ -286,6 +286,10 @@ An attribution source is a [=struct=] with the following items:
 :: A [=source type=].
 : <dfn>expiry</dfn>
 :: A length of time.
+: <dfn>event report window</dfn>
+:: A length of time.
+: <dfn>aggregatable report window</dfn>
+:: A length of time.
 : <dfn>priority</dfn>
 :: A 64-bit integer.
 : <dfn>source time</dfn>
@@ -307,8 +311,6 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>aggregation keys</dfn>
 :: An [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose [=map/value|values=] are
     non-negative 128-bit integers.
-: <dfn>aggregatable expiry</dfn>
-:: A length of time.
 : <dfn>aggregatable budget consumed</dfn>
 :: A non-negative integer, total [=aggregatable contribution/value=] of all [=aggregatable contributions=] created with this [=attribution source=].
 : <dfn>aggregatable dedup keys</dfn>
@@ -683,6 +685,14 @@ Given an [=attribution rate-limit record=] |record|:
 
 An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
 
+<h3 id="obtaining-attribution-source-event-report-window-time">Obtaining an attribution source's event report window time</h3>
+
+An [=attribution source=] |source|'s <dfn for="attribution source">event report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/event report window=].
+
+<h3 id="obtaining-attribution-source-aggregatable-report-window-time">Obtaining an attribution source's aggregatable report window time</h3>
+
+An [=attribution source=] |source|'s <dfn for="attribution source">aggregatable report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/aggregatable report window=].	
+	
 <h3 id="obtaining-attribution-source-site">Obtaining an attribution source's source site</h3>
 
 An [=attribution source=] |source|'s <dfn for="attribution source">source site</dfn> is the result
@@ -795,6 +805,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 1. If |attributionDestination| is null, return null.
 1. Let |expiry| be the result of running [=obtain a source expiry=] on |value|["`expiry`"].
 1. If |expiry| is null, set |expiry| to 30 days.
+1. Let |eventReportWindow| be the result of running [=obtain a source expiry=] on |value|["`event_report_window`"].
+1. If |eventReportWindow| is null, set |eventReportWindow| to |expiry|.
+1. Let |aggregatableReportWindow| be the result of running [=obtain a source expiry=] on |value|["`aggregatable_report_window`"].
+1. If |aggregatableReportWindow| is null, set |aggregatableReportWindow| to |expiry|.
 1. Let |priority| be 0.
 1. If |value|["`priority`"] [=map/exists=] and is a [=string=]:
     1. Set |priority| to the result of applying the
@@ -817,7 +831,6 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
         |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
 1. If |aggregationKeys| is null, return null.
-1. Let |aggregatableExpiry| be the result of running [=obtain a source expiry=] on |value|["`aggregatable_expiry`"].
 1. If |aggregatableExpiry| is null, set |aggregatableExpiry| to |expiry|.
 1. Let |triggerDataCardinality| be the user agent's
     [=navigation-source trigger data cardinality=].
@@ -849,6 +862,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     :: |reportingOrigin|
     : [=attribution source/expiry=]
     :: |expiry|
+    : [=attribution source/event report window=]
+    :: |eventReportWindow|
+    : [=attribution source/aggregatable report window=]
+    :: |aggregatableReportWindow|
     : [=attribution source/priority=]
     :: |priority|
     : [=attribution source/source time=]
@@ -867,8 +884,6 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     :: |debugKey|
     : [=attribution source/aggregation keys=]
     :: |aggregationKeys|
-    : [=attribution source/aggregatable expiry=]
-    :: |aggregatableExpiry|
     : [=attribution source/aggregatable budget consumed=]
     :: 0
 1. Return |source|.
@@ -1292,6 +1307,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 1. If |sourceToAttribute|'s [=attribution source/event-level attributable=] value is false, return <strong>dropped</strong>.
 1. Assert: |sourceToAttribute|'s [=attribution source/randomized response=] is
     null or an [=set/is empty|empty=] [=set=].
+1. If |sourceToAttribute|'s [=attribution source/event report window time=] is less than the current time, return. 
 1. Let |matchedConfig| be null.
 1. [=map/iterate|For each=] [=event-level trigger configuration=] |config| of |trigger|'s
     [=attribution trigger/event-level trigger configurations=]:
@@ -1351,6 +1367,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] |trigger| and an
 [=attribution source=] |sourceToAttribute|, run the following steps:
 
+1. If |sourceToAttribute|'s [=attribution source/aggregatable report window time=] is less than the current time, return. 
 1. Let |report| be the result of running [=obtain an aggregatable report=] with |sourceToAttribute| and |trigger|.
 1. If |report|'s [=aggregatable report/contributions=] [=list/is empty=], return <strong>dropped</strong>.
 1. If |trigger|'s [=attribution trigger/aggregatable dedup key=] is not null and
@@ -1428,12 +1445,6 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 
-To <dfn>obtain an expiry deadline</dfn> given an [=attribution source=]
-|source|:
-
-1. Return the maximum of |source|'s [=attribution source/expiry=] and 2 days
-    (172800 seconds).
-
 To <dfn>obtain early deadlines</dfn> given a [=source type=] |sourceType|:
 
 1. If |sourceType| is "`event`", return «».
@@ -1456,8 +1467,7 @@ To <dfn>obtain the report time at a window</dfn> given an
 
 1. Let |earlyDeadlines| be the result of running [=obtain early deadlines=]
     with |source|'s [=attribution source/source type=].
-1. Let |deadline| be the result of running [=obtain an expiry deadline=] with
-    |source|.
+1. Let |deadline| be |source|'s [=attribution source/event report window=].
 1. If |earlyDeadlines|[|window|] [=list/exists=], set |deadline| to it.
 1. Return the result of running [=obtain a report time from deadline=] with
     |source|'s [=attribution source/source time=] and |deadline|.
@@ -1465,8 +1475,7 @@ To <dfn>obtain the report time at a window</dfn> given an
 To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution source=]
 |source| and a time |triggerTime|:
 
-1. Let |deadlineToUse| be the result of running [=obtain an expiry deadline=]
-    with |source|.
+1. Let |deadlineToUse| be |source|'s [=attribution source/event report window=].
 1. Let |earlyDeadlines| be the result of running [=obtain early deadlines=]
     with |source|'s [=attribution source/source type=].
 1. [=list/iterate|For each=] |earlyDeadline| of |earlyDeadlines|:
