@@ -56,7 +56,7 @@ Normal attribution logic in the browser will be halted.
 
 For a site to enable App<->Web attribution after integrating with the Web API, they will only need to make server side changes.
 
-A reporting origin responding with the `Attribution-Reporting-Register-OS-Source` or `Attribution-Reporting-Register-OS-Trigger` headers while `Attribution-Reporting-Support` does not contain `os` will fail cause a registration failure (including web registration).
+A reporting origin responding with the `Attribution-Reporting-Register-OS-Source` or `Attribution-Reporting-Register-OS-Trigger` headers while `Attribution-Reporting-Support` does not contain `os` will cause a registration failure (including web registration).
 
 ## Privacy considerations
 
