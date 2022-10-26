@@ -208,12 +208,8 @@ since it is the origin that will end up receiving attribution reports.
 
 ### Handling an attribution source event
 
-A `navigation` attribution source event will be logged to storage if the
-resulting document being navigated to ends up sharing an eTLD+1 with the
-`destination` origin. Additionally, the navigation needs occur with [transient
-user activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation).
-
-`event` sources don’t require any of the above constraints to be logged.
+A `navigation` attribution source event will be logged to storage if  the navigation occurs with [transient
+user activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation). `event` sources don’t require activation.
 
 An attribution source will be eligible for reporting if any page on the
 `destination` eTLD+1 (advertiser site) triggers attribution for the associated
