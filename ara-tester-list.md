@@ -44,3 +44,4 @@ The usefulness of this page depends on testers sharing information and updates; 
 | Yahoo! JAPAN | Ad tech services | 2022-2023 | [Report](https://github.com/WICG/attribution-reporting-api/issues/201) |  | 
 | NextRoll | Demand-side platform (DSP) | | | privacysandbox@nextroll.com |
 | RTB House | Demand-side platform (DSP) | | | privacysandbox@rtbhouse.com |
+| CyberAgent | Demand-side platform (DSP) | | | privacysandbox@cyberagent.co.jp |
