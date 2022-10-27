@@ -614,7 +614,7 @@ failure modes that may enable cross-site tracking are only reported in a
 transitional phase while third-party cookies are available and the browser will
 check for the presence of the `ar_debug` cookie set by the reporting origin.
 Failure modes that are privacy neutral (e.g.
-a source is rejected due to the [destination limits](#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources))
+a source is rejected due to the [destination limit](#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources))
 are reported regardless the presence of third-party cookies.
 
 The browser will send non-credentialed secure HTTP `POST` requests to the
