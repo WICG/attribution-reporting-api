@@ -207,8 +207,7 @@ window in which reports will be sent.
 Once this header is received, the browser will proceed with [handling an
 attribution source event](#handling-an-attribution-source-event). Note that it
 is possible to register multiple sources for the same request using HTTP
-redirects (though these multiple sources may not set distinct destinations if
-they are `navigation` sources).
+redirects.
 
 Note that we sometimes call the `attributionsrc`'s origin the "reporting origin"
 since it is the origin that will end up receiving attribution reports.
