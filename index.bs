@@ -312,7 +312,7 @@ An attribution source is a [=struct=] with the following items:
 :: A non-negative integer, total [=aggregatable contribution/value=] of all [=aggregatable contributions=] created with this [=attribution source=].
 : <dfn>aggregatable dedup keys</dfn>
 :: [=ordered set=] of [=attribution trigger/aggregatable dedup keys=] associated with this [=attribution source=].
-: <dfn>debug reporting</dfn>
+: <dfn>debug reporting enabled</dfn>
 :: A [=boolean=].
 
 </dl>
@@ -876,9 +876,9 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
         [=max attributions per event source=].
 1. Let |numReportWindows| be the result of running
     [=obtain the number of report windows=] with |sourceType|.
-1. Let |debugReporting| be false.
+1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
-    |debugReporting| to |value|["`debug_reporting`"].
+    |debugReportingEnabled| to |value|["`debug_reporting`"].
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -917,8 +917,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     :: |aggregationKeys|
     : [=attribution source/aggregatable budget consumed=]
     :: 0
-    : [=attribution source/debug reporting=]
-    :: |debugReporting|
+    : [=attribution source/debug reporting enabled=]
+    :: |debugReportingEnabled|
 1. Return |source|.
 
 Issue: Ensure that |attributionDestination|'s [=origin/scheme=] is HTTP/HTTPS.
@@ -996,7 +996,7 @@ a [=trigger state=] |triggerState|:
 To <dfn>obtain a debug report on source registration</dfn> given a [=debug data type=] |dataType| and
 a [=attribution source=] |source|:
 
-1. If |source|'s [attribution source/debug reporting] is false, return null.
+1. If |source|'s [attribution source/debug reporting enabled] is false, return null.
 1. Let |body| be a new [=map=] with the following key/value pairs:
     : "`attribution_destination`"
     :: |source|'s [=attribution source/attribution destination=].
