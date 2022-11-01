@@ -312,6 +312,8 @@ An attribution source is a [=struct=] with the following items:
 :: A non-negative integer, total [=aggregatable contribution/value=] of all [=aggregatable contributions=] created with this [=attribution source=].
 : <dfn>aggregatable dedup keys</dfn>
 :: [=ordered set=] of [=attribution trigger/aggregatable dedup keys=] associated with this [=attribution source=].
+: <dfn>debug reporting enabled</dfn>
+:: A [=boolean=].
 
 </dl>
 
@@ -469,6 +471,35 @@ An attribution rate-limit record is a [=struct=] with the following items:
 :: Null or a point in time.
 
 </dl>
+
+<h3 dfn-type=dfn>Attribution debug data</h3>
+
+A <dfn>debug data type</dfn> is a non-empty string that specifies the set of data that is
+contained in the [=attribution debug data/body=] of an [=attribution debug data=].
+Possible values include "`source-destination-limit`".
+
+An attribution debug data is a [=struct=] with the following items:
+
+<dl dfn-for="attribution debug data">
+: <dfn>data type</dfn>
+:: A [=debug data type=].
+: <dfn>body</dfn>
+:: A [=map=] whose fields are determined by the [=attribution debug data/data type=].
+
+</dl>
+
+<h3 dfn-type=dfn>Attribution debug report</h3>
+
+An attribution debug report is a [=struct=] with the following items:
+
+<dl dfn-for="attribution debug report">
+: <dfn>data</dfn>
+:: A [=list=] of [=attribution debug data=].
+: <dfn>reporting endpoint</dfn>
+:: An [=origin=].
+
+</dl>
+
 
 # Storage # {#storage}
 
@@ -688,8 +719,8 @@ An [=attribution source=] |source|'s <dfn for="attribution source">event report 
 
 <h3 id="obtaining-attribution-source-aggregatable-report-window-time">Obtaining an attribution source's aggregatable report window time</h3>
 
-An [=attribution source=] |source|'s <dfn for="attribution source">aggregatable report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/aggregatable report window=].	
-	
+An [=attribution source=] |source|'s <dfn for="attribution source">aggregatable report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/aggregatable report window=].
+
 <h3 id="obtaining-attribution-source-site">Obtaining an attribution source's source site</h3>
 
 An [=attribution source=] |source|'s <dfn for="attribution source">source site</dfn> is the result
@@ -845,6 +876,9 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
         [=max attributions per event source=].
 1. Let |numReportWindows| be the result of running
     [=obtain the number of report windows=] with |sourceType|.
+1. Let |debugReportingEnabled| be false.
+1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
+    |debugReportingEnabled| to |value|["`debug_reporting`"].
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -883,6 +917,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     :: |aggregationKeys|
     : [=attribution source/aggregatable budget consumed=]
     :: 0
+    : [=attribution source/debug reporting enabled=]
+    :: |debugReportingEnabled|
 1. Return |source|.
 
 Issue: Ensure that |attributionDestination|'s [=origin/scheme=] is HTTP/HTTPS.
@@ -957,6 +993,26 @@ a [=trigger state=] |triggerState|:
     |triggerState|'s [=trigger state/report window=].
 1. Return |fakeReport|.
 
+To <dfn>obtain a debug report on source registration</dfn> given a [=debug data type=] |dataType| and
+an [=attribution source=] |source|:
+
+1. If |source|'s [=attribution source/debug reporting enabled=] is false, return null.
+1. Let |body| be a new [=map=] with the following key/value pairs:
+    : "`attribution_destination`"
+    :: |source|'s [=attribution source/attribution destination=].
+    : "`limit`"
+    :: The user agent's [=max destinations covered by unexpired sources=].
+    : "`source_event_id`"
+    :: |source|'s [=attribution source/event ID=], [=serialize an integer|serialized=].
+    : "`source_site`"
+    :: |source|'s [=attribution source/source site=].
+1. Let |report| be a new [=attribution debug report=] with the items:
+    : [=attribution debug data/data type=]
+    :: |dataType|
+    : [=attribution debug data/body=]
+    :: |body|
+1. Return |report|.
+
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
 
 1. Let |cache| be the user agent's [=attribution source cache=].
@@ -970,7 +1026,11 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. If |pendingSourcesForSourceOrigin|'s [=list/size=] is greater than or equal
     to the user agent's [=max pending sources per source origin=], return.
 1. If the result of running [=check if an attribution source exceeds the unexpired destination limit=]
-    with |source| is true, return.
+    with |source| is true:
+    1. Let |debugReport| be the result of running [=obtain a debug report on source registration=]
+        with "`source-destination-limit`" and |source|.
+    1. If |debugReport| is not null, [=queue a task=] to [=attempt to deliver a verbose debug report=] with |debugReport|.
+    1. Return.
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
     : [=attribution rate-limit record/scope=]
     :: "`source`"
@@ -1210,11 +1270,11 @@ To <dfn>match an attribution source's filter data against filters</dfn> given an
         <dl class="switch">
         <dt>false</dt>
         <dd> If the result of running [=match filter values=] with |sourceValues| and |filterValues|
-	     is false, return false.</dd>
+             is false, return false.</dd>
 
         <dt>true</dt>
         <dd>If the result of running [=match filter values with negation=] with |sourceValues| and
-	    |filterValues| is false, return false.</dd>
+            |filterValues| is false, return false.</dd>
         </dl>
 1. Return true.
 
@@ -1633,7 +1693,7 @@ To <dfn>serialize an [=aggregatable report=] </dfn> |report|, run the following 
 
 Issue: Spec |data|["`shared_info`"] and |data|["`aggregation_service_payloads`"].
 
-To <dfn> serialize an [=attribution report=]</dfn> |report|, run the following steps:
+To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following steps:
 
 1. [=Assert=]: |report|'s [=attribution report/attribution destination=] is not an [=opaque origin=].
 1. If |report| is an:
@@ -1650,18 +1710,38 @@ to perform deduplication and prevent double counting, in the event that the user
 reports on failure. To prevent the report recipient from learning additional information about
 whether a user is online, retries might be limited in number and subject to random delays.
 
+<h3 id="serialize-debug-report-body">Serialize attribution debug report body</h3>
+
+To <dfn>serialize an [=attribution debug report=]</dfn> |report|, run the following steps:
+
+1. Let |collection| be an [=list/is empty|empty=] [=list=].
+1. [=list/iterate|For each=] |debugData| of |report|'s [=attribution debug report/data=]:
+    1. Let |data| be a [=map=] of the following key/value pairs:
+        : "`type`"
+        :: |debugData|'s [=attribution debug data/data type=]
+        : "`body`"
+        :: |debugData|'s [=attribution debug data/body=]
+    1. [=list/Append=] |data| to |collection|.
+1. Return the [=byte sequence=] resulting from executing [=serialize an Infra value to JSON bytes=] on |collection|.
+
 <h3 id="get-report-url">Get report request URL</h3>
 
-To <dfn>generate a report URL</dfn> given an [=attribution report=] |report| and an optional
-[=boolean=] <dfn for="generate a report URL"><var>isDebugReport</var></dfn> (default false):
+To <dfn>generate a report URL</dfn> given an [=origin=] |reportingOrigin| and a [=list=] of [=strings=] |path|:
 
-1. Let |reportUrl| be a new [=URL record=].
-1. Let |reportingOrigin| be |report|'s [=attribution report/reporting endpoint=].
 1. [=Assert=]: |reportingOrigin| is not an [=opaque origin=].
+1. Let |reportUrl| be a new [=URL=] record.
 1. Set |reportUrl|'s [=url/scheme=] to |reportingOrigin|'s [=origin/scheme=].
 1. Set |reportUrl|'s [=url/host=] to |reportingOrigin|'s [=origin/host=].
 1. Set |reportUrl|'s [=url/port=] to |reportingOrigin|'s [=origin/port=].
-1. Let |path| be «"`.well-known`", "`attribution-reporting`"».
+1. Let |fullPath| be «"`.well-known`", "`attribution-reporting`"».
+1. [=list/Append=] |path| to |fullPath|.
+1. Set |reportUrl|'s [=url/path=] to |path|.
+1. Return |reportUrl|.
+
+To <dfn>generate an attribution report URL</dfn> given an [=attribution report=] |report| and an optional
+[=boolean=] <dfn for="generate an attribution report URL"><var>isDebugReport</var></dfn> (default false):
+
+1. Let |path| be an [=list/is empty|empty=] [=list=].
 1. If |isDebugReport| is true, [=list/append=] "`debug`" to |path|.
 1. If |report| is an:
     <dl class="switch">
@@ -1671,14 +1751,19 @@ To <dfn>generate a report URL</dfn> given an [=attribution report=] |report| and
     <dt>[=aggregatable report=]</dt>
     <dd>[=list/Append=] "`report-aggregate-attribution`" to |path|.</dd>
     </dl>
-1. Set |reportUrl|'s [=url/path=] to |path|.
-1. Return |reportUrl|.
+1. Return the result of running [=generate a report URL=] with |report|'s
+    [=attribution report/reporting endpoint=] and |path|.
+
+To <dfn>generate an attribution debug report URL</dfn> given an [=attribution debug report=] |report|:
+
+1. Let |path| be «"`debug`", "`verbose`"».
+1. Return the result of running [=generate a report URL=] with |report|'s
+    [=attribution debug report/reporting endpoint=] and |path|.
 
 <h3 id="create-report-request">Creating a report request</h3>
 
-To <dfn>create a report request</dfn> given an [=attribution report=] |report|:
+To <dfn>create a report request</dfn> given a [=URL=] |url| and a [=byte sequence=] |body|:
 
-1. Let |body| be the result of executing [=serialize an attribution report=] on |report|.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
     ::  "`POST`"
@@ -1711,13 +1796,13 @@ To <dfn>create a report request</dfn> given an [=attribution report=] |report|:
 
 <h3 id="issue-report-request">Issuing a report request</h3>
 
-This algorithm constructs a [=request=] and attempts to deliver it to
-|report|'s [=event-level report/reporting endpoint=].
+This algorithm constructs a [=request=] and attempts to deliver it to an [=origin=].
 
 To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report|, run the following steps:
 
-1. Let |url| be the result of executing [=generate a report URL=] on |report|.
-1. Let |request| be the result of executing [=create a report request=] on |report|.
+1. Let |url| be the result of executing [=generate an attribution report URL=] on |report|.
+1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
+1. Let |request| be the result of executing [=create a report request=] on |url| and |data|.
 1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being these steps:
     1. If |report| is an:
         <dl class="switch">
@@ -1736,12 +1821,20 @@ A user agent MAY retry this algorithm in the event that there was an error.
 
 To <dfn>attempt to deliver a debug report</dfn> given an [=attribution report=] |report|:
 
-1. Let |url| be the result of executing [=generate a report URL=] on |report| with
-    [=generate a report URL/isDebugReport=] set to true.
-1. Let |request| be the result of executing [=create a report request=] on |report|.
+1. Let |url| be the result of executing [=generate an attribution report URL=] on |report| with
+    [=generate an attribution report URL/isDebugReport=] set to true.
+1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
+1. Let |request| be the result of executing [=create a report request=] on |url| and |data|.
 1. [=Fetch=] |request|.
 
-Issue: Update for [=aggregatable report=].
+<h3 id="issue-verbose-debug-report-request">Issuing a verbose debug request</h3>
+
+To <dfn>attempt to deliver a verbose debug report</dfn> given an [=attribution debug report=] |report|:
+
+1. Let |url| be the result of executing [=generate an attribution debug report URL=] on |report|.
+1. Let |data| be the result of executing [=serialize an attribution debug report=] on |report|.
+1. Let |request| be the result of executing [=create a report request=] on |url| and |data|.
+1. [=Fetch=] |request|.
 
 Issue(220): This fetch should use a network partition key for an opaque origin.
 
