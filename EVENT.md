@@ -627,7 +627,7 @@ included in the request body as a JSON list of objects, e.g.:
   "body": {
     "limit": 100, // the browser's limit
     "source_event_id": "<source event id in the source registration>",
-    "source_site": "https://source.example", // omitted if registered inside a fenced frame tree
+    "source_site": "https://source.example",
     "attribution_destination": "https://destination.example"
   }
 }]
@@ -638,7 +638,7 @@ Each object has:
  - `body`: the contents of the report as defined by the `type`.
 
 These debugging reports will be sent immediately upon the error occurring
-during attribution registrations.
+during attribution registrations outside a fenced frame tree.
 
 #### Reporting endpoints
 
@@ -660,6 +660,9 @@ https://<reporting origin>/.well-known/attribution-reporting/debug/verbose
 
 TODO: Consider adding support for the top-level site to opt in to receiving
 debug reports without cross-site leak.
+
+TODO: Consider supporting debug reports for attirbution registrations inside a
+fenced frame tree.
 
 ## Sample Usage
 
