@@ -751,6 +751,7 @@ To <dfn>parse attribution destinations</dfn> from a value |val|:
     1. If |destination| is null, return null.
     1. [=set/append=] |destination| to |result|.
 1. If |result|'s [=set/size=] is greater than 3, return null.
+1. If |result| is [=set/empty=], return null.
 1. return |result|.
 
 Issue: confirm that the maximum destinations size is workable.
@@ -1661,19 +1662,27 @@ To <dfn>serialize an integer</dfn>, represent it as a string of the shortest pos
 Issue: This would ideally be replaced by a more descriptive algorithm in Infra. See
 <a href="https://github.com/whatwg/infra/issues/201">infra/201</a>
 
+<h3 id="serialize-destinations">Serialize attribution destinations</h3>
+
+To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destinations|, run the following steps:
+
+1. [=Assert=]: |destinations| does not [=set/contain=] the [=opaque origin=].
+1. [=Assert=]: |destinations| is not [=set/empty=].
+1. Let |destinationStrings| be a [=list=]
+1. [=list/iterate|For each=] |destination| in |destinations|:
+    1. [=list/append=] |destination| <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a> to |destinationStrings|
+1. If |destinationStrings|'s [=set/size=] is equal to 1, return |destinationStrings|[0].
+1. Return the result of running [=serialize an infra value to JSON bytes=] on |destinationStrings|.
+
+
 <h3 id="serialize-report-body">Serialize attribution report body</h3>
 
 To <dfn>serialize an [=event-level report=]</dfn> |report|, run the following steps:
 
-1. [=Assert=]: |report|'s [=event-level report/attribution destinations=] does not [=set/contain=] the [=opaque origin=].
-1. [=Assert=]: |report|'s [=event-level report/attribution destinations=] is not [=set/empty=].
-1. Let |destinationStrings| be a [=list=]
-1. [=list/iterate|For each=] |destination| in [=event-level report/attribution destinations=]:
-    1. [=list/append=] |destination| <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a> to |destinationStrings|
 1. Let |data| be a [=map=] of the following key/value pairs:
 
     : "`attribution_destination`"
-    :: The result of running [=serialize an infra value to JSON bytes=] on |destinationStrings|
+    :: |report|'s [=event-level report/attribution destinations=], [=serialize attribution destinations|serialized=].
     : "`randomized_trigger_rate`"
     :: |report|'s [=event-level report/randomized trigger rate=]
     : "`source_type`"
