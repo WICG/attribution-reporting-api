@@ -42,7 +42,7 @@ send [=attribution reports=] containing information from both of those events.
 
 A reporter `https://reporter.example` embedded on `https://source.example` is able to
 measure whether an iteraction on the page lead to an action on `https://destination.example`
-by registering an [=attribution source=] with an [=attribution source/attribution destinations=]
+by registering an [=attribution source=] with [=attribution source/attribution destinations=]
 of « `https://destination.example` ». Reporters are able to register sources through a variety
 of surfaces, but ultimately the reporter is required to provide the User Agent with an
 HTTP-response header which allows the source to be eligible for attribution.
@@ -276,7 +276,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>event ID</dfn>
 :: A non-negative 64-bit integer.
 : <dfn>attribution destinations</dfn>
-:: An [=ordered set=] of [=site=].
+:: An [=ordered set=] of [=sites=].
 : <dfn>reporting endpoint</dfn>
 :: An [=url/origin=].
 : <dfn>source type</dfn>
@@ -573,7 +573,7 @@ for triggers that are attributed to an [=attribution source=] whose
 
 <dfn>Max event-level reports per attribution destination</dfn> is a positive integer that
 controls how many [=event-level reports=] can be in the
-[=event-level report cache=] per each [=site=] in
+[=event-level report cache=] per [=site=] in
 [=event-level report/attribution destinations=].
 
 <dfn>Max aggregatable reports per attribution destination</dfn> is a positive integer that controls how
@@ -951,11 +951,11 @@ To <dfn>check if an [=attribution source=] exceeds the unexpired destination lim
      * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
      * |record|'s [=attribution rate-limit record/reporting endpoint=] and |source|'s [=attribution source/reporting endpoint=] are equal
      * |record|'s [=attribution rate-limit record/expiry time=] is greater than |source|'s [=attribution source/source time=]
-1. Let |unexpiredDestinations| be an [=set=]
+1. Let |unexpiredDestinations| be an [=set/empty=] [=set=].
 1. For each [=attribution source=] |unexpiredSource| of |unexpiredSources|:
-    1. Let |unexpiredDestinations| be the result of taking the [=set/union=] of |unexpiredDestinations| and |unexpiredSource|'s [=attribution source/attribution destinations=]'
-1. Let |newDestinations| be the result of taking the [=set/union=] of |unexpiredDestinations| and |source|'s [=attribution source/attribution destinations=]'
-1. Return whether |newDestinations|'s [=set/size=]' is  is greater than or equal to the user agent's [=max destinations covered by unexpired sources=].
+    1. Let |unexpiredDestinations| be the result of taking the [=set/union=] of |unexpiredDestinations| and |unexpiredSource|'s [=attribution source/attribution destinations=].
+1. Let |newDestinations| be the result of taking the [=set/union=] of |unexpiredDestinations| and |source|'s [=attribution source/attribution destinations=].
+1. Return whether |newDestinations|'s [=set/size=] is greater than or equal to the user agent's [=max destinations covered by unexpired sources=].
 
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
