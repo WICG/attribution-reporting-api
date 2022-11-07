@@ -1869,6 +1869,108 @@ To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destina
 1. If |destinationStrings|'s [=set/size=] is equal to 1, return |destinationStrings|[0].
 1. Return |destinationStrings|.
 
+<h3 id="encode-integer">Encode an unsigned k-bit integer</h3>
+
+To <dfn>encode an unsigned k-bit integer</dfn>, represent it as a big-endian [=byte sequence=]
+of length k / 8, left padding with zero as necessary.
+
+<h3 id="obtain-aggregatable-report-debug-mode">Obtaining an aggregatable report's debug mode</h3>
+
+An [=aggregatable report=] |report|'s <dfn for="aggregatable report">debug mode</dfn> is the result
+of running the following steps:
+
+1. If |report|'s [=aggregatable report/source debug key=] is null, return <strong>disabled</strong>.
+1. If |report|'s [=aggregatable report/trigger debug key=] is null, return <strong>disabled</strong>.
+1. Return <strong>enabled</strong>.
+
+<h3 id="obtain-aggregatable-report-shared-info">Obtaining an aggregatable report's shared info</h3>
+
+An [=aggregatable report=] |report|'s <dfn for="aggregatable report">shared info</dfn> is the result
+of running the following steps:
+
+1. Let |reportingOrigin| be |report|'s [=aggregatable report/reporting endpoint=].
+1. [=Assert=]: |reportingOrigin| is a [=potentially trustworthy origin=].
+1. Let |sharedInfo| be an [=ordered map=] of the following key/value pairs:
+
+    : "`api`"
+    :: "`attribution-reporting`"
+    : "`attribution destination`"
+    :: |report|'s [=aggregatable report/attribution destination=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
+    : "`report_id`"
+    :: |report|'s [=aggregatable report/report ID=]
+    : "`reporting_origin`"
+    :: |reportingOrigin|, [=serialization of an origin|serialized=]
+    : "`scheduled_report_time`"
+    :: |report|'s [=aggregatable report/original report time=] in seconds since the UNIX epoch, [=serialize an integer|serialized=]
+    : "`source_registration_time`"
+    :: |report|'s [=aggregatable report/source time=] in seconds since the UNIX epoch, rounded down
+        to a whole day (86400 seconds), [=serialize an integer|serialized=]
+    : "`version`"
+    :: A [=string=], API version.
+
+1. If |report|'s [=aggregatable report/debug mode=] is <strong>enabled</strong>,
+    set |sharedInfo|["`debug_mode`"] to "`enabled`".
+1. Return the [=string=] resulting from executing [=serialize an infra value to a json string=] on |sharedInfo|.
+
+<h3 id="obtain-aggregatable-report-aggregation-service-payloads">Obtaining an aggregatable report's aggregation service payloads</h3>
+
+To <dfn>obtain the public key for encryption</dfn>, return a user agent-determined public key asynchronously.
+
+Note: The user agent might enforce weekly key rotation. If there are multiple keys, the user agent
+might independently pick a key uniformly at random for every encryption operation.
+The key should be uniquely identifiable by an identifier.
+
+An [=aggregatable report=] |report|'s <dfn for="aggregatable report">plaintext payload</dfn>
+is the result of running the following steps:
+
+1. Let |payloadData| be a new [=list/is empty|empty=] [=list=].
+1. [=list/iterate|For each=] |contribution| of |report|'s [=aggregatable report/contributions=]:
+    1. Let |contributionData| be a [=map=] of the following key/value pairs:
+
+        : "`bucket`"
+        :: |contribution|'s [=aggregatable contribution/key=], [=encode an unsigned k-bit integer|encoded=]
+        : "`value`"
+        :: |contribution|'s [=aggregatable contribution/value=], [=encode an unsigned k-bit integer|encoded=]
+
+    1. [=list/Append=] |contributionData| to |payloadData|.
+1. Let |payload| be a [=map=] of the following key/value pairs:
+
+    : "`data`"
+    :: |payloadData|
+    : "`operation`"
+    :: "`histogram`"
+
+1. Return the [=byte sequence=] resulting from [[!RFC8949|CBOR encoding]] |payload|.
+
+To <dfn>obtain the encrypted payload</dfn> given an [=aggregatable report=] |report| and
+a public key |pkR|, run the following steps:
+
+1. Let |plaintext| be |report|'s [=aggregatable report/plaintext payload=].
+1. Let |encodedSharedInfo| be |report|'s [=aggregatable report/shared info=], [=utf-8 encode|encoded=].
+1. Let |info| be the [=string/concatenate|concatenation=] of «"`aggregation_service`", |encodedSharedInfo|».
+1. Set up [[RFC9180|HPKE]] [[RFC9180#name-encryption-to-a-public-key|sender's context]]
+    with |pkR| and |info|.
+1. Return the [=byte sequence=] resulting from [[RFC9180#name-encryption-and-decryption|encrypting]]
+    |plaintext| with the [[RFC9180#name-encryption-to-a-public-key|sender's context]].
+
+To <dfn>obtain the aggregation service payloads</dfn> given an [=aggregatable report=] |report|,
+run the following steps:
+
+1. Let |pkR| be the result of running [=obtain the public key for encryption=].
+1. Let |encryptedPayload| be the result of running [=obtain the encrypted payload=] with |report| and |pkR|.
+1. Let |aggregationServicePayloads| be a new [=list/is empty|empty=] [=list=].
+1. Let |aggregationServicePayload| be a [=map=] of the following key/value pairs:
+
+    : "`payload`"
+    :: |encryptedPayload|, [=forgiving-base64 encode|base64 encoded=]
+    : "`key_id`"
+    :: A [=string=] identifying |pkR|
+
+1. If |report|'s [=aggregatable report/debug mode=] is <strong>enabled</strong>,
+    set |aggregationServicePayload|["`debug_cleartext_payload`"] to |report|'s
+    [=aggregatable report/plaintext payload=], [=forgiving-base64 encode|base64 encoded=].
+1. [=list/Append=] |aggregationServicePayload| to |aggregationServicePayloads|.
+1. Return |aggregationServicePayloads|.
 
 <h3 id="serialize-report-body">Serialize attribution report body</h3>
 
@@ -1908,9 +2010,9 @@ To <dfn>serialize an [=aggregatable report=] </dfn> |report|, run the following 
 1. Let |data| be a [=map=] of the following key/value pairs:
 
     : "`shared_info`"
-    :: ""
+    :: |report|'s [=aggregatable report/shared info=].
     : "`aggregation_service_payloads`"
-    :: ""
+    :: The result of running [=obtain the aggregation service payloads=].
 
 1. If |report|'s [=aggregatable report/source debug key=] is not null, [=map/set=]
     |data|["`source_debug_key`"] to |report|'s [=aggregatable report/source debug key=],
@@ -1919,8 +2021,6 @@ To <dfn>serialize an [=aggregatable report=] </dfn> |report|, run the following 
     |data|["`trigger_debug_key`"] to |report|'s [=aggregatable report/trigger debug key=],
     [=serialize an integer|serialized=].
 1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
-
-Issue: Spec |data|["`shared_info`"] and |data|["`aggregation_service_payloads`"].
 
 To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following steps:
 
