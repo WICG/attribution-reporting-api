@@ -27,6 +27,21 @@ The proposal here takes advantage of OS-level support for attribution. In partic
 *   While focusing initially on Android support, the proposal should be generic enough to be supported on other platforms
 
 ## API changes
+```mermaid
+sequenceDiagram
+  participant B as Browser
+  participant O as OS platform
+  participant R as Reporting endpoint
+  Note over B,R: For either source or trigger registration
+  B->>R: Registration request advertising OS support
+  R->>B: Response headers chooses how registration is handled
+  alt header opts into OS handling
+  B->>O: Passes relevant information to the OS
+  O->>R: OS re-pings to attain full registration config
+  else header opts out and provides browser registration
+  B->>B: Applies standard registration
+  end
+```
 See Android's [Attribution reporting: cross app and web measurement proposal](https://developer.android.com/design-for-safety/privacy-sandbox/attribution-app-to-web) for one example of an OS API that a browser can integrate with to do cross app and web measurement.
 
 The existing API involves sending requests to the reporting origin to register events. These requests will have a new request header `Attribution-Reporting-Eligible`. On requests with this header, the browser will additionally broadcast possible OS-level support for attribution to the reporting origin’s server via a new [dictionary structured request header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.2):
