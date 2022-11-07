@@ -5,6 +5,10 @@ export const validSourceHeadersAsObjects = [
   },
   {
     source_event_id: '12340873456',
+    destination: ['https://example.com', 'https://example2.com'],
+  },
+  {
+    source_event_id: '12340873456',
     destination: 'https://example.com',
     priority: '4567898765678',
     debug_key: '9876786543456',
@@ -94,6 +98,31 @@ export const invalidSourceHeadersAsObjects = [
   // Missing required field Destination
   {
     source_event_id: '12340873456',
+  },
+  // Empty destination list
+  {
+    source_event_id: '12340873456',
+    destination: [],
+  },
+  // Destination not a string or list
+  {
+    source_event_id: '12340873456',
+    destination: 1,
+  },
+  // Destination list includes a non-string
+  {
+    source_event_id: '12340873456',
+    destination: ['https://example.com', 1],
+  },
+  // Destination list includes a non-trustworthy URL.
+  {
+    source_event_id: '12340873456',
+    destination: ['http://example.com'],
+  },
+  // More than 3 destinations.
+  {
+    source_event_id: '12340873456',
+    destination: ['https://a.com', 'https://b.com', 'https://c.com', 'https://d.com'],
   },
   // One aggregation key not a hex string
   {
