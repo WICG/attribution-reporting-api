@@ -184,7 +184,8 @@ header `Attribution-Reporting-Register-Source` of the form:
 ```
 
 - `destination`: an origin whose eTLD+1 is where attribution will be triggered
-for this source.
+for this source. This field can optionally be repeated in a list of some small size
+(e.g. 3-5).
 
 - `source_event_id`: (optional) A string encoding a 64-bit unsigned integer which
 represents the event-level data associated with this source. This will be
@@ -217,8 +218,8 @@ since it is the origin that will end up receiving attribution reports.
 A `navigation` attribution source event will be logged to storage if  the navigation occurs with [transient
 user activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation). `event` sources don’t require activation.
 
-An attribution source will be eligible for reporting if any page on the
-`destination` eTLD+1 (advertiser site) triggers attribution for the associated
+An attribution source will be eligible for reporting if any page on any of the
+associated `destination` eTLD+1s (advertiser sites) triggers attribution for the associated
 reporting origin.
 
 ### Publisher-side Controls for Attribution Source Declaration
@@ -257,7 +258,7 @@ issue](https://github.com/w3c/webappsec-permissions-policy/issues/252).
 ### Triggering Attribution
 
 Attribution can only be triggered for a source on a page whose eTLD+1 matches
-the eTLD+1 of the site provided in `destination`. To trigger attribution, a
+the eTLD+1 of (one of) the site(s) provided in `destination`. To trigger attribution, a
 similar mechanism is used as source event registration, via HTML:
 ```html
 <img src="https://ad-tech.example/conversionpixel"
@@ -380,7 +381,7 @@ reflect a final set of parameters.
 
 ### Trigger attribution algorithm
 
-When the browser receives an attribution trigger redirect on a URL matching the
+When the browser receives an attribution trigger redirect on a URL matching a
 `destination` eTLD+1, it looks up all sources in storage that match
 <`attributionsrc` origin, `destination`> and picks the one with the greatest
 `priority`. If multiple sources have the greatest `priority`, the
@@ -858,10 +859,10 @@ browsers.
 ### Reporting cooldown / rate limits
 
 To limit the amount of user identity leakage between a <source site,
-destination> pair, the browser should throttle the amount of total information
+destination site> pair, the browser should throttle the amount of total information
 sent through this API in a given time period for a user. The browser should set
 a maximum number of attributions per
-<source site, destination, reporting origin, user> tuple per time period. If this
+<source site, destination site, reporting origin, user> tuple per time period. If this
 threshold is hit, the browser will stop scheduling reports the API for the
 rest of the time period for attributions matching that tuple.
 
@@ -874,7 +875,7 @@ leak when multiple origins collude with each other. However, the alternative
 makes it very difficult to adopt the API if all reporting origins had to share a
 budget.
 
-Strawman rate limit: 100 attributions per {source site, destination, reporting
+Strawman rate limit: 100 attributions per {source site, destination site, reporting
 origin, 30 days}
 
 ### Less trigger-side data
@@ -898,13 +899,10 @@ attribution window a source was triggered.
 
 ### Browsing history reconstruction
 
-Reporting attribution without a pre-existing navigation allows the
-`reportingorigin` to learn whether a given user on the source site visited the
-`destination` site at all. For click-through reports, this is not an issue
-because the `reportingorigin` knows a priori the user was navigating to
-`destination`.
+Reporting attribution allows the `reportingorigin` to learn whether a given user
+on the source site visited (one of) the `destination` site(s) at all.
 
-This new threat is be mitigated in a number of ways:
+This threat is be mitigated in a number of ways:
 
 #### Adding noise to whether a trigger is genuine
 
@@ -920,7 +918,7 @@ trying to measure user visits on, the browser can limit the number `destination`
 eTLD+1s represented by unexpired sources for a source-site.
 
 The browser can place a limit on the number of a source site's unexpired source's
-unique `destination`s. When an attribution source is registered for an eTLD+1
+unique `destination` sites. When an attribution source is registered for an eTLD+1
 that is not already in the unexpired sources and a source site is at its limit,
 the browser will drop the new source.
 
