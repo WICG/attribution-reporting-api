@@ -859,7 +859,7 @@ browsers.
 ### Reporting cooldown / rate limits
 
 To limit the amount of user identity leakage between a <source site,
- site> pair, the browser should throttle the amount of total information
+destination site> pair, the browser should throttle the amount of total information
 sent through this API in a given time period for a user. The browser should set
 a maximum number of attributions per
 <source site, destination site, reporting origin, user> tuple per time period. If this
