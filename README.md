@@ -36,7 +36,7 @@ These two report types can be used simultaneously. They're complementary.
 
 ## API features (proposals)
 
-🕙 Last updated: May 2022
+🕙 Last updated: Nov 2022
 
 All the features below are proposals under incubation. This list evolves over time.
 
@@ -61,14 +61,6 @@ Implementation status: `Available in Chrome as an origin trial`
 Attribution reports for web conversions for ad clicks (touches) or views that occurred within an Android app. 
 
 See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/app_to_web.md).
-
-Implementation status: `Proposal. Not implemented yet (all browsers)`
-
-### Cross-device (clicks and views)
-
-Attribute conversions occurring across distinct devices, i.e. as distinct web browser instances. 
-
-See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/cross_device.md).
 
 Implementation status: `Proposal. Not implemented yet (all browsers)`
 
