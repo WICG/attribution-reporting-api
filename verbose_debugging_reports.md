@@ -264,7 +264,7 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
 
 ```jsonc
 {
-  "type": "trigger-aggregate-deduplication",
+  "type": "trigger-aggregate-deduplicated",
   "body": {
     "attribution_destination": "https://destination.example",
     "source_event_id": "<source event id in the matched source>",
