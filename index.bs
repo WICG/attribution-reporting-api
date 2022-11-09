@@ -98,132 +98,9 @@ The IDL attribute {{HTMLAttributionSrcElementUtils/attributionSrc}}
 must <a spec=html>reflect</a> the respective content attribute of the same
 name.
 
-<h3 id="monkeypatch-navigation">Navigation</h3>
-
-This section ensures that an [=attribution source=] associated with a navigation
-results in a top-level navigation whose final URL is [=same site=] with the
-[=attribution source/attribution destination=].
-
-<h4 id="monkeypatch-navigation-params">Navigation Params</h4>
-
-A <a spec="HTML">navigation params</a> struct has an item:
-
-: <dfn for="navigation params">attribution source</dfn>
-:: null or an [=attribution source=] declared when initiating a navigation
-
-<h4 id="monkeypatch-navigate-algorithm">Navigate algorithm</h4>
-
-Modify the <a spec="html">navigate</a> algorithm to accept a new optional parameter
-<var>attributionSource</var> of type [=attribution source=] defaulting to null.
-
-In <a spec="html">navigate</a>, within step
-
-> 19. This is the step that attempts to obtain resource, if necessary. Jump to the first appropriate substep:
->     ...
-
-in the case where
-
-> If resource is a response
-
-modify the substep
-
-> 7. Let navigationParams be a new navigation params whose request is null, response is resource
->     ...
-
-to set the [=navigation params/attribution source=] of |navigationParams| to |attributionSource|.
-
-In the case where
-
-> If resource is a request whose URL's scheme is "javascript"
-
-modify the substep
-
-> 4. Let navigationParams be a new navigation params whose request is resource,
->     ...
-
-to set the [=navigation params/attribution source=] of |navigationParams| to |attributionSource|.
-
-In the case where
-
-> If resource is a request whose URL's scheme is a fetch scheme
-
-modify the substep to pass |attributionSource| to the <a spec="html">process a navigate fetch</a> algorithm.
-
-Note: The final case, where the request is not a javascript or fetch scheme, does not need to be handled
- as it will not result in the navigation of a top-level browsing context.
-
-<h4 id="monkeypatch-navigate-fetch">Process a navigate fetch</h4>
-
-Modify the <a spec="html">process a navigate fetch</a> algorithm to accept a new optional parameter
-<var>attributionSource</var> of type [=attribution source=] defaulting to null.
-
-In <a spec="html">process a navigate fetch</a>, modify the step
-
-> 15. Otherwise, if locationURL is a URL whose scheme is a fetch scheme, then run process a navigate fetch with a new request
->     ...
-
-to also pass |attributionSource| into the <a spec="html">process a navigate fetch</a> algorithm.
-
-Modify the step
-
-> 19. Let navigationParams be a new navigation params whose request is request, response is response,
->     ...
-
-to set the [=navigation params/attribution source=] of |navigationParams| to |attributionSource|.
-
-<h4 id="monkeypatch-document-creation">Document creation</h4>
-
-In <a spec="html">create and initialize a <code>Document</code> object</a>, before
-
-> 2. Let permissionsPolicy be the result of creating a permissions policy from a response given browsingContext
->     ...
-
-add the following step:
-
-1. Execute [=maybe process a navigation attribution source=] with |navigationParams| and |browsingContext|.
-
-<h3 id="monkeypatch-following-hyperlink">Follow the hyperlink</h4>
-
-Attribution source information declared on the <{a}> element needs to be passed to the
-<a spec="html">navigate</a> algorithm.
-
-In <a spec="html">follow the hyperlink</a> after
-
-> 14. Let historyHandling be "replace" if windowType is not "existing or none"; otherwise, "default".
-
-add the following steps:
-
-1. Let <var>attributionSource</var> be null.
-1. If |subject| is an <{a}> element, set |attributionSource| to the result of running [=obtain an attribution source from an anchor=] with |subject|.
-
-Modify the step:
-
-> 15. Queue an element task on the DOM manipulation task source given subject to navigate target to request
->     ...
-
-to call <a spec="html">navigate</a> with |attributionSource| set to |attributionSource|.
-
 <h3 id="monkeypatch-window-open">Window open steps</h4>
 
-Attribution source information declared via `window.open()` needs to be passed to
-the <a spec="html">navigate</a> algorithm.
-
-In <a spec="html">window open steps</a> after
-
-> 10. If |target browsing context| is null, then return null.
-
-add the following steps:
-1. Let |attributionSource| be the result of running [=obtain an attribution source from window features=] with <var ignore="">tokenizedFeatures</var> and |source browsing context|.
-
-Modify the step:
-> 3. [=Navigate=] |target browsing context| to |request|, with <var>[=exceptionsEnabled=]</var> set to true and the [=source browsing context=] set to |source browsing context|.
-
-to also pass |attributionSource| into the <a spec="html">navigate</a> algorithm.
-
-Modify the step:
-> 5. [=Navigate=] |target browsing context| to |request|, with <var>[=exceptionsEnabled=]</var> set to true and the [=source browsing context=] set to |source browsing context|.
-
-to also pass |attributionSource| into the <a spec="html">navigate</a> algorithm.
+Issue: Monkeypatch `window.open()`.
 
 # Fetch monkeypatches # {#fetch-monkeypatches}
 
@@ -789,15 +666,14 @@ Issue: Specify the steps for making attributionsrc request.
 
 <h3 algorithm id="obtaining-attribution-source-window-features">Obtaining an attribution source from window features</h3>
 
-To <dfn>obtain an attribution source from window features</dfn> given an [=ordered map=] |tokenizedFeatures|
-and a [=browsing context=] |sourceBrowsingContext|:
+To <dfn>obtain an attribution source from window features</dfn> given an [=ordered map=] |tokenizedFeatures|:
 
 1. If |tokenizedFeatures|["attributionsrc"] does not [=map/exists|exist=], return null.
-1. If |sourceBrowsingContext|'s [=browsing context/active window=] does not have [=transient activation=], return null.
 1. Let |decodedSrcBytes| be the result of [=string/percent-decode|percent-decoding=] |tokenizedFeatures|["attributionsrc"].
 1. Let |decodedSrc| be the [=UTF-8 decode without BOM=] of |decodedSrcBytes|.
 1. Return null.
 
+Issue: Check for transient activation.
 Issue: Specify the steps for making an attributionsrc request with |decodedSrc|.
 
 <h3 algorithm id="parsing-source-registration">Parsing source-registration JSON</h3>
@@ -959,15 +835,6 @@ To <dfn>check if an [=attribution source=] exceeds the unexpired destination lim
 
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
-
-To <dfn>maybe process a navigation attribution source</dfn> given a <a spec="HTML">navigation params</a>
-|navigationParams| and [=browsing context=] |browsingContext|, run the following steps:
-
-1. If |browsingContext|'s [=browsing context/active window=] does not have [=transient activation=], return.
-1. If |browsingContext| is not a <a spec="html">top-level browsing context</a>, return.
-1. Let <var>attributionSource</var> be |navigationParams|'s [=navigation params/attribution source=].
-1. If |attributionSource| is null, return.
-1. [=Queue a task=] to [=process an attribution source=] with |attributionSource|.
 
 To <dfn>obtain a fake report</dfn> given an [=attribution source=] |source| and
 a [=trigger state=] |triggerState|:
