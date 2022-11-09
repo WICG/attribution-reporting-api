@@ -1,262 +1,325 @@
-export const validSourceHeadersAsObjects = [
+export const testCases = [
+  // no errors or warnings
   {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
+    name: "required-fields-only",
+    json: `{"destination": "https://a.test"}`,
   },
   {
-    source_event_id: '12340873456',
-    destination: ['https://example.com', 'https://example2.com'],
+    name: "multi-destination",
+    json: `{"destination": ["https://a.test", "https://b.test"]}`,
   },
   {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    priority: '4567898765678',
-    debug_key: '9876786543456',
-    expiry: '123',
-    aggregation_keys: {
-      campaignCounts: '0x159',
-      geoValue: '0x5',
-    },
-    aggregatable_report_window: '86400',
-    event_report_window: '86400',
-    debug_reporting: true
-  },
-]
-
-export const validSourceHeadersAsJSON = validSourceHeadersAsObjects.map(
-  JSON.stringify
-)
-
-export const invalidSourceHeadersAsObjects = [
-  // ❌ ❌ ❌  ERRORS ❌ ❌ ❌
-  // Source ID not a string
-  {
-    source_event_id: 12340873456,
-    destination: 'https://example.com',
-  },
-  // Source ID not a ui64
-  {
-    source_event_id: 'hello',
-    destination: 'https://example.com',
-  },
-  // Source ID too big
-  {
-    source_event_id: '12340873456123408734561234087345612340873456',
-    destination: 'https://example.com',
-  },
-  // Source ID is signed
-  {
-    source_event_id: '-12340873456',
-    destination: 'https://example.com',
-  },
-  // Priority not a ui64
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    priority: 'hello',
-  },
-  // Priority too big
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    priority: '12340873456123408734561234087345612340873456',
-  },
-  // Priority is signed
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    priority: '-12340873456',
-  },
-  // Debug key not a ui64
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    debug_key: 'hello',
-  },
-  // Debug key too big
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    debug_key: '12340873456123408734561234087345612340873456',
-  },
-  // Debug key is signed
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    debug_key: '-12340873456',
-  },
-  // Destination not a valid URL
-  {
-    source_event_id: '12340873456',
-    destination: 'not-a-url',
-  },
-  // Destination not trustworthy
-  {
-    source_event_id: '12340873456',
-    destination: 'http://example.com',
-  },
-  // Missing required field Destination
-  {
-    source_event_id: '12340873456',
-  },
-  // Empty destination list
-  {
-    source_event_id: '12340873456',
-    destination: [],
-  },
-  // Destination not a string or list
-  {
-    source_event_id: '12340873456',
-    destination: 1,
-  },
-  // Destination list includes a non-string
-  {
-    source_event_id: '12340873456',
-    destination: ['https://example.com', 1],
-  },
-  // Destination list includes a non-trustworthy URL.
-  {
-    source_event_id: '12340873456',
-    destination: ['http://example.com'],
-  },
-  // More than 3 destinations.
-  {
-    source_event_id: '12340873456',
-    destination: ['https://a.com', 'https://b.com', 'https://c.com', 'https://d.com'],
-  },
-  // One aggregation key not a hex string
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    aggregation_keys: {
-      campaignCounts: '1xabc',
-    },
-  },
-  // One aggregation key not a hex string
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    aggregation_keys: {
-      campaignCounts: 0x159,
-    },
-  },
-  // Multiple aggregation keys are not a hex string
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    aggregation_keys: {
-      campaignCounts: '1xabc',
-      geoValue: 0x159,
-      productCategory: '42',
-    },
-  },
-  // Aggregation keys not an object
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    aggregation_keys: ['1xabc'],
-  },
-  // Filter data not a list
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    filter_data: {
-      conversion_subdomain: 123,
-    },
-  },
-  // Filter data not a list of strings
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    filter_data: {
-      conversion_subdomain: [123],
-    },
-  },
-  // Filter data contains forbidden value
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    filter_data: {
-      conversion_subdomain: ['electronics.megastore', 'electronics2.megastore'],
-      source_type: ['1234'],
-    },
+    name: "all-fields",
+    json: `{
+      "aggregatable_report_window": "-1",
+      "aggregation_keys": {"a": "0xf"},
+      "debug_key": "1",
+      "debug_reporting": true,
+      "destination": "https://a.test",
+      "event_report_window": "-2",
+      "expiry": "-3",
+      "filter_data": {"b": ["c"]},
+      "priority": "2",
+      "source_event_id": "3"
+    }`,
   },
 
-  // Multiple errors
+  // warnings
   {
-    destination: 'foo',
-    priority: 'bar',
+    name: "unknown-field",
+    json: `{
+      "destination": "https://a.test",
+      "x": true
+    }`,
+    expectedWarnings: [{
+      path: ["x"],
+      msg: "unknown field",
+    }],
   },
-  // ⚠️ ⚠️ ⚠️ WARNINGS ⚠️ ⚠️ ⚠️
-  // Unknown field `foo`
   {
-    source_event_id: '12340873456',
-    destination: 'https://example.com',
-    foo: 'xxxxx',
+    name: "destination-url-components",
+    json: `{"destination": "https://a.test/b?c=d#e"}`,
+    expectedWarnings: [
+      {
+        path: ["destination"],
+        msg: "contains a path that will be ignored",
+      },
+      {
+        path: ["destination"],
+        msg: "contains a query string that will be ignored",
+      },
+      {
+        path: ["destination"],
+        msg: "contains a fragment that will be ignored",
+      },
+    ],
   },
-  // Destination contains a path that will be ignored
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com/foo',
-  },
-  // Destination contains a query string that will be ignored
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com?foo',
-  },
-  // Destination contains a fragment that will be ignored
-  {
-    source_event_id: '12340873456',
-    destination: 'https://example.com#foo',
-  },
-  // Too many filters
-  {
-    source_event_id: '0',
-    destination: 'https://example.com',
-    filter_data: (function () {
-      const obj = {}
-      for (let i = 0; i < 51; i++) {
-        obj[`${i}`] = []
-      }
-      return obj
-    })(),
-  },
-  // Too many filter values
-  {
-    source_event_id: '0',
-    destination: 'https://example.com',
-    filter_data: {
-      x: (function () {
-        const arr = []
-        for (let i = 0; i < 51; i++) {
-          arr.push(`${i}`)
-        }
-        return arr
-      })(),
-    },
-  },
-  // Too many aggregation keys
-  {
-    source_event_id: '0',
-    destination: 'https://example.com',
-    aggregation_keys: (function () {
-      const obj = {}
-      for (let i = 0; i < 51; i++) {
-        obj[`${i}`] = '0x1'
-      }
-      return obj
-    })(),
-  },
-  // Invalid debug_reporting
-  {
-    destination: 'https://example.com',
-    debug_reporting: 'true',
-  },
-]
 
-export const invalidSourceHeadersAsJSON = [
-  // same invalid headers as above, but as JSON
-  ...invalidSourceHeadersAsObjects.map(JSON.stringify),
-  // additionally, one invalid JSON example: missing value
-  '{"source_event_id":"12340873456","destination"}',
+  // errors
+  {
+    name: "invalid-json",
+    json: ``,
+    expectedErrors: [{msg: "Unexpected end of JSON input"}],
+  },
+  {
+    name: "wrong-root-type",
+    json: `1`,
+    expectedErrors: [{
+      path: [],
+      msg: "must be an object",
+    }],
+  },
+
+  {
+    name: "destination-missing",
+    json: `{}`,
+    expectedErrors: [{
+      path: ["destination"],
+      msg: "missing required field",
+    }],
+  },
+  {
+    name: "destination-wrong-type",
+    json: `{"destination": 1}`,
+    expectedErrors: [{
+      path: ["destination"],
+      msg: "Must be either a list or a string",
+    }],
+  },
+  {
+    name: "destination-not-url",
+    json: `{"destination": "a.test"}`,
+    expectedErrors: [{
+      path: ["destination"],
+      msg: "must contain a valid URL",
+    }],
+  },
+  {
+    name: "destination-untrustworthy",
+    json: `{"destination": "http://a.test"}`,
+    expectedErrors: [{
+      path: ["destination"],
+      msg: "must contain a potentially trustworthy URL",
+    }],
+  },
+
+  {
+    name: "filter-data-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "filter_data": 1
+    }`,
+    expectedErrors: [{
+      path: ["filter_data"],
+      msg: "must be an object",
+    }],
+  },
+  {
+    name: "filter-data-values-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "filter_data": {"a": "b"}
+    }`,
+    expectedErrors: [{
+      path: ["filter_data", "a"],
+      msg: "must be a list",
+    }],
+  },
+  {
+    name: "filter-data-value-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "filter_data": {"a": [1]}
+    }`,
+    expectedErrors: [{
+      path: ["filter_data", "a", 0],
+      msg: "must be a string",
+    }],
+  },
+  // TODO: add tests for exceeding size limits
+
+  {
+    name: "aggregation-keys-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "aggregation_keys": 1
+    }`,
+    expectedErrors: [{
+      path: ["aggregation_keys"],
+      msg: "must be an object",
+    }],
+  },
+  {
+    name: "aggregation-keys-value-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "aggregation_keys": {"a": 1}
+    }`,
+    expectedErrors: [{
+      path: ["aggregation_keys", "a"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "aggregation-keys-value-wrong-format",
+    json: `{
+      "destination": "https://a.test",
+      "aggregation_keys": {"a": "3"}
+    }`,
+    expectedErrors: [{
+      path: ["aggregation_keys", "a"],
+      msg: "must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)",
+    }],
+  },
+  // TODO: add tests for exceeding size limits
+
+  {
+    name: "source-event-id-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "source_event_id": 1
+    }`,
+    expectedErrors: [{
+      path: ["source_event_id"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "source-event-id-wrong-format",
+    json: `{
+      "destination": "https://a.test",
+      "source_event_id": "-1"
+    }`,
+    expectedErrors: [{
+      path: ["source_event_id"],
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
+    }],
+  },
+
+  {
+    name: "debug-key-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "debug_key": 1
+    }`,
+    expectedErrors: [{
+      path: ["debug_key"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "debug-key-wrong-format",
+    json: `{
+      "destination": "https://a.test",
+      "debug_key": "-1"
+    }`,
+    expectedErrors: [{
+      path: ["debug_key"],
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
+    }],
+  },
+
+  {
+    name: "priority-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "priority": 1
+    }`,
+    expectedErrors: [{
+      path: ["priority"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "priority-wrong-format",
+    json: `{
+      "destination": "https://a.test",
+      "priority": "x"
+    }`,
+    expectedErrors: [{
+      path: ["priority"],
+      msg: "must be an int64 (must match /^-?[0-9]+$/)",
+    }],
+  },
+
+  {
+    name: "aggregatable-report-window-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "aggregatable_report_window": 1
+    }`,
+    expectedErrors: [{
+      path: ["aggregatable_report_window"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "aggregatable-report-window-wrong-format",
+    json: `{
+      "destination": "https://a.test",
+      "aggregatable_report_window": "x"
+    }`,
+    expectedErrors: [{
+      path: ["aggregatable_report_window"],
+      msg: "must be an int64 (must match /^-?[0-9]+$/)",
+    }],
+  },
+
+  {
+    name: "event-report-window-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "event_report_window": 1
+    }`,
+    expectedErrors: [{
+      path: ["event_report_window"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "event-report-window-wrong-format",
+    json: `{
+      "destination": "https://a.test",
+      "event_report_window": "x"
+    }`,
+    expectedErrors: [{
+      path: ["event_report_window"],
+      msg: "must be an int64 (must match /^-?[0-9]+$/)",
+    }],
+  },
+
+  {
+    name: "expiry-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "expiry": 1
+    }`,
+    expectedErrors: [{
+      path: ["expiry"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "expiry-wrong-format",
+    json: `{
+      "destination": "https://a.test",
+      "expiry": "x"
+    }`,
+    expectedErrors: [{
+      path: ["expiry"],
+      msg: "must be an int64 (must match /^-?[0-9]+$/)",
+    }],
+  },
+
+  {
+    name: "debug-reporting-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "debug_reporting": "true"
+    }`,
+    expectedErrors: [{
+      path: ["debug_reporting"],
+      msg: "must be a boolean",
+    }],
+  },
 ]
