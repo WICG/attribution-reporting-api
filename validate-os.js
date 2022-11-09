@@ -75,10 +75,7 @@ function validate(str, paramChecks) {
 }
 
 export function validateRegisterOsSource(str) {
-  return validate(str, {
-    'os-destination': validateString,
-    'web-destination': validateURL,
-  })
+  return validate(str, {})
 }
 
 export function validateRegisterOsTrigger(str) {

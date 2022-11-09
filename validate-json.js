@@ -106,11 +106,11 @@ function object(f = () => {}, maxKeys = Infinity) {
   }
 }
 
-function list(f = () => {}, maxLength = Infinity) {
+function list(f = () => {}, maxLength = Infinity, minLength = 0) {
   return (state, values) => {
     if (values instanceof Array) {
-      if (values.length > maxLength) {
-        state.error(`exceeds the maximum length (${maxLength})`)
+      if (values.length > maxLength || values.length < minLength) {
+        state.error(`List size out of expected bounds. Size must be within [${minLength}, ${maxLength}]`)
       }
 
       values.forEach((value, index) =>
@@ -185,6 +185,17 @@ const destination = string((state, url) => {
     state.warn('contains a fragment that will be ignored')
   }
 })
+const destinationList = list(destination, 3, 1);
+
+const destinationValue = (state, value) => {
+  if (typeof value === 'string') {
+    return destination(state, value);
+  }
+  if (value instanceof Array) {
+    return destinationList(state, value);
+  }
+  state.error('Must be either a list or a string');
+}
 
 // TODO: Check length of strings.
 const filters = (allowSourceType = true) =>
@@ -210,7 +221,7 @@ export function validateSource(source) {
     aggregation_keys: optional(aggregationKeys),
     debug_key: optional(uint64),
     debug_reporting: optional(bool),
-    destination: required(destination),
+    destination: required(destinationValue),
     expiry: optional(int64),
     filter_data: optional(filters(/*allowSourceType=*/ false)),
     priority: optional(int64),
@@ -256,6 +267,7 @@ export function validateTrigger(trigger) {
     aggregatable_trigger_data: optional(aggregatableTriggerData),
     aggregatable_values: optional(aggregatableValues),
     debug_key: optional(uint64),
+    debug_reporting: optional(bool),
     event_trigger_data: optional(eventTriggerData),
     filters: optional(filters()),
     not_filters: optional(filters()),
