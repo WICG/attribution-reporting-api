@@ -1,24 +1,53 @@
+import assert from 'node:assert/strict'
 import { validateEligible } from './validate-eligible.js'
-import { logHeaderListValidation } from './logger.js'
 
 const tests = [
   // Valid
-  '',
-  'event-source',
-  'trigger',
-  'event-source, trigger',
+  {input: ''},
+  {input: 'event-source'},
+  {input: 'trigger'},
+  {input: 'event-source, trigger'},
+
   // Warnings
-  'navigation-source',
-  'trigger, navigation-source',
-  'event-source=(1 2 3)',
-  'event-source="x"',
-  'event-source; x="y"',
-  'event-source="x"; y="z"',
-  'event-source=(1 2 3); x="y"',
+  {
+    input: 'navigation-source',
+    warnings: [{
+      path: ['navigation-source'],
+      msg: 'may only be specified in browser-initiated requests',
+    }]
+  },
+  {
+    input: 'x',
+    warnings: [{
+      path: ['x'],
+      msg: 'unknown dictionary key',
+    }],
+  },
+  {
+    input: 'event-source=2',
+    warnings: [{
+      path: ['event-source'],
+      msg: 'ignoring dictionary value',
+    }],
+  },
+  {
+    input: 'event-source;x=2',
+    warnings: [{
+      path: ['event-source'],
+      msg: 'ignoring parameters',
+    }],
+  },
+
   // Invalid header syntax
-  '!',
-  // Not a dictionary
-  '"x"',
+  {
+    input: '!',
+    errors: [{msg: 'Error: Parse error: A key must begin with an asterisk or letter (a-z) at offset 0'}],
+  },
 ]
 
-logHeaderListValidation(tests, validateEligible)
+tests.forEach(test => {
+  const { errors, warnings } = validateEligible(test.input);
+
+  assert.deepEqual(errors, test.errors || [], test.input);
+  assert.deepEqual(warnings, test.warnings || [], test.input);
+});
