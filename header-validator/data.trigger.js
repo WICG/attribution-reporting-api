@@ -22,6 +22,7 @@ export const validTriggerHeadersAsObjects = [
       geoValue: 1664,
     },
     debug_key: '98767654567654',
+    debug_reporting: true,
     event_trigger_data: [
       {
         deduplication_key: '234567545678',
@@ -122,6 +123,10 @@ export const invalidTriggerHeadersAsObjects = [
       }
       return arr
     })(),
+  },
+  // Invalid debug_reporting
+  {
+    debug_reporting: 'true',
   },
 ]
 

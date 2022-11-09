@@ -267,6 +267,7 @@ export function validateTrigger(trigger) {
     aggregatable_trigger_data: optional(aggregatableTriggerData),
     aggregatable_values: optional(aggregatableValues),
     debug_key: optional(uint64),
+    debug_reporting: optional(bool),
     event_trigger_data: optional(eventTriggerData),
     filters: optional(filters()),
     not_filters: optional(filters()),
