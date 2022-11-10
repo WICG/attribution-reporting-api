@@ -254,6 +254,8 @@ An attribution trigger is a [=struct=] with the following items:
     [=map/value|values=] are non-negative 32-bit integers.
 : <dfn>aggregatable dedup key</dfn>
 :: Null or a non-negative 64-bit integer.
+: <dfn>serialized private state token</dfn>
+:: A [=byte sequence=]
 
 </dl>
 
@@ -326,6 +328,8 @@ An aggregatable report is an [=attribution report=] with the following additiona
 :: A [=list=] of [=aggregatable contributions=].
 : <dfn>effective attribution destination</dfn>
 :: A [=site=].
+: <dfn>serialized private state token</dfn>
+:: A [=byte sequence=]
 
 </dl>
 
@@ -1058,8 +1062,27 @@ To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
      1. If |value| is less than or equal to 0, return null.
 1. Return |values|.
 
-To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
-|json|, a [=site=] |destination|, and an [=origin=] |reportingOrigin|:
+To <dfn noexport>serialize a private state token</dfn> given a [=string=] |encodedBlindedPrivateStateToken|:
+1. If |encodedBlindedPrivateStateToken| is null, return null.
+1. Let |decoded| be the result of [=forgiving-base64 decoding=] |encodedBlindedPrivateStateToken|
+1. If |decoded| is failure, return null.
+1. Let |tokens| be the result of finishing issuance of |decoded|.
+
+ISSUE: properly define the "finishing issuance" operation.
+
+1. If |tokens| is null, or has [=list/size=] not equal to 1, return null.
+1. Let |token| be |tokens|[0].
+
+1. Let |redeemedBytes| be the result of "beginning redemption" with |token|,
+    the empty [=byte sequence=] (data), and 0 (the null timestamp),
+
+ISSUE: properly define "begin redemption" operation. Consider running the algorithm at report sending time.
+
+1. Return the result of [=forgiving-base64 encoding=] |redeemedBytes|
+
+
+To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
+|json|, a [=site=] |destination|, an [=origin=] |reportingOrigin|, and a [=string=] |encodedPrivateStateToken|:
 
 1. [=Assert=]: |reportingOrigin| is a [=potentially trustworthy origin=].
 1. Let |value| be the result of running
@@ -1120,6 +1143,8 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
     :: |aggregatableValues|
     : [=attribution trigger/aggregatable dedup key=]
     :: |aggregatableDedupKey|
+    : [=attribution trigger/serialized private state token=]
+    :: The result of [=serializing a private state token=] with |encodedPrivateStateToken|
 1. Return |trigger|.
 
 <h3 dfn id="does-filter-data-match">Does filter data match</h3>
@@ -1501,6 +1526,8 @@ an [=attribution trigger=] |trigger|:
     :: |trigger|'s [=attribution trigger/debug key=].
     : [=aggregatable report/contributions=]
     :: The result of running [=create aggregatable contributions=] with |source| and |trigger|.
+    : [=aggregatable report/serialized private state token=]
+    :: |trigger|'s [=attribution trigger/serialized private state token=]
 1. Return |report|.
 
 # Report delivery # {#report-delivery}
@@ -1657,16 +1684,20 @@ To <dfn>generate an attribution debug report URL</dfn> given an [=attribution de
 
 <h3 id="create-report-request">Creating a report request</h3>
 
-To <dfn>create a report request</dfn> given a [=URL=] |url| and a [=byte sequence=] |body|:
+To <dfn>create a report request</dfn> given a [=URL=] |url|, a [=byte sequence=] |body|,
+and a [=header list=] |newHeaders|:
 
+1. Let |headers| be a new [=header list=] containing a [=header=] named
+    "`Content-Type`" whose value is "`application/json`".
+1. [=list/iterate|For each=] |header| in |newHeaders|:
+    1. [=header list/append=] |header| to |headers|.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
     ::  "`POST`"
     :   [=request/URL=]
     ::  |url|
     :   [=request/header list=]
-    ::  A new [=header list=] containing a [=header=] named
-        "`Content-Type`" whose value is "`application/json`"
+    ::  |headers|
     :   [=request/body=]
     ::  A [=/body=] whose [=body/source=] is |body|.
     :   [=request/referrer=]
@@ -1697,6 +1728,11 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
 
 1. Let |url| be the result of executing [=generate an attribution report URL=] on |report|.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
+1. Let |newHeaders| be a new [=header list=].
+1. If |report| is an [=aggregatable report=]
+    1. If |report|'s [=aggregatable report/serialized private state token=] is not null,
+        [=header list/append=] a new [=header=] named "`Sec-Attribution-Reporting-Private-State-Token`"
+        whose value is |report|'s [=aggregatable report/serialized private state token=].
 1. Let |request| be the result of executing [=create a report request=] on |url| and |data|.
 1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being these steps:
     1. If |report| is an:
