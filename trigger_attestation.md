@@ -160,7 +160,10 @@ should therefore be allowed to generate attribution reports.
     `Sec-Attribution-Reporting-Private-State-Token` response header. If this
     header is omitted or is not valid, the browser will proceed with trigger
     registration normally, but any report generated will not contain the
-    attestation header.
+    attestation header. Note: more advanced cases deployments can consider
+    issuing an "invalid" token using private metadata to avoid the client
+    learning the detection result. See
+    [privacy of the IVT detector](#privacy-of-the-ivt-detector) for more details.
 *   If the request is considered **valid**, the reporting origin should add a
     `Sec-Attribution-Reporting-Private-State-Token` header with a blind token
     (the blind signature over the blinded message).
@@ -246,20 +249,22 @@ theory be mitigated by the following techniques:
 
 Evaluating the top level security goals:
 
-**"No reports out of thin air"** is addressed because any report created out of
-thin air and sent to the ad-tech will need to be associated with a token. Any
-report not associated with a token can be immediately discarded as invalid.
-Tokens cannot be generated "out of thin air", because receiving one requires an
+### No reports out of thin air
+This is addressed because any report created out of thin air and sent to the
+ad-tech will need to be associated with a token. Any report not associated with
+a token can be immediately discarded as invalid. Tokens cannot be generated "out
+of thin air", because receiving one requires an
 interaction with the reporting origin.
 
-**"No replaying reports"** is addressed because every report will come with a
-token bound to its `report_id`. Reporting origins can easily protect themselves
-from replays by keeping track of which IDs they have already seen (something we
-already recommend due to browser retries).
+### No replaying reports
+This is addressed because every report will come with a token bound to its
+`report_id`. Reporting origins can easily protect themselves from replays by
+keeping track of which IDs they have already seen (something we already
+recommend due to browser retries).
 
-**"Privacy of the IVT detector"** is addressed via supporting the existing
-Private State Token's notion of [Private
-metadata](https://github.com/WICG/trust-token-api#extension-private-metadata).
+### Privacy of the IVT detector
+This is addressed via supporting the existing Private State Token's notion of
+[Private metadata](https://github.com/WICG/trust-token-api#extension-private-metadata).
 Reporting origins may not wish to reveal to clients (who could be potential
 attackers) the signal of whether the report was deemed invalid or not, since
 this exposes information about the reporting origin's potentially secret logic.
@@ -269,18 +274,19 @@ of (e.g. that the information is just 1 bit). A reporting origin wishing to hide
 information about its IVT detector can simply issue tokens unconditionally, and
 embed the IVT decision in the private metadata bit.
 
-**"Limit the attack scope for bad actors that can bypass IVT detectors"** is not
-addressed in this proposal, but we are exploring  [future
+### Limit the attack scope for bad actors that can bypass IVT detectors
+This is not addressed in this proposal, but we are exploring  [future
 extensions](#future-extension-scalable-public-metadata-for-destination-attestation)
 to address it.
 
-**"No report mutation"** is only partially addressed via binding the issued
-token to the report’s `report_id` and `attribution_destination`. This means
-that tokens are not "fungible" and could only be used with a report with those
-matching properties. Note that it may be possible to ensure total immutability
-of a report (by signing over the whole generated report), but it naturally
-implies that we’d need to add another round of interaction between client and
-reporting origin, which may not be worth the extra complexity to support this.
+### No report mutation
+This is only partially addressed via binding the issued token to the report’s
+`report_id` and `attribution_destination`. This means that tokens are not
+"fungible" and could only be used with a report with those matching properties.
+Note that it may be possible to ensure total immutability of a report (by
+signing over the whole generated report), but it naturally implies that we’d
+need to add another round of interaction between client and reporting origin,
+which may not be worth the extra complexity to support this.
 
 Note that because we expect reporting origins to already deduplicate based on
 `report_id`, this infrastructure should neatly work to handle the "double
@@ -394,7 +400,7 @@ proceeding with this option currently due to performance concerns (bandwidth,
 compute) with sending lots of null reports.
 
 Note that this approach would also mean we could likely remove some/all of the
-delay in aggregatable reports. However, this approach requires…
+delay in aggregatable reports.
 
 ### How can I compose this with other trust signals?
 
