@@ -339,7 +339,7 @@ This design chooses (2) because:
 
 The reason is very similar to why this proposal doesn’t support
 [issuance at source registration time](#why-doesnt-this-support-issuance-at-source-registration-time).
-Event-levelreports are subject to browser randomization in which the browser
+Event-level reports are subject to browser randomization in which the browser
 needs to be free to create fake triggers. This means that we couldn’t possibly
 provide attestation for triggers as it breaks the privacy mechanism. It is
 possible to attest sources, but because event-level reports already have a high
