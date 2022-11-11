@@ -365,7 +365,7 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "type": "trigger-unknown-error",
   "body": {
     "attribution_destination": "https://destination.example",
-    "source_debug_key": "<debug key in source registration>", // omitted if unavailable not not set
+    "source_debug_key": "<debug key in source registration>", // omitted if unavailable or not set
     "source_event_id": "<source event id in the matched source>", // omitted if unavailable
     "source_site": "https://source.example", // omitted if unavailable
     "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
