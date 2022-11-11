@@ -22,6 +22,7 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "body": {
     "attribution_destination": "https://destination.example",
     "limit": "100", // the browser's limit
+    "source_debug_key": "<debug key in the source registration>", // omitted if not set
     "source_event_id": "<source event id in the source registration>",
     "source_site": "https://source.example"
   }
@@ -39,6 +40,7 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "type": "source-noised",
   "body": {
     "attribution_destination": "https://destination.example",
+    "source_debug_key": "<debug key in the source registration>", // omitted if not set
     "source_event_id": "<source event id in the source registration>",
     "source_site": "https://source.example"
   }
@@ -57,6 +59,7 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "body": {
     "attribution_destination": "https://destination.example",
     "limit": "1024" // the browser's limit
+    "source_debug_key": "<debug key in the source registration>", // omitted if not set
     "source_event_id": "<source event id in the source registration>",
     "source_site": "https://source.example"
   }
@@ -74,6 +77,7 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "type": "source-unknown-error",
   "body": {
     "attribution_destination": "https://destination.example",
+    "source_debug_key": "<debug key in the source registration>", // omitted if not set
     "source_event_id": "<source event id in the source registration>",
     "source_site": "https://source.example"
   }
@@ -95,7 +99,8 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
 {
   "type": "trigger-no-matching-source",
   "body": {
-    "attribution_destination": "https://destination.example"
+    "attribution_destination": "https://destination.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -111,8 +116,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "type": "trigger-no-matching-filter-data",
   "body": {
     "attribution_destination": "https://destination.example",
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
-    "source_site": "https://source.example"
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -129,8 +136,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "body": {
     "attribution_destination": "https://destination.example",
     "limit": "100", // the browser's limit
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
-    "source_site": "https://source.example"
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -147,8 +156,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "body": {
     "attribution_destination": "https://destination.example",
     "limit": "10", // the browser's limit
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
-    "source_site": "https://source.example"
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -165,8 +176,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "type": "trigger-event-deduplicated",
   "body": {
     "attribution_destination": "https://destination.example",
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
-    "source_site": "https://source.example"
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -183,8 +196,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "type": "trigger-event-no-matching-configurations",
   "body": {
     "attribution_destination": "https://destination.example",
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
-    "source_site": "https://source.example"
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -201,8 +216,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "type": "trigger-event-noise",
   "body": {
     "attribution_destination": "https://destination.example",
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
-    "source_site": "https://source.example"
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -249,8 +266,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "body": {
     "attribution_destination": "https://destination.example",
     "limit": "1024", // the browser's limit
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
-    "source_site": "https://source.example"
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -267,8 +286,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "type": "trigger-aggregate-deduplicated",
   "body": {
     "attribution_destination": "https://destination.example",
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
-    "source_site": "https://source.example"
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -284,8 +305,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "type": "trigger-aggregate-no-contributions",
   "body": {
     "attribution_destination": "https://destination.example",
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
-    "source_site": "https://source.example"
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -303,8 +326,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "body": {
     "attribution_destination": "https://destination.example",
     "limit": "65536", // the browser's limit
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
-    "source_site": "https://source.example"
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -321,8 +346,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "body": {
     "attribution_destination": "https://destination.example",
     "limit": "1024", // the browser's limit
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
-    "source_site": "https://source.example"
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
@@ -338,8 +365,10 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "type": "trigger-unknown-error",
   "body": {
     "attribution_destination": "https://destination.example",
+    "source_debug_key": "<debug key in source registration>", // omitted if unavailable not not set
     "source_event_id": "<source event id in the matched source>", // omitted if unavailable
-    "source_site": "https://source.example" // omitted if unavailable
+    "source_site": "https://source.example", // omitted if unavailable
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
   }
 }
 ```
