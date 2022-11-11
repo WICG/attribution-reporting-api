@@ -255,7 +255,7 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>aggregatable dedup key</dfn>
 :: Null or a non-negative 64-bit integer.
 : <dfn>serialized private state token</dfn>
-:: A [=byte sequence=]
+:: A [=byte sequence=].
 
 </dl>
 
@@ -329,7 +329,7 @@ An aggregatable report is an [=attribution report=] with the following additiona
 : <dfn>effective attribution destination</dfn>
 :: A [=site=].
 : <dfn>serialized private state token</dfn>
-:: A [=byte sequence=]
+:: A [=byte sequence=].
 
 </dl>
 
@@ -1064,7 +1064,7 @@ To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
 
 To <dfn noexport>serialize a private state token</dfn> given a [=string=] |encodedBlindedPrivateStateToken|:
 1. If |encodedBlindedPrivateStateToken| is null, return null.
-1. Let |decoded| be the result of [=forgiving-base64 decoding=] |encodedBlindedPrivateStateToken|
+1. Let |decoded| be the result of [=forgiving-base64 decoding=] |encodedBlindedPrivateStateToken|.
 1. If |decoded| is failure, return null.
 1. Let |tokens| be the result of finishing issuance of |decoded|.
 
@@ -1072,14 +1072,12 @@ ISSUE: properly define the "finishing issuance" operation.
 
 1. If |tokens| is null, or has [=list/size=] not equal to 1, return null.
 1. Let |token| be |tokens|[0].
-
 1. Let |redeemedBytes| be the result of "beginning redemption" with |token|,
-    the empty [=byte sequence=] (data), and 0 (the null timestamp),
+    the empty [=byte sequence=] (data), and 0 (the null timestamp).
 
 ISSUE: properly define "begin redemption" operation. Consider running the algorithm at report sending time.
 
-1. Return the result of [=forgiving-base64 encoding=] |redeemedBytes|
-
+1. Return the result of [=forgiving-base64 encoding=] |redeemedBytes|.
 
 To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
 |json|, a [=site=] |destination|, an [=origin=] |reportingOrigin|, and a [=string=] |encodedPrivateStateToken|:
@@ -1731,9 +1729,9 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
 1. Let |newHeaders| be a new [=header list=].
 1. If |report| is an [=aggregatable report=]
     1. If |report|'s [=aggregatable report/serialized private state token=] is not null,
-        [=header list/append=] a new [=header=] named "`Sec-Attribution-Reporting-Private-State-Token`"
+        [=header list/append=] a new [=header=] named "`Sec-Attribution-Reporting-Private-State-Token`" to |newHeaders|
         whose value is |report|'s [=aggregatable report/serialized private state token=].
-1. Let |request| be the result of executing [=create a report request=] on |url| and |data|.
+1. Let |request| be the result of executing [=create a report request=] on |url|, |data|, and |newHeaders|.
 1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being these steps:
     1. If |report| is an:
         <dl class="switch">
