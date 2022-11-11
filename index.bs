@@ -914,14 +914,16 @@ To <dfn>obtain and deliver a debug report on source registration</dfn> given a
     :: |source|'s [=attribution source/event ID=], [=serialize an integer|serialized=].
     : "`source_site`"
     :: |source|'s [=attribution source/source site=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
+1. If |source|'s [=attribution source/debug key=] is not null, [=map/set=] |body|["`source_debug_key`"]
+    to |source|'s [=attribution source/debug key=], [=serialize an integer|serialized=].
 
 1. If |dataType| is:
     <dl class="switch">
     <dt>"`source-destination-limit`"</dt>
-    <dd>Set |body|["`limit`"] to the user agent's [=max destinations covered by unexpired sources=],
+    <dd>[=map/Set=] |body|["`limit`"] to the user agent's [=max destinations covered by unexpired sources=],
          [=serialize an integer|serialized=].</dd>
     <dt>"`source-storage-limit`"</dt>
-    <dd>Set |body|["`limit`"] to the user agent's [=max pending sources per source origin=],
+    <dd>[=map/Set=] |body|["`limit`"] to the user agent's [=max pending sources per source origin=],
          [=serialize an integer|serialized=].</dd>
     </dl>
 1. Let |data| be a new [=attribution debug data=] with the items:
@@ -1292,17 +1294,22 @@ an optional [=attribution source=] <dfn for="obtain debug data body on trigger r
     : "`attribution_destination`"
     :: |trigger|'s [=attribution trigger/attribution destination=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
 
+1. If |trigger|'s [=attribution trigger/debug key=] is not null, [=map/set=] |body|["`trigger_debug_key`"]
+    to |trigger|'s [=attribution trigger/debug key=], [=serialize an integer|serialized=].
 1. If |sourceToAttribute| is not null:
-    1. Set |body|["`source_event_id`"] to |source|'s [=attribution source/event ID=], [=serialize an integer|serialized=].
-    1. Set |body|["`source_site`"] to |source|'s [=attribution source/source site=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
+    1. [=map/Set=] |body|["`source_event_id`"] to |source|'s [=attribution source/event ID=], [=serialize an integer|serialized=].
+    1. [=map/Set] |body|["`source_site`"] to |source|'s [=attribution source/source site=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
+    1. If |sourceToAttribute|'s [=attribution source/debug key=] is not null, [=map/set=]
+        |body|["`source_debug_key`"] to |sourceToAttribute|'s [=attribution source/debug key=],
+        [=serialize an integer|serialized=].
 
 1. If |dataType| is:
     <dl class="switch">
     <dt>"`trigger-reporting-origin-limit`"</dt>
-    <dd>Set |body|["`limit`"] to [=max attribution reporting endpoints per rate-limit window=],
+    <dd>[=map/Set=] |body|["`limit`"] to [=max attribution reporting endpoints per rate-limit window=],
          [=serialize an integer|serialized=].</dd>
     <dt>"trigger-attributions-per-source-destination-limit"</dt>
-    <dd>Set |body|["`limit`"] to [=max attributions per rate-limit window=],
+    <dd>[=map/Set=] |body|["`limit`"] to [=max attributions per rate-limit window=],
          [=serialize an integer|serialized=].</dd>
     <dt>"`trigger-event-low-priority`"</dt>
     <dt>"`trigger-event-excessive-reports`"</dt>
@@ -1311,13 +1318,13 @@ an optional [=attribution source=] <dfn for="obtain debug data body on trigger r
         1. Return the result of running [=obtain an event-level report body=] with |report|.
     </dd>
     <dt>"`trigger-event-storage-limit`"</dt>
-    <dd>Set |body|["`limit`"] to [=max event-level reports per attribution destination=],
+    <dd>[=map/Set=] |body|["`limit`"] to [=max event-level reports per attribution destination=],
          [=serialize an integer|serialized=].</dd>
     <dt>"`trigger-aggregate-insufficient-budget`"</dt>
-    <dd>Set |body|["`limit`"] to [=allowed aggregatable budget per source=],
+    <dd>[=map/Set=] |body|["`limit`"] to [=allowed aggregatable budget per source=],
          [=serialize an integer|serialized=].</dd>
     <dt>"`trigger-aggregate-storage-limit`"</dt>
-    <dd>Set |body|["`limit`"] to [=max aggregatable reports per attribution destination=],
+    <dd>[=map/Set=] |body|["`limit`"] to [=max aggregatable reports per attribution destination=],
          [=serialize an integer|serialized=].</dd>
     </dl>
 
