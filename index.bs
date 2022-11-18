@@ -1893,7 +1893,7 @@ of running the following steps:
     : "`api`"
     :: "`attribution-reporting`"
     : "`attribution destination`"
-    :: |report|'s [=aggregatable report/attribution destination=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
+    :: |report|'s [=aggregatable report/effective attribution destination=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
     : "`report_id`"
     :: |report|'s [=aggregatable report/report ID=]
     : "`reporting_origin`"
@@ -1902,7 +1902,7 @@ of running the following steps:
     :: |report|'s [=aggregatable report/original report time=] in seconds since the UNIX epoch, [=serialize an integer|serialized=]
     : "`source_registration_time`"
     :: |report|'s [=aggregatable report/source time=] in seconds since the UNIX epoch, rounded down
-        to a whole day (86400 seconds), [=serialize an integer|serialized=]
+        to a multiple of a whole day (86400 seconds), [=serialize an integer|serialized=]
     : "`version`"
     :: A [=string=], API version.
 
@@ -1912,7 +1912,8 @@ of running the following steps:
 
 <h3 id="obtain-aggregatable-report-aggregation-service-payloads">Obtaining an aggregatable report's aggregation service payloads</h3>
 
-To <dfn>obtain the public key for encryption</dfn>, return a user agent-determined public key asynchronously.
+To <dfn>obtain the public key for encryption</dfn>, return a user agent-determined public key asynchronously,
+or an error in the event that the user agent failed to obgtain the public key.
 
 Note: The user agent might enforce weekly key rotation. If there are multiple keys, the user agent
 might independently pick a key uniformly at random for every encryption operation.
@@ -1948,14 +1949,16 @@ a public key |pkR|, run the following steps:
 1. Let |info| be the [=string/concatenate|concatenation=] of «"`aggregation_service`", |encodedSharedInfo|».
 1. Set up [[RFC9180|HPKE]] [[RFC9180#name-encryption-to-a-public-key|sender's context]]
     with |pkR| and |info|.
-1. Return the [=byte sequence=] resulting from [[RFC9180#name-encryption-and-decryption|encrypting]]
+1. Return the [=byte sequence=] or an error resulting from [[RFC9180#name-encryption-and-decryption|encrypting]]
     |plaintext| with the [[RFC9180#name-encryption-to-a-public-key|sender's context]].
 
 To <dfn>obtain the aggregation service payloads</dfn> given an [=aggregatable report=] |report|,
 run the following steps:
 
 1. Let |pkR| be the result of running [=obtain the public key for encryption=].
+1. If |pkR| is an error, return null.
 1. Let |encryptedPayload| be the result of running [=obtain the encrypted payload=] with |report| and |pkR|.
+1. If |encryptedPayload| is an error, return null.
 1. Let |aggregationServicePayloads| be a new [=list/is empty|empty=] [=list=].
 1. Let |aggregationServicePayload| be a [=map=] of the following key/value pairs:
 
@@ -2005,12 +2008,14 @@ To <dfn>serialize an [=event-level report=]</dfn> |report|, run the following st
 To <dfn>serialize an [=aggregatable report=] </dfn> |report|, run the following steps:
 
 1. [=Assert=]: |report|'s [=aggregatable report/effective attribution destination=] is not the [=opaque origin=].
+1. Let |aggregationServicePayloads| be the result of running [=obtain the aggregation service payloads=].
+1. If |aggregationServicePayloads| is null, return null.
 1. Let |data| be a [=map=] of the following key/value pairs:
 
     : "`shared_info`"
     :: |report|'s [=aggregatable report/shared info=].
     : "`aggregation_service_payloads`"
-    :: The result of running [=obtain the aggregation service payloads=].
+    :: |aggregationServicePayloads|
 
 1. If |report|'s [=aggregatable report/source debug key=] is not null, [=map/set=]
     |data|["`source_debug_key`"] to |report|'s [=aggregatable report/source debug key=],
@@ -2131,6 +2136,7 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
 
 1. Let |url| be the result of executing [=generate an attribution report URL=] on |report|.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
+1. If |data| is null, return.
 1. Let |newHeaders| be a new [=header list=].
 1. If |report| is an [=aggregatable report=]
     1. If |report|'s [=aggregatable report/serialized private state token=] is not null,
@@ -2158,6 +2164,7 @@ To <dfn>attempt to deliver a debug report</dfn> given an [=attribution report=] 
 1. Let |url| be the result of executing [=generate an attribution report URL=] on |report| with
     [=generate an attribution report URL/isDebugReport=] set to true.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
+1. If |data| is null, return.
 1. Let |request| be the result of executing [=create a report request=] on |url| and |data|.
 1. [=Fetch=] |request|.
 
