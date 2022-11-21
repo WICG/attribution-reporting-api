@@ -550,9 +550,9 @@ To <dfn>parse filter data</dfn> given a |value| and a [=string=]
 Issue: Determine whether to limit [=string/length=] or
 [=string/code point length=] for |filter| and |d| above.
 
-<h3 id="debug-keys">Debug keys</h3>
+<h3 id="debug-keys">Cookie-based debugging</h3>
 
-To <dfn>check if a debug key is allowed</dfn> given an [=origin=]
+To <dfn>check if cookie-based debugging is allowed</dfn> given an [=origin=]
 |reportingOrigin|:
 
 1. [=Assert=]: |reportingOrigin| is a [=potentially trustworthy origin=].
@@ -599,7 +599,7 @@ Given an [=attribution rate-limit record=] |record|:
 To <dfn>obtain and deliver a debug report</dfn> given a [=list=] of [=attribution debug data=] |data|
 and an [=origin=] |reportingEndpoint|:
 
-1. Assert that |reportingEndpoint| is a [=potentially trustworthy origin=].
+1. [=Assert =]: |reportingEndpoint| is a [=potentially trustworthy origin=].
 1. Let |debugReport| be an [=attribution debug report=] with the items:
     : [=attribution debug report/data=]
     :: |data|
@@ -770,7 +770,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
         <a spec="html">rules for parsing non-negative integers</a> to
         |value|["`debug_key`"].
     1. If |debugKey| is an error, set |debugKey| to null.
-    1. If the result of running [=check if a debug key is allowed=] with
+    1. If the result of running [=check if cookie-based debugging is allowed=] with
         |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
 1. If |aggregationKeys| is null, return null.
@@ -895,10 +895,24 @@ a [=trigger state=] |triggerState|:
     |triggerState|'s [=trigger state/report window=].
 1. Return |fakeReport|.
 
+To <dfn>check if debug reporting is allowed</dfn> given a [=source debug data type=] |dataType|
+and an [=origin=] |reportingOrigin|:
+1. If |dataType| is:
+    <dl class="switch">
+    <dt>"`source-destination-limit`"</dt>
+    <dd>Return <strong>allowed</strong>.</dd>
+    <dt>"`source-noised`"</dt>
+    <dt>"`source-storage-limit`"</dt>
+    <dt>"`source-unknown-error`"</dt>
+    <dd>Return t he result of running [=check if cookie-based debugging is allowed=] with |reportingOrigin|.</dd>
+    </dl>
+
 To <dfn>obtain and deliver a debug report on source registration</dfn> given a
 [=source debug data type=] |dataType| and an [=attribution source=] |source|:
 
 1. If |source|'s [=attribution source/debug reporting enabled=] is false, return.
+1. If the result of running [=check if debug reporting is allowed=] with |dataType| and |source|'s
+    [=attribution source/reporting endpoint=] is <strong>blocked</strong>, return.
 1. Let |body| be a new [=map=] with the following key/value pairs:
     : "`attribution_destination`"
     :: |source|'s [=attribution source/attribution destinations=], [=serialize attribution destinations|serialized=].
@@ -1117,7 +1131,7 @@ To <dfn noexport>parse trigger-registration JSON</dfn> given a [=string=]
         <a spec="html">rules for parsing non-negative integers</a> to
         |value|["`debug_key`"].
     1. If |debugKey| is an error, set |debugKey| to null.
-    1. If the result of running [=check if a debug key is allowed=] with
+    1. If the result of running [=check if cookie-based debugging is allowed=] with
         |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |filters| be a new [=filter map=].
 1. If |value|["`filters`"] exists:
