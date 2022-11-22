@@ -139,7 +139,7 @@ A <dfn>filter map</dfn> is an [=ordered map=] whose [=map/key|keys=] are [=strin
 
 <h3 dfn-type=dfn>Suitable origin</h3>
 
-A suitable origin is an [=origin=] that is [=potentially trustworthy origin|potentially trustworthy=].
+A suitable origin is an [=origin=] that is [=check if an origin is suitable|suitable=].
 
 <h3 dfn-type=dfn>Source type</h3>
 
@@ -542,6 +542,12 @@ random delay to deliver an [=aggregatable report=].
 
 # General Algorithms # {#general-algorithms}
 
+To <dfn>check if an origin is suitable</dfn> given an [=origin=] |origin|:
+
+1. If |origin| is not a [=potentially trustworthy origin=], return false.
+1. If |origin|'s [=origin/scheme=] is not "`http`" or "`https`", return false.
+1. Return true.
+
 <h3 id="parsing-filter-data">Parsing filter data</h3>
 
 To <dfn>parse filter data</dfn> given a |value| and a [=string=]
@@ -648,7 +654,7 @@ To <dfn>parse an attribution destination</dfn> from a [=string=] |str|:
 1. Let |url| be the result of running the [=URL parser=] on the value of
     the |str|.
 1. If |url| is failure or null, return null.
-1. If |url|'s [=url/origin=] is not a [=potentially trustworthy origin=],
+1. If |url|'s [=url/origin=] is not [=check if an origin is suitable|suitable=],
     return null.
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
