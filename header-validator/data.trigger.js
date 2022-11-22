@@ -1,138 +1,349 @@
-export const validTriggerHeadersAsObjects = [
+export const testCases = [
+  // no errors or warnings
   {
-    event_trigger_data: [
-      {
-        trigger_data: '99',
-      },
-    ],
+    name: "required-fields-only",
+    json: `{}`,
   },
   {
-    aggregatable_trigger_data: [
-      {
-        key_piece: '0x400',
-        source_keys: ['campaignCounts'],
-      },
-      {
-        key_piece: '0xA80',
-        source_keys: ['geoValue'],
-      },
-    ],
-    aggregatable_values: {
-      campaignCounts: 232,
-      geoValue: 1664,
-    },
-    debug_key: '98767654567654',
-    debug_reporting: true,
-    event_trigger_data: [
-      {
-        deduplication_key: '234567545678',
-        filters: {
-          conversion_subdomain: ['electronics.megastore'],
-          directory: ['/store/electronics'],
-        },
-        priority: '456789876789',
-        trigger_data: '3',
-      },
-    ],
-    filters: {
-      conversion_subdomain: ['electronics.megastore'],
-      directory: ['/store/electronics'],
-    },
-    not_filters: {
-      conversion_subdomain: ['foo.megastore'],
-    },
-    aggregatable_deduplication_key: '345678656789',
+    name: "all-fields",
+    json: `{
+      "aggregatable_deduplication_key": "7",
+      "aggregatable_trigger_data": [{
+        "filters": {"a": ["b"]},
+        "key_piece": "0x1",
+        "not_filters": {"c": ["d"]},
+        "source_keys": ["x"]
+      }],
+      "aggregatable_values": {"e": 5},
+      "debug_key": "5",
+      "debug_reporting": true,
+      "event_trigger_data": [{
+        "deduplication_key": "123",
+        "filters": {"x": []},
+        "not_filters": {"y": []},
+        "priority": "-7",
+        "trigger_data": "6"
+      }],
+      "filters": {"f": []},
+      "not_filters": {"g": []}
+    }`,
   },
-]
 
-export const validTriggerHeadersAsJSON = validTriggerHeadersAsObjects.map(
-  JSON.stringify
-)
+  // warnings
+  {
+    name: "unknown-field",
+    json: `{"x": true}`,
+    expectedWarnings: [{
+      path: ["x"],
+      msg: "unknown field",
+    }],
+  },
 
-export const invalidTriggerHeadersAsObjects = [
-  // ❌ ERRORS
-  // Event trigger data not a string
+  // errors
   {
-    event_trigger_data: 3,
+    name: "invalid-json",
+    json: ``,
+    expectedErrors: [{msg: "Unexpected end of JSON input"}],
   },
-  // Event trigger data wrong
-  // TODO this one crashes the validator for now
-  // {
-  //   event_trigger_data: ['2343'],
-  // },
-  // Aggregatable values over budget
   {
-    aggregatable_trigger_data: [
-      {
-        key_piece: '0x400',
-        source_keys: ['campaignCounts'],
-      },
-    ],
-    aggregatable_values: {
-      campaignCounts: 12345334,
-    },
+    name: "wrong-root-type",
+    json: `1`,
+    expectedErrors: [{
+      path: [],
+      msg: "must be an object",
+    }],
   },
-  // Aggregatable values are set but not keys
-  {
-    aggregatable_values: {
-      campaignCounts: 123,
-    },
-  },
-  // Aggregatable keys are set but not values
-  {
-    aggregatable_trigger_data: [
-      {
-        key_piece: '0x400',
-        source_keys: ['campaignCounts'],
-      },
-    ],
-  },
-  // Key names don't all match
-  {
-    aggregatable_trigger_data: [
-      {
-        key_piece: '0x400',
-        source_keys: ['campaignCounts'],
-      },
-    ],
-    aggregatable_values: {
-      xxcampaignCounts: 123,
-    },
-  },
-  // ⚠️ ⚠️ ⚠️ WARNINGS ⚠️ ⚠️ ⚠️
-  // Unknown field `foo`
-  {
-    foo: '3',
-  },
-  // Too many event trigger data
-  {
-    event_trigger_data: (function () {
-      const arr = []
-      for (let i = 0; i < 11; i++) {
-        arr.push({ trigger_data: '0' })
-      }
-      return arr
-    })(),
-  },
-  // Too many aggregatable trigger data
-  {
-    aggregatable_trigger_data: (function () {
-      const arr = []
-      for (let i = 0; i < 51; i++) {
-        arr.push({ key_piece: '0x1', source_keys: [] })
-      }
-      return arr
-    })(),
-  },
-  // Invalid debug_reporting
-  {
-    debug_reporting: 'true',
-  },
-]
 
-export const invalidTriggerHeadersAsJSON = [
-  // same invalid headers as above, but as JSON
-  ...invalidTriggerHeadersAsObjects.map(JSON.stringify),
-  // additionally, one invalid JSON example: `` = wrong quotes
-  '{"event_trigger_data":[{"trigger_data":`99`}]}',
-]
+  {
+    name: "filters-wrong-type",
+    json: `{"filters": 1}`,
+    expectedErrors: [{
+      path: ["filters"],
+      msg: "must be an object",
+    }],
+  },
+  {
+    name: "filters-values-wrong-type",
+    json: `{"filters": {"a": "b"}}`,
+    expectedErrors: [{
+      path: ["filters", "a"],
+      msg: "must be a list",
+    }],
+  },
+  {
+    name: "filters-value-wrong-type",
+    json: `{"filters": {"a": [1]}}`,
+    expectedErrors: [{
+      path: ["filters", "a", 0],
+      msg: "must be a string",
+    }],
+  },
+  // TODO: add tests for exceeding size limits
+
+  {
+    name: "not-filters-wrong-type",
+    json: `{"not_filters": 1}`,
+    expectedErrors: [{
+      path: ["not_filters"],
+      msg: "must be an object",
+    }],
+  },
+  {
+    name: "not-filters-values-wrong-type",
+    json: `{"not_filters": {"a": "b"}}`,
+    expectedErrors: [{
+      path: ["not_filters", "a"],
+      msg: "must be a list",
+    }],
+  },
+  {
+    name: "not-filters-value-wrong-type",
+    json: `{"not_filters": {"a": [1]}}`,
+    expectedErrors: [{
+      path: ["not_filters", "a", 0],
+      msg: "must be a string",
+    }],
+  },
+  // TODO: add tests for exceeding size limits
+
+  {
+    name: "aggregatable-values-wrong-type",
+    json: `{"aggregatable_values": 1}`,
+    expectedErrors: [{
+      path: ["aggregatable_values"],
+      msg: "must be an object",
+    }],
+  },
+  {
+    name: "aggregatable-values-value-wrong-type",
+    json: `{"aggregatable_values": {"a": "1"}}`,
+    expectedErrors: [{
+      path: ["aggregatable_values", "a"],
+      msg: "must be an integer in the range (1, 65536]",
+    }],
+  },
+  {
+    name: "aggregatable-values-value-below-min",
+    json: `{"aggregatable_values": {"a": 0}}`,
+    expectedErrors: [{
+      path: ["aggregatable_values", "a"],
+      msg: "must be an integer in the range (1, 65536]",
+    }],
+  },
+  {
+    name: "aggregatable-values-value-above-max",
+    json: `{"aggregatable_values": {"a": 65537}}`,
+    expectedErrors: [{
+      path: ["aggregatable_values", "a"],
+      msg: "must be an integer in the range (1, 65536]",
+    }],
+  },
+  // TODO: add tests for exceeding size limits
+
+  {
+    name: "debug-reporting-wrong-type",
+    json: `{"debug_reporting": "true"}`,
+    expectedErrors: [{
+      path: ["debug_reporting"],
+      msg: "must be a boolean",
+    }],
+  },
+
+  {
+    name: "debug-key-wrong-type",
+    json: `{"debug_key": 1}`,
+    expectedErrors: [{
+      path: ["debug_key"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "debug-key-wrong-format",
+    json: `{"debug_key": "-1"}`,
+    expectedErrors: [{
+      path: ["debug_key"],
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
+    }],
+  },
+
+  {
+    name: "aggregatable-deduplication-key-wrong-type",
+    json: `{"aggregatable_deduplication_key": 1}`,
+    expectedErrors: [{
+      path: ["aggregatable_deduplication_key"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "aggregatable-deduplication-key-wrong-format",
+    json: `{"aggregatable_deduplication_key": "-1"}`,
+    expectedErrors: [{
+      path: ["aggregatable_deduplication_key"],
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
+    }],
+  },
+
+  {
+    name: "event-trigger-data-wrong-type",
+    json: `{"event_trigger_data": 1}`,
+    expectedErrors: [{
+      path: ["event_trigger_data"],
+      msg: "must be a list",
+    }],
+  },
+  {
+    name: "event-trigger-data-value-wrong-type",
+    json: `{"event_trigger_data": [1]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0],
+      msg: "must be an object",
+    }],
+  },
+
+  {
+    name: "aggregatable-trigger-data-wrong-type",
+    json: `{"aggregatable_trigger_data": 1}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data"],
+      msg: "must be a list",
+    }],
+  },
+  {
+    name: "aggregatable-trigger-data-value-wrong-type",
+    json: `{"aggregatable_trigger_data": [1]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0],
+      msg: "must be an object",
+    }],
+  },
+
+  {
+    name: "trigger-data-wrong-type",
+    json: `{"event_trigger_data": [{
+      "trigger_data": 1
+    }]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "trigger_data"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "trigger-data-wrong-format",
+    json: `{"event_trigger_data": [{
+      "trigger_data": "-1"
+    }]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "trigger_data"],
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
+    }],
+  },
+
+  {
+    name: "priority-wrong-type",
+    json: `{"event_trigger_data": [{
+      "priority": 1
+    }]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "priority"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "priority-wrong-format",
+    json: `{"event_trigger_data": [{
+      "priority": "a"
+    }]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "priority"],
+      msg: "must be an int64 (must match /^-?[0-9]+$/)",
+    }],
+  },
+
+  {
+    name: "deduplication-key-wrong-type",
+    json: `{"event_trigger_data": [{
+      "deduplication_key": 1
+    }]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "deduplication_key"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "deduplication-key-wrong-format",
+    json: `{"event_trigger_data": [{
+      "deduplication_key": "-1"
+    }]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "deduplication_key"],
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
+    }],
+  },
+
+  {
+    name: "source-keys-missing",
+    json: `{"aggregatable_trigger_data": [{"key_piece": "0x1"}]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "source_keys"],
+      msg: "missing required field",
+    }],
+  },
+  {
+    name: "source-keys-wrong-type",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "source_keys": false
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "source_keys"],
+      msg: "must be a list",
+    }],
+  },
+  {
+    name: "source-keys-value-wrong-type",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "source_keys": [false]
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "source_keys", 0],
+      msg: "must be a string",
+    }],
+  },
+
+  {
+    name: "key-piece-missing",
+    json: `{"aggregatable_trigger_data": [{"source_keys": []}]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "key_piece"],
+      msg: "missing required field",
+    }],
+  },
+  {
+    name: "key-piece-wrong-type",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": 1,
+      "source_keys": []
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "key_piece"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "key-piece-wrong-format",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "f",
+      "source_keys": []
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "key_piece"],
+      msg: "must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)",
+    }],
+  },
+
+  // TODO: validate filters/not_filters in event_trigger_data and
+  // aggregatable_trigger_data
+
+  // TODO: validate length of event_trigger_data and aggregatable_trigger_data
+];

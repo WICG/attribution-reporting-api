@@ -136,7 +136,7 @@ const uint64 = string((state, value) => {
 
 const int64 = string((state, value) => {
   if (!int64Regex.test(value)) {
-    state.error(`must be a uint64 (must match ${uint64Regex})`)
+    state.error(`must be an int64 (must match ${int64Regex})`)
     return
   }
 
@@ -284,21 +284,4 @@ export function validateJSON(json, f) {
     return { errors: [{ msg: err.message }], warnings: [] }
   }
   return f(value)
-}
-
-export function formatIssue({ msg, path }) {
-  if (path === undefined) {
-    return msg
-  }
-
-  let context
-  if (path.length === 0) {
-    context = 'JSON root'
-  } else {
-    context = path
-      .map((p) => (typeof p === 'number' ? `[${p}]` : `["${p}"]`))
-      .join('')
-  }
-
-  return `${msg}: ${context}`
 }
