@@ -137,6 +137,10 @@ A <dfn>filter value</dfn> is an [=ordered set=] of [=strings=].
 A <dfn>filter map</dfn> is an [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
 [=map/value|values=] are [=filter values=].
 
+<h3 dfn-type=dfn>Suitable origin</h3>
+
+A suitable origin is an [=origin=] that is [=potentially trustworthy origin|potentially trustworthy=].
+
 <h3 dfn-type=dfn>Source type</h3>
 
 A source type is either "`navigation`" or "`event`".
@@ -149,13 +153,13 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>source identifier</dfn>
 :: A [=string=].
 : <dfn>source origin</dfn>
-:: An [=url/origin=].
+:: A [=suitable origin=].
 : <dfn>event ID</dfn>
 :: A non-negative 64-bit integer.
 : <dfn>attribution destinations</dfn>
 :: An [=ordered set=] of [=sites=].
 : <dfn>reporting endpoint</dfn>
-:: An [=url/origin=].
+:: A [=suitable origin=].
 : <dfn>source type</dfn>
 :: A [=source type=].
 : <dfn>expiry</dfn>
@@ -238,7 +242,7 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>trigger time</dfn>
 :: A point in time.
 : <dfn>reporting endpoint</dfn>
-:: An [=url/origin=].
+:: A [=suitable origin=].
 : <dfn>filters</dfn>
 :: A [=filter map=].
 : <dfn>negated filters</dfn>
@@ -267,7 +271,7 @@ An attribution report is a [=struct=] with the following items:
 
 <dl dfn-for="attribution report, aggregatable report, event-level report">
 : <dfn>reporting endpoint</dfn>
-:: An [=url/origin=].
+:: A [=suitable origin=].
 : <dfn>report time</dfn>
 :: A point in time.
 : <dfn>delivered</dfn> (default false)
@@ -349,7 +353,7 @@ An attribution rate-limit record is a [=struct=] with the following items:
 : <dfn>attribution destination</dfn>
 :: A [=site=].
 : <dfn>reporting endpoint</dfn>
-:: An [=url/origin=].
+:: A [=suitable origin=].
 : <dfn>time</dfn>
 :: A point in time.
 :: <dfn>expiry time</dfn>
@@ -397,7 +401,7 @@ An attribution debug report is a [=struct=] with the following items:
 : <dfn>data</dfn>
 :: A [=list=] of [=attribution debug data=].
 : <dfn>reporting endpoint</dfn>
-:: An [=origin=].
+:: A [=suitable origin=].
 
 </dl>
 
@@ -566,10 +570,9 @@ Issue: Determine whether to limit [=string/length=] or
 
 <h3 id="debug-keys">Cookie-based debugging</h3>
 
-To <dfn>check if cookie-based debugging is allowed</dfn> given an [=origin=]
-|reportingOrigin|:
+To <dfn>check if cookie-based debugging is allowed</dfn> given a
+[=suitable origin=] |reportingOrigin|:
 
-1. [=Assert=]: |reportingOrigin| is a [=potentially trustworthy origin=].
 1. Return <strong>blocked</strong>.
 
 Issue: Check for "`ar_debug`" cookie on |reportingOrigin| and return
@@ -611,9 +614,8 @@ Given an [=attribution rate-limit record=] |record|:
 <h3 id="obtaining-and-delivering-debug-report">Obtaining and delivering an attribution debug report</h3>
 
 To <dfn>obtain and deliver a debug report</dfn> given a [=list=] of [=attribution debug data=] |data|
-and an [=origin=] |reportingEndpoint|:
+and a [=suitable origin=] |reportingEndpoint|:
 
-1. [=Assert=]: |reportingEndpoint| is a [=potentially trustworthy origin=].
 1. Let |debugReport| be an [=attribution debug report=] with the items:
     : [=attribution debug report/data=]
     :: |data|
@@ -741,11 +743,9 @@ To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
 1. Return |aggregationKeys|.
 
 To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
-|json|, an [=origin=] |sourceOrigin|, an [=origin=] |reportingOrigin|, and a
+|json|, a [=suitable origin=] |sourceOrigin|, a [=suitable origin=] |reportingOrigin|, and a
 [=source type=] |sourceType|:
 
-1. [=Assert=]: |sourceOrigin| is a [=potentially trustworthy origin=].
-1. [=Assert=]: |reportingOrigin| is a [=potentially trustworthy origin=].
 1. Let |value| be the result of running
     [=parse a JSON string to an Infra value=] with |json|.
 1. If |value| is not an [=ordered map=], return null.
@@ -912,7 +912,7 @@ a [=trigger state=] |triggerState|:
 1. Return |fakeReport|.
 
 To <dfn>check if debug reporting is allowed</dfn> given a [=source debug data type=] |dataType|
-and an [=origin=] |reportingOrigin|:
+and a [=suitable origin=] |reportingOrigin|:
 1. If |dataType| is:
     <dl class="switch">
     <dt>"`source-destination-limit`"</dt>
@@ -1138,9 +1138,8 @@ ISSUE: properly define "begin redemption" operation. Consider running the algori
 1. Return the result of [=forgiving-base64 encoding=] |redeemedBytes|.
 
 To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
-|json|, a [=site=] |destination|, an [=origin=] |reportingOrigin|, and a [=string=] |privateStateToken|:
+|json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, and a [=string=] |privateStateToken|:
 
-1. [=Assert=]: |reportingOrigin| is a [=potentially trustworthy origin=].
 1. Let |value| be the result of running
     [=parse a JSON string to an Infra value=] with |json|.
 1. If |value| is not an [=ordered map=], return null.
@@ -1772,9 +1771,8 @@ To <dfn>serialize an [=attribution debug report=]</dfn> |report|, run the follow
 
 <h3 id="get-report-url">Get report request URL</h3>
 
-To <dfn>generate a report URL</dfn> given an [=origin=] |reportingOrigin| and a [=list=] of [=strings=] |path|:
+To <dfn>generate a report URL</dfn> given a [=suitable origin=] |reportingOrigin| and a [=list=] of [=strings=] |path|:
 
-1. [=Assert=]: |reportingOrigin| is not an [=opaque origin=].
 1. Let |reportUrl| be a new [=URL=] record.
 1. Set |reportUrl|'s [=url/scheme=] to |reportingOrigin|'s [=origin/scheme=].
 1. Set |reportUrl|'s [=url/host=] to |reportingOrigin|'s [=origin/host=].
@@ -1846,7 +1844,7 @@ and a [=header list=] |newHeaders| (defaults to an empty [=list=]):
 
 <h3 id="issue-report-request">Issuing a report request</h3>
 
-This algorithm constructs a [=request=] and attempts to deliver it to an [=origin=].
+This algorithm constructs a [=request=] and attempts to deliver it to a [=suitable origin=].
 
 To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report|, run the following steps:
 
