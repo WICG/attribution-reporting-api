@@ -376,6 +376,9 @@ Possible values are:
 
 <ul>
 <li>"`trigger-no-matching-source`"</li>
+<li>"`trigger-no-matching-filter-data`"</li>
+<li>"`trigger-attributions-per-source-destination-limit`"</li>
+<li>"`trigger-reporting-origin-limit`"</li>
 <li>"`trigger-unknown-error`"</li>
 </ul>
 
@@ -1341,6 +1344,15 @@ and an optional [=attribution source=] <dfn for="obtain debug data body on trigg
     1. If |sourceToAttribute|'s [=attribution source/debug key=] is not null, [=map/set=]
         |body|["`source_debug_key`"] to |sourceToAttribute|'s [=attribution source/debug key=],
         [=serialize an integer|serialized=].
+1. If |dataType| is:
+    <dl class="switch">
+    <dt>"`trigger-attributions-per-source-destination-limit`"</dt>
+    <dd>[=map/Set=] |body|["`limit`"] to the user agent's [=max attributions per rate-limit window=],
+         [=serialize an integer|serialized=].</dd>
+    <dt>"`trigger-reporting-origin-limit`"</dt>
+    <dd>[=map/Set=] |body|["`limit`"] to the user agent's [=max attribution reporting endpoints per rate-limit window=],
+         [=serialize an integer|serialized=].</dd>
+    </dl>
 1. Return |body|.
 
 To <dfn>obtain debug data on trigger registration</dfn> given a [=trigger debug data type=] |dataType|,
@@ -1365,9 +1377,12 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
 
 1. If |sourceToAttribute|'s [=attribution source/randomized response=] is not null and is not [=set/is empty|empty=]:
     1. Assert: |sourceToAttribute|'s [=attribution source/event-level attributable=] is false.
-    1. Return <strong>dropped</strong>.
-1. If |topLevelFiltersMatch| is false, return <strong>dropped</strong>.
-1. If |sourceToAttribute|'s [=attribution source/event report window time=] is less than the current time, return <strong>dropped</strong>.
+    1. Return [ "`status`" → "`dropped`" ].
+1. If |topLevelFiltersMatch| is false:
+    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+        with "`trigger-no-matching-filter-data`", |trigger| and |sourceToAttribute|.
+    1. Return [ "`status`" → "`dropped`",  "`debug_data`" → |debugData| ].
+1. If |sourceToAttribute|'s [=attribution source/event report window time=] is less than the current time, return [ "`status`" → "`dropped`" ].
 1. Let |matchedConfig| be null.
 1. [=map/iterate|For each=] [=event-level trigger configuration=] |config| of |trigger|'s
     [=attribution trigger/event-level trigger configurations=]:
@@ -1381,19 +1396,24 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
         [=match an attribution source's filter data against filters/isNegated=] set to true is false, [=iteration/continue=].
     1. Set |matchedConfig| to |config|.
     1. [=iteration/Break=].
-1. If |matchedConfig| is null, return <strong>dropped</strong>.
+1. If |matchedConfig| is null, return [ "`status`" → "`dropped`" ].
 1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null and
-    |sourceToAttribute|'s [=attribution source/dedup keys=] [=list/contains=] it, return <strong>dropped</strong>.
+    |sourceToAttribute|'s [=attribution source/dedup keys=] [=list/contains=] it, return [ "`status`" → "`dropped`" ].
 1. Let |numMatchingReports| be the number of entries in the [=event-level report cache=] whose
     [=event-level report/attribution destinations=] [=set/contains=] |trigger|'s [=attribution trigger/attribution destination=].
-1. If |numMatchingReports| is greater than or equal to the user agent's [=max event-level reports per attribution destination=],
-    return <strong>dropped</strong>.
+1. If |numMatchingReports| is greater than or equal to the user agent's [=max event-level reports per attribution destination=], return [ "`status`" → "`dropped`" ].
 1. If the result of running [=should attribution be blocked by rate limit=] with |trigger| and
-    |sourceToAttribute| is <strong>blocked</strong>, return <strong>dropped</strong>.
+    |sourceToAttribute| is <strong>blocked</strong>:
+    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+        with "`trigger-attributions-per-source-destination-limit`", |trigger| and |sourceToAttribute|
+    1. Return [ "`status`" → "`dropped`",  "`debug_data`" → |debugData| ].
 1. If the result of running [=should processing be blocked by reporting-endpoint limit=] with
-    |rateLimitRecord| is <strong>blocked</strong>, return <strong>dropped</strong>.
+    |rateLimitRecord| is <strong>blocked</strong>:
+    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+        with "`trigger-reporting-origin-limit`", |trigger| and |sourceToAttribute|.
+    1. Return [ "`status`" → "`dropped`",  "`debug_data`" → |debugData| ].
 1. If |sourceToAttribute|'s [=attribution source/event-level attributable=] value
-    is false, return <strong>dropped</strong>.
+    is false, return [ "`status`" → "`dropped`" ].
 1. Let |report| be the result of running [=obtain an event-level report=] with |sourceToAttribute|, |trigger|,
     and |matchedConfig|.
 1. Let |maxAttributionsPerSource| be the user agent's [=max attributions per navigation source=].
@@ -1405,7 +1425,7 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
          * entry's [=event-level report/report time=] and |report|'s [=event-level report/report time=] are equal.
          * entry's [=event-level report/source identifier=] [=string/is=] |report|'s [=event-level report/source identifier=]
     1. If |matchingReports| is empty, then set |sourceToAttribute|'s [=attribution source/event-level attributable=] value to false
-        and return <strong>dropped</strong>.
+        and return [ "`status`" → "`dropped`" ].
     1. Set |matchingReports| to the result of [=list/sort in ascending order|sorting=] |matchingReports|
         in ascending order, with |a| being less than |b| if any of the following are true:
              * |a|'s [=event-level report/trigger priority=] is less than |b|'s [=event-level report/trigger priority=].
@@ -1413,11 +1433,11 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
                 and |a|'s [=event-level report/trigger time=] is greater than |b|'s [=event-level report/trigger time=].
     1. Let |lowestPriorityReport| be the first item in |matchingReports|.
     1. If |report|'s [=event-level report/trigger priority=] is less than or equal to
-        |lowestPriorityReport|'s [=event-level report/trigger priority=], return <strong>dropped</strong>.
+        |lowestPriorityReport|'s [=event-level report/trigger priority=], return [ "`status`" → "`dropped`" ].
     1. [=list/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
     1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
 1. If the [=list/size=] of the [=event-level report cache=] is greater than or equal to the user
-    agent's [=max event-level report cache size=], return <strong>cache full</strong>.
+    agent's [=max event-level report cache size=], return [ "`status`" → "`cache full`" ].
 1. If |sourceToAttribute|'s [=attribution source/randomized response=] is
     null, [=set/append=] |report| to the [=event-level report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
@@ -1426,7 +1446,7 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
 1. If |report|'s [=event-level report/source debug key=] is not null and |report|'s
     [=event-level report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
-1. Return <strong>attributed</strong>.
+1. Return [ "`status`" → "`attributed`" ].
 
 <h3 algorithm id="triggering-aggregatable-attribution">Triggering aggregatable attribution</h3>
 
@@ -1434,29 +1454,38 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 [=attribution source=] |sourceToAttribute|, an [=attribution rate-limit record=] |rateLimitRecord|
 and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
 
-1. If |sourceToAttribute|'s [=attribution source/aggregation keys=] [=map/is empty=], return <strong>dropped</strong>.
+1. If |sourceToAttribute|'s [=attribution source/aggregation keys=] [=map/is empty=], return [ "`status`" → "`dropped`" ].
 1. If |trigger|'s [=attribution trigger/aggregatable trigger data=] [=list/is empty=]
     and |trigger|'s [=attribution trigger/aggregatable values=] [=map/is empty=],
-    return <strong>dropped</strong>.
-1. If |topLevelFiltersMatch| is false, return <strong>dropped</strong>.
-1. If |sourceToAttribute|'s [=attribution source/aggregatable report window time=] is less than the current time, return <strong>dropped</strong>.
+    return [ "`status`" → "`dropped`" ].
+1. If |topLevelFiltersMatch| is false:
+    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+        with "`trigger-no-matching-filter-data`", |trigger| and |sourceToAttribute|.
+    1. Return [ "`status`" → "`dropped`",  "`debug_data`" → |debugData| ].
+1. If |sourceToAttribute|'s [=attribution source/aggregatable report window time=] is less than the current time, return [ "`status`" → "`dropped`" ].
 1. Let |report| be the result of running [=obtain an aggregatable report=] with |sourceToAttribute| and |trigger|.
-1. If |report|'s [=aggregatable report/contributions=] [=list/is empty=], return <strong>dropped</strong>.
+1. If |report|'s [=aggregatable report/contributions=] [=list/is empty=], return [ "`status`" → "`dropped`" ].
 1. If |trigger|'s [=attribution trigger/aggregatable dedup key=] is not null and
     |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=]
-    [=list/contains=] it, return <strong>dropped</strong>.
+    [=list/contains=] it, return [ "`status`" → "`dropped`" ].
 1. Let |numMatchingReports| be the number of entries in the [=aggregatable report cache=] whose
     [=aggregatable report/effective attribution destination=] equals |trigger|'s [=attribution trigger/attribution destination=].
 1. If |numMatchingReports| is greater than or equal to the user agent's
-    [=max aggregatable reports per attribution destination=], return <strong>dropped</strong>.
+    [=max aggregatable reports per attribution destination=], return [ "`status`" → "`dropped`" ].
 1. If the result of running [=should attribution be blocked by rate limit=] with |trigger| and
-    |sourceToAttribute| is <strong>blocked</strong>, return <strong>dropped</strong>.
+    |sourceToAttribute| is <strong>blocked</strong>:
+     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+         with "`trigger-aggregate-storage-limit`", |trigger| and |sourceToAttribute|.
+     1. Return [ "`status`" → "`dropped`",  "`debug_data`" → |debugData| ].
 1. If the result of running [=should processing be blocked by reporting-endpoint limit=] with
-    |rateLimitRecord| is <strong>blocked</strong>, return <strong>dropped</strong>.
+    |rateLimitRecord| is <strong>blocked</strong>:
+    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+        with "`trigger-attributions-per-source-destination-limit`", |trigger| and |sourceToAttribute|.
+    1. Return [ "`status`" → "`dropped`",  "`debug_data`" → |debugData| ].
 1. If the result of running [=check if an attribution source can create aggregatable contributions=]
-    with |report| and |sourceToAttribute| is false, return <strong>dropped</strong>.
+    with |report| and |sourceToAttribute| is false, return [ "`status`" → "`dropped`" ].
 1. If the [=list/size=] of the [=aggregatable report cache=] is greater than or equal to the user
-    agent's [=max aggregatable report cache size=], return <strong>cache full</strong>.
+    agent's [=max aggregatable report cache size=], return [ "`status`" → "`cache full`" ].
 1. Add |report| to the [=aggregatable report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/aggregatable budget consumed=] value by
     |report|'s [=aggregatable report/required aggregatable budget=].
@@ -1465,7 +1494,7 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
 1. If |report|'s [=aggregatable report/source debug key=] is not null and |report|'s
     [=aggregatable report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
-1. Return <strong>attributed</strong>.
+1. Return [ "`status`" → "`attributed`" ].
 
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
@@ -1520,11 +1549,23 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     with |trigger|, |sourceToAttribute|, |rateLimitRecord| and |topLevelFiltersMatch|.
 1. Let |aggregatableResult| be the result of running [=trigger aggregatable attribution=]
     with |trigger|, |sourceToAttribute|, |rateLimitRecord| and |topLevelFiltersMatch|.
-1. If both |eventLevelResult| and |aggregatableResult| are <strong>dropped</strong>, return.
+1. Let |debugDataList| be an [=list/is empty|empty=] [=list=].
+1. If |eventLevelResult|["`debug_data`"] exists and is not null:
+    1. Assert: |eventLevelResult|["`debug_data`"] is an [=attribution debug data=].
+    1. [=list/Append=] |eventLevelResult|["`debug_data`"] to |debugDataList|.
+1. If |aggregatableResult|["`debug_data`"] exists and is not null:
+    1. Assert: |aggregatableResult|["`debug_data`"] is an [=attribution debug data=].
+    1. If |debugDataList| [=list/is empty=] or |aggregatableResult|["`debug_data`"]'s
+        [=attribution debug data/data type=] does not equal |eventLevelResult|["`debug_data`"]'s
+        [=attribution debug data/data type=], then [=list/append=]
+        |aggregatableResult|["`debug_data`"] to |debugDataList|.
+1. If |debugDataList| is not [=list/is empty|empty=], then run [=obtain and deliver a debug report=]
+    with |debugDataList| and |trigger|'s [=attribution trigger/reporting endpoint=].
+1. If both |eventLevelResult|["`status`"] and |aggregatableResult|["`status`"] are "`dropped`", return.
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
 1. For each |item| of |matchingSources|:
     1. [=set/Remove=] |item| from the [=attribution source cache=].
-1. If neither |eventLevelResult| nor |aggregatableResult| is <strong>attributed</strong>, return.
+1. If neither |eventLevelResult|["`status`"] nor |aggregatableResult|["`status`"] is "`attributed`", return.
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] if the result of running
     [=can attribution rate-limit record be removed=] with the entry is true.
