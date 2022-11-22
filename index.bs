@@ -256,6 +256,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: Null or a non-negative 64-bit integer.
 : <dfn>serialized private state token</dfn>
 :: A [=byte sequence=].
+: <dfn>debug reporting enabled</dfn>
+:: A [=boolean=].
 
 </dl>
 
@@ -367,6 +369,14 @@ Possible values are:
 <li>"`source-noised`"</li>
 <li>"`source-storage-limit`"</li>
 <li>"`source-unknown-error`"</li>
+</ul>
+
+A <dfn>trigger debug data type</dfn> is a [=debug data type=] for trigger registrations.
+Possible values are:
+
+<ul>
+<li>"`trigger-no-matching-source`"</li>
+<li>"`trigger-unknown-error`"</li>
 </ul>
 
 An attribution debug data is a [=struct=] with the following items:
@@ -892,6 +902,8 @@ a [=trigger state=] |triggerState|:
     :: «[]»
     : [=attribution trigger/aggregatable dedup key=]
     :: null
+    : [=attribution trigger/debug reporting enabled=]
+    :: false
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
 1. Set |fakeReport|'s [=event-level report/report time=] to the result of
@@ -1166,6 +1178,9 @@ To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
         |value|["`not_filters`"] and [=parse filter data/registrationType=] set
         to "`trigger`".
     1. If |negatedFilters| is null, return null.
+1. Let |debugReportingEnabled| be false.
+1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
+    |debugReportingEnabled| to value["`debug_reporting`"].
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -1189,6 +1204,8 @@ To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
     :: |aggregatableDedupKey|
     : [=attribution trigger/serialized private state token=]
     :: The result of [=serializing a private state token=] with |privateStateToken|
+    : [=attribution trigger/debug reporting enabled=]
+    :: |debugReportingEnabled|
 1. Return |trigger|.
 
 <h3 dfn id="does-filter-data-match">Does filter data match</h3>
@@ -1305,6 +1322,41 @@ To <dfn>check if an [=attribution source=] can create [=aggregatable contributio
     |remainingAggregatableBudget|, return false.
 1. Return true.
 
+<h3 id="obtaining-trigger-debug-data">Obtaining debug data on trigger registration</h3>
+
+To <dfn>obtain debug data body on trigger registration</dfn> given a
+[=trigger debug data type=] |dataType|, an [=attribution trigger=] |trigger|
+and an optional [=attribution source=] <dfn for="obtain debug data body on trigger registration">
+<var>sourceToAttribute</var></dfn>:
+
+1. Let |body| be a new [=map=] with the following key/value pairs:
+    : "`attribution_destination`"
+    :: |trigger|'s [=attribution trigger/attribution destination=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
+
+1. If |trigger|'s [=attribution trigger/debug key=] is not null, [=map/set=] |body|["`trigger_debug_key`"]
+    to |trigger|'s [=attribution trigger/debug key=], [=serialize an integer|serialized=].
+1. If |sourceToAttribute| is not null:
+    1. [=map/Set=] |body|["`source_event_id`"] to |source|'s [=attribution source/event ID=], [=serialize an integer|serialized=].
+    1. [=map/Set=] |body|["`source_site`"] to |source|'s [=attribution source/source site=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
+    1. If |sourceToAttribute|'s [=attribution source/debug key=] is not null, [=map/set=]
+        |body|["`source_debug_key`"] to |sourceToAttribute|'s [=attribution source/debug key=],
+        [=serialize an integer|serialized=].
+1. Return |body|.
+
+To <dfn>obtain debug data on trigger registration</dfn> given a [=trigger debug data type=] |dataType|,
+an [=attribution trigger=] |trigger| and an optional [=attribution source=]
+<dfn for="obtain debug data on trigger registration"><var>sourceToAttribute</var></dfn>:
+
+1. If |trigger|'s [=attribution trigger/debug reporting enabled=] is false, return null.
+1. If the result of running [=check if cookie-based debugging is allowed=] with |trigger|'s
+    [=attribution trigger/reporting endpoint=] is <strong>blocked</strong>, return null.
+1. Let |data| be a new [=attribution debug data=] with the items:
+    : [=attribution debug data/data type=]
+    :: |dataType|.
+    : [=attribution debug data/body=]
+    :: The result of running [=obtain debug data body on trigger registration=] with |dataType|, |trigger| and |sourceToAttribute|.
+1. Return |data|.
+
 <h3 algorithm id="triggering-event-level-attribution">Triggering event-level attribution</h3>
 
 To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |trigger| and an
@@ -1399,6 +1451,15 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
+To <dfn>obtain and deliver a debug report on trigger registration</dfn> given a [=trigger debug data type=] |dataType|,
+an [=attribution trigger=] |trigger| and an optional [=attribution source=]
+<dfn for="obtain and deliver a debug report on trigger registration"><var>sourceToAttribute</var></dfn>:
+
+1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+    with |dataType|, |trigger| and |sourceToAttribute|.
+1. If |debugData| is null, return.
+1. Run [=obtain and deliver a debug report=] with « |debugData| » and |trigger|'s [=attribution trigger/reporting endpoint=].
+
 To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |trigger|, run the following steps:
 
 1. Let |attributionDestination| be |trigger|'s [=attribution trigger/attribution destination=].
@@ -1406,7 +1467,10 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
      * entry's [=attribution source/attribution destinations=] [=set/contains=] |attributionDestination|.
      * entry's [=attribution source/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are [=same origin=].
      * entry's [=attribution source/expiry time=] is greater than the current time.
-1. If |matchingSources| [=set/is empty=], return.
+1. If |matchingSources| [=set/is empty=]:
+    1. Run [=obtain and deliver a debug report on trigger registration=]
+        with "`trigger-no-matching-source`", |trigger| and [=obtain and deliver a debug report on trigger registration/sourceToAttribute=] set to null.
+    1. Return.
 1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources|
     in descending order, with |a| being less than |b| if any of the following are true:
       * |a|'s [=attribution source/priority=] is less than |b|'s [=attribution source/priority=].
