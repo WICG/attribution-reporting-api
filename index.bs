@@ -784,6 +784,8 @@ To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
     1. [=map/Set=] |aggregationKeys|[|key|] to |keyPiece|.
 1. Return |aggregationKeys|.
 
+Issue: Determine whether to limit [=string/length=] or [=string/code point length=] for |key| above.
+
 To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 |json|, a [=suitable origin=] |sourceOrigin|, a [=suitable origin=] |reportingOrigin|, and a
 [=source type=] |sourceType|:
@@ -1121,13 +1123,14 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
     1. If |value|["`key_piece`"] does not [=map/exist=] or is not a [=string=], return null.
     1. Let |keyPiece| be the result of running [=parse an aggregation key piece=] with |value|["`key_piece`"].
     1. If |keyPiece| is an error, return null.
-    1. If |value|["`source_keys`"] does not [=map/exist=] or is not a [=list=], return null.
-    1. If |value|["`source_keys`"]'s [=list/size=] is greater than the user agent's
-        [=max aggregation keys per attribution=], return null.
-    1. Let |sourceKeys| be a new [=set=].
-    1. [=list/iterate|For each=] |sourceKey| of |value|["`source_keys`"]:
-        1. If |sourceKey| is not a [=string=], return null.
-        1. [=set/Append=] |sourceKey| to |sourceKeys|.
+    1. Let |sourceKeys| be a new [=ordered set=].
+    1. If |value|["`source_keys`"] [=map/exists=]:
+        1. If |value|["`source_keys`"] is not a [=list=], return null.
+        1. If |value|["`source_keys`"]'s [=list/size=] is greater than the user agent's
+            [=max aggregation keys per attribution=], return null.
+        1. [=list/iterate|For each=] |sourceKey| of |value|["`source_keys`"]:
+            1. If |sourceKey| is not a [=string=], return null.
+            1. [=set/Append=] |sourceKey| to |sourceKeys|.
     1. Let |filters| be a new [=filter map=].
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filter data=] with
@@ -1150,6 +1153,8 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
     1. [=list/Append=] |aggregatableTrigger| to |aggregatableTriggerData|.
 1. Return |aggregatableTriggerData|.
 
+Issue: Determine whether to limit [=string/length=] or [=string/code point length=] for |sourceKey| above.
+
 To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
 
 1. If |map|["`aggregatable_values`"] does not [=map/exist=], return «[]».
@@ -1157,10 +1162,12 @@ To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
 1. If |values| is not an [=ordered map=], return null.
 1. If |values|'s [=map/size=] is great than the user agent's
     [=max aggregation keys per attribution=], return null.
-1. [=map/iterate|For each=] <var ignore=''>key</var> → |value| of |values|:
+1. [=map/iterate|For each=] |key| → |value| of |values|:
      1. If |value| is not an integer, return null.
      1. If |value| is less than or equal to 0, return null.
 1. Return |values|.
+
+Issue: Determine whether to limit [=string/length=] or [=string/code point length=] for |key| above.
 
 To <dfn noexport>serialize a private state token</dfn> given a [=string=] |encodedBlindedPrivateStateToken|:
 1. If |encodedBlindedPrivateStateToken| is null, return null.

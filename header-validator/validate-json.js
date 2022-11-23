@@ -236,7 +236,7 @@ const aggregatableTriggerData = list(
       filters: optional(filters()),
       key_piece: required(hex128),
       not_filters: optional(filters()),
-      source_keys: required(list(string(), limits.maxAggregationKeys)),
+      source_keys: optional(list(string(), limits.maxAggregationKeys)),
     }),
   limits.maxAggregatableTriggerData
 )
