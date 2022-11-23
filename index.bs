@@ -1279,9 +1279,9 @@ To <dfn>match [=filter values=] with negation</dfn> given a [=filter value=] |a|
 1. If |i| is not [=set/is empty|empty=], then return false.
 1. Return true.
 
-To <dfn>match an attribution source's filter data against filters</dfn> given an
+To <dfn>match an attribution source's filter data against filters map</dfn> given an
 [=attribution source=] |source|, a [=filter map=] |filters|, and a [=boolean=]
-<dfn for="match an attribution source's filter data against filters"><var>isNegated</var></dfn>:
+<dfn for="match an attribution source's filter data against filters map"><var>isNegated</var></dfn>:
 
 1. Let |sourceData| be |source|'s [=attribution source/filter data=].
 1. [=map/iterate|For each=] |key| → |filterValues| of |filters|:
@@ -1299,12 +1299,15 @@ To <dfn>match an attribution source's filter data against filters</dfn> given an
         </dl>
 1. Return true.
 
-To <dfn>match an attribution source's filter data against filters when filters is a list</dfn> given an
-[=attribution source=] |source|, a [=list=] of [=filter map=] |filters|, and a [=boolean=]
-<dfn for="match an attribution source's filter data against filters when filters is list"><var>isNegated</var></dfn>:
+To <dfn>match an attribution source's filter data against filters</dfn> given an
+[=attribution source=] |source|, a [=filter map=] or a [=list=] of [=filter map=] |filters|, and a [=boolean=]
+<dfn for="match an attribution source's filter data against filters"><var>isNegated</var></dfn>:
 
+1. If |filters| is a [=map=].
+    1. Return the result of running [=match an attribution source's filter data against filters map=]
+       with |source|, |filters| and |isNegated|.
 1. [=list/iterate|For each=] |filter| of |filters|:
-    1. If the result of running [=match an attribution source's filter data against filters=]
+    1. If the result of running [=match an attribution source's filter data against filters map=]
        with |source|, |filter| and |isNegated| is true, return true.
 1. Return false.
 
