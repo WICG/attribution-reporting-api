@@ -583,19 +583,9 @@ random delay to deliver an [=aggregatable report=].
 
 <h3 id="parsing-filter-data">Parsing filter data</h3>
 
-A <dfn>registration type</dfn> is one of the following:
-
-<ul dfn-for="registration type">
-<li>"<dfn><code>source</code></dfn>"
-<li>"<dfn><code>trigger</code></dfn>"
-</ul>
-
-To <dfn>parse filter data</dfn> given a |value| and a [=registration type=]
-|registrationType|:
+To <dfn>parse filter data</dfn> given a |value|:
 
 1. If |value| is not a [=map=], return null.
-1. If |registrationType| is "<code>[=registration type/source=]</code>" and |value|["`source_type`"]
-    [=map/exists=], return null.
 1. If |value|'s [=map/size=] is greater than the user agent's
     [=max entries per filter map=], return null.
 1. Let |result| be a new [=filter map=].
@@ -819,8 +809,9 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 1. Let |filterData| be a new [=filter map=].
 1. If |value|["`filter_data`"] [=map/exists=]:
     1. Set |filterData| to the result of running [=parse filter data=] with
-        |value|["`filter_data`"] and "<code>[=registration type/source=]</code>".
+        |value|["`filter_data`"].
     1. If |filterData| is null, return null.
+    1. If |filterData|["`source_type`"] [=map/exists=], return null.
 1. [=map/Set=] |filterData|["`source_type`"] to « |sourceType| ».
 1. Let |debugKey| be null.
 1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
@@ -1085,12 +1076,12 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
     1. Let |filters| be a new [=filter map=].
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filter data=] with
-            |value|["`filters`"] and "<code>[=registration type/trigger=]</code>".
+            |value|["`filters`"].
         1. If |filters| is null, return null.
     1. Let |negatedFilters| be a new [=filter map=].
     1. If |value|["`not_filters`"] [=map/exists=]:
         1. Set |negatedFilters| to the result of running [=parse filter data=]
-            with |value|["`not_filters`"] and "<code>[=registration type/trigger=]</code>".
+            with |value|["`not_filters`"].
         1. If |negatedFilters| is null, return null.
     1. Let |eventTrigger| be a new [=event-level trigger configuration=] with
         the items:
@@ -1133,12 +1124,12 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
     1. Let |filters| be a new [=filter map=].
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filter data=] with
-            |value|["`filters`"] and "<code>[=registration type/trigger=]</code>".
+            |value|["`filters`"].
         1. If |filters| is null, return null.
     1. Let |negatedFilters| be a new [=filter map=].
     1. If |value|["`not_filters`"] [=map/exists=]:
         1. Set |negatedFilters| to the result of running [=parse filter data=]
-            with |value|["`not_filters`"] and "<code>[=registration type/trigger=]</code>".
+            with |value|["`not_filters`"].
         1. If |negatedFilters| is null, return null.
     1. Let |aggregatableTrigger| be a new [=aggregatable trigger data=] with the items:
         : [=aggregatable trigger data/key piece=]
@@ -1212,12 +1203,12 @@ To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
 1. Let |filters| be a new [=filter map=].
 1. If |value|["`filters`"] exists:
     1. Set |filters| to the result of running [=parse filter data=] with
-        |value|["`filters`"] and "<code>[=registration type/trigger=]</code>".
+        |value|["`filters`"].
     1. If |filters| is null, return null.
 1. Let |negatedFilters| be a new [=filter map=].
 1. If |value|["`not_filters`"] exists:
     1. Set |negatedFilters| to the result of running [=parse filter data=] with
-        |value|["`not_filters`"] and "<code>[=registration type/trigger=]</code>".
+        |value|["`not_filters`"].
     1. If |negatedFilters| is null, return null.
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
