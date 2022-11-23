@@ -1489,6 +1489,7 @@ Issue: Specify the steps for making an attributionsrc request with <var>decodedS
     <li data-md>
      <p>Return <var>aggregationKeys</var>.</p>
    </ol>
+   <p class="issue" id="issue-f31c9d0c"><a class="self-link" href="#issue-f31c9d0c"></a> Determine whether to limit <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-length" id="ref-for-string-length①">length</a> or <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-code-point-length" id="ref-for-string-code-point-length②">code point length</a> for <var>key</var> above.</p>
    <p>To <dfn data-dfn-type="dfn" data-noexport id="parse-source-registration-json">parse source-registration JSON<a class="self-link" href="#parse-source-registration-json"></a></dfn> given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑦">string</a> <var>json</var>, a <a data-link-type="dfn" href="#suitable-origin" id="ref-for-suitable-origin⑧">suitable origin</a> <var>sourceOrigin</var>, a <a data-link-type="dfn" href="#suitable-origin" id="ref-for-suitable-origin⑨">suitable origin</a> <var>reportingOrigin</var>, and a <a data-link-type="dfn" href="#source-type" id="ref-for-source-type②">source type</a> <var>sourceType</var>:</p>
    <ol>
     <li data-md>
@@ -2000,18 +2001,22 @@ greater than some constant.</p>
       <li data-md>
        <p>If <var>keyPiece</var> is an error, return null.</p>
       <li data-md>
-       <p>If <var>value</var>["<code>source_keys</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①⑦">exist</a> or is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list⑨">list</a>, return null.</p>
+       <p>Let <var>sourceKeys</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set②①">ordered set</a>.</p>
       <li data-md>
-       <p>If <var>value</var>["<code>source_keys</code>"]'s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size①⓪">size</a> is greater than the user agent’s <a data-link-type="dfn" href="#max-aggregation-keys-per-attribution" id="ref-for-max-aggregation-keys-per-attribution①">max aggregation keys per attribution</a>, return null.</p>
-      <li data-md>
-       <p>Let <var>sourceKeys</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set②①">set</a>.</p>
-      <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑤">For each</a> <var>sourceKey</var> of <var>value</var>["<code>source_keys</code>"]:</p>
+       <p>If <var>value</var>["<code>source_keys</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists①⑦">exists</a>:</p>
        <ol>
         <li data-md>
-         <p>If <var>sourceKey</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string②⑥">string</a>, return null.</p>
+         <p>If <var>value</var>["<code>source_keys</code>"] is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list⑨">list</a>, return null.</p>
         <li data-md>
-         <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append①⓪">Append</a> <var>sourceKey</var> to <var>sourceKeys</var>.</p>
+         <p>If <var>value</var>["<code>source_keys</code>"]'s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size①⓪">size</a> is greater than the user agent’s <a data-link-type="dfn" href="#max-aggregation-keys-per-attribution" id="ref-for-max-aggregation-keys-per-attribution①">max aggregation keys per attribution</a>, return null.</p>
+        <li data-md>
+         <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑤">For each</a> <var>sourceKey</var> of <var>value</var>["<code>source_keys</code>"]:</p>
+         <ol>
+          <li data-md>
+           <p>If <var>sourceKey</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string②⑥">string</a>, return null.</p>
+          <li data-md>
+           <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append①⓪">Append</a> <var>sourceKey</var> to <var>sourceKeys</var>.</p>
+         </ol>
        </ol>
       <li data-md>
        <p>Let <var>filters</var> be a new <a data-link-type="dfn" href="#filter-map" id="ref-for-filter-map①③">filter map</a>.</p>
@@ -2055,6 +2060,7 @@ greater than some constant.</p>
     <li data-md>
      <p>Return <var>aggregatableTriggerData</var>.</p>
    </ol>
+   <p class="issue" id="issue-a89384b8"><a class="self-link" href="#issue-a89384b8"></a> Determine whether to limit <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-length" id="ref-for-string-length②">length</a> or <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-code-point-length" id="ref-for-string-code-point-length③">code point length</a> for <var>sourceKey</var> above.</p>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-aggregatable-values">parse aggregatable values</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map①⑤">ordered map</a> <var>map</var>:</p>
    <ol>
     <li data-md>
@@ -2076,6 +2082,7 @@ greater than some constant.</p>
     <li data-md>
      <p>Return <var>values</var>.</p>
    </ol>
+   <p class="issue" id="issue-f31c9d0c①"><a class="self-link" href="#issue-f31c9d0c①"></a> Determine whether to limit <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-length" id="ref-for-string-length③">length</a> or <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-code-point-length" id="ref-for-string-code-point-length④">code point length</a> for <var>key</var> above.</p>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="serialize-a-private-state-token">serialize a private state token</dfn> given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string②⑦">string</a> <var>encodedBlindedPrivateStateToken</var>:</p>
    <ol>
     <li data-md>
@@ -3993,6 +4000,8 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-string-code-point-length">8.1. Parsing filter data</a>
     <li><a href="#ref-for-string-code-point-length①">8.4. Parsing aggregation key piece</a>
+    <li><a href="#ref-for-string-code-point-length②">9.10. Parsing source-registration JSON</a>
+    <li><a href="#ref-for-string-code-point-length③">10.1. Creating an attribution trigger</a> <a href="#ref-for-string-code-point-length④">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-code-point-substring">
@@ -4138,6 +4147,8 @@ an origin from a user’s browsing history.</p>
    <a href="https://infra.spec.whatwg.org/#string-length">https://infra.spec.whatwg.org/#string-length</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-string-length">8.1. Parsing filter data</a>
+    <li><a href="#ref-for-string-length①">9.10. Parsing source-registration JSON</a>
+    <li><a href="#ref-for-string-length②">10.1. Creating an attribution trigger</a> <a href="#ref-for-string-length③">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-list">
@@ -4638,10 +4649,13 @@ an origin from a user’s browsing history.</p>
    <div class="issue"> Specify the steps for making attributionsrc request. <a class="issue-return" href="#issue-45c98580" title="Jump to section">↵</a></div>
    <div class="issue"> Check for transient activation.
 Issue: Specify the steps for making an attributionsrc request with <var>decodedSrc</var>. <a class="issue-return" href="#issue-968a1f46" title="Jump to section">↵</a></div>
+   <div class="issue"> Determine whether to limit <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-length">length</a> or <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-code-point-length">code point length</a> for <var>key</var> above. <a class="issue-return" href="#issue-f31c9d0c" title="Jump to section">↵</a></div>
    <div class="issue"> Ensure that all sites in <var>attributionDestinations</var> have HTTP/HTTPS <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-scheme">schemes</a>. <a class="issue-return" href="#issue-9c346b60" title="Jump to section">↵</a></div>
    <div class="issue"> Should fake reports respect the user agent’s <a data-link-type="dfn" href="#max-event-level-reports-per-attribution-destination">max event-level reports per attribution destination</a>? <a class="issue-return" href="#issue-75fbcf24" title="Jump to section">↵</a></div>
    <div class="issue"> Allow the user agent to return null if <var>values</var>’s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size">size</a> is
 greater than some constant. <a class="issue-return" href="#issue-4950c7c2" title="Jump to section">↵</a></div>
+   <div class="issue"> Determine whether to limit <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-length">length</a> or <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-code-point-length">code point length</a> for <var>sourceKey</var> above. <a class="issue-return" href="#issue-a89384b8" title="Jump to section">↵</a></div>
+   <div class="issue"> Determine whether to limit <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-length">length</a> or <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-code-point-length">code point length</a> for <var>key</var> above. <a class="issue-return" href="#issue-f31c9d0c①" title="Jump to section">↵</a></div>
    <div class="issue"> properly define the "finishing issuance" operation. <a class="issue-return" href="#issue-46826c27" title="Jump to section">↵</a></div>
    <div class="issue"> properly define "begin redemption" operation. Consider running the algorithm at report sending time. <a class="issue-return" href="#issue-182767d1" title="Jump to section">↵</a></div>
    <div class="issue"> This would ideally be replaced by a more descriptive algorithm in Infra. See <a href="https://github.com/whatwg/infra/issues/201">infra/201</a> <a class="issue-return" href="#issue-ccb90c6c" title="Jump to section">↵</a></div>
