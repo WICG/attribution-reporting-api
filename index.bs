@@ -583,19 +583,9 @@ random delay to deliver an [=aggregatable report=].
 
 <h3 id="parsing-filter-data">Parsing filter data</h3>
 
-A <dfn>registration type</dfn> is one of the following:
-
-<ul dfn-for="registration type">
-<li>"<dfn><code>source</code></dfn>"
-<li>"<dfn><code>trigger</code></dfn>"
-</ul>
-
-To <dfn>parse filter data</dfn> given a |value| and a [=registration type=]
-|registrationType|:
+To <dfn>parse filter data</dfn> given a |value|:
 
 1. If |value| is not a [=map=], return null.
-1. If |registrationType| is "<code>[=registration type/source=]</code>" and |value|["`source_type`"]
-    [=map/exists=], return null.
 1. If |value|'s [=map/size=] is greater than the user agent's
     [=max entries per filter map=], return null.
 1. Let |result| be a new [=filter map=].
@@ -840,8 +830,9 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
 1. Let |filterData| be a new [=filter map=].
 1. If |value|["`filter_data`"] [=map/exists=]:
     1. Set |filterData| to the result of running [=parse filter data=] with
-        |value|["`filter_data`"] and "<code>[=registration type/source=]</code>".
+        |value|["`filter_data`"].
     1. If |filterData| is null, return null.
+    1. If |filterData|["`source_type`"] [=map/exists=], return null.
 1. [=map/Set=] |filterData|["`source_type`"] to « |sourceType| ».
 1. Let |debugKey| be null.
 1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
