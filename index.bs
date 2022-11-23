@@ -395,6 +395,11 @@ A <dfn>trigger debug data type</dfn> is a [=debug data type=] for trigger regist
 Possible values are:
 
 <ul dfn-for="trigger debug data type">
+<li>"<dfn><code>trigger-aggregate-deduplicated</code></dfn>"
+<li>"<dfn><code>trigger-aggregate-no-contributions</code></dfn>"
+<li>"<dfn><code>trigger-aggregate-insufficient-budget</code></dfn>"
+<li>"<dfn><code>trigger-aggregate-storage-limit</code></dfn>"
+<li>"<dfn><code>trigger-aggregate-report-window-passed</code></dfn>"
 <li>"<dfn><code>trigger-attributions-per-source-destination-limit</code></dfn>"
 <li>"<dfn><code>trigger-event-deduplicated</code></dfn>"
 <li>"<dfn><code>trigger-event-excessive-reports</code></dfn>"
@@ -1381,6 +1386,12 @@ an optional [=attribution source=] <dfn for="obtain debug data body on trigger r
     : "<code>[=trigger debug data type/trigger-event-storage-limit=]</code>"
     :: [=map/Set=] |body|["`limit`"] to [=max event-level reports per attribution destination=],
          [=serialize an integer|serialized=].
+    : "<code>[=trigger debug data type/trigger-aggregate-storage-limit=]</code>"
+    :: [=map/Set=] |body|["`limit`"] to [=max aggregatable reports per attribution destination=],
+         [=serialize an integer|serialized=].
+    : "<code>[=trigger debug data type/trigger-aggregate-insufficient-budget=]</code>"
+    :: [=map/Set=] |body|["`limit`"] to [=allowed aggregatable budget per source=],
+         [=serialize an integer|serialized=].
     : "<code>[=trigger debug data type/trigger-event-low-priority=]</code>"
     : "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>"
     ::
@@ -1551,17 +1562,32 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
         with "<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>", |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If |sourceToAttribute|'s [=attribution source/aggregatable report window time=] is less than the current time,
-    return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
+1. If |sourceToAttribute|'s [=attribution source/aggregatable report window time=] is less than the current time:
+    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+        with "<code>[=trigger debug data type/trigger-aggregate-report-window-passed=]</code>", |trigger|, |sourceToAttribute|
+        and [=obtain debug data on trigger registration/report=] set to null.
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. Let |report| be the result of running [=obtain an aggregatable report=] with |sourceToAttribute| and |trigger|.
-1. If |report|'s [=aggregatable report/contributions=] [=list/is empty=], return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
+1. If |report|'s [=aggregatable report/contributions=] [=list/is empty=]:
+    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=] with
+        "<code>[=trigger debug data type/trigger-aggregate-no-contributions=]</code>", |trigger|, |sourceToAttribute| and
+        [=obtain debug data on trigger registration/report=] set to null.
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. If |trigger|'s [=attribution trigger/aggregatable dedup key=] is not null and
     |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=]
-    [=list/contains=] it, return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
+    [=list/contains=] it:
+     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+         with "<code>[=trigger debug data type/trigger-aggregate-deduplicated=]</code>", |trigger|, |sourceToAttribute|
+         and [=obtain debug data on trigger registration/report=] set to null.
+     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. Let |numMatchingReports| be the number of entries in the [=aggregatable report cache=] whose
     [=aggregatable report/effective attribution destination=] equals |trigger|'s [=attribution trigger/attribution destination=].
 1. If |numMatchingReports| is greater than or equal to the user agent's
-    [=max aggregatable reports per attribution destination=], return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
+    [=max aggregatable reports per attribution destination=]:
+     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+         with "<code>[=trigger debug data type/trigger-aggregate-storage-limit=]</code>", |trigger|, |sourceToAttribute| and
+         [=obtain debug data on trigger registration/report=] set to null.
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. If the result of running [=should attribution be blocked by rate limit=] with |trigger| and
     |sourceToAttribute| is <strong>blocked</strong>:
      1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
@@ -1575,7 +1601,11 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. If the result of running [=check if an attribution source can create aggregatable contributions=]
-    with |report| and |sourceToAttribute| is false, return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
+    with |report| and |sourceToAttribute| is false:
+     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+         with "<code>[=trigger debug data type/trigger-aggregate-insufficient-budget=]</code>", |trigger|, |sourceToAttribute| and
+        [=obtain debug data on trigger registration/report=] set to null.
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. If the [=list/size=] of the [=aggregatable report cache=] is greater than or equal to the user
     agent's [=max aggregatable report cache size=], return the [=triggering result=] ("<code>[=triggering status/cache full=]</code>", null).
 1. Add |report| to the [=aggregatable report cache=].
