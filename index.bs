@@ -216,9 +216,9 @@ An aggregatable trigger data is a [=struct=] with the following items:
 : <dfn>source keys</dfn>
 :: An [=ordered set=] of [=strings=].
 : <dfn>filters</dfn>
-:: A [=filter map=].
+:: A [=filter map=] or a [=list=] of [=filter map=].
 : <dfn>negated filters</dfn>
-:: A [=filter map=].
+:: A [=filter map=] or a [=list=] of [=filter map=].
 
 </dl>
 
@@ -234,9 +234,9 @@ An event-level trigger configuration is a [=struct=] with the following items:
 : <dfn>priority</dfn>
 :: A 64-bit integer.
 : <dfn>filters</dfn>
-:: A [=filter map=].
+:: A [=filter map=] or a [=list=] of [=filter map=].
 : <dfn>negated filters</dfn>
-:: A [=filter map=].
+:: A [=filter map=] or a [=list=] of [=filter map=].
 
 </dl>
 
@@ -252,9 +252,9 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>reporting endpoint</dfn>
 :: A [=suitable origin=].
 : <dfn>filters</dfn>
-:: A [=filter map=].
+:: A [=filter map=] or a [=list=] of [=filter map=].
 : <dfn>negated filters</dfn>
-:: A [=filter map=].
+:: A [=filter map=] or a [=list=] of [=filter map=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
 : <dfn>event-level trigger configurations</dfn>
@@ -612,6 +612,27 @@ To <dfn>parse filter data</dfn> given a |value| and a [=registration type=]
 
 Issue: Determine whether to limit [=string/length=] or
 [=string/code point length=] for |filter| and |d| above.
+
+<h3 id="parsing-list-of-filter-data"> Parsing filter data or list of filter data</h3>
+
+To <dfn>parse list of filter data</dfn> given a |value|:
+
+1. If |value| is a [=map=]
+    Return the result of running [=parse filter data=] with
+    |value| and "<code>[=registration type/trigger=]</code>".
+1. If |value| is not a [=list=], return null.
+1. Let |filtersList| be a new [=list=].
+1. [=list/iterate|For each=] |data| of |value|:
+    1. Let |filterMap| be a new [=filter map=].
+    1. Set |filterMap| to the result of running [=parse filter data=] with
+       |data| and "<code>[=registration type/trigger=]</code>".
+    1. If |filterMap| is null, return null.
+    1. [=list/Append=] |filterMap| to |filtersList|.
+1. If |filtersList| [=list/is empty=], return null.
+1. Return |filtersList|.
+
+Issue: Determine whether to have a limit on the length of the list or the
+number of keys from the combined filter data maps.
 
 <h3 id="debug-keys">Cookie-based debugging</h3>
 
@@ -1084,13 +1105,13 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
         1. If |priority| is an error, set |priority| to 0.
     1. Let |filters| be a new [=filter map=].
     1. If |value|["`filters`"] [=map/exists=]:
-        1. Set |filters| to the result of running [=parse filter data=] with
-            |value|["`filters`"] and "<code>[=registration type/trigger=]</code>".
+        1. Set |filters| to the result of running [=parse list of filter data=] with
+            |value|["`filters`"].
         1. If |filters| is null, return null.
     1. Let |negatedFilters| be a new [=filter map=].
     1. If |value|["`not_filters`"] [=map/exists=]:
-        1. Set |negatedFilters| to the result of running [=parse filter data=]
-            with |value|["`not_filters`"] and "<code>[=registration type/trigger=]</code>".
+        1. Set |negatedFilters| to the result of running [=parse list of filter data=]
+            with |value|["`not_filters`"].
         1. If |negatedFilters| is null, return null.
     1. Let |eventTrigger| be a new [=event-level trigger configuration=] with
         the items:
@@ -1132,13 +1153,13 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
         1. [=set/Append=] |sourceKey| to |sourceKeys|.
     1. Let |filters| be a new [=filter map=].
     1. If |value|["`filters`"] [=map/exists=]:
-        1. Set |filters| to the result of running [=parse filter data=] with
-            |value|["`filters`"] and "<code>[=registration type/trigger=]</code>".
+        1. Set |filters| to the result of running [=parse list of filter data=] with
+            |value|["`filters`"].
         1. If |filters| is null, return null.
     1. Let |negatedFilters| be a new [=filter map=].
     1. If |value|["`not_filters`"] [=map/exists=]:
-        1. Set |negatedFilters| to the result of running [=parse filter data=]
-            with |value|["`not_filters`"] and "<code>[=registration type/trigger=]</code>".
+        1. Set |negatedFilters| to the result of running [=parse list of filter data=]
+            with |value|["`not_filters`"].
         1. If |negatedFilters| is null, return null.
     1. Let |aggregatableTrigger| be a new [=aggregatable trigger data=] with the items:
         : [=aggregatable trigger data/key piece=]
@@ -1211,13 +1232,13 @@ To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
         |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |filters| be a new [=filter map=].
 1. If |value|["`filters`"] exists:
-    1. Set |filters| to the result of running [=parse filter data=] with
-        |value|["`filters`"] and "<code>[=registration type/trigger=]</code>".
+    1. Set |filters| to the result of running [=parse list of filter data=] with
+        |value|["`filters`"].
     1. If |filters| is null, return null.
 1. Let |negatedFilters| be a new [=filter map=].
 1. If |value|["`not_filters`"] exists:
-    1. Set |negatedFilters| to the result of running [=parse filter data=] with
-        |value|["`not_filters`"] and "<code>[=registration type/trigger=]</code>".
+    1. Set |negatedFilters| to the result of running [=parse list of filter data=] with
+        |value|["`not_filters`"].
     1. If |negatedFilters| is null, return null.
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
@@ -1286,6 +1307,15 @@ To <dfn>match an attribution source's filter data against filters</dfn> given an
             |filterValues| is false, return false.</dd>
         </dl>
 1. Return true.
+
+To <dfn>match an attribution source's filter data against filters when filters is a list</dfn> given an
+[=attribution source=] |source|, a [=list=] of [=filter map=] |filters|, and a [=boolean=]
+<dfn for="match an attribution source's filter data against filters when filters is list"><var>isNegated</var></dfn>:
+
+1. [=list/iterate|For each=] |filter| of |filters|:
+    1. If the result of running [=match an attribution source's filter data against filters=]
+       with |source|, |filter| and |isNegated| is true, return true.
+1. Return false.
 
 <h3 dfn id="should-rate-limit-attribution">Should attribution be blocked by rate limit</h3>
 

@@ -517,15 +517,14 @@ Trigger registration:
   }
 }
 ```
-If keys in the filters JSON match keys in `filter_data`, the trigger is
-completely ignored if the intersection is empty.
+If keys in the `filters` dictionnary match keys in the `filter_data` dictionnary and the intersection of their values is
+empty, the trigger is ignored.
 
-Note: A key which is present in one JSON and not the other will not be included
-in the matching logic.
+eg. The "conversion_subdomain" key is present in both `filter_data` and `filters` dictionnaries. If the values of the `filters`'s "conversion_subdomain" key do not include "electronics.megastore" or
+"electronics2.megastore", the trigger gets ignored.
 
-Note: The filter JSON does not support nested dictionaries or lists.
-`filter_data` and `filters` are only allowed to have a list of values with
-string type.
+Note: A key which is present in one dictionary and not the other will not be included
+in the matching logic (ie. the trigger will be considered).
 
 The `event_trigger_data` field can also be extended to do selective filtering
 to set `trigger_data` based on `filter_data`:
@@ -545,6 +544,27 @@ to set `trigger_data` based on `filter_data`:
   ]
 }
 ```
+
+`filter_data` must be a filter dictionnary. `filters` can be a filter
+dictionnary or a list of filter dictionaries. When a list is received, only
+one dictionnary has to match for the trigger to be considered.
+
+```jsonc
+{
+
+  "event_trigger_data": [
+    {
+      "trigger_data": "2",
+       "filters": [
+           {"product": ["1234"], "conversion_subdomain": ["electronics.megastore"]},  // OR
+           {"product": ["4321"], "conversion_subdomain": ["electronics4.megastore"]}
+        ]
+    },
+]}
+```
+
+Note: A filter dictionary does not support nested dictionaries or lists. It is only
+allowed to have a list of values with string type.
 
 If the filters do not match for any of the event triggers, no event-level report
 will be created.
