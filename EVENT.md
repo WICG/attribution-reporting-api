@@ -517,14 +517,16 @@ Trigger registration:
   }
 }
 ```
-If keys in the `filters` dictionnary match keys in the `filter_data` dictionnary and the intersection of their values is
-empty, the trigger is ignored.
+If keys in the `filters` dictionnary match keys in the `filter_data` dictionnary
+and the intersection of their values is empty, the trigger is ignored.
 
-eg. The "conversion_subdomain" key is present in both `filter_data` and `filters` dictionnaries. If the values of the `filters`'s "conversion_subdomain" key do not include "electronics.megastore" or
-"electronics2.megastore", the trigger gets ignored.
+eg. Given a "conversion_subdomain" key present in both `filter_data` and
+`filters` dictionnaries. If the values of the `filters`'s "conversion_subdomain"
+key do not include "electronics.megastore" or "electronics2.megastore", the
+trigger gets ignored.
 
-Note: A key which is present in one dictionary and not the other will not be included
-in the matching logic (ie. the trigger will be considered).
+Note: A key which is present in one dictionary and not the other will not be
+included in the matching logic (ie. the trigger will be considered).
 
 The `event_trigger_data` field can also be extended to do selective filtering
 to set `trigger_data` based on `filter_data`:
@@ -546,8 +548,8 @@ to set `trigger_data` based on `filter_data`:
 ```
 
 `filter_data` must be a filter dictionnary. `filters` can be a filter
-dictionnary or a list of filter dictionaries. When a list is received, only
-one dictionnary has to match for the trigger to be considered.
+dictionnary or a list of filter dictionaries. When a list is received, only one
+dictionnary has to match for the trigger to be considered.
 
 ```jsonc
 {
