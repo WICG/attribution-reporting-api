@@ -347,14 +347,6 @@ export const testCases = [
   },
 
   {
-    name: "source-keys-missing",
-    json: `{"aggregatable_trigger_data": [{"key_piece": "0x1"}]}`,
-    expectedErrors: [{
-      path: ["aggregatable_trigger_data", 0, "source_keys"],
-      msg: "missing required field",
-    }],
-  },
-  {
     name: "source-keys-wrong-type",
     json: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
