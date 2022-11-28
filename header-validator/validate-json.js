@@ -87,9 +87,17 @@ function bool(state, value) {
   state.error('must be a boolean')
 }
 
+function isObject(value) {
+  return typeof value === 'object' && value.constructor === Object
+}
+
+function isArray(value) {
+  return value instanceof Array
+}
+
 function object(f = () => {}, maxKeys = Infinity) {
   return (state, value) => {
-    if (typeof value === 'object' && value.constructor === Object) {
+    if (isObject(value)) {
       const entries = Object.entries(value)
 
       if (entries.length > maxKeys) {
@@ -108,9 +116,11 @@ function object(f = () => {}, maxKeys = Infinity) {
 
 function list(f = () => {}, maxLength = Infinity, minLength = 0) {
   return (state, values) => {
-    if (values instanceof Array) {
+    if (isArray(values)) {
       if (values.length > maxLength || values.length < minLength) {
-        state.error(`List size out of expected bounds. Size must be within [${minLength}, ${maxLength}]`)
+        state.error(
+          `List size out of expected bounds. Size must be within [${minLength}, ${maxLength}]`
+        )
       }
 
       values.forEach((value, index) =>
@@ -185,16 +195,31 @@ const destination = string((state, url) => {
     state.warn('contains a fragment that will be ignored')
   }
 })
-const destinationList = list(destination, 3, 1);
+const destinationList = list(destination, 3, 1)
 
 const destinationValue = (state, value) => {
   if (typeof value === 'string') {
-    return destination(state, value);
+    return destination(state, value)
   }
   if (value instanceof Array) {
-    return destinationList(state, value);
+    return destinationList(state, value)
   }
-  state.error('Must be either a list or a string');
+  state.error('Must be either a list or a string')
+}
+
+const listOrObject = (f = () => {}) => {
+  return (state, value, key) => {
+    if (isObject(value)) {
+      return f(state, value, key)
+    }
+
+    if (isArray(value)) {
+      return list(f)(state, value, key)
+    }
+
+    state.error('must be a list or an object')
+    return false
+  }
 }
 
 // TODO: Check length of strings.
@@ -233,9 +258,9 @@ export function validateSource(source) {
 const aggregatableTriggerData = list(
   (state, value) =>
     state.validate(value, {
-      filters: optional(filters()),
+      filters: optional(listOrObject(filters())),
       key_piece: required(hex128),
-      not_filters: optional(filters()),
+      not_filters: optional(listOrObject(filters())),
       source_keys: required(list(string(), limits.maxAggregationKeys)),
     }),
   limits.maxAggregatableTriggerData
@@ -253,8 +278,8 @@ const eventTriggerData = list(
   (state, value) =>
     state.validate(value, {
       deduplication_key: optional(uint64),
-      filters: optional(filters()),
-      not_filters: optional(filters()),
+      filters: optional(listOrObject(filters())),
+      not_filters: optional(listOrObject(filters())),
       priority: optional(int64),
       trigger_data: optional(uint64),
     }),
@@ -269,8 +294,8 @@ export function validateTrigger(trigger) {
     debug_key: optional(uint64),
     debug_reporting: optional(bool),
     event_trigger_data: optional(eventTriggerData),
-    filters: optional(filters()),
-    not_filters: optional(filters()),
+    filters: optional(listOrObject(filters())),
+    not_filters: optional(listOrObject(filters())),
     aggregatable_deduplication_key: optional(uint64),
   })
   return state.result()
