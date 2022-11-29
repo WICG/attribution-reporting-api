@@ -389,13 +389,21 @@ what follows is a high-level summary.
 
 As the browser sends individual aggregatable reports to the reporting origin,
 the reporting origin organizes them into
-[batches](AGGREGATION_SERVICE_TEE.md#disjoint-batches). They can send these
-batches to the aggregation service `origin` specified in the report.
+[batches](AGGREGATION_SERVICE_TEE.md#disjoint-batches). The adtech can then send these
+batches to the aggregation service.
 
 The aggregation service will aggregate reports within a certain batch, and
-respond back with an aggregate histogram, i.e. a list of keys with associated
+respond back with a summary report (aggregate histogram), i.e. a list of keys with associated
 _aggregate_ values. It is expected that as a privacy protection mechanism, a
 certain amount of noise will be added to each output key's aggregate value.
+
+Currently the aggregation service can be deployed on Amazon Web Services (AWS). We expect to support Google Cloud Platform (GCP) and other cloud providers in the future.
+
+Trigger registration will accept an optional string field `aggregation_coordinator_identifier` to allow developers to specify the deployment option for the aggregation service. The default value is `aws-cloud`. `gcp-cloud` and other values will be supported in the future.
+
+```http
+Attribution-Reporting-Register-Trigger: {..., "aggregatable_trigger_data": ..., "aggregatable_values": ..., "aggregation_coordinator_identifier": "aws-cloud"}
+```
 
 ## Privacy considerations
 
