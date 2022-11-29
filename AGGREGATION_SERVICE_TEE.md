@@ -361,12 +361,13 @@ The initial implementation strategy for the aggregation service is as follows:
   on cloud service(s) which support needed security features.  We
   envision the aggregation service being capable of being deployed with
   multiple cloud providers.
+  * Currently the aggregation service can be deployed on Amazon Web Services (AWS). We expect to support Google Cloud Platform (GCP) and other cloud providers in the future.
 * In our current implementation, batches can be assembled on any
   reliable storage service. However, batches will need to be uploaded
   to the cloud provider to be processed by the aggregation service.
 * To make testing of the aggregation service available in an origin
   trial, Google will play the role of coordinator. Longer term, we
-  prefer that one or more independent entities can share this role. 
+  prefer that one or more independent entities can assume this role. 
 * During the initial experiment, we expect that adtechs will be able
   to access decrypted payloads via a debugging mode tied to the
   availability of third party cookies.
