@@ -477,6 +477,9 @@ maximum value that can be used as an [=attribution source/event id=].
 maximum value that can be used as an [=attribution source/expiry=]. It must be
 greater than or equal to 30 days.
 
+<dfn>Max items in filters</dfn> is a positive integer that controls the
+maximum [=list/size=] of a [=list=] of [=filter map=].
+
 <dfn>Max entries per filter map</dfn> is a positive integer that controls the
 maximum [=map/size=] of a [=filter map=].
 
@@ -627,15 +630,14 @@ To <dfn>parse filters</dfn> given a |value|:
     1. [=list/Append=] |filterMap| to |filtersList|.
     1. Return |filtersList|.
 1. If |value| is not a [=list=], return null.
+1. If |value|'s [=list/size=] is greater than the user agent's
+    [=max items in filters=], return null.
 1. [=list/iterate|For each=] |data| of |value|:
     1. Let |filterMap| be the result of running [=parse filter data=] with |data|.
     1. If |filterMap| is null, return null.
     1. [=list/Append=] |filterMap| to |filtersList|.
 1. If |filtersList| [=list/is empty=], return null.
 1. Return |filtersList|.
-
-Issue: Determine whether to have a limit on the length of the list or the
-number of keys from the combined filter data maps.
 
 <h3 id="debug-keys">Cookie-based debugging</h3>
 
@@ -1109,12 +1111,12 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
             <a spec="html">rules for parsing integers</a> to
             |value|["`priority`"].
         1. If |priority| is an error, set |priority| to 0.
-    1. Let |filters| be a new [=filter map=].
+    1. Let |filters| be a new [=list=] of [=filter map=].
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filters=] with
             |value|["`filters`"].
         1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a new [=filter map=].
+    1. Let |negatedFilters| be a new [=list=] of [=filter map=].
     1. If |value|["`not_filters`"] [=map/exists=]:
         1. Set |negatedFilters| to the result of running [=parse filters=]
             with |value|["`not_filters`"].
@@ -1158,12 +1160,12 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
         1. [=list/iterate|For each=] |sourceKey| of |value|["`source_keys`"]:
             1. If |sourceKey| is not a [=string=], return null.
             1. [=set/Append=] |sourceKey| to |sourceKeys|.
-    1. Let |filters| be a new [=filter map=].
+    1. Let |filters| be a new new [=list=] of [=filter map=].
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filters=] with
             |value|["`filters`"].
         1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a new [=filter map=].
+    1. Let |negatedFilters| be a new [=list=] of [=filter map=].
     1. If |value|["`not_filters`"] [=map/exists=]:
         1. Set |negatedFilters| to the result of running [=parse filters=]
             with |value|["`not_filters`"].
@@ -1241,12 +1243,12 @@ To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
     1. If |debugKey| is an error, set |debugKey| to null.
     1. If the result of running [=check if cookie-based debugging is allowed=] with
         |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
-1. Let |filters| be a new [=filter map=].
+1. Let |filters| be a new [=list=] of [=filter map=].
 1. If |value|["`filters`"] exists:
     1. Set |filters| to the result of running [=parse filters=] with
         |value|["`filters`"].
     1. If |filters| is null, return null.
-1. Let |negatedFilters| be a new [=filter map=].
+1. Let |negatedFilters| be a new [=list=] of [=filter map=].
 1. If |value|["`not_filters`"] exists:
     1. Set |negatedFilters| to the result of running [=parse filters=] with
         |value|["`not_filters`"].

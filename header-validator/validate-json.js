@@ -8,6 +8,7 @@ const limits = {
   maxEventTriggerData: 10,
   maxFilters: 50,
   maxFilterValues: 50,
+  maxOrFilters: 50,
 }
 
 class State {
@@ -206,14 +207,14 @@ const destinationValue = (state, value) => {
   state.error('must be a list or a string')
 }
 
-const listOrObject = (f = () => {}) => {
+const listOrObject = (f = () => {}, maxLength, minLength) => {
   return (state, value, key) => {
     if (isObject(value)) {
       return f(state, value, key)
     }
 
     if (isArray(value)) {
-      return list(f)(state, value, key)
+      return list(f, maxLength, minLength)(state, value, key)
     }
 
     state.error('must be a list or an object')
@@ -230,6 +231,8 @@ const filters = (allowSourceType = true) =>
 
     list(string(), limits.maxFilterValues)(state, values)
   }, limits.maxFilters)
+
+const orFilters = listOrObject(filters(), limits.maxOrFilters, 1);
 
 // TODO: check length of key
 const aggregationKeys = object((state, key, value) => {
@@ -256,9 +259,9 @@ export function validateSource(source) {
 const aggregatableTriggerData = list(
   (state, value) =>
     state.validate(value, {
-      filters: optional(listOrObject(filters())),
+      filters: optional(orFilters),
       key_piece: required(hex128),
-      not_filters: optional(listOrObject(filters())),
+      not_filters: optional(orFilters),
       source_keys: optional(list(string(), limits.maxAggregationKeys)),
     }),
   limits.maxAggregatableTriggerData
@@ -276,8 +279,8 @@ const eventTriggerData = list(
   (state, value) =>
     state.validate(value, {
       deduplication_key: optional(uint64),
-      filters: optional(listOrObject(filters())),
-      not_filters: optional(listOrObject(filters())),
+      filters: optional(orFilters),
+      not_filters: optional(orFilters),
       priority: optional(int64),
       trigger_data: optional(uint64),
     }),
@@ -292,8 +295,8 @@ export function validateTrigger(trigger) {
     debug_key: optional(uint64),
     debug_reporting: optional(bool),
     event_trigger_data: optional(eventTriggerData),
-    filters: optional(listOrObject(filters())),
-    not_filters: optional(listOrObject(filters())),
+    filters: optional(orFilters),
+    not_filters: optional(orFilters),
     aggregatable_deduplication_key: optional(uint64),
   })
   return state.result()
