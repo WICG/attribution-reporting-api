@@ -204,7 +204,7 @@ const destinationValue = (state, value) => {
   if (value instanceof Array) {
     return destinationList(state, value)
   }
-  state.error('Must be either a list or a string')
+  state.error('must be a list or a string')
 }
 
 const listOrObject = (f = () => {}) => {
@@ -261,7 +261,7 @@ const aggregatableTriggerData = list(
       filters: optional(listOrObject(filters())),
       key_piece: required(hex128),
       not_filters: optional(listOrObject(filters())),
-      source_keys: required(list(string(), limits.maxAggregationKeys)),
+      source_keys: optional(list(string(), limits.maxAggregationKeys)),
     }),
   limits.maxAggregatableTriggerData
 )

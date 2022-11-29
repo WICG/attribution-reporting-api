@@ -547,22 +547,22 @@ to set `trigger_data` based on `filter_data`:
 }
 ```
 
-`filter_data` must be a filter dictionary. `filters` can be a filter
+`filter_data` must be a dictionary. `filters` can be a
 dictionary or a list of filter dictionaries. When a list is received, only one
 dictionary has to match for the trigger to be considered.
 
 ```jsonc
 {
-
   "event_trigger_data": [
     {
       "trigger_data": "2",
-       "filters": [
-           {"product": ["1234"], "conversion_subdomain": ["electronics.megastore"]},  // OR
-           {"product": ["4321"], "conversion_subdomain": ["electronics4.megastore"]}
-        ]
+      "filters": [
+        {"product": ["1234"], "conversion_subdomain": ["electronics.megastore"]},  // OR
+        {"product": ["4321"], "conversion_subdomain": ["electronics4.megastore"]}
+      ]
     },
-]}
+  ]
+}
 ```
 
 Note: A filter dictionary does not support nested dictionaries or lists. It is only

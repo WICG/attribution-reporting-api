@@ -83,7 +83,7 @@ export const testCases = [
     json: `{"destination": 1}`,
     expectedErrors: [{
       path: ["destination"],
-      msg: "Must be either a list or a string",
+      msg: "must be a list or a string",
     }],
   },
   {
