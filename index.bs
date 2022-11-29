@@ -616,18 +616,16 @@ To <dfn>parse filter data</dfn> given a |value|:
 Issue: Determine whether to limit [=string/length=] or
 [=string/code point length=] for |filter| and |d| above.
 
-<h3 id="parsing-list-of-filter-data"> Parsing filter data or list of filter data</h3>
+<h3 id="parsing-filters"> Parsing filters data</h3>
 
-To <dfn>parse list of filter data</dfn> given a |value|:
+To <dfn>parse filters</dfn> given a |value|:
 
 1. Let |filtersList| be a new [=list=].
-
-1. If |value| is a [=map=]
+1. If |value| is a [=map=], then:
     1. Let |filterMap| be the result of running [=parse filter data=] with |value|.
     1. If |filterMap| is null, return null.
     1. [=list/Append=] |filterMap| to |filtersList|.
     1. Return |filtersList|.
-
 1. If |value| is not a [=list=], return null.
 1. [=list/iterate|For each=] |data| of |value|:
     1. Let |filterMap| be the result of running [=parse filter data=] with |data|.
@@ -1113,12 +1111,12 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
         1. If |priority| is an error, set |priority| to 0.
     1. Let |filters| be a new [=filter map=].
     1. If |value|["`filters`"] [=map/exists=]:
-        1. Set |filters| to the result of running [=parse list of filter data=] with
+        1. Set |filters| to the result of running [=parse filters=] with
             |value|["`filters`"].
         1. If |filters| is null, return null.
     1. Let |negatedFilters| be a new [=filter map=].
     1. If |value|["`not_filters`"] [=map/exists=]:
-        1. Set |negatedFilters| to the result of running [=parse list of filter data=]
+        1. Set |negatedFilters| to the result of running [=parse filters=]
             with |value|["`not_filters`"].
         1. If |negatedFilters| is null, return null.
     1. Let |eventTrigger| be a new [=event-level trigger configuration=] with
@@ -1162,12 +1160,12 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
             1. [=set/Append=] |sourceKey| to |sourceKeys|.
     1. Let |filters| be a new [=filter map=].
     1. If |value|["`filters`"] [=map/exists=]:
-        1. Set |filters| to the result of running [=parse list of filter data=] with
+        1. Set |filters| to the result of running [=parse filters=] with
             |value|["`filters`"].
         1. If |filters| is null, return null.
     1. Let |negatedFilters| be a new [=filter map=].
     1. If |value|["`not_filters`"] [=map/exists=]:
-        1. Set |negatedFilters| to the result of running [=parse list of filter data=]
+        1. Set |negatedFilters| to the result of running [=parse filters=]
             with |value|["`not_filters`"].
         1. If |negatedFilters| is null, return null.
     1. Let |aggregatableTrigger| be a new [=aggregatable trigger data=] with the items:
@@ -1245,12 +1243,12 @@ To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
         |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |filters| be a new [=filter map=].
 1. If |value|["`filters`"] exists:
-    1. Set |filters| to the result of running [=parse list of filter data=] with
+    1. Set |filters| to the result of running [=parse filters=] with
         |value|["`filters`"].
     1. If |filters| is null, return null.
 1. Let |negatedFilters| be a new [=filter map=].
 1. If |value|["`not_filters`"] exists:
-    1. Set |negatedFilters| to the result of running [=parse list of filter data=] with
+    1. Set |negatedFilters| to the result of running [=parse filters=] with
         |value|["`not_filters`"].
     1. If |negatedFilters| is null, return null.
 1. Let |debugReportingEnabled| be false.
