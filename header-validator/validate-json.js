@@ -207,14 +207,14 @@ const destinationValue = (state, value) => {
   state.error('must be a list or a string')
 }
 
-const listOrObject = (f = () => {}, maxLength, minLength) => {
+const listOrObject = (f = () => {}, listMaxLength, listMinLength) => {
   return (state, value, key) => {
     if (isObject(value)) {
       return f(state, value, key)
     }
 
     if (isArray(value)) {
-      return list(f, maxLength, minLength)(state, value, key)
+      return list(f, listMaxLength, listMinLength)(state, value, key)
     }
 
     state.error('must be a list or an object')
@@ -232,7 +232,7 @@ const filters = (allowSourceType = true) =>
     list(string(), limits.maxFilterValues)(state, values)
   }, limits.maxFilters)
 
-const orFilters = listOrObject(filters(), limits.maxOrFilters, 1);
+const orFilters = listOrObject(filters(), limits.maxOrFilters, 1)
 
 // TODO: check length of key
 const aggregationKeys = object((state, key, value) => {
