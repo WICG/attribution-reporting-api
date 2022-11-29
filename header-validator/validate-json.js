@@ -110,7 +110,6 @@ function object(f = () => {}, maxKeys = Infinity) {
       return true
     }
     state.error('must be an object')
-    return false
   }
 }
 
@@ -201,7 +200,7 @@ const destinationValue = (state, value) => {
   if (typeof value === 'string') {
     return destination(state, value)
   }
-  if (value instanceof Array) {
+  if (isArray(value)) {
     return destinationList(state, value)
   }
   state.error('must be a list or a string')
@@ -218,7 +217,6 @@ const listOrObject = (f = () => {}) => {
     }
 
     state.error('must be a list or an object')
-    return false
   }
 }
 

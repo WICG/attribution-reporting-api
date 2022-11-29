@@ -33,7 +33,6 @@ export const testCases = [
     json: `{
       "aggregatable_trigger_data": [{
         "key_piece": "0x1",
-        "source_keys": ["x"],
         "filters": [{"g": []}, {"h": []}],
         "not_filters": [{"g": []}, {"h": []}]
       }],
