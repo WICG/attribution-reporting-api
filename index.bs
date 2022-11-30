@@ -1956,9 +1956,9 @@ To <dfn>obtain the aggregation service payloads</dfn> given an [=aggregatable re
 run the following steps:
 
 1. Let |pkR| be the result of running [=obtain the public key for encryption=].
-1. If |pkR| is an error, return null.
+1. If |pkR| is an error, return the error.
 1. Let |encryptedPayload| be the result of running [=obtain the encrypted payload=] with |report| and |pkR|.
-1. If |encryptedPayload| is an error, return null.
+1. If |encryptedPayload| is an error, return the error.
 1. Let |aggregationServicePayloads| be a new [=list/is empty|empty=] [=list=].
 1. Let |aggregationServicePayload| be a [=map=] of the following key/value pairs:
 
@@ -2009,7 +2009,7 @@ To <dfn>serialize an [=aggregatable report=] </dfn> |report|, run the following 
 
 1. [=Assert=]: |report|'s [=aggregatable report/effective attribution destination=] is not the [=opaque origin=].
 1. Let |aggregationServicePayloads| be the result of running [=obtain the aggregation service payloads=].
-1. If |aggregationServicePayloads| is null, return null.
+1. If |aggregationServicePayloads| is an error, return the error.
 1. Let |data| be a [=map=] of the following key/value pairs:
 
     : "`shared_info`"
@@ -2136,7 +2136,7 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
 
 1. Let |url| be the result of executing [=generate an attribution report URL=] on |report|.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
-1. If |data| is null, return.
+1. If |data| is an error, return.
 1. Let |newHeaders| be a new [=header list=].
 1. If |report| is an [=aggregatable report=]
     1. If |report|'s [=aggregatable report/serialized private state token=] is not null,
