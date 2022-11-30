@@ -274,6 +274,25 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
 }
 ```
 
+#### Event-level report window passed
+
+* Reason
+  * an event-level report is not created as the [report window](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#registering-attribution-sources) has passed.
+* Report
+
+```jsonc
+{
+  "type": "trigger-event-report-window-passed",
+  "body": {
+    "attribution_destination": "https://destination.example",
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
+    "source_event_id": "<source event id in the matched source>",
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
+  }
+}
+```
+
 #### Aggregatable trigger deduplication
 
 * Reason
@@ -346,6 +365,25 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
   "body": {
     "attribution_destination": "https://destination.example",
     "limit": "1024", // the browser's limit
+    "source_debug_key": "<debug key in source registration>", // omitted if not set
+    "source_event_id": "<source event id in the matched source>",
+    "source_site": "https://source.example",
+    "trigger_debug_key": "<debug key in trigger registration>" // omitted if not set
+  }
+}
+```
+
+#### Aggregatable report window passed
+
+* Reason
+  * an aggregatable report is not created as the [report window](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#attribution-source-registration) has passed.
+* Report
+
+```jsonc
+{
+  "type": "trigger-aggregate-report-window-passed",
+  "body": {
+    "attribution_destination": "https://destination.example",
     "source_debug_key": "<debug key in source registration>", // omitted if not set
     "source_event_id": "<source event id in the matched source>",
     "source_site": "https://source.example",
