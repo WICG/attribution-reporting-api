@@ -626,10 +626,10 @@ included in the request body as a JSON list of objects, e.g.:
 [{
   "type": "<report type>", // e.g. "source-destination-limit"
   "body": {
-    "limit": 100, // the browser's limit
+    "attribution_destination": "https://destination.example",
+    "limit": "100", // the browser's limit
     "source_event_id": "<source event id in the source registration>",
-    "source_site": "https://source.example",
-    "attribution_destination": "https://destination.example"
+    "source_site": "https://source.example"
   }
 }]
 ```
