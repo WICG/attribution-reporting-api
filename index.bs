@@ -2132,26 +2132,29 @@ and a [=header list=] |newHeaders| (defaults to an empty [=list=]):
 
 This algorithm constructs a [=request=] and attempts to deliver it to a [=suitable origin=].
 
+To <dfn>remove a report from the cache </dfn> given an [=attribution report=] |report|:
+
+1. If |report| is an:
+    <dl class="switch">
+    <dt>[=event-level report=]</dt>
+    <dd>[=Queue a task=] to [=list/remove=] |report| from the [=event-level report cache=].</dd>
+
+    <dt>[=aggregatable report=]</dt>
+    <dd>[=Queue a task=] to [=list/remove=] |report| from the [=aggregatable report cache=].</dd>
+    </dl>
+
 To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report|, run the following steps:
 
 1. Let |url| be the result of executing [=generate an attribution report URL=] on |report|.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
-1. If |data| is an error, return.
+1. If |data| is an error, run [=remove a report from the cache=] and return.
 1. Let |newHeaders| be a new [=header list=].
 1. If |report| is an [=aggregatable report=]
     1. If |report|'s [=aggregatable report/serialized private state token=] is not null,
         [=header list/append=] a new [=header=] named "`Sec-Attribution-Reporting-Private-State-Token`" to |newHeaders|
         whose value is |report|'s [=aggregatable report/serialized private state token=].
 1. Let |request| be the result of executing [=create a report request=] on |url|, |data|, and |newHeaders|.
-1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being these steps:
-    1. If |report| is an:
-        <dl class="switch">
-        <dt>[=event-level report=]</dt>
-        <dd>[=Queue a task=] to [=list/remove=] |report| from the [=event-level report cache=].</dd>
-
-        <dt>[=aggregatable report=]</dt>
-        <dd>[=Queue a task=] to [=list/remove=] |report| from the [=aggregatable report cache=].</dd>
-        </dl>
+1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being [=remove a report from the cache=].
 
 Issue(220): This fetch should use a network partition key for an opaque origin.
 
