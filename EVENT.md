@@ -564,9 +564,6 @@ dictionary has to match for the trigger to be considered.
 }
 ```
 
-Note: A filter dictionary does not support nested dictionaries or lists. It is only
-allowed to have a list of values with string type.
-
 If the filters do not match for any of the event triggers, no event-level report
 will be created.
 
