@@ -64,7 +64,20 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
 ### Report data
 
 The report data is included in the requested body as a JSON list of objects, and
-each object has a string field `type` and a dictionary field `body`.
+each object has a string field `type` and a dictionary field `body`, e.g.:
+
+```jsonc
+[{
+  "type": "source-destination-limit",
+  "body": {
+    "attribution_destination": "https://destination.example",
+    "limit": "100",
+    "source_debug_key": "1234567890",
+    "source_event_id": "12340873456",
+    "source_site": "https://source.example"
+  }
+}]
+```
 
 The `body` field is identical to the event-level report body if `type` is
 `source-event-low-priority` or `source-event-excessive-reports`, otherwise the
