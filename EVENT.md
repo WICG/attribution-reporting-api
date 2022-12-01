@@ -383,7 +383,7 @@ reflect a final set of parameters.
 
 When the browser receives an attribution trigger redirect on a URL matching a
 `destination` eTLD+1, it looks up all sources in storage that match
-<reporting origin, `destination`> and picks the one with the greatest
+<reporting origin, `destination` eTLD+1> and picks the one with the greatest
 `priority`. If multiple sources have the greatest `priority`, the
 browser picks the one that was stored most recently.
 
