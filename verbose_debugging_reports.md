@@ -3,7 +3,8 @@ Verbose Debugging Reports
 
 This document is a collection of [verbose debugging
 reports](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-verbose-debugging-reports)
-that are supported.
+that are supported. Note that the types marked `cookie-based` are only reported
+in a transitional phase while third-party cookies are available.
 
 ### Source debugging reports
 
