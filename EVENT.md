@@ -383,12 +383,12 @@ reflect a final set of parameters.
 
 When the browser receives an attribution trigger redirect on a URL matching a
 `destination` eTLD+1, it looks up all sources in storage that match
-<`attributionsrc` origin, `destination`> and picks the one with the greatest
+<reporting origin, `destination` eTLD+1> and picks the one with the greatest
 `priority`. If multiple sources have the greatest `priority`, the
 browser picks the one that was stored most recently.
 
 The browser then schedules a report for the source that was picked by storing
-{`attributionsrc` origin, `destination` eTLD+1, `source_event_id`,
+{reporting origin, `destination` eTLD+1, `source_event_id`,
 [decoded](#data-encoding) `trigger_data`, `priority`, `deduplication_key`} for
 the source. Scheduled reports will be sent as detailed in [Sending scheduled
 reports](#sending-scheduled-reports).
