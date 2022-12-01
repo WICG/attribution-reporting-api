@@ -35,7 +35,7 @@ extension on top of this.
   - [Attribution Reports](#attribution-reports)
   - [Data Encoding](#data-encoding)
   - [Optional attribution filters](#optional-attribution-filters)
-  - [Optional: extended debugging reports](#optional-extended-debugging-reports)
+  - [Optional: Primary debugging reports](#optional-primary-debugging-reports)
   - [Optional: verbose debugging reports](#optional-verbose-debugging-reports)
   - [Noisy fake conversion example](#noisy-fake-conversion-example)
   - [Storage limits](#storage-limits)
@@ -552,7 +552,7 @@ will be created.
 If the filters match for multiple event triggers, the first matching event
 trigger is used.
 
-### Optional: extended debugging reports
+### Optional: primary debugging reports
 
 The Attribution Reporting API is a new and fairly complex way to do attribution
 measurement without third-party cookies. As such, we are open to introducing a
@@ -610,7 +610,7 @@ order to allow debug keys to be registered.
 We also introduce a debugging framework to allow developers to monitor certain
 failures in the attribution registrations.
 
-Similar to [extended debugging reports](#optional-extended-debugging-reports),
+Similar to [primary debugging reports](#optional-primary-debugging-reports),
 failure modes that may enable cross-site tracking are only reported in a
 transitional phase while third-party cookies are available and the browser will
 check for the presence of the `ar_debug` cookie set by the reporting origin.

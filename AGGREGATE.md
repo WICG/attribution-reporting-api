@@ -263,7 +263,7 @@ The browser is free to utilize techniques like retries to minimize data loss.
 * The `payload` will contain the actual histogram contributions. It should be be
   encrypted and then base64 encoded, see [below](#encrypted-payload).
 
-Optional debugging fields are discussed [below](#optional-extended-debugging-reports).
+Optional debugging fields are discussed [below](#optional-primary-debugging-reports).
 
 #### Encrypted payload
 The `payload` should be a [CBOR](https://cbor.io) map encrypted via
@@ -326,9 +326,9 @@ future versions of the API), the endpoint URL should also change.
 **Note:** The browser may need some mechanism to ensure that the same set of
 keys are delivered to different users.
 
-#### Optional: extended debugging reports
+#### Optional: primary debugging reports
 
-If [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
+If [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-primary-debugging-reports)
 is enabled, additional debug fields will be present in aggregatable reports.
 The `source_debug_key` and `trigger_debug_key` fields match those in the
 event-level reports. If both the source and trigger debug keys are set, there
