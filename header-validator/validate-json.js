@@ -262,10 +262,11 @@ const eventTriggerData = list(
 )
 
 const aggregationCoordinator = string((state, value) => {
-  if (value.toLowerCase() === "aws-cloud") {
+  const awsCloud = 'aws-cloud'
+  if (value.toLowerCase() === awsCloud) {
     return
   }
-  state.error('must be case insensitive matching "aws-cloud"')
+  state.error(`must match '${awsCloud}' (case-insensitive)`)
 })
 
 export function validateTrigger(trigger) {
