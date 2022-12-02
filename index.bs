@@ -240,6 +240,17 @@ An event-level trigger configuration is a [=struct=] with the following items:
 
 </dl>
 
+<h3 id="aggregation-coordinator-header">Aggregation coordinator</h3>
+
+An <dfn>aggregation coordinator</dfn> is a non-empty [=string=] that specifies
+the depoloyment option for the aggregation service and is one of the following:
+
+<dl dfn-for="aggregation coordinator">
+: "<dfn><code>aws-cloud</code></dfn>"
+:: The aggregation service is deployed on AWS cloud.
+
+</dl>
+
 <h3 dfn-type=dfn>Attribution trigger</h3>
 
 An attribution trigger is a [=struct=] with the following items:
@@ -270,6 +281,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: A [=byte sequence=].
 : <dfn>debug reporting enabled</dfn>
 :: A [=boolean=].
+: <dfn>aggregation coordinator</dfn>
+:: An [=aggregation coordinator=].
 
 </dl>
 
@@ -344,6 +357,8 @@ An aggregatable report is an [=attribution report=] with the following additiona
 :: A [=site=].
 : <dfn>serialized private state token</dfn>
 :: A [=byte sequence=].
+: <dfn>aggregation coordinator</dfn>
+:: An [=aggregation coordinator=].
 
 </dl>
 
@@ -957,6 +972,8 @@ a [=trigger state=] |triggerState|:
     :: null
     : [=attribution trigger/debug reporting enabled=]
     :: false
+    : [=attribution trigger/aggregation coordinator=]
+    :: "<code>[=aggregation coordinator/aws-cloud=]</code>"
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
 1. Set |fakeReport|'s [=event-level report/report time=] to the result of
@@ -1236,6 +1253,12 @@ To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to value["`debug_reporting`"].
+1. Let |aggregationCoordinator| be "<code>[=aggregation coordinator/aws-cloud=]</code>".
+1. If |value|["`aggregation_coordinator_identifier`"] [=map/exists=]:
+    1. If |value|["`aggregation_coordinator_identifier`"] is not a [=string=], return null.
+    1. If |value|["`aggregation_coordinator_identifier`"] is not an [=ASCII case-insensitive=] match
+        for any of [=aggregation coordinator=], return null.
+    1. Set |aggregationCoordinator| to |value|["`aggregation_coordinator_identifier`"].
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -1261,6 +1284,8 @@ To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
     :: The result of [=serializing a private state token=] with |privateStateToken|
     : [=attribution trigger/debug reporting enabled=]
     :: |debugReportingEnabled|
+    :: [=attribution trigger/aggregation coordinator=]
+    :: |aggregationCoordinator|
 1. Return |trigger|.
 
 <h3 dfn id="does-filter-data-match">Does filter data match</h3>
@@ -1827,6 +1852,8 @@ an [=attribution trigger=] |trigger|:
     :: The result of running [=create aggregatable contributions=] with |source| and |trigger|.
     : [=aggregatable report/serialized private state token=]
     :: |trigger|'s [=attribution trigger/serialized private state token=]
+    : [=aggregatable report/aggregation coordinator=]
+    :: |trigger|'s [=attribution trigger/aggregation coordinator=]
 1. Return |report|.
 
 # Report delivery # {#report-delivery}
@@ -1911,8 +1938,9 @@ of running the following steps:
 
 <h3 id="obtain-aggregatable-report-aggregation-service-payloads">Obtaining an aggregatable report's aggregation service payloads</h3>
 
-To <dfn>obtain the public key for encryption</dfn>, asynchronously return a user-agent-determined public key
-or an error in the event that the user agent failed to obtain the public key.
+To <dfn>obtain the public key for encryption</dfn> given an [=aggregation coordinator=],
+asynchronously return a user-agent-determined public key or an error in the event that
+the user agent failed to obtain the public key.
 
 Note: The user agent might enforce weekly key rotation. If there are multiple keys, the user agent
 might independently pick a key uniformly at random for every encryption operation.
@@ -1954,7 +1982,8 @@ a public key |pkR|, run the following steps:
 To <dfn>obtain the aggregation service payloads</dfn> given an [=aggregatable report=] |report|,
 run the following steps:
 
-1. Let |pkR| be the result of running [=obtain the public key for encryption=].
+1. Let |pkR| be the result of running [=obtain the public key for encryption=]
+    with |report|'s [=aggregatable report/aggregation coordinator=].
 1. If |pkR| is an error, return |pkR|.
 1. Let |encryptedPayload| be the result of running [=obtain the encrypted payload=] with |report| and |pkR|.
 1. If |encryptedPayload| is an error, return |encryptedPayload|.

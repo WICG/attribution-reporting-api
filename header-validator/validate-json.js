@@ -261,11 +261,19 @@ const eventTriggerData = list(
   limits.maxEventTriggerData
 )
 
+const aggregationCoordinator = string((state, value) => {
+  if (value.toLowerCase() === "aws-cloud") {
+    return
+  }
+  state.error('must be case insensitive matching "aws-cloud"')
+})
+
 export function validateTrigger(trigger) {
   const state = new State()
   state.validate(trigger, {
     aggregatable_trigger_data: optional(aggregatableTriggerData),
     aggregatable_values: optional(aggregatableValues),
+    aggregation_coordinator_identifier: optional(aggregationCoordinator),
     debug_key: optional(uint64),
     debug_reporting: optional(bool),
     event_trigger_data: optional(eventTriggerData),

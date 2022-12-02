@@ -15,6 +15,7 @@ export const testCases = [
         "source_keys": ["x"]
       }],
       "aggregatable_values": {"e": 5},
+      "aggregation_coordinator_identifier": "aws-cloud",
       "debug_key": "5",
       "debug_reporting": true,
       "event_trigger_data": [{
@@ -331,6 +332,23 @@ export const testCases = [
     expectedErrors: [{
       path: ["aggregatable_trigger_data", 0, "key_piece"],
       msg: "must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)",
+    }],
+  },
+
+  {
+    name: "aggregation-coordinator-identifier-wrong-type",
+    json: `{"aggregation_coordinator_identifier": 1}`,
+    expectedErrors: [{
+      path: ["aggregation_coordinator_identifier"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "aggregation-coordinator-identifier-unknown-value",
+    json: `{"aggregation_coordinator_identifier": "unknown"}`,
+    expectedErrors: [{
+      path: ["aggregation_coordinator_identifier"],
+      msg: 'must be case insensitive matching "aws-cloud"',
     }],
   },
 
