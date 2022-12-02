@@ -348,7 +348,7 @@ export const testCases = [
     json: `{"aggregation_coordinator_identifier": "unknown"}`,
     expectedErrors: [{
       path: ["aggregation_coordinator_identifier"],
-      msg: 'must be case insensitive matching "aws-cloud"',
+      msg: "must match 'aws-cloud' (case-insensitive)",
     }],
   },
 
