@@ -12,7 +12,7 @@
   - [Attribution trigger registration](#attribution-trigger-registration)
   - [Aggregatable reports](#aggregatable-reports)
   - [Optional: transitional debugging reports](#optional-transitional-debugging-reports)
-    - [Attribution-succeeded debugging reports](#attribution-succeeded-debugging-reports)
+    - [Attribution-succeed debugging reports](#attribution-succeed-debugging-reports)
     - [Verbose debugging reports](#verbose-debugging-reports)
   - [Contribution bounding and budgeting](#contribution-bounding-and-budgeting)
   - [Storage limits](#storage-limits)
@@ -266,7 +266,7 @@ The browser is free to utilize techniques like retries to minimize data loss.
 * The `payload` will contain the actual histogram contributions. It should be be
   encrypted and then base64 encoded, see [below](#encrypted-payload).
 
-Optional debugging fields are discussed [below](#attribution-succeeded-debugging-reports).
+Optional debugging fields are discussed [below](#attribution-succeed-debugging-reports).
 
 #### Encrypted payload
 The `payload` should be a [CBOR](https://cbor.io) map encrypted via
@@ -331,9 +331,9 @@ keys are delivered to different users.
 
 ### Optional: transitional debugging reports
 
-#### Attribution-succeeded debugging reports
+#### Attribution-succeed debugging reports
 
-If [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#attribution-succeeded-debugging-reports)
+If [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#attribution-succeed-debugging-reports)
 is enabled, additional debug fields will be present in aggregatable reports.
 The `source_debug_key` and `trigger_debug_key` fields match those in the
 event-level reports. If both the source and trigger debug keys are set, there
