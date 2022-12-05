@@ -333,7 +333,7 @@ keys are delivered to different users.
 
 #### Attribution-succeeded debugging reports
 
-If [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#attribution-succeeded-debug-reports)
+If [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#attribution-succeeded-debugging-reports)
 is enabled, additional debug fields will be present in aggregatable reports.
 The `source_debug_key` and `trigger_debug_key` fields match those in the
 event-level reports. If both the source and trigger debug keys are set, there
