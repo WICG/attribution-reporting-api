@@ -345,10 +345,10 @@ export const testCases = [
   },
   {
     name: "aggregation-coordinator-identifier-unknown-value",
-    json: `{"aggregation_coordinator_identifier": "unknown"}`,
+    json: `{"aggregation_coordinator_identifier": "AWS-CLOUD"}`,
     expectedErrors: [{
       path: ["aggregation_coordinator_identifier"],
-      msg: "must match 'aws-cloud' (case-insensitive)",
+      msg: "must match 'aws-cloud' (case-sensitive)",
     }],
   },
 
