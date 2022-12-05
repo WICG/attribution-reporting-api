@@ -64,7 +64,7 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
 
 ### Report data
 
-The report data is included in the requested body as a JSON list of objects, and
+The report data is included in the request body as a JSON list of objects, and
 each object has a string field `type` and a dictionary field `body`, e.g.:
 
 ```jsonc
