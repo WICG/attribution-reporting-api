@@ -35,8 +35,9 @@ extension on top of this.
   - [Attribution Reports](#attribution-reports)
   - [Data Encoding](#data-encoding)
   - [Optional attribution filters](#optional-attribution-filters)
-  - [Optional: Primary debugging reports](#optional-primary-debugging-reports)
-  - [Optional: verbose debugging reports](#optional-verbose-debugging-reports)
+  - [Optional: transitional debugging reports](#optional-transitional-debugging-reports)
+    - [Attribution-succeeded debugging reports](#attribution-succeeded-debugging-reports)
+    - [Verbose debugging reports](#verbose-debugging-reports)
   - [Noisy fake conversion example](#noisy-fake-conversion-example)
   - [Storage limits](#storage-limits)
 - [Privacy Considerations](#privacy-considerations)
@@ -552,7 +553,7 @@ will be created.
 If the filters match for multiple event triggers, the first matching event
 trigger is used.
 
-### Optional: primary debugging reports
+### Optional: transitional debugging reports
 
 The Attribution Reporting API is a new and fairly complex way to do attribution
 measurement without third-party cookies. As such, we are open to introducing a
@@ -561,6 +562,22 @@ _while third-party cookies are available_. This ensures that the API can be
 fully understood during roll-out and help flush out any bugs (either in browser
 or caller code), and more easily compare the performance to cookie-based
 alternatives.
+
+To ensure that this data (which could enable cross-site tracking) is only
+available in a transitional phase while third-party cookies are available and
+are already capable of user tracking, the browser will check (at both source
+and trigger registration) for the presence of a special `SameSite=None` cookie
+set by the reporting origin:
+```http
+Set-Cookie: ar_debug=1; SameSite=None; Secure; HttpOnly
+```
+If a cookie of this form is not present, debugging information will be ignored.
+
+Note that in the context of proposals such as
+[CHIPS](https://github.com/privacycg/CHIPS), the cookie must be unpartitioned in
+order to allow debug keys to be registered.
+
+#### Attribution-succeeded debugging reports
 
 Source and trigger registrations will both accept a new field `debug_key`:
 ```jsonc
@@ -591,32 +608,10 @@ Note that event-level reports associated with false trigger events
 will not have `trigger_debug_key`s. This allows developers to more
 closely understand how noise is applied in the API.
 
-To ensure that this data (which could enable cross-site tracking) is only
-available in a transitional phase while third-party cookies are available and
-are already capable of user tracking, the browser will check (at both source
-and trigger registration) for the presence of a special `SameSite=None` cookie
-set by the reporting origin:
-```http
-Set-Cookie: ar_debug=1; SameSite=None; Secure; HttpOnly
-```
-If a cookie of this form is not present, debugging information will be ignored.
-
-Note that in the context of proposals such as
-[CHIPS](https://github.com/privacycg/CHIPS), the cookie must be unpartitioned in
-order to allow debug keys to be registered.
-
-### Optional: verbose debugging reports
+#### Verbose debugging reports
 
 We also introduce a debugging framework to allow developers to monitor certain
 failures in the attribution registrations.
-
-Similar to [primary debugging reports](#optional-primary-debugging-reports),
-failure modes that may enable cross-site tracking are only reported in a
-transitional phase while third-party cookies are available and the browser will
-check for the presence of the `ar_debug` cookie set by the reporting origin.
-Failure modes that are privacy neutral (e.g.
-a source is rejected due to the [destination limit](#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources))
-are reported regardless the presence of third-party cookies.
 
 The browser will send non-credentialed secure HTTP `POST` requests to the
 reporting endpoints, see [below](#reporting-endpoints). The report data is
@@ -641,7 +636,7 @@ Each object has:
 These debugging reports will be sent immediately upon the error occurring
 during attribution registrations outside a fenced frame tree.
 
-#### Reporting endpoints
+##### Reporting endpoints
 
 The reporting origins may opt in to receiving debugging reports by adding a new
 `debug_reporting` dictionary field to the `Attribution-Reporting-Register-Source`

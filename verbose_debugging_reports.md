@@ -2,9 +2,8 @@ Verbose Debugging Reports
 =========================
 
 This document is a collection of [verbose debugging
-reports](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-verbose-debugging-reports)
-that are supported. Note that the types marked `cookie-based` are only reported
-in a transitional phase while third-party cookies are available.
+reports](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#verbose-debugging-reports)
+that are supported.
 
 ### Source debugging reports
 
@@ -14,16 +13,16 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
 #### `source-destination-limit`
 A source is rejected due to the [destination limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources).
 
-#### `source-noised` (cookie-based)
+#### `source-noised`
 [Noise](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#data-limits-and-noise) is applied to a source event.
 
-#### `source-storage-limit` (cookie-based)
+#### `source-storage-limit`
 A source is rejected due to the [storage limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#storage-limits).
 
-#### `source-unknown-error` (cookie-based)
+#### `source-unknown-error`
 System error.
 
-### Trigger debugging reports (cookie-based)
+### Trigger debugging reports
 
 Here are the debugging reports supported for [attribution trigger
 registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#triggering-attribution).
@@ -112,9 +111,9 @@ This table defines the fields in the `body` dictionary.
 | `type` | `attribution_destination`| `limit` | `source_debug_key` | `source_event_id` | `source_site` | ` trigger_debug_key` |
 | --- | --- | --- | --- | --- | --- | --- |
 | [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
-| [`source-noised`](#source-noised-cookie-based) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
-| [`source-storage-limit`](#source-storage-limit-cookie-based) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
-| [`source-unknown-error`](#source-unknown-error-cookie-based) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
+| [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
+| [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`source-unknown-error`](#source-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`trigger-no-matching-source`](#trigger-no-matching-source) | ✓ | ❌ | ❌ | ❌ | ❌ | ✓ |
 | [`trigger-no-matching-filter-data`](#trigger-no-matching-filter-data) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-attributions-per-source-destination-limit`](#trigger-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
