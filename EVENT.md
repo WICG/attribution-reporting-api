@@ -566,7 +566,7 @@ alternatives.
 To ensure that this data (which could enable cross-site tracking) is only
 available in a transitional phase while third-party cookies are available and
 are already capable of user tracking, the browser will check (at both source
-and trigger registration) for the presence of a special `SameSite=None` cookie
+and trigger registration) for the presence of a special cookie
 set by the reporting origin:
 ```http
 Set-Cookie: ar_debug=1; SameSite=None; Secure; HttpOnly
