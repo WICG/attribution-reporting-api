@@ -11,6 +11,9 @@
   - [Attribution source registration](#attribution-source-registration)
   - [Attribution trigger registration](#attribution-trigger-registration)
   - [Aggregatable reports](#aggregatable-reports)
+  - [Optional: transitional debugging reports](#optional-transitional-debugging-reports)
+    - [Attribution-success debugging reports](#attribution-success-debugging-reports)
+    - [Verbose debugging reports](#verbose-debugging-reports)
   - [Contribution bounding and budgeting](#contribution-bounding-and-budgeting)
   - [Storage limits](#storage-limits)
 - [Data processing through a Secure Aggregation Service](#data-processing-through-a-secure-aggregation-service)
@@ -263,7 +266,7 @@ The browser is free to utilize techniques like retries to minimize data loss.
 * The `payload` will contain the actual histogram contributions. It should be be
   encrypted and then base64 encoded, see [below](#encrypted-payload).
 
-Optional debugging fields are discussed [below](#optional-extended-debugging-reports).
+Optional debugging fields are discussed [below](#attribution-success-debugging-reports).
 
 #### Encrypted payload
 The `payload` should be a [CBOR](https://cbor.io) map encrypted via
@@ -326,9 +329,11 @@ future versions of the API), the endpoint URL should also change.
 **Note:** The browser may need some mechanism to ensure that the same set of
 keys are delivered to different users.
 
-#### Optional: extended debugging reports
+### Optional: transitional debugging reports
 
-If [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#optional-extended-debugging-reports)
+#### Attribution-success debugging reports
+
+If [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#attribution-success-debugging-reports)
 is enabled, additional debug fields will be present in aggregatable reports.
 The `source_debug_key` and `trigger_debug_key` fields match those in the
 event-level reports. If both the source and trigger debug keys are set, there
@@ -345,6 +350,12 @@ The debug reports should be almost identical to the normal reports, including th
 additional debug fields. However, the `payload` ciphertext will differ due to
 repeating the encryption operation and the `key_id` may differ if the previous
 key had since expired or the browser randomly chose a different valid public key.
+
+#### Verbose debugging reports
+
+As outlined in the
+  [event-level explainer](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#verbose-debugging-reports),
+certain aggregate attribution failures can be monitored as well.
 
 ### Contribution bounding and budgeting
 
