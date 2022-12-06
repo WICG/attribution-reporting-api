@@ -36,7 +36,7 @@ extension on top of this.
   - [Data Encoding](#data-encoding)
   - [Optional attribution filters](#optional-attribution-filters)
   - [Optional: transitional debugging reports](#optional-transitional-debugging-reports)
-    - [Attribution-succeed debugging reports](#attribution-succeed-debugging-reports)
+    - [Attribution-success debugging reports](#attribution-success-debugging-reports)
     - [Verbose debugging reports](#verbose-debugging-reports)
   - [Noisy fake conversion example](#noisy-fake-conversion-example)
   - [Storage limits](#storage-limits)
@@ -577,7 +577,7 @@ Note that in the context of proposals such as
 [CHIPS](https://github.com/privacycg/CHIPS), the cookie must be unpartitioned in
 order to allow debug keys to be registered.
 
-#### Attribution-succeed debugging reports
+#### Attribution-success debugging reports
 
 Source and trigger registrations will both accept a new field `debug_key`:
 ```jsonc
