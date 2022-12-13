@@ -51,14 +51,14 @@ Attribution-Reporting-Support: os, web
 
 For subresource requests without the `Attribution-Reporting-Eligible` header,
 the server can optionally respond to the request with a [boolean structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3-3-6):
-```
+```http
 Accept-Attribution-Reporting-Support: ?1
 ```
 
-If this header exists and is a true value, the browser will add the
-`Attribution-Reporting-Support` header in all subsequent redirect requests.
+If this header exists and contains a true value, the browser will add the
+`Attribution-Reporting-Support` header in all subsequent requests in the same redirect chain.
 
-If the `Attribution-Reporting-Support` header indicates OS support, the reporting origin can optionally respond to the request with a [string structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.3) that indicates a desire to use the OS’s attribution API instead of the browser’s. Note that the API also allows browsers to only support OS-level attribution if they choose.
+If the `Attribution-Reporting-Support` header indicates OS support, the reporting origin can optionally respond to the request with a [string structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.3) that indicates a desire to use the OS's attribution API instead of the browser's. Note that the API also allows browsers to only support OS-level attribution if they choose.
 ```
 // Registers a source against a native OS attribution API
 Attribution-Reporting-Register-OS-Source: "https://adtech.example/register-android-source?..."
