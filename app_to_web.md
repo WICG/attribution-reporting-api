@@ -50,7 +50,7 @@ Attribution-Reporting-Support: os, web
 ```
 
 For subresource requests without the `Attribution-Reporting-Eligible` header,
-the server can optionally respond to the request with a [boolean structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3-3-6):
+the server can optionally respond to the request with a [boolean structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.6):
 ```http
 Accept-Attribution-Reporting-Support: ?1
 ```
