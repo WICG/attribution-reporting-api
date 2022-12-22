@@ -1319,6 +1319,15 @@ To <dfn>match an attribution source's filter data against filters</dfn> given an
         </dl>
 1. Return true.
 
+To <dfn>match an attribution source's filter data against filters and negated filters</dfn> given an
+[=attribution source=] |source|, a [=filter map=] |filters|, and a [=filter map=] |notFilters|:
+
+1. If the result of running [=match an attribution source's filter data against filters=] with
+    |source|, |filters|, and [=match an attribution source's filter data against filters/isNegated=] set to false is false, return false.
+1. If the result of running [=match an attribution source's filter data against filters=] with
+    |source|, |notFilters|, and [=match an attribution source's filter data against filters/isNegated=] set to true is false, return false.
+1. Return true.
+
 <h3 dfn id="should-rate-limit-attribution">Should attribution be blocked by rate limit</h3>
 
 Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToAttribute|:
@@ -1360,12 +1369,10 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
 
 1. Let |aggregationKeys| be the result of [=map/clone|cloning=] |source|'s [=attribution source/aggregation keys=].
 1. [=list/iterate|For each=] |triggerData| of |trigger|'s [=attribution trigger/aggregatable trigger data=]:
-    1. If the result of running [=match an attribution source's filter data against filters=] with
+    1. If the result of running [=match an attribution source's filter data against filters and negated filters=] with
         |source|, |triggerData|'s [=aggregatable trigger data/filters=], and
-        [=match an attribution source's filter data against filters/isNegated=] set to false is false, [=iteration/continue=].
-    1. If the result of running [=match an attribution source's filter data against filters=] with
-        |source|, |triggerData|'s [=aggregatable trigger data/negated filters=], and
-        [=match an attribution source's filter data against filters/isNegated=] set to true is false, [=iteration/continue=].
+        |triggerData|'s [=aggregatable trigger data/negated filters=]
+        is false, [=iteration/continue=].
     1. [=set/iterate|For each=] |sourceKey| of |triggerData|'s [=aggregatable trigger data/source keys=]:
         1. If |aggregationKeys|[|sourceKey|] does not [=map/exist=], [=iteration/continue=].
         1. Set |aggregationKeys|[|sourceKey|] to |aggregationKeys|[|sourceKey|] OR |triggerData|'s
@@ -1482,13 +1489,10 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
 1. [=map/iterate|For each=] [=event-level trigger configuration=] |config| of |trigger|'s
     [=attribution trigger/event-level trigger configurations=]:
     1. If the result of running
-        [=match an attribution source's filter data against filters=] with |sourceToAttribute|,
+        [=match an attribution source's filter data against filters and negated filters=] with |sourceToAttribute|,
         |config|'s [=event-level trigger configuration/filters=], and
-        [=match an attribution source's filter data against filters/isNegated=] set to false is false, [=iteration/continue=].
-    1. If the result of running
-        [=match an attribution source's filter data against filters=] with |sourceToAttribute|,
-        |config|'s [=event-level trigger configuration/negated filters=], and
-        [=match an attribution source's filter data against filters/isNegated=] set to true is false, [=iteration/continue=].
+        |config|'s [=event-level trigger configuration/negated filters=]
+        is false, [=iteration/continue=].
     1. Set |matchedConfig| to |config|.
     1. [=iteration/Break=].
 1. If |matchedConfig| is null:
@@ -1682,13 +1686,9 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     1. Return.
 1. Let |sourceToAttribute| be |matchingSources|[0].
 1. Let |topLevelFiltersMatch| be the result of running
-    [=match an attribution source's filter data against filters=] with
+    [=match an attribution source's filter data against filters and negated filters=] with
     |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=], and
-    [=match an attribution source's filter data against filters/isNegated=] set to false.
-1. If |topLevelFiltersMatch| is true, set |topLevelFiltersMatch| to the result of running
-    [=match an attribution source's filter data against filters=] with
-    |sourceToAttribute|, |trigger|'s [=attribution trigger/negated filters=], and
-    [=match an attribution source's filter data against filters/isNegated=] set to true.
+    |trigger|'s [=attribution trigger/negated filters=].
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
     : [=attribution rate-limit record/scope=]
     :: "<code>[=rate-limit scope/attribution=]</code>"
