@@ -1659,23 +1659,28 @@ an [=attribution trigger=] |trigger| and an optional [=attribution source=]
 1. If |debugData| is null, return.
 1. Run [=obtain and deliver a debug report=] with « |debugData| » and |trigger|'s [=attribution trigger/reporting endpoint=].
 
-To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |trigger|, run the following steps:
+To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
 
-1. Let |attributionDestination| be |trigger|'s [=attribution trigger/attribution destination=].
-1. Let |matchingSources| be all entries in the [=attribution source cache=] where all of the following are true:
-     * entry's [=attribution source/attribution destinations=] [=set/contains=] |attributionDestination|.
-     * entry's [=attribution source/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are [=same origin=].
-     * entry's [=attribution source/expiry time=] is greater than the current time.
-1. If |matchingSources| [=set/is empty=]:
-    1. Run [=obtain and deliver a debug report on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-no-matching-source=]</code>", |trigger| and [=obtain and deliver a debug report on trigger registration/sourceToAttribute=] set to null.
-    1. Return.
+1. Let |matchingSources| be a new [=list/is empty|empty=] [=list=].
+1. [=set/iterate|For each=] |source| of the [=attribution source cache=]:
+    1. If |source|'s [=attribution source/attribution destinations=] does not [=set/contains|contain=] |trigger|'s [=attribution trigger/attribution destination=], [=iteration/continue=].
+    1. If |source|'s [=attribution source/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are not [=same origin=], [=iteration/continue=].
+    1. If |source|'s [=attribution source/expiry time=] is less than or equal to the current time, [=iteration/continue=].
+    1. [=list/Append=] |source| to |matchingSources|.
 1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources|
     in descending order, with |a| being less than |b| if any of the following are true:
       * |a|'s [=attribution source/priority=] is less than |b|'s [=attribution source/priority=].
       * |a|'s [=attribution source/priority=] is equal to |b|'s [=attribution source/priority=] and |a|'s
          [=attribution source/source time=] is less than |b|'s [=attribution source/source time=].
-1. Let |sourceToAttribute| be the first item in |matchingSources|.
+1. Return |matchingSources|.
+
+To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |trigger|, run the following steps:
+1. Let |matchingSources| be the result of running [=find matching sources=] with |trigger|.
+1. If |matchingSources| [=list/is empty=]:
+    1. Run [=obtain and deliver a debug report on trigger registration=]
+        with "<code>[=trigger debug data type/trigger-no-matching-source=]</code>", |trigger| and [=obtain and deliver a debug report on trigger registration/sourceToAttribute=] set to null.
+    1. Return.
+1. Let |sourceToAttribute| be |matchingSources|[0].
 1. Let |topLevelFiltersMatch| be the result of running
     [=match an attribution source's filter data against filters=] with
     |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=], and
@@ -1690,7 +1695,7 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     : [=attribution rate-limit record/source site=]
     :: |sourceToAttribute|'s [=attribution source/source site=]
     : [=attribution rate-limit record/attribution destination=]
-    :: |attributionDestination|
+    :: |trigger|'s [=attribution trigger/attribution destination=]
     : [=attribution rate-limit record/reporting endpoint=]
     :: |sourceToAttribute|'s [=attribution source/reporting endpoint=]
     : [=attribution rate-limit record/time=]
