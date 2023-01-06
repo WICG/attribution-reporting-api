@@ -462,6 +462,9 @@ following keys:
 -   `randomized_trigger_rate`: Decimal number between 0 and 1 indicating how
     often noise is applied.
 
+-   `scheduled_report_time`: The number of seconds since the Unix Epoch (1970-01-01T00:00:00Z, ignoring leap seconds) until the browser initially scheduled the report to be sent (to avoid noise around offline devices reporting late).
+
+
 ### Data Encoding
 
 The source event id and trigger data should be specified in a way that is
