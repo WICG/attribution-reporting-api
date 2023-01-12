@@ -1868,15 +1868,15 @@ The user agent MUST periodically [=set/iterate=] over its [=event-level report c
 [=aggregatable report cache=] and run [=queue a report for delivery=] on each item.
 
 To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report|
-and a [=environment settings objects=] |context|, run the following steps [=in parallel=]:
+and an [=environment settings objects=] |context|, run the following steps [=in parallel=]:
 
 1. If |report|'s [=attribution report/delivered=] value is true, return.
 1. Set |report|'s [=attribution report/delivered=] value to true.
-1. If |report|'s [=attribution report/report time=] is less than |context|'s [=current wall time=], add an [=implementation-defined=] random positive [=duration=] to |report|'s [=attribution report/report time=].
+1. If |report|'s [=attribution report/report time=] is less than |context|'s [=current wall time=], add an [=implementation-defined=] random non-negative [=duration=] to |report|'s [=attribution report/report time=].
 
     Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
      closed. Adding random delay prevents temporal joining of reports from different [=attribution source/source origin=]s.
-1. Wait until |report|'s [=attribution report/report time=] is greater than or equal to |context|'s [=current wall time=].
+1. Wait until |context|'s [=current wall time=] is equal to |report|'s [=attribution report/report time=].
 1. Optionally, wait a further [=implementation-defined=] [=duration=].
 
     Note: This is intended to allow user agents to optimize device resource usage.
