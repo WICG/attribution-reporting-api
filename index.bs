@@ -1342,13 +1342,21 @@ To <dfn>match an attribution source's filter data against filters map</dfn> give
         </dl>
 1. Return true.
 
-To <dfn>match an attribution source's filter data against filters and negated filters</dfn> given an
-[=attribution source=] |source|, a [=filter map=] |filters|, and a [=filter map=] |notFilters|:
+To <dfn>match an attribution source's filter data against filters</dfn> given an
+[=attribution source=] |source|, a [=list=] of [=filter map=] |filters|, and a [=boolean=]
+<dfn for="match an attribution source's filter data against filters"><var>isNegated</var></dfn>:
 
-1. If the result of running [=match an attribution source's filter data against filters map=] with
-    |source|, |filters|, and [=match an attribution source's filter data against filters map/isNegated=] set to false is false, return false.
-1. If the result of running [=match an attribution source's filter data against filters map=] with
-    |source|, |notFilters|, and [=match an attribution source's filter data against filters map/isNegated=] set to true is false, return false.
+1. [=list/iterate|For each=] |filter| of |filters|:
+    1. If the result of running [=match an attribution source's filter data against filters map=] with |source|, |filter| and |isNegated| is true, return true.
+1. Return false.
+
+To <dfn>match an attribution source's filter data against filters and negated filters</dfn> given an
+[=attribution source=] |source|, a [=list=] of [=filter maps=] |filters|, and a [=list=] of [=filter maps=] |notFilters|:
+
+1. If the result of running [=match an attribution source's filter data against filters=] with
+    |source|, |filters|, and [=match an attribution source's filter data against filters/isNegated=] set to false is false, return false.
+1. If the result of running [=match an attribution source's filter data against filters=] with
+    |source|, |notFilters|, and [=match an attribution source's filter data against filters/isNegated=] set to true is false, return false.
 1. Return true.
 
 <h3 dfn id="should-rate-limit-attribution">Should attribution be blocked by rate limit</h3>
