@@ -216,9 +216,9 @@ An aggregatable trigger data is a [=struct=] with the following items:
 : <dfn>source keys</dfn>
 :: An [=ordered set=] of [=strings=].
 : <dfn>filters</dfn>
-:: A [=list=] of [=filter map=].
+:: A [=list=] of [=filter maps=].
 : <dfn>negated filters</dfn>
-:: A [=list=] of [=filter map=].
+:: A [=list=] of [=filter maps=].
 
 </dl>
 
@@ -234,9 +234,9 @@ An event-level trigger configuration is a [=struct=] with the following items:
 : <dfn>priority</dfn>
 :: A 64-bit integer.
 : <dfn>filters</dfn>
-:: A [=list=] of [=filter map=].
+:: A [=list=] of [=filter maps=].
 : <dfn>negated filters</dfn>
-:: A [=list=] of [=filter map=].
+:: A [=list=] of [=filter maps=].
 
 </dl>
 
@@ -257,9 +257,9 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>reporting endpoint</dfn>
 :: A [=suitable origin=].
 : <dfn>filters</dfn>
-:: A [=list=] of [=filter map=].
+:: A [=list=] of [=filter maps=].
 : <dfn>negated filters</dfn>
-:: A [=list=] of [=filter map=].
+:: A [=list=] of [=filter maps=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
 : <dfn>event-level trigger configurations</dfn>
@@ -490,10 +490,10 @@ maximum value that can be used as an [=attribution source/expiry=]. It must be
 greater than or equal to 30 days.
 
 <dfn>Max items in filters</dfn> is a positive integer that controls the
-maximum [=list/size=] of a [=list=] of [=filter map=].
+maximum [=list/size=] of a [=list=] of [=filter maps=].
 
 <dfn>Max entries per filter map</dfn> is a positive integer that controls the
-maximum [=map/size=] of a [=filter map=].
+maximum [=map/size=] of a [=filter maps=].
 
 <dfn>Max values per filter entry</dfn> is a positive integer that
 controls the maximum [=set/size=] of a [=filter map=] entry.
@@ -1125,12 +1125,12 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
             <a spec="html">rules for parsing integers</a> to
             |value|["`priority`"].
         1. If |priority| is an error, set |priority| to 0.
-    1. Let |filters| be a new [=list=] of [=filter map=].
+    1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filters=] with
             |value|["`filters`"].
         1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a new [=list=] of [=filter map=].
+    1. Let |negatedFilters| be a [=list=] of [=filter maps=], initially empty.
     1. If |value|["`not_filters`"] [=map/exists=]:
         1. Set |negatedFilters| to the result of running [=parse filters=]
             with |value|["`not_filters`"].
@@ -1174,12 +1174,12 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
         1. [=list/iterate|For each=] |sourceKey| of |value|["`source_keys`"]:
             1. If |sourceKey| is not a [=string=], return null.
             1. [=set/Append=] |sourceKey| to |sourceKeys|.
-    1. Let |filters| be a new new [=list=] of [=filter map=].
+    1. Let |filters| be a [=list=] of [=filter map=], initially empty.
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filters=] with
             |value|["`filters`"].
         1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a new [=list=] of [=filter map=].
+    1. Let |negatedFilters| be a [=list=] of [=filter maps=], initially empty.
     1. If |value|["`not_filters`"] [=map/exists=]:
         1. Set |negatedFilters| to the result of running [=parse filters=]
             with |value|["`not_filters`"].
@@ -1257,12 +1257,12 @@ To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
     1. If |debugKey| is an error, set |debugKey| to null.
     1. If the result of running [=check if cookie-based debugging is allowed=] with
         |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
-1. Let |filters| be a new [=list=] of [=filter map=].
+1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
 1. If |value|["`filters`"] exists:
     1. Set |filters| to the result of running [=parse filters=] with
         |value|["`filters`"].
     1. If |filters| is null, return null.
-1. Let |negatedFilters| be a new [=list=] of [=filter map=].
+1. Let |negatedFilters| be a [=list=] of [=filter maps=], initially empty.
 1. If |value|["`not_filters`"] exists:
     1. Set |negatedFilters| to the result of running [=parse filters=] with
         |value|["`not_filters`"].
