@@ -597,6 +597,23 @@ export const testCases = [
     }]
   },
 
+  {
+    name: "aggregation-coordinator-identifier-wrong-type",
+    json: `{"aggregation_coordinator_identifier": 1}`,
+    expectedErrors: [{
+      path: ["aggregation_coordinator_identifier"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "aggregation-coordinator-identifier-unknown-value",
+    json: `{"aggregation_coordinator_identifier": "AWS-CLOUD"}`,
+    expectedErrors: [{
+      path: ["aggregation_coordinator_identifier"],
+      msg: "must match 'aws-cloud' (case-sensitive)",
+    }],
+  },
+
 
   // TODO: validate length of event_trigger_data and aggregatable_trigger_data
 ];
