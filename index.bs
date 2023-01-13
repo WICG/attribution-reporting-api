@@ -20,6 +20,10 @@ spec:html; type:element; text:a
 spec:html; type:element; text:script
 </pre>
 <pre class="anchors">
+spec: hr-time; type: dfn; urlPrefix: https://w3c.github.io/hr-time/
+    text: current wall time; url: #dfn-moment
+    text: duration; url: #dfn-duration
+    text: moment; url: #dfn-moment
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
     text: generate a random UUID; url: #dfn-generate-a-random-uuid
 </pre>
@@ -171,15 +175,15 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>source type</dfn>
 :: A [=source type=].
 : <dfn>expiry</dfn>
-:: A length of time.
+:: A [=duration=].
 : <dfn>event report window</dfn>
-:: A length of time.
+:: A [=duration=].
 : <dfn>aggregatable report window</dfn>
-:: A length of time.
+:: A [=duration=].
 : <dfn>priority</dfn>
 :: A 64-bit integer.
 : <dfn>source time</dfn>
-:: A point in time.
+:: A [=moment=].
 : <dfn>number of event-level reports</dfn>
 :: Number of [=event-level reports=] created for this [=attribution source=].
 : <dfn>event-level attributable</dfn> (default true)
@@ -253,7 +257,7 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>attribution destination</dfn>
 :: A [=site=].
 : <dfn>trigger time</dfn>
-:: A point in time.
+:: A [=moment=].
 : <dfn>reporting endpoint</dfn>
 :: A [=suitable origin=].
 : <dfn>filters</dfn>
@@ -288,9 +292,9 @@ An attribution report is a [=struct=] with the following items:
 : <dfn>reporting endpoint</dfn>
 :: A [=suitable origin=].
 : <dfn>report time</dfn>
-:: A point in time.
+:: A [=moment=].
 : <dfn>original report time</dfn>
-:: A point in time.
+:: A [=moment=].
 : <dfn>delivered</dfn> (default false)
 :: A [=boolean=].
 : <dfn>report ID</dfn>
@@ -318,7 +322,7 @@ An event-level report is an [=attribution report=] with the following additional
 : <dfn>trigger priority</dfn>
 :: A 64-bit integer.
 : <dfn>trigger time</dfn>
-:: A point in time.
+:: A [=moment=].
 : <dfn>source identifier</dfn>
 :: A string.
 : <dfn>attribution destinations</dfn>
@@ -344,7 +348,7 @@ An aggregatable report is an [=attribution report=] with the following additiona
 
 <dl dfn-for="aggregatable report">
 : <dfn>source time</dfn>
-:: A point in time.
+:: A [=moment=].
 : <dfn>contributions</dfn>
 :: A [=list=] of [=aggregatable contributions=].
 : <dfn>effective attribution destination</dfn>
@@ -377,9 +381,9 @@ An <dfn>attribution rate-limit record</dfn> is a [=struct=] with the following i
 : <dfn>reporting endpoint</dfn>
 :: A [=suitable origin=].
 : <dfn>time</dfn>
-:: A point in time.
+:: A [=moment=].
 :: <dfn>expiry time</dfn>
-:: Null or a point in time.
+:: Null or a [=moment=].
 
 </dl>
 
@@ -485,7 +489,7 @@ However attribution data is inherently cross-site, and operations on storage wou
 <dfn>Source event ID cardinality</dfn> is a positive integer that controls the
 maximum value that can be used as an [=attribution source/event id=].
 
-<dfn>Max source expiry</dfn> is a positive length of time that controls the
+<dfn>Max source expiry</dfn> is a positive [=duration=] that controls the
 maximum value that can be used as an [=attribution source/expiry=]. It must be
 greater than or equal to 30 days.
 
@@ -555,7 +559,7 @@ controls how many times a single [=attribution source=] whose
 integer that controls the maximum number of distinct [=sites=] across all [=attribution source/attribution destinations=]
 for unexpired [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting endpoint=]).
 
-<dfn>Attribution rate-limit window</dfn> is a positive length of time that
+<dfn>Attribution rate-limit window</dfn> is a positive [=duration=] that
 controls the rate-limiting window for attribution.
 
 <dfn>Max source reporting endpoints per rate-limit window</dfn> is a positive
@@ -592,10 +596,10 @@ controls the maximum number of attributions for a
 [=aggregatable report/required aggregatable budget=] of all [=aggregatable reports=] created for
 an [=attribution source=].
 
-<dfn>Min aggregatable report delay</dfn> is a non-negative length of time that controls the minimum
+<dfn>Min aggregatable report delay</dfn> is a non-negative [=duration=] that controls the minimum
 delay to deliver an [=aggregatable report=].
 
-<dfn>Randomized aggregatable report delay</dfn> is a positive length of time that controls the
+<dfn>Randomized aggregatable report delay</dfn> is a positive [=duration=] that controls the
 random delay to deliver an [=aggregatable report=].
 
 # General Algorithms # {#general-algorithms}
@@ -665,10 +669,10 @@ This algorithm will return either a non-negative 128-bit integer or an error.
 
 <h3 dfn id="can-attribution-rate-limit-record-be-removed">Can attribution rate-limit record be removed</h3>
 
-Given an [=attribution rate-limit record=] |record|:
-1. If |record|'s [=attribution rate-limit record|time=] is after the current time, return false.
+Given an [=attribution rate-limit record=] |record| and a [=moment=] |now|:
+1. If |record|'s [=attribution rate-limit record|time=] is after |now|, return false.
 1. If |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>", return true.
-1. If |record|'s [=attribution rate-limit record/expiry time=] is after the current time, return false.
+1. If |record|'s [=attribution rate-limit record/expiry time=] is after |now|, return false.
 1. Return true.
 
 <h3 id="obtaining-and-delivering-debug-report">Obtaining and delivering an attribution debug report</h3>
@@ -805,8 +809,8 @@ To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
 Issue: Determine whether to limit [=string/length=] or [=string/code point length=] for |key| above.
 
 To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
-|json|, a [=suitable origin=] |sourceOrigin|, a [=suitable origin=] |reportingOrigin|, and a
-[=source type=] |sourceType|:
+|json|, a [=suitable origin=] |sourceOrigin|, a [=suitable origin=] |reportingOrigin|, a
+[=source type=] |sourceType|, and a [=moment=] |sourceTime|:
 
 1. Let |value| be the result of running
     [=parse a JSON string to an Infra value=] with |json|.
@@ -891,7 +895,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     : [=attribution source/priority=]
     :: |priority|
     : [=attribution source/source time=]
-    :: The current time
+    :: |sourceTime|
     : [=attribution source/source type=]
     :: |sourceType|
     : [=attribution source/randomized response=]
@@ -1024,7 +1028,7 @@ To <dfn>obtain and deliver a debug report on source registration</dfn> given a
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
 
 1. Let |cache| be the user agent's [=attribution source cache=].
-1. [=list/Remove=] all entries in |cache| where the entry's [=attribution source/expiry time=] is less than the current time.
+1. [=list/Remove=] all [=attribution sources=] |entry| in |cache| where |entry|'s [=attribution source/expiry time=] is less than |source|'s [=attribution source/source time=].
 1. If the [=list/size=] of |cache| is greater than or equal to the user agent's
      [=max source cache size=], return.
 1. Let |pendingSourcesForSourceOrigin| be the [=set=] of all
@@ -1056,8 +1060,8 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     1. If the result of running [=should processing be blocked by reporting-endpoint limit=] with
         |rateLimitRecord| is <strong>blocked</strong>, return.
     1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
-1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] if the result of running
-    [=can attribution rate-limit record be removed=] with the entry is true.
+1. [=list/Remove=] all [=attribution rate-limit records=] |entry| from the [=attribution rate-limit cache=] if the result of running
+    [=can attribution rate-limit record be removed=] with |entry| and |source|'s [=attribution source/source time=] is true.
 1. If |source|'s [=attribution source/randomized response=] is not null and is a [=set=]:
     1. [=map/iterate|For each=] [=trigger state=] |triggerState| of |source|'s
         [=attribution source/randomized response=]:
@@ -1207,7 +1211,8 @@ ISSUE: properly define "begin redemption" operation. Consider running the algori
 1. Return the result of [=forgiving-base64 encoding=] |redeemedBytes|.
 
 To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
-|json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, and a [=string=] |privateStateToken|:
+|json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, a [=string=] |privateStateToken|,
+and a [=moment=] |triggerTime|:
 
 1. Let |value| be the result of running
     [=parse a JSON string to an Infra value=] with |json|.
@@ -1256,7 +1261,7 @@ To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
     : [=attribution trigger/attribution destination=]
     :: |destination|
     : [=attribution trigger/trigger time=]
-    :: The current time.
+    :: |triggerTime|
     : [=attribution trigger/reporting endpoint=]
     :: |reportingOrigin|
     : [=attribution trigger/filters=]
@@ -1480,7 +1485,7 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
         with "<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>", |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If |sourceToAttribute|'s [=attribution source/event report window time=] is less than the current time:
+1. If |sourceToAttribute|'s [=attribution source/event report window time=] is less than |trigger|'s [=attribution trigger/trigger time=]:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-event-report-window-passed=]</code>",
         |trigger|, |sourceToAttribute| and [=obtain debug data on trigger registration/report=] set to null.
@@ -1595,7 +1600,7 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
         with "<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>", |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If |sourceToAttribute|'s [=attribution source/aggregatable report window time=] is less than the current time:
+1. If |sourceToAttribute|'s [=attribution source/aggregatable report window time=] is less than |trigger|'s [=attribution trigger/trigger time=]:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-aggregate-report-window-passed=]</code>", |trigger|, |sourceToAttribute|
         and [=obtain debug data on trigger registration/report=] set to null.
@@ -1669,7 +1674,7 @@ To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
 1. [=set/iterate|For each=] |source| of the [=attribution source cache=]:
     1. If |source|'s [=attribution source/attribution destinations=] does not [=set/contains|contain=] |trigger|'s [=attribution trigger/attribution destination=], [=iteration/continue=].
     1. If |source|'s [=attribution source/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are not [=same origin=], [=iteration/continue=].
-    1. If |source|'s [=attribution source/expiry time=] is less than or equal to the current time, [=iteration/continue=].
+    1. If |source|'s [=attribution source/expiry time=] is less than or equal to |trigger|'s [=attribution trigger/trigger time=], [=iteration/continue=].
     1. [=list/Append=] |source| to |matchingSources|.
 1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources|
     in descending order, with |a| being less than |b| if any of the following are true:
@@ -1724,8 +1729,8 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
 1. If neither |eventLevelResult|'s [=triggering result/status=] nor |aggregatableResult|'s
     [=triggering result/status=] is "<code>[=triggering status/attributed=]</code>", return.
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
-1. [=list/Remove=] all entries from the [=attribution rate-limit cache=] if the result of running
-    [=can attribution rate-limit record be removed=] with the entry is true.
+1. [=list/Remove=] all [=attribution rate-limit records=] |entry| from the [=attribution rate-limit cache=] if the result of running
+    [=can attribution rate-limit record be removed=] with |entry| and |trigger|'s [=attribution trigger/trigger time=] is true.
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 
@@ -1741,8 +1746,8 @@ To <dfn>obtain the number of report windows</dfn> given a [=source type=]
     with |sourceType|.
 1. Return the [=list/size=] of |earlyDeadlines| + 1.
 
-To <dfn>obtain a report time from deadline</dfn> given a time |sourceTime| and
-a length of time |deadline|:
+To <dfn>obtain a report time from deadline</dfn> given a [=moment=] |sourceTime| and
+a [=duration=] |deadline|:
 
 1. Return |sourceTime| + |deadline| + 1 hour.
 
@@ -1757,7 +1762,7 @@ To <dfn>obtain the report time at a window</dfn> given an
     |source|'s [=attribution source/source time=] and |deadline|.
 
 To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution source=]
-|source| and a time |triggerTime|:
+|source| and a [=moment=] |triggerTime|:
 
 1. Let |deadlineToUse| be |source|'s [=attribution source/event report window=].
 1. Let |earlyDeadlines| be the result of running [=obtain early deadlines=]
@@ -1773,8 +1778,8 @@ To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution 
 1. Return the result of running [=obtain a report time from deadline=] with
     |source|'s [=attribution source/source time=] and |deadlineToUse|.
 
-To <dfn>obtain an aggregatable report delivery time</dfn> given a point in time
-|triggerTime|, perform the following steps. They return a point in time.
+To <dfn>obtain an aggregatable report delivery time</dfn> given a [=moment=]
+|triggerTime|, perform the following steps. They return a [=moment=].
 
 1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive) with uniform probability.
 1. Return |triggerTime| + [=min aggregatable report delay=] + |r| * [=randomized aggregatable report delay=].
@@ -1860,18 +1865,19 @@ an [=attribution trigger=] |trigger|:
 # Report delivery # {#report-delivery}
 
 The user agent MUST periodically [=set/iterate=] over its [=event-level report cache=] and
-[=aggregatable report cache=]  and run [=queue a report for delivery=] on each item.
+[=aggregatable report cache=] and run [=queue a report for delivery=] on each item.
 
-To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report|, run the following steps [=in parallel=]:
+To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report|
+and an [=environment settings objects=] |context|, run the following steps [=in parallel=]:
 
 1. If |report|'s [=attribution report/delivered=] value is true, return.
 1. Set |report|'s [=attribution report/delivered=] value to true.
-1. If |report|'s [=attribution report/report time=] is less than the current time, add an [=implementation-defined=] random amount to |report|'s [=attribution report/report time=].
+1. If |report|'s [=attribution report/report time=] is less than |context|'s [=current wall time=], add an [=implementation-defined=] random non-negative [=duration=] to |report|'s [=attribution report/report time=].
 
     Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
      closed. Adding random delay prevents temporal joining of reports from different [=attribution source/source origin=]s.
-1. Wait until |report|'s [=attribution report/report time=] is the current time.
-1. Optionally, wait a further [=implementation-defined=] length of time.
+1. Wait until |context|'s [=current wall time=] is equal to |report|'s [=attribution report/report time=].
+1. Optionally, wait a further [=implementation-defined=] [=duration=].
 
     Note: This is intended to allow user agents to optimize device resource usage.
 1. Run [=attempt to deliver a report=] with |report|.
