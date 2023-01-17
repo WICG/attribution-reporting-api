@@ -454,6 +454,7 @@ A <dfn>triggering status</dfn> is one of the following:
 <ul dfn-for="triggering status">
 <li>"<dfn><code>dropped</code></dfn>"
 <li>"<dfn><code>cache full</code></dfn>"
+<li>"<dfn><code>noised</code></dfn>"
 <li>"<dfn><code>attributed</code></dfn>"
 </ul>
 
@@ -1070,6 +1071,21 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         1. [=set/Append=] |fakeReport| to the [=event-level report cache=].
     1. If |source|'s [=attribution source/randomized response=] is not [=set/is empty|empty=],
         then set |source|'s [=attribution source/event-level attributable=] value to false.
+    1. [=map/iterate|For each=] |destination| in [=source=]'s [=attribution source/attribution destinations=]:
+        1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
+            : [=attribution rate-limit record/scope=]
+            :: "<code>[=rate-limit scope/attribution=]</code>"
+            : [=attribution rate-limit record/source site=]
+            :: |source|'s [=attribution source/source site=]
+            : [=attribution rate-limit record/attribution destination=]
+            :: |destination|
+            : [=attribution rate-limit record/reporting endpoint=]
+            :: |source|'s [=attribution source/reporting endpoint=]
+            : [=attribution rate-limit record/time=]
+            :: |source|'s [=attribution source/source time=]
+            : [=attribution rate-limit record/expiry time=]
+            :: null
+        1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
     1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-noised=]</code>" and |source|.
 1. [=set/Append=] |source| to |cache|.
 
@@ -1565,15 +1581,18 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
     1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
 1. If the [=list/size=] of the [=event-level report cache=] is greater than or equal to the user
     agent's [=max event-level report cache size=], return the [=triggering result=] ("<code>[=triggering status/cache full=]</code>", null).
+1. Let |triggeringStatus| be "<code>[=triggering status/attributed=]</code>".
 1. Let |debugData| be null.
 1. If |sourceToAttribute|'s [=attribution source/randomized response=] is:
     <dl class="switch">
     : null
     :: [=set/Append=] |report| to the [=event-level report cache=].
     : not null
-    :: Set |debugData| to the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-event-noise=]</code>", |trigger|, |sourceToAttribute| and
-        [=obtain debug data on trigger registration/report=] set to null.
+    ::
+        1. Set |triggeringStatus| to "<code>[=triggering status/noised=]</code>".
+        1. Set |debugData| to the result of running [=obtain debug data on trigger registration=]
+            with "<code>[=trigger debug data type/trigger-event-noise=]</code>", |trigger|, |sourceToAttribute| and
+            [=obtain debug data on trigger registration/report=] set to null.
 
     </dl>
 1. Increment |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
@@ -1582,7 +1601,7 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
 1. If |report|'s [=event-level report/source debug key=] is not null and |report|'s
     [=event-level report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
-1. Return the [=triggering result=] ("<code>[=triggering status/attributed=]</code>", |debugData|).
+1. Return the [=triggering result=] (|triggeringStatus|, |debugData|).
 
 <h3 algorithm id="triggering-aggregatable-attribution">Triggering aggregatable attribution</h3>
 
