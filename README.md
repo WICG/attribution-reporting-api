@@ -4,13 +4,13 @@ _The Attribution Reporting API supports measurement of clicks and views with eve
 
 _This repository hosts multiple technical explainers that specify various features of the API. This document offers an overview of the API and its explainers._
 
-## Just getting started?
+## Get started
 
 This repository hosts detailed technical explainers.
 Before diving into these, check out this [introductory article](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting).
 If you're looking to experiment with the API, head over to this [guide](https://developer.chrome.com/docs/privacy-sandbox/attribution-reporting-experiment/).
 
-All developer resources for this API are listed [here](https://developer.chrome.com/docs/privacy-sandbox/#measure-digital-ads).
+All developer resources for this API are listed on [developer.chrome.com](https://developer.chrome.com/docs/privacy-sandbox/#measure-digital-ads).
 
 ## Participate
 
@@ -36,11 +36,11 @@ These two report types can be used simultaneously. They're complementary.
 
 ## API features (proposals)
 
-🕙 Last updated: Nov 2022
+🕙 Last updated: Jan 2023
 
 All the features below are proposals under incubation. This list evolves over time.
 
-### Event-Level reports (clicks and views)
+### Event-level reports (clicks and views)
 
 Attribute cross-site click-through or view-through conversions with reports at a per-event level. 
 
@@ -60,9 +60,12 @@ Implementation status: `Available in Chrome as an origin trial`
 
 Attribution reports for web conversions for ad clicks (touches) or views that occurred within an Android app. 
 
-See details in the [Explainer](https://github.com/WICG/conversion-measurement-api/blob/main/app_to_web.md).
+See details in the [Chrome explainer](https://github.com/WICG/conversion-measurement-api/blob/main/app_to_web.md) and [Android explainer](https://developer.android.com/design-for-safety/privacy-sandbox/attribution-app-to-web).
 
-Implementation status: `Proposal. Not implemented yet (all browsers)`
+Implementation status: `Expected in Chrome and Android for origin trial in Q2 2023`.
 
-## External Documentation
-All developer resources for this API are listed [here](https://developer.chrome.com/docs/privacy-sandbox/#measure-digital-ads).
+## External documentation
+
+Chrome developer resources for the Aggregation Reporting API are available on [developer.chrome.com](https://developer.chrome.com/docs/privacy-sandbox/#measure-digital-ads).
+
+Android has documentation on [developer.android.com](https://developer.android.com/design-for-safety/privacy-sandbox/attribution).
