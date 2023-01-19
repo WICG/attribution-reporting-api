@@ -656,6 +656,13 @@ To <dfn>check if cookie-based debugging is allowed</dfn> given a
     1. Return <strong>allowed</strong>.
 1. Return <strong>blocked</strong>.
 
+Issue: Ideally this would use the
+<a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-retrieval-algorithm">cookie-retrieval algorithm</a>,
+but it cannot: There is no way to consider *only* cookies whose http-only-flag
+is true and whose same-site-flag is "`None`"; there is no way to prevent the
+last-access-time from being modified; and the return value is a string that
+would have to be further processed to check for the "`ar_debug`" cookie.
+
 <h3 id="obtaining-randomized-response">Obtaining a randomized response</h3>
 
 To <dfn>obtain a randomized response</dfn> given |trueValue|, a [=set=] |possibleValues|, and a
