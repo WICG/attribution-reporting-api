@@ -60,7 +60,7 @@ Implementation status: `Available in Chrome as an origin trial`
 
 Attribution reports for web conversions for ad clicks (touches) or views that occurred within an Android app. 
 
-See details in the [Chrome explainer](https://github.com/WICG/conversion-measurement-api/blob/main/app_to_web.md) and [Android explainer](https://developer.android.com/design-for-safety/privacy-sandbox/attribution-app-to-web).
+See details in the [web explainer](https://github.com/WICG/conversion-measurement-api/blob/main/app_to_web.md) and [Android explainer](https://developer.android.com/design-for-safety/privacy-sandbox/attribution-app-to-web).
 
 Implementation status: `Expected in Chrome and Android for origin trial in Q2 2023`.
 
