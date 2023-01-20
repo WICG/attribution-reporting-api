@@ -641,11 +641,31 @@ Issue: Determine whether to limit [=string/length=] or
 To <dfn>check if cookie-based debugging is allowed</dfn> given a
 [=suitable origin=] |reportingOrigin|:
 
+1. Let |domain| be the
+    <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-canonicalized-host-names">canonicalized domain name</a>
+    of |reportingOrigin|'s [=origin/host=].
+1. For each |cookie| of the user agent's <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-storage-model">cookie store</a>:
+    1. If |cookie|'s name is not "`ar_debug`", [=iteration/continue=].
+    1. If |cookie|'s http-only-flag is false, [=iteration/continue=].
+    1. If |cookie|'s secure-flag is false, [=iteration/continue=].
+    1. If |cookie|'s same-site-flag is not "`None`", [=iteration/continue=].
+    1. If |cookie|'s host-only-flag is true and |domain| is not
+        identical to |cookie|'s domain, [=iteration/continue=].
+    1. If |cookie|'s host-only-flag is false and |domain| does not
+        <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-domain-matching">domain-match</a>
+        |cookie|'s domain, [=iteration/continue=].
+    1. If "`/`" does not
+        <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-paths-and-path-match">path-match</a>
+        |cookie|'s path, [=iteration/continue=].
+    1. Return <strong>allowed</strong>.
 1. Return <strong>blocked</strong>.
 
-Issue: Check for "`ar_debug`" cookie on |reportingOrigin| and return
-<strong>allowed</strong> if it exists, is `Secure`, is `HttpOnly`, and is
-`SameSite=None`.
+Issue: Ideally this would use the
+<a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-retrieval-algorithm">cookie-retrieval algorithm</a>,
+but it cannot: There is no way to consider *only* cookies whose http-only-flag
+is true and whose same-site-flag is "`None`"; there is no way to prevent the
+last-access-time from being modified; and the return value is a string that
+would have to be further processed to check for the "`ar_debug`" cookie.
 
 <h3 id="obtaining-randomized-response">Obtaining a randomized response</h3>
 
