@@ -595,7 +595,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Attribution Reporting</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-01-19">19 January 2023</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-01-20">20 January 2023</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -1297,9 +1297,36 @@ random delay to deliver an <a data-link-type="dfn" href="#aggregatable-report" i
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="check-if-cookie-based-debugging-is-allowed">check if cookie-based debugging is allowed</dfn> given a <a data-link-type="dfn" href="#suitable-origin" id="ref-for-suitable-origin⑥">suitable origin</a> <var>reportingOrigin</var>:</p>
    <ol>
     <li data-md>
+     <p>Let <var>domain</var> be the <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-canonicalized-host-names">canonicalized domain name</a> of <var>reportingOrigin</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-host" id="ref-for-concept-origin-host">host</a>.</p>
+    <li data-md>
+     <p>For each <var>cookie</var> of the user agent’s <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-storage-model">cookie store</a>:</p>
+     <ol>
+      <li data-md>
+       <p>If <var>cookie</var>’s name is not "<code>ar_debug</code>", <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue">continue</a>.</p>
+      <li data-md>
+       <p>If <var>cookie</var>’s http-only-flag is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①">continue</a>.</p>
+      <li data-md>
+       <p>If <var>cookie</var>’s secure-flag is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue②">continue</a>.</p>
+      <li data-md>
+       <p>If <var>cookie</var>’s same-site-flag is not "<code>None</code>", <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue③">continue</a>.</p>
+      <li data-md>
+       <p>If <var>cookie</var>’s host-only-flag is true and <var>domain</var> is not
+identical to <var>cookie</var>’s domain, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue④">continue</a>.</p>
+      <li data-md>
+       <p>If <var>cookie</var>’s host-only-flag is false and <var>domain</var> does not <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-domain-matching">domain-match</a> <var>cookie</var>’s domain, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑤">continue</a>.</p>
+      <li data-md>
+       <p>If "<code>/</code>" does not <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-paths-and-path-match">path-match</a> <var>cookie</var>’s path, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑥">continue</a>.</p>
+      <li data-md>
+       <p>Return <strong>allowed</strong>.</p>
+     </ol>
+    <li data-md>
      <p>Return <strong>blocked</strong>.</p>
    </ol>
-   <p class="issue" id="issue-001a5052"><a class="self-link" href="#issue-001a5052"></a> Check for "<code>ar_debug</code>" cookie on <var>reportingOrigin</var> and return <strong>allowed</strong> if it exists, is <code>Secure</code>, is <code>HttpOnly</code>, and is <code>SameSite=None</code>.</p>
+   <p class="issue" id="issue-6b554b5d"><a class="self-link" href="#issue-6b554b5d"></a> Ideally this would use the <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-retrieval-algorithm">cookie-retrieval algorithm</a>,
+but it cannot: There is no way to consider <em>only</em> cookies whose http-only-flag
+is true and whose same-site-flag is "<code>None</code>"; there is no way to prevent the
+last-access-time from being modified; and the return value is a string that
+would have to be further processed to check for the "<code>ar_debug</code>" cookie.</p>
    <h3 class="heading settled" data-level="8.3" id="obtaining-randomized-response"><span class="secno">8.3. </span><span class="content">Obtaining a randomized response</span><a class="self-link" href="#obtaining-randomized-response"></a></h3>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-randomized-response">obtain a randomized response</dfn> given <var>trueValue</var>, a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①④">set</a> <var>possibleValues</var>, and a
 double <var>randomPickRate</var>:</p>
@@ -2336,7 +2363,7 @@ and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" i
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate④">For each</a> <var>key</var> → <var>filterValues</var> of <var>filters</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>sourceData</var>[<var>key</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②⑤">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue">continue</a>.</p>
+       <p>If <var>sourceData</var>[<var>key</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②⑤">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑦">continue</a>.</p>
       <li data-md>
        <p>Let <var>sourceValues</var> be <var>sourceData</var>[<var>key</var>].</p>
       <li data-md>
@@ -2421,12 +2448,12 @@ and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" i
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑧">For each</a> <var>triggerData</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-aggregatable-trigger-data" id="ref-for-attribution-trigger-aggregatable-trigger-data③">aggregatable trigger data</a>:</p>
      <ol>
       <li data-md>
-       <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters-and-negated-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters-and-negated-filters">match an attribution source’s filter data against filters and negated filters</a> with <var>source</var>, <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-filters" id="ref-for-aggregatable-trigger-data-filters①">filters</a>, and <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-negated-filters" id="ref-for-aggregatable-trigger-data-negated-filters①">negated filters</a> is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①">continue</a>.</p>
+       <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters-and-negated-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters-and-negated-filters">match an attribution source’s filter data against filters and negated filters</a> with <var>source</var>, <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-filters" id="ref-for-aggregatable-trigger-data-filters①">filters</a>, and <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-negated-filters" id="ref-for-aggregatable-trigger-data-negated-filters①">negated filters</a> is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑧">continue</a>.</p>
       <li data-md>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑨">For each</a> <var>sourceKey</var> of <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-source-keys" id="ref-for-aggregatable-trigger-data-source-keys②">source keys</a>:</p>
        <ol>
         <li data-md>
-         <p>If <var>aggregationKeys</var>[<var>sourceKey</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②⑥">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue②">continue</a>.</p>
+         <p>If <var>aggregationKeys</var>[<var>sourceKey</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②⑥">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑨">continue</a>.</p>
         <li data-md>
          <p>Set <var>aggregationKeys</var>[<var>sourceKey</var>] to <var>aggregationKeys</var>[<var>sourceKey</var>] OR <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-key-piece" id="ref-for-aggregatable-trigger-data-key-piece①">key piece</a>.</p>
        </ol>
@@ -2439,7 +2466,7 @@ and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" i
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate⑤">For each</a> <var>id</var> → <var>key</var> of <var>aggregationKeys</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>aggregatableValues</var>[<var>id</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②⑦">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue③">continue</a>.</p>
+       <p>If <var>aggregatableValues</var>[<var>id</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②⑦">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⓪">continue</a>.</p>
       <li data-md>
        <p>Let <var>contribution</var> be a new <a data-link-type="dfn" href="#aggregatable-contribution" id="ref-for-aggregatable-contribution③">aggregatable contribution</a> with the items:</p>
        <dl>
@@ -2576,7 +2603,7 @@ and an optional <a data-link-type="dfn" href="#attribution-report" id="ref-for-a
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⓪">For each</a> <a data-link-type="dfn" href="#event-level-trigger-configuration" id="ref-for-event-level-trigger-configuration③">event-level trigger configuration</a> <var>config</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-event-level-trigger-configurations" id="ref-for-attribution-trigger-event-level-trigger-configurations②">event-level trigger configurations</a>:</p>
      <ol>
       <li data-md>
-       <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters-and-negated-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters-and-negated-filters①">match an attribution source’s filter data against filters and negated filters</a> with <var>sourceToAttribute</var>, <var>config</var>’s <a data-link-type="dfn" href="#event-level-trigger-configuration-filters" id="ref-for-event-level-trigger-configuration-filters②">filters</a>, and <var>config</var>’s <a data-link-type="dfn" href="#event-level-trigger-configuration-negated-filters" id="ref-for-event-level-trigger-configuration-negated-filters①">negated filters</a> is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue④">continue</a>.</p>
+       <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters-and-negated-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters-and-negated-filters①">match an attribution source’s filter data against filters and negated filters</a> with <var>sourceToAttribute</var>, <var>config</var>’s <a data-link-type="dfn" href="#event-level-trigger-configuration-filters" id="ref-for-event-level-trigger-configuration-filters②">filters</a>, and <var>config</var>’s <a data-link-type="dfn" href="#event-level-trigger-configuration-negated-filters" id="ref-for-event-level-trigger-configuration-negated-filters①">negated filters</a> is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①①">continue</a>.</p>
       <li data-md>
        <p>Set <var>matchedConfig</var> to <var>config</var>.</p>
       <li data-md>
@@ -2826,11 +2853,11 @@ an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-t
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①①">For each</a> <var>source</var> of the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache③">attribution source cache</a>:</p>
      <ol>
       <li data-md>
-       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destinations" id="ref-for-attribution-source-attribution-destinations⑧">attribution destinations</a> does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain④">contain</a> <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-attribution-destination" id="ref-for-attribution-trigger-attribution-destination⑥">attribution destination</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑤">continue</a>.</p>
+       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destinations" id="ref-for-attribution-source-attribution-destinations⑧">attribution destinations</a> does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain④">contain</a> <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-attribution-destination" id="ref-for-attribution-trigger-attribution-destination⑥">attribution destination</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①②">continue</a>.</p>
       <li data-md>
-       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑨">reporting endpoint</a> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-reporting-endpoint" id="ref-for-attribution-trigger-reporting-endpoint⑥">reporting endpoint</a> are not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin②">same origin</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑥">continue</a>.</p>
+       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint⑨">reporting endpoint</a> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-reporting-endpoint" id="ref-for-attribution-trigger-reporting-endpoint⑥">reporting endpoint</a> are not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin②">same origin</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①③">continue</a>.</p>
       <li data-md>
-       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time②">expiry time</a> is less than or equal to <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time⑤">trigger time</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑦">continue</a>.</p>
+       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time②">expiry time</a> is less than or equal to <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time⑤">trigger time</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①④">continue</a>.</p>
       <li data-md>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append④">Append</a> <var>source</var> to <var>matchingSources</var>.</p>
      </ol>
@@ -2965,9 +2992,9 @@ a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-duration" id=
       <li data-md>
        <p>Let <var>time</var> be <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time①③">source time</a> + <var>earlyDeadline</var>.</p>
       <li data-md>
-       <p>If <var>time</var> is less than <var>triggerTime</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑧">continue</a>.</p>
+       <p>If <var>time</var> is less than <var>triggerTime</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⑤">continue</a>.</p>
       <li data-md>
-       <p>If <var>earlyDeadline</var> is greater than or equal to <var>deadlineToUse</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑨">continue</a>.</p>
+       <p>If <var>earlyDeadline</var> is greater than or equal to <var>deadlineToUse</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⑥">continue</a>.</p>
       <li data-md>
        <p>Set <var>deadlineToUse</var> to <var>earlyDeadline</var>.</p>
       <li data-md>
@@ -3381,7 +3408,7 @@ whether a user is online, retries might be limited in number and subject to rand
     <li data-md>
      <p>Set <var>reportUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-scheme" id="ref-for-concept-url-scheme">scheme</a> to <var>reportingOrigin</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-scheme" id="ref-for-concept-origin-scheme①">scheme</a>.</p>
     <li data-md>
-     <p>Set <var>reportUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host">host</a> to <var>reportingOrigin</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-host" id="ref-for-concept-origin-host">host</a>.</p>
+     <p>Set <var>reportUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-host" id="ref-for-concept-url-host">host</a> to <var>reportingOrigin</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-host" id="ref-for-concept-origin-host①">host</a>.</p>
     <li data-md>
      <p>Set <var>reportUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-port" id="ref-for-concept-url-port">port</a> to <var>reportingOrigin</var>’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-port" id="ref-for-concept-origin-port">port</a>.</p>
     <li data-md>
@@ -4170,7 +4197,8 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-concept-origin-host">
    <a href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-host">https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-host</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-concept-origin-host">11.9. Get report request URL</a>
+    <li><a href="#ref-for-concept-origin-host">8.2. Cookie-based debugging</a>
+    <li><a href="#ref-for-concept-origin-host①">11.9. Get report request URL</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-the-img-element">
@@ -4398,11 +4426,12 @@ an origin from a user’s browsing history.</p>
   <aside class="dfn-panel" data-for="term-for-iteration-continue">
    <a href="https://infra.spec.whatwg.org/#iteration-continue">https://infra.spec.whatwg.org/#iteration-continue</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-iteration-continue">10.2. Does filter data match</a>
-    <li><a href="#ref-for-iteration-continue①">10.5. Creating aggregatable contributions</a> <a href="#ref-for-iteration-continue②">(2)</a> <a href="#ref-for-iteration-continue③">(3)</a>
-    <li><a href="#ref-for-iteration-continue④">10.8. Triggering event-level attribution</a>
-    <li><a href="#ref-for-iteration-continue⑤">10.10. Triggering attribution</a> <a href="#ref-for-iteration-continue⑥">(2)</a> <a href="#ref-for-iteration-continue⑦">(3)</a>
-    <li><a href="#ref-for-iteration-continue⑧">10.11. Establishing report delivery time</a> <a href="#ref-for-iteration-continue⑨">(2)</a>
+    <li><a href="#ref-for-iteration-continue">8.2. Cookie-based debugging</a> <a href="#ref-for-iteration-continue①">(2)</a> <a href="#ref-for-iteration-continue②">(3)</a> <a href="#ref-for-iteration-continue③">(4)</a> <a href="#ref-for-iteration-continue④">(5)</a> <a href="#ref-for-iteration-continue⑤">(6)</a> <a href="#ref-for-iteration-continue⑥">(7)</a>
+    <li><a href="#ref-for-iteration-continue⑦">10.2. Does filter data match</a>
+    <li><a href="#ref-for-iteration-continue⑧">10.5. Creating aggregatable contributions</a> <a href="#ref-for-iteration-continue⑨">(2)</a> <a href="#ref-for-iteration-continue①⓪">(3)</a>
+    <li><a href="#ref-for-iteration-continue①①">10.8. Triggering event-level attribution</a>
+    <li><a href="#ref-for-iteration-continue①②">10.10. Triggering attribution</a> <a href="#ref-for-iteration-continue①③">(2)</a> <a href="#ref-for-iteration-continue①④">(3)</a>
+    <li><a href="#ref-for-iteration-continue①⑤">10.11. Establishing report delivery time</a> <a href="#ref-for-iteration-continue①⑥">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-list-empty">
@@ -5068,7 +5097,11 @@ an origin from a user’s browsing history.</p>
    <div class="issue"> Monkeypatch <code>window.open()</code>. <a class="issue-return" href="#issue-adb5eac2" title="Jump to section">↵</a></div>
    <div class="issue"> Specify monkeypatches for source/trigger registration. <a class="issue-return" href="#issue-963bda2b" title="Jump to section">↵</a></div>
    <div class="issue"> Determine whether to limit <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-length">length</a> or <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string-code-point-length">code point length</a> for <var>filter</var> and <var>d</var> above. <a class="issue-return" href="#issue-5c232164" title="Jump to section">↵</a></div>
-   <div class="issue"> Check for "<code>ar_debug</code>" cookie on <var>reportingOrigin</var> and return <strong>allowed</strong> if it exists, is <code>Secure</code>, is <code>HttpOnly</code>, and is <code>SameSite=None</code>. <a class="issue-return" href="#issue-001a5052" title="Jump to section">↵</a></div>
+   <div class="issue"> Ideally this would use the <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-retrieval-algorithm">cookie-retrieval algorithm</a>,
+but it cannot: There is no way to consider <em>only</em> cookies whose http-only-flag
+is true and whose same-site-flag is "<code>None</code>"; there is no way to prevent the
+last-access-time from being modified; and the return value is a string that
+would have to be further processed to check for the "<code>ar_debug</code>" cookie. <a class="issue-return" href="#issue-6b554b5d" title="Jump to section">↵</a></div>
    <div class="issue"> confirm that the maximum destinations size is workable. <a class="issue-return" href="#issue-166863ca" title="Jump to section">↵</a></div>
    <div class="issue"> Specify the steps for making attributionsrc request. <a class="issue-return" href="#issue-45c98580" title="Jump to section">↵</a></div>
    <div class="issue"> Check for transient activation.
