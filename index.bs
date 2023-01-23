@@ -1511,8 +1511,8 @@ and an optional [=attribution report=] <dfn for="obtain debug data on trigger re
 <h3 algorithm id="triggering-event-level-attribution">Triggering event-level attribution</h3>
 
 To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |trigger|, an
-[=attribution source=] |sourceToAttribute|, an [=attribution rate-limit record=] |rateLimitRecord|
-and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
+[=attribution source=] |sourceToAttribute|, and an
+[=attribution rate-limit record=] |rateLimitRecord|, run the following steps:
 
 1. If |trigger|'s [=attribution trigger/event-level trigger configurations=]
     [=list/is empty=], return the [=triggering result=]
@@ -1521,11 +1521,6 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
     1. Assert: |sourceToAttribute|'s [=attribution source/event-level attributable=] is false.
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-event-noise=]</code>", |trigger|, |sourceToAttribute| and
-        [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If |topLevelFiltersMatch| is false:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>", |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. If |sourceToAttribute|'s [=attribution source/event report window time=] is less than |trigger|'s [=attribution trigger/trigger time=]:
@@ -1633,19 +1628,14 @@ and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
 <h3 algorithm id="triggering-aggregatable-attribution">Triggering aggregatable attribution</h3>
 
 To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] |trigger|, an
-[=attribution source=] |sourceToAttribute|, an [=attribution rate-limit record=] |rateLimitRecord|
-and a [=boolean=] |topLevelFiltersMatch|, run the following steps:
+[=attribution source=] |sourceToAttribute|, and an
+[=attribution rate-limit record=] |rateLimitRecord|, run the following steps:
 
 1. If |sourceToAttribute|'s [=attribution source/aggregation keys=] [=map/is empty=],
     return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
 1. If |trigger|'s [=attribution trigger/aggregatable trigger data=] [=list/is empty=]
     and |trigger|'s [=attribution trigger/aggregatable values=] [=map/is empty=],
     return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
-1. If |topLevelFiltersMatch| is false:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>", |trigger|, |sourceToAttribute| and
-        [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. If |sourceToAttribute|'s [=attribution source/aggregatable report window time=] is less than |trigger|'s [=attribution trigger/trigger time=]:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-aggregate-report-window-passed=]</code>", |trigger|, |sourceToAttribute|
@@ -1736,10 +1726,14 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
         with "<code>[=trigger debug data type/trigger-no-matching-source=]</code>", |trigger| and [=obtain and deliver a debug report on trigger registration/sourceToAttribute=] set to null.
     1. Return.
 1. Let |sourceToAttribute| be |matchingSources|[0].
-1. Let |topLevelFiltersMatch| be the result of running
+1. If the result of running
     [=match an attribution source's filter data against filters and negated filters=] with
     |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=], and
-    |trigger|'s [=attribution trigger/negated filters=].
+    |trigger|'s [=attribution trigger/negated filters=] is false,
+    1. Run [=obtain and deliver a debug report on trigger registration=]
+        with "<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>",
+        |trigger|, and |sourceToAttribute|.
+    1. Return.
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
     : [=attribution rate-limit record/scope=]
     :: "<code>[=rate-limit scope/attribution=]</code>"
@@ -1754,9 +1748,9 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     : [=attribution rate-limit record/expiry time=]
     :: null
 1. Let |eventLevelResult| be the result of running [=trigger event-level attribution=]
-    with |trigger|, |sourceToAttribute|, |rateLimitRecord| and |topLevelFiltersMatch|.
+    with |trigger|, |sourceToAttribute|, and |rateLimitRecord|.
 1. Let |aggregatableResult| be the result of running [=trigger aggregatable attribution=]
-    with |trigger|, |sourceToAttribute|, |rateLimitRecord| and |topLevelFiltersMatch|.
+    with |trigger|, |sourceToAttribute|, and |rateLimitRecord|.
 1. Let |eventLevelDebugData| be |eventLevelResult|'s [=triggering result/debug data=].
 1. Let |aggregatableDebugData| be |aggregatableResult|'s [=triggering result/debug data=].
 1. Let |debugDataList| be an [=list/is empty|empty=] [=list=].
