@@ -210,6 +210,15 @@ An attribution source is a [=struct=] with the following items:
 
 </dl>
 
+An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
+
+An [=attribution source=] |source|'s <dfn for="attribution source">event report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/event report window=].
+
+An [=attribution source=] |source|'s <dfn for="attribution source">aggregatable report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/aggregatable report window=].
+
+An [=attribution source=] |source|'s <dfn for="attribution source">source site</dfn> is the result
+of [=obtain a site|obtaining a site=] from |source|'s [=attribution source/source origin=].
+
 <h3 dfn-type=dfn>Aggregatable trigger data</h3>
 
 An aggregatable trigger data is a [=struct=] with the following items:
@@ -597,6 +606,26 @@ random delay to deliver an [=aggregatable report=].
 
 # General Algorithms # {#general-algorithms}
 
+<h3 id="serialize-integer">Serialize an integer</h3>
+
+To <dfn>serialize an integer</dfn>, represent it as a string of the shortest possible decimal number.
+
+Issue: This would ideally be replaced by a more descriptive algorithm in Infra. See
+<a href="https://github.com/whatwg/infra/issues/201">infra/201</a>
+
+<h3 id="serialize-destinations">Serialize attribution destinations</h3>
+
+To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destinations|, run the following steps:
+
+1. [=Assert=]: |destinations| is not [=set/is empty|empty=].
+1. Let |destinationStrings| be a [=list=].
+1. [=list/iterate|For each=] |destination| in |destinations|:
+    1. [=Assert=]: |destination| is not the [=opaque origin=].
+    1. [=list/Append=] |destination| <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a> to |destinationStrings|.
+1. If |destinationStrings|'s [=set/size=] is equal to 1, return |destinationStrings|[0].
+1. Return |destinationStrings|.
+
+
 To <dfn>check if an origin is suitable</dfn> given an [=origin=] |origin|:
 
 1. If |origin| is not a [=potentially trustworthy origin=], return false.
@@ -702,51 +731,6 @@ and a [=suitable origin=] |reportingEndpoint|:
 
 # Source Algorithms # {#source-algorithms}
 
-<h3 id="obtaining-attribution-source-expiry-time">Obtaining an attribution source's expiry time</h3>
-
-An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
-
-<h3 id="obtaining-attribution-source-event-report-window-time">Obtaining an attribution source's event report window time</h3>
-
-An [=attribution source=] |source|'s <dfn for="attribution source">event report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/event report window=].
-
-<h3 id="obtaining-attribution-source-aggregatable-report-window-time">Obtaining an attribution source's aggregatable report window time</h3>
-
-An [=attribution source=] |source|'s <dfn for="attribution source">aggregatable report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/aggregatable report window=].
-
-<h3 id="obtaining-attribution-source-site">Obtaining an attribution source's source site</h3>
-
-An [=attribution source=] |source|'s <dfn for="attribution source">source site</dfn> is the result
-of [=obtain a site|obtaining a site=] from |source|'s [=attribution source/source origin=].
-
-<h3 algorithm id="parsing-attribution-destination">Parsing an attribution destination</h3>
-
-To <dfn>parse an attribution destination</dfn> from a [=string=] |str|:
-1. Let |url| be the result of running the [=URL parser=] on the value of
-    the |str|.
-1. If |url| is failure or null, return null.
-1. If |url|'s [=url/origin=] is not [=check if an origin is suitable|suitable=],
-    return null.
-1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
-    [=url/origin=].
-
-<h3 algorithm id="parsing-attribution-destinations">Parsing attribution destinations</h3>
-
-To <dfn>parse attribution destinations</dfn> from a value |val|:
-1. Let |result| be an [=ordered set=].
-1. If |val| is a [=string=], [=set/append=] the result of [=parse an attribution destination=] to |result|, and return |result|.
-1. If |val| is not a [=list=], return null.
-1. [=list/iterate|For each=] |value| of |val|:
-    1. If |value| is not a [=string=], return null.
-    1. Let |destination| be the result of [=parse an attribution destination=] with |value|.
-    1. If |destination| is null, return null.
-    1. [=set/Append=] |destination| to |result|.
-1. If |result|'s [=set/size=] is greater than 3, return null.
-1. If |result| [=set/is empty=], return null.
-1. return |result|.
-
-Issue: Confirm that the maximum destinations size is workable.
-
 <h3 algorithm id="obtaining-randomized-source-response">Obtaining a randomized source response</h3>
 
 To <dfn>obtain a randomized source response</dfn> given a positive integer
@@ -792,6 +776,30 @@ Issue: Check for transient activation.
 Issue: Specify the steps for making an attributionsrc request with |decodedSrc|.
 
 <h3 algorithm id="parsing-source-registration">Parsing source-registration JSON</h3>
+
+To <dfn>parse an attribution destination</dfn> from a [=string=] |str|:
+1. Let |url| be the result of running the [=URL parser=] on the value of
+    the |str|.
+1. If |url| is failure or null, return null.
+1. If |url|'s [=url/origin=] is not [=check if an origin is suitable|suitable=],
+    return null.
+1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
+    [=url/origin=].
+
+To <dfn>parse attribution destinations</dfn> from a value |val|:
+1. Let |result| be an [=ordered set=].
+1. If |val| is a [=string=], [=set/append=] the result of [=parse an attribution destination=] to |result|, and return |result|.
+1. If |val| is not a [=list=], return null.
+1. [=list/iterate|For each=] |value| of |val|:
+    1. If |value| is not a [=string=], return null.
+    1. Let |destination| be the result of [=parse an attribution destination=] with |value|.
+    1. If |destination| is null, return null.
+    1. [=set/Append=] |destination| to |result|.
+1. If |result|'s [=set/size=] is greater than 3, return null.
+1. If |result| [=set/is empty=], return null.
+1. return |result|.
+
+Issue: Confirm that the maximum destinations size is workable.
 
 To <dfn>obtain a source expiry</dfn> given a |value|:
 
@@ -930,7 +938,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     :: |debugReportingEnabled|
 1. Return |source|.
 
-<h3 id="check-unexpired-destination-limit">Checking unexpired destination limit</h3>
+<h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
 To <dfn>check if an [=attribution source=] exceeds the unexpired destination limit</dfn> given an
 [=attribution source=] |source|, run the following steps:
@@ -945,8 +953,6 @@ To <dfn>check if an [=attribution source=] exceeds the unexpired destination lim
     1. [=set/Append=] |unexpiredRecord|'s [=attribution rate-limit record/attribution destination=] to |unexpiredDestinations|.
 1. Let |newDestinations| be the result of taking the [=set/union=] of |unexpiredDestinations| and |source|'s [=attribution source/attribution destinations=].
 1. Return whether |newDestinations|'s [=set/size=] is greater than the user agent's [=max destinations covered by unexpired sources=].
-
-<h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
 To <dfn>obtain a fake report</dfn> given an [=attribution source=] |source| and
 a [=trigger state=] |triggerState|:
@@ -1908,25 +1914,6 @@ and an [=environment settings objects=] |context|, run the following steps [=in 
 
     Note: This is intended to allow user agents to optimize device resource usage.
 1. Run [=attempt to deliver a report=] with |report|.
-
-<h3 id="serialize-integer">Serialize an integer</h3>
-
-To <dfn>serialize an integer</dfn>, represent it as a string of the shortest possible decimal number.
-
-Issue: This would ideally be replaced by a more descriptive algorithm in Infra. See
-<a href="https://github.com/whatwg/infra/issues/201">infra/201</a>
-
-<h3 id="serialize-destinations">Serialize attribution destinations</h3>
-
-To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destinations|, run the following steps:
-
-1. [=Assert=]: |destinations| is not [=set/is empty|empty=].
-1. Let |destinationStrings| be a [=list=].
-1. [=list/iterate|For each=] |destination| in |destinations|:
-    1. [=Assert=]: |destination| is not the [=opaque origin=].
-    1. [=list/Append=] |destination| <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a> to |destinationStrings|.
-1. If |destinationStrings|'s [=set/size=] is equal to 1, return |destinationStrings|[0].
-1. Return |destinationStrings|.
 
 <h3 id="encode-integer">Encode an unsigned k-bit integer</h3>
 
