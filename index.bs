@@ -453,7 +453,6 @@ A <dfn>triggering status</dfn> is one of the following:
 
 <ul dfn-for="triggering status">
 <li>"<dfn><code>dropped</code></dfn>"
-<li>"<dfn><code>cache full</code></dfn>"
 <li>"<dfn><code>noised</code></dfn>"
 <li>"<dfn><code>attributed</code></dfn>"
 </ul>
@@ -586,15 +585,6 @@ controls the maximum number of attributions for a
 [=attribution rate-limit record/attribution destination=],
 [=attribution rate-limit record/reporting endpoint=]) per
 [=attribution rate-limit window=].
-
-<dfn>Max source cache size</dfn> is a positive integer that controls how many
-[=attribution sources=] can be in the [=attribution source cache=].
-
-<dfn>Max event-level report cache size</dfn> is a positive integer that controls how many
-[=event-level reports=] can be in the [=event-level report cache=].
-
-<dfn>Max aggregatable report cache size</dfn> is a positive integer that controls how many
-[=aggregatable reports=] can be in the [=aggregatable report cache=].
 
 <dfn>Allowed aggregatable budget per source</dfn> is a positive integer that controls the total
 [=aggregatable report/required aggregatable budget=] of all [=aggregatable reports=] created for
@@ -1051,8 +1041,6 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 
 1. Let |cache| be the user agent's [=attribution source cache=].
 1. [=list/Remove=] all [=attribution sources=] |entry| in |cache| where |entry|'s [=attribution source/expiry time=] is less than |source|'s [=attribution source/source time=].
-1. If the [=list/size=] of |cache| is greater than or equal to the user agent's
-     [=max source cache size=], return.
 1. Let |pendingSourcesForSourceOrigin| be the [=set=] of all
     [=attribution sources=] |pendingSource| of |cache| where |pendingSource|'s
     [=attribution source/source origin=] and |source|'s
@@ -1601,8 +1589,6 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
          1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
     1. [=list/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
     1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
-1. If the [=list/size=] of the [=event-level report cache=] is greater than or equal to the user
-    agent's [=max event-level report cache size=], return the [=triggering result=] ("<code>[=triggering status/cache full=]</code>", null).
 1. Let |triggeringStatus| be "<code>[=triggering status/attributed=]</code>".
 1. Let |debugData| be null.
 1. If |sourceToAttribute|'s [=attribution source/randomized response=] is:
@@ -1678,8 +1664,6 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
          with "<code>[=trigger debug data type/trigger-aggregate-insufficient-budget=]</code>", |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If the [=list/size=] of the [=aggregatable report cache=] is greater than or equal to the user
-    agent's [=max aggregatable report cache size=], return the [=triggering result=] ("<code>[=triggering status/cache full=]</code>", null).
 1. Add |report| to the [=aggregatable report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/aggregatable budget consumed=] value by
     |report|'s [=aggregatable report/required aggregatable budget=].
