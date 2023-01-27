@@ -204,7 +204,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>aggregatable budget consumed</dfn>
 :: A non-negative integer, total [=aggregatable contribution/value=] of all [=aggregatable contributions=] created with this [=attribution source=].
 : <dfn>aggregatable dedup keys</dfn>
-:: [=ordered set=] of [=aggregatable dedup key/dedup key|aggregatable dedup keys=] associated with this [=attribution source=].
+:: [=ordered set=] of [=aggregatable dedup key/dedup key|aggregatable dedup key values=] associated with this [=attribution source=].
 : <dfn>debug reporting enabled</dfn>
 :: A [=boolean=].
 
@@ -297,7 +297,7 @@ An attribution trigger is a [=struct=] with the following items:
 :: An [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
     [=map/value|values=] are non-negative 32-bit integers.
 : <dfn>aggregatable dedup keys</dfn>
-:: A [=set=] of [=aggregatable dedup key=].
+:: A [=list=] of [=aggregatable dedup key=].
 : <dfn>serialized private state token</dfn>
 :: A [=byte sequence=].
 : <dfn>debug reporting enabled</dfn>
@@ -536,7 +536,7 @@ controls the maximum [=list/size=] of an [=attribution trigger=]'s
 [=attribution trigger/aggregatable trigger data=].
 
 <dfn>Max aggregatable dedup keys per trigger</dfn> is a positive integer
-that controls the maximum [=set/size=] of an [=attribution trigger=]'s
+that controls the maximum [=list/size=] of an [=attribution trigger=]'s
 [=attribution trigger/aggregatable dedup keys=].
 
 <dfn>Max pending sources per source origin</dfn> is a positive integer that
@@ -1246,7 +1246,7 @@ Issue: Determine whether to limit [=string/length=] or [=string/code point lengt
 
 To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
 
-1. Let |aggregatableDedupKeys| be a new [=set=].
+1. Let |aggregatableDedupKeys| be a new [=list=].
 1. If |map|["`aggregatable_deduplication_keys`"] does not [=map/exist=], return |aggregatableDedupKeys|.
 1. Let |values| be |map|["`aggregatable_deduplication_keys`"].
 1. If |values| is not a [=list=], return null.
