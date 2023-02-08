@@ -2192,6 +2192,15 @@ and a [=header list=] |newHeaders| (defaults to an empty [=list=]):
 
 <h3 id="issue-report-request">Issuing a report request</h3>
 
+To <dfn>generate an attribution report headers</dfn> given an [=attribution report=] |report|:
+
+1. Let |newHeaders| be a new [=header list=].
+1. If |report| is an [=aggregatable report=]
+    1. If |report|'s [=aggregatable report/serialized private state token=] is not null,
+        [=header list/append=] a new [=header=] named "`Sec-Attribution-Reporting-Private-State-Token`" to |newHeaders|
+        whose value is |report|'s [=aggregatable report/serialized private state token=].
+1. Return |newHeaders|.
+
 This algorithm constructs a [=request=] and attempts to deliver it to a [=suitable origin=].
 
 To <dfn>remove a report from the cache</dfn> given an [=attribution report=] |report|:
@@ -2210,12 +2219,8 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
 1. Let |url| be the result of executing [=generate an attribution report URL=] on |report|.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
 1. If |data| is an error, run [=remove a report from the cache=] with |report| and return.
-1. Let |newHeaders| be a new [=header list=].
-1. If |report| is an [=aggregatable report=]
-    1. If |report|'s [=aggregatable report/serialized private state token=] is not null,
-        [=header list/append=] a new [=header=] named "`Sec-Attribution-Reporting-Private-State-Token`" to |newHeaders|
-        whose value is |report|'s [=aggregatable report/serialized private state token=].
-1. Let |request| be the result of executing [=create a report request=] on |url|, |data|, and |newHeaders|.
+1. Let |headers| be the result of executing [=generate an attribution report headers=].  
+1. Let |request| be the result of executing [=create a report request=] on |url|, |data|, and |headers|.
 1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being [=remove a report from the cache=] with |report|.
 
 Issue(220): This fetch should use a network partition key for an opaque origin.
@@ -2230,12 +2235,8 @@ To <dfn>attempt to deliver a debug report</dfn> given an [=attribution report=] 
     [=generate an attribution report URL/isDebugReport=] set to true.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
 1. If |data| is an error, return.
-1. Let |newHeaders| be a new [=header list=].
-1. If |report| is an [=aggregatable report=]
-    1. If |report|'s [=aggregatable report/serialized private state token=] is not null,
-        [=header list/append=] a new [=header=] named "`Sec-Attribution-Reporting-Private-State-Token`" to |newHeaders|
-        whose value is |report|'s [=aggregatable report/serialized private state token=].
-1. Let |request| be the result of executing [=create a report request=] on |url|, |data|, and |newHeaders|.
+1. Let |headers| be the result of executing [=generate an attribution report headers=].
+1. Let |request| be the result of executing [=create a report request=] on |url|, |data|, and |headers|.
 1. [=Fetch=] |request|.
 
 <h3 id="issue-verbose-debug-report-request">Issuing a verbose debug request</h3>
