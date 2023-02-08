@@ -232,7 +232,7 @@ const filters = (allowSourceType = true) =>
     list(string(), limits.maxFilterValues)(state, values)
   }, limits.maxFilters)
 
-const orFilters = listOrObject(filters(), limits.maxOrFilters, 1)
+const orFilters = listOrObject(filters(), limits.maxOrFilters, 0)
 
 // TODO: check length of key
 const aggregationKeys = object((state, key, value) => {

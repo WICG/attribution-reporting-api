@@ -47,6 +47,22 @@ export const testCases = [
       "not_filters": [{"g": []}, {"h": []}]
     }`,
   },
+  {
+    name: "empty-or-filters",
+    json: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "filters": [],
+        "not_filters": []
+      }],
+      "event_trigger_data": [{
+        "filters": [],
+        "not_filters": []
+      }],
+      "filters": [],
+      "not_filters": []
+    }`,
+  },
 
   // warnings
   {
@@ -98,19 +114,11 @@ export const testCases = [
     }],
   },
   {
-    name: "filters-too-few-or-filters",
-    json: `{"filters": []}`,
-    expectedErrors: [{
-      path: ["filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
-    }]
-  },
-  {
     name: "filters-too-many-or-filters",
     json: `{"filters": ${JSON.stringify(times(51, () => ({'a': ['b']})))}}`,
     expectedErrors: [{
       path: ["filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
     }]
   },
   // TODO: add tests for exceeding size limits
@@ -140,19 +148,11 @@ export const testCases = [
     }],
   },
   {
-    name: "not-filters-too-few-or-filters",
-    json: `{"not_filters": []}`,
-    expectedErrors: [{
-      path: ["not_filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
-    }]
-  },
-  {
     name: "not-filters-too-many-or-filters",
     json: `{"not_filters": ${JSON.stringify(times(51, () => ({'a': ['b']})))}}`,
     expectedErrors: [{
       path: ["not_filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
     }]
   },
   // TODO: add tests for exceeding size limits
@@ -275,14 +275,6 @@ export const testCases = [
     }],
   },
   {
-    name: "event-trigger-data-filters-too-few-or-filters",
-    json: `{"event_trigger_data": [{"filters": []}]}`,
-    expectedErrors: [{
-      path: ["event_trigger_data", 0, "filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
-    }]
-  },
-  {
     name: "event-trigger-data-filters-too-many-or-filters",
     json: `{
       "event_trigger_data": [
@@ -293,7 +285,7 @@ export const testCases = [
     }`,
     expectedErrors: [{
       path: ["event_trigger_data", 0, "filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
     }]
   },
   // TODO: add tests for exceeding size limits
@@ -323,14 +315,6 @@ export const testCases = [
     }],
   },
   {
-    name: "event-trigger-data-not-filters-too-few-or-filters",
-    json: `{"event_trigger_data": [{"not_filters": []}]}`,
-    expectedErrors: [{
-      path: ["event_trigger_data", 0, "not_filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
-    }]
-  },
-  {
     name: "event-trigger-data-not-filters-too-many-or-filters",
     json: `{
       "event_trigger_data": [
@@ -341,7 +325,7 @@ export const testCases = [
     }`,
     expectedErrors: [{
       path: ["event_trigger_data", 0, "not_filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
     }]
   },
   {
@@ -515,17 +499,6 @@ export const testCases = [
     }],
   },
   {
-    name: "aggregatable_trigger_data-filters-too-few-or-filters",
-    json: `{"aggregatable_trigger_data": [{
-      "key_piece": "0x1",
-      "filters": []
-    }]}`,
-    expectedErrors: [{
-      path: ["aggregatable_trigger_data", 0, "filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
-    }]
-  },
-  {
     name: "aggregatable_trigger_data-filters-too-many-or-filters",
     json: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
@@ -533,7 +506,7 @@ export const testCases = [
     }}]}`,
     expectedErrors: [{
       path: ["aggregatable_trigger_data", 0, "filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
     }]
   },
   // TODO: add tests for exceeding size limits
@@ -575,17 +548,6 @@ export const testCases = [
     }],
   },
   {
-    name: "aggregatable_trigger_data-not-filters-too-few-or-filters",
-    json: `{"aggregatable_trigger_data": [{
-      "key_piece": "0x1",
-      "not_filters": []
-    }]}`,
-    expectedErrors: [{
-      path: ["aggregatable_trigger_data", 0, "not_filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
-    }]
-  },
-  {
     name: "aggregatable_trigger_data-not-filters-too-many-or-filters",
     json: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
@@ -593,7 +555,7 @@ export const testCases = [
     }}]}`,
     expectedErrors: [{
       path: ["aggregatable_trigger_data", 0, "not_filters"],
-      msg: "List size out of expected bounds. Size must be within [1, 50]",
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
     }]
   },
 
