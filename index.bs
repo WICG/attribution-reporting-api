@@ -204,7 +204,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>aggregatable budget consumed</dfn>
 :: A non-negative integer, total [=aggregatable contribution/value=] of all [=aggregatable contributions=] created with this [=attribution source=].
 : <dfn>aggregatable dedup keys</dfn>
-:: [=ordered set=] of [=attribution trigger/aggregatable dedup keys=] associated with this [=attribution source=].
+:: [=ordered set=] of [=aggregatable dedup key/dedup key|aggregatable dedup key values=] associated with this [=attribution source=].
 : <dfn>debug reporting enabled</dfn>
 :: A [=boolean=].
 
@@ -228,6 +228,20 @@ An aggregatable trigger data is a [=struct=] with the following items:
 :: A non-negative 128-bit integer.
 : <dfn>source keys</dfn>
 :: An [=ordered set=] of [=strings=].
+: <dfn>filters</dfn>
+:: A [=filter map=].
+: <dfn>negated filters</dfn>
+:: A [=filter map=].
+
+</dl>
+
+<h3 dfn-type=dfn>Aggregatable dedup key</h3>
+
+An aggregatable dedup key is a [=struct=] with the following items:
+
+<dl dfn-for="aggregatable dedup key">
+: <dfn>dedup key</dfn>
+:: Null or a non-negative 64-bit integer.
 : <dfn>filters</dfn>
 :: A [=filter map=].
 : <dfn>negated filters</dfn>
@@ -282,8 +296,8 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>aggregatable values</dfn>
 :: An [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
     [=map/value|values=] are non-negative 32-bit integers.
-: <dfn>aggregatable dedup key</dfn>
-:: Null or a non-negative 64-bit integer.
+: <dfn>aggregatable dedup keys</dfn>
+:: A [=list=] of [=aggregatable dedup key=].
 : <dfn>serialized private state token</dfn>
 :: A [=byte sequence=].
 : <dfn>debug reporting enabled</dfn>
@@ -520,6 +534,10 @@ and the maximum [=map/size=] of an [=attribution trigger=]'s
 <dfn>Max aggregatable trigger data per trigger</dfn> is a positive integer that
 controls the maximum [=list/size=] of an [=attribution trigger=]'s
 [=attribution trigger/aggregatable trigger data=].
+
+<dfn>Max aggregatable dedup keys per trigger</dfn> is a positive integer
+that controls the maximum [=list/size=] of an [=attribution trigger=]'s
+[=attribution trigger/aggregatable dedup keys=].
 
 <dfn>Max pending sources per source origin</dfn> is a positive integer that
 controls how many [=attribution sources=] can be in the
@@ -984,7 +1002,7 @@ a [=trigger state=] |triggerState|:
     : [=attribution trigger/aggregatable values=]
     :: «[]»
     : [=attribution trigger/aggregatable dedup key=]
-    :: null
+    :: «»
     : [=attribution trigger/debug reporting enabled=]
     :: false
     : [=attribution trigger/aggregation coordinator=]
@@ -1226,6 +1244,39 @@ To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
 
 Issue: Determine whether to limit [=string/length=] or [=string/code point length=] for |key| above.
 
+To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
+
+1. Let |aggregatableDedupKeys| be a new [=list=].
+1. If |map|["`aggregatable_deduplication_keys`"] does not [=map/exist=], return |aggregatableDedupKeys|.
+1. Let |values| be |map|["`aggregatable_deduplication_keys`"].
+1. If |values| is not a [=list=], return null.
+1. If |values|'s [=list/size=] is greater than the user agent's
+    [=max aggregatable dedup keys per trigger=], return null.
+1. [=list/iterate|For each=] |value| of |values|:
+    1. If |value| is not an [=ordered map=], return null.
+    1. Let |dedupKey| be null.
+    1. If |value|["`deduplication_key`"] [=map/exists=] and is a [=string=]:
+        1. Set |dedupKey| to the result of applying the <a spec="html">rules for parsing non-negative integers</a> to
+            |value|["`deduplication_key`"].
+        1. If |dedupKey| is an error, set |dedupKey| to null.
+    1. Let |filters| be a new [=filter map=].
+    1. If |values|["`filters`"] [=map/exists=]:
+        1. Set |filters| to the result of running [=parse filter data=] with |value|["`filters`"].
+        1. If |filters| is null, return null.
+    1. Let |negatedFilters| be a new [=filter map=].
+    1. If |values|["`not_filters`"] [=map/exists=]:
+        1. Set |negatedFilters| to the result of running [=parse filter data=] with |value|["`not_filters`"].
+        1. If |negatedFilters| is null, return null.
+    1. Let  |aggregatableDedupKey| be a new [=aggregatable dedup key=] with the items:
+        : [=aggregatable dedup key/dedup key=]
+        :: |dedupKey|
+        : [=aggregatable dedup key/filters=]
+        :: |filters|
+        : [=aggregatable dedup key/negated filters=]
+        :: |negatedFilters|
+    1. [=set/Append=] |aggregatableDedupKey| to |aggregatableDedupKeys|.
+1. Return |aggregatableDedupKeys|.
+
 To <dfn noexport>serialize a private state token</dfn> given a [=string=] |encodedBlindedPrivateStateToken|:
 1. If |encodedBlindedPrivateStateToken| is null, return null.
 1. Let |decoded| be the result of [=forgiving-base64 decoding=] |encodedBlindedPrivateStateToken|.
@@ -1258,12 +1309,9 @@ and a [=moment=] |triggerTime|:
 1. If |aggregatableTriggerData| is null, return null.
 1. Let |aggregatableValues| be the result of running [=parse aggregatable values=] with |value|.
 1. If |aggregatableValues| is null, return null.
-1. Let |aggregatableDedupKey| be null.
-1. If |value|["`aggregatable_deduplication_key`"] [=map/exists=] and is a [=string=]:
-    1. Set |aggregatableDedupKey| to the result of applying the
-        <a spec="html">rules for parsing non-negative integers</a> to
-        |value|["`aggregatable_deduplication_key`"].
-    1. If |aggregatableDedupKey| is an error, set |aggregatableDedupKey| to null.
+1. Let |aggregatableDedupKeys| be the result of running [=parse aggregatable dedup keys=]
+    with |value|.
+1. If |aggregatableDedupKeys| is null, return null.
 1. Let |debugKey| be null.
 1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
     1. Set |debugKey| to the result of applying the
@@ -1309,8 +1357,8 @@ and a [=moment=] |triggerTime|:
     :: |aggregatableTriggerData|
     : [=attribution trigger/aggregatable values=]
     :: |aggregatableValues|
-    : [=attribution trigger/aggregatable dedup key=]
-    :: |aggregatableDedupKey|
+    : [=attribution trigger/aggregatable dedup keys=]
+    :: |aggregatableDedupKeys|
     : [=attribution trigger/serialized private state token=]
     :: The result of [=serializing a private state token=] with |privateStateToken|
     : [=attribution trigger/debug reporting enabled=]
@@ -1644,8 +1692,14 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
         "<code>[=trigger debug data type/trigger-aggregate-no-contributions=]</code>", |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If |trigger|'s [=attribution trigger/aggregatable dedup key=] is not null and
-    |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=]
+1. Let |matchedDedupKey| be null.
+1. [=list/iterate|For each=] [=aggregatable dedup key=] |aggregatableDedupKey| of |trigger|'s [=attribution trigger/aggregatable dedup keys=]:
+    1. If the result of running [=match an attribution source's filter data against filters and negated filters=]
+        with |sourceToAttribute|, |aggregatableDedupKey|'s [=aggregatable dedup key/filters=], and
+        |aggregatableDedupKey|'s [=aggregatable dedup key/negated filters=] is true:
+        1. Set |matchedDedupKey| to |aggregatableDedupKey|'s [=aggregatable dedup key/dedup key=].
+        1. [=iteration/Break=].
+1. If |matchedDedupKey| is not null and |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=]
     [=list/contains=] it:
      1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
          with "<code>[=trigger debug data type/trigger-aggregate-deduplicated=]</code>", |trigger|, |sourceToAttribute|
@@ -1671,8 +1725,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. Add |report| to the [=aggregatable report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/aggregatable budget consumed=] value by
     |report|'s [=aggregatable report/required aggregatable budget=].
-1. If |trigger|'s [=attribution trigger/aggregatable dedup key=] is not null,
-    [=list/append=] it to |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=].
+1. If |matchedDedupKey| is not null, [=list/append=] it to |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=].
 1. If |report|'s [=aggregatable report/source debug key=] is not null and |report|'s
     [=aggregatable report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.

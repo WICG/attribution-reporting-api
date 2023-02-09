@@ -8,6 +8,7 @@ const limits = {
   maxEventTriggerData: 10,
   maxFilters: 50,
   maxFilterValues: 50,
+  maxAggregatableDedupKeys: 10,
 }
 
 class State {
@@ -269,6 +270,16 @@ const aggregationCoordinator = string((state, value) => {
   state.error(`must match '${awsCloud}' (case-sensitive)`)
 })
 
+const aggregatableDedupKeys = list(
+  (state, value) =>
+    state.validate(value, {
+      deduplication_key: optional(uint64),
+      filters: optional(filters()),
+      not_filters: optional(filters()),
+    }),
+  limits.maxAggregatableDedupKeys
+)
+
 export function validateTrigger(trigger) {
   const state = new State()
   state.validate(trigger, {
@@ -280,7 +291,7 @@ export function validateTrigger(trigger) {
     event_trigger_data: optional(eventTriggerData),
     filters: optional(filters()),
     not_filters: optional(filters()),
-    aggregatable_deduplication_key: optional(uint64),
+    aggregatable_deduplication_keys: optional(aggregatableDedupKeys),
   })
   return state.result()
 }

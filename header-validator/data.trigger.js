@@ -7,7 +7,11 @@ export const testCases = [
   {
     name: "all-fields",
     json: `{
-      "aggregatable_deduplication_key": "7",
+      "aggregatable_deduplication_keys": [{
+        "deduplication_key": "123",
+        "filters": {"x": []},
+        "not_filters": {"y": []}
+      }],
       "aggregatable_trigger_data": [{
         "filters": {"a": ["b"]},
         "key_piece": "0x1",
@@ -168,18 +172,38 @@ export const testCases = [
   },
 
   {
-    name: "aggregatable-deduplication-key-wrong-type",
-    json: `{"aggregatable_deduplication_key": 1}`,
+    name: "aggregatable-deduplication-keys-wrong-type",
+    json: `{"aggregatable_deduplication_keys": 1}`,
     expectedErrors: [{
-      path: ["aggregatable_deduplication_key"],
+      path: ["aggregatable_deduplication_keys"],
+      msg: "must be a list",
+    }],
+  },
+  {
+    name: "aggregatable-deduplication-keys-value-wrong-type",
+    json: `{"aggregatable_deduplication_keys": [1]}`,
+    expectedErrors: [{
+      path: ["aggregatable_deduplication_keys", 0],
+      msg: "must be an object",
+    }],
+  },
+  {
+    name: "aggregatable-deduplication-key-wrong-type",
+    json: `{"aggregatable_deduplication_keys": [{
+      "deduplication_key": 1
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_deduplication_keys", 0, "deduplication_key"],
       msg: "must be a string",
     }],
   },
   {
     name: "aggregatable-deduplication-key-wrong-format",
-    json: `{"aggregatable_deduplication_key": "-1"}`,
+    json: `{"aggregatable_deduplication_keys": [{
+      "deduplication_key": "-1"
+    }]}`,
     expectedErrors: [{
-      path: ["aggregatable_deduplication_key"],
+      path: ["aggregatable_deduplication_keys", 0, "deduplication_key"],
       msg: "must be a uint64 (must match /^[0-9]+$/)",
     }],
   },

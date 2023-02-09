@@ -184,14 +184,18 @@ true_agg_geo_value = 1024 * raw_agg_geo_value / (L1 / 2)
 ```
 
 Trigger registration will accept an optional field
-`aggregatable_deduplication_key` which will be used to deduplicate multiple
-triggers containing the same `aggregatable_deduplication_key` for a single
-source.
+`aggregatable_deduplication_keys` which will be used to deduplicate multiple
+triggers containing the same `deduplication_key` for a single source with selective filtering.
 
 ```jsonc
 {
   ...
-  "aggregatable_deduplication_key": "[unsigned 64-bit integer]"
+  "aggregatable_deduplication_keys": [
+    {
+      "deduplication_key": "[unsigned 64-bit integer]",
+      "filters": {"source_type": ["navigation"]}
+    }
+  ]
 }
 ```
 
