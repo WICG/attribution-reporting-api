@@ -958,8 +958,14 @@ mechanism.
 Note that the number of all possible output states k in the above design is:
 - 2925 for click sources. This results from a particular "stars and bars"
   counting method which derives `k = (num_reporting_windows * num_trigger_data +
-  num_reports choose num_reports) = (3 * 8 + 3 choose 3)`. TODO: outline why this
-  is the case.
+  num_reports choose num_reports) = (3 * 8 + 3 choose 3)`. There are three reports per
+  click (represented by stars) which can land in 3 * 8 + 1 bins. One bin corresponds
+  to the no-report case, while the 24 others are the choice of one of 3 intermediate
+  window and one of 8 metadata. To find the total number of ways to put 3 stars in of the bins, 
+  the ["stars and bars" method](https://en.wikipedia.org/wiki/Stars_and_bars_(combinatorics)#Theorem_two_proof)
+  represents the 3 * 8 + 1 bins by 3 * 8 bars and the 3 reports by stars, which makes a total 3 + 3 * 8 symbols.
+  The total number of combinations is found by choosing the location of three stars out of 3 + 3 * 8 symbols,
+  hence the formula.
 - 3 for event-sources (no attribution, attribution with trigger data 1,
   attribution with trigger data 0). This also follows from `(1 * 2 + 1 choose 1)`.
 
