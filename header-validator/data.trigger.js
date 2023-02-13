@@ -1,3 +1,6 @@
+import { times } from "./utils.js";
+
+
 export const testCases = [
   // no errors or warnings
   {
@@ -19,7 +22,6 @@ export const testCases = [
         "source_keys": ["x"]
       }],
       "aggregatable_values": {"e": 5},
-      "aggregation_coordinator_identifier": "aws-cloud",
       "debug_key": "5",
       "debug_reporting": true,
       "event_trigger_data": [{
@@ -31,6 +33,38 @@ export const testCases = [
       }],
       "filters": {"f": []},
       "not_filters": {"g": []}
+    }`,
+  },
+  {
+    name: "or-filters",
+    json: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "filters": [{"g": []}, {"h": []}],
+        "not_filters": [{"g": []}, {"h": []}]
+      }],
+      "event_trigger_data": [{
+        "filters": [{"g": []}, {"h": []}],
+        "not_filters": [{"g": []}, {"h": []}]
+      }],
+      "filters": [{"g": []}, {"h": []}],
+      "not_filters": [{"g": []}, {"h": []}]
+    }`,
+  },
+  {
+    name: "empty-or-filters",
+    json: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "filters": [],
+        "not_filters": []
+      }],
+      "event_trigger_data": [{
+        "filters": [],
+        "not_filters": []
+      }],
+      "filters": [],
+      "not_filters": []
     }`,
   },
 
@@ -64,7 +98,7 @@ export const testCases = [
     json: `{"filters": 1}`,
     expectedErrors: [{
       path: ["filters"],
-      msg: "must be an object",
+      msg: "must be a list or an object",
     }],
   },
   {
@@ -83,6 +117,14 @@ export const testCases = [
       msg: "must be a string",
     }],
   },
+  {
+    name: "filters-too-many-or-filters",
+    json: `{"filters": ${JSON.stringify(times(51, () => ({'a': ['b']})))}}`,
+    expectedErrors: [{
+      path: ["filters"],
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
+    }]
+  },
   // TODO: add tests for exceeding size limits
 
   {
@@ -90,7 +132,7 @@ export const testCases = [
     json: `{"not_filters": 1}`,
     expectedErrors: [{
       path: ["not_filters"],
-      msg: "must be an object",
+      msg: "must be a list or an object",
     }],
   },
   {
@@ -108,6 +150,14 @@ export const testCases = [
       path: ["not_filters", "a", 0],
       msg: "must be a string",
     }],
+  },
+  {
+    name: "not-filters-too-many-or-filters",
+    json: `{"not_filters": ${JSON.stringify(times(51, () => ({'a': ['b']})))}}`,
+    expectedErrors: [{
+      path: ["not_filters"],
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
+    }]
   },
   // TODO: add tests for exceeding size limits
 
@@ -224,7 +274,84 @@ export const testCases = [
       msg: "must be an object",
     }],
   },
+  {
+    name: "event-trigger-data-filters-wrong-type",
+    json: `{"event_trigger_data": [{"filters": 1}]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "filters"],
+      msg: "must be a list or an object",
+    }],
+  },
+  {
+    name: "event-trigger-data-filters-values-wrong-type",
+    json: `{"event_trigger_data": [{"filters": {"a": "b"}}]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0 ,"filters", "a"],
+      msg: "must be a list",
+    }],
+  },
+  {
+    name: "event-trigger-data-filters-value-wrong-type",
+    json: `{"event_trigger_data": [{"filters": {"a": [1]}}]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "filters", "a", 0],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "event-trigger-data-filters-too-many-or-filters",
+    json: `{
+      "event_trigger_data": [
+        {
+          "filters": ${JSON.stringify(times(51, () => ({'a': ['b']})))
+        }
+      }]
+    }`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "filters"],
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
+    }]
+  },
+  // TODO: add tests for exceeding size limits
 
+  {
+    name: "event-trigger-data-not-filters-wrong-type",
+    json: `{"event_trigger_data": [{"not_filters": 1}]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "not_filters"],
+      msg: "must be a list or an object",
+    }],
+  },
+  {
+    name: "event-trigger-data-not-filters-values-wrong-type",
+    json: `{"event_trigger_data": [{"not_filters": {"a": "b"}}]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "not_filters", "a"],
+      msg: "must be a list",
+    }],
+  },
+  {
+    name: "event-trigger-data-not-filters-value-wrong-type",
+    json: `{"event_trigger_data": [{"not_filters": {"a": [1]}}]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "not_filters", "a", 0],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "event-trigger-data-not-filters-too-many-or-filters",
+    json: `{
+      "event_trigger_data": [
+        {
+          "not_filters": ${JSON.stringify(times(51, () => ({'a': ['b']})))
+        }
+      }]
+    }`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "not_filters"],
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
+    }]
+  },
   {
     name: "aggregatable-trigger-data-wrong-type",
     json: `{"aggregatable_trigger_data": 1}`,
@@ -360,6 +487,103 @@ export const testCases = [
   },
 
   {
+    name: "aggregatable_trigger_data-filters-wrong-type",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "source_keys": ["x"],
+      "filters": 1
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "filters"],
+      msg: "must be a list or an object",
+    }],
+  },
+  {
+    name: "aggregatable_trigger_data-filters-values-wrong-type",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "source_keys": ["x"],
+      "filters": {"a": "b"}
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0 ,"filters", "a"],
+      msg: "must be a list",
+    }],
+  },
+  {
+    name: "aggregatable_trigger_data-filters-value-wrong-type",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "source_keys": ["x"],
+      "filters": {"a": [1]}
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "filters", "a", 0],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "aggregatable_trigger_data-filters-too-many-or-filters",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "filters": ${JSON.stringify(times(51, () => ({'a': ['b']})))
+    }}]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "filters"],
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
+    }]
+  },
+  // TODO: add tests for exceeding size limits
+
+  {
+    name: "aggregatable_trigger_data-not-filters-wrong-type",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "source_keys": ["x"],
+      "not_filters": 1
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "not_filters"],
+      msg: "must be a list or an object",
+    }],
+  },
+  {
+    name: "aggregatable_trigger_data-not-filters-values-wrong-type",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "source_keys": ["x"],
+      "not_filters": {"a": "b"}
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "not_filters", "a"],
+      msg: "must be a list",
+    }],
+  },
+  {
+    name: "aggregatable_trigger_data-not-filters-value-wrong-type",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "source_keys": ["x"],
+      "not_filters": {"a": [1]}
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "not_filters", "a", 0],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "aggregatable_trigger_data-not-filters-too-many-or-filters",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "not_filters": ${JSON.stringify(times(51, () => ({'a': ['b']})))
+    }}]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "not_filters"],
+      msg: "List size out of expected bounds. Size must be within [0, 50]",
+    }]
+  },
+
+  {
     name: "aggregation-coordinator-identifier-wrong-type",
     json: `{"aggregation_coordinator_identifier": 1}`,
     expectedErrors: [{
@@ -376,8 +600,6 @@ export const testCases = [
     }],
   },
 
-  // TODO: validate filters/not_filters in event_trigger_data and
-  // aggregatable_trigger_data
 
   // TODO: validate length of event_trigger_data and aggregatable_trigger_data
 ];

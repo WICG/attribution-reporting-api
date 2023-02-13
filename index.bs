@@ -229,9 +229,9 @@ An aggregatable trigger data is a [=struct=] with the following items:
 : <dfn>source keys</dfn>
 :: An [=ordered set=] of [=strings=].
 : <dfn>filters</dfn>
-:: A [=filter map=].
+:: A [=list=] of [=filter maps=].
 : <dfn>negated filters</dfn>
-:: A [=filter map=].
+:: A [=list=] of [=filter maps=].
 
 </dl>
 
@@ -261,9 +261,9 @@ An event-level trigger configuration is a [=struct=] with the following items:
 : <dfn>priority</dfn>
 :: A 64-bit integer.
 : <dfn>filters</dfn>
-:: A [=filter map=].
+:: A [=list=] of [=filter maps=].
 : <dfn>negated filters</dfn>
-:: A [=filter map=].
+:: A [=list=] of [=filter maps=].
 
 </dl>
 
@@ -284,9 +284,9 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>reporting endpoint</dfn>
 :: A [=suitable origin=].
 : <dfn>filters</dfn>
-:: A [=filter map=].
+:: A [=list=] of [=filter maps=].
 : <dfn>negated filters</dfn>
-:: A [=filter map=].
+:: A [=list=] of [=filter maps=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
 : <dfn>event-level trigger configurations</dfn>
@@ -518,6 +518,9 @@ maximum value that can be used as an [=attribution source/event id=].
 maximum value that can be used as an [=attribution source/expiry=]. It must be
 greater than or equal to 30 days.
 
+<dfn>Max items in filters</dfn> is a positive integer that controls the
+maximum [=list/size=] of a [=list=] of [=filter maps=].
+
 <dfn>Max entries per filter map</dfn> is a positive integer that controls the
 maximum [=map/size=] of a [=filter map=].
 
@@ -671,6 +674,25 @@ To <dfn>parse filter data</dfn> given a |value|:
 
 Issue: Determine whether to limit [=string/length=] or
 [=string/code point length=] for |filter| and |d| above.
+
+<h3 id="parsing-filters">Parsing filters</h3>
+
+To <dfn>parse filters</dfn> given a |value|:
+
+1. Let |filtersList| be a new [=list=].
+1. If |value| is a [=map=], then:
+    1. Let |filterMap| be the result of running [=parse filter data=] with |value|.
+    1. If |filterMap| is null, return null.
+    1. [=list/Append=] |filterMap| to |filtersList|.
+    1. Return |filtersList|.
+1. If |value| is not a [=list=], return null.
+1. If |value|'s [=list/size=] is greater than the user agent's
+    [=max items in filters=], return null.
+1. [=list/iterate|For each=] |data| of |value|:
+    1. Let |filterMap| be the result of running [=parse filter data=] with |data|.
+    1. If |filterMap| is null, return null.
+    1. [=list/Append=] |filterMap| to |filtersList|.
+1. Return |filtersList|.
 
 <h3 id="debug-keys">Cookie-based debugging</h3>
 
@@ -1157,14 +1179,14 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
             <a spec="html">rules for parsing integers</a> to
             |value|["`priority`"].
         1. If |priority| is an error, set |priority| to 0.
-    1. Let |filters| be a new [=filter map=].
+    1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
     1. If |value|["`filters`"] [=map/exists=]:
-        1. Set |filters| to the result of running [=parse filter data=] with
+        1. Set |filters| to the result of running [=parse filters=] with
             |value|["`filters`"].
         1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a new [=filter map=].
+    1. Let |negatedFilters| be a [=list=] of [=filter maps=], initially empty.
     1. If |value|["`not_filters`"] [=map/exists=]:
-        1. Set |negatedFilters| to the result of running [=parse filter data=]
+        1. Set |negatedFilters| to the result of running [=parse filters=]
             with |value|["`not_filters`"].
         1. If |negatedFilters| is null, return null.
     1. Let |eventTrigger| be a new [=event-level trigger configuration=] with
@@ -1206,14 +1228,14 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
         1. [=list/iterate|For each=] |sourceKey| of |value|["`source_keys`"]:
             1. If |sourceKey| is not a [=string=], return null.
             1. [=set/Append=] |sourceKey| to |sourceKeys|.
-    1. Let |filters| be a new [=filter map=].
+    1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
     1. If |value|["`filters`"] [=map/exists=]:
-        1. Set |filters| to the result of running [=parse filter data=] with
+        1. Set |filters| to the result of running [=parse filters=] with
             |value|["`filters`"].
         1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a new [=filter map=].
+    1. Let |negatedFilters| be a [=list=] of [=filter maps=], initially empty.
     1. If |value|["`not_filters`"] [=map/exists=]:
-        1. Set |negatedFilters| to the result of running [=parse filter data=]
+        1. Set |negatedFilters| to the result of running [=parse filters=]
             with |value|["`not_filters`"].
         1. If |negatedFilters| is null, return null.
     1. Let |aggregatableTrigger| be a new [=aggregatable trigger data=] with the items:
@@ -1320,14 +1342,14 @@ and a [=moment=] |triggerTime|:
     1. If |debugKey| is an error, set |debugKey| to null.
     1. If the result of running [=check if cookie-based debugging is allowed=] with
         |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
-1. Let |filters| be a new [=filter map=].
+1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
 1. If |value|["`filters`"] exists:
-    1. Set |filters| to the result of running [=parse filter data=] with
+    1. Set |filters| to the result of running [=parse filters=] with
         |value|["`filters`"].
     1. If |filters| is null, return null.
-1. Let |negatedFilters| be a new [=filter map=].
+1. Let |negatedFilters| be a [=list=] of [=filter maps=], initially empty.
 1. If |value|["`not_filters`"] exists:
-    1. Set |negatedFilters| to the result of running [=parse filter data=] with
+    1. Set |negatedFilters| to the result of running [=parse filters=] with
         |value|["`not_filters`"].
     1. If |negatedFilters| is null, return null.
 1. Let |debugReportingEnabled| be false.
@@ -1385,12 +1407,12 @@ To <dfn>match [=filter values=] with negation</dfn> given a [=filter value=] |a|
 1. If |i| is not [=set/is empty|empty=], then return false.
 1. Return true.
 
-To <dfn>match an attribution source's filter data against filters</dfn> given an
-[=attribution source=] |source|, a [=filter map=] |filters|, and a [=boolean=]
-<dfn for="match an attribution source's filter data against filters"><var>isNegated</var></dfn>:
+To <dfn>match an attribution source's filter data against a filter map</dfn> given an
+[=attribution source=] |source|, a [=filter map=] |filter|, and a [=boolean=]
+<dfn for="match an attribution source's filter data against a filter map"><var>isNegated</var></dfn>:
 
 1. Let |sourceData| be |source|'s [=attribution source/filter data=].
-1. [=map/iterate|For each=] |key| → |filterValues| of |filters|:
+1. [=map/iterate|For each=] |key| → |filterValues| of |filter|:
     1. If |sourceData|[|key|] does not [=map/exist=], [=iteration/continue=].
     1. Let |sourceValues| be |sourceData|[|key|].
     1. If |isNegated| is:
@@ -1405,8 +1427,17 @@ To <dfn>match an attribution source's filter data against filters</dfn> given an
         </dl>
 1. Return true.
 
+To <dfn>match an attribution source's filter data against filters</dfn> given an
+[=attribution source=] |source|, a [=list=] of [=filter maps=] |filters|, and a [=boolean=]
+<dfn for="match an attribution source's filter data against filters"><var>isNegated</var></dfn>:
+
+1. If |filters| [=list/is empty=], return true.
+1. [=list/iterate|For each=] |filter| of |filters|:
+    1. If the result of running [=match an attribution source's filter data against a filter map=] with |source|, |filter| and |isNegated| is true, return true.
+1. Return false.
+
 To <dfn>match an attribution source's filter data against filters and negated filters</dfn> given an
-[=attribution source=] |source|, a [=filter map=] |filters|, and a [=filter map=] |notFilters|:
+[=attribution source=] |source|, a [=list=] of [=filter maps=] |filters|, and a [=list=] of [=filter maps=] |notFilters|:
 
 1. If the result of running [=match an attribution source's filter data against filters=] with
     |source|, |filters|, and [=match an attribution source's filter data against filters/isNegated=] set to false is false, return false.
