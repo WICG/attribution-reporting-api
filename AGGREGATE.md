@@ -209,7 +209,7 @@ trigger registration.
 ### Aggregatable reports
 
 Aggregatable reports will look very similar to event-level reports. They will be
-reported to the reporting origin at the path
+reported via HTTP POST to the reporting origin at the path
 `.well-known/attribution-reporting/report-aggregate-attribution`.
 
 The report itself does not contain histogram contributions in the clear. Rather,
