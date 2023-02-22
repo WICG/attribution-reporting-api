@@ -19,6 +19,10 @@ A source is rejected due to the [destination limit](https://github.com/WICG/attr
 #### `source-storage-limit`
 A source is rejected due to the [storage limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#storage-limits).
 
+#### `source-success`
+A source is successfully registered. Note that this is also sent when a source
+is rejected due to the [unattributed reporting origin limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits) to mitigate security concerns.
+
 #### `source-unknown-error`
 System error.
 
@@ -108,11 +112,12 @@ otherwise the dictionary may include the following fields:
 
 This table defines the fields in the `body` dictionary.
 
-| `type` | `attribution_destination`| `limit` | `source_debug_key` | `source_event_id` | `source_site` | ` trigger_debug_key` |
+| `type` | `attribution_destination`| `limit` | `source_debug_key` | `source_event_id` | `source_site` | `trigger_debug_key` |
 | --- | --- | --- | --- | --- | --- | --- |
 | [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`source-success`](#source-success) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-unknown-error`](#source-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`trigger-no-matching-source`](#trigger-no-matching-source) | ✓ | ❌ | ❌ | ❌ | ❌ | ✓ |
 | [`trigger-no-matching-filter-data`](#trigger-no-matching-filter-data) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
