@@ -136,6 +136,17 @@ export const testCases = [
       msg: "must be a string",
     }],
   },
+  {
+    name: "filter-data-source-type-key",
+    json: `{
+      "destination": "https://a.test",
+      "filter_data": {"source_type": []}
+    }`,
+    expectedErrors: [{
+      path: ["filter_data", "source_type"],
+      msg: "is prohibited because it is implicitly set",
+    }],
+  },
   // TODO: add tests for exceeding size limits
 
   {

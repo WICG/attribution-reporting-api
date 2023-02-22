@@ -3,13 +3,9 @@ const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const limits = {
-  maxAggregatableTriggerData: 50,
   maxAggregationKeys: 50,
-  maxEventTriggerData: 10,
-  maxFilters: 50,
-  maxFilterValues: 50,
-  maxOrFilters: 50,
-  maxAggregatableDedupKeys: 10,
+  maxFiltersPerFilterData: 50,
+  maxValuesPerFilter: 50,
 }
 
 class State {
@@ -223,17 +219,22 @@ const listOrObject = (f = () => {}, listMaxLength, listMinLength) => {
 }
 
 // TODO: Check length of strings.
-const filters = (allowSourceType = true) =>
+const filterData = () =>
   object((state, filter, values) => {
-    if (filter === 'source_type' && !allowSourceType) {
+    if (filter === 'source_type') {
       state.error('is prohibited because it is implicitly set')
       return
     }
 
-    list(string(), limits.maxFilterValues)(state, values)
-  }, limits.maxFilters)
+    list(string(), limits.maxValuesPerFilter)(state, values)
+  }, limits.maxFiltersPerFilterData)
 
-const orFilters = listOrObject(filters(), limits.maxOrFilters, 0)
+const filters = () =>
+  object((state, filter, values) => {
+    list(string())(state, values)
+  })
+
+const orFilters = listOrObject(filters())
 
 // TODO: check length of key
 const aggregationKeys = object((state, key, value) => {
@@ -250,7 +251,7 @@ export function validateSource(source) {
     debug_reporting: optional(bool),
     destination: required(destinationValue),
     expiry: optional(int64),
-    filter_data: optional(filters(/*allowSourceType=*/ false)),
+    filter_data: optional(filterData()),
     priority: optional(int64),
     source_event_id: optional(uint64),
   })
@@ -264,9 +265,7 @@ const aggregatableTriggerData = list(
       key_piece: required(hex128),
       not_filters: optional(orFilters),
       source_keys: optional(list(string(), limits.maxAggregationKeys)),
-    }),
-  limits.maxAggregatableTriggerData
-)
+    }))
 
 // TODO: check length of key
 const aggregatableValues = object((state, key, value) => {
@@ -284,9 +283,7 @@ const eventTriggerData = list(
       not_filters: optional(orFilters),
       priority: optional(int64),
       trigger_data: optional(uint64),
-    }),
-  limits.maxEventTriggerData
-)
+    }))
 
 const aggregationCoordinator = string((state, value) => {
   const awsCloud = 'aws-cloud'
@@ -302,9 +299,7 @@ const aggregatableDedupKeys = list(
       deduplication_key: optional(uint64),
       filters: optional(filters()),
       not_filters: optional(filters()),
-    }),
-  limits.maxAggregatableDedupKeys
-)
+    }))
 
 export function validateTrigger(trigger) {
   const state = new State()
