@@ -21,7 +21,7 @@ A source is rejected due to the [storage limit](https://github.com/WICG/attribut
 
 #### `source-success`
 A source is successfully registered. Note that this is also sent when a source
-is rejected due to the [unattributed reporting origin limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits) to mitigate security concern.
+is rejected due to the [unattributed reporting origin limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits) to mitigate security concerns.
 
 #### `source-unknown-error`
 System error.
