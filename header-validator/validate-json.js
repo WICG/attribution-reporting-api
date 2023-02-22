@@ -4,8 +4,8 @@ const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const limits = {
   maxAggregationKeys: 50,
-  maxFiltersPerFilterData: 50,
-  maxValuesPerFilter: 50,
+  maxEntriesPerFilterData: 50,
+  maxValuesPerFilterDataEntry: 50,
 }
 
 class State {
@@ -226,8 +226,8 @@ const filterData = () =>
       return
     }
 
-    list(string(), limits.maxValuesPerFilter)(state, values)
-  }, limits.maxFiltersPerFilterData)
+    list(string(), limits.maxValuesPerFilterDataEntry)(state, values)
+  }, limits.maxEntriesPerFilterData)
 
 const filters = () =>
   object((state, filter, values) => {
