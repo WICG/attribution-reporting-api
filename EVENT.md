@@ -185,8 +185,7 @@ header `Attribution-Reporting-Register-Source` of the form:
 ```
 
 - `destination`: an origin whose eTLD+1 is where attribution will be triggered
-for this source. This field can optionally be repeated in a list of some small size
-(e.g. 3-5).
+for this source. The field may also be specified as a list (JSON array) of no more than three elements.
 
 - `source_event_id`: (optional) A string encoding a 64-bit unsigned integer which
 represents the event-level data associated with this source. This will be
