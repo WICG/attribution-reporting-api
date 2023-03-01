@@ -280,11 +280,9 @@ detailed in [Trigger attribution algorithm](#trigger-attribution-algorithm).
 Note that the header can be present on redirect requests.
 
 Triggering attribution requires the `attribution-reporting` Permissions Policy
-to be enabled in the context the request is made. As described in [Publisher
+to be enabled in the context the request is made. See [Publisher
 Controls for Attribution Source
-Declaration](#publisher-side-controls-for-attribution-source-declaration), this
-Permissions Policy will be enabled by default in the top-level context and in
-same-origin children, but disabled in cross-origin children.
+Declaration](#publisher-side-controls-for-attribution-source-declaration).
 
 Navigation sources may be attributed up to 3 times. Event sources may be
 attributed up to 1 time.
