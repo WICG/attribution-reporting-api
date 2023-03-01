@@ -224,36 +224,10 @@ reporting origin.
 
 ### Publisher-side Controls for Attribution Source Declaration
 
-In order to prevent arbitrary third parties from registering sources without the
-publisher’s knowledge, the Attribution Reporting API will need to be enabled in
-child contexts by a new [Permissions
-Policy](https://w3c.github.io/webappsec-permissions-policy/):
-
-```html
-<iframe src="https://advertiser.example" allow="attribution-reporting 'src'">
-
-<a … attributionsrc="https://ad-tech.example?..."></a>
-
-</iframe>
-```
-
-The API will be enabled by default in the top-level context and in same-origin
-children. Any script running in these contexts can declare a source with any
-reporting origin. Publishers who wish to explicitly disable the API for all
-parties can do so via an [HTTP
-header](https://w3c.github.io/webappsec-permissions-policy/#permissions-policy-http-header-field).
-
-Without a Permissions Policy, a top-level document and cooperating iframe could
-recreate this functionality. This is possible by using
-[postMessage](https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage)
-to send the `source_event_id`, `attributionsrc` origin, `destination` values to
-the top level document who can then wrap the iframe in an anchor tag (with some
-additional complexities behind handling clicks on the iframe). Using Permissions
-Policy prevents the need for these hacks. This is inline with the classification
-of powerful features as discussed on [this
-issue](https://github.com/w3c/webappsec-permissions-policy/issues/252).
-
-**NOTE**: For the [Chromium Origin Trial](https://developer.chrome.com/blog/privacy-sandbox-unified-origin-trial/), the Chromium implementation of the Attribution Reporting API will temporarily ship with a Permissions Policy [default](https://w3c.github.io/webappsec-permissions-policy/#default-allowlists) of `*`, which bypasses the need for top-level documents to delegate permission to cross-origin iframes.
+This API is governed by a [Permissions Policy](https://www.w3.org/TR/permissions-policy/) with
+a default allowlist of `*`. This means that publishers can opt-out of the API for themselves or
+third parties, but by default anyone on the page can use the API. See
+[issue 558](https://github.com/WICG/attribution-reporting-api/issues/558) for more details.
 
 ### Triggering Attribution
 
