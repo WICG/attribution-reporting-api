@@ -516,14 +516,12 @@ However attribution data is inherently cross-site, and operations on storage wou
 maximum value that can be used as an [=attribution source/expiry=]. It must be
 greater than or equal to 30 days.
 
-<dfn>Max items in filters</dfn> is a positive integer that controls the
-maximum [=list/size=] of a [=list=] of [=filter maps=].
+<dfn>Max entries per filter data</dfn> is a positive integer that controls the
+maximum [=map/size=] of an [=attribution source=]'s [=attribution source/filter data=].
 
-<dfn>Max entries per filter map</dfn> is a positive integer that controls the
-maximum [=map/size=] of a [=filter map=].
-
-<dfn>Max values per filter entry</dfn> is a positive integer that
-controls the maximum [=set/size=] of a [=filter map=] entry.
+<dfn>Max values per filter data entry</dfn> is a positive integer that
+controls the maximum [=set/size=] of each [=map/value=] of an
+[=attribution source=]'s [=attribution source/filter data=].
 
 <dfn>Max aggregation keys per attribution</dfn> is a positive integer that
 controls the maximum [=map/size=] of an [=attribution source=]'s
@@ -531,14 +529,6 @@ controls the maximum [=map/size=] of an [=attribution source=]'s
 [=aggregatable trigger data=]'s [=aggregatable trigger data/source keys=],
 and the maximum [=map/size=] of an [=attribution trigger=]'s
 [=attribution trigger/aggregatable values=].
-
-<dfn>Max aggregatable trigger data per trigger</dfn> is a positive integer that
-controls the maximum [=list/size=] of an [=attribution trigger=]'s
-[=attribution trigger/aggregatable trigger data=].
-
-<dfn>Max aggregatable dedup keys per trigger</dfn> is a positive integer
-that controls the maximum [=list/size=] of an [=attribution trigger=]'s
-[=attribution trigger/aggregatable dedup keys=].
 
 <dfn>Max pending sources per source origin</dfn> is a positive integer that
 controls how many [=attribution sources=] can be in the
@@ -653,11 +643,9 @@ To <dfn>check if an origin is suitable</dfn> given an [=origin=] |origin|:
 
 <h3 id="parsing-filter-data">Parsing filter data</h3>
 
-To <dfn>parse filter data</dfn> given a |value|:
+To <dfn>parse filter values</dfn> given a |value|:
 
 1. If |value| is not a [=map=], return null.
-1. If |value|'s [=map/size=] is greater than the user agent's
-    [=max entries per filter map=], return null.
 1. Let |result| be a new [=filter map=].
 1. [=map/iterate|For each=] |filter| → |data| of |value|:
     1. If |data| is not a [=list=], return null.
@@ -665,10 +653,19 @@ To <dfn>parse filter data</dfn> given a |value|:
     1. [=list/iterate|For each=] |d| of |data|:
         1. If |d| is not a [=string=], return null.
         1. [=set/Append=] |d| to |set|.
-    1. If |set|'s [=set/size=] is greater than the user agent's
-        [=max values per filter entry=], return null.
     1. [=map/Set=] |result|[|filter|] to |set|.
 1. Return |result|.
+
+To <dfn>parse filter data</dfn> given a |value|:
+
+1. Let |map| be the result of running [=parse filter values=] with |value|.
+1. If |map| is null, return null.
+1. If |map|'s [=map/size=] is greater than the user agent's
+    [=max entries per filter data=], return null.
+1. [=map/iterate|For each=] |filter| → |set| of |map|:
+    1. If |set|'s [=set/size=] is greater than the user agent's
+        [=max values per filter data entry=], return null.
+1. Return |map|.
 
 Issue: Determine whether to limit [=string/length=] or
 [=string/code point length=] for |filter| and |d| above.
@@ -679,15 +676,13 @@ To <dfn>parse filters</dfn> given a |value|:
 
 1. Let |filtersList| be a new [=list=].
 1. If |value| is a [=map=], then:
-    1. Let |filterMap| be the result of running [=parse filter data=] with |value|.
+    1. Let |filterMap| be the result of running [=parse filter values=] with |value|.
     1. If |filterMap| is null, return null.
     1. [=list/Append=] |filterMap| to |filtersList|.
     1. Return |filtersList|.
 1. If |value| is not a [=list=], return null.
-1. If |value|'s [=list/size=] is greater than the user agent's
-    [=max items in filters=], return null.
 1. [=list/iterate|For each=] |data| of |value|:
-    1. Let |filterMap| be the result of running [=parse filter data=] with |data|.
+    1. Let |filterMap| be the result of running [=parse filter values=] with |data|.
     1. If |filterMap| is null, return null.
     1. [=list/Append=] |filterMap| to |filtersList|.
 1. Return |filtersList|.
@@ -1206,17 +1201,12 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
     1. [=set/Append=] |eventTrigger| to |eventTriggers|.
 1. Return |eventTriggers|.
 
-Issue: Allow the user agent to return null if |values|'s [=list/size=] is
-greater than some constant.
-
 To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
 
 1. Let |aggregatableTriggerData| be a new [=list=].
 1. If |map|["`aggregatable_trigger_data`"] does not [=map/exist=], return |aggregatableTriggerData|.
 1. Let |values| be |map|["`aggregatable_trigger_data`"].
 1. If |values| is not a [=list=], return null.
-1. If |values|'s [=list/size=] is greater than the user agent's
-    [=max aggregatable trigger data per trigger=], return null.
 1. [=list/iterate|For each=] |value| of |values|:
     1. If |value| is not an [=ordered map=], return null.
     1. If |value|["`key_piece`"] does not [=map/exist=] or is not a [=string=], return null.
@@ -1274,8 +1264,6 @@ To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
 1. If |map|["`aggregatable_deduplication_keys`"] does not [=map/exist=], return |aggregatableDedupKeys|.
 1. Let |values| be |map|["`aggregatable_deduplication_keys`"].
 1. If |values| is not a [=list=], return null.
-1. If |values|'s [=list/size=] is greater than the user agent's
-    [=max aggregatable dedup keys per trigger=], return null.
 1. [=list/iterate|For each=] |value| of |values|:
     1. If |value| is not an [=ordered map=], return null.
     1. Let |dedupKey| be null.
