@@ -1,4 +1,4 @@
-# Preventing invalid aggregatable reports via trigger attestation
+# Preventing invalid aggregatable reports via report verification
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -18,7 +18,7 @@
   - [Privacy of the IVT detector](#privacy-of-the-ivt-detector)
   - [Limit the attack scope for bad actors that can bypass IVT detectors](#limit-the-attack-scope-for-bad-actors-that-can-bypass-ivt-detectors)
   - [No report mutation](#no-report-mutation)
-- [Future Extension: scalable public metadata for destination attestation](#future-extension-scalable-public-metadata-for-destination-attestation)
+- [Future Extension: scalable public metadata for destination verification](#future-extension-scalable-public-metadata-for-destination-verification)
 - [FAQ](#faq)
   - [Why doesn’t this support issuance at source registration time?](#why-doesnt-this-support-issuance-at-source-registration-time)
   - [Why doesn’t this support event-level reports?](#why-doesnt-this-support-event-level-reports)
@@ -164,7 +164,7 @@ should therefore be allowed to generate attribution reports.
     `Sec-Attribution-Reporting-Private-State-Token` response header. If this
     header is omitted or is not valid, the browser will proceed with trigger
     registration normally, but any report generated will not contain the
-    attestation header. Note: more advanced cases deployments can consider
+    verification header. Note: more advanced cases deployments can consider
     issuing an "invalid" token using private metadata to avoid the client
     learning the detection result. See
     [privacy of the IVT detector](#privacy-of-the-ivt-detector) for more details.
@@ -207,7 +207,7 @@ thereof) communicate across sites. If the _count_ of encrypted records is
 sensitive, then partitioning this count per token-state (trigger-side data)
 could amplify a counting attack.
 
-Even without trigger attestation, reports can already be partitioned by the
+Even without report verification, reports can already be partitioned by the
 following trigger-side fields:
 
 - `scheduled_report_time`
@@ -280,7 +280,7 @@ embed the IVT decision in the private metadata bit.
 
 ### Limit the attack scope for bad actors that can bypass IVT detectors
 This is not addressed in this proposal, but we are exploring  [future
-extensions](#future-extension-scalable-public-metadata-for-destination-attestation)
+extensions](#future-extension-scalable-public-metadata-for-destination-verification)
 to address it.
 
 ### No report mutation
@@ -296,7 +296,7 @@ Note that because we expect reporting origins to already deduplicate based on
 `report_id`, this infrastructure should neatly work to handle the "double
 spend" problem where attackers attempt to use tokens multiple times.
 
-## Future Extension: scalable public metadata for destination attestation
+## Future Extension: scalable public metadata for destination verification
 
 Currently, Private State Tokens supports a notion of "public metadata" that
 corresponds essentially to which signing key is used to generate a blind token.
@@ -351,7 +351,7 @@ The reason is very similar to why this proposal doesn’t support
 [issuance at source registration time](#why-doesnt-this-support-issuance-at-source-registration-time).
 Event-level reports are subject to browser randomization in which the browser
 needs to be free to create fake triggers. This means that we couldn’t possibly
-provide attestation for triggers as it breaks the privacy mechanism. It is
+provide verification for triggers as it breaks the privacy mechanism. It is
 possible to attest sources, but because event-level reports already have a high
 entropy (hard to guess) ID associated with it, the added benefit of tokens is
 minimal.
@@ -454,5 +454,5 @@ window.fetch('https://adtech.example/trigger-attribution?convid=123?trustSignal=
 Our designs for [cross app and web
 measurement](https://github.com/WICG/attribution-reporting-api/blob/main/app_to_web.md)
 allow routing attribution to the underlying platform. Therefore, to support this
-kind of token-based attestation in that setting would require the underlying
+kind of token-based verification in that setting would require the underlying
 platform to support this design.
