@@ -20,6 +20,8 @@ spec:html; type:element; text:a
 spec:html; type:element; text:script
 </pre>
 <pre class="anchors">
+spec: clear-site-data; type: dfn; urlPrefix: https://w3c.github.io/webappsec-clear-site-data/
+    text: clear DOM-accessible storage for origin; url: #abstract-opdef-clear-dom-accessible-storage-for-origin
 spec: hr-time; type: dfn; urlPrefix: https://w3c.github.io/hr-time/
     text: current wall time; url: #dfn-current-wall-time
     text: duration; url: #dfn-duration
@@ -114,6 +116,28 @@ Issue: Specify monkeypatches for source/trigger registration.
 
 This specification defines a [=policy-controlled feature=] identified by the string "<code><dfn noexport>attribution-reporting</dfn></code>".
 Its [=policy-controlled feature/default allowlist=] is <a href="https://w3c.github.io/webappsec-permissions-policy/#default-allowlist">`*`</a>.
+
+# Clear Site Data integration # {#clear-site-data-integration}
+
+In [=clear DOM-accessible storage for origin=], add the following step:
+
+> 7. Run [=clear site data=] with |origin|.
+
+To <dfn>clear site data</dfn> given an [=origin=] |origin|:
+
+1. [=set/iterate|For each=] [=attribution source=] |source| of the [=attribution source cache=]:
+    1. If |source|'s [=attribution source/reporting endpoint=] and |origin| are [=same origin=],
+        [=set/remove=] |source| from the [=attribution source cache=].
+1. [=set/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
+    1. If |report|'s [=event-level report/reporting endpoint=] and |origin| are [=same origin=],
+        [=set/remove=] |report| from the [=event-level report cache=].
+1. [=set/iterate|For each=] [=aggregatable report=] |report| of the [=aggregatable report cache=]:
+    1. If |report|'s [=aggregatable report/reporting endpoint=] and |origin| are [=same origin=],
+        [=set/remove=] |report| from the [=aggregatable report cache=].
+
+Note: We deliberately do *not* remove matching entries from the
+[=attribution rate-limit cache=], as doing so would allow a site to reset and
+therefore exceed the intended rate limits at will.
 
 # Structures # {#structures}
 
