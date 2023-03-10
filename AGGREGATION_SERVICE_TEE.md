@@ -343,7 +343,7 @@ problem, we require adtech to [pre-declare aggregation buckets](#pre-declaring-a
 
 ```python
 # Input: a raw summary report (a dictionary)
-# Output: a noised report (a very large dictionary with all 2^128 possible keys present)
+# Output: a noised report (a dictionary containing all the keys in declared_labels)
 def add_noise(raw_summary_report, declared_labels):
   noised_summary_report = {}
   for bucket_label in declared_labels:  
