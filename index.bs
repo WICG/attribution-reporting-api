@@ -788,6 +788,69 @@ and a [=suitable origin=] |reportingEndpoint|:
     :: |reportingEndpoint|
 1. [=Queue a task=] to [=attempt to deliver a verbose debug report=] with |debugReport|.
 
+<h3 id="making-a-background-attributionsrc-request">Making a background attributionsrc request</h3>
+
+An <dfn>eligibility</dfn> is one of the following:
+
+<dl dfn-for="eligibility">
+: "<dfn><code>navigation-source</code></dfn>"
+:: A [=source type/navigation=] [=attribution source|source=] may be registered.
+: "<dfn><code>event-source or trigger</code></dfn>"
+:: Either an [=source type/event=] [=attribution source|source=] or a
+    [=attribution trigger|trigger=] may be registered.
+
+</dl>
+
+To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
+|contextOrigin|, an [=eligibility=] |eligibility|, an
+[=environment settings objects=] |context|, and a [=response=] |response|:
+
+1. Let |reportingOrigin| be |response|'s [=response/URL=]'s [=url/origin=].
+1. If |reportingOrigin| is not [=check if an origin is suitable|suitable=], return.
+1. Let |sourceHeader| be the result of [=header list/get|getting=]
+    "`Attribution-Reporting-Register-Source`" from |response|'s
+    [=response/header list=].
+1. Let |triggerHeader| be the result of [=header list/get|getting=]
+    "`Attribution-Reporting-Register-Trigger`" from |response|'s
+    [=response/header list=].
+1. If |eligibility| is:
+    <dl class="switch">
+    : "<code>[=eligibility/navigation-source=]</code>"
+    :: Run the following steps:
+        1. If |sourceHeader| is null, return.
+        1. Let |source| be the result of running
+            [=parse source-registration JSON=] with |sourceHeader|,
+            |contextOrigin|, |reportingOrigin|,
+            "<code>[=source type/navigation=]</code>", and |context|'s
+            [=current wall time=].
+        1. If |source| is not null, [=process an attribution source|process=]
+            |source|.
+    : "<code>[=eligibility/event-source or trigger=]</code>"
+    :: Run the following steps:
+        1. If |sourceHeader| is not null and |triggerHeader| is not null,
+            return.
+        1. If |sourceHeader| is not null:
+            1. Let |source| be the result of running
+                [=parse source-registration JSON=] with |sourceHeader|,
+                |contextOrigin|, |reportingOrigin|,
+                "<code>[=source type/event=]</code>", and |context|'s
+                [=current wall time=].
+            1. If |source| is not null,
+                [=process an attribution source|process=] |source|.
+        1. If |triggerHeader| is not null:
+            1. Let |destinationSite| be the result of [=obtaining a site=] from
+                |contextOrigin|.
+            1. Let |privateStateToken| be null.
+            1. Let |trigger| be the result of running
+                [=create an attribution trigger=] with |triggerHeader|
+                |destinationSite|, |reportingOrigin|, |privateStateToken|, and
+                |context|'s [=current wall time=].
+            1. If |trigger| is not null, [=trigger attribution=] with |trigger|.
+
+    </dl>
+
+Issue: Set |privateStateToken| properly.
+
 # Source Algorithms # {#source-algorithms}
 
 <h3 algorithm id="obtaining-randomized-source-response">Obtaining a randomized source response</h3>
