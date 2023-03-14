@@ -795,11 +795,29 @@ An <dfn>eligibility</dfn> is one of the following:
 <dl dfn-for="eligibility">
 : "<dfn><code>navigation-source</code></dfn>"
 :: A [=source type/navigation=] [=attribution source|source=] may be registered.
-: "<dfn><code>event-source or trigger</code></dfn>"
+: "<dfn><code>event-source, trigger</code></dfn>"
 :: Either an [=source type/event=] [=attribution source|source=] or a
     [=attribution trigger|trigger=] may be registered.
 
 </dl>
+
+To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
+[=suitable origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and an
+[=environment settings objects=] |context|:
+
+1. Let |request| be a new [=request=] with the following properties:
+    :   [=request/method=]
+    ::  "`GET`"
+    :   [=request/URL=]
+    ::  |url|
+    :   [=request/keepalive=]
+    ::  true
+1. [=header list/Set=] a header
+    ("Attribution-Reporting-Eligible", |eligibility|) in |request|'s
+    [=request/header list=].
+1. [=Fetch=] |request| with [=fetch/processResponse=] being
+    [=process an attributionsrc response=] with |contextOrigin|, |eligibility|,
+    and |context|.
 
 To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
 |contextOrigin|, an [=eligibility=] |eligibility|, an
@@ -825,7 +843,7 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
             [=current wall time=].
         1. If |source| is not null, [=process an attribution source|process=]
             |source|.
-    : "<code>[=eligibility/event-source or trigger=]</code>"
+    : "<code>[=eligibility/event-source, trigger=]</code>"
     :: Run the following steps:
         1. If |sourceHeader| is not null and |triggerHeader| is not null,
             return.
