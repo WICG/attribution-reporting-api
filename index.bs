@@ -104,6 +104,24 @@ The IDL attribute {{HTMLAttributionSrcElementUtils/attributionSrc}}
 must <a spec=html>reflect</a> the respective content attribute of the same
 name.
 
+Whenever an <{img}> or a <{script}> |element| is created or |element|'s
+{{HTMLAttributionSrcElementUtils/attributionSrc}} attribute is set or changed,
+run the following steps:
+
+1. Let |attributionSrc| be |element|'s
+    {{HTMLAttributionSrcElementUtils/attributionSrc}}.
+1. If |attributionSrc| is the empty string, return.
+1. Parse |attributionSrc|, relative to |element|'s node document.
+    If that is not successful, return. Otherwise, let |url| be the resulting
+    [=URL record=].
+1. Run [=make a background attributionsrc request=] with |url|, |contextOrigin|,
+    "<code>event-source, trigger</code>", and |element|'s node document's
+    [=relevant settings object=].
+
+Issue: Add links to "Parse" and "node document".
+
+Issue: Specify when to make background attributionsrc requests for <{a}>.
+
 <h3 id="monkeypatch-window-open">Window open steps</h4>
 
 Issue: Monkeypatch `window.open()`.
