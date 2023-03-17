@@ -4,7 +4,7 @@
   <title>Attribution Reporting</title>
   <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
-  <meta content="Bikeshed version 71458e5bb, updated Thu Mar 9 17:18:51 2023 -0800" name="generator">
+  <meta content="Bikeshed version d9f9c3533, updated Fri Mar 10 11:31:29 2023 -0800" name="generator">
   <link href="https://wicg.github.io/attribution-reporting-api" rel="canonical">
 <style>/* style-autolinks */
 .css.css, .property.property, .descriptor.descriptor {
@@ -597,7 +597,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Attribution Reporting</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-03-10">10 March 2023</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-03-17">17 March 2023</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -731,11 +731,12 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
       <li><a href="#issue-debug-report-request"><span class="secno">12.11</span> <span class="content">Issuing a debug report request</span></a>
       <li><a href="#issue-verbose-debug-report-request"><span class="secno">12.12</span> <span class="content">Issuing a verbose debug request</span></a>
      </ol>
-    <li><a href="#security-considerations"><span class="secno">13</span> <span class="content">Security considerations</span></a>
+    <li><a href="#cross-app-and-web"><span class="secno">13</span> <span class="content">Cross App and Web Algorithms</span></a>
+    <li><a href="#security-considerations"><span class="secno">14</span> <span class="content">Security considerations</span></a>
     <li>
-     <a href="#privacy-considerations"><span class="secno">14</span> <span class="content">Privacy consideration</span></a>
+     <a href="#privacy-considerations"><span class="secno">15</span> <span class="content">Privacy consideration</span></a>
      <ol class="toc">
-      <li><a href="#clearing-attribution-storage"><span class="secno">14.1</span> <span class="content">Clearing attribution storage</span></a>
+      <li><a href="#clearing-attribution-storage"><span class="secno">15.1</span> <span class="content">Clearing attribution storage</span></a>
      </ol>
     <li>
      <a href="#w3c-conformance"><span class="secno"></span> <span class="content">Conformance</span></a>
@@ -3726,11 +3727,31 @@ and a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-heade
    </ol>
    <p class="issue" id="issue-c8706ee1①"><a class="self-link" href="#issue-c8706ee1①"></a> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/attribution-reporting-api/issues/220">[Issue #220]</a></p>
    <p>A user agent MAY retry this algorithm in the event that there was an error.</p>
-   <h2 class="heading settled" data-level="13" id="security-considerations"><span class="secno">13. </span><span class="content">Security considerations</span><a class="self-link" href="#security-considerations"></a></h2>
+   <h2 class="heading settled" data-level="13" id="cross-app-and-web"><span class="secno">13. </span><span class="content">Cross App and Web Algorithms</span><a class="self-link" href="#cross-app-and-web"></a></h2>
+   <p>To <dfn data-dfn-type="dfn" data-noexport id="get-an-os-registration-url-from-a-header-list">get an OS-registration URL from a header list<a class="self-link" href="#get-an-os-registration-url-from-a-header-list"></a></dfn> given a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-list" id="ref-for-concept-header-list③">header list</a> <var>headers</var> and a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#header-name" id="ref-for-header-name">header name</a> <var>name</var>:</p>
+   <ol>
+    <li data-md>
+     <p>Let <var>value</var> be the result of <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-list-get-structured-header" id="ref-for-concept-header-list-get-structured-header">getting</a> <var>name</var> from <var>headers</var> with a type of "<code>item</code>".</p>
+    <li data-md>
+     <p>If <var>value</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string③⑧">string</a>, return null.</p>
+    <li data-md>
+     <p>Return the result of running the <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-parser" id="ref-for-concept-url-parser①">URL parser</a> on <var>value</var>.</p>
+   </ol>
+   <p>To <dfn data-dfn-type="dfn" data-noexport id="set-an-os-support-header">set an OS-support header<a class="self-link" href="#set-an-os-support-header"></a></dfn> given a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-list" id="ref-for-concept-header-list④">header list</a> <var>headers</var> and a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#boolean" id="ref-for-boolean⑨">boolean</a> <var>hasOsSupport</var>:</p>
+   <ol>
+    <li data-md>
+     <p>Let <var>value</var> be "<code>web</code>".</p>
+    <li data-md>
+     <p>If <var>hasOsSupport</var> is true, set <var>value</var> to "<code>web, os</code>".</p>
+    <li data-md>
+     <p><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-list-set" id="ref-for-concept-header-list-set">Set</a> ("<code>Attribution-Reporting-Support</code>", <var>value</var>) in <var>headers</var>.</p>
+   </ol>
+   <p class="issue" id="issue-912a579f"><a class="self-link" href="#issue-912a579f"></a> Consider replacing these string values with structured-field algorithms.</p>
+   <h2 class="heading settled" data-level="14" id="security-considerations"><span class="secno">14. </span><span class="content">Security considerations</span><a class="self-link" href="#security-considerations"></a></h2>
     TODO 
-   <h2 class="heading settled" data-level="14" id="privacy-considerations"><span class="secno">14. </span><span class="content">Privacy consideration</span><a class="self-link" href="#privacy-considerations"></a></h2>
+   <h2 class="heading settled" data-level="15" id="privacy-considerations"><span class="secno">15. </span><span class="content">Privacy consideration</span><a class="self-link" href="#privacy-considerations"></a></h2>
     TODO 
-   <h3 class="heading settled" data-level="14.1" id="clearing-attribution-storage"><span class="secno">14.1. </span><span class="content">Clearing attribution storage</span><a class="self-link" href="#clearing-attribution-storage"></a></h3>
+   <h3 class="heading settled" data-level="15.1" id="clearing-attribution-storage"><span class="secno">15.1. </span><span class="content">Clearing attribution storage</span><a class="self-link" href="#clearing-attribution-storage"></a></h3>
    <p>A user agent’s <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches①">attribution caches</a> contain data about a user’s web activity. When a user agent clears an origin’s storage,
 it MUST also <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove①①">remove</a> entries in the <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches②">attribution caches</a> whose <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin⑥">source origin</a>, <a data-link-type="dfn" href="#attribution-source-attribution-destinations" id="ref-for-attribution-source-attribution-destinations①⓪">attribution destinations</a>, <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint①④">reporting endpoint</a>, <a data-link-type="dfn" href="#event-level-report-attribution-destinations" id="ref-for-event-level-report-attribution-destinations⑤">attribution destinations</a>, or <a data-link-type="dfn" href="#attribution-report-reporting-endpoint" id="ref-for-attribution-report-reporting-endpoint⑥">reporting endpoint</a> is the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin⑥">same</a> as the cleared origin.</p>
    <p>A user agent MAY clear <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches③">attribution cache</a> entries at other times. For example, when a user agent clears
@@ -3921,6 +3942,7 @@ an origin from a user’s browsing history.</p>
    <li><a href="#generate-an-attribution-report-url">generate an attribution report URL</a><span>, in § 12.7</span>
    <li><a href="#generate-a-report-url">generate a report URL</a><span>, in § 12.7</span>
    <li><a href="#generate-attribution-report-headers">generate attribution report headers</a><span>, in § 12.9</span>
+   <li><a href="#get-an-os-registration-url-from-a-header-list">get an OS-registration URL from a header list</a><span>, in § 13</span>
    <li><a href="#htmlattributionsrcelementutils">HTMLAttributionSrcElementUtils</a><span>, in § 2.1</span>
    <li><a href="#generate-an-attribution-report-url-isdebugreport">isDebugReport</a><span>, in § 12.7</span>
    <li>
@@ -4053,6 +4075,7 @@ an origin from a user’s browsing history.</p>
      <li><a href="#aggregatable-report-serialized-private-state-token">dfn for aggregatable report</a><span>, in § 6.15</span>
      <li><a href="#attribution-trigger-serialized-private-state-token">dfn for attribution trigger</a><span>, in § 6.11</span>
     </ul>
+   <li><a href="#set-an-os-support-header">set an OS-support header</a><span>, in § 13</span>
    <li><a href="#aggregatable-report-shared-info">shared info</a><span>, in § 12.3</span>
    <li><a href="#should-block-attribution-for-attribution-limit">Should attribution be blocked by attribution rate limit</a><span>, in § 11.2</span>
    <li><a href="#should-block-attribution-for-rate-limits">Should attribution be blocked by rate limits</a><span>, in § 11.4</span>
@@ -4206,6 +4229,12 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-concept-fetch②">12.12. Issuing a verbose debug request</a>
    </ul>
   </aside>
+  <aside aria-labelledby="infopaneltitle-for-7d20d86aab82c14f214b792b61bc7cb8" class="dfn-panel" data-for="7d20d86aab82c14f214b792b61bc7cb8" id="infopanel-for-7d20d86aab82c14f214b792b61bc7cb8">
+   <span id="infopaneltitle-for-7d20d86aab82c14f214b792b61bc7cb8" style="display:none">Info about the 'get a structured field value' external reference.</span><a href="https://fetch.spec.whatwg.org/#concept-header-list-get-structured-header">https://fetch.spec.whatwg.org/#concept-header-list-get-structured-header</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-concept-header-list-get-structured-header">13. Cross App and Web Algorithms</a>
+   </ul>
+  </aside>
   <aside aria-labelledby="infopaneltitle-for-ee7584061c2f45d6a827359cc7178423" class="dfn-panel" data-for="ee7584061c2f45d6a827359cc7178423" id="infopanel-for-ee7584061c2f45d6a827359cc7178423">
    <span id="infopaneltitle-for-ee7584061c2f45d6a827359cc7178423" style="display:none">Info about the 'header' external reference.</span><a href="https://fetch.spec.whatwg.org/#concept-header">https://fetch.spec.whatwg.org/#concept-header</a><b>Referenced in:</b>
    <ul>
@@ -4218,12 +4247,19 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-concept-header-list">12.8. Creating a report request</a> <a href="#ref-for-concept-header-list①">(2)</a>
     <li><a href="#ref-for-concept-header-list②">12.9. Get report request headers</a>
+    <li><a href="#ref-for-concept-header-list③">13. Cross App and Web Algorithms</a> <a href="#ref-for-concept-header-list④">(2)</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-4fd8d1762cd9c874700296c854598fda" class="dfn-panel" data-for="4fd8d1762cd9c874700296c854598fda" id="infopanel-for-4fd8d1762cd9c874700296c854598fda">
    <span id="infopaneltitle-for-4fd8d1762cd9c874700296c854598fda" style="display:none">Info about the 'header list (for request)' external reference.</span><a href="https://fetch.spec.whatwg.org/#concept-request-header-list">https://fetch.spec.whatwg.org/#concept-request-header-list</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-concept-request-header-list">12.8. Creating a report request</a>
+   </ul>
+  </aside>
+  <aside aria-labelledby="infopaneltitle-for-c6e05a4731ae2297e1992152e937e094" class="dfn-panel" data-for="c6e05a4731ae2297e1992152e937e094" id="infopanel-for-c6e05a4731ae2297e1992152e937e094">
+   <span id="infopaneltitle-for-c6e05a4731ae2297e1992152e937e094" style="display:none">Info about the 'header name' external reference.</span><a href="https://fetch.spec.whatwg.org/#header-name">https://fetch.spec.whatwg.org/#header-name</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-header-name">13. Cross App and Web Algorithms</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-fbcfa904ec1519986ad26d2b61d17047" class="dfn-panel" data-for="fbcfa904ec1519986ad26d2b61d17047" id="infopanel-for-fbcfa904ec1519986ad26d2b61d17047">
@@ -4267,6 +4303,12 @@ an origin from a user’s browsing history.</p>
    <span id="infopaneltitle-for-53448884e088e162bab57824ad9a7165" style="display:none">Info about the 'service-workers mode' external reference.</span><a href="https://fetch.spec.whatwg.org/#request-service-workers-mode">https://fetch.spec.whatwg.org/#request-service-workers-mode</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-request-service-workers-mode">12.8. Creating a report request</a>
+   </ul>
+  </aside>
+  <aside aria-labelledby="infopaneltitle-for-c92a6a04d5edd0548c96b946dabec975" class="dfn-panel" data-for="c92a6a04d5edd0548c96b946dabec975" id="infopanel-for-c92a6a04d5edd0548c96b946dabec975">
+   <span id="infopaneltitle-for-c92a6a04d5edd0548c96b946dabec975" style="display:none">Info about the 'set' external reference.</span><a href="https://fetch.spec.whatwg.org/#concept-header-list-set">https://fetch.spec.whatwg.org/#concept-header-list-set</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-concept-header-list-set">13. Cross App and Web Algorithms</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-c196cbd8060929df106163762cfa48fe" class="dfn-panel" data-for="c196cbd8060929df106163762cfa48fe" id="infopanel-for-c196cbd8060929df106163762cfa48fe">
@@ -4450,7 +4492,7 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-same-origin③">10.5. Processing an attribution source</a>
     <li><a href="#ref-for-same-origin④">11.3. Should attribution be blocked by attribution rate limit</a>
     <li><a href="#ref-for-same-origin⑤">11.11. Triggering attribution</a>
-    <li><a href="#ref-for-same-origin⑥">14.1. Clearing attribution storage</a>
+    <li><a href="#ref-for-same-origin⑥">15.1. Clearing attribution storage</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-e462c9f2460203de987a597cf2944ef9" class="dfn-panel" data-for="e462c9f2460203de987a597cf2944ef9" id="infopanel-for-e462c9f2460203de987a597cf2944ef9">
@@ -4539,6 +4581,7 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-boolean⑤">11.1. Creating an attribution trigger</a>
     <li><a href="#ref-for-boolean⑥">11.2. Does filter data match</a> <a href="#ref-for-boolean⑦">(2)</a>
     <li><a href="#ref-for-boolean⑧">12.7. Get report request URL</a>
+    <li><a href="#ref-for-boolean⑨">13. Cross App and Web Algorithms</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-2889fa868b02a31759864aaf77f851d6" class="dfn-panel" data-for="2889fa868b02a31759864aaf77f851d6" id="infopanel-for-2889fa868b02a31759864aaf77f851d6">
@@ -4832,7 +4875,7 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-list-remove⑤">11.9. Triggering event-level attribution</a>
     <li><a href="#ref-for-list-remove⑥">11.11. Triggering attribution</a> <a href="#ref-for-list-remove⑦">(2)</a> <a href="#ref-for-list-remove⑧">(3)</a>
     <li><a href="#ref-for-list-remove⑨">12.10. Issuing a report request</a> <a href="#ref-for-list-remove①⓪">(2)</a>
-    <li><a href="#ref-for-list-remove①①">14.1. Clearing attribution storage</a>
+    <li><a href="#ref-for-list-remove①①">15.1. Clearing attribution storage</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-45b0d481871a171d5773ec0478e0395f" class="dfn-panel" data-for="45b0d481871a171d5773ec0478e0395f" id="infopanel-for-45b0d481871a171d5773ec0478e0395f">
@@ -4930,6 +4973,7 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-string③④">12.3. Obtaining an aggregatable report’s shared info</a> <a href="#ref-for-string③⑤">(2)</a>
     <li><a href="#ref-for-string③⑥">12.4. Obtaining an aggregatable report’s aggregation service payloads</a>
     <li><a href="#ref-for-string③⑦">12.7. Get report request URL</a>
+    <li><a href="#ref-for-string③⑧">13. Cross App and Web Algorithms</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-3ee316b93eb2dbe81d01a666cce50f9b" class="dfn-panel" data-for="3ee316b93eb2dbe81d01a666cce50f9b" id="infopanel-for-3ee316b93eb2dbe81d01a666cce50f9b">
@@ -5047,6 +5091,7 @@ an origin from a user’s browsing history.</p>
    <span id="infopaneltitle-for-07df417653faafb38ece7480f2c15a3e" style="display:none">Info about the 'url parser' external reference.</span><a href="https://url.spec.whatwg.org/#concept-url-parser">https://url.spec.whatwg.org/#concept-url-parser</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-concept-url-parser">10.4. Parsing source-registration JSON</a>
+    <li><a href="#ref-for-concept-url-parser①">13. Cross App and Web Algorithms</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-3ee481c84087d2fc253e43977a457c6c" class="dfn-panel" data-for="3ee481c84087d2fc253e43977a457c6c" id="infopanel-for-3ee481c84087d2fc253e43977a457c6c">
@@ -5085,9 +5130,11 @@ an origin from a user’s browsing history.</p>
      <li><span class="dfn-paneled" id="136f2700e84634abd2f3d42487ba7f41">client</span>
      <li><span class="dfn-paneled" id="28b697a3fde8f7519842ff0d1ae51f77">credentials mode</span>
      <li><span class="dfn-paneled" id="0bae0f8d0fc019614ef3bb69c15d5311">fetch</span>
+     <li><span class="dfn-paneled" id="7d20d86aab82c14f214b792b61bc7cb8">get a structured field value</span>
      <li><span class="dfn-paneled" id="ee7584061c2f45d6a827359cc7178423">header</span>
      <li><span class="dfn-paneled" id="5171067c910207c96b5420a19bae87a3">header list</span>
      <li><span class="dfn-paneled" id="4fd8d1762cd9c874700296c854598fda">header list <small>(for request)</small></span>
+     <li><span class="dfn-paneled" id="c6e05a4731ae2297e1992152e937e094">header name</span>
      <li><span class="dfn-paneled" id="fbcfa904ec1519986ad26d2b61d17047">initiator</span>
      <li><span class="dfn-paneled" id="763381417a53db57db9cfbb40d3c552a">method</span>
      <li><span class="dfn-paneled" id="731849104592df0f69027b4122c950f6">mode</span>
@@ -5095,6 +5142,7 @@ an origin from a user’s browsing history.</p>
      <li><span class="dfn-paneled" id="4f358b1fbdaf345d2691f5744de6612b">referrer</span>
      <li><span class="dfn-paneled" id="491791562dd138987138e7051a96c07c">request</span>
      <li><span class="dfn-paneled" id="53448884e088e162bab57824ad9a7165">service-workers mode</span>
+     <li><span class="dfn-paneled" id="c92a6a04d5edd0548c96b946dabec975">set</span>
      <li><span class="dfn-paneled" id="c196cbd8060929df106163762cfa48fe">source</span>
      <li><span class="dfn-paneled" id="1700cdddfa774dcfdae6e2d75f495dad">unsafe-request flag</span>
      <li><span class="dfn-paneled" id="6f4775873c70787775f9c70f0f110709">url</span>
@@ -5297,6 +5345,7 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
    <div class="issue"> properly define "begin redemption" operation. Consider running the algorithm at report sending time. <a class="issue-return" href="#issue-182767d1" title="Jump to section">↵</a></div>
    <div class="issue"> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/attribution-reporting-api/issues/220">[Issue #220]</a> <a class="issue-return" href="#issue-c8706ee1" title="Jump to section">↵</a></div>
    <div class="issue"> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/attribution-reporting-api/issues/220">[Issue #220]</a> <a class="issue-return" href="#issue-c8706ee1①" title="Jump to section">↵</a></div>
+   <div class="issue"> Consider replacing these string values with structured-field algorithms. <a class="issue-return" href="#issue-912a579f" title="Jump to section">↵</a></div>
   </div>
   <aside aria-labelledby="infopaneltitle-for-htmlattributionsrcelementutils" class="dfn-panel" data-for="htmlattributionsrcelementutils" id="infopanel-for-htmlattributionsrcelementutils">
    <span id="infopaneltitle-for-htmlattributionsrcelementutils" style="display:none">Info about the 'HTMLAttributionSrcElementUtils' definition.</span><b><a href="#htmlattributionsrcelementutils">#htmlattributionsrcelementutils</a></b><b>Referenced in:</b>
@@ -5456,7 +5505,7 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
     <li><a href="#ref-for-attribution-source-source-origin②">10.4. Parsing source-registration JSON</a>
     <li><a href="#ref-for-attribution-source-source-origin③">10.5. Processing an attribution source</a> <a href="#ref-for-attribution-source-source-origin④">(2)</a>
     <li><a href="#ref-for-attribution-source-source-origin⑤">12. Report delivery</a>
-    <li><a href="#ref-for-attribution-source-source-origin⑥">14.1. Clearing attribution storage</a>
+    <li><a href="#ref-for-attribution-source-source-origin⑥">15.1. Clearing attribution storage</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-attribution-source-event-id" class="dfn-panel" data-for="attribution-source-event-id" id="infopanel-for-attribution-source-event-id">
@@ -5477,7 +5526,7 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
     <li><a href="#ref-for-attribution-source-attribution-destinations③">10.5. Processing an attribution source</a> <a href="#ref-for-attribution-source-attribution-destinations④">(2)</a> <a href="#ref-for-attribution-source-attribution-destinations⑤">(3)</a> <a href="#ref-for-attribution-source-attribution-destinations⑥">(4)</a> <a href="#ref-for-attribution-source-attribution-destinations⑦">(5)</a>
     <li><a href="#ref-for-attribution-source-attribution-destinations⑧">11.11. Triggering attribution</a>
     <li><a href="#ref-for-attribution-source-attribution-destinations⑨">11.13. Obtaining an event-level report</a>
-    <li><a href="#ref-for-attribution-source-attribution-destinations①⓪">14.1. Clearing attribution storage</a>
+    <li><a href="#ref-for-attribution-source-attribution-destinations①⓪">15.1. Clearing attribution storage</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-attribution-source-reporting-endpoint" class="dfn-panel" data-for="attribution-source-reporting-endpoint" id="infopanel-for-attribution-source-reporting-endpoint">
@@ -5490,7 +5539,7 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
     <li><a href="#ref-for-attribution-source-reporting-endpoint①⓪">11.11. Triggering attribution</a> <a href="#ref-for-attribution-source-reporting-endpoint①①">(2)</a>
     <li><a href="#ref-for-attribution-source-reporting-endpoint①②">11.13. Obtaining an event-level report</a>
     <li><a href="#ref-for-attribution-source-reporting-endpoint①③">11.15. Obtaining an aggregatable report</a>
-    <li><a href="#ref-for-attribution-source-reporting-endpoint①④">14.1. Clearing attribution storage</a>
+    <li><a href="#ref-for-attribution-source-reporting-endpoint①④">15.1. Clearing attribution storage</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-attribution-source-source-type" class="dfn-panel" data-for="attribution-source-source-type" id="infopanel-for-attribution-source-source-type">
@@ -5952,7 +6001,7 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
     <li><a href="#ref-for-attribution-report-reporting-endpoint③">11.15. Obtaining an aggregatable report</a>
     <li><a href="#ref-for-attribution-report-reporting-endpoint④">12.3. Obtaining an aggregatable report’s shared info</a>
     <li><a href="#ref-for-attribution-report-reporting-endpoint⑤">12.7. Get report request URL</a>
-    <li><a href="#ref-for-attribution-report-reporting-endpoint⑥">14.1. Clearing attribution storage</a>
+    <li><a href="#ref-for-attribution-report-reporting-endpoint⑥">15.1. Clearing attribution storage</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-attribution-report-report-time" class="dfn-panel" data-for="attribution-report-report-time" id="infopanel-for-attribution-report-report-time">
@@ -6082,7 +6131,7 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
     <li><a href="#ref-for-event-level-report-attribution-destinations②">11.9. Triggering event-level attribution</a>
     <li><a href="#ref-for-event-level-report-attribution-destinations③">11.13. Obtaining an event-level report</a>
     <li><a href="#ref-for-event-level-report-attribution-destinations④">12.5. Serialize attribution report body</a>
-    <li><a href="#ref-for-event-level-report-attribution-destinations⑤">14.1. Clearing attribution storage</a>
+    <li><a href="#ref-for-event-level-report-attribution-destinations⑤">15.1. Clearing attribution storage</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-aggregatable-contribution" class="dfn-panel" data-for="aggregatable-contribution" id="infopanel-for-aggregatable-contribution">
@@ -6564,7 +6613,7 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
    <span id="infopaneltitle-for-attribution-caches" style="display:none">Info about the 'attribution caches' definition.</span><b><a href="#attribution-caches">#attribution-caches</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-attribution-caches">7. Storage</a>
-    <li><a href="#ref-for-attribution-caches①">14.1. Clearing attribution storage</a> <a href="#ref-for-attribution-caches②">(2)</a> <a href="#ref-for-attribution-caches③">(3)</a>
+    <li><a href="#ref-for-attribution-caches①">15.1. Clearing attribution storage</a> <a href="#ref-for-attribution-caches②">(2)</a> <a href="#ref-for-attribution-caches③">(3)</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-max-source-expiry" class="dfn-panel" data-for="max-source-expiry" id="infopanel-for-max-source-expiry">
