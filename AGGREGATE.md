@@ -237,7 +237,7 @@ The report will be JSON encoded with the following scheme:
     },
   ],
 
-  // the deployment option for the aggregation service.
+  // The deployment option for the aggregation service.
   "aggregation_coordinator_identifier": "aws-cloud",
 
   // Optional debugging information (also present in event-level reports),
