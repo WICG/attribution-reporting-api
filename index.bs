@@ -2341,6 +2341,26 @@ Issue(220): This fetch should use a network partition key for an opaque origin.
 
 A user agent MAY retry this algorithm in the event that there was an error.
 
+# Cross App and Web Algorithms # {#cross-app-and-web}
+
+To <dfn noexport>get an OS-registration URL from a header list</dfn> given a
+[=header list=] |headers| and a [=header name=] |name|:
+
+1. Let |value| be the result of
+    [=header list/get a structured field value=|getting=] |name| from |headers|
+    with a type of "`item`".
+1. If |value| is not a [=string=], return null.
+1. Return the result of running the [=URL parser=] on |value|.
+
+To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
+|headers| and a [=boolean=] |hasOsSupport|:
+
+1. Let |value| be "`web`".
+1. If |hasOsSupport| is true, set |value| to "`web, os`".
+1. [=header list/Set=] ("`Attribution-Reporting-Support`, |value|) in |headers|.
+
+Issue: Consider replacing these string values with structured-field algorithms.
+
 # Security considerations # {#security-considerations}
 TODO
 
