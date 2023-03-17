@@ -326,7 +326,7 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>debug reporting enabled</dfn>
 :: A [=boolean=].
 : <dfn>aggregation coordinator</dfn>
-:: Null or an [=aggregation coordinator=].
+:: An [=aggregation coordinator=].
 
 </dl>
 
@@ -635,6 +635,9 @@ delay to deliver an [=aggregatable report=].
 
 <dfn>Randomized aggregatable report delay</dfn> is a positive [=duration=] that controls the
 random delay to deliver an [=aggregatable report=].
+
+<dfn>Default aggregation coordinator</dfn> is the [=aggregation coordinator=] that controls how to
+obtain the public key for encrypting an [=aggregatable report=] by default.
 
 # General Algorithms # {#general-algorithms}
 
@@ -1043,7 +1046,7 @@ a [=trigger state=] |triggerState|:
     : [=attribution trigger/debug reporting enabled=]
     :: false
     : [=attribution trigger/aggregation coordinator=]
-    :: null
+    :: [=default aggregation coordinator=]
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
 1. Set |fakeReport|'s [=event-level report/report time=] to the result of
@@ -1368,7 +1371,7 @@ and a [=moment=] |triggerTime|:
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to value["`debug_reporting`"].
-1. Let |aggregationCoordinator| be null.
+1. Let |aggregationCoordinator| be [=default aggregation coordinator=].
 1. If |value|["`aggregation_coordinator_identifier`"] [=map/exists=]:
     1. If |value|["`aggregation_coordinator_identifier`"] is not a [=string=], return null.
     1. If |value|["`aggregation_coordinator_identifier`"] is not an [=aggregation coordinator=], return null.
@@ -2055,11 +2058,9 @@ of running the following steps:
 
 <h3 id="obtain-aggregatable-report-aggregation-service-payloads">Obtaining an aggregatable report's aggregation service payloads</h3>
 
-To <dfn>obtain the public key for encryption</dfn> given an optional [=aggregation coordinator=]
-|aggregationCoordinator|, asynchronously return a user-agent-determined public key
+To <dfn>obtain the public key for encryption</dfn> given an [=aggregation coordinator=]
+<var ignore=''>aggregationCoordinator</var>, asynchronously return a user-agent-determined public key
 or an error in the event that the user agent failed to obtain the public key.
-A user-agent-determined default [=aggregation coordinator=] should be used if
-|aggregationCoordinator| is null.
 
 Note: The user agent might enforce weekly key rotation. If there are multiple keys, the user agent
 might independently pick a key uniformly at random for every encryption operation.
@@ -2165,6 +2166,8 @@ To <dfn>serialize an [=aggregatable report=] </dfn> |report|, run the following 
     :: |report|'s [=aggregatable report/shared info=].
     : "`aggregation_service_payloads`"
     :: |aggregationServicePayloads|
+    : "`aggregation_coordinator_identifier`"
+    :: |report|'s [=aggregatable report/aggregation coordinator=]
 
 1. If |report|'s [=aggregatable report/source debug key=] is not null, [=map/set=]
     |data|["`source_debug_key`"] to |report|'s [=aggregatable report/source debug key=],

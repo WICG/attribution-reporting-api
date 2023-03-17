@@ -237,6 +237,9 @@ The report will be JSON encoded with the following scheme:
     },
   ],
 
+  // the deployment option for the aggregation service.
+  "aggregation_coordinator_identifier": "aws-cloud",
+
   // Optional debugging information (also present in event-level reports),
   // if the cookie `ar_debug` is present.
   "source_debug_key": "[64 bit unsigned integer]",
