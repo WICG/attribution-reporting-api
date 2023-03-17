@@ -41,7 +41,7 @@
 ## Introduction
 
 This document proposes extensions to our existing [Attribution Reporting
-API](https://github.com/csharrison/conversion-measurement-api) that reports
+API](https://github.com/WICG/attribution-reporting-api) that reports
 event-level data. The intention is to provide a mechanism for rich metadata to
 be reported in aggregate, to better support use-cases such as campaign-level
 performance reporting or conversion values.
@@ -74,7 +74,7 @@ example an ad-tech will use the API to collect:
 
 Registering sources eligible for aggregate reporting entails adding a new
 `aggregation_keys` dictionary field to the JSON dictionary of the
-[`Attribution-Reporting-Register-Source` header](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#registering-attribution-sources):
+[`Attribution-Reporting-Register-Source` header](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#registering-attribution-sources):
 ```jsonc
 {
   ... // existing fields, such as `source_event_id` and `destination`
@@ -107,7 +107,7 @@ for this source.
 
 Trigger registration will also add two new fields to the JSON dictionary of the
 [`Attribution-Reporting-Register-Trigger`
-header](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#triggering-attribution):
+header](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#triggering-attribution):
 ```jsonc
 {
   ... // existing fields, such as `event_trigger_data`
@@ -337,7 +337,7 @@ keys are delivered to different users.
 
 #### Attribution-success debugging reports
 
-If [debugging](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#attribution-success-debugging-reports)
+If [debugging](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#attribution-success-debugging-reports)
 is enabled, additional debug fields will be present in aggregatable reports.
 The `source_debug_key` and `trigger_debug_key` fields match those in the
 event-level reports. If both the source and trigger debug keys are set, there
@@ -358,7 +358,7 @@ key had since expired or the browser randomly chose a different valid public key
 #### Verbose debugging reports
 
 As outlined in the
-  [event-level explainer](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#verbose-debugging-reports),
+  [event-level explainer](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#verbose-debugging-reports),
 certain aggregate attribution failures can be monitored as well.
 
 ### Contribution bounding and budgeting
@@ -467,7 +467,7 @@ Note: there are a few caveats about a formal differential privacy claim:
   ### Rate limits
   
   Various rate limits outlined in the 
-  [event-level explainer](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#reporting-cooldown--rate-limits)
+  [event-level explainer](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits)
   should also apply to aggregatable reports. The limits should be shared across
   all types of reports.
 
@@ -483,7 +483,7 @@ conversion). From within the worklet, code can access both the source and
 trigger context in the same function to generate an aggregate report. This
 allows for more dynamic keys than a declarative API (like the existing[
 HTTP-based
-triggering](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#triggering-attribution)),
+triggering](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#triggering-attribution)),
 but disallows exfiltrating sensitive cross-site data out of the worklet.
 
 The worklet is used to generate histogram contributions, which are key-value
@@ -506,7 +506,7 @@ window.attributionReporting.triggerAttribution("https://reporter.example",
 
 Internally, the browser will look up to see which source should be attributed,
 similar to how
-[attribution](https://github.com/WICG/conversion-measurement-api/blob/main/EVENT.md#trigger-attribution-algorithm)
+[attribution](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#trigger-attribution-algorithm)
 works in the HTTP-based API. Note here that only a single source will be
 matched.
 
@@ -587,7 +587,8 @@ contribution to any one bucket). Care should be taken to ensure that either:
 * We can support multiple types of contribution bounding for different reporting
   origins without introducing privacy leaks
 
-See [issue 249](https://github.com/WICG/conversion-measurement-api/issues/249)
+See [issue 249](https://github.com/WICG/attribution-reporting
+-api/issues/249)
 for more details.
 
 ### Choosing among aggregation services
