@@ -587,8 +587,7 @@ contribution to any one bucket). Care should be taken to ensure that either:
 * We can support multiple types of contribution bounding for different reporting
   origins without introducing privacy leaks
 
-See [issue 249](https://github.com/WICG/attribution-reporting
--api/issues/249)
+See [issue 249](https://github.com/WICG/attribution-reporting-api/issues/249)
 for more details.
 
 ### Choosing among aggregation services
