@@ -292,12 +292,8 @@ An event-level trigger configuration is a [=struct=] with the following items:
 
 <h3 id="aggregation-coordinator-header">Aggregation coordinator</h3>
 
-An <dfn>aggregation coordinator</dfn> is one of the the following [=strings=] that specifies which
-aggregation service deployment to use:
-
-<ul dfn-for="aggregation coordinator">
-<li>"<dfn><code>aws-cloud</code></dfn>"
-</ul>
+An <dfn>aggregation coordinator</dfn> is one of a user-agent-determined [=set=]
+of [=strings=] that specifies which aggregation service deployment to use.
 
 <h3 dfn-type=dfn>Attribution trigger</h3>
 
@@ -639,6 +635,9 @@ delay to deliver an [=aggregatable report=].
 
 <dfn>Randomized aggregatable report delay</dfn> is a positive [=duration=] that controls the
 random delay to deliver an [=aggregatable report=].
+
+<dfn>Default aggregation coordinator</dfn> is the [=aggregation coordinator=] that controls how to
+obtain the public key for encrypting an [=aggregatable report=] by default.
 
 # General Algorithms # {#general-algorithms}
 
@@ -1047,7 +1046,7 @@ a [=trigger state=] |triggerState|:
     : [=attribution trigger/debug reporting enabled=]
     :: false
     : [=attribution trigger/aggregation coordinator=]
-    :: "<code>[=aggregation coordinator/aws-cloud=]</code>"
+    :: [=default aggregation coordinator=]
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
 1. Set |fakeReport|'s [=event-level report/report time=] to the result of
@@ -1372,7 +1371,7 @@ and a [=moment=] |triggerTime|:
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to value["`debug_reporting`"].
-1. Let |aggregationCoordinator| be "<code>[=aggregation coordinator/aws-cloud=]</code>".
+1. Let |aggregationCoordinator| be [=default aggregation coordinator=].
 1. If |value|["`aggregation_coordinator_identifier`"] [=map/exists=]:
     1. If |value|["`aggregation_coordinator_identifier`"] is not a [=string=], return null.
     1. If |value|["`aggregation_coordinator_identifier`"] is not an [=aggregation coordinator=], return null.
