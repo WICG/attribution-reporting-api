@@ -248,8 +248,6 @@ Attributed triggers with `trigger_data` set to 0 get counted capped to 10. The t
 }
 ```
 
-
-
 ### Binary with more frequent reporting
 
 This example configuration supports a developer who wants to learn whether at least one conversion occurred in the first 10 days (regardless of value), but wants to receive reports at more frequent intervals than the default. Again, in this example any trigger that sets `trigger_data` to a value other than 0 is ineligible for attribution. This is why we refer to this use case as _binary_.
@@ -284,8 +282,6 @@ Note that the `trigger_specs` registration can differ from source to source. Thi
   "max_bucket_increments": 3
 }
 ```
-
-
 
 ```jsonc
 {
