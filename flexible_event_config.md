@@ -38,8 +38,8 @@ We will add another optional parameter `trigger_specs` to the JSON in `Attributi
     "trigger_data": [<int>, ...]
 
     // Represents a series of time windows, starting at <start time>.
-    // At the end of each window, a report for this spec will be delivered an
-    // hour later. Time is encoded as seconds after source registration.
+    // Reports for this spec will be delivered an hour after the end of each window.
+    // Time is encoded as seconds after source registration.
     //
     // Note: specs with identical trigger_data cannot have overlapping windows, 
     // this ensures that triggers match at most one spec. If event_report_windows  
