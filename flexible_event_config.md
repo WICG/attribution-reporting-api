@@ -132,7 +132,7 @@ When the `event_report_window` for a spec completes, we will map it's summary va
 The goal of this proposal is to remain largely privacy neutral with respect to the existing event-level reports. We will publish an algorithm which computes the number of output states for a given source registration. From this we will be able to:
 
 * Compute a randomized response algorithm across the entire output space
-* Set the noise level to satisfy a certain epsilon level level via a randomized response mechanism
+* Set the noise level to satisfy a certain epsilon level via a randomized response mechanism
 * Verify that the privacy parameters (like information gain) are within a given threshold, and fail registration if they are not
 
 With these pieces we can ensure that this extension does not regress our privacy measures. Additionally, it allows callers to fine-tune the noise added to the API e.g. by specifying different kinds of output domains. For example, `navigation` sources that only need 1 bit of trigger data and 1 reporting window can use the same noise level as `event` sources.
@@ -141,7 +141,7 @@ Beyond setting noise levels, we will have some parameter limits to avoid large c
 
 * Maximum of 20 total reports, globally and per `trigger_data`
 * Maximum of 5 possible reporting windows per `trigger_data`
-* Maximum of 32 for trigger data cardinality
+* Maximum of 32 trigger data cardinality
 
 Be mindful that using extremal values here may result in a large amount of noise, or failure to register if privacy levels are not met.
 
