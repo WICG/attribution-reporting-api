@@ -239,7 +239,7 @@ This example shows how a developer can configure a source to get a count of trig
 }
 ```
 
-Attributed triggers with `trigger_data` set to 0 get counted capped to 10. The trigger value is ignored since `summary_window_operator` is set to “count”. Supposing 4 triggers are registered and attributed to the source, the report would look like this:
+Attributed triggers with `trigger_data` set to 0 are counted and capped at 10. The trigger value is ignored since `summary_window_operator` is set to “count”. Supposing 4 triggers are registered and attributed to the source, the report would look like this:
 
 ```jsonc
 {
