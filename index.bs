@@ -104,6 +104,26 @@ The IDL attribute {{HTMLAttributionSrcElementUtils/attributionSrc}}
 must <a spec=html>reflect</a> the respective content attribute of the same
 name.
 
+Whenever an <{img}> or a <{script}> |element| is created or |element|'s
+{{HTMLAttributionSrcElementUtils/attributionSrc}} attribute is set or changed,
+run the following steps:
+
+1. Let |attributionSrc| be |element|'s
+    {{HTMLAttributionSrcElementUtils/attributionSrc}}.
+1. If |attributionSrc| is the empty string, return.
+1. Parse |attributionSrc|, relative to |element|'s node document.
+    If that is not successful, return. Otherwise, let |url| be the resulting
+    [=URL record=].
+1. Run [=make a background attributionsrc request=] with |url|, |contextOrigin|,
+    "<code>event-source, trigger</code>", and |element|'s node document's
+    [=relevant settings object=].
+
+Issue: Set |contextOrigin| properly.
+
+Issue: Add links to "Parse" and "node document".
+
+Issue: Specify when to make background attributionsrc requests for <{a}>.
+
 <h3 id="monkeypatch-window-open">Window open steps</h4>
 
 Issue: Monkeypatch `window.open()`.
@@ -788,6 +808,98 @@ and a [=suitable origin=] |reportingEndpoint|:
     :: |reportingEndpoint|
 1. [=Queue a task=] to [=attempt to deliver a verbose debug report=] with |debugReport|.
 
+<h3 id="making-a-background-attributionsrc-request">Making a background attributionsrc request</h3>
+
+An <dfn>eligibility</dfn> is one of the following:
+
+<dl dfn-for="eligibility">
+: "<dfn><code>navigation-source</code></dfn>"
+:: A [=source type/navigation=] [=attribution source|source=] may be registered.
+: "<dfn><code>event-source, trigger</code></dfn>"
+:: Either an [=source type/event=] [=attribution source|source=] or a
+    [=attribution trigger|trigger=] may be registered.
+
+</dl>
+
+To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
+[=suitable origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and an
+[=environment settings objects=] |context|:
+
+1. If |url|'s [=url/origin=] is not [=check if an origin is suitable|suitable=],
+    return.
+1. Let |request| be a new [=request=] with the following properties:
+    :   [=request/method=]
+    ::  "`GET`"
+    :   [=request/URL=]
+    ::  |url|
+    :   [=request/keepalive=]
+    ::  true
+1. [=header list/Set=] a header
+    ("Attribution-Reporting-Eligible", |eligibility|) in |request|'s
+    [=request/header list=].
+1. [=Set an OS-support header=] in |request|'s [=request/header list=].
+1. [=Fetch=] |request| with [=fetch/processResponse=] being
+    [=process an attributionsrc response=] with |contextOrigin|, |eligibility|,
+    and |context|.
+
+Issue: Check permission policy and document trustworthiness.
+
+Issue: Audit other properties on |request| and set them properly.
+
+Issue: Support header-processing on redirects.
+
+To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
+|contextOrigin|, an [=eligibility=] |eligibility|, an
+[=environment settings objects=] |context|, and a [=response=] |response|:
+
+1. Let |reportingOrigin| be |response|'s [=response/URL=]'s [=url/origin=].
+1. If |reportingOrigin| is not [=check if an origin is suitable|suitable=], return.
+1. Let |sourceHeader| be the result of [=header list/get|getting=]
+    "`Attribution-Reporting-Register-Source`" from |response|'s
+    [=response/header list=].
+1. Let |triggerHeader| be the result of [=header list/get|getting=]
+    "`Attribution-Reporting-Register-Trigger`" from |response|'s
+    [=response/header list=].
+1. If |eligibility| is:
+    <dl class="switch">
+    : "<code>[=eligibility/navigation-source=]</code>"
+    :: Run the following steps:
+        1. If |sourceHeader| is null, return.
+        1. Let |source| be the result of running
+            [=parse source-registration JSON=] with |sourceHeader|,
+            |contextOrigin|, |reportingOrigin|,
+            "<code>[=source type/navigation=]</code>", and |context|'s
+            [=current wall time=].
+        1. If |source| is not null, [=process an attribution source|process=]
+            |source|.
+    : "<code>[=eligibility/event-source, trigger=]</code>"
+    :: Run the following steps:
+        1. If |sourceHeader| is not null and |triggerHeader| is not null,
+            return.
+        1. If |sourceHeader| is not null:
+            1. Let |source| be the result of running
+                [=parse source-registration JSON=] with |sourceHeader|,
+                |contextOrigin|, |reportingOrigin|,
+                "<code>[=source type/event=]</code>", and |context|'s
+                [=current wall time=].
+            1. If |source| is not null,
+                [=process an attribution source|process=] |source|.
+        1. If |triggerHeader| is not null:
+            1. Let |destinationSite| be the result of [=obtaining a site=] from
+                |contextOrigin|.
+            1. Let |privateStateToken| be null.
+            1. Let |trigger| be the result of running
+                [=create an attribution trigger=] with |triggerHeader|
+                |destinationSite|, |reportingOrigin|, |privateStateToken|, and
+                |context|'s [=current wall time=].
+            1. If |trigger| is not null, [=trigger attribution=] with |trigger|.
+
+    </dl>
+
+Issue: Handle OS-registration headers.
+
+Issue: Set |privateStateToken| properly.
+
 # Source Algorithms # {#source-algorithms}
 
 <h3 algorithm id="obtaining-randomized-source-response">Obtaining a randomized source response</h3>
@@ -889,12 +1001,12 @@ To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
 
 Issue: Determine whether to limit [=string/length=] or [=string/code point length=] for |key| above.
 
-To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
+To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 |json|, a [=suitable origin=] |sourceOrigin|, a [=suitable origin=] |reportingOrigin|, a
 [=source type=] |sourceType|, and a [=moment=] |sourceTime|:
 
 1. Let |value| be the result of running
-    [=parse a JSON string to an Infra value=] with |json|.
+    [=parse JSON bytes to an Infra value=] with |json|.
 1. If |value| is not an [=ordered map=], return null.
 1. Let |sourceEventId| be 0.
 1. If |value|["`source_event_id`"] [=map/exists=] and is a [=string=]:
@@ -995,6 +1107,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=string=]
     : [=attribution source/debug reporting enabled=]
     :: |debugReportingEnabled|
 1. Return |source|.
+
+Issue: Determine proper charset-handling for the JSON header value.
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
@@ -1332,12 +1446,12 @@ ISSUE: properly define "begin redemption" operation. Consider running the algori
 
 1. Return the result of [=forgiving-base64 encoding=] |redeemedBytes|.
 
-To <dfn noexport>create an attribution trigger</dfn> given a [=string=]
+To <dfn noexport>create an attribution trigger</dfn> given a [=byte sequence=]
 |json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, a [=string=] |privateStateToken|,
 and a [=moment=] |triggerTime|:
 
 1. Let |value| be the result of running
-    [=parse a JSON string to an Infra value=] with |json|.
+    [=parse JSON bytes to an Infra value=] with |json|.
 1. If |value| is not an [=ordered map=], return null.
 1. Let |eventTriggers| be the result of running [=parse event triggers=]
     with |value|.
@@ -1404,6 +1518,8 @@ and a [=moment=] |triggerTime|:
     :: [=attribution trigger/aggregation coordinator=]
     :: |aggregationCoordinator|
 1. Return |trigger|.
+
+Issue: Determine proper charset-handling for the JSON header value.
 
 <h3 dfn id="does-filter-data-match">Does filter data match</h3>
 
@@ -2356,10 +2472,10 @@ To <dfn noexport>get an OS-registration URL from a header list</dfn> given a
 1. Return the result of running the [=URL parser=] on |value|.
 
 To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
-|headers| and a [=boolean=] |hasOsSupport|:
+|headers|:
 
 1. Let |value| be "`web`".
-1. If |hasOsSupport| is true, set |value| to "`web, os`".
+1. If the user agent supports OS registrations, set |value| to "`web, os`".
 1. [=header list/Set=] ("`Attribution-Reporting-Support`", |value|) in |headers|.
 
 Issue: Consider replacing these string values with structured-field algorithms.
