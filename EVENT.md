@@ -152,15 +152,15 @@ non-empty. If it is non-empty, it contains a space-separated list of URLs
 to which the browser will initiate a separate `keepalive` fetch request in the
 background. If it is empty, no background requests will be made. In both
 cases, the request(s) (originating from `href`, `src`, or `attributionsrc`) will
-contain an `Attribution-Reporting-Eligible` header that indicates the types
+contain an `Attribution-Reporting-Eligible` header that indicates the types of
 registrations that are allowed in the response.
 
-For `<a>`, background requests, if any, are made when the user navigates. For
-`<img>` and `<script>`, background requests are made when the `attributionsrc`
-attribute is set on the DOM element.
+For `<a>` and `window.open`, background requests, if any, are made when the user
+navigates. For `<img>` and `<script>`, background requests are made when the
+`attributionsrc` attribute is set on the DOM element.
 
 In JavaScript, `window.open` also supports an empty or non-empty
-`attributionsrc` feature, though it *does not yet support* multiple values due
+`attributionsrc` feature, though it **does not yet support multiple values** due
 to complexity in parsing the feature string.
 
 `event` sources can also be registered using existing JavaScript request
