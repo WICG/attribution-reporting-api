@@ -1081,7 +1081,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     : [=randomized response output configuration/max attributions per source=]
     :: |maxAttributionsPerSource|
     : [=randomized response output configuration/num report windows=]
-    :: The result of [=obtaining the number of report windows=] with |sourceType|
+    :: The result of [=obtaining the number of report windows=] with |sourceType| and |eventReportWindow|
     : [=randomized response output configuration/trigger data cardinality=]
     :: |triggerDataCardinality|
 
@@ -2006,12 +2006,18 @@ To <dfn>obtain early deadlines</dfn> given a [=source type=] |sourceType|:
 1. If |sourceType| is "<code>[=source type/event=]</code>", return «».
 1. Return « 2 days, 7 days ».
 
-To <dfn>obtain the number of report windows</dfn> given a [=source type=]
-|sourceType|:
+To <dfn>obtain effective deadlines</dfn> given an [=attribution source/source type=] |sourceType| and a [=duration=] |eventReportWindow|:
 
-1. Let |earlyDeadlines| be the result of running [=obtain early deadlines=]
-    with |sourceType|.
-1. Return the [=list/size=] of |earlyDeadlines| + 1.
+1. Let |deadlines| be the result of [=obtaining early deadlines=] given |sourceType|.
+1. [=list/remove=] all elements in |deadlines| that are greater than |eventReportWindow|.
+1. [=list/append=] |eventReportWindow| to |deadlines|.
+1. Return |deadlines|.
+
+To <dfn>obtain the number of report windows</dfn> given an [=attribution source/source type=] |sourceType|
+and a [=duration=] |eventReportWindow|:
+
+1. Let |deadlines| be the result of [=obtaining effective deadlines=] for |sourceType| and |eventReportWindow|.
+1. Return the [=list/size=] of |deadlines|.
 
 To <dfn>obtain a report time from deadline</dfn> given a [=moment=] |sourceTime| and
 a [=duration=] |deadline|:
@@ -2021,26 +2027,23 @@ a [=duration=] |deadline|:
 To <dfn>obtain the report time at a window</dfn> given an
 [=attribution source=] |source| and a non-negative integer |window|:
 
-1. Let |earlyDeadlines| be the result of running [=obtain early deadlines=]
-    with |source|'s [=attribution source/source type=].
-1. Let |deadline| be |source|'s [=attribution source/event report window=].
-1. If |earlyDeadlines|[|window|] [=list/exists=], set |deadline| to it.
+1. Let |deadlines| be the result of running [=obtain effective deadlines=]
+    with |source|'s [=attribution source/source type=] and [=attribution source/event report window=].
+1. [=Assert=] |deadlines|[|window|] [=list/exists=].
+1. Let |deadline| be |deadlines|[|window|].
 1. Return the result of running [=obtain a report time from deadline=] with
     |source|'s [=attribution source/source time=] and |deadline|.
 
 To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution source=]
 |source| and a [=moment=] |triggerTime|:
 
-1. Let |deadlineToUse| be |source|'s [=attribution source/event report window=].
-1. Let |earlyDeadlines| be the result of running [=obtain early deadlines=]
-    with |source|'s [=attribution source/source type=].
-1. [=list/iterate|For each=] |earlyDeadline| of |earlyDeadlines|:
+1. Let |deadlines| be the result of [=obtaining effective deadlines=] with |source|.
+1. Let |deadlineToUse| be the last item in |deadlines|.
+1. [=list/iterate|For each=] |deadline| of |deadlines|:
     1. Let |time| be |source|'s [=attribution source/source time=] +
-        |earlyDeadline|.
+        |deadline|.
     1. If |time| is less than |triggerTime|, [=iteration/continue=].
-    1. If |earlyDeadline| is greater than or equal to |deadlineToUse|,
-        [=iteration/continue=].
-    1. Set |deadlineToUse| to |earlyDeadline|.
+    1. Set |deadlineToUse| to |deadline|.
     1. [=iteration/Break=].
 1. Return the result of running [=obtain a report time from deadline=] with
     |source|'s [=attribution source/source time=] and |deadlineToUse|.
