@@ -173,6 +173,20 @@ A trigger state is a [=struct=] with the following items:
 
 </dl>
 
+<h3 dfn-type=dfn>Randomized response output configuration</h3>
+
+A randomized response output configuration is a [=struct=] with the following items:
+
+<dl dfn-for="randomized response output configuration">
+: <dfn>max attributions per source</dfn>
+:: A positive integer.
+: <dfn>trigger data cardinality</dfn>
+:: A positive integer.
+: <dfn>num report windows</dfn>
+:: A positive integer.
+
+</dl>
+
 <h3 dfn-type=dfn>Randomized source response</h3>
 
 A randomized source response is null or a [=set=] of [=trigger states=].
@@ -590,14 +604,8 @@ for triggers that are attributed to an [=attribution source=] whose
 [=attribution source/source type=] is "<code>[=source type/event=]</code>":
 0 <= [=event-level trigger configuration/trigger data=] < [=event-source trigger data cardinality=].
 
-<dfn>Randomized navigation-source trigger rate</dfn> is a double between 0 and
-1 (both inclusive) that controls the randomized response probability of an
-[=attribution source=] whose [=attribution source/source type=] is
-"<code>[=source type/navigation=]</code>".
-
-<dfn>Randomized event-source trigger rate</dfn> is a double between 0 and 1
-(both inclusive) that controls the randomized response probability of an
-[=attribution source=] whose [=attribution source/source type=] is "<code>[=source type/event=]</code>".
+<dfn>Randomized response epsilon</dfn> is a non-negative double that controls
+the randomized response probability of an [=attribution source=].
 
 <dfn>Max event-level reports per attribution destination</dfn> is a positive integer that
 controls how many [=event-level reports=] can be in the
@@ -904,13 +912,10 @@ Issue: Set |privateStateToken| properly.
 
 <h3 algorithm id="obtaining-randomized-source-response">Obtaining a randomized source response</h3>
 
-To <dfn>obtain a randomized source response</dfn> given a positive integer
-|triggerDataCardinality|, a positive integer |maxAttributionsPerSource|, a positive integer
-|numReportWindows|, and a double |randomPickRate|:
-
+To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized response output configuration=] |config|:
 1. Let |possibleTriggerStates| be a new [=list/is empty|empty=] [=set=].
-1. For each integer |triggerData| between 0 (inclusive) and |triggerDataCardinality| (exclusive):
-    1. For each integer |reportWindow| between 0 (inclusive) and |numReportWindows| (exclusive):
+1. For each integer |triggerData| between 0 (inclusive) and |config|'s [=randomized response output configuration/trigger data cardinality=] (exclusive):
+    1. For each integer |reportWindow| between 0 (inclusive) and |config|'s [=randomized response output configuration/num report windows=] (exclusive):
         1. Let |state| be a new [=trigger state=] with the items:
             : [=trigger state/trigger data=]
             :: |triggerData|
@@ -918,11 +923,22 @@ To <dfn>obtain a randomized source response</dfn> given a positive integer
             :: |reportWindow|
         1. [=set/Append=] |state| to |possibleTriggerStates|.
 1. Let |possibleValues| be a new [=list/is empty|empty=] [=set=].
-1. For each integer |attributions| between 0 (inclusive) and |maxAttributionsPerSource| (inclusive):
+1. For each integer |attributions| between 0 (inclusive) and |config's| [=randomized response output configuration/max attributions per source=] (inclusive):
     1. [=set/Append=] to |possibleValues| all distinct |attributions|-length combinations of
         |possibleTriggerStates|.
+
+To <dfn>obtain a randomized source response pick rate</dfn> given a [=randomized response output configuration=] |config| and a double |epsilon|:
+
+1. Let |possibleValues| be the result of [=obtaining a set of possible trigger states=] with |config|.
+1. Let |numPossibleValues| be the [=set/size=] of |possibleValues|.
+1. Return |numPossibleValues| / (|numPossibleValues| - 1 + e<sup>|epsilon|</sup>).
+
+To <dfn>obtain a randomized source response</dfn> given a [=randomized response output configuration=] |config| and a double |epsilon|:
+
+1. Let |possibleValues| be the result of [=obtaining a set of possible trigger states=] with |config|.
+1. Let |pickRate| be the result of [=obtaining a randomized source response pick rate=] with |config| and |epsilon|.
 1. Return the result of [=obtaining a randomized response=] with null, |possibleValues|, and
-    |randomPickRate|.
+    |pickRate|.
 
 <h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
 
@@ -1047,25 +1063,30 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. If |aggregatableExpiry| is null, set |aggregatableExpiry| to |expiry|.
 1. Let |triggerDataCardinality| be the user agent's
     [=navigation-source trigger data cardinality=].
-1. Let |randomizedTriggerRate| be the user agent's
-    [=randomized navigation-source trigger rate=].
 1. Let |maxAttributionsPerSource| be the user agent's
     [=max attributions per navigation source=].
 1. If |sourceType| is "<code>[=source type/event=]</code>":
     1. Round |expiry| away from zero to the nearest day (86400 seconds).
     1. Set |triggerDataCardinality| to the user agent's
         [=event-source trigger data cardinality=].
-    1. Set |randomizedTriggerRate|'s to the user agent's
-        [=randomized event-source trigger rate=].
     1. Set |maxAttributionsPerSource| to the user agent's
         [=max attributions per event source=].
 1. If |eventReportWindow| is null or greater than |expiry|, set |eventReportWindow| to |expiry|.
 1. If |aggregatableReportWindow| is null or greater than |expiry|, set |aggregatableReportWindow| to |expiry|.
-1. Let |numReportWindows| be the result of running
-    [=obtain the number of report windows=] with |sourceType|.
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to |value|["`debug_reporting`"].
+1. Let |randomizedResponseConfig| be a new [=randomized response output configuration=] whose items are:
+
+    : [=randomized response output configuration/max attributions per source=]
+    :: |maxAttributionsPerSource|
+    : [=randomized response output configuration/num report windows=]
+    :: The result of [=obtaining the number of report windows=] with |sourceType|
+    : [=randomized response output configuration/trigger data cardinality=]
+    :: |triggerDataCardinality|
+
+1. Let |epsilon| be the user agent's [=randomized response epsilon=].
+
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -1091,11 +1112,9 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     : [=attribution source/source type=]
     :: |sourceType|
     : [=attribution source/randomized response=]
-    :: The result of [=obtaining a randomized source response=] with
-        |triggerDataCardinality|, |maxAttributionsPerSource|,
-        |numReportWindows|, and |randomizedTriggerRate|.
+    :: The result of [=obtaining a randomized source response=] with |randomizedResponseConfig| and |epsilon|.
     : [=attribution source/randomized trigger rate=]
-    :: |randomizedTriggerRate|
+    :: The result of [=obtaining a randomized source response pick rate=] with |randomizedResponseConfig| and |epsilon|.
     : [=attribution source/filter data=]
     :: |filterData|
     : [=attribution source/debug key=]
