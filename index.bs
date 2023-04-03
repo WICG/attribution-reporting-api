@@ -868,22 +868,35 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
 1. Let |triggerHeader| be the result of [=header list/get|getting=]
     "`Attribution-Reporting-Register-Trigger`" from |response|'s
     [=response/header list=].
+1. Let |osSourceURL| be the result of
+    [=getting an OS-registration URL from a header list|get an OS-registration URL=]
+    from |response|'s [=response/header list=] with
+    "`Attribution-Reporting-Register-OS-Source`".
+1. Let |osTriggerURL| be the result of
+    [=getting an OS-registration URL from a header list|get an OS-registration URL=]
+    from |response|'s [=response/header list=] with
+    "`Attribution-Reporting-Register-OS-Trigger`".
 1. If |eligibility| is:
     <dl class="switch">
     : "<code>[=eligibility/navigation-source=]</code>"
     :: Run the following steps:
-        1. If |sourceHeader| is null, return.
-        1. Let |source| be the result of running
-            [=parse source-registration JSON=] with |sourceHeader|,
-            |contextOrigin|, |reportingOrigin|,
-            "<code>[=source type/navigation=]</code>", and |context|'s
-            [=current wall time=].
-        1. If |source| is not null, [=process an attribution source|process=]
-            |source|.
+        1. If |sourceHeader| and |osSourceURL| are both null or both not
+            null, return.
+        1. If |sourceHeader| is not null:
+            1. Let |source| be the result of running
+                [=parse source-registration JSON=] with |sourceHeader|,
+                |contextOrigin|, |reportingOrigin|,
+                "<code>[=source type/navigation=]</code>", and |context|'s
+                [=current wall time=].
+            1. If |source| is not null, [=process an attribution source|process=]
+                |source|.
+        1. If |osSourceURL| is not null and the user agent supports OS
+            registrations, process |osSourceURL| according to an
+            [=implementation-defined=] algorithm.
     : "<code>[=eligibility/event-source, trigger=]</code>"
     :: Run the following steps:
-        1. If |sourceHeader| is not null and |triggerHeader| is not null,
-            return.
+        1. If the number of non-null entries in «|sourceHeader|,
+            |triggerHeader|, |osSourceURL|, |osTriggerURL|» is not 1, return.
         1. If |sourceHeader| is not null:
             1. Let |source| be the result of running
                 [=parse source-registration JSON=] with |sourceHeader|,
@@ -901,6 +914,12 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
                 |destinationSite|, |reportingOrigin|, |privateStateToken|, and
                 |context|'s [=current wall time=].
             1. If |trigger| is not null, [=trigger attribution=] with |trigger|.
+        1. If |osSourceURL| is not null and the user agent supports OS
+            registrations, process |osSourceURL| according to an
+            [=implementation-defined=] algorithm.
+        1. If |osTriggerURL| is not null and the user agent supports OS
+            registrations, process |osTriggerURL| according to an
+            [=implementation-defined=] algorithm.
 
     </dl>
 
