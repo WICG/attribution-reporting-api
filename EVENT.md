@@ -147,16 +147,23 @@ window.open(
         attributionsrc="https://adtech.example/attribution_source?my_ad_id=123">
 ```
 
-Specifying a URL value for `attributionsrc` within `<a>`, `<img>`, `<script>` or
-`window.open` will cause the browser to initiate a separate `keepalive` fetch
-request which includes the `Attribution-Reporting-Eligible` request header.
+The `attributionsrc` attribute on `<a>`, `<img>`, and `<script>` may be empty or
+non-empty. If it is non-empty, it contains a space-separated list of URLs
+to which the browser will initiate a separate `keepalive` fetch request in the
+background. If it is empty, no background requests will be made. In both
+cases, the request(s) (originating from `href`, `src`, or `attributionsrc`) will
+contain an `Attribution-Reporting-Eligible` header that indicates the types of
+registrations that are allowed in the response.
 
-When the `attributionsrc` attribute is present in these surfaces/APIs, both with
-and without a value, existing requests made via `src`/`href` attributes or
-`window.open` will now include the `Attribution-Reporting-Eligible` request
-header. Each of these requests will be able to register attribution sources.
+For `<a>` and `window.open`, background requests, if any, are made when the user
+navigates. For `<img>` and `<script>`, background requests are made when the
+`attributionsrc` attribute is set on the DOM element.
 
-`event` sources can also be registered using existing JavaScript request 
+In JavaScript, `window.open` also supports an empty or non-empty
+`attributionsrc` feature, though it **does not yet support multiple values** due
+to complexity in parsing the feature string.
+
+`event` sources can also be registered using existing JavaScript request
 APIs by setting the `Attribution-Reporting-Eligible` header manually:
 
 ```javascript
