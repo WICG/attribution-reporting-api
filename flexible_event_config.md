@@ -23,7 +23,7 @@ In general, the approach here is to more flexibly encode the output of the API f
 
 ## API changes 
 
-We will add another optional parameter `trigger_specs` to the JSON in `Attribution-Reporting-Register-Source`:
+We will add two optional parameters to the JSON in `Attribution-Reporting-Register-Source`, `trigger_specs` and `max_event_level_reports`:
 
 ```jsonc
 {
@@ -73,14 +73,14 @@ We will add another optional parameter `trigger_specs` to the JSON in `Attributi
   } ...],
 
   // Optional. This is a global parameter that acts across all trigger specs
-  // for the lifetime of this source. It restricts the total number of reports
+  // for the lifetime of this source. It restricts the total number of event-level reports
   // that this source can generate. A report is generated for every "bucket increment",
   // so this parameter also restricts the total number of bucket increments as well.
   // After this maximum is hit, the source is no longer capable of producing any new
   // data. The use of priority in the trigger attribution algorithm in the case of
   // multiple attributable triggers remain unchanged.
   // Defaults to 20.
-  "max_reports": <int>
+  "max_event_level_reports": <int>
 }
 ```
 
@@ -159,7 +159,7 @@ Here are the default configurations for event and navigation sources. Especially
   {
     "trigger_data": [0, 1],
   }],
-  "max_reports": 1
+  "max_event_level_reports": 1
 }
 ```
 
@@ -174,7 +174,7 @@ Here are the default configurations for event and navigation sources. Especially
       "end_times": [<2 days>, <7 days>, <30 days>]
     }
   }],
-  "max_reports": 3
+  "max_event_level_reports": 3
 }
 ```
 
@@ -280,7 +280,7 @@ Note that the `trigger_specs` registration can differ from source to source. Thi
       "end_times": [<2 days>, <7 days>, <30 days>]
     }
   }],
-  "max_reports": 3
+  "max_event_level_reports": 3
 }
 ```
 
@@ -293,7 +293,7 @@ Note that the `trigger_specs` registration can differ from source to source. Thi
       "end_times": [<2 days>, <7 days>, <30 days>]
     }
   }],
-  "max_reports": 3
+  "max_event_level_reports": 3
 }
 ```
 
