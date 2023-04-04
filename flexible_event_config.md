@@ -23,7 +23,7 @@ In general, the approach here is to more flexibly encode the output of the API f
 
 ## API changes 
 
-We will two optional parameters to the JSON in `Attribution-Reporting-Register-Source`, `trigger_specs` and `max_event_level_reports`:
+We will add two optional parameters to the JSON in `Attribution-Reporting-Register-Source`, `trigger_specs` and `max_event_level_reports`:
 
 ```jsonc
 {
