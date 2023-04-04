@@ -597,7 +597,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Attribution Reporting</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-03-29">29 March 2023</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-04-04">4 April 2023</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -826,17 +826,23 @@ run the following steps:</p>
     <li data-md>
      <p>Let <var>attributionSrc</var> be <var>element</var>’s <code class="idl"><a data-link-type="idl" href="#dom-htmlattributionsrcelementutils-attributionsrc" id="ref-for-dom-htmlattributionsrcelementutils-attributionsrc②">attributionSrc</a></code>.</p>
     <li data-md>
-     <p>If <var>attributionSrc</var> is the empty string, return.</p>
+     <p>Let <var>tokens</var> be the result of <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#split-on-ascii-whitespace" id="ref-for-split-on-ascii-whitespace">splitting</a> <var>attributionSrc</var> on ASCII
+whitespace.</p>
     <li data-md>
-     <p>Parse <var>attributionSrc</var>, relative to <var>element</var>’s node document.
-If that is not successful, return. Otherwise, let <var>url</var> be the resulting <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url" id="ref-for-concept-url⑥">URL record</a>.</p>
-    <li data-md>
-     <p>Run <a data-link-type="dfn" href="#make-a-background-attributionsrc-request" id="ref-for-make-a-background-attributionsrc-request">make a background attributionsrc request</a> with <var>url</var>, <var>contextOrigin</var>,
-"<code><a data-link-type="dfn" href="#eligibility-event-source-trigger" id="ref-for-eligibility-event-source-trigger">event-source, trigger</a></code>", and <var>element</var>’s node
-document’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#relevant-settings-object" id="ref-for-relevant-settings-object">relevant settings object</a>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate">For each</a> <var>token</var> of <var>tokens</var>:</p>
+     <ol>
+      <li data-md>
+       <p>Parse <var>token</var>, relative to <var>element</var>’s node document. If that is not
+successful, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue">continue</a>. Otherwise, let <var>url</var> be the
+resulting <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url" id="ref-for-concept-url⑥">URL record</a>.</p>
+      <li data-md>
+       <p>Run <a data-link-type="dfn" href="#make-a-background-attributionsrc-request" id="ref-for-make-a-background-attributionsrc-request">make a background attributionsrc request</a> with <var>url</var>, <var>contextOrigin</var>, "<code><a data-link-type="dfn" href="#eligibility-event-source-trigger" id="ref-for-eligibility-event-source-trigger">event-source, trigger</a></code>",
+and <var>element</var>’s node document’s <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#relevant-settings-object" id="ref-for-relevant-settings-object">relevant settings object</a>.</p>
+     </ol>
    </ol>
    <p class="issue" id="issue-0f6e3885"><a class="self-link" href="#issue-0f6e3885"></a> Set <var>contextOrigin</var> properly.</p>
    <p class="issue" id="issue-cdf1dda4"><a class="self-link" href="#issue-cdf1dda4"></a> Add links to "Parse" and "node document".</p>
+   <p class="issue" id="issue-4cc8b8aa"><a class="self-link" href="#issue-4cc8b8aa"></a> Consider allowing the user agent to limit the size of <var>tokens</var>.</p>
    <p class="issue" id="issue-80ca5c3f"><a class="self-link" href="#issue-80ca5c3f"></a> Specify when to make background attributionsrc requests for <code><a data-link-type="element" href="https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element" id="ref-for-the-a-element③">a</a></code>.</p>
    <h3 class="heading settled" data-level="2.2" id="monkeypatch-window-open"><span class="secno">2.2. </span><span class="content">Window open steps</span><a class="self-link" href="#monkeypatch-window-open"></a></h3>
    <p class="issue" id="issue-adb5eac2"><a class="self-link" href="#issue-adb5eac2"></a> Monkeypatch <code>window.open()</code>.</p>
@@ -856,19 +862,19 @@ Its <a data-link-type="dfn" href="https://w3c.github.io/webappsec-permissions-po
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="clear-site-data">clear site data</dfn> given an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin" id="ref-for-concept-origin">origin</a> <var>origin</var>:</p>
    <ol>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate">For each</a> <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑤">attribution source</a> <var>source</var> of the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache">attribution source cache</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①">For each</a> <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑤">attribution source</a> <var>source</var> of the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache">attribution source cache</a>:</p>
      <ol>
       <li data-md>
        <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint">reporting endpoint</a> and <var>origin</var> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin">same origin</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove">remove</a> <var>source</var> from the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache①">attribution source cache</a>.</p>
      </ol>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①">For each</a> <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report">event-level report</a> <var>report</var> of the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache">event-level report cache</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②">For each</a> <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report">event-level report</a> <var>report</var> of the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache">event-level report cache</a>:</p>
      <ol>
       <li data-md>
        <p>If <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-reporting-endpoint" id="ref-for-attribution-report-reporting-endpoint">reporting endpoint</a> and <var>origin</var> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin①">same origin</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove①">remove</a> <var>report</var> from the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache①">event-level report cache</a>.</p>
      </ol>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②">For each</a> <a data-link-type="dfn" href="#aggregatable-report" id="ref-for-aggregatable-report">aggregatable report</a> <var>report</var> of the <a data-link-type="dfn" href="#aggregatable-report-cache" id="ref-for-aggregatable-report-cache">aggregatable report cache</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate③">For each</a> <a data-link-type="dfn" href="#aggregatable-report" id="ref-for-aggregatable-report">aggregatable report</a> <var>report</var> of the <a data-link-type="dfn" href="#aggregatable-report-cache" id="ref-for-aggregatable-report-cache">aggregatable report cache</a>:</p>
      <ol>
       <li data-md>
        <p>If <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-reporting-endpoint" id="ref-for-attribution-report-reporting-endpoint①">reporting endpoint</a> and <var>origin</var> are <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin②">same origin</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove②">remove</a> <var>report</var> from the <a data-link-type="dfn" href="#aggregatable-report-cache" id="ref-for-aggregatable-report-cache①">aggregatable report cache</a>.</p>
@@ -1337,7 +1343,7 @@ obtain the public key for encrypting an <a data-link-type="dfn" href="#aggregata
     <li data-md>
      <p>Let <var>destinationStrings</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list①⓪">list</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate③">For each</a> <var>destination</var> in <var>destinations</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate④">For each</a> <var>destination</var> in <var>destinations</var>:</p>
      <ol>
       <li data-md>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#assert" id="ref-for-assert①">Assert</a>: <var>destination</var> is not the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-opaque" id="ref-for-concept-origin-opaque">opaque origin</a>.</p>
@@ -1373,7 +1379,7 @@ obtain the public key for encrypting an <a data-link-type="dfn" href="#aggregata
       <li data-md>
        <p>Let <var>set</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set①③">ordered set</a>.</p>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate④">For each</a> <var>d</var> of <var>data</var>:</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑤">For each</a> <var>d</var> of <var>data</var>:</p>
        <ol>
         <li data-md>
          <p>If <var>d</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①①">string</a>, return null.</p>
@@ -1424,7 +1430,7 @@ obtain the public key for encrypting an <a data-link-type="dfn" href="#aggregata
     <li data-md>
      <p>If <var>value</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list①③">list</a>, return null.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑤">For each</a> <var>data</var> of <var>value</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑥">For each</a> <var>data</var> of <var>value</var>:</p>
      <ol>
       <li data-md>
        <p>Let <var>filterMap</var> be the result of running <a data-link-type="dfn" href="#parse-filter-values" id="ref-for-parse-filter-values②">parse filter values</a> with <var>data</var>.</p>
@@ -1445,20 +1451,20 @@ obtain the public key for encrypting an <a data-link-type="dfn" href="#aggregata
      <p>For each <var>cookie</var> of the user agent’s <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-storage-model">cookie store</a>:</p>
      <ol>
       <li data-md>
-       <p>If <var>cookie</var>’s name is not "<code>ar_debug</code>", <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue">continue</a>.</p>
+       <p>If <var>cookie</var>’s name is not "<code>ar_debug</code>", <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①">continue</a>.</p>
       <li data-md>
-       <p>If <var>cookie</var>’s http-only-flag is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①">continue</a>.</p>
+       <p>If <var>cookie</var>’s http-only-flag is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue②">continue</a>.</p>
       <li data-md>
-       <p>If <var>cookie</var>’s secure-flag is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue②">continue</a>.</p>
+       <p>If <var>cookie</var>’s secure-flag is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue③">continue</a>.</p>
       <li data-md>
-       <p>If <var>cookie</var>’s same-site-flag is not "<code>None</code>", <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue③">continue</a>.</p>
+       <p>If <var>cookie</var>’s same-site-flag is not "<code>None</code>", <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue④">continue</a>.</p>
       <li data-md>
        <p>If <var>cookie</var>’s host-only-flag is true and <var>domain</var> is not
-identical to <var>cookie</var>’s domain, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue④">continue</a>.</p>
+identical to <var>cookie</var>’s domain, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑤">continue</a>.</p>
       <li data-md>
-       <p>If <var>cookie</var>’s host-only-flag is false and <var>domain</var> does not <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-domain-matching">domain-match</a> <var>cookie</var>’s domain, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑤">continue</a>.</p>
+       <p>If <var>cookie</var>’s host-only-flag is false and <var>domain</var> does not <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-domain-matching">domain-match</a> <var>cookie</var>’s domain, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑥">continue</a>.</p>
       <li data-md>
-       <p>If "<code>/</code>" does not <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-paths-and-path-match">path-match</a> <var>cookie</var>’s path, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑥">continue</a>.</p>
+       <p>If "<code>/</code>" does not <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-paths-and-path-match">path-match</a> <var>cookie</var>’s path, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑦">continue</a>.</p>
       <li data-md>
        <p>Return <strong>allowed</strong>.</p>
      </ol>
@@ -1727,7 +1733,7 @@ return null.</p>
     <li data-md>
      <p>If <var>val</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list①⑤">list</a>, return null.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑥">For each</a> <var>value</var> of <var>val</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑦">For each</a> <var>value</var> of <var>val</var>:</p>
      <ol>
       <li data-md>
        <p>If <var>value</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string①⑤">string</a>, return null.</p>
@@ -2141,7 +2147,7 @@ to the user agent’s <a data-link-type="dfn" href="#max-pending-sources-per-sou
        <p>Return.</p>
      </ol>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑦">For each</a> <var>destination</var> in <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destinations" id="ref-for-attribution-source-attribution-destinations⑥">attribution destinations</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑧">For each</a> <var>destination</var> in <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destinations" id="ref-for-attribution-source-attribution-destinations⑥">attribution destinations</a>:</p>
      <ol>
       <li data-md>
        <p>Let <var>rateLimitRecord</var> be a new <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record⑤">attribution rate-limit record</a> with the items:</p>
@@ -2184,7 +2190,7 @@ to the user agent’s <a data-link-type="dfn" href="#max-pending-sources-per-sou
      <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response①">randomized response</a> is not null and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set②⓪">set</a>:</p>
      <ol>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑧">For each</a> <a data-link-type="dfn" href="#trigger-state" id="ref-for-trigger-state③">trigger state</a> <var>triggerState</var> of <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response②">randomized response</a>:</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑨">For each</a> <a data-link-type="dfn" href="#trigger-state" id="ref-for-trigger-state③">trigger state</a> <var>triggerState</var> of <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response②">randomized response</a>:</p>
        <ol>
         <li data-md>
          <p>Let <var>fakeReport</var> be the result of running <a data-link-type="dfn" href="#obtain-a-fake-report" id="ref-for-obtain-a-fake-report">obtain a fake report</a> with <var>source</var> and <var>triggerState</var>.</p>
@@ -2246,7 +2252,7 @@ privacy budget of all possible destinations.</p>
     <li data-md>
      <p>If <var>values</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list①⑥">list</a>, return null.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑨">For each</a> <var>value</var> of <var>values</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⓪">For each</a> <var>value</var> of <var>values</var>:</p>
      <ol>
       <li data-md>
        <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map①③">ordered map</a>, return null.</p>
@@ -2337,7 +2343,7 @@ the items:</p>
     <li data-md>
      <p>If <var>values</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list②⓪">list</a>, return null.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⓪">For each</a> <var>value</var> of <var>values</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①①">For each</a> <var>value</var> of <var>values</var>:</p>
      <ol>
       <li data-md>
        <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map①⑤">ordered map</a>, return null.</p>
@@ -2357,7 +2363,7 @@ the items:</p>
         <li data-md>
          <p>If <var>value</var>["<code>source_keys</code>"]'s <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size⑧">size</a> is greater than the user agent’s <a data-link-type="dfn" href="#max-aggregation-keys-per-attribution" id="ref-for-max-aggregation-keys-per-attribution①">max aggregation keys per attribution</a>, return null.</p>
         <li data-md>
-         <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①①">For each</a> <var>sourceKey</var> of <var>value</var>["<code>source_keys</code>"]:</p>
+         <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①②">For each</a> <var>sourceKey</var> of <var>value</var>["<code>source_keys</code>"]:</p>
          <ol>
           <li data-md>
            <p>If <var>sourceKey</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string②⑥">string</a>, return null.</p>
@@ -2441,7 +2447,7 @@ the items:</p>
     <li data-md>
      <p>If <var>values</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list②⑤">list</a>, return null.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①②">For each</a> <var>value</var> of <var>values</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①③">For each</a> <var>value</var> of <var>values</var>:</p>
      <ol>
       <li data-md>
        <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map①⑨">ordered map</a>, return null.</p>
@@ -2682,7 +2688,7 @@ and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" i
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate⑤">For each</a> <var>key</var> → <var>filterValues</var> of <var>filter</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>sourceData</var>[<var>key</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②⑧">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑦">continue</a>.</p>
+       <p>If <var>sourceData</var>[<var>key</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②⑧">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑧">continue</a>.</p>
       <li data-md>
        <p>Let <var>sourceValues</var> be <var>sourceData</var>[<var>key</var>].</p>
       <li data-md>
@@ -2702,7 +2708,7 @@ and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" i
     <li data-md>
      <p>If <var>filters</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty①②">is empty</a>, return true.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①③">For each</a> <var>filter</var> of <var>filters</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①④">For each</a> <var>filter</var> of <var>filters</var>:</p>
      <ol>
       <li data-md>
        <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-a-filter-map" id="ref-for-match-an-attribution-sources-filter-data-against-a-filter-map">match an attribution source’s filter data against a filter map</a> with <var>source</var>, <var>filter</var> and <var>isNegated</var> is true, return true.</p>
@@ -2763,7 +2769,7 @@ and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" i
     <li data-md>
      <p>Let <var>distinctReportingEndpoints</var> be a new empty <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set②③">ordered set</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①④">For each</a> <var>record</var> of <var>matchingRateLimitRecords</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append①③">append</a> <var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint⑤">reporting endpoint</a> to <var>distinctReportingEndpoints</var>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⑤">For each</a> <var>record</var> of <var>matchingRateLimitRecords</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append①③">append</a> <var>record</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint⑤">reporting endpoint</a> to <var>distinctReportingEndpoints</var>.</p>
     <li data-md>
      <p>If <var>distinctReportingEndpoints</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain">contains</a> <var>newRecord</var>’s <a data-link-type="dfn" href="#attribution-rate-limit-record-reporting-endpoint" id="ref-for-attribution-rate-limit-record-reporting-endpoint⑥">reporting endpoint</a>, return <strong>allowed</strong>.</p>
     <li data-md>
@@ -2799,15 +2805,15 @@ and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" i
     <li data-md>
      <p>Let <var>aggregationKeys</var> be the result of <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-clone" id="ref-for-map-clone">cloning</a> <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-aggregation-keys" id="ref-for-attribution-source-aggregation-keys②">aggregation keys</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⑤">For each</a> <var>triggerData</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-aggregatable-trigger-data" id="ref-for-attribution-trigger-aggregatable-trigger-data②">aggregatable trigger data</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⑥">For each</a> <var>triggerData</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-aggregatable-trigger-data" id="ref-for-attribution-trigger-aggregatable-trigger-data②">aggregatable trigger data</a>:</p>
      <ol>
       <li data-md>
-       <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters-and-negated-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters-and-negated-filters">match an attribution source’s filter data against filters and negated filters</a> with <var>source</var>, <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-filters" id="ref-for-aggregatable-trigger-data-filters①">filters</a>, and <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-negated-filters" id="ref-for-aggregatable-trigger-data-negated-filters①">negated filters</a> is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑧">continue</a>.</p>
+       <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters-and-negated-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters-and-negated-filters">match an attribution source’s filter data against filters and negated filters</a> with <var>source</var>, <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-filters" id="ref-for-aggregatable-trigger-data-filters①">filters</a>, and <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-negated-filters" id="ref-for-aggregatable-trigger-data-negated-filters①">negated filters</a> is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑨">continue</a>.</p>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⑥">For each</a> <var>sourceKey</var> of <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-source-keys" id="ref-for-aggregatable-trigger-data-source-keys②">source keys</a>:</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⑦">For each</a> <var>sourceKey</var> of <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-source-keys" id="ref-for-aggregatable-trigger-data-source-keys②">source keys</a>:</p>
        <ol>
         <li data-md>
-         <p>If <var>aggregationKeys</var>[<var>sourceKey</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②⑨">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue⑨">continue</a>.</p>
+         <p>If <var>aggregationKeys</var>[<var>sourceKey</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists②⑨">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⓪">continue</a>.</p>
         <li data-md>
          <p>Set <var>aggregationKeys</var>[<var>sourceKey</var>] to <var>aggregationKeys</var>[<var>sourceKey</var>] OR <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-key-piece" id="ref-for-aggregatable-trigger-data-key-piece①">key piece</a>.</p>
        </ol>
@@ -2820,7 +2826,7 @@ and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" i
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate⑥">For each</a> <var>id</var> → <var>key</var> of <var>aggregationKeys</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>aggregatableValues</var>[<var>id</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⓪">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⓪">continue</a>.</p>
+       <p>If <var>aggregatableValues</var>[<var>id</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⓪">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①①">continue</a>.</p>
       <li data-md>
        <p>Let <var>contribution</var> be a new <a data-link-type="dfn" href="#aggregatable-contribution" id="ref-for-aggregatable-contribution③">aggregatable contribution</a> with the items:</p>
        <dl>
@@ -2948,7 +2954,7 @@ and an optional <a data-link-type="dfn" href="#attribution-report" id="ref-for-a
     <li data-md>
      <p>Let <var>matchedConfig</var> be null.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⑦">For each</a> <a data-link-type="dfn" href="#event-level-trigger-configuration" id="ref-for-event-level-trigger-configuration③">event-level trigger configuration</a> <var>config</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-event-level-trigger-configurations" id="ref-for-attribution-trigger-event-level-trigger-configurations③">event-level trigger configurations</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⑧">For each</a> <a data-link-type="dfn" href="#event-level-trigger-configuration" id="ref-for-event-level-trigger-configuration③">event-level trigger configuration</a> <var>config</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-event-level-trigger-configurations" id="ref-for-attribution-trigger-event-level-trigger-configurations③">event-level trigger configurations</a>:</p>
      <ol>
       <li data-md>
        <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters-and-negated-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters-and-negated-filters①">match an attribution source’s filter data against filters and negated filters</a> with <var>sourceToAttribute</var>, <var>config</var>’s <a data-link-type="dfn" href="#event-level-trigger-configuration-filters" id="ref-for-event-level-trigger-configuration-filters②">filters</a>, and <var>config</var>’s <a data-link-type="dfn" href="#event-level-trigger-configuration-negated-filters" id="ref-for-event-level-trigger-configuration-negated-filters①">negated filters</a> is true:</p>
@@ -3093,7 +3099,7 @@ return the <a data-link-type="dfn" href="#triggering-result" id="ref-for-trigger
     <li data-md>
      <p>Let <var>matchedDedupKey</var> be null.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⑧">For each</a> <a data-link-type="dfn" href="#aggregatable-dedup-key" id="ref-for-aggregatable-dedup-key②">aggregatable dedup key</a> <var>aggregatableDedupKey</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-aggregatable-dedup-keys" id="ref-for-attribution-trigger-aggregatable-dedup-keys②">aggregatable dedup keys</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⑨">For each</a> <a data-link-type="dfn" href="#aggregatable-dedup-key" id="ref-for-aggregatable-dedup-key②">aggregatable dedup key</a> <var>aggregatableDedupKey</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-aggregatable-dedup-keys" id="ref-for-attribution-trigger-aggregatable-dedup-keys②">aggregatable dedup keys</a>:</p>
      <ol>
       <li data-md>
        <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-sources-filter-data-against-filters-and-negated-filters" id="ref-for-match-an-attribution-sources-filter-data-against-filters-and-negated-filters②">match an attribution source’s filter data against filters and negated filters</a> with <var>sourceToAttribute</var>, <var>aggregatableDedupKey</var>’s <a data-link-type="dfn" href="#aggregatable-dedup-key-filters" id="ref-for-aggregatable-dedup-key-filters①">filters</a>, and <var>aggregatableDedupKey</var>’s <a data-link-type="dfn" href="#aggregatable-dedup-key-negated-filters" id="ref-for-aggregatable-dedup-key-negated-filters①">negated filters</a> is true:</p>
@@ -3171,14 +3177,14 @@ an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-t
     <li data-md>
      <p>Let <var>matchingSources</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty①⑦">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list③②">list</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate①⑨">For each</a> <var>source</var> of the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache④">attribution source cache</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②⓪">For each</a> <var>source</var> of the <a data-link-type="dfn" href="#attribution-source-cache" id="ref-for-attribution-source-cache④">attribution source cache</a>:</p>
      <ol>
       <li data-md>
-       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destinations" id="ref-for-attribution-source-attribution-destinations⑧">attribution destinations</a> does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain④">contain</a> <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-attribution-destination" id="ref-for-attribution-trigger-attribution-destination⑥">attribution destination</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①①">continue</a>.</p>
+       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-attribution-destinations" id="ref-for-attribution-source-attribution-destinations⑧">attribution destinations</a> does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain④">contain</a> <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-attribution-destination" id="ref-for-attribution-trigger-attribution-destination⑥">attribution destination</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①②">continue</a>.</p>
       <li data-md>
-       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint①⓪">reporting endpoint</a> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-reporting-endpoint" id="ref-for-attribution-trigger-reporting-endpoint⑥">reporting endpoint</a> are not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin⑤">same origin</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①②">continue</a>.</p>
+       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint①⓪">reporting endpoint</a> and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-reporting-endpoint" id="ref-for-attribution-trigger-reporting-endpoint⑥">reporting endpoint</a> are not <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin⑤">same origin</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①③">continue</a>.</p>
       <li data-md>
-       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time②">expiry time</a> is less than or equal to <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time⑤">trigger time</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①③">continue</a>.</p>
+       <p>If <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-expiry-time" id="ref-for-attribution-source-expiry-time②">expiry time</a> is less than or equal to <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time⑤">trigger time</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①④">continue</a>.</p>
       <li data-md>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append⑦">Append</a> <var>source</var> to <var>matchingSources</var>.</p>
      </ol>
@@ -3317,14 +3323,14 @@ a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-duration" id=
     <li data-md>
      <p>Let <var>earlyDeadlines</var> be the result of running <a data-link-type="dfn" href="#obtain-early-deadlines" id="ref-for-obtain-early-deadlines②">obtain early deadlines</a> with <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑧">source type</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②⓪">For each</a> <var>earlyDeadline</var> of <var>earlyDeadlines</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②①">For each</a> <var>earlyDeadline</var> of <var>earlyDeadlines</var>:</p>
      <ol>
       <li data-md>
        <p>Let <var>time</var> be <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time①④">source time</a> + <var>earlyDeadline</var>.</p>
       <li data-md>
-       <p>If <var>time</var> is less than <var>triggerTime</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①④">continue</a>.</p>
+       <p>If <var>time</var> is less than <var>triggerTime</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⑤">continue</a>.</p>
       <li data-md>
-       <p>If <var>earlyDeadline</var> is greater than or equal to <var>deadlineToUse</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⑤">continue</a>.</p>
+       <p>If <var>earlyDeadline</var> is greater than or equal to <var>deadlineToUse</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⑥">continue</a>.</p>
       <li data-md>
        <p>Set <var>deadlineToUse</var> to <var>earlyDeadline</var>.</p>
       <li data-md>
@@ -3445,7 +3451,7 @@ an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-t
      <p>Return <var>report</var>.</p>
    </ol>
    <h2 class="heading settled" data-level="12" id="report-delivery"><span class="secno">12. </span><span class="content">Report delivery</span><a class="self-link" href="#report-delivery"></a></h2>
-   <p>The user agent MUST periodically <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②①">iterate</a> over its <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑧">event-level report cache</a> and <a data-link-type="dfn" href="#aggregatable-report-cache" id="ref-for-aggregatable-report-cache⑤">aggregatable report cache</a> and run <a data-link-type="dfn" href="#queue-a-report-for-delivery" id="ref-for-queue-a-report-for-delivery">queue a report for delivery</a> on each item.</p>
+   <p>The user agent MUST periodically <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②②">iterate</a> over its <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑧">event-level report cache</a> and <a data-link-type="dfn" href="#aggregatable-report-cache" id="ref-for-aggregatable-report-cache⑤">aggregatable report cache</a> and run <a data-link-type="dfn" href="#queue-a-report-for-delivery" id="ref-for-queue-a-report-for-delivery">queue a report for delivery</a> on each item.</p>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="queue-a-report-for-delivery">queue a report for delivery</dfn> given an <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report⑥">attribution report</a> <var>report</var> and an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object" id="ref-for-environment-settings-object③">environment settings objects</a> <var>context</var>, run the following steps <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel" id="ref-for-in-parallel">in parallel</a>:</p>
    <ol>
     <li data-md>
@@ -3526,7 +3532,7 @@ The key should be uniquely identifiable.</p>
     <li data-md>
      <p>Let <var>payloadData</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty②④">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list③④">list</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②②">For each</a> <var>contribution</var> of <var>report</var>’s <a data-link-type="dfn" href="#aggregatable-report-contributions" id="ref-for-aggregatable-report-contributions③">contributions</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②③">For each</a> <var>contribution</var> of <var>report</var>’s <a data-link-type="dfn" href="#aggregatable-report-contributions" id="ref-for-aggregatable-report-contributions③">contributions</a>:</p>
      <ol>
       <li data-md>
        <p>Let <var>contributionData</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map②③">map</a> of the following key/value pairs:</p>
@@ -3691,7 +3697,7 @@ whether a user is online, retries might be limited in number and subject to rand
     <li data-md>
      <p>Let <var>collection</var> be an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty②⑥">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list③⑥">list</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②③">For each</a> <var>debugData</var> of <var>report</var>’s <a data-link-type="dfn" href="#attribution-debug-report-data" id="ref-for-attribution-debug-report-data①">data</a>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②④">For each</a> <var>debugData</var> of <var>report</var>’s <a data-link-type="dfn" href="#attribution-debug-report-data" id="ref-for-attribution-debug-report-data①">data</a>:</p>
      <ol>
       <li data-md>
        <p>Let <var>data</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map②⑧">map</a> of the following key/value pairs:</p>
@@ -3761,7 +3767,7 @@ and a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-heade
      <p>Let <var>headers</var> be a new <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-list" id="ref-for-concept-header-list①">header list</a> containing a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header" id="ref-for-concept-header">header</a> named
 "<code>Content-Type</code>" whose value is "<code>application/json</code>".</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②④">For each</a> <var>header</var> in <var>newHeaders</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②⑤">For each</a> <var>header</var> in <var>newHeaders</var>:</p>
      <ol>
       <li data-md>
        <p><a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-list-append" id="ref-for-concept-header-list-append">Append</a> <var>header</var> to <var>headers</var>.</p>
@@ -4861,11 +4867,12 @@ an origin from a user’s browsing history.</p>
   <aside aria-labelledby="infopaneltitle-for-ce9efec0e74a2cbfe986593eb861ade6" class="dfn-panel" data-for="ce9efec0e74a2cbfe986593eb861ade6" id="infopanel-for-ce9efec0e74a2cbfe986593eb861ade6">
    <span id="infopaneltitle-for-ce9efec0e74a2cbfe986593eb861ade6" style="display:none">Info about the 'continue' external reference.</span><a href="https://infra.spec.whatwg.org/#iteration-continue">https://infra.spec.whatwg.org/#iteration-continue</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-iteration-continue">9.5. Cookie-based debugging</a> <a href="#ref-for-iteration-continue①">(2)</a> <a href="#ref-for-iteration-continue②">(3)</a> <a href="#ref-for-iteration-continue③">(4)</a> <a href="#ref-for-iteration-continue④">(5)</a> <a href="#ref-for-iteration-continue⑤">(6)</a> <a href="#ref-for-iteration-continue⑥">(7)</a>
-    <li><a href="#ref-for-iteration-continue⑦">11.2. Does filter data match</a>
-    <li><a href="#ref-for-iteration-continue⑧">11.6. Creating aggregatable contributions</a> <a href="#ref-for-iteration-continue⑨">(2)</a> <a href="#ref-for-iteration-continue①⓪">(3)</a>
-    <li><a href="#ref-for-iteration-continue①①">11.11. Triggering attribution</a> <a href="#ref-for-iteration-continue①②">(2)</a> <a href="#ref-for-iteration-continue①③">(3)</a>
-    <li><a href="#ref-for-iteration-continue①④">11.12. Establishing report delivery time</a> <a href="#ref-for-iteration-continue①⑤">(2)</a>
+    <li><a href="#ref-for-iteration-continue">2.1. API for elements</a>
+    <li><a href="#ref-for-iteration-continue①">9.5. Cookie-based debugging</a> <a href="#ref-for-iteration-continue②">(2)</a> <a href="#ref-for-iteration-continue③">(3)</a> <a href="#ref-for-iteration-continue④">(4)</a> <a href="#ref-for-iteration-continue⑤">(5)</a> <a href="#ref-for-iteration-continue⑥">(6)</a> <a href="#ref-for-iteration-continue⑦">(7)</a>
+    <li><a href="#ref-for-iteration-continue⑧">11.2. Does filter data match</a>
+    <li><a href="#ref-for-iteration-continue⑨">11.6. Creating aggregatable contributions</a> <a href="#ref-for-iteration-continue①⓪">(2)</a> <a href="#ref-for-iteration-continue①①">(3)</a>
+    <li><a href="#ref-for-iteration-continue①②">11.11. Triggering attribution</a> <a href="#ref-for-iteration-continue①③">(2)</a> <a href="#ref-for-iteration-continue①④">(3)</a>
+    <li><a href="#ref-for-iteration-continue①⑤">11.12. Establishing report delivery time</a> <a href="#ref-for-iteration-continue①⑥">(2)</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-d5f5f0c03c51cfd7211eeccd4918549b" class="dfn-panel" data-for="d5f5f0c03c51cfd7211eeccd4918549b" id="infopanel-for-d5f5f0c03c51cfd7211eeccd4918549b">
@@ -4946,24 +4953,25 @@ an origin from a user’s browsing history.</p>
   <aside aria-labelledby="infopaneltitle-for-9fda9133089970d69ace9de8f46a334c" class="dfn-panel" data-for="9fda9133089970d69ace9de8f46a334c" id="infopanel-for-9fda9133089970d69ace9de8f46a334c">
    <span id="infopaneltitle-for-9fda9133089970d69ace9de8f46a334c" style="display:none">Info about the 'iterate (for list)' external reference.</span><a href="https://infra.spec.whatwg.org/#list-iterate">https://infra.spec.whatwg.org/#list-iterate</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-list-iterate">5. Clear Site Data integration</a> <a href="#ref-for-list-iterate①">(2)</a> <a href="#ref-for-list-iterate②">(3)</a>
-    <li><a href="#ref-for-list-iterate③">9.2. Serialize attribution destinations</a>
-    <li><a href="#ref-for-list-iterate④">9.3. Parsing filter data</a>
-    <li><a href="#ref-for-list-iterate⑤">9.4. Parsing filters</a>
-    <li><a href="#ref-for-list-iterate⑥">10.4. Parsing source-registration JSON</a>
-    <li><a href="#ref-for-list-iterate⑦">10.5. Processing an attribution source</a> <a href="#ref-for-list-iterate⑧">(2)</a>
-    <li><a href="#ref-for-list-iterate⑨">11.1. Creating an attribution trigger</a> <a href="#ref-for-list-iterate①⓪">(2)</a> <a href="#ref-for-list-iterate①①">(3)</a> <a href="#ref-for-list-iterate①②">(4)</a>
-    <li><a href="#ref-for-list-iterate①③">11.2. Does filter data match</a>
-    <li><a href="#ref-for-list-iterate①④">11.4. Should processing be blocked by reporting-endpoint limit</a>
-    <li><a href="#ref-for-list-iterate①⑤">11.6. Creating aggregatable contributions</a> <a href="#ref-for-list-iterate①⑥">(2)</a>
-    <li><a href="#ref-for-list-iterate①⑦">11.9. Triggering event-level attribution</a>
-    <li><a href="#ref-for-list-iterate①⑧">11.10. Triggering aggregatable attribution</a>
-    <li><a href="#ref-for-list-iterate①⑨">11.11. Triggering attribution</a>
-    <li><a href="#ref-for-list-iterate②⓪">11.12. Establishing report delivery time</a>
-    <li><a href="#ref-for-list-iterate②①">12. Report delivery</a>
-    <li><a href="#ref-for-list-iterate②②">12.4. Obtaining an aggregatable report’s aggregation service payloads</a>
-    <li><a href="#ref-for-list-iterate②③">12.6. Serialize attribution debug report body</a>
-    <li><a href="#ref-for-list-iterate②④">12.8. Creating a report request</a>
+    <li><a href="#ref-for-list-iterate">2.1. API for elements</a>
+    <li><a href="#ref-for-list-iterate①">5. Clear Site Data integration</a> <a href="#ref-for-list-iterate②">(2)</a> <a href="#ref-for-list-iterate③">(3)</a>
+    <li><a href="#ref-for-list-iterate④">9.2. Serialize attribution destinations</a>
+    <li><a href="#ref-for-list-iterate⑤">9.3. Parsing filter data</a>
+    <li><a href="#ref-for-list-iterate⑥">9.4. Parsing filters</a>
+    <li><a href="#ref-for-list-iterate⑦">10.4. Parsing source-registration JSON</a>
+    <li><a href="#ref-for-list-iterate⑧">10.5. Processing an attribution source</a> <a href="#ref-for-list-iterate⑨">(2)</a>
+    <li><a href="#ref-for-list-iterate①⓪">11.1. Creating an attribution trigger</a> <a href="#ref-for-list-iterate①①">(2)</a> <a href="#ref-for-list-iterate①②">(3)</a> <a href="#ref-for-list-iterate①③">(4)</a>
+    <li><a href="#ref-for-list-iterate①④">11.2. Does filter data match</a>
+    <li><a href="#ref-for-list-iterate①⑤">11.4. Should processing be blocked by reporting-endpoint limit</a>
+    <li><a href="#ref-for-list-iterate①⑥">11.6. Creating aggregatable contributions</a> <a href="#ref-for-list-iterate①⑦">(2)</a>
+    <li><a href="#ref-for-list-iterate①⑧">11.9. Triggering event-level attribution</a>
+    <li><a href="#ref-for-list-iterate①⑨">11.10. Triggering aggregatable attribution</a>
+    <li><a href="#ref-for-list-iterate②⓪">11.11. Triggering attribution</a>
+    <li><a href="#ref-for-list-iterate②①">11.12. Establishing report delivery time</a>
+    <li><a href="#ref-for-list-iterate②②">12. Report delivery</a>
+    <li><a href="#ref-for-list-iterate②③">12.4. Obtaining an aggregatable report’s aggregation service payloads</a>
+    <li><a href="#ref-for-list-iterate②④">12.6. Serialize attribution debug report body</a>
+    <li><a href="#ref-for-list-iterate②⑤">12.8. Creating a report request</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-7ed12c0c34d89a6d72eac5c2904dbf40" class="dfn-panel" data-for="7ed12c0c34d89a6d72eac5c2904dbf40" id="infopanel-for-7ed12c0c34d89a6d72eac5c2904dbf40">
@@ -5171,6 +5179,12 @@ an origin from a user’s browsing history.</p>
    <span id="infopaneltitle-for-c6f1d533f9ca4fee242d76491e3ce518" style="display:none">Info about the 'sort in descending order' external reference.</span><a href="https://infra.spec.whatwg.org/#list-sort-in-descending-order">https://infra.spec.whatwg.org/#list-sort-in-descending-order</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-list-sort-in-descending-order">11.11. Triggering attribution</a>
+   </ul>
+  </aside>
+  <aside aria-labelledby="infopaneltitle-for-64436fbcf30f0567373344220b42ce37" class="dfn-panel" data-for="64436fbcf30f0567373344220b42ce37" id="infopanel-for-64436fbcf30f0567373344220b42ce37">
+   <span id="infopaneltitle-for-64436fbcf30f0567373344220b42ce37" style="display:none">Info about the 'split a string on ascii whitespace' external reference.</span><a href="https://infra.spec.whatwg.org/#split-on-ascii-whitespace">https://infra.spec.whatwg.org/#split-on-ascii-whitespace</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-split-on-ascii-whitespace">2.1. API for elements</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-40b59bc325bd4d66701dfd8b7f1847c0" class="dfn-panel" data-for="40b59bc325bd4d66701dfd8b7f1847c0" id="infopanel-for-40b59bc325bd4d66701dfd8b7f1847c0">
@@ -5460,6 +5474,7 @@ an origin from a user’s browsing history.</p>
      <li><span class="dfn-paneled" id="cb6090a4148c3b79aef250d4d6625e39">size <small>(for map)</small></span>
      <li><span class="dfn-paneled" id="282b495485475648840948f38adba5f7">sort in ascending order</span>
      <li><span class="dfn-paneled" id="c6f1d533f9ca4fee242d76491e3ce518">sort in descending order</span>
+     <li><span class="dfn-paneled" id="64436fbcf30f0567373344220b42ce37">split a string on ascii whitespace</span>
      <li><span class="dfn-paneled" id="40b59bc325bd4d66701dfd8b7f1847c0">string</span>
      <li><span class="dfn-paneled" id="3ee316b93eb2dbe81d01a666cce50f9b">struct</span>
      <li><span class="dfn-paneled" id="decbbd3ee5a73b54e8e8996ce1fddbbc">tuple</span>
@@ -5562,6 +5577,7 @@ an origin from a user’s browsing history.</p>
   <div style="counter-reset:issue">
    <div class="issue"> Set <var>contextOrigin</var> properly. <a class="issue-return" href="#issue-0f6e3885" title="Jump to section">↵</a></div>
    <div class="issue"> Add links to "Parse" and "node document". <a class="issue-return" href="#issue-cdf1dda4" title="Jump to section">↵</a></div>
+   <div class="issue"> Consider allowing the user agent to limit the size of <var>tokens</var>. <a class="issue-return" href="#issue-4cc8b8aa" title="Jump to section">↵</a></div>
    <div class="issue"> Specify when to make background attributionsrc requests for <code><a data-link-type="element" href="https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element">a</a></code>. <a class="issue-return" href="#issue-80ca5c3f" title="Jump to section">↵</a></div>
    <div class="issue"> Monkeypatch <code>window.open()</code>. <a class="issue-return" href="#issue-adb5eac2" title="Jump to section">↵</a></div>
    <div class="issue"> Specify monkeypatches for source/trigger registration. <a class="issue-return" href="#issue-963bda2b" title="Jump to section">↵</a></div>
