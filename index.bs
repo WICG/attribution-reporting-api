@@ -406,6 +406,19 @@ An event-level trigger configuration is a [=struct=] with the following items:
 An <dfn>aggregation coordinator</dfn> is one of a user-agent-determined [=set=]
 of [=strings=] that specifies which aggregation service deployment to use.
 
+<h3 id="aggregatable-source-registration-time-configuration-header">Aggregatable source registration time configuration</h3>
+
+An <dfn>aggregatable source registration time configuration</dfn> is one of the following:
+
+<dl dfn-for="aggregatable source registration time configuration">
+: "<dfn><code>omit</code></dfn>"
+:: "`source_registration_time`" is omitted from an [=aggregatable report=]'s [=aggregatable report/shared info=].
+: "<dfn><code>include</code></dfn>"
+:: "`source_registration_time`" is included in an [=aggregatable report=]'s [=aggregatable report/shared info=].
+
+</dl>
+
+
 <h3 dfn-type=dfn>Attribution trigger</h3>
 
 An attribution trigger is a [=struct=] with the following items:
@@ -432,12 +445,14 @@ An attribution trigger is a [=struct=] with the following items:
     [=map/value|values=] are non-negative 32-bit integers.
 : <dfn>aggregatable dedup keys</dfn>
 :: A [=list=] of [=aggregatable dedup key=].
-: <dfn>serialized private state token</dfn>
-:: A [=byte sequence=].
+: <dfn>serialized private state tokens</dfn>
+:: A [=list=] of [=byte sequence=].
 : <dfn>debug reporting enabled</dfn>
 :: A [=boolean=].
 : <dfn>aggregation coordinator</dfn>
 :: An [=aggregation coordinator=].
+: <dfn>aggregatable source registration time configuration</dfn>
+:: An [=aggregatable source registration time configuration=].
 
 </dl>
 
@@ -514,6 +529,10 @@ An aggregatable report is an [=attribution report=] with the following additiona
 :: A [=byte sequence=].
 : <dfn>aggregation coordinator</dfn>
 :: An [=aggregation coordinator=].
+: <dfn>source registration time configuration</dfn>
+:: An [=aggregatable source registration time configuration=].
+: <dfn>is null report</dfn> (default false)
+:: A [=boolean=].
 
 </dl>
 
@@ -683,6 +702,17 @@ for triggers that are attributed to an [=attribution source=] whose
 
 <dfn>Randomized response epsilon</dfn> is a non-negative double that controls
 the randomized response probability of an [=attribution source=].
+
+<dfn>Randomized null report distribution parameter omitting source registration time</dfn> is a
+double between 0 and 1 (both inclusive) that controls the randomized number of null reports
+generated for an [=attribution trigger=] whose [attribution trigger/aggregatable source registration time configuration]
+is "<code>[=aggregatable source registration time configuration/omit=]</code>".
+
+
+<dfn>Randomized null report distribution parameter including source registration time</dfn> is a
+double between 0 and 1 (both inclusive) that controls the randomized number of null reports
+generated for an [=attribution trigger=] whose [attribution trigger/aggregatable source registration time configuration]
+is "<code>[=aggregatable source registration time configuration/include=]</code>".
 
 <dfn>Max event-level reports per attribution destination</dfn> is a positive integer that
 controls how many [=event-level reports=] can be in the
@@ -995,10 +1025,10 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
         1. If |triggerHeader| is not null:
             1. Let |destinationSite| be the result of [=obtaining a site=] from
                 |contextOrigin|.
-            1. Let |privateStateToken| be null.
+            1. Let |privateStateTokens| be an [=list/is empty|empty=] [=list=].
             1. Let |trigger| be the result of running
                 [=create an attribution trigger=] with |triggerHeader|
-                |destinationSite|, |reportingOrigin|, |privateStateToken|, and
+                |destinationSite|, |reportingOrigin|, |privateStateTokens|, and
                 |context|'s [=current wall time=].
             1. If |trigger| is not null, [=trigger attribution=] with |trigger|.
         1. If |osSourceURL| is not null and the user agent supports OS
@@ -1010,7 +1040,7 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
 
     </dl>
 
-Issue: Set |privateStateToken| properly.
+Issue: Set |privateStateTokens| properly.
 
 # Source Algorithms # {#source-algorithms}
 
@@ -1271,6 +1301,10 @@ a [=trigger state=] |triggerState|:
     :: false
     : [=attribution trigger/aggregation coordinator=]
     :: [=default aggregation coordinator=]
+    : [=attribution trigger/serialized private state tokens=]
+    :: «»
+    : [=attribution trigger/aggregatable source registration time configuration=]
+    :: "<code>[=aggregatable source registration time configuration/omit=]</code>"
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
 1. Set |fakeReport|'s [=event-level report/report time=] to the result of
@@ -1557,7 +1591,7 @@ ISSUE: properly define "begin redemption" operation. Consider running the algori
 1. Return the result of [=forgiving-base64 encoding=] |redeemedBytes|.
 
 To <dfn noexport>create an attribution trigger</dfn> given a [=byte sequence=]
-|json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, a [=string=] |privateStateToken|,
+|json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, a [=list=] of [=strings=] |privateStateTokens|,
 and a [=moment=] |triggerTime|:
 
 1. Let |value| be the result of running
@@ -1600,6 +1634,15 @@ and a [=moment=] |triggerTime|:
     1. If |value|["`aggregation_coordinator_identifier`"] is not a [=string=], return null.
     1. If |value|["`aggregation_coordinator_identifier`"] is not an [=aggregation coordinator=], return null.
     1. Set |aggregationCoordinator| to |value|["`aggregation_coordinator_identifier`"].
+1. Let |aggregatableSourceRegTimeConfig| be "<code>[=aggregatable source registration time configuration/omit=]</code>".
+1. If |value|["`aggregatable_source_registration_time`"] [=map/exists=]:
+    1. If |value|["`aggregatable_source_registration_time`"] is not a [=string=], return null.
+    1. If |value|["`aggregatable_source_registration_time`"] is not an [=aggregatable source registration time configuration=], return null.
+    1. Set |aggregatableSourceRegTimeConfig| to |value|["`aggregatable_source_registration_time`"].
+1. Let |serializedPrivateStateTokens| be a new [=list/is empty|empty=] [=list=].
+1. [=list/iterate|For each=] |privateStateToken| of |privateStateTokens|:
+    1. Let |serializedPrivateStateToken| be the result of [=serializing a private state token=] with |privateStateToken|.
+    1. [=list/Append=] |serializedPrivateStateToken| to  |serializedPrivateStateTokens|.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -1621,12 +1664,14 @@ and a [=moment=] |triggerTime|:
     :: |aggregatableValues|
     : [=attribution trigger/aggregatable dedup keys=]
     :: |aggregatableDedupKeys|
-    : [=attribution trigger/serialized private state token=]
-    :: The result of [=serializing a private state token=] with |privateStateToken|
+    : [=attribution trigger/serialized private state tokens=]
+    :: |serializedPrivateStateTokens|
     : [=attribution trigger/debug reporting enabled=]
     :: |debugReportingEnabled|
     : [=attribution trigger/aggregation coordinator=]
     :: |aggregationCoordinator|
+    : [=attribution trigger/aggregatable source registration time configuration=]
+    :: |aggregatableSourceRegTimeConfig|
 1. Return |trigger|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -1778,6 +1823,15 @@ To <dfn>check if an [=attribution source=] can create [=aggregatable contributio
 1. If |report|'s [=aggregatable report/required aggregatable budget=] is greater than
     |remainingAggregatableBudget|, return false.
 1. Return true.
+
+<h3 id="does-trigger-contain-aggregatable-data">Does trigger contain aggregatable data</h3>
+
+To <dfn>check if an [=attribution trigger=] contains aggregatable data</dfn> given an [=attribution trigger=] |trigger|,
+run the following steps:
+
+1. If |trigger|'s [=attribution trigger/aggregatable trigger data=] is not [=list/is empty|empty=], return true.
+1. If |trigger|'s [=attribution trigger/aggregatable values=] is not [=map/is empty|empty=], return true.
+1. Return false.
 
 <h3 id="obtaining-trigger-debug-data">Obtaining debug data on trigger registration</h3>
 
@@ -1948,11 +2002,10 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 <h3 algorithm id="triggering-aggregatable-attribution">Triggering aggregatable attribution</h3>
 
 To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] |trigger|, an
-[=attribution source=] |sourceToAttribute|, and an
-[=attribution rate-limit record=] |rateLimitRecord|, run the following steps:
+[=attribution source=] |sourceToAttribute|, an [=attribution rate-limit record=] |rateLimitRecord|,
+and a [=list=] of [=aggregatable reports=] |nullReports|, run the following steps:
 
-1. If |trigger|'s [=attribution trigger/aggregatable trigger data=] [=list/is empty=]
-    and |trigger|'s [=attribution trigger/aggregatable values=] [=map/is empty=],
+1. If the result of running [=check if an attribution trigger contains aggregatable data=] is false,
     return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
 1. If |sourceToAttribute|'s [=attribution source/aggregatable report window time=] is less than |trigger|'s [=attribution trigger/trigger time=]:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
@@ -1979,7 +2032,8 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. Let |numMatchingReports| be the number of entries in the [=aggregatable report cache=] whose
-    [=aggregatable report/effective attribution destination=] equals |trigger|'s [=attribution trigger/attribution destination=].
+    [=aggregatable report/effective attribution destination=] equals |trigger|'s [=attribution trigger/attribution destination=]
+     and [=aggregatable report/is null report=] is false.
 1. If |numMatchingReports| is greater than or equal to the user agent's
     [=max aggregatable reports per attribution destination=]:
      1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
@@ -1999,6 +2053,9 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. Increment |sourceToAttribute|'s [=attribution source/aggregatable budget consumed=] value by
     |report|'s [=aggregatable report/required aggregatable budget=].
 1. If |matchedDedupKey| is not null, [=list/append=] it to |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=].
+1. Let |reports| be a [=list/clone=] of |nullReports|.
+1. [=list/Append=] |report| to |reports|.
+1. Run [=assign private state tokens=] with |reports| and |trigger|.
 1. If |report|'s [=aggregatable report/source debug key=] is not null and |report|'s
     [=aggregatable report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
@@ -2033,15 +2090,16 @@ To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
 
 To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |trigger|, run the following steps:
 
+1. Let |hasAggregatableData| be the result of [=checking if an attribution trigger contains aggregatable data=].
 1. If |trigger|'s [=attribution trigger/event-level trigger configurations=]
-    [=set/is empty=] and |trigger|'s
-    [=attribution trigger/aggregatable trigger data=] [=list/is empty=] and
-    |trigger|'s [=attribution trigger/aggregatable values=] [=map/is empty=],
-    return.
+    [=set/is empty=] and |hasAggregatableData| is false, return.
+1. Let |nullReports| be a new [=list/is empty|empty=] [=list=].
+1. If |hasAggregatableData| is true, set |nullReports| to the result of [=generating null reports=] with |trigger|.
 1. Let |matchingSources| be the result of running [=find matching sources=] with |trigger|.
 1. If |matchingSources| [=list/is empty=]:
     1. Run [=obtain and deliver a debug report on trigger registration=]
         with "<code>[=trigger debug data type/trigger-no-matching-source=]</code>", |trigger| and [=obtain and deliver a debug report on trigger registration/sourceToAttribute=] set to null.
+    1. Run [=assign private state tokens=] with |nullReports| and |trigger|.
     1. Return.
 1. Let |sourceToAttribute| be |matchingSources|[0].
 1. If the result of running
@@ -2051,6 +2109,7 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     1. Run [=obtain and deliver a debug report on trigger registration=]
         with "<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>",
         |trigger|, and |sourceToAttribute|.
+    1. Run [=assign private state tokens=] with |nullReports| and |trigger|.
     1. Return.
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
     : [=attribution rate-limit record/scope=]
@@ -2068,7 +2127,7 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
 1. Let |eventLevelResult| be the result of running [=trigger event-level attribution=]
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord|.
 1. Let |aggregatableResult| be the result of running [=trigger aggregatable attribution=]
-    with |trigger|, |sourceToAttribute|, and |rateLimitRecord|.
+    with |trigger|, |sourceToAttribute|, |rateLimitRecord| and |nullReports|.
 1. Let |eventLevelDebugData| be |eventLevelResult|'s [=triggering result/debug data=].
 1. Let |aggregatableDebugData| be |aggregatableResult|'s [=triggering result/debug data=].
 1. Let |debugDataList| be an [=list/is empty|empty=] [=list=].
@@ -2079,6 +2138,8 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
         then [=list/append=] |aggregatableDebugData| to |debugDataList|.
 1. If |debugDataList| is not [=list/is empty|empty=], then run [=obtain and deliver a debug report=]
     with |debugDataList| and |trigger|'s [=attribution trigger/reporting endpoint=].
+1. If |aggregatableResult|'s [=triggering result/status=] is "<code>[=triggering status/dropped=]</code>",
+    then run [=assign private state tokens=] with |nullReports| and |trigger|.
 1. If both |eventLevelResult|'s [=triggering result/status=] and |aggregatableResult|'s
     [=triggering result/status=] are "<code>[=triggering status/dropped=]</code>", return.
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
@@ -2215,10 +2276,102 @@ an [=attribution trigger=] |trigger|:
     : [=aggregatable report/contributions=]
     :: The result of running [=create aggregatable contributions=] with |source| and |trigger|.
     : [=aggregatable report/serialized private state token=]
-    :: |trigger|'s [=attribution trigger/serialized private state token=]
+    :: null.
+    : [=aggregatable report/aggregation coordinator=]
+    :: |trigger|'s [=attribution trigger/aggregation coordinator=].
+    : [=aggregatable report/source registration time configuration=]
+    :: |trigger|'s [=attribution trigger/aggregatable source registration time configuration=].
+1. Return |report|.
+
+<h3 id="generating-randomized-null-reports">Generating randomized null reports</h3>
+
+To <dfn>obtain a randomized number of null reports</dfn> given a double |distributionParameter|:
+
+1. [=Assert=]: |distributionParameter| is between 0 and 1 ( both inclusive).
+1. Return a random non-negative integer from a geometric distribution with probability parameter
+    |distributionParameter|.
+
+To <dfn>obtain a null report</dfn> given an [=attribution trigger=] |trigger| and a [=moment=] |sourceTime|:
+
+1. Let |reportTime| be the result of running [=obtain an aggregatable report delivery time=] with |trigger|'s
+    [=attribution trigger/trigger time=].
+1. Let |contribution| be a new [=aggregatable contribution=] with the items:
+
+    : [=aggregatable contribution/key=]
+    :: A random non-negative 128-bit integer with uniform probability
+    : [=aggregatable contribution/value=]
+    :: 0
+1. Let |report| be a new [=aggregatable report=] struct whose items are:
+
+    : [=aggregatable report/reporting endpoint=]
+    :: |trigger|'s [=attribution trigger/reporting endpoint=]
+    : [=aggregatable report/effective attribution destination=]
+    :: |trigger|'s [=attribution trigger/attribution destination=]
+    : [=aggregatable report/source time=]
+    :: |sourceTime|
+    : [=aggregatable report/original report time=]
+    :: |reportTime|
+    : [=aggregatable report/report time=]
+    :: |reportTime|
+    : [=aggregatable report/report id=]
+    :: The result of [=generating a random UUID=]
+    : [=aggregatable report/source debug key=]
+    :: null
+    : [=aggregatable report/trigger debug key=]
+    :: |trigger|'s [=attribution trigger/debug key=]
+    : [=aggregatable report/contributions=]
+    :: « |contribution| »
+    : [=aggregatable report/serialized private state token=]
+    :: null
     : [=aggregatable report/aggregation coordinator=]
     :: |trigger|'s [=attribution trigger/aggregation coordinator=]
+    : [=aggregatable report/source registration time configuration=]
+    :: |trigger|'s [=attribution trigger/aggregatable source registration time configuration=]
+    : [=aggregatable report/is null report=]
+    :: true
 1. Return |report|.
+
+To <dfn>generate null reports</dfn> given an [=attribution trigger=] |trigger|:
+
+1. Let |nullReports| be a new [=list/is empty|empty=] [=list=].
+1. If |trigger|'s [=attribution trigger/aggregatable source registration time configuration=] is "<code>[=aggregatable source registration time configuration/omit=]</code>":
+    1. Let |numNullReports| be the result of [=obtaining a randomized number of null reports=] with
+        [=randomized null report distribution parameter omitting source registration time=].
+    1. Repeat the following steps |numNullReports| times:
+        1. Let |nullReport| be the result of [=obtaining a null report=] with |trigger| and
+            |trigger|'s [=attribution trigger/trigger time=].
+        1. Add |nullReport| to the [=aggregatable report cache=].
+        1. [=list/Append=] |nullReport| to |nullReports|.
+    1. Return |nullReports|.
+1. Let |maxSourceExpiry| be [=max source expiry=].
+1. Round |maxSourceExpiry| away from zero to the nearest day (86400 seconds).
+1. For each integer |day| between 0 (inclusive) and the number of days in |maxSourceExpiry| (inclusive):
+    1. Let |numNullReports| be the result of [=obtaining a randomized number of null reports=] with
+        [=randomized null report distribution parameter including source registration time=].
+    1. Repeat the following steps |numNullReports| times:
+        1. Let |fakeSourceTime| be |trigger|'s [=attribution trigger/trigger time=] - |day| days.
+        1. Let |nullReport| be the result of [=obtaining a null report=] with |trigger| and |fakeSourceTime|.
+        1. Add |nullReport| to the [=aggregatable report cache=].
+        1. [=list/Append=] |nullReport| to |nullReports|.
+1. Return |nullReports|.
+
+<h3 id="assign-private-state-tokens-for-aggregatable-reports">Assigning private state tokens for aggregatable reports</h3>
+
+To <dfn>shuffle a [=list=]</dfn> |list|, reorder |list|'s elements such that each possible permutation has equal
+probability of appearance.
+
+To <dfn>assign private state tokens</dfn> given a [=list=] of [=aggregatable reports=] |reports| and
+an [=attribution trigger=] |trigger|:
+
+1. If |reports| [=list/is empty=], return.
+1. Let |privateStateTokens| be |trigger|'s [=attribution trigger/serialized private state tokens=].
+1. If |privateStateTokens| [=list/is empty=], return.
+1. Run [=shuffle a list=] with |reports|.
+1. Run [=shuffle a list=] with |privateStateTokens|.
+1. Let |n| be |reports|'s [=list/size=].
+1. If |privateStateTokens|'s [=list/size=] is less than |n|, set |n| to it.
+1. For each integer |i| between 0 (inclusive) and |n| (exclusive):
+    1. Set |reports|[i]'s [=aggregatable report/serialized private state token=] to |privateStateTokens|[i].
 
 # Report delivery # {#report-delivery}
 
@@ -2272,14 +2425,16 @@ of running the following steps:
     :: |reportingOrigin|, [=serialization of an origin|serialized=]
     : "`scheduled_report_time`"
     :: |report|'s [=aggregatable report/original report time=] in seconds since the UNIX epoch, [=serialize an integer|serialized=]
-    : "`source_registration_time`"
-    :: |report|'s [=aggregatable report/source time=] in seconds since the UNIX epoch, rounded down
-        to a multiple of a whole day (86400 seconds), [=serialize an integer|serialized=]
     : "`version`"
     :: A [=string=], API version.
 
 1. If |report|'s [=aggregatable report/debug mode=] is <strong>enabled</strong>,
     set |sharedInfo|["`debug_mode`"] to "`enabled`".
+1. If |report|'s [=aggregatable report/source registration time configuration=] is
+    "<code>[=aggregatable source registration time configuration/include=]</code>",
+    set |sharedInfo|["`source_registration_time`"] to |report|'s [=aggregatable report/source time=]
+    in seconds since the UNIX epoch, rounded down to a multiple of a whole day (86400 seconds),
+    [=serialize an integer|serialized=].
 1. Return the [=string=] resulting from executing [=serialize an infra value to a json string=] on |sharedInfo|.
 
 <h3 id="obtain-aggregatable-report-aggregation-service-payloads">Obtaining an aggregatable report's aggregation service payloads</h3>
