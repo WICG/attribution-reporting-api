@@ -530,7 +530,7 @@ export const testCases = [
   },
 
   {
-    name: "aggregatable-source-registrationt-time-wrong-type",
+    name: "aggregatable-source-registration-time-wrong-type",
     json: `{"aggregatable_source_registration_time": 1}`,
     expectedErrors: [{
       path: ["aggregatable_source_registration_time"],
