@@ -151,8 +151,8 @@ registration](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREG
 For reporting origins that are configured to do Private State Token issuance,
 all new requests that have the `Attribution-Reporting-Eligible` request header
 with the `trigger` value will automatically attach a
-`Sec-Attribution-Reporting-Private-State-Token` header with a comma-seperated
-list of blinded messages (which embeds concatenation of the `report_id` and
+`Sec-Attribution-Reporting-Private-State-Token` header with a comma-separated
+list of blinded messages (which embeds the concatenation of the `report_id` and
 `attribution_destination`).
 
 The reporting origin will inspect the request and decide whether it is valid,

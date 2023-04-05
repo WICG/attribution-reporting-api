@@ -427,7 +427,7 @@ aggregatable report. The null report rate will need to be higher if
 ```
 
 Strawman: There should be ~0.05 reports (in expectation) sent for trigger
-registrations that exclude `source_registration_time` field, and ~0.25 reports for
+registrations that exclude the `source_registration_time` field, and ~0.25 reports for
 those that include this field.
 
 ## Data processing through a Secure Aggregation Service
