@@ -539,10 +539,10 @@ export const testCases = [
   },
   {
     name: "aggregatable-source-registration-time-unknown-value",
-    json: `{"aggregatable_source_registration_time": "OMIT"}`,
+    json: `{"aggregatable_source_registration_time": "EXCLUDE"}`,
     expectedErrors: [{
       path: ["aggregatable_source_registration_time"],
-      msg: "must match 'omit' or 'include' (case-sensitive)",
+      msg: "must match 'exclude' or 'include' (case-sensitive)",
     }],
   },
 ];

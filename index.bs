@@ -411,8 +411,8 @@ of [=strings=] that specifies which aggregation service deployment to use.
 An <dfn>aggregatable source registration time configuration</dfn> is one of the following:
 
 <dl dfn-for="aggregatable source registration time configuration">
-: "<dfn><code>omit</code></dfn>"
-:: "`source_registration_time`" is omitted from an [=aggregatable report=]'s [=aggregatable report/shared info=].
+: "<dfn><code>exclude</code></dfn>"
+:: "`source_registration_time`" is excluded from an [=aggregatable report=]'s [=aggregatable report/shared info=].
 : "<dfn><code>include</code></dfn>"
 :: "`source_registration_time`" is included in an [=aggregatable report=]'s [=aggregatable report/shared info=].
 
@@ -703,10 +703,10 @@ for triggers that are attributed to an [=attribution source=] whose
 <dfn>Randomized response epsilon</dfn> is a non-negative double that controls
 the randomized response probability of an [=attribution source=].
 
-<dfn>Randomized null report distribution parameter omitting source registration time</dfn> is a
+<dfn>Randomized null report distribution parameter excluding source registration time</dfn> is a
 double between 0 and 1 (both inclusive) that controls the randomized number of null reports
 generated for an [=attribution trigger=] whose [attribution trigger/aggregatable source registration time configuration]
-is "<code>[=aggregatable source registration time configuration/omit=]</code>".
+is "<code>[=aggregatable source registration time configuration/exclude=]</code>".
 
 <dfn>Randomized null report distribution parameter including source registration time</dfn> is a
 double between 0 and 1 (both inclusive) that controls the randomized number of null reports
@@ -1303,7 +1303,7 @@ a [=trigger state=] |triggerState|:
     : [=attribution trigger/serialized private state tokens=]
     :: «»
     : [=attribution trigger/aggregatable source registration time configuration=]
-    :: "<code>[=aggregatable source registration time configuration/omit=]</code>"
+    :: "<code>[=aggregatable source registration time configuration/exclude=]</code>"
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
 1. Set |fakeReport|'s [=event-level report/report time=] to the result of
@@ -1633,7 +1633,7 @@ and a [=moment=] |triggerTime|:
     1. If |value|["`aggregation_coordinator_identifier`"] is not a [=string=], return null.
     1. If |value|["`aggregation_coordinator_identifier`"] is not an [=aggregation coordinator=], return null.
     1. Set |aggregationCoordinator| to |value|["`aggregation_coordinator_identifier`"].
-1. Let |aggregatableSourceRegTimeConfig| be "<code>[=aggregatable source registration time configuration/omit=]</code>".
+1. Let |aggregatableSourceRegTimeConfig| be "<code>[=aggregatable source registration time configuration/exclude=]</code>".
 1. If |value|["`aggregatable_source_registration_time`"] [=map/exists=]:
     1. If |value|["`aggregatable_source_registration_time`"] is not a [=string=], return null.
     1. If |value|["`aggregatable_source_registration_time`"] is not an [=aggregatable source registration time configuration=], return null.
@@ -2333,9 +2333,9 @@ To <dfn>obtain a null report</dfn> given an [=attribution trigger=] |trigger| an
 To <dfn>generate null reports</dfn> given an [=attribution trigger=] |trigger|:
 
 1. Let |nullReports| be a new [=list/is empty|empty=] [=list=].
-1. If |trigger|'s [=attribution trigger/aggregatable source registration time configuration=] is "<code>[=aggregatable source registration time configuration/omit=]</code>":
+1. If |trigger|'s [=attribution trigger/aggregatable source registration time configuration=] is "<code>[=aggregatable source registration time configuration/exclude=]</code>":
     1. Let |numNullReports| be the result of [=obtaining a randomized number of null reports=] with
-        [=randomized null report distribution parameter omitting source registration time=].
+        [=randomized null report distribution parameter excluding source registration time=].
     1. Repeat the following steps |numNullReports| times:
         1. Let |nullReport| be the result of [=obtaining a null report=] with |trigger| and
             |trigger|'s [=attribution trigger/trigger time=].

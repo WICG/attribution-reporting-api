@@ -302,12 +302,12 @@ const aggregatableDedupKeys = list(
     }))
 
 const aggregatableSourceRegistrationTime = string((state, value) => {
-  const omit = 'omit'
+  const exclude = 'exclude'
   const include = 'include'
-  if (value === omit || value === include) {
+  if (value === exclude || value === include) {
     return
   }
-  state.error(`must match '${omit}' or '${include}' (case-sensitive)`)
+  state.error(`must match '${exclude}' or '${include}' (case-sensitive)`)
 })
 
 export function validateTrigger(trigger) {
