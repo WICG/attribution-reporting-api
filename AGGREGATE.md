@@ -413,7 +413,7 @@ registrations. Null reports will not check or affect rate limits.
 As a lot of the cross site information is embedded in the source registration
 time, trigger registration will accept an optional field
 `aggregatable_source_registration_time` to allow developers to specify whether
-to omit or include `source_registration_time` field within `shared_info` in the
+to exclude or include `source_registration_time` field within `shared_info` in the
 aggregatable report. The null report rate will need to be higher if
 `source_registration_time` is present in the aggregatable report.
 
@@ -422,12 +422,12 @@ aggregatable report. The null report rate will need to be higher if
    ...,
    "aggregatable_trigger_data": ...,
    "aggregatable_values": ...,
-   "aggregatable_source_registration_time": "omit" // or "include", defaults to "omit" if not present
+   "aggregatable_source_registration_time": "exclude" // or "include", defaults to "exclude" if not present
 }
 ```
 
 Strawman: There should be ~0.05 reports (in expectation) sent for trigger
-registrations that omit `source_registration_time` field, and ~0.25 reports for
+registrations that exclude `source_registration_time` field, and ~0.25 reports for
 those that include this field.
 
 ## Data processing through a Secure Aggregation Service
