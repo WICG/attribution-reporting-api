@@ -167,7 +167,7 @@ indicate that multiple background requests should be made:
 const url1 = encodeURIComponent('https://adtech1.example');
 const url2 = encodeURIComponent('https://adtech2.example');
 window.open(
-  'https://advertier.example/landing',
+  'https://advertiser.example/landing',
   '_blank',
   `attributionsrc=${url1} attributionsrc=${url2}`);
 ```
