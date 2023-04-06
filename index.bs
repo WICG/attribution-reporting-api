@@ -1636,7 +1636,8 @@ and a [=moment=] |triggerTime|:
 1. Let |aggregatableSourceRegTimeConfig| be "<code>[=aggregatable source registration time configuration/exclude=]</code>".
 1. If |value|["`aggregatable_source_registration_time`"] [=map/exists=]:
     1. If |value|["`aggregatable_source_registration_time`"] is not a [=string=], return null.
-    1. If |value|["`aggregatable_source_registration_time`"] is not an [=aggregatable source registration time configuration=], return null.
+    1. If |value|["`aggregatable_source_registration_time`"] is not an [=aggregatable source registration time configuration=],
+        return null.
     1. Set |aggregatableSourceRegTimeConfig| to |value|["`aggregatable_source_registration_time`"].
 1. Let |serializedPrivateStateTokens| be a new [=list/is empty|empty=] [=list=].
 1. [=list/iterate|For each=] |privateStateToken| of |privateStateTokens|:
@@ -2089,7 +2090,8 @@ To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
 
 To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |trigger|, run the following steps:
 
-1. Let |hasAggregatableData| be the result of [=checking if an attribution trigger contains aggregatable data=].
+1. Let |hasAggregatableData| be the result of [=checking if an attribution trigger contains aggregatable data=]
+    with |trigger|.
 1. If |trigger|'s [=attribution trigger/event-level trigger configurations=]
     [=set/is empty=] and |hasAggregatableData| is false, return.
 1. Let |nullReports| be a new [=list/is empty|empty=] [=list=].
@@ -2286,13 +2288,13 @@ an [=attribution trigger=] |trigger|:
 
 To <dfn>obtain a randomized number of null reports</dfn> given a double |distributionParameter|:
 
-1. [=Assert=]: |distributionParameter| is between 0 and 1 ( both inclusive).
+1. [=Assert=]: |distributionParameter| is between 0 and 1 (both inclusive).
 1. Return a random non-negative integer sampled from the geometric distribution with probability parameter
     |distributionParameter|.
 
 Issue: Consider specifying how to sample this from the geometric distribution.
 
-Issue: Consider truncating the total number of reports generated for an [=attribution trigger=].
+Issue: Consider limiting the total number of reports generated for an [=attribution trigger=].
 
 To <dfn>obtain a null report</dfn> given an [=attribution trigger=] |trigger| and a [=moment=] |sourceTime|:
 
@@ -2343,7 +2345,7 @@ To <dfn>generate null reports</dfn> given an [=attribution trigger=] |trigger|:
     1. Repeat the following steps |numNullReports| times:
         1. Let |nullReport| be the result of [=obtaining a null report=] with |trigger| and
             |trigger|'s [=attribution trigger/trigger time=].
-        1. Add |nullReport| to the [=aggregatable report cache=].
+        1. [=set/Append=] |nullReport| to the [=aggregatable report cache=].
         1. [=list/Append=] |nullReport| to |nullReports|.
     1. Return |nullReports|.
 1. Let |maxSourceExpiry| be [=max source expiry=].
@@ -2354,7 +2356,7 @@ To <dfn>generate null reports</dfn> given an [=attribution trigger=] |trigger|:
     1. Repeat the following steps |numNullReports| times:
         1. Let |fakeSourceTime| be |trigger|'s [=attribution trigger/trigger time=] - |day| days.
         1. Let |nullReport| be the result of [=obtaining a null report=] with |trigger| and |fakeSourceTime|.
-        1. Add |nullReport| to the [=aggregatable report cache=].
+        1. [=set/Append=] |nullReport| to the [=aggregatable report cache=].
         1. [=list/Append=] |nullReport| to |nullReports|.
 1. Return |nullReports|.
 
