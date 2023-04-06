@@ -160,8 +160,17 @@ navigates. For `<img>` and `<script>`, background requests are made when the
 `attributionsrc` attribute is set on the DOM element.
 
 In JavaScript, `window.open` also supports an empty or non-empty
-`attributionsrc` feature, though it **does not yet support multiple values** due
-to complexity in parsing the feature string.
+`attributionsrc` feature. The feature may appear multiple times with a value to
+indicate that multiple background requests should be made:
+
+```javascript
+const url1 = encodeURIComponent('https://adtech1.example');
+const url2 = encodeURIComponent('https://adtech2.example');
+window.open(
+  'https://advertiser.example/landing',
+  '_blank',
+  `attributionsrc=${url1} attributionsrc=${url2}`);
+```
 
 `event` sources can also be registered using existing JavaScript request
 APIs by setting the `Attribution-Reporting-Eligible` header manually:
