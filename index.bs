@@ -693,11 +693,16 @@ To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destina
 1. If |destinationStrings|'s [=set/size=] is equal to 1, return |destinationStrings|[0].
 1. Return |destinationStrings|.
 
+To <dfn>check if a scheme is suitable</dfn> given a [=string=] |scheme|:
+
+1. If |scheme| is "`http`" or "`https`", return true.
+1. Return false.
 
 To <dfn>check if an origin is suitable</dfn> given an [=origin=] |origin|:
 
 1. If |origin| is not a [=potentially trustworthy origin=], return false.
-1. If |origin|'s [=origin/scheme=] is not "`http`" or "`https`", return false.
+1. If |origin|'s [=origin/scheme=] is not
+    [=check if a scheme is suitable|suitable=], return false.
 1. Return true.
 
 <h3 id="parsing-filter-data">Parsing filter data</h3>
@@ -838,7 +843,7 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
 [=suitable origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and an
 [=environment settings objects=] |context|:
 
-1. If |url|'s [=url/origin=] is not [=check if an origin is suitable|suitable=],
+1. If |url|'s [=url/scheme=] is not [=check if a scheme is suitable|suitable=],
     return.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
