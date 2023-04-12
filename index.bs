@@ -208,23 +208,23 @@ Issue: Use |attributionSrcUrls| with [=make a background attributionsrc request=
 # Fetch monkeypatches # {#fetch-monkeypatches}
 
 <pre class="idl">
-enum AttributionReportingEligibility {
-  "none",
-  "source",
-  "trigger",
-  "source-and-trigger",
+dictionary AttributionReportingRequestOptions {
+  boolean eventSourceEligible = false;
+  boolean triggerEligible = false;
 };
 
 partial dictionary RequestInit {
-  AttributionReportingEligibility? attributionReportingEligibility;
+  AttributionReportingRequestOptions? attributionReporting;
 };
 
 partial interface XMLHttpRequest {
-  attribute AttributionReportingEligibility? attributionReportingEligibility;
+  attribute AttributionReportingRequestOptions? attributionReporting;
 };
 </pre>
 
-Issue: Describe how this field is used.
+If {{AttributionReportingRequestOptions}} is not set, then no
+`Attribution-Reporting-Eligible` header is added to the request, but the
+request is allowed to register triggers.
 
 # Permissions Policy integration # {#permission-policy-integration}
 
