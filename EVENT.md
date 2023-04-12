@@ -178,7 +178,7 @@ APIs by setting the appropriate option:
 ```javascript
 // Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
-             { keepalive: true, attributionReportingEligibility: 'source' });
+             { keepalive: true, attributionReporting: {eventSourceEligible: true}});
 ```
 
 The response to these requests will configure the API via a new JSON HTTP
@@ -252,7 +252,7 @@ or JavaScript:
 ```javascript
 // Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_trigger?purchase=13",
-             { keepalive: true, attributionReportingEligibility: 'trigger' });
+             { keepalive: true, attributionReporting: {triggerEligible: true}});
 ```
 
 As a stop-gap to support pre-existing conversion tags which do not include the
