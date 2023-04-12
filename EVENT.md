@@ -181,9 +181,6 @@ window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
              { keepalive: true, attributionReportingEligibility: 'source' });
 ```
 
-Other requests APIs which allow specifying headers (e.g. `XMLHttpRequest`)
-will also work.
-
 The response to these requests will configure the API via a new JSON HTTP
 header `Attribution-Reporting-Register-Source` of the form:
 
