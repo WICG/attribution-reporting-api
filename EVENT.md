@@ -176,9 +176,13 @@ window.open(
 APIs by setting the appropriate option:
 
 ```javascript
+const attributionReporting = {
+  eventSourceEligible: true,
+  triggerEligible: false,
+};
 // Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
-             { keepalive: true, attributionReporting: {eventSourceEligible: true}});
+             { keepalive: true, attributionReporting });
 ```
 
 The response to these requests will configure the API via a new JSON HTTP
@@ -250,9 +254,13 @@ similar mechanism is used as source event registration, via HTML:
 ```
 or JavaScript:
 ```javascript
+const attributionReporting = {
+  eventSourceEligible: false,
+  triggerEligible: true,
+};
 // Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_trigger?purchase=13",
-             { keepalive: true, attributionReporting: {triggerEligible: true}});
+             { keepalive: true, attributionReporting });
 ```
 
 As a stop-gap to support pre-existing conversion tags which do not include the
