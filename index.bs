@@ -223,9 +223,18 @@ partial interface XMLHttpRequest {
 };
 </pre>
 
-If {{AttributionReportingRequestOptions}} is not set, then no
-`Attribution-Reporting-Eligible` header is added to the request, but the
-request is allowed to register triggers.
+To <dfn>mark a request for Attribution Reporting eligibility<dfn> given a
+[=header list=] |headers| and an optional {{AttributionReportingRequestOptions}}
+|options|:
+
+1. If |options| is null, return.
+1. Let |dict| be an [=ordered map=].
+1. If |options|'s {{AttributionReportingRequestOptions/eventSourceEligible}} is
+    true, [=map/set=] |dict|["`event-source`"] to true.
+1. If |options|'s {{AttributionReportingRequestOptions/triggerEligible}} is
+    true, [=map/set=] |dict|["`trigger`"] to true.
+1. [=header list/Set a structured field value=] given
+    ("`Attribution-Reporting-Eligible`", |dict|) in |headers|.
 
 # Permissions Policy integration # {#permission-policy-integration}
 
