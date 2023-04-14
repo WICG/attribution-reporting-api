@@ -120,7 +120,7 @@ run the following steps:
         [=URL record=].
     1. Run [=make a background attributionsrc request=] with |url|,
         |contextOrigin|, "<code>[=eligibility/event-source, trigger=]</code>",
-        and |element|'s [=Node/node document=]'s [=relevant settings object=].
+        and |element|'s [=Node/node document=].
 
 Issue: Set |contextOrigin| properly.
 
@@ -839,11 +839,16 @@ An <dfn>eligibility</dfn> is one of the following:
 </dl>
 
 To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
-[=suitable origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and an
-[=environment settings objects=] |context|:
+[=suitable origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and a
+{{Document}} |document|:
 
 1. If |url|'s [=url/scheme=] is not [=check if a scheme is suitable|suitable=],
     return.
+1. Let |context| be |document|'s [=relevant settings object=].
+1. If |context| is not a [=secure context=], return.
+1. If the "<code>[=attribution-reporting=]</code>" feature
+    <a href="https://w3c.github.io/webappsec-permissions-policy/#algo-is-feature-enabled">is not enabled</a>
+    in |document| with |document|'s [=url/origin=], return.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
     ::  "`GET`"
@@ -858,8 +863,6 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
 1. [=Fetch=] |request| with [=fetch/processResponse=] being
     [=process an attributionsrc response=] with |contextOrigin|, |eligibility|,
     and |context|.
-
-Issue: Check permission policy and document trustworthiness.
 
 Issue: Audit other properties on |request| and set them properly.
 
