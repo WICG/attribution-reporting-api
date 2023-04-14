@@ -120,6 +120,9 @@ if __name__ == "__main__":
 
   It optionally also accepts windows and per-trigger-data summary buckets from command
   line arguments.
+
+  Note: JSON input is not completely validated. It is minimally processed to count the
+  number of windows and buckets per trigger spec.
   '''
 
     parser = argparse.ArgumentParser(
