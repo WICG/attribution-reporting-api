@@ -135,9 +135,6 @@ Issue: Specify when to make background attributionsrc requests for <{a}>.
 
 Modify the [=tokenize the features argument=] as follows:
 
-Add an optional [=boolean=] parameter |preserveCaseAndReturnEachValue|,
-defaulting to false.
-
 Replace the step
 
 > [=Collect a sequence of code points=] that are not [=feature separators=] code
@@ -147,9 +144,9 @@ Replace the step
 with
 
 [=Collect a sequence of code points=] that are not [=feature separators=] code
-points from |features| given |position|. If |preserveCaseAndReturnEachValue| is
-true, set |value| to the collected code points. Otherwise, set |value| to the
-collected code points, [=ASCII lowercase|converted to ASCII lowercase=].
+points from |features| given |position|. Set |value| to the collected code
+points, [=ASCII lowercase|converted to ASCII lowercase=]. Set
+|originalCaseValue| to the collected code points.
 
 Replace the step
 
@@ -159,7 +156,7 @@ Replace the step
 with the steps
 
 1. If |name| is not the empty string:
-    1. If |preserveCaseAndReturnEachValue| is:
+    1. If |name| is "`attributionsrc`":
         <dl class="switch">
         : false
         :: Set |tokenizedFeatures|[|name|] to |value|.
@@ -167,7 +164,7 @@ with the steps
         :: Run the following steps:
             1. If |tokenizedFeatures|[|name|] does not [=map/exists|exist=],
                 [=map/set=] |tokenizedFeatures|[|name|] to a new [=list=].
-            1. [=list/Append=] |value| to |tokenizedFeatures|[|name|].
+            1. [=list/Append=] |originalCaseValue| to |tokenizedFeatures|[|name|].
 
         </dl>
 
@@ -182,12 +179,10 @@ add the steps
 
 1. Let |attributionSrcUrls| be null.
 1. If |tokenizedFeatures|["`attributionsrc`"] [=map/exists=]:
-    1. Let |originalCaseMultiFeatures| be the result of
-        [=tokenize the features argument|tokenizing=] |features| with
-        |preserveCaseAndReturnEachValue| set to true.
+    1. [=Assert=]: |tokenizedFeatures|["`attributionsrc`"] is a [=list=].
     1. Set |attributionSrcUrls| to a new [=list=].
     1. [=list/iterate|For each=] |value| of
-        |originalCaseMultiFeatures|["`attributionsrc`"]:
+        |tokenizedFeatures|["`attributionsrc`"]:
         1. If |value| is the empty string, [=iteration/continue=].
         1. Let |decodedSrcBytes| be the result of
             [=string/percent-decode|percent-decoding=] |value|.
@@ -199,8 +194,9 @@ add the steps
             parsing failed, [=iteration/continue=].
         1. [=list/Append=] |urlRecord| to |attributionSrcUrls|.
 
-Issue: Modify the navigation request to permit navigation-source registration
-even if |attributionSrcUrls| [=list/is empty=].
+Issue: Modify the navigation request to permit
+"<code>[=eligibility/navigation-source=]</code>" registration even if
+|attributionSrcUrls| [=list/is empty=].
 
 Issue: Use |attributionSrcUrls| with [=make a background attributionsrc request=].
 
