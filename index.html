@@ -839,6 +839,8 @@ and <var>element</var>’s <a data-link-type="dfn" href="https://dom.spec.whatwg
    <p class="issue" id="issue-0f6e3885"><a class="self-link" href="#issue-0f6e3885"></a> Set <var>contextOrigin</var> properly.</p>
    <p class="issue" id="issue-4cc8b8aa"><a class="self-link" href="#issue-4cc8b8aa"></a> Consider allowing the user agent to limit the size of <var>tokens</var>.</p>
    <p class="issue" id="issue-80ca5c3f"><a class="self-link" href="#issue-80ca5c3f"></a> Specify when to make background attributionsrc requests for <code><a data-link-type="element" href="https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element" id="ref-for-the-a-element③">a</a></code>.</p>
+   <p class="issue" id="issue-42a5e6a2"><a class="self-link" href="#issue-42a5e6a2"></a> Monkeypatch <code><a data-link-type="element" href="https://html.spec.whatwg.org/multipage/embedded-content.html#the-img-element" id="ref-for-the-img-element③">img</a></code> and <code><a data-link-type="element" href="https://html.spec.whatwg.org/multipage/scripting.html#script" id="ref-for-script③">script</a></code> loading so that the presence of an <code class="idl"><a data-link-type="idl" href="#dom-htmlattributionsrcelementutils-attributionsrc" id="ref-for-dom-htmlattributionsrcelementutils-attributionsrc③">attributionSrc</a></code> attribute causes the <code class="idl"><a data-link-type="idl" href="https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-src" id="ref-for-dom-img-src">src</a></code> or <code class="idl"><a data-link-type="idl" href="https://html.spec.whatwg.org/multipage/scripting.html#dom-script-src" id="ref-for-dom-script-src">src</a></code> request to contain an
+"<code>Attribution-Reporting-Eligible</code>" header.</p>
    <h3 class="heading settled" data-level="2.2" id="monkeypatch-window-open"><span class="secno">2.2. </span><span class="content">Window open steps</span><a class="self-link" href="#monkeypatch-window-open"></a></h3>
    <p>Modify the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-window-open-features-tokenize" id="ref-for-concept-window-open-features-tokenize">tokenize the features argument</a> as follows:</p>
    <p>Replace the step</p>
@@ -4730,7 +4732,7 @@ an origin from a user’s browsing history.</p>
   <aside aria-labelledby="infopaneltitle-for-abfedd7f01779095e32057f505b061f5" class="dfn-panel" data-for="abfedd7f01779095e32057f505b061f5" id="infopanel-for-abfedd7f01779095e32057f505b061f5">
    <span id="infopaneltitle-for-abfedd7f01779095e32057f505b061f5" style="display:none">Info about the 'img' external reference.</span><a href="https://html.spec.whatwg.org/multipage/embedded-content.html#the-img-element">https://html.spec.whatwg.org/multipage/embedded-content.html#the-img-element</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-the-img-element">2.1. API for elements</a> <a href="#ref-for-the-img-element①">(2)</a> <a href="#ref-for-the-img-element②">(3)</a>
+    <li><a href="#ref-for-the-img-element">2.1. API for elements</a> <a href="#ref-for-the-img-element①">(2)</a> <a href="#ref-for-the-img-element②">(3)</a> <a href="#ref-for-the-img-element③">(4)</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-3a2763fcaa6bc82693554cf36780c0dd" class="dfn-panel" data-for="3a2763fcaa6bc82693554cf36780c0dd" id="infopanel-for-3a2763fcaa6bc82693554cf36780c0dd">
@@ -4830,7 +4832,7 @@ an origin from a user’s browsing history.</p>
   <aside aria-labelledby="infopaneltitle-for-a2f36d7fac800a62429fab3384fbef28" class="dfn-panel" data-for="a2f36d7fac800a62429fab3384fbef28" id="infopanel-for-a2f36d7fac800a62429fab3384fbef28">
    <span id="infopaneltitle-for-a2f36d7fac800a62429fab3384fbef28" style="display:none">Info about the 'script' external reference.</span><a href="https://html.spec.whatwg.org/multipage/scripting.html#script">https://html.spec.whatwg.org/multipage/scripting.html#script</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-script">2.1. API for elements</a> <a href="#ref-for-script①">(2)</a> <a href="#ref-for-script②">(3)</a>
+    <li><a href="#ref-for-script">2.1. API for elements</a> <a href="#ref-for-script①">(2)</a> <a href="#ref-for-script②">(3)</a> <a href="#ref-for-script③">(4)</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-613400696de3e8f8a5001430db03abe8" class="dfn-panel" data-for="613400696de3e8f8a5001430db03abe8" id="infopanel-for-613400696de3e8f8a5001430db03abe8">
@@ -4855,6 +4857,18 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-site④">6.17. Attribution rate-limits</a> <a href="#ref-for-site⑤">(2)</a>
     <li><a href="#ref-for-site⑥">8. Vendor-Specific Values</a> <a href="#ref-for-site⑦">(2)</a>
     <li><a href="#ref-for-site⑧">11.1. Creating an attribution trigger</a>
+   </ul>
+  </aside>
+  <aside aria-labelledby="infopaneltitle-for-086e792e89a8a0392218eface09f212f" class="dfn-panel" data-for="086e792e89a8a0392218eface09f212f" id="infopanel-for-086e792e89a8a0392218eface09f212f">
+   <span id="infopaneltitle-for-086e792e89a8a0392218eface09f212f" style="display:none">Info about the 'src (for HTMLImageElement)' external reference.</span><a href="https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-src">https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-src</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-img-src">2.1. API for elements</a>
+   </ul>
+  </aside>
+  <aside aria-labelledby="infopaneltitle-for-aab18decc0f7ff28fd92a81dc48a399b" class="dfn-panel" data-for="aab18decc0f7ff28fd92a81dc48a399b" id="infopanel-for-aab18decc0f7ff28fd92a81dc48a399b">
+   <span id="infopaneltitle-for-aab18decc0f7ff28fd92a81dc48a399b" style="display:none">Info about the 'src (for HTMLScriptElement)' external reference.</span><a href="https://html.spec.whatwg.org/multipage/scripting.html#dom-script-src">https://html.spec.whatwg.org/multipage/scripting.html#dom-script-src</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-dom-script-src">2.1. API for elements</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-f81970b8edd6a65eb555ed27a0563921" class="dfn-panel" data-for="f81970b8edd6a65eb555ed27a0563921" id="infopanel-for-f81970b8edd6a65eb555ed27a0563921">
@@ -5589,6 +5603,8 @@ an origin from a user’s browsing history.</p>
      <li><span class="dfn-paneled" id="613400696de3e8f8a5001430db03abe8">secure context</span>
      <li><span class="dfn-paneled" id="2aeb953708ac6466a37697c533cf366f">serialization of an origin</span>
      <li><span class="dfn-paneled" id="f7e6800046257cc9fe726534da6b862b">site</span>
+     <li><span class="dfn-paneled" id="086e792e89a8a0392218eface09f212f">src <small>(for HTMLImageElement)</small></span>
+     <li><span class="dfn-paneled" id="aab18decc0f7ff28fd92a81dc48a399b">src <small>(for HTMLScriptElement)</small></span>
      <li><span class="dfn-paneled" id="f81970b8edd6a65eb555ed27a0563921">tokenize the features argument</span>
      <li><span class="dfn-paneled" id="8d61582eb608c6f8f1b3a04b8b95bba8">window open steps</span>
     </ul>
@@ -5744,6 +5760,8 @@ an origin from a user’s browsing history.</p>
    <div class="issue"> Set <var>contextOrigin</var> properly. <a class="issue-return" href="#issue-0f6e3885" title="Jump to section">↵</a></div>
    <div class="issue"> Consider allowing the user agent to limit the size of <var>tokens</var>. <a class="issue-return" href="#issue-4cc8b8aa" title="Jump to section">↵</a></div>
    <div class="issue"> Specify when to make background attributionsrc requests for <code><a data-link-type="element" href="https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-a-element">a</a></code>. <a class="issue-return" href="#issue-80ca5c3f" title="Jump to section">↵</a></div>
+   <div class="issue"> Monkeypatch <code><a data-link-type="element" href="https://html.spec.whatwg.org/multipage/embedded-content.html#the-img-element">img</a></code> and <code><a data-link-type="element" href="https://html.spec.whatwg.org/multipage/scripting.html#script">script</a></code> loading so that the presence of an <code class="idl"><a data-link-type="idl" href="#dom-htmlattributionsrcelementutils-attributionsrc">attributionSrc</a></code> attribute causes the <code class="idl"><a data-link-type="idl" href="https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-src">src</a></code> or <code class="idl"><a data-link-type="idl" href="https://html.spec.whatwg.org/multipage/scripting.html#dom-script-src">src</a></code> request to contain an
+"<code>Attribution-Reporting-Eligible</code>" header. <a class="issue-return" href="#issue-42a5e6a2" title="Jump to section">↵</a></div>
    <div class="issue"> Modify the navigation request to permit
 "<code><a data-link-type="dfn" href="#eligibility-navigation-source">navigation-source</a></code>" registration even if <var>attributionSrcUrls</var> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty">is empty</a>. <a class="issue-return" href="#issue-3b9e5695" title="Jump to section">↵</a></div>
    <div class="issue"> Use <var>attributionSrcUrls</var> with <a data-link-type="dfn" href="#make-a-background-attributionsrc-request">make a background attributionsrc request</a>. <a class="issue-return" href="#issue-d5f595fc" title="Jump to section">↵</a></div>
@@ -5782,7 +5800,7 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
   <aside aria-labelledby="infopaneltitle-for-dom-htmlattributionsrcelementutils-attributionsrc" class="dfn-panel" data-for="dom-htmlattributionsrcelementutils-attributionsrc" id="infopanel-for-dom-htmlattributionsrcelementutils-attributionsrc">
    <span id="infopaneltitle-for-dom-htmlattributionsrcelementutils-attributionsrc" style="display:none">Info about the 'attributionSrc' definition.</span><b><a href="#dom-htmlattributionsrcelementutils-attributionsrc">#dom-htmlattributionsrcelementutils-attributionsrc</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-dom-htmlattributionsrcelementutils-attributionsrc">2.1. API for elements</a> <a href="#ref-for-dom-htmlattributionsrcelementutils-attributionsrc①">(2)</a> <a href="#ref-for-dom-htmlattributionsrcelementutils-attributionsrc②">(3)</a>
+    <li><a href="#ref-for-dom-htmlattributionsrcelementutils-attributionsrc">2.1. API for elements</a> <a href="#ref-for-dom-htmlattributionsrcelementutils-attributionsrc①">(2)</a> <a href="#ref-for-dom-htmlattributionsrcelementutils-attributionsrc②">(3)</a> <a href="#ref-for-dom-htmlattributionsrcelementutils-attributionsrc③">(4)</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-element-attrdef-a-attributionsrc" class="dfn-panel" data-for="element-attrdef-a-attributionsrc" id="infopanel-for-element-attrdef-a-attributionsrc">
