@@ -151,8 +151,9 @@ registration](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREG
 For reporting origins that are configured to do Private State Token issuance,
 all new requests that have the `Attribution-Reporting-Eligible` request header
 with the `trigger` value will automatically attach a
-`Sec-Attribution-Reporting-Private-State-Token` header with a blinded message
-(which embeds concatenation of the `report_id` and `attribution_destination`).
+`Sec-Attribution-Reporting-Private-State-Token` header with a comma-separated
+list of blinded messages (which embeds the concatenation of the `report_id` and
+`attribution_destination`).
 
 The reporting origin will inspect the request and decide whether it is valid,
 i.e. whether the origin suspects it is coming from a real, honest client and
@@ -169,11 +170,11 @@ should therefore be allowed to generate attribution reports.
     learning the detection result. See
     [privacy of the IVT detector](#privacy-of-the-ivt-detector) for more details.
 *   If the request is considered **valid**, the reporting origin should add a
-    `Sec-Attribution-Reporting-Private-State-Token` header with a blind token
-    (the blind signature over the blinded message).
+    `Sec-Attribution-Reporting-Private-State-Token` header with blind tokens
+    (the blind signatures over the blinded messages).
 
-Internally, the browser will store the token associated with any generated
-report.
+Internally, the browser will randomly associate the tokens with any reports
+generated from this trigger request, including [null reports](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#hide-the-true-number-of-attribution-reports).
 
 Note: because we only support issuance requests on requests bearing the
 `Attribution-Reporting-Eligible` header, some trigger requests flows are not

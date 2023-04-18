@@ -16,13 +16,13 @@
     - [Verbose debugging reports](#verbose-debugging-reports)
   - [Contribution bounding and budgeting](#contribution-bounding-and-budgeting)
   - [Storage limits](#storage-limits)
+  - [Hide the true number of attribution reports](#hide-the-true-number-of-attribution-reports)
 - [Data processing through a Secure Aggregation Service](#data-processing-through-a-secure-aggregation-service)
 - [Privacy considerations](#privacy-considerations)
   - [Differential Privacy](#differential-privacy)
 - [Ideas for future iteration](#ideas-for-future-iteration)
   - [Worklet-based aggregation key generation](#worklet-based-aggregation-key-generation)
   - [Custom attribution models](#custom-attribution-models)
-  - [Hide the true number of attribution reports](#hide-the-true-number-of-attribution-reports)
   - [More advanced contribution bounding](#more-advanced-contribution-bounding)
   - [Choosing among aggregation services](#choosing-among-aggregation-services)
 - [Considered alternatives](#considered-alternatives)
@@ -248,9 +248,8 @@ The report will be JSON encoded with the following scheme:
 ```
 
 Reports will not be delayed to the same extent as they are for event level
-reports. The browser will delay them with a random delay between 10 minutes to
-1 hour, or with a small delay after the browser next starts up. The minimum 10
-minutes delay allows regretful users to have a chance to delete the reports.
+reports. The browser will delay them with a random delay between 0 to 10
+minutes, or with a small delay after the browser next starts up.
 The browser is free to utilize techniques like retries to minimize data loss.
 
 * The `shared_info` will be a serialized JSON object. This exact string is used
@@ -399,6 +398,38 @@ destination site.
 Note: The storage limits for event-level and aggregatable reports are enforced
 independently of each other.
 
+### Hide the true number of attribution reports
+
+The presence or absence of an attribution report leaks some potentially
+sensitive cross-site data in the current design. Therefore, revealing the total
+count of reports to the reporting origin could leak something sensitive as well
+(imagine if the reporting origin only ever registered a conversion or impression
+for a single user).
+
+To hide the true number of reports, the browser will add noise to the number of
+reports by randomly sending noisy null reports for some fraction of trigger
+registrations. Null reports will not check or affect rate limits.
+
+As a lot of the cross site information is embedded in the source registration
+time, trigger registration will accept an optional field
+`aggregatable_source_registration_time` to allow developers to specify whether
+to exclude or include `source_registration_time` field within `shared_info` in the
+aggregatable report. The null report rate will need to be higher if
+`source_registration_time` is present in the aggregatable report.
+
+```jsonc
+{
+   ...,
+   "aggregatable_trigger_data": ...,
+   "aggregatable_values": ...,
+   "aggregatable_source_registration_time": "exclude" // or "include", defaults to "exclude" if not present
+}
+```
+
+Strawman: There should be ~0.05 reports (in expectation) sent for trigger
+registrations that exclude the `source_registration_time` field, and ~0.25 reports for
+those that include this field.
+
 ## Data processing through a Secure Aggregation Service
 
 The exact design of the service is not specified here. We expect to have more
@@ -457,7 +488,7 @@ source will be well-protected in an aggregate release.
 Note: there are a few caveats about a formal differential privacy claim:
 - In the current design, the number of encrypted reports is revealed to the
   reporting origin in the clear without any noise. See [Hide the true number of
-  attribution reports](#Hide the-true-number-of-attribution-reports).
+  attribution reports](#hide-the-true-number-of-attribution-reports).
 - The scope of privacy in the current design is not user-level, but per-source.
   See [More advanced contribution
   bounding](#more-advanced-contribution-bounding) for follow-up work exploring
@@ -556,21 +587,6 @@ models other than last-touch.
 
 We should be careful in allowing reports to include cross site information from
 multiple sites, as it could increase the risk of cross site tracking.
-
-### Hide the true number of attribution reports
-
-The presence or absence of an attribution report leaks some potentially
-sensitive cross-site data in the current design. Therefore, revealing the total
-count of reports to the reporting origin could leak something sensitive as well
-(imagine if the reporting origin only ever registered a conversion or impression
-for a single user).
-
-To hide the true number of reports, we could: 
-- Unconditionally send a null report for every registered attribution trigger
-  (thus making the count a function of only destination-side information)
-- Add noise to the number of reports by having some clients randomly add noisy
-  null reports. This technique would have to assume some threshold number of
-  unattributed triggers to maintain privacy.
 
 ### More advanced contribution bounding
 
