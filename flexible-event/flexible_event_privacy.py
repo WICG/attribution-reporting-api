@@ -6,8 +6,10 @@ from math import log, exp
 import sys
 from typing import Tuple, TypedDict, List, NamedTuple
 
-
+# Each per-trigger-data config specifies (num_windows, num_buckets)
 PerTriggerDataConfig = List[Tuple[int, int]]
+
+
 class ApiConfig(NamedTuple):
     max_event_level_reports: int
     per_trigger_data_configs: PerTriggerDataConfig
@@ -112,6 +114,31 @@ def get_config(json: dict) -> ApiConfig:
     return ApiConfig(max_event_level_reports, per_trigger_data_configs)
 
 
+NAVIGATION_DEFAULT_CONFIG = ApiConfig(3, [(3, 3)] * 8)
+EVENT_DEFAULT_CONFIG = ApiConfig(1, [(1, 1)] * 2)
+
+
+def print_config_data(config: ApiConfig, epsilon):
+    num_states = num_flexible_states(config)
+    info_gain = max_information_gain(num_states, epsilon)
+    flip_prob = flip_probability_dp(num_states, epsilon)
+
+    print(f"Number of possible different output states: {num_states}")
+    print(f"Information gain: {info_gain:.2f} bits")
+    print(f"Flip percent: {100 * flip_prob:.5f}%")
+
+    info_gain_default_nav = max_information_gain(
+        num_flexible_states(NAVIGATION_DEFAULT_CONFIG), args.epsilon)
+    info_gain_default_event = max_information_gain(
+        num_flexible_states(EVENT_DEFAULT_CONFIG), args.epsilon)
+    if info_gain > info_gain_default_nav:
+        print(
+            f"WARNING: info gain of {info_gain:.2f} > {info_gain_default_nav:.2f} for navigation sources")
+    if info_gain > info_gain_default_event:
+        print(
+            f"WARNING: info gain of {info_gain:.2f} > {info_gain_default_event:.2f} for event sources")
+
+
 if __name__ == "__main__":
     DESCRIPTION = '''\
   flexible_event_privacy.py is a utility to ingest configurations for the flexible
@@ -121,7 +148,13 @@ if __name__ == "__main__":
   It optionally also accepts windows and per-trigger-data summary buckets from command
   line arguments.
 
-  Note: JSON input is not completely validated. It is minimally processed to count the
+  The output of this tool prints diagnostics about the config, including how many
+  output states it encodes, the flip probability for a certain epsilon value (default 14),
+  and the maximum information gain obtained from one source. The tool will also emit a
+  warning if the information gain exceeds the default configs for navigation or event
+  sources.
+
+  Caution: JSON input is not completely validated. It is minimally processed to count the
   number of windows and buckets per trigger spec.
   '''
 
@@ -157,11 +190,4 @@ if __name__ == "__main__":
             args.max_event_level_reports, per_trigger_configs)
     else:
         api_config = get_config(json.load(sys.stdin))
-
-    num_states = num_flexible_states(api_config)
-    info_gain = max_information_gain(num_states, args.epsilon)
-    flip_prob = flip_probability_dp(num_states, args.epsilon)
-
-    print(f"Num states: {num_states}")
-    print(f"Information gain: {info_gain:.2f} bits")
-    print(f"Flip percent: {100 * flip_prob:.5f}%")
+    print_config_data(api_config, args.epsilon)
