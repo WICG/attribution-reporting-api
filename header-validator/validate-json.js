@@ -301,6 +301,15 @@ const aggregatableDedupKeys = list(
       not_filters: optional(filters()),
     }))
 
+const aggregatableSourceRegistrationTime = string((state, value) => {
+  const exclude = 'exclude'
+  const include = 'include'
+  if (value === exclude || value === include) {
+    return
+  }
+  state.error(`must match '${exclude}' or '${include}' (case-sensitive)`)
+})
+
 export function validateTrigger(trigger) {
   const state = new State()
   state.validate(trigger, {
@@ -313,6 +322,7 @@ export function validateTrigger(trigger) {
     filters: optional(orFilters),
     not_filters: optional(orFilters),
     aggregatable_deduplication_keys: optional(aggregatableDedupKeys),
+    aggregatable_source_registration_time : optional(aggregatableSourceRegistrationTime),
   })
   return state.result()
 }

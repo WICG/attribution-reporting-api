@@ -12,6 +12,7 @@ export const testCases = [
         "filters": {"x": []},
         "not_filters": {"y": []}
       }],
+      "aggregatable_source_registration_time": "include",
       "aggregatable_trigger_data": [{
         "filters": {"a": ["b"]},
         "key_piece": "0x1",
@@ -525,6 +526,23 @@ export const testCases = [
     expectedErrors: [{
       path: ["aggregation_coordinator_identifier"],
       msg: "must match 'aws-cloud' (case-sensitive)",
+    }],
+  },
+
+  {
+    name: "aggregatable-source-registration-time-wrong-type",
+    json: `{"aggregatable_source_registration_time": 1}`,
+    expectedErrors: [{
+      path: ["aggregatable_source_registration_time"],
+      msg: "must be a string",
+    }],
+  },
+  {
+    name: "aggregatable-source-registration-time-unknown-value",
+    json: `{"aggregatable_source_registration_time": "EXCLUDE"}`,
+    expectedErrors: [{
+      path: ["aggregatable_source_registration_time"],
+      msg: "must match 'exclude' or 'include' (case-sensitive)",
     }],
   },
 ];
