@@ -173,19 +173,17 @@ window.open(
 ```
 
 `event` sources can also be registered using existing JavaScript request
-APIs by setting the `Attribution-Reporting-Eligible` header manually:
+APIs by setting the appropriate option:
 
 ```javascript
-const headers = {
-  'Attribution-Reporting-Eligible': 'event-source'
+const attributionReporting = {
+  eventSourceEligible: true,
+  triggerEligible: false,
 };
 // Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
-             { headers, keepalive: true });
+             { keepalive: true, attributionReporting });
 ```
-
-Other requests APIs which allow specifying headers (e.g. `XMLHttpRequest`)
-will also work.
 
 The response to these requests will configure the API via a new JSON HTTP
 header `Attribution-Reporting-Register-Source` of the form:
@@ -256,12 +254,13 @@ similar mechanism is used as source event registration, via HTML:
 ```
 or JavaScript:
 ```javascript
-const headers = {
-  'Attribution-Reporting-Eligible': 'trigger'
+const attributionReporting = {
+  eventSourceEligible: false,
+  triggerEligible: true,
 };
 // Optionally set keepalive to ensure the request outlives the page.
 window.fetch("https://adtech.example/attribution_trigger?purchase=13",
-             { headers, keepalive: true });
+             { keepalive: true, attributionReporting });
 ```
 
 As a stop-gap to support pre-existing conversion tags which do not include the
@@ -317,8 +316,8 @@ ignore invalid registrations:
 1. `<a>` and `window.open` will have `navigation-source`.
 2. Other APIs that automatically set `Attribution-Reporting-Eligible` (like
    `<img>`) will contain `event-source, trigger`.
-3. Requests from JavaScript, e.g. `window.fetch`, can set this header manually,
-   but it is an error for such requests to specify `navigation-source`.
+3. Requests from JavaScript, e.g. `window.fetch`, can set this header using an
+   option.
 4. All other requests will not have the `Attribution-Reporting-Eligible`
    header. For those requests the browser will permit trigger registration
    only.

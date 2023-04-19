@@ -207,7 +207,36 @@ Issue: Use |attributionSrcUrls| with [=make a background attributionsrc request=
 
 # Fetch monkeypatches # {#fetch-monkeypatches}
 
-Issue: Specify monkeypatches for source/trigger registration.
+<pre class="idl">
+dictionary AttributionReportingRequestOptions {
+  required boolean eventSourceEligible;
+  required boolean triggerEligible;
+};
+
+partial dictionary RequestInit {
+  AttributionReportingRequestOptions attributionReporting;
+};
+
+partial interface XMLHttpRequest {
+  [SecureContext]
+  undefined setAttributionReporting(AttributionReportingRequestOptions options);
+};
+</pre>
+
+To <dfn>mark a request for Attribution Reporting eligibility</dfn> given a
+[=header list=] |headers| and an optional {{AttributionReportingRequestOptions}}
+|options|:
+
+1. If |options| is null, return.
+1. Let |dict| be an [=ordered map=].
+1. If |options|'s {{AttributionReportingRequestOptions/eventSourceEligible}} is
+    true, [=map/set=] |dict|["`event-source`"] to true.
+1. If |options|'s {{AttributionReportingRequestOptions/triggerEligible}} is
+    true, [=map/set=] |dict|["`trigger`"] to true.
+1. [=header list/Set a structured field value=] given
+    ("`Attribution-Reporting-Eligible`", |dict|) in |headers|.
+
+Issue: Monkeypatch [=fetch=] and {{XMLHttpRequest}} to use these IDL definitions.
 
 # Permissions Policy integration # {#permission-policy-integration}
 
@@ -972,6 +1001,8 @@ Issue: Support header-processing on redirects.
 
 Issue: Check for transient activation with "<code>[=eligibility/navigation-source=]</code>".
 
+Issue: Reformulate [=eligibility=] in terms of a fetch parameter.
+
 To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
 |contextOrigin|, an [=eligibility=] |eligibility|, an
 [=environment settings objects=] |context|, and a [=response=] |response|:
@@ -1040,6 +1071,8 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
     </dl>
 
 Issue: Set |privateStateTokens| properly.
+
+Issue: Reformulate [=eligibility=] in terms of a fetch parameter.
 
 # Source Algorithms # {#source-algorithms}
 
