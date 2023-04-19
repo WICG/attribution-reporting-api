@@ -597,7 +597,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Attribution Reporting</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-04-18">18 April 2023</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2023-04-19">19 April 2023</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -2017,7 +2017,7 @@ return null.</p>
        <p><var>maxAttributionsPerSource</var></p>
       <dt data-md><a data-link-type="dfn" href="#randomized-response-output-configuration-num-report-windows" id="ref-for-randomized-response-output-configuration-num-report-windows①">num report windows</a>
       <dd data-md>
-       <p>The result of <a data-link-type="dfn" href="#obtain-the-number-of-report-windows" id="ref-for-obtain-the-number-of-report-windows">obtaining the number of report windows</a> with <var>sourceType</var></p>
+       <p>The result of <a data-link-type="dfn" href="#obtain-the-number-of-report-windows" id="ref-for-obtain-the-number-of-report-windows">obtaining the number of report windows</a> with <var>sourceType</var> and <var>eventReportWindow</var></p>
       <dt data-md><a data-link-type="dfn" href="#randomized-response-output-configuration-trigger-data-cardinality" id="ref-for-randomized-response-output-configuration-trigger-data-cardinality①">trigger data cardinality</a>
       <dd data-md>
        <p><var>triggerDataCardinality</var></p>
@@ -3461,15 +3461,26 @@ run <a data-link-type="dfn" href="#generate-null-reports-and-assign-private-stat
     <li data-md>
      <p>Return « 2 days, 7 days ».</p>
    </ol>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-the-number-of-report-windows">obtain the number of report windows</dfn> given a <a data-link-type="dfn" href="#source-type" id="ref-for-source-type④">source type</a> <var>sourceType</var>:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-effective-deadlines">obtain effective deadlines</dfn> given an <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑦">source type</a> <var>sourceType</var> and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-duration" id="ref-for-dfn-duration⑦">duration</a> <var>eventReportWindow</var>:</p>
    <ol>
     <li data-md>
-     <p>Let <var>earlyDeadlines</var> be the result of running <a data-link-type="dfn" href="#obtain-early-deadlines" id="ref-for-obtain-early-deadlines">obtain early deadlines</a> with <var>sourceType</var>.</p>
+     <p>Let <var>deadlines</var> be the result of <a data-link-type="dfn" href="#obtain-early-deadlines" id="ref-for-obtain-early-deadlines">obtaining early deadlines</a> given <var>sourceType</var>.</p>
     <li data-md>
-     <p>Return the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size①②">size</a> of <var>earlyDeadlines</var> + 1.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove⑨">Remove</a> all elements in <var>deadlines</var> that are greater than <var>eventReportWindow</var>.</p>
+    <li data-md>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①③">Append</a> <var>eventReportWindow</var> to <var>deadlines</var>.</p>
+    <li data-md>
+     <p>Return <var>deadlines</var>.</p>
+   </ol>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-the-number-of-report-windows">obtain the number of report windows</dfn> given a <a data-link-type="dfn" href="#source-type" id="ref-for-source-type④">source type</a> <var>sourceType</var> and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-duration" id="ref-for-dfn-duration⑧">duration</a> <var>eventReportWindow</var>:</p>
+   <ol>
+    <li data-md>
+     <p>Let <var>deadlines</var> be the result of <a data-link-type="dfn" href="#obtain-effective-deadlines" id="ref-for-obtain-effective-deadlines">obtaining effective deadlines</a> for <var>sourceType</var> and <var>eventReportWindow</var>.</p>
+    <li data-md>
+     <p>Return the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size①②">size</a> of <var>deadlines</var>.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-a-report-time-from-deadline">obtain a report time from deadline</dfn> given a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" id="ref-for-dfn-moment①①">moment</a> <var>sourceTime</var> and
-a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-duration" id="ref-for-dfn-duration⑦">duration</a> <var>deadline</var>:</p>
+a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-duration" id="ref-for-dfn-duration⑨">duration</a> <var>deadline</var>:</p>
    <ol>
     <li data-md>
      <p>Return <var>sourceTime</var> + <var>deadline</var> + 1 hour.</p>
@@ -3477,31 +3488,29 @@ a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-duration" id=
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-the-report-time-at-a-window">obtain the report time at a window</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑤⓪">attribution source</a> <var>source</var> and a non-negative integer <var>window</var>:</p>
    <ol>
     <li data-md>
-     <p>Let <var>earlyDeadlines</var> be the result of running <a data-link-type="dfn" href="#obtain-early-deadlines" id="ref-for-obtain-early-deadlines①">obtain early deadlines</a> with <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑦">source type</a>.</p>
+     <p>Let <var>deadlines</var> be the result of running <a data-link-type="dfn" href="#obtain-effective-deadlines" id="ref-for-obtain-effective-deadlines①">obtain effective deadlines</a> with <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑧">source type</a> and <a data-link-type="dfn" href="#attribution-source-event-report-window" id="ref-for-attribution-source-event-report-window②">event report window</a>.</p>
     <li data-md>
-     <p>Let <var>deadline</var> be <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-event-report-window" id="ref-for-attribution-source-event-report-window②">event report window</a>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#assert" id="ref-for-assert⑦">Assert</a>: <var>deadlines</var>[<var>window</var>] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain⑤">exists</a>.</p>
     <li data-md>
-     <p>If <var>earlyDeadlines</var>[<var>window</var>] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain⑤">exists</a>, set <var>deadline</var> to it.</p>
+     <p>Let <var>deadline</var> be <var>deadlines</var>[<var>window</var>].</p>
     <li data-md>
      <p>Return the result of running <a data-link-type="dfn" href="#obtain-a-report-time-from-deadline" id="ref-for-obtain-a-report-time-from-deadline">obtain a report time from deadline</a> with <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time①③">source time</a> and <var>deadline</var>.</p>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-an-event-level-report-delivery-time">obtain an event-level report delivery time</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑤①">attribution source</a> <var>source</var> and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" id="ref-for-dfn-moment①②">moment</a> <var>triggerTime</var>:</p>
    <ol>
     <li data-md>
-     <p>Let <var>deadlineToUse</var> be <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-event-report-window" id="ref-for-attribution-source-event-report-window③">event report window</a>.</p>
+     <p>Let <var>deadlines</var> be the result of <a data-link-type="dfn" href="#obtain-effective-deadlines" id="ref-for-obtain-effective-deadlines②">obtaining effective deadlines</a> with <var>source</var>.</p>
     <li data-md>
-     <p>Let <var>earlyDeadlines</var> be the result of running <a data-link-type="dfn" href="#obtain-early-deadlines" id="ref-for-obtain-early-deadlines②">obtain early deadlines</a> with <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-type" id="ref-for-attribution-source-source-type⑧">source type</a>.</p>
+     <p>Let <var>deadlineToUse</var> be the last item in <var>deadlines</var>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②③">For each</a> <var>earlyDeadline</var> of <var>earlyDeadlines</var>:</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②③">For each</a> <var>deadline</var> of <var>deadlines</var>:</p>
      <ol>
       <li data-md>
-       <p>Let <var>time</var> be <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time①④">source time</a> + <var>earlyDeadline</var>.</p>
+       <p>Let <var>time</var> be <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-source-time" id="ref-for-attribution-source-source-time①④">source time</a> + <var>deadline</var>.</p>
       <li data-md>
        <p>If <var>time</var> is less than <var>triggerTime</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⑦">continue</a>.</p>
       <li data-md>
-       <p>If <var>earlyDeadline</var> is greater than or equal to <var>deadlineToUse</var>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⑧">continue</a>.</p>
-      <li data-md>
-       <p>Set <var>deadlineToUse</var> to <var>earlyDeadline</var>.</p>
+       <p>Set <var>deadlineToUse</var> to <var>deadline</var>.</p>
       <li data-md>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-break" id="ref-for-iteration-break②">Break</a>.</p>
      </ol>
@@ -3688,7 +3697,7 @@ since the UNIX epoch, rounded down to a multiple of a whole day (86400 seconds).
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="determine-if-a-randomized-null-report-is-generated">determine if a randomized null report is generated</dfn> given a double <var>randomPickRate</var>:</p>
    <ol>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#assert" id="ref-for-assert⑦">Assert</a>: <var>randomPickRate</var> is between 0 and 1 (both inclusive).</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#assert" id="ref-for-assert⑧">Assert</a>: <var>randomPickRate</var> is between 0 and 1 (both inclusive).</p>
     <li data-md>
      <p>Let <var>r</var> be a random double beween 0 (inclusive) and 1 (exclusive) with uniform probability.</p>
     <li data-md>
@@ -3711,7 +3720,7 @@ since the UNIX epoch, rounded down to a multiple of a whole day (86400 seconds).
         <li data-md>
          <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append①⑥">Append</a> <var>nullReport</var> to the <a data-link-type="dfn" href="#aggregatable-report-cache" id="ref-for-aggregatable-report-cache⑤">aggregatable report cache</a>.</p>
         <li data-md>
-         <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①③">Append</a> <var>nullReport</var> to <var>nullReports</var>.</p>
+         <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①④">Append</a> <var>nullReport</var> to <var>nullReports</var>.</p>
        </ol>
      </ol>
     <li data-md>
@@ -3734,7 +3743,7 @@ since the UNIX epoch, rounded down to a multiple of a whole day (86400 seconds).
          <p>If <var>roundedAttributedSourceTime</var> is not null and equals the result of <a data-link-type="dfn" href="#obtain-rounded-source-time" id="ref-for-obtain-rounded-source-time①">obtaining rounded source time</a> with <var>fakeSourceTime</var>:</p>
          <ol>
           <li data-md>
-           <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⑨">Continue</a>.</p>
+           <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⑧">Continue</a>.</p>
          </ol>
         <li data-md>
          <p>If the result of <a data-link-type="dfn" href="#determine-if-a-randomized-null-report-is-generated" id="ref-for-determine-if-a-randomized-null-report-is-generated①">determining if a randomized null report is generated</a> with <a data-link-type="dfn" href="#randomized-null-report-rate-including-source-registration-time" id="ref-for-randomized-null-report-rate-including-source-registration-time">randomized null report rate including source registration time</a> is true:</p>
@@ -3744,7 +3753,7 @@ since the UNIX epoch, rounded down to a multiple of a whole day (86400 seconds).
           <li data-md>
            <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append①⑦">Append</a> <var>nullReport</var> to the <a data-link-type="dfn" href="#aggregatable-report-cache" id="ref-for-aggregatable-report-cache⑥">aggregatable report cache</a>.</p>
           <li data-md>
-           <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①④">Append</a> <var>nullReport</var> to <var>nullReports</var>.</p>
+           <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①⑤">Append</a> <var>nullReport</var> to <var>nullReports</var>.</p>
          </ol>
        </ol>
      </ol>
@@ -3784,7 +3793,7 @@ an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-t
      <p>If <var>report</var> is not null:</p>
      <ol>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①⑤">Append</a> <var>report</var> to <var>reports</var>.</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①⑥">Append</a> <var>report</var> to <var>reports</var>.</p>
      </ol>
     <li data-md>
      <p>Run <a data-link-type="dfn" href="#assign-private-state-tokens" id="ref-for-assign-private-state-tokens">assign private state tokens</a> with <var>reports</var> and <var>trigger</var>.</p>
@@ -3798,13 +3807,13 @@ an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-t
     <li data-md>
      <p>Set <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-delivered" id="ref-for-attribution-report-delivered①">delivered</a> value to true.</p>
     <li data-md>
-     <p>If <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-report-time" id="ref-for-attribution-report-report-time⑥">report time</a> is less than <var>context</var>’s <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-current-wall-time" id="ref-for-dfn-current-wall-time③">current wall time</a>, add an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#implementation-defined" id="ref-for-implementation-defined③">implementation-defined</a> random non-negative <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-duration" id="ref-for-dfn-duration⑧">duration</a> to <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-report-time" id="ref-for-attribution-report-report-time⑦">report time</a>.</p>
+     <p>If <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-report-time" id="ref-for-attribution-report-report-time⑥">report time</a> is less than <var>context</var>’s <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-current-wall-time" id="ref-for-dfn-current-wall-time③">current wall time</a>, add an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#implementation-defined" id="ref-for-implementation-defined③">implementation-defined</a> random non-negative <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-duration" id="ref-for-dfn-duration①⓪">duration</a> to <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-report-time" id="ref-for-attribution-report-report-time⑦">report time</a>.</p>
      <p class="note" role="note"><span class="marker">Note:</span> On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
  closed. Adding random delay prevents temporal joining of reports from different <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin⑤">source origin</a>s.</p>
     <li data-md>
      <p>Wait until <var>context</var>’s <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-current-wall-time" id="ref-for-dfn-current-wall-time④">current wall time</a> is equal to <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-report-time" id="ref-for-attribution-report-report-time⑧">report time</a>.</p>
     <li data-md>
-     <p>Optionally, wait a further <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#implementation-defined" id="ref-for-implementation-defined④">implementation-defined</a> <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-duration" id="ref-for-dfn-duration⑨">duration</a>.</p>
+     <p>Optionally, wait a further <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#implementation-defined" id="ref-for-implementation-defined④">implementation-defined</a> <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-duration" id="ref-for-dfn-duration①①">duration</a>.</p>
      <p class="note" role="note"><span class="marker">Note:</span> This is intended to allow user agents to optimize device resource usage.</p>
     <li data-md>
      <p>Run <a data-link-type="dfn" href="#attempt-to-deliver-a-report" id="ref-for-attempt-to-deliver-a-report">attempt to deliver a report</a> with <var>report</var>.</p>
@@ -3884,7 +3893,7 @@ The key should be uniquely identifiable.</p>
          <p><var>contribution</var>’s <a data-link-type="dfn" href="#aggregatable-contribution-value" id="ref-for-aggregatable-contribution-value④">value</a>, <a data-link-type="dfn" href="#encode-an-unsigned-k-bit-integer" id="ref-for-encode-an-unsigned-k-bit-integer①">encoded</a></p>
        </dl>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①⑥">Append</a> <var>contributionData</var> to <var>payloadData</var>.</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①⑦">Append</a> <var>contributionData</var> to <var>payloadData</var>.</p>
      </ol>
     <li data-md>
      <p>Let <var>payload</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map②③">map</a> of the following key/value pairs:</p>
@@ -3940,7 +3949,7 @@ run the following steps:</p>
      <p>If <var>report</var>’s <a data-link-type="dfn" href="#aggregatable-report-debug-mode" id="ref-for-aggregatable-report-debug-mode①">debug mode</a> is <strong>enabled</strong>,
 set <var>aggregationServicePayload</var>["<code>debug_cleartext_payload</code>"] to <var>report</var>’s <a data-link-type="dfn" href="#aggregatable-report-plaintext-payload" id="ref-for-aggregatable-report-plaintext-payload①">plaintext payload</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#forgiving-base64-encode" id="ref-for-forgiving-base64-encode②">base64 encoded</a>.</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①⑦">Append</a> <var>aggregationServicePayload</var> to <var>aggregationServicePayloads</var>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①⑧">Append</a> <var>aggregationServicePayload</var> to <var>aggregationServicePayloads</var>.</p>
     <li data-md>
      <p>Return <var>aggregationServicePayloads</var>.</p>
    </ol>
@@ -3989,7 +3998,7 @@ set <var>aggregationServicePayload</var>["<code>debug_cleartext_payload</code>"]
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-lt="serialize an aggregatable report" data-noexport id="serialize-an-aggregatable-report">serialize an <a data-link-type="dfn" href="#aggregatable-report" id="ref-for-aggregatable-report②①">aggregatable report</a> </dfn> <var>report</var>, run the following steps:</p>
    <ol>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#assert" id="ref-for-assert⑧">Assert</a>: <var>report</var>’s <a data-link-type="dfn" href="#aggregatable-report-effective-attribution-destination" id="ref-for-aggregatable-report-effective-attribution-destination⑤">effective attribution destination</a> is not the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-opaque" id="ref-for-concept-origin-opaque①">opaque origin</a>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#assert" id="ref-for-assert⑨">Assert</a>: <var>report</var>’s <a data-link-type="dfn" href="#aggregatable-report-effective-attribution-destination" id="ref-for-aggregatable-report-effective-attribution-destination⑤">effective attribution destination</a> is not the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#concept-origin-opaque" id="ref-for-concept-origin-opaque①">opaque origin</a>.</p>
     <li data-md>
      <p>Let <var>aggregationServicePayloads</var> be the result of running <a data-link-type="dfn" href="#obtain-the-aggregation-service-payloads" id="ref-for-obtain-the-aggregation-service-payloads">obtain the aggregation service payloads</a>.</p>
     <li data-md>
@@ -4049,7 +4058,7 @@ whether a user is online, retries might be limited in number and subject to rand
          <p><var>debugData</var>’s <a data-link-type="dfn" href="#attribution-debug-data-body" id="ref-for-attribution-debug-data-body③">body</a></p>
        </dl>
       <li data-md>
-       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①⑧">Append</a> <var>data</var> to <var>collection</var>.</p>
+       <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①⑨">Append</a> <var>data</var> to <var>collection</var>.</p>
      </ol>
     <li data-md>
      <p>Return the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#byte-sequence" id="ref-for-byte-sequence①⓪">byte sequence</a> resulting from executing <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#serialize-an-infra-value-to-json-bytes" id="ref-for-serialize-an-infra-value-to-json-bytes②">serialize an Infra value to JSON bytes</a> on <var>collection</var>.</p>
@@ -4068,7 +4077,7 @@ whether a user is online, retries might be limited in number and subject to rand
     <li data-md>
      <p>Let <var>fullPath</var> be «"<code>.well-known</code>", "<code>attribution-reporting</code>"».</p>
     <li data-md>
-     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append①⑨">Append</a> <var>path</var> to <var>fullPath</var>.</p>
+     <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append②⓪">Append</a> <var>path</var> to <var>fullPath</var>.</p>
     <li data-md>
      <p>Set <var>reportUrl</var>’s <a data-link-type="dfn" href="https://url.spec.whatwg.org/#concept-url-path" id="ref-for-concept-url-path">path</a> to <var>path</var>.</p>
     <li data-md>
@@ -4079,14 +4088,14 @@ whether a user is online, retries might be limited in number and subject to rand
     <li data-md>
      <p>Let <var>path</var> be an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty③②">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list④⑧">list</a>.</p>
     <li data-md>
-     <p>If <var>isDebugReport</var> is true, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append②⓪">append</a> "<code>debug</code>" to <var>path</var>.</p>
+     <p>If <var>isDebugReport</var> is true, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append②①">append</a> "<code>debug</code>" to <var>path</var>.</p>
     <li data-md>
      <p>If <var>report</var> is an:</p>
      <dl class="switch">
       <dt><a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report①①">event-level report</a>
-      <dd><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append②①">Append</a> "<code>report-event-attribution</code>" to <var>path</var>.
+      <dd><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append②②">Append</a> "<code>report-event-attribution</code>" to <var>path</var>.
       <dt><a data-link-type="dfn" href="#aggregatable-report" id="ref-for-aggregatable-report②③">aggregatable report</a>
-      <dd><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append②②">Append</a> "<code>report-aggregate-attribution</code>" to <var>path</var>.
+      <dd><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append②③">Append</a> "<code>report-aggregate-attribution</code>" to <var>path</var>.
      </dl>
     <li data-md>
      <p>Return the result of running <a data-link-type="dfn" href="#generate-a-report-url" id="ref-for-generate-a-report-url">generate a report URL</a> with <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-reporting-endpoint" id="ref-for-attribution-report-reporting-endpoint⑥">reporting endpoint</a> and <var>path</var>.</p>
@@ -4179,9 +4188,9 @@ and a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-heade
      <p>If <var>report</var> is an:</p>
      <dl class="switch">
       <dt><a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report①②">event-level report</a>
-      <dd><a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task" id="ref-for-queue-a-task③">Queue a task</a> to <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove⑨">remove</a> <var>report</var> from the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑨">event-level report cache</a>.
+      <dd><a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task" id="ref-for-queue-a-task③">Queue a task</a> to <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove①⓪">remove</a> <var>report</var> from the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑨">event-level report cache</a>.
       <dt><a data-link-type="dfn" href="#aggregatable-report" id="ref-for-aggregatable-report②⑤">aggregatable report</a>
-      <dd><a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task" id="ref-for-queue-a-task④">Queue a task</a> to <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove①⓪">remove</a> <var>report</var> from the <a data-link-type="dfn" href="#aggregatable-report-cache" id="ref-for-aggregatable-report-cache⑧">aggregatable report cache</a>.
+      <dd><a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task" id="ref-for-queue-a-task④">Queue a task</a> to <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove①①">remove</a> <var>report</var> from the <a data-link-type="dfn" href="#aggregatable-report-cache" id="ref-for-aggregatable-report-cache⑧">aggregatable report cache</a>.
      </dl>
    </ol>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="attempt-to-deliver-a-report">attempt to deliver a report</dfn> given an <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report①②">attribution report</a> <var>report</var>, run the following steps:</p>
@@ -4257,7 +4266,7 @@ and a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-heade
     TODO 
    <h3 class="heading settled" data-level="15.1" id="clearing-attribution-storage"><span class="secno">15.1. </span><span class="content">Clearing attribution storage</span><a class="self-link" href="#clearing-attribution-storage"></a></h3>
    <p>A user agent’s <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches①">attribution caches</a> contain data about a user’s web activity. When a user agent clears an origin’s storage,
-it MUST also <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove①①">remove</a> entries in the <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches②">attribution caches</a> whose <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin⑥">source origin</a>, <a data-link-type="dfn" href="#attribution-source-attribution-destinations" id="ref-for-attribution-source-attribution-destinations①⓪">attribution destinations</a>, <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint①④">reporting endpoint</a>, <a data-link-type="dfn" href="#event-level-report-attribution-destinations" id="ref-for-event-level-report-attribution-destinations⑤">attribution destinations</a>, or <a data-link-type="dfn" href="#attribution-report-reporting-endpoint" id="ref-for-attribution-report-reporting-endpoint⑦">reporting endpoint</a> is the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin⑥">same</a> as the cleared origin.</p>
+it MUST also <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove①②">remove</a> entries in the <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches②">attribution caches</a> whose <a data-link-type="dfn" href="#attribution-source-source-origin" id="ref-for-attribution-source-source-origin⑥">source origin</a>, <a data-link-type="dfn" href="#attribution-source-attribution-destinations" id="ref-for-attribution-source-attribution-destinations①⓪">attribution destinations</a>, <a data-link-type="dfn" href="#attribution-source-reporting-endpoint" id="ref-for-attribution-source-reporting-endpoint①④">reporting endpoint</a>, <a data-link-type="dfn" href="#event-level-report-attribution-destinations" id="ref-for-event-level-report-attribution-destinations⑤">attribution destinations</a>, or <a data-link-type="dfn" href="#attribution-report-reporting-endpoint" id="ref-for-attribution-report-reporting-endpoint⑦">reporting endpoint</a> is the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers.html#same-origin" id="ref-for-same-origin⑥">same</a> as the cleared origin.</p>
    <p>A user agent MAY clear <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches③">attribution cache</a> entries at other times. For example, when a user agent clears
 an origin from a user’s browsing history.</p>
   </main>
@@ -4516,6 +4525,7 @@ an origin from a user’s browsing history.</p>
    <li><a href="#obtain-debug-data-body-on-trigger-registration">obtain debug data body on trigger registration</a><span>, in § 11.8</span>
    <li><a href="#obtain-debug-data-on-trigger-registration">obtain debug data on trigger registration</a><span>, in § 11.8</span>
    <li><a href="#obtain-early-deadlines">obtain early deadlines</a><span>, in § 11.12</span>
+   <li><a href="#obtain-effective-deadlines">obtain effective deadlines</a><span>, in § 11.12</span>
    <li><a href="#obtain-rounded-source-time">obtain rounded source time</a><span>, in § 11.16</span>
    <li><a href="#obtain-the-aggregation-service-payloads">obtain the aggregation service payloads</a><span>, in § 12.4</span>
    <li><a href="#obtain-the-encrypted-payload">obtain the encrypted payload</a><span>, in § 12.4</span>
@@ -4914,8 +4924,8 @@ an origin from a user’s browsing history.</p>
    <ul>
     <li><a href="#ref-for-dfn-duration">6.7. Attribution source</a> <a href="#ref-for-dfn-duration①">(2)</a> <a href="#ref-for-dfn-duration②">(3)</a>
     <li><a href="#ref-for-dfn-duration③">8. Vendor-Specific Values</a> <a href="#ref-for-dfn-duration④">(2)</a> <a href="#ref-for-dfn-duration⑤">(3)</a> <a href="#ref-for-dfn-duration⑥">(4)</a>
-    <li><a href="#ref-for-dfn-duration⑦">11.12. Establishing report delivery time</a>
-    <li><a href="#ref-for-dfn-duration⑧">12. Report delivery</a> <a href="#ref-for-dfn-duration⑨">(2)</a>
+    <li><a href="#ref-for-dfn-duration⑦">11.12. Establishing report delivery time</a> <a href="#ref-for-dfn-duration⑧">(2)</a> <a href="#ref-for-dfn-duration⑨">(3)</a>
+    <li><a href="#ref-for-dfn-duration①⓪">12. Report delivery</a> <a href="#ref-for-dfn-duration①①">(2)</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-a33f352de1a9eb5d29cfa3005d40d072" class="dfn-panel" data-for="a33f352de1a9eb5d29cfa3005d40d072" id="infopanel-for-a33f352de1a9eb5d29cfa3005d40d072">
@@ -5163,10 +5173,11 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-list-append⑧">11.9. Triggering event-level attribution</a>
     <li><a href="#ref-for-list-append⑨">11.10. Triggering aggregatable attribution</a>
     <li><a href="#ref-for-list-append①⓪">11.11. Triggering attribution</a> <a href="#ref-for-list-append①①">(2)</a> <a href="#ref-for-list-append①②">(3)</a>
-    <li><a href="#ref-for-list-append①③">11.16. Generating randomized null reports</a> <a href="#ref-for-list-append①④">(2)</a> <a href="#ref-for-list-append①⑤">(3)</a>
-    <li><a href="#ref-for-list-append①⑥">12.4. Obtaining an aggregatable report’s aggregation service payloads</a> <a href="#ref-for-list-append①⑦">(2)</a>
-    <li><a href="#ref-for-list-append①⑧">12.6. Serialize attribution debug report body</a>
-    <li><a href="#ref-for-list-append①⑨">12.7. Get report request URL</a> <a href="#ref-for-list-append②⓪">(2)</a> <a href="#ref-for-list-append②①">(3)</a> <a href="#ref-for-list-append②②">(4)</a>
+    <li><a href="#ref-for-list-append①③">11.12. Establishing report delivery time</a>
+    <li><a href="#ref-for-list-append①④">11.16. Generating randomized null reports</a> <a href="#ref-for-list-append①⑤">(2)</a> <a href="#ref-for-list-append①⑥">(3)</a>
+    <li><a href="#ref-for-list-append①⑦">12.4. Obtaining an aggregatable report’s aggregation service payloads</a> <a href="#ref-for-list-append①⑧">(2)</a>
+    <li><a href="#ref-for-list-append①⑨">12.6. Serialize attribution debug report body</a>
+    <li><a href="#ref-for-list-append②⓪">12.7. Get report request URL</a> <a href="#ref-for-list-append②①">(2)</a> <a href="#ref-for-list-append②②">(3)</a> <a href="#ref-for-list-append②③">(4)</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-53c2c70bc752d6cf2a1f7deddc029549" class="dfn-panel" data-for="53c2c70bc752d6cf2a1f7deddc029549" id="infopanel-for-53c2c70bc752d6cf2a1f7deddc029549">
@@ -5204,8 +5215,9 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-assert④">11.7. Can source create aggregatable contributions</a>
     <li><a href="#ref-for-assert⑤">11.8. Obtaining debug data on trigger registration</a>
     <li><a href="#ref-for-assert⑥">11.9. Triggering event-level attribution</a>
-    <li><a href="#ref-for-assert⑦">11.16. Generating randomized null reports</a>
-    <li><a href="#ref-for-assert⑧">12.5. Serialize attribution report body</a>
+    <li><a href="#ref-for-assert⑦">11.12. Establishing report delivery time</a>
+    <li><a href="#ref-for-assert⑧">11.16. Generating randomized null reports</a>
+    <li><a href="#ref-for-assert⑨">12.5. Serialize attribution report body</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-0d4cc8e47c65b15b2be5e5e730a09d3c" class="dfn-panel" data-for="0d4cc8e47c65b15b2be5e5e730a09d3c" id="infopanel-for-0d4cc8e47c65b15b2be5e5e730a09d3c">
@@ -5295,8 +5307,8 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-iteration-continue①⓪">11.2. Does filter data match</a>
     <li><a href="#ref-for-iteration-continue①①">11.6. Creating aggregatable contributions</a> <a href="#ref-for-iteration-continue①②">(2)</a> <a href="#ref-for-iteration-continue①③">(3)</a>
     <li><a href="#ref-for-iteration-continue①④">11.11. Triggering attribution</a> <a href="#ref-for-iteration-continue①⑤">(2)</a> <a href="#ref-for-iteration-continue①⑥">(3)</a>
-    <li><a href="#ref-for-iteration-continue①⑦">11.12. Establishing report delivery time</a> <a href="#ref-for-iteration-continue①⑧">(2)</a>
-    <li><a href="#ref-for-iteration-continue①⑨">11.16. Generating randomized null reports</a>
+    <li><a href="#ref-for-iteration-continue①⑦">11.12. Establishing report delivery time</a>
+    <li><a href="#ref-for-iteration-continue①⑧">11.16. Generating randomized null reports</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-d5f5f0c03c51cfd7211eeccd4918549b" class="dfn-panel" data-for="d5f5f0c03c51cfd7211eeccd4918549b" id="infopanel-for-d5f5f0c03c51cfd7211eeccd4918549b">
@@ -5528,8 +5540,9 @@ an origin from a user’s browsing history.</p>
     <li><a href="#ref-for-list-remove③">10.4. Processing an attribution source</a> <a href="#ref-for-list-remove④">(2)</a>
     <li><a href="#ref-for-list-remove⑤">11.9. Triggering event-level attribution</a>
     <li><a href="#ref-for-list-remove⑥">11.11. Triggering attribution</a> <a href="#ref-for-list-remove⑦">(2)</a> <a href="#ref-for-list-remove⑧">(3)</a>
-    <li><a href="#ref-for-list-remove⑨">12.10. Issuing a report request</a> <a href="#ref-for-list-remove①⓪">(2)</a>
-    <li><a href="#ref-for-list-remove①①">15.1. Clearing attribution storage</a>
+    <li><a href="#ref-for-list-remove⑨">11.12. Establishing report delivery time</a>
+    <li><a href="#ref-for-list-remove①⓪">12.10. Issuing a report request</a> <a href="#ref-for-list-remove①①">(2)</a>
+    <li><a href="#ref-for-list-remove①②">15.1. Clearing attribution storage</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-45b0d481871a171d5773ec0478e0395f" class="dfn-panel" data-for="45b0d481871a171d5773ec0478e0395f" id="infopanel-for-45b0d481871a171d5773ec0478e0395f">
@@ -6330,7 +6343,7 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
    <ul>
     <li><a href="#ref-for-attribution-source-event-report-window">6.7. Attribution source</a>
     <li><a href="#ref-for-attribution-source-event-report-window①">10.3. Parsing source-registration JSON</a>
-    <li><a href="#ref-for-attribution-source-event-report-window②">11.12. Establishing report delivery time</a> <a href="#ref-for-attribution-source-event-report-window③">(2)</a>
+    <li><a href="#ref-for-attribution-source-event-report-window②">11.12. Establishing report delivery time</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-attribution-source-aggregatable-report-window" class="dfn-panel" data-for="attribution-source-aggregatable-report-window" id="infopanel-for-attribution-source-aggregatable-report-window">
@@ -7995,7 +8008,13 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
   <aside aria-labelledby="infopaneltitle-for-obtain-early-deadlines" class="dfn-panel" data-for="obtain-early-deadlines" id="infopanel-for-obtain-early-deadlines">
    <span id="infopaneltitle-for-obtain-early-deadlines" style="display:none">Info about the 'obtain early deadlines' definition.</span><b><a href="#obtain-early-deadlines">#obtain-early-deadlines</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-obtain-early-deadlines">11.12. Establishing report delivery time</a> <a href="#ref-for-obtain-early-deadlines①">(2)</a> <a href="#ref-for-obtain-early-deadlines②">(3)</a>
+    <li><a href="#ref-for-obtain-early-deadlines">11.12. Establishing report delivery time</a>
+   </ul>
+  </aside>
+  <aside aria-labelledby="infopaneltitle-for-obtain-effective-deadlines" class="dfn-panel" data-for="obtain-effective-deadlines" id="infopanel-for-obtain-effective-deadlines">
+   <span id="infopaneltitle-for-obtain-effective-deadlines" style="display:none">Info about the 'obtain effective deadlines' definition.</span><b><a href="#obtain-effective-deadlines">#obtain-effective-deadlines</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-obtain-effective-deadlines">11.12. Establishing report delivery time</a> <a href="#ref-for-obtain-effective-deadlines①">(2)</a> <a href="#ref-for-obtain-effective-deadlines②">(3)</a>
    </ul>
   </aside>
   <aside aria-labelledby="infopaneltitle-for-obtain-the-number-of-report-windows" class="dfn-panel" data-for="obtain-the-number-of-report-windows" id="infopanel-for-obtain-the-number-of-report-windows">
