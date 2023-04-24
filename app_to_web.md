@@ -44,16 +44,10 @@ sequenceDiagram
 ```
 See Android's [Attribution reporting: cross app and web measurement proposal](https://developer.android.com/design-for-safety/privacy-sandbox/attribution-app-to-web) for one example of an OS API that a browser can integrate with to do cross app and web measurement.
 
-The existing API involves sending requests to the reporting origin to register events. These requests will have a new request header `Attribution-Reporting-Eligible`. On requests with this header, the browser will additionally broadcast possible web or OS-level support for attribution to the reporting origin’s server via a new [dictionary structured request header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.2):
+The existing API involves sending requests to the reporting origin to register events. These requests will have a new request header `Attribution-Reporting-Eligible`. On requests with this header, the browser will additionally broadcast possible OS-level support for attribution to the reporting origin’s server via a new [dictionary structured request header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.2):
 ```
 Attribution-Reporting-Support: os, web
 ```
-
-Note that if there is neither web nor OS-level support for attribution, no
-background requests will be made and the browser will not set
-`Attribution-Reporting-Eligible` header on `<a>`, `window.open`, `<img>`, and
-`<script>` requests.
-
 For subresource requests without the `Attribution-Reporting-Eligible` header,
 the server can optionally respond to the request with a [boolean structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.6):
 ```http
