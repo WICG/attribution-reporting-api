@@ -132,9 +132,10 @@ Issue: Consider allowing the user agent to limit the size of |tokens|.
 Issue: Specify when to make background attributionsrc requests for <{a}>.
 
 Issue: Monkeypatch <{img}> and <{script}> loading so that the presence of an
-{{HTMLAttributionSrcElementUtils/attributionSrc}} attribute causes the
-{{HTMLImageElement/src}} or {{HTMLScriptElement/src}} request to contain an
-"`Attribution-Reporting-Eligible`" header.
+{{HTMLAttributionSrcElementUtils/attributionSrc}} attribute sets the
+{{HTMLImageElement/src}} or {{HTMLScriptElement/src}} request's
+[=request/Attribution Reporting eligibility=] to
+"<code>[=eligibility/event-source-or-trigger=]</code>".
 
 <h3 id="monkeypatch-window-open">Window open steps</h4>
 
@@ -199,9 +200,10 @@ add the steps
             parsing failed, [=iteration/continue=].
         1. [=list/Append=] |urlRecord| to |attributionSrcUrls|.
 
-Issue: Modify the navigation request to permit
-"<code>[=eligibility/navigation-source=]</code>" registration even if
-|attributionSrcUrls| [=list/is empty=].
+Issue: Set the navigation request's
+[=request/Attribution Reporting eligibility=] to
+"<code>[=eligibility/navigation-source=]</code>" even if |attributionSrcUrls|
+[=list/is empty=].
 
 Issue: Use |attributionSrcUrls| with [=make a background attributionsrc request=].
 
@@ -303,7 +305,7 @@ add the step
     |request|'s [=request/Attribution Reporting eligibility=] to the result of
     [=get an eligibility from AttributionReportingRequestOptions=] with it.
 
-Issue: Monkeypatch {{XMLHttpRequest}} to use these IDL definitions.
+Issue: Monkeypatch {{XMLHttpRequest}}.
 
 # Permissions Policy integration # {#permission-policy-integration}
 
@@ -1029,7 +1031,7 @@ An <dfn>eligibility</dfn> is one of the following:
 
 <dl dfn-for="eligibility">
 : "<dfn><code>unset</code></dfn>"
-:: Depending on context, a [=attribution trigger|trigger=] may nor may not be
+:: Depending on context, a [=attribution trigger|trigger=] may or may not be
     registered.
 : "<dfn><code>empty</code></dfn>"
 :: Neither a [=attribution source|source=] nor a
@@ -1154,8 +1156,6 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
 
 Issue: Set |privateStateTokens| properly.
 
-Issue: Reformulate [=eligibility=] in terms of a fetch parameter.
-
 # Source Algorithms # {#source-algorithms}
 
 <h3 algorithm id="obtaining-randomized-source-response">Obtaining a randomized source response</h3>
@@ -1187,15 +1187,6 @@ To <dfn>obtain a randomized source response</dfn> given a [=randomized response 
 1. Let |pickRate| be the result of [=obtaining a randomized source response pick rate=] with |config| and |epsilon|.
 1. Return the result of [=obtaining a randomized response=] with null, |possibleValues|, and
     |pickRate|.
-
-<h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
-
-To <dfn>obtain an attribution source from an anchor</dfn> given an <{a}> element |anchor|:
-
-1. If |anchor| does not have an <{a/attributionsrc}> attribute, return null.
-1. Return null.
-
-Issue: Specify the steps for making attributionsrc request.
 
 <h3 algorithm id="parsing-source-registration">Parsing source-registration JSON</h3>
 
