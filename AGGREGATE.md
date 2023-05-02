@@ -387,6 +387,7 @@ other representing the conversion dollar value per geography. This budgeting
 mechanism is highly flexible and can support many different aggregation
 strategies as long as the appropriate scaling is performed on the outputs. 
 
+
 ### Storage limits
 
 The browser may apply storage limits in order to prevent excessive resource
@@ -429,6 +430,8 @@ aggregatable report. The null report rate will need to be higher if
 Strawman: There should be ~0.05 reports (in expectation) sent for trigger
 registrations that exclude the `source_registration_time` field, and ~0.25 reports for
 those that include this field.
+
+In order to limit abuse of the protections above, there will be a maximum limit of 20 aggregatable reports per source.
 
 ## Data processing through a Secure Aggregation Service
 
@@ -504,6 +507,7 @@ Note: there are a few caveats about a formal differential privacy claim:
   [event-level explainer](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits)
   should also apply to aggregatable reports. The limits should be shared across
   all types of reports.
+  
 
 ## Ideas for future iteration
 
