@@ -250,11 +250,30 @@ given an optional {{AttributionReportingRequestOptions}} |options|:
 
     </dl>
 
+"<code><dfn>Attribution-Reporting-Eligible</dfn></code>" is a Dictionary
+Structured Header set on a [=request=] that indicates which registrations, if
+any, are allowed on the corresponding [=response=]. Its values are not specified
+and its <dfn lt="eligible key">allowed keys</dfn> are:
+
+<dl dfn-for="eligible key">
+: "<dfn><code>event-source</code></dfn>"
+:: An [=source type/event=] [=attribution source|source=] may be registered.
+: "<dfn><code>navigation-source</code></dfn>"
+:: A [=source type/navigation=] [=attribution source|source=] may be registered.
+: "<dfn><code>trigger</code></dfn>"
+:: A [=attribution trigger|trigger=] may be registered.
+
+</dl>
+
+Issue: Add links to Structured Header RFC.
+
 To <dfn>set Attribution Reporting headers</dfn> given a
 [=header list=] |headers| and an [=eligibility=] |eligibility|:
 
-1. [=header list/Delete=] "`Attribution-Reporting-Eligible`" from |headers|.
-1. [=header list/Delete=] "`Attribution-Reporting-Support`" from |headers|.
+1. [=header list/Delete=] "<code>[=Attribution-Reporting-Eligible=]</code>" from
+    |headers|.
+1. [=header list/Delete=] "<code>[=Attribution-Reporting-Support=]</code>" from
+    |headers|.
 1. If |eligibility| is "<code>[=eligibility/unset=]</code>", return.
 1. Let |dict| be an [=ordered map=].
 1. If |eligibility| is:
@@ -262,14 +281,19 @@ To <dfn>set Attribution Reporting headers</dfn> given a
     : "<code>[=eligibility/empty=]</code>"
     :: Do nothing.
     : "<code>[=eligibility/event-source=]</code>"
-    :: [=map/Set=] |dict|["`event-source`"] to true.
+    :: [=map/Set=] |dict|["<code>[=eligible key/event-source=]</code>"] to
+        true.
+    : "<code>[=eligibility/navigation-source=]</code>"
+    :: [=map/Set=] |dict|["<code>[=eligible key/navigation-source=]</code>"] to
+        true.
     : "<code>[=eligibility/trigger=]</code>"
-    :: [=map/Set=] |dict|["`trigger`"] to true.
+    :: [=map/Set=] |dict|["<code>[=eligible key/trigger=]</code>"] to true.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
-    :: [=map/Set=] |dict|["`event-source`"] to true and [=map/set=]
-        |dict|["`trigger`"] to true.
+    :: [=map/Set=] |dict|["<code>[=eligible key/event-source=]</code>"] to
+        true and [=map/set=] |dict|["<code>[=eligible key/trigger=]</code>"]
+        to true.
 1. [=header list/Set a structured field value=] given
-    ("`Attribution-Reporting-Eligible`", |dict|) in |headers|.
+    ("<code>[=Attribution-Reporting-Eligible=]</code>", |dict|) in |headers|.
 1. [=Set an OS-support header=] in |headers|.
 
 Modify [=fetch=] as follows:
@@ -2857,16 +2881,31 @@ To <dfn noexport>get an OS-registration URL from a header list</dfn> given a
 1. If |value| is not a [=string=], return null.
 1. Return the result of running the [=URL parser=] on |value|.
 
+"<code><dfn>Attribution-Reporting-Support</dfn></code>" is a Dictionary
+Structured Header set on a [=request=] that indicates which registrars, if
+any, the corresponding [=response=] can use. Its values are not specified and
+its <dfn lt="support key">allowed keys</dfn> are:
+
+<dl dfn-for="support key">
+: "<dfn><code>web</code></dfn>"
+:: The user agent supports web registrations.
+: "<dfn><code>os</code></dfn>"
+:: The user agent supports OS registrations.
+
+</dl>
+
+Issue: Add links to Structured Header RFC.
+
 To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
 |headers|:
 
-1. Let |dict| be an [=ordered map=].
-1. If the user agent supports web registrations, [=map/set=] |dict|["`web`"] to
-    true.
-1. If the user agent supports OS registrations, [=map/set=] |dict|["`os`"] to
-    true.
+1. Let |dict| be a [=ordered map=].
+1. If the user agent supports web registrations, [=map/set=]
+    |dict|["<code>[=support key/web=]</code>"] to true.
+1. If the user agent supports OS registrations, [=map/set=]
+    |dict|["<code>[=support key/os=]</code>"] to true.
 1. [=header list/Set a structured field value=] given
-    ("`Attribution-Reporting-Support`", |dict|) in |headers|.
+    ("<code>[=Attribution-Reporting-Support=]</code>", |dict|) in |headers|.
 
 # Security considerations # {#security-considerations}
 TODO
