@@ -132,6 +132,7 @@ This table defines the fields in the `body` dictionary.
 | [`trigger-event-storage-limit`](#trigger-event-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-report-window-passed`](#trigger-event-report-window-passed) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-aggregate-deduplicated`](#trigger-aggregate-deduplicated) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
+| [`trigger-aggregate-excessive-reports`](#trigger-aggregate-excessive-reports) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-aggregate-no-contributions`](#trigger-aggregate-no-contributions) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-aggregate-insufficient-budget`](#trigger-aggregate-insufficient-budget) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-aggregate-storage-limit`](#trigger-aggregate-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
