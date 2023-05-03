@@ -506,7 +506,6 @@ Note: there are a few caveats about a formal differential privacy claim:
   [event-level explainer](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits)
   should also apply to aggregatable reports. The limits should be shared across
   all types of reports.
-  
 
 ## Ideas for future iteration
 
