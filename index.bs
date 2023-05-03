@@ -29,6 +29,8 @@ spec: hr-time; type: dfn; urlPrefix: https://w3c.github.io/hr-time/
     text: current wall time; url: #dfn-current-wall-time
     text: duration; url: #dfn-duration
     text: moment; url: #dfn-moment
+spec: idl; type: dfn; urlPrefix: https://webidl.spec.whatwg.org/
+    text: throw; url: #dfn-throw
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
     text: generate a random UUID; url: #dfn-generate-a-random-uuid
 </pre>
@@ -207,7 +209,7 @@ Issue: Set the navigation request's
 
 Issue: Use |attributionSrcUrls| with [=make a background attributionsrc request=].
 
-# Fetch monkeypatches # {#fetch-monkeypatches}
+# Network monkeypatches # {#network-monkeypatches}
 
 <pre class="idl">
 dictionary AttributionReportingRequestOptions {
@@ -249,6 +251,8 @@ given an optional {{AttributionReportingRequestOptions}} |options|:
     :: Return "<code>[=eligibility/event-source-or-trigger=]</code>".
 
     </dl>
+
+Issue: Check permissions policy.
 
 "<code><dfn>Attribution-Reporting-Eligible</dfn></code>" is a Dictionary
 Structured Header set on a [=request=] that indicates which registrations, if
@@ -296,6 +300,8 @@ To <dfn>set Attribution Reporting headers</dfn> given a
     ("<code>[=Attribution-Reporting-Eligible=]</code>", |dict|) in |headers|.
 1. [=Set an OS-support header=] in |headers|.
 
+<h3 id="monkeypatch-fetch">Fetch monkeypatches</h4>
+
 Modify [=fetch=] as follows:
 
 After the step
@@ -329,9 +335,39 @@ add the step
     |request|'s [=request/Attribution Reporting eligibility=] to the result of
     [=get an eligibility from AttributionReportingRequestOptions=] with it.
 
-Issue: Monkeypatch {{XMLHttpRequest}}.
+<h3 id="monkeypatch-xmlhttprequest">XMLHttpRequest monkeypatches</h4>
 
-Issue: Check permissions policy.
+An {{XMLHttpRequest}} object has an associated
+<dfn id="xmlhttprequest-eligibility">Attribution Reporting eligibility</dfn> (an
+[=eligibility=]). Unless otherwise stated it is
+"<code>[=eligibility/unset=]</code>".
+
+The {{XMLHttpRequest/setAttributionReporting(options)}} method must run these
+steps:
+
+1. If <a>this</a>'s
+    <a href="https://xhr.spec.whatwg.org/#concept-xmlhttprequest-state">state</a>
+    is not <i>opened</i>, then [=throw=] an
+    "{{InvalidStateError!!exception}}" {{DOMException}}.
+1. If <a>this</a>'s
+    <a href="https://xhr.spec.whatwg.org/#send-flag">`send()` flag</a> is set,
+    then [=throw=] an "{{InvalidStateError!!exception}}" {{DOMException}}.
+1. Set <a>this</a>'s <a href=#xmlhttprequest-eligibility>Attribution Reporting
+    eligibility</a> to the result of
+    [=get an eligibility from AttributionReportingRequestOptions=] with
+    |options|.
+
+Modify {{XMLHttpRequest/send(body)}} as follows:
+
+After the step:
+
+> Let |req| be a new [=request=], initialized as follows...
+
+Add the step:
+
+1. [=Set Attribution Reporting headers=] with |req|'s [=request/header list=]
+    and <a>this</a>'s <a href=#xmlhttprequest-eligibility>Attribution Reporting
+    eligibility</a>.
 
 # Permissions Policy integration # {#permission-policy-integration}
 
