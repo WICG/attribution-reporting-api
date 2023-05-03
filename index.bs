@@ -122,7 +122,7 @@ run the following steps:
         [=iteration/continue=]. Otherwise, let |url| be the resulting
         [=URL record=].
     1. Run [=make a background attributionsrc request=] with |url|,
-        |contextOrigin|, "<code>[=eligibility/event-source, trigger=]</code>",
+        |contextOrigin|, "<code>[=eligibility/event-source-or-trigger=]</code>",
         and |element|'s [=Node/node document=].
 
 Issue: Set |contextOrigin| properly.
@@ -132,9 +132,10 @@ Issue: Consider allowing the user agent to limit the size of |tokens|.
 Issue: Specify when to make background attributionsrc requests for <{a}>.
 
 Issue: Monkeypatch <{img}> and <{script}> loading so that the presence of an
-{{HTMLAttributionSrcElementUtils/attributionSrc}} attribute causes the
-{{HTMLImageElement/src}} or {{HTMLScriptElement/src}} request to contain an
-"`Attribution-Reporting-Eligible`" header.
+{{HTMLAttributionSrcElementUtils/attributionSrc}} attribute sets the
+{{HTMLImageElement/src}} or {{HTMLScriptElement/src}} request's
+[=request/Attribution Reporting eligibility=] to
+"<code>[=eligibility/event-source-or-trigger=]</code>".
 
 <h3 id="monkeypatch-window-open">Window open steps</h4>
 
@@ -199,9 +200,10 @@ add the steps
             parsing failed, [=iteration/continue=].
         1. [=list/Append=] |urlRecord| to |attributionSrcUrls|.
 
-Issue: Modify the navigation request to permit
-"<code>[=eligibility/navigation-source=]</code>" registration even if
-|attributionSrcUrls| [=list/is empty=].
+Issue: Set the navigation request's
+[=request/Attribution Reporting eligibility=] to
+"<code>[=eligibility/navigation-source=]</code>" even if |attributionSrcUrls|
+[=list/is empty=].
 
 Issue: Use |attributionSrcUrls| with [=make a background attributionsrc request=].
 
@@ -223,20 +225,113 @@ partial interface XMLHttpRequest {
 };
 </pre>
 
-To <dfn>mark a request for Attribution Reporting eligibility</dfn> given a
-[=header list=] |headers| and an optional {{AttributionReportingRequestOptions}}
-|options|:
+A [=request=] has an associated
+<dfn for=request>Attribution Reporting eligibility</dfn> (an [=eligibility=]).
+Unless otherwise stated it is "<code>[=eligibility/unset=]</code>".
 
-1. If |options| is null, return.
+To <dfn>get an eligibility from {{AttributionReportingRequestOptions}}</dfn>
+given an optional {{AttributionReportingRequestOptions}} |options|:
+
+1. If |options| is null, return "<code>[=eligibility/unset=]</code>".
+1. Let |eventSourceEligible| be |options|'s
+    {{AttributionReportingRequestOptions/eventSourceEligible}}.
+1. Let |triggerEligible| be |options|'s
+    {{AttributionReportingRequestOptions/triggerEligible}}.
+1. If (|eventSourceEligible|, |triggerEligible|) is:
+    <dl class="switch">
+    : (false, false)
+    :: Return "<code>[=eligibility/empty=]</code>".
+    : (false, true)
+    :: Return "<code>[=eligibility/trigger=]</code>".
+    : (true, false)
+    :: Return "<code>[=eligibility/event-source=]</code>".
+    : (true, true)
+    :: Return "<code>[=eligibility/event-source-or-trigger=]</code>".
+
+    </dl>
+
+"<code><dfn>Attribution-Reporting-Eligible</dfn></code>" is a Dictionary
+Structured Header set on a [=request=] that indicates which registrations, if
+any, are allowed on the corresponding [=response=]. Its values are not specified
+and its <dfn lt="eligible key">allowed keys</dfn> are:
+
+<dl dfn-for="eligible key">
+: "<dfn><code>event-source</code></dfn>"
+:: An [=source type/event=] [=attribution source|source=] may be registered.
+: "<dfn><code>navigation-source</code></dfn>"
+:: A [=source type/navigation=] [=attribution source|source=] may be registered.
+: "<dfn><code>trigger</code></dfn>"
+:: A [=attribution trigger|trigger=] may be registered.
+
+</dl>
+
+Issue: Add links to Structured Header RFC.
+
+To <dfn>set Attribution Reporting headers</dfn> given a
+[=header list=] |headers| and an [=eligibility=] |eligibility|:
+
+1. [=header list/Delete=] "<code>[=Attribution-Reporting-Eligible=]</code>" from
+    |headers|.
+1. [=header list/Delete=] "<code>[=Attribution-Reporting-Support=]</code>" from
+    |headers|.
+1. If |eligibility| is "<code>[=eligibility/unset=]</code>", return.
 1. Let |dict| be an [=ordered map=].
-1. If |options|'s {{AttributionReportingRequestOptions/eventSourceEligible}} is
-    true, [=map/set=] |dict|["`event-source`"] to true.
-1. If |options|'s {{AttributionReportingRequestOptions/triggerEligible}} is
-    true, [=map/set=] |dict|["`trigger`"] to true.
+1. If |eligibility| is:
+    <dl class="switch">
+    : "<code>[=eligibility/empty=]</code>"
+    :: Do nothing.
+    : "<code>[=eligibility/event-source=]</code>"
+    :: [=map/Set=] |dict|["<code>[=eligible key/event-source=]</code>"] to
+        true.
+    : "<code>[=eligibility/navigation-source=]</code>"
+    :: [=map/Set=] |dict|["<code>[=eligible key/navigation-source=]</code>"] to
+        true.
+    : "<code>[=eligibility/trigger=]</code>"
+    :: [=map/Set=] |dict|["<code>[=eligible key/trigger=]</code>"] to true.
+    : "<code>[=eligibility/event-source-or-trigger=]</code>"
+    :: [=map/Set=] |dict|["<code>[=eligible key/event-source=]</code>"] to
+        true and [=map/set=] |dict|["<code>[=eligible key/trigger=]</code>"]
+        to true.
 1. [=header list/Set a structured field value=] given
-    ("`Attribution-Reporting-Eligible`", |dict|) in |headers|.
+    ("<code>[=Attribution-Reporting-Eligible=]</code>", |dict|) in |headers|.
+1. [=Set an OS-support header=] in |headers|.
 
-Issue: Monkeypatch [=fetch=] and {{XMLHttpRequest}} to use these IDL definitions.
+Modify [=fetch=] as follows:
+
+After the step
+
+> If |request|'s [=request/header list=] does not contain `Accept`...
+
+add the step
+
+1. [=Set Attribution Reporting headers=] with |request|'s
+    [=request/header list=] and |request|'s
+    [=request/Attribution Reporting eligibility=].
+
+Modify {{Request/constructor(input, init)}} as follows:
+
+In the step
+
+> Set |request| to a new [=request=] with the following properties:
+
+add the property
+
+: [=request/Attribution Reporting eligibility=]
+:: |request|'s [=request/Attribution Reporting eligibility=].
+
+After the step
+
+> If |init|["`priority`"] [=map/exists=], then:
+
+add the step
+
+1. If |init|["{{RequestInit/attributionReporting}}"] [=map/exists=], then set
+    |request|'s [=request/Attribution Reporting eligibility=] to the result of
+    [=get an eligibility from AttributionReportingRequestOptions=] with it.
+
+Issue: Monkeypatch {{XMLHttpRequest}}.
+
+Issue: Check permissions policy.
 
 # Permissions Policy integration # {#permission-policy-integration}
 
@@ -961,18 +1056,36 @@ and a [=suitable origin=] |reportingEndpoint|:
 An <dfn>eligibility</dfn> is one of the following:
 
 <dl dfn-for="eligibility">
+: "<dfn><code>unset</code></dfn>"
+:: Depending on context, a [=attribution trigger|trigger=] may or may not be
+    registered.
+: "<dfn><code>empty</code></dfn>"
+:: Neither a [=attribution source|source=] nor a
+    [=attribution trigger|trigger=] may be registered.
+: "<dfn><code>event-source</code></dfn>"
+:: An [=source type/event=] [=attribution source|source=] may be registered.
 : "<dfn><code>navigation-source</code></dfn>"
 :: A [=source type/navigation=] [=attribution source|source=] may be registered.
-: "<dfn><code>event-source, trigger</code></dfn>"
-:: Either an [=source type/event=] [=attribution source|source=] or a
+: "<dfn><code>trigger</code></dfn>"
+:: A [=attribution trigger|trigger=] may be registered.
+: "<dfn><code>event-source-or-trigger</code></dfn>"
+:: An [=source type/event=] [=attribution source|source=] or a
     [=attribution trigger|trigger=] may be registered.
 
 </dl>
+
+To <dfn>validate a background attributionsrc eligibility</dfn> given an
+[=eligibility=] |eligibility|:
+
+1. [=Assert=]: |eligibility| is
+    "<code>[=eligibility/navigation-source=]</code>" or
+    "<code>[=eligibility/event-source-or-trigger=]</code>".
 
 To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
 [=suitable origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and a
 {{Document}} |document|:
 
+1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
 1. If |url|'s [=url/scheme=] is not [=check if a scheme is suitable|suitable=],
     return.
 1. Let |context| be |document|'s [=relevant settings object=].
@@ -987,10 +1100,8 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
     ::  |url|
     :   [=request/keepalive=]
     ::  true
-1. [=header list/Set=] a header
-    ("Attribution-Reporting-Eligible", |eligibility|) in |request|'s
-    [=request/header list=].
-1. [=Set an OS-support header=] in |request|'s [=request/header list=].
+    :   [=request/Attribution Reporting eligibility=]
+    ::  |eligibility|
 1. [=Fetch=] |request| with [=fetch/processResponse=] being
     [=process an attributionsrc response=] with |contextOrigin|, |eligibility|,
     and |context|.
@@ -1001,12 +1112,11 @@ Issue: Support header-processing on redirects.
 
 Issue: Check for transient activation with "<code>[=eligibility/navigation-source=]</code>".
 
-Issue: Reformulate [=eligibility=] in terms of a fetch parameter.
-
 To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
 |contextOrigin|, an [=eligibility=] |eligibility|, an
 [=environment settings objects=] |context|, and a [=response=] |response|:
 
+1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
 1. Let |reportingOrigin| be |response|'s [=response/URL=]'s [=url/origin=].
 1. If |reportingOrigin| is not [=check if an origin is suitable|suitable=], return.
 1. Let |sourceHeader| be the result of [=header list/get|getting=]
@@ -1040,7 +1150,7 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
         1. If |osSourceURL| is not null and the user agent supports OS
             registrations, process |osSourceURL| according to an
             [=implementation-defined=] algorithm.
-    : "<code>[=eligibility/event-source, trigger=]</code>"
+    : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: Run the following steps:
         1. If the number of non-null entries in «|sourceHeader|,
             |triggerHeader|, |osSourceURL|, |osTriggerURL|» is not 1, return.
@@ -1071,8 +1181,6 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
     </dl>
 
 Issue: Set |privateStateTokens| properly.
-
-Issue: Reformulate [=eligibility=] in terms of a fetch parameter.
 
 # Source Algorithms # {#source-algorithms}
 
@@ -1105,15 +1213,6 @@ To <dfn>obtain a randomized source response</dfn> given a [=randomized response 
 1. Let |pickRate| be the result of [=obtaining a randomized source response pick rate=] with |config| and |epsilon|.
 1. Return the result of [=obtaining a randomized response=] with null, |possibleValues|, and
     |pickRate|.
-
-<h3 algorithm id="obtaining-attribution-source-anchor">Obtaining an attribution source from an <code>a</code> element</h3>
-
-To <dfn>obtain an attribution source from an anchor</dfn> given an <{a}> element |anchor|:
-
-1. If |anchor| does not have an <{a/attributionsrc}> attribute, return null.
-1. Return null.
-
-Issue: Specify the steps for making attributionsrc request.
 
 <h3 algorithm id="parsing-source-registration">Parsing source-registration JSON</h3>
 
@@ -2782,23 +2881,31 @@ To <dfn noexport>get an OS-registration URL from a header list</dfn> given a
 1. If |value| is not a [=string=], return null.
 1. Return the result of running the [=URL parser=] on |value|.
 
+"<code><dfn>Attribution-Reporting-Support</dfn></code>" is a Dictionary
+Structured Header set on a [=request=] that indicates which registrars, if
+any, the corresponding [=response=] can use. Its values are not specified and
+its <dfn lt="support key">allowed keys</dfn> are:
+
+<dl dfn-for="support key">
+: "<dfn><code>web</code></dfn>"
+:: The user agent supports web registrations.
+: "<dfn><code>os</code></dfn>"
+:: The user agent supports OS registrations.
+
+</dl>
+
+Issue: Add links to Structured Header RFC.
+
 To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
 |headers|:
 
-1. Let |value| be "".
-1. If the user agent supports:
-    <dl class="switch">
-    : web registrations only
-    :: Set |value| to "`web`".
-    : OS registrations only
-    :: Set |value| to "`os`".
-    : both web and OS registrations:
-    :: Set |value| to "`os, web`".
-
-    </dl>
-1. [=header list/Set=] ("`Attribution-Reporting-Support`", |value|) in |headers|.
-
-Issue: Consider replacing these string values with structured-field algorithms.
+1. Let |dict| be an [=ordered map=].
+1. If the user agent supports web registrations, [=map/set=]
+    |dict|["<code>[=support key/web=]</code>"] to true.
+1. If the user agent supports OS registrations, [=map/set=]
+    |dict|["<code>[=support key/os=]</code>"] to true.
+1. [=header list/Set a structured field value=] given
+    ("<code>[=Attribution-Reporting-Support=]</code>", |dict|) in |headers|.
 
 # Security considerations # {#security-considerations}
 TODO
