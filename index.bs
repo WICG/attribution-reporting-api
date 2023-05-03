@@ -501,6 +501,8 @@ An attribution source is a [=struct=] with the following items:
 :: [=ordered set=] of [=aggregatable dedup key/dedup key|aggregatable dedup key values=] associated with this [=attribution source=].
 : <dfn>debug reporting enabled</dfn>
 :: A [=boolean=].
+: <dfn>number of aggregatable reports</dfn>
+:: Number of [=aggregatable reports=] created for this [=attribution source=].
 
 </dl>
 
@@ -744,6 +746,7 @@ Possible values are:
 
 <ul dfn-for="trigger debug data type">
 <li>"<dfn><code>trigger-aggregate-deduplicated</code></dfn>"
+<li>"<dfn><code>trigger-aggregate-excessive-reports</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-no-contributions</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-insufficient-budget</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-storage-limit</code></dfn>"
@@ -891,6 +894,9 @@ controls how many times a single [=attribution source=] whose
 controls how many times a single [=attribution source=] whose
 [=attribution source/source type=] is "<code>[=source type/event=]</code>" can create an
 [=event-level report=].
+
+<dfn>Max aggregatable reports per source</dfn> is a positive integer that controls how many times a
+single [=attribution source=] can create an [=aggregatable report=].
 
 <dfn>Max destinations covered by unexpired sources</dfn> is a positive
 integer that controls the maximum number of distinct [=sites=] across all [=attribution source/attribution destinations=]
@@ -2018,6 +2024,8 @@ an optional [=attribution source=] <dfn for="obtain debug data body on trigger r
     : "<code>[=trigger debug data type/trigger-aggregate-insufficient-budget=]</code>"
     :: [=map/Set=] |body|["`limit`"] to [=allowed aggregatable budget per source=],
          [=serialize an integer|serialized=].
+    : "<code>[=trigger debug data type/trigger-aggregate-excessive-reports=]</code>"
+    :: [=map/Set=] |body|["`limit`"] to [=max aggregatable reports per source=],
     : "<code>[=trigger debug data type/trigger-event-low-priority=]</code>"
     : "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>"
     ::
@@ -2202,6 +2210,10 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. If the result of running [=should attribution be blocked by rate limits=]
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
     return it.
+1. If |sourceToAttribute|'s [=attribution source/number of aggregatable reports=] value is equal to [=max aggregatable reports per source=], then:
+    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=] with
+        "<code>[=trigger debug data type/trigger-aggregate-excessive-reports=]</code>", |trigger|, |sourceToAttribute| and |report|.
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. If the result of running [=check if an attribution source can create aggregatable contributions=]
     with |report| and |sourceToAttribute| is false:
      1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
@@ -2209,6 +2221,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. Add |report| to the [=aggregatable report cache=].
+1. Increment |sourceToAttribute|'s [=attribution source/number of aggregatable reports=] value by 1.
 1. Increment |sourceToAttribute|'s [=attribution source/aggregatable budget consumed=] value by
     |report|'s [=aggregatable report/required aggregatable budget=].
 1. If |matchedDedupKey| is not null, [=list/append=] it to |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=].
