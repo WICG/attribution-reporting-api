@@ -19,6 +19,8 @@ Assume Explicit For: on
 spec:html; type:element; text:a
 spec:html; type:element; text:script
 spec:html; type:dfn; text:feature separators
+spec:html; type:dfn; text:follow the hyperlink
+spec:html; type:dfn; text:navigation params
 spec:html; type:dfn; text:tokenize the features argument
 spec:html; type:dfn; text:window open steps
 </pre>
@@ -109,9 +111,9 @@ The IDL attribute {{HTMLAttributionSrcElementUtils/attributionSrc}}
 must <a spec=html>reflect</a> the respective content attribute of the same
 name.
 
-Whenever an <{img}> or a <{script}> |element| is created or |element|'s
-{{HTMLAttributionSrcElementUtils/attributionSrc}} attribute is set or changed,
-run the following steps:
+To <dfn>make background attributionsrc requests</dfn> given an
+{{HTMLAttributionSrcElementUtils}} |element| and an [=eligibility=]
+|eligibility|:
 
 1. Let |attributionSrc| be |element|'s
     {{HTMLAttributionSrcElementUtils/attributionSrc}}.
@@ -131,13 +133,35 @@ Issue: Set |contextOrigin| properly.
 
 Issue: Consider allowing the user agent to limit the size of |tokens|.
 
-Issue: Specify when to make background attributionsrc requests for <{a}>.
+Whenever an <{img}> or a <{script}> |element| is created or |element|'s
+{{HTMLAttributionSrcElementUtils/attributionSrc}} attribute is set or changed,
+run [=make background attributionsrc requests=] with |element| and
+"<code>[=eligibility/event-source-or-trigger=]</code>".
 
 Issue: Monkeypatch <{img}> and <{script}> loading so that the presence of an
 {{HTMLAttributionSrcElementUtils/attributionSrc}} attribute sets the
 {{HTMLImageElement/src}} or {{HTMLScriptElement/src}} request's
 [=request/Attribution Reporting eligibility=] to
 "<code>[=eligibility/event-source-or-trigger=]</code>".
+
+Modify [=follow the hyperlink=] as follows:
+
+After the step
+
+> If |subject|'s link types includes...
+
+add the steps
+
+1. Let |navigationSourceEligible| be false.
+1. If |subject| has an `attributionsrc` attribute:
+    1. Set |navigationSourceEligible| to true.
+    1. [=Make background attributionsrc requests=] with |subject| and
+        "<code>[=eligibility/navigation-source=]</code>".
+
+Add "and [=navigate/navigationSourceEligible=] set to
+|navigationSourceEligible|" to the step
+
+> [=Navigate=] <var ignore=''>targetNavigable</var>...
 
 <h3 id="monkeypatch-window-open">Window open steps</h4>
 
@@ -185,9 +209,10 @@ After the step
 
 add the steps
 
-1. Let |attributionSrcUrls| be null.
+1. Let |navigationSourceEligible| be false.
 1. If |tokenizedFeatures|["`attributionsrc`"] [=map/exists=]:
     1. [=Assert=]: |tokenizedFeatures|["`attributionsrc`"] is a [=list=].
+    1. Set |navigationSourceEligible| to true.
     1. Set |attributionSrcUrls| to a new [=list=].
     1. [=list/iterate|For each=] |value| of
         |tokenizedFeatures|["`attributionsrc`"]:
@@ -202,12 +227,37 @@ add the steps
             parsing failed, [=iteration/continue=].
         1. [=list/Append=] |urlRecord| to |attributionSrcUrls|.
 
-Issue: Set the navigation request's
-[=request/Attribution Reporting eligibility=] to
-"<code>[=eligibility/navigation-source=]</code>" even if |attributionSrcUrls|
-[=list/is empty=].
-
 Issue: Use |attributionSrcUrls| with [=make a background attributionsrc request=].
+
+In each step that calls [=navigate=], set [=navigate/navigationSourceEligible=]
+to |navigationSourceEligible|.
+
+# Navigation monkeypatches # {#navigation-monkeypatches}
+
+Add the following item to [=navigation params=]:
+
+: <dfn for="navigation params">navigationSourceEligible</dfn>
+:: A boolean indicating whether the navigation can register a
+    [=source type/navigation=] [=attribution source|source=] in its response.
+    Defaults to false.
+
+Modify [=navigate=] as follows:
+
+Add an optional boolean parameter called <dfn for="navigate">
+<var>navigationSourceEligible</var></dfn>, defaulting to false.
+
+In the step
+
+> Set <var ignore=''>navigationParams</var> to a new [=navigation params=]
+> with...
+
+add the property
+
+: [=navigation params/navigationSourceEligible=]
+:: |navigationSourceEligible|
+
+Issue: Use/propagate [=navigation params/navigationSourceEligible=] to the
+[=navigation request=]'s [=request/Attribution Reporting eligibility=].
 
 # Network monkeypatches # {#network-monkeypatches}
 
