@@ -3,7 +3,7 @@ const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const limits = {
-  maxAggregationKeys: 50,
+  maxAggregationKeys: 20,
   maxEntriesPerFilterData: 50,
   maxValuesPerFilterDataEntry: 50,
 }
