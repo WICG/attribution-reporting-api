@@ -1110,6 +1110,16 @@ An <dfn>eligibility</dfn> is one of the following:
 
 </dl>
 
+A <dfn>registrar</dfn> is one of the following:
+
+<dl dfn-for="registrar">
+: "<dfn><code>web</code></dfn>"
+:: The user agent supports web registrations.
+: "<dfn><code>os</code></dfn>"
+:: The user agent supports OS registrations.
+
+</dl>
+
 To <dfn>validate a background attributionsrc eligibility</dfn> given an
 [=eligibility=] |eligibility|:
 
@@ -1129,6 +1139,8 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
 1. If the "<code>[=attribution-reporting=]</code>" feature
     <a href="https://w3c.github.io/webappsec-permissions-policy/#algo-is-feature-enabled">is not enabled</a>
     in |document| with |document|'s [=url/origin=], return.
+1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
+1. If |supportedRegistrars| [=set/is empty=], return.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
     ::  "`GET`"
@@ -2917,29 +2929,29 @@ To <dfn noexport>get an OS-registration URL from a header list</dfn> given a
 1. If |value| is not a [=string=], return null.
 1. Return the result of running the [=URL parser=] on |value|.
 
+To <dfn>get supported registrars</dfn>:
+
+1. Let |supportedRegistrars| be an [=set/is empty|empty=] [=ordered set=].
+1. If the user agent supports web registrations, [=set/append=] "<code>[=registrar/web=]</code>"
+    to |supportedRegistrars|.
+1. If the user agent supports OS registrations, [=set/append=] "<code>[=registrar/os=]</code>"
+    to |supportedRegistrars|.
+1. Return |supportedRegistrars|.
+
 "<code><dfn>Attribution-Reporting-Support</dfn></code>" is a Dictionary
 Structured Header set on a [=request=] that indicates which registrars, if
 any, the corresponding [=response=] can use. Its values are not specified and
-its <dfn lt="support key">allowed keys</dfn> are:
-
-<dl dfn-for="support key">
-: "<dfn><code>web</code></dfn>"
-:: The user agent supports web registrations.
-: "<dfn><code>os</code></dfn>"
-:: The user agent supports OS registrations.
-
-</dl>
+its allowed keys are the [=registrars=].
 
 Issue: Add links to Structured Header RFC.
 
 To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
 |headers|:
 
+1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
 1. Let |dict| be an [=ordered map=].
-1. If the user agent supports web registrations, [=map/set=]
-    |dict|["<code>[=support key/web=]</code>"] to true.
-1. If the user agent supports OS registrations, [=map/set=]
-    |dict|["<code>[=support key/os=]</code>"] to true.
+1. [=set/iterate|For each=] |registrar| of |supportedRegistrars|:
+    1. [=map/Set=] |dict|[|registrar|] to true.
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Support=]</code>", |dict|) in |headers|.
 
