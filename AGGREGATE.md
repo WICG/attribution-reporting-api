@@ -385,7 +385,12 @@ in proportion to this parameter. In the example above,  the budget is split
 equally between two keys, one for the number of conversions per campaign and the
 other representing the conversion dollar value per geography. This budgeting
 mechanism is highly flexible and can support many different aggregation
-strategies as long as the appropriate scaling is performed on the outputs. 
+strategies as long as the appropriate scaling is performed on the outputs.
+
+The browser also applies a limit on the number of contributions within a single
+report.
+
+Strawman: There should be a limit of 20 contributions per aggregatable report.
 
 ### Storage limits
 
