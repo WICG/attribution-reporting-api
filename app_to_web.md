@@ -54,7 +54,7 @@ background requests will be made and the browser will not set
 `Attribution-Reporting-Eligible` header on `<a>`, `window.open`, `<img>`, or
 `<script>` requests.
 
-If the `Attribution-Reporting-Support` header indicates OS support, the reporting origin can optionally respond to the request with a [list structured header](https://www.rfc-editor.org/rfc/rfc8941.html#name-lists) containing one or more URLs that indicates a desire to use the OS's attribution API instead of the browser's. Note that the API also allows browsers to only support OS-level attribution if they choose.
+If the `Attribution-Reporting-Support` header indicates OS support, the reporting origin can optionally respond to the request with a [list structured header](https://httpwg.org/specs/rfc8941.html#list) containing one or more URLs that indicates a desire to use the OS's attribution API instead of the browser's. Note that the API also allows browsers to only support OS-level attribution if they choose.
 ```http
 // Registers a source against a native OS attribution API
 Attribution-Reporting-Register-OS-Source: "https://adtech.example/register", "https://other-adtech.example/register"
