@@ -1172,19 +1172,19 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
 1. Let |triggerHeader| be the result of [=header list/get|getting=]
     "`Attribution-Reporting-Register-Trigger`" from |response|'s
     [=response/header list=].
-1. Let |osSourceURL| be the result of
-    [=get an OS-registration URL from a header list|getting an OS-registration URL=]
+1. Let |osSourceURLs| be the result of
+    [=get OS-registration URLs from a header list|getting OS-registration URLs=]
     from |response|'s [=response/header list=] with
     "`Attribution-Reporting-Register-OS-Source`".
-1. Let |osTriggerURL| be the result of
-    [=get an OS-registration URL from a header list|getting an OS-registration URL=]
+1. Let |osTriggerURLs| be the result of
+    [=get OS-registration URLs from a header list|getting OS-registration URLs=]
     from |response|'s [=response/header list=] with
     "`Attribution-Reporting-Register-OS-Trigger`".
 1. If |eligibility| is:
     <dl class="switch">
     : "<code>[=eligibility/navigation-source=]</code>"
     :: Run the following steps:
-        1. If |sourceHeader| and |osSourceURL| are both null or both not
+        1. If |sourceHeader| and |osSourceURLs| are both null or both not
             null, return.
         1. If |sourceHeader| is not null:
             1. Let |source| be the result of running
@@ -1194,13 +1194,13 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
                 [=current wall time=].
             1. If |source| is not null, [=process an attribution source|process=]
                 |source|.
-        1. If |osSourceURL| is not null and the user agent supports OS
-            registrations, process |osSourceURL| according to an
+        1. If |osSourceURLs| is not null and the user agent supports OS
+            registrations, process |osSourceURLs| according to an
             [=implementation-defined=] algorithm.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: Run the following steps:
         1. If the number of non-null entries in «|sourceHeader|,
-            |triggerHeader|, |osSourceURL|, |osTriggerURL|» is not 1, return.
+            |triggerHeader|, |osSourceURLs|, |osTriggerURLs|» is not 1, return.
         1. If |sourceHeader| is not null:
             1. Let |source| be the result of running
                 [=parse source-registration JSON=] with |sourceHeader|,
@@ -1218,11 +1218,11 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
                 |destinationSite|, |reportingOrigin|, |privateStateTokens|, and
                 |context|'s [=current wall time=].
             1. If |trigger| is not null, [=trigger attribution=] with |trigger|.
-        1. If |osSourceURL| is not null and the user agent supports OS
-            registrations, process |osSourceURL| according to an
+        1. If |osSourceURLs| is not null and the user agent supports OS
+            registrations, process |osSourceURLs| according to an
             [=implementation-defined=] algorithm.
-        1. If |osTriggerURL| is not null and the user agent supports OS
-            registrations, process |osTriggerURL| according to an
+        1. If |osTriggerURLs| is not null and the user agent supports OS
+            registrations, process |osTriggerURLs| according to an
             [=implementation-defined=] algorithm.
 
     </dl>
@@ -2918,14 +2918,20 @@ A user agent MAY retry this algorithm in the event that there was an error.
 
 # Cross App and Web Algorithms # {#cross-app-and-web}
 
-To <dfn noexport>get an OS-registration URL from a header list</dfn> given a
+To <dfn noexport>get OS-registration URLs from a header list</dfn> given a
 [=header list=] |headers| and a [=header name=] |name|:
 
-1. Let |value| be the result of
+1. Let |values| be the result of
     [=header list/get a structured field value|getting=] |name| from |headers|
-    with a type of "`item`".
-1. If |value| is not a [=string=], return null.
-1. Return the result of running the [=URL parser=] on |value|.
+    with a type of "`list`".
+1. If |values| is not a [=list=], return null.
+1. Let |urls| be a new [=list=].
+1. [=list/iterate|For each=] |value| of |values|:
+     1. If |value| is not a [=string=], [=iteration/continue=].
+     1. Let |url| be the result of running the [=URL parser=] on |value|.
+     1. If |url| is failure or null, [=iteration/continue=].
+     1. [=list/Append=] |url| to |urls|.
+1. Return |urls|.
 
 To <dfn>get supported registrars</dfn>:
 

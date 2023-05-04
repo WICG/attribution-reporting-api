@@ -54,17 +54,16 @@ background requests will be made and the browser will not set
 `Attribution-Reporting-Eligible` header on `<a>`, `window.open`, `<img>`, or
 `<script>` requests.
 
-If the `Attribution-Reporting-Support` header indicates OS support, the reporting origin can optionally respond to the request with a [string structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.3) that indicates a desire to use the OS's attribution API instead of the browser's. Note that the API also allows browsers to only support OS-level attribution if they choose.
-```
+If the `Attribution-Reporting-Support` header indicates OS support, the reporting origin can optionally respond to the request with a [list structured header](https://www.rfc-editor.org/rfc/rfc8941.html#name-lists) containing one or more URLs that indicates a desire to use the OS's attribution API instead of the browser's. Note that the API also allows browsers to only support OS-level attribution if they choose.
+```http
 // Registers a source against a native OS attribution API
-Attribution-Reporting-Register-OS-Source: "https://adtech.example/register-android-source?..."
-
+Attribution-Reporting-Register-OS-Source: "https://adtech.example/register", "https://other-adtech.example/register"
 ```
 
 Trigger registrations will accept a new response header as well:
-```
+```http
 // Registers a trigger against a native OS attribution API
-Attribution-Reporting-Register-OS-Trigger: "https://adtech.example/register-android-trigger?..."
+Attribution-Reporting-Register-OS-Trigger: "https://adtech.example/register", "https://other-adtech.example/register"
 ```
 
 After receiving these headers, the browser will pass these URLs into the underlying OS API with any additional information including:
