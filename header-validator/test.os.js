@@ -6,6 +6,7 @@ const tests = [
   {input: '"https://a.test/"'},
   {input: '"http://localhost/"'},
   {input: '"http://127.0.0.1/"'},
+  {input: '"https://a.test/", "https://b.test/"'},
 
   // Warnings
   {
@@ -25,6 +26,13 @@ const tests = [
   // Not a string
   {
     input: 'x',
+    errors: [{
+      path: [],
+      msg: 'must be a string',
+    }],
+  },
+  {
+    input: '("https://a.test/")',
     errors: [{
       path: [],
       msg: 'must be a string',
