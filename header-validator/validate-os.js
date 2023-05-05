@@ -1,17 +1,17 @@
-async function getParseItemFunctionFromEnvironment() {
-  let parseItem = null
+async function getParseListFunctionFromEnvironment() {
+  let parseList = null
   if (typeof window === 'undefined') {
     // Environment = nodeJS -> Take structured header functions from the locally installed node module
     const structuredHeaderLib = await import('structured-headers')
-    parseItem = structuredHeaderLib.default.parseItem
+    parseList = structuredHeaderLib.default.parseList
   } else {
     // Environment = browser -> Take structured header functions from the lib loaded from the CDN (see HTML)
-    parseItem = window.structuredHeader.parseItem
+    parseList = window.structuredHeader.parseList
   }
-  return parseItem
+  return parseList
 }
 
-const parseItem = await getParseItemFunctionFromEnvironment()
+const parseList = await getParseListFunctionFromEnvironment()
 
 function validateString(item) {
   if (typeof item !== 'string') {
@@ -46,29 +46,31 @@ function validate(str, paramChecks) {
   const errors = []
   const warnings = []
 
-  let item, params
+  let list
   try {
-    [item, params] = parseItem(str)
+    list = parseList(str)
   } catch (err) {
     errors.push({ msg: err.toString() })
     return { errors, warnings }
   }
 
-  const err = validateURL(item)
-  if (err) {
-    errors.push({ msg: err, path: [] })
-  }
-
-  Object.entries(paramChecks).forEach(([param, check]) => {
-    const err = check(params.get(param))
+  for (const [item, params] of list) {
+    const err = validateURL(item)
     if (err) {
-      errors.push({ msg: err, path: [param] })
+      errors.push({ msg: err, path: [] })
     }
-    params.delete(param);
-  });
 
-  for (const key of params.keys()) {
-    warnings.push({ msg: 'unknown parameter', path: [key] })
+    Object.entries(paramChecks).forEach(([param, check]) => {
+      const err = check(params.get(param))
+      if (err) {
+        errors.push({ msg: err, path: [param] })
+      }
+      params.delete(param);
+    });
+
+    for (const key of params.keys()) {
+      warnings.push({ msg: 'unknown parameter', path: [key] })
+    }
   }
 
   return { errors, warnings }
