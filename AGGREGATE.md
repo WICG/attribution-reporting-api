@@ -435,6 +435,8 @@ Strawman: There should be ~0.05 reports (in expectation) sent for trigger
 registrations that exclude the `source_registration_time` field, and ~0.25 reports for
 those that include this field.
 
+In order to limit abuse of the protections above, there will be a maximum limit of 20 aggregatable reports per source.
+
 ## Data processing through a Secure Aggregation Service
 
 The exact design of the service is not specified here. We expect to have more
