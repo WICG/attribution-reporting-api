@@ -942,7 +942,7 @@ controls how many times a single [=attribution source=] whose
 
 <dfn>Max destinations covered by unexpired sources</dfn> is a positive
 integer that controls the maximum number of distinct [=sites=] across all [=attribution source/attribution destinations=]
-for unexpired [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting endpoint=]).
+for unexpired [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting endpoint=] [=site=]).
 
 <dfn>Attribution rate-limit window</dfn> is a positive [=duration=] that
 controls the rate-limiting window for attribution.
@@ -965,7 +965,7 @@ positive integer that controls the maximum number of distinct
 controls the maximum number of attributions for a
 ([=attribution rate-limit record/source site=],
 [=attribution rate-limit record/attribution destination=],
-[=attribution rate-limit record/reporting endpoint=]) per
+[=attribution rate-limit record/reporting endpoint=] [=site=]) per
 [=attribution rate-limit window=].
 
 <dfn>Allowed aggregatable budget per source</dfn> is a positive integer that controls the total
@@ -1484,7 +1484,7 @@ To <dfn>check if an [=attribution source=] exceeds the unexpired destination lim
 1. Let |unexpiredSources| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
      * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/source=]</code>"
      * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
-     * |record|'s [=attribution rate-limit record/reporting endpoint=] and |source|'s [=attribution source/reporting endpoint=] are equal
+     * |record|'s [=attribution rate-limit record/reporting endpoint=] and |source|'s [=attribution source/reporting endpoint=] are [=same site=]
      * |record|'s [=attribution rate-limit record/expiry time=] is greater than |source|'s [=attribution source/source time=]
 1. Let |unexpiredDestinations| be an [=set/is empty|empty=] [=set=].
 1. For each [=attribution rate-limit record=] |unexpiredRecord| of |unexpiredSources|:
@@ -1968,7 +1968,7 @@ Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToA
      * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>"
      * |record|'s [=attribution rate-limit record/source site=] and |sourceToAttribute|'s [=attribution source/source site=] are equal
      * |record|'s [=attribution rate-limit record/attribution destination=] and |trigger|'s [=attribution trigger/attribution destination=] are equal
-     * |record|'s [=attribution rate-limit record/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are [=same origin=]
+     * |record|'s [=attribution rate-limit record/reporting endpoint=] and |trigger|'s [=attribution trigger/reporting endpoint=] are [=same site=]
      * |record|'s [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=] before |trigger|'s [=attribution trigger/trigger time=]
 1. If |matchingRateLimitRecords|'s [=list/size=] is greater than or equal to [=max attributions per rate-limit window=], return <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
