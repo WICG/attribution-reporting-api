@@ -70,6 +70,9 @@ An aggregatable report is not created due to [deduplication](https://github.com/
 #### `trigger-aggregate-no-contributions`
 An aggregatable report is not created as no [histogram contributions](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#attribution-trigger-registration) are created.
 
+#### `trigger-aggregate-excessive reports`
+An aggregatable report is dropped as the [maximum number of reports](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#hide-the-true-number-of-attribution-reports) have been scheduled for the source.
+
 #### `trigger-aggregate-insufficient-budget`
 An aggregatable report is dropped due to [insufficient budget](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#contribution-bounding-and-budgeting).
 
@@ -129,6 +132,7 @@ This table defines the fields in the `body` dictionary.
 | [`trigger-event-storage-limit`](#trigger-event-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-report-window-passed`](#trigger-event-report-window-passed) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-aggregate-deduplicated`](#trigger-aggregate-deduplicated) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
+| [`trigger-aggregate-excessive-reports`](#trigger-aggregate-excessive-reports) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-aggregate-no-contributions`](#trigger-aggregate-no-contributions) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-aggregate-insufficient-budget`](#trigger-aggregate-insufficient-budget) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-aggregate-storage-limit`](#trigger-aggregate-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
