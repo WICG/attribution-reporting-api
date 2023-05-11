@@ -2685,10 +2685,16 @@ of running the following steps:
 
 1. If |report|'s [=aggregatable report/debug mode=] is <strong>enabled</strong>,
     set |sharedInfo|["`debug_mode`"] to "`enabled`".
-1. If |report|'s [=aggregatable report/source registration time configuration=] is
-    "<code>[=aggregatable source registration time configuration/include=]</code>",
-    set |sharedInfo|["`source_registration_time`"] to the result of [=obtaining rounded source time=]
-    with |report|'s [=aggregatable report/source time=], [=serialize an integer|serialized=].
+1. If |report|'s [=aggregatable report/source registration time configuration=] is:
+    <dl class="switch">
+    : "<code>[=aggregatable source registration time configuration/include=]</code>"</dt>
+    :: Set |sharedInfo|["`source_registration_time`"] to the result of [=obtaining rounded source time=]
+        with |report|'s [=aggregatable report/source time=], [=serialize an integer|serialized=].
+    : "<code>[=aggregatable source registration time configuration/exclude=]</code>"
+    :: Set |sharedInfo|["`source_registration_time`"] to the result of [=serialize an integer|serializing=] 0.
+
+    </dl>
+
 1. Return the [=string=] resulting from executing [=serialize an infra value to a json string=] on |sharedInfo|.
 
 <h3 id="obtain-aggregatable-report-aggregation-service-payloads">Obtaining an aggregatable report's aggregation service payloads</h3>
@@ -2821,7 +2827,7 @@ To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following st
 
     <dt>[=aggregatable report=]</dt>
     <dd>Return the result of running [=serialize an aggregatable report=] with |report|.</dd>
-    <dl>
+    </dl>
 
 Note: The inclusion of "`report_id`" in the report body is intended to allow the report recipient
 to perform deduplication and prevent double counting, in the event that the user agent retries
