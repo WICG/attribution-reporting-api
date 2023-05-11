@@ -35,6 +35,10 @@ spec: idl; type: dfn; urlPrefix: https://webidl.spec.whatwg.org/
     text: throw; url: #dfn-throw
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
     text: generate a random UUID; url: #dfn-generate-a-random-uuid
+spec: private-state-token-api; type: dfn; urlPrefix: https://wicg.github.io/trust-token-api/
+    text: look up the key commitments; url: #look-up-the-key-commitments
+    text: generate masked tokens; url: #generate-masked-tokens
+    text: unmask tokens; url: #unmask-tokens
 </pre>
 
 Introduction {#intro}
@@ -280,6 +284,14 @@ A [=request=] has an associated
 <dfn for=request>Attribution Reporting eligibility</dfn> (an [=eligibility=]).
 Unless otherwise stated it is "<code>[=eligibility/unset=]</code>".
 
+A [=request=] has an associated
+<dfn for=request>triggerVerificationMetadata</dfn> which is null or a [=struct=] with the following items:
+<dl dfn-for="triggerVerificationMetadata">
+: <dfn>pretokens</dfn>
+:: A [=byte sequence=].
+: <dfn>ids</dfn>
+:: A  [=list=] of [=uuid=].
+
 To <dfn>get an eligibility from {{AttributionReportingRequestOptions}}</dfn>
 given an optional {{AttributionReportingRequestOptions}} |options|:
 
@@ -320,7 +332,7 @@ and its <dfn lt="eligible key">allowed keys</dfn> are:
 </dl>
 
 To <dfn>set Attribution Reporting headers</dfn> given a
-[=header list=] |headers| and an [=eligibility=] |eligibility|:
+[=header list=] |headers|, an [=eligibility=] |eligibility| and a |url| [=request/URL=]:
 
 1. [=header list/Delete=] "<code>[=Attribution-Reporting-Eligible=]</code>" from
     |headers|.
@@ -340,10 +352,12 @@ To <dfn>set Attribution Reporting headers</dfn> given a
         true.
     : "<code>[=eligibility/trigger=]</code>"
     :: [=map/Set=] |dict|["<code>[=eligible key/trigger=]</code>"] to true.
+    :: [=Set trigger verification headers=] with |url|, |contextOrigin| and |headers|.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: [=map/Set=] |dict|["<code>[=eligible key/event-source=]</code>"] to
         true and [=map/set=] |dict|["<code>[=eligible key/trigger=]</code>"]
         to true.
+    :: [=Set trigger verification headers=] with |url|, |contextOrigin| and |headers|.
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Eligible=]</code>", |dict|) in |headers|.
 1. [=Set an OS-support header=] in |headers|.
@@ -358,9 +372,10 @@ After the step
 
 add the step
 
-1. [=Set Attribution Reporting headers=] with |request|'s
-    [=request/header list=] and |request|'s
-    [=request/Attribution Reporting eligibility=].
+1. [=Set Attribution Reporting headers=] with
+    |request|'s [=request/header list=], 
+    |request|'s [=request/Attribution Reporting eligibility=] and
+    |request|'s [=request/URL=].
 
 Modify {{Request/constructor(input, init)}} as follows:
 
@@ -653,8 +668,8 @@ An attribution trigger is a [=struct=] with the following items:
     [=map/value|values=] are non-negative 32-bit integers.
 : <dfn>aggregatable dedup keys</dfn>
 :: A [=list=] of [=aggregatable dedup key=].
-: <dfn>serialized private state tokens</dfn>
-:: A [=list=] of [=byte sequence=].
+: <dfn>verifications</dfn>
+:: A [=list=] of [=trigger verification=].
 : <dfn>debug reporting enabled</dfn>
 :: A [=boolean=].
 : <dfn>aggregation coordinator</dfn>
@@ -829,6 +844,18 @@ An attribution debug report is a [=struct=] with the following items:
 :: A [=list=] of [=attribution debug data=].
 : <dfn>reporting endpoint</dfn>
 :: A [=suitable origin=].
+
+</dl>
+
+<h3 dfn-type=dfn>Trigger verification</h3>
+
+A trigger verification is a [=struct=] with the following items:
+
+<dl dfn-for="trigger verification">
+: <dfn>token</dfn>
+:: A [=string=] which is a [=forgiving-base64 encoding=] of a [=byte sequence=].
+: <dfn>id</dfn>
+:: A [=uuid=] over which the [=trigger verification/token=] is signed.
 
 </dl>
 
@@ -1261,10 +1288,10 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
         1. If |triggerHeader| is not null:
             1. Let |destinationSite| be the result of [=obtaining a site=] from
                 |contextOrigin|.
-            1. Let |privateStateTokens| be an [=list/is empty|empty=] [=list=].
+            1. Let |triggerVerifications| be the result of [=receiving trigger verification tokens=].
             1. Let |trigger| be the result of running
                 [=create an attribution trigger=] with |triggerHeader|
-                |destinationSite|, |reportingOrigin|, |privateStateTokens|, and
+                |destinationSite|, |reportingOrigin|, |triggerVerifications|, and
                 |context|'s [=current wall time=].
             1. If |trigger| is not null, [=trigger attribution=] with |trigger|.
         1. If |osSourceURLs| is not null and the user agent supports OS
@@ -1275,8 +1302,6 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
             [=implementation-defined=] algorithm.
 
     </dl>
-
-Issue: Set |privateStateTokens| properly.
 
 # Source Algorithms # {#source-algorithms}
 
@@ -1799,25 +1824,8 @@ To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
     1. [=set/Append=] |aggregatableDedupKey| to |aggregatableDedupKeys|.
 1. Return |aggregatableDedupKeys|.
 
-To <dfn noexport>serialize a private state token</dfn> given a [=string=] |encodedBlindedPrivateStateToken|:
-1. If |encodedBlindedPrivateStateToken| is null, return null.
-1. Let |decoded| be the result of [=forgiving-base64 decoding=] |encodedBlindedPrivateStateToken|.
-1. If |decoded| is failure, return null.
-1. Let |tokens| be the result of finishing issuance of |decoded|.
-
-ISSUE: properly define the "finishing issuance" operation.
-
-1. If |tokens| is null, or has [=list/size=] not equal to 1, return null.
-1. Let |token| be |tokens|[0].
-1. Let |redeemedBytes| be the result of "beginning redemption" with |token|,
-    the empty [=byte sequence=] (data), and 0 (the null timestamp).
-
-ISSUE: properly define "begin redemption" operation. Consider running the algorithm at report sending time.
-
-1. Return the result of [=forgiving-base64 encoding=] |redeemedBytes|.
-
 To <dfn noexport>create an attribution trigger</dfn> given a [=byte sequence=]
-|json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, a [=list=] of [=strings=] |privateStateTokens|,
+|json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, a [=list=] of [=trigger verification=] |triggerVerifications|,
 and a [=moment=] |triggerTime|:
 
 1. Let |value| be the result of running
@@ -1866,10 +1874,6 @@ and a [=moment=] |triggerTime|:
     1. If |value|["`aggregatable_source_registration_time`"] is not an [=aggregatable source registration time configuration=],
         return null.
     1. Set |aggregatableSourceRegTimeConfig| to |value|["`aggregatable_source_registration_time`"].
-1. Let |serializedPrivateStateTokens| be a new [=list/is empty|empty=] [=list=].
-1. [=list/iterate|For each=] |privateStateToken| of |privateStateTokens|:
-    1. Let |serializedPrivateStateToken| be the result of [=serializing a private state token=] with |privateStateToken|.
-    1. [=list/Append=] |serializedPrivateStateToken| to  |serializedPrivateStateTokens|.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -1891,8 +1895,8 @@ and a [=moment=] |triggerTime|:
     :: |aggregatableValues|
     : [=attribution trigger/aggregatable dedup keys=]
     :: |aggregatableDedupKeys|
-    : [=attribution trigger/serialized private state tokens=]
-    :: |serializedPrivateStateTokens|
+    : [=attribution trigger/verifications=]
+    :: |triggerVerifications|
     : [=attribution trigger/debug reporting enabled=]
     :: |debugReportingEnabled|
     : [=attribution trigger/aggregation coordinator=]
@@ -2596,12 +2600,13 @@ To <dfn>assign private state tokens</dfn> given a [=list=] of [=aggregatable rep
 an [=attribution trigger=] |trigger|:
 
 1. If |reports| [=list/is empty=], return.
-1. Let |privateStateTokens| be |trigger|'s [=attribution trigger/serialized private state tokens=].
-1. If |privateStateTokens| [=list/is empty=], return.
+1. Let |verifications| be |trigger|'s [=attribution trigger/verifications=].
+1. If |verifications| [=list/is empty=], return.
 1. [=shuffle a list|Shuffle=] |reports|.
-1. [=shuffle a list|Shuffle=] |privateStateTokens|.
+1. [=shuffle a list|Shuffle=] |verifications|.
 1. Let |n| be the minimum of |reports|'s [=list/size=] and |privateStateTokens|'s [=list/size=].
 1. For each integer |i| between 0 (inclusive) and |n| (exclusive):
+    1. Set |reports|[i]'s  [=aggregatable report/id=] to |privateStateTokens|[i].
     1. Set |reports|[i]'s [=aggregatable report/serialized private state token=] to |privateStateTokens|[i].
 
 Issue: Assign the ID associated with the private state token to [=aggregatable report/report ID=].
@@ -3006,6 +3011,100 @@ To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
     1. [=map/Set=] |dict|[|registrar|] to true.
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Support=]</code>", |dict|) in |headers|.
+
+
+# Report Verification Algorithms # {#report-verification}
+
+"<code><dfn>Sec-Attribution-Reporting-Private-State-Token</dfn></code>" is a
+header used to orchestrate Report Verification.
+
+<a href="https://httpwg.org/specs/rfc8941.html#list">List Structured Header</a>
+set on a [=request=] that contains masked messages encoded as base64 strings. It
+can also be set on a [=response=] by a Private State Token issuer in which it case
+it would contains masked tokens encoded as base64 strings.
+
+"<code><dfn>Sec-Private-State-Token-Crypto-Version</dfn></code>" is a
+cryptographic protocol version, VOPRF.
+
+
+<h3 id="initiate-trigger-verification">Initiate trigger verification</h3>
+
+To <dfn noexport>set trigger verification headers</dfn> given an [=request/URL=]
+|issuerUrl|, an [=origin=] |contextOrigin| and a [=header list=] |headers|:
+
+1. If |contextOrigin| is not [=check if an origin is suitable|suitable=], return.
+1. Let |destination| be the result of [=obtaining a site=] from |contextOrigin|.
+
+1. Let |issuer| be |issuerUrl|'s [=url/origin=].
+1. If |issuer| is not [=check if an origin is suitable|suitable=], return.
+
+1. Let (|issuerKeys|,|preTokens|,|cryptoProtocolVersion|) be the result of [=looking up the key commitments=] for |issuer|.
+1. If |issuerKeys| is null, return.
+
+1. Set |request|'s [=request/triggerVerificationMetadata=] to |preTokens|.
+
+1. Let |base64encodedMaskedMessages| be a new [=list=].
+1. While |ids|'s [=list/size=] is smaller than 3:
+    1. Let |id| be the result of [=generating a random UUID=] to |ids|.
+    1. Let |message| be the [=string/concatenate|concatenation=] of |id|, |destination|.
+    1. Let |maskedMessage| be the result of  [=generating masked tokens=] with |issuerKeys| and |message|.
+    1. Let |base64encodedMaskedMessage| be the [=forgiving-base64 encoding=] of |maskedMessage|.
+    1. [=list/Append=] |base64encodedMaskedMessage| to |base64encodedMaskedMessages|.
+
+1. Let  |request|'s [=request/triggerVerificationMetadata=] be an [=request/triggerVerificationMetadata=] with the items:
+    : [=request/triggerVerificationMetadata/pretokens=]
+    :: |preTokens|
+    : [=request/triggerVerificationMetadata/ids=]
+    :: |ids|
+
+1. [=header list/Set a structured field value=] given
+    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", |base64encodedMaskedMessages|) in |headers|.
+1. [=header list/Set a structured field value=] given
+    ("<code>[=Sec-Private-State-Token-Crypto-Version=]</code>", |cryptoProtocolVersion|) in |headers|.
+
+
+Issue: Link to a generating masked tokens algorithm that receive messages.
+
+
+<h3 id="handle-trigger-verification">Handle trigger verification</h3>
+
+To <dfn noexport>receive trigger verification tokens</dfn> given a [=request=] |request| and a [=response=] |response|:
+
+1. Let |metadata| be |request|'s [=request/triggerVerificationMetadata=].
+1. If |metadata| is null, return a new [=list=].
+
+1. Let |preTokens| be |metadata|'s [=request/triggerVerificationMetadata/pretokens=].
+
+1. Let |issuer| be |request|'s [=request/URL=]'s [=url/origin=].
+1. Let |issuerKeys be the result of [=looking up the key commitments=] for |issuer|.
+1. If |issuerKeys| is null, return a new [=list=].
+
+1. Let |base64encodedMaskedTokens| [=header list/Get a structured field value=] given
+    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", "list") from |response|'s [=response/header list=].
+1. [=header list/delete|Delete=] <code>[=Sec-Attribution-Reporting-Private-State-Token=]</code> from |response|'s [=response/header list=].
+
+1. Let |base64encodedPrivateStateTokens| be a new [=list=].
+1.  [=list/iterate|For each=] |base64encodedMaskedToken| in |base64encodedMaskedTokens|:
+    1. Let |maskedToken| be the [=forgiving-base64 decoding=] of |base64encodedMaskedToken|.
+    1. Let |token| be the result of [=unmasking tokens=] given |issuerKeys|, |preTokens| and |maskedToken|.
+    1. If |token| is null, return a new [=list=].
+    1. Let |privateStateToken| be the result of running a cryptographic redemption procedure with |token|.
+    1. If |privateStateToken| is null, return a new [=list=].
+    1. Let |base64encodedPrivateStateToken| be the [=forgiving-base64 encoding=] of |privateStateToken|.
+    1. [=list/Append=] |base64encodedPrivateStateToken| to |base64encodedPrivateStateTokens|.
+
+1. Let |triggerVerifications| be a new [=list=].
+1. For each integer |i| between 0 (inclusive) and |base64encodedPrivateStateTokens|'s [=list/size=] (exclusive):
+    1. Let |triggerVerification| be an [=trigger verification=] with the items:
+        : [=trigger verification/token=]
+        :: |base64encodedPrivateStateTokens|[i]
+        : [=trigger verification/id=]
+        :: |metadata|'s [=request/triggerVerificationMetadata/ids=][i]
+    1. [=list/Append=] |triggerVerification| to |triggerVerifications|
+
+1. Return |triggerVerifications|
+
+<h3 id="add-report-verification">Add report verification header</h3>
 
 # Security considerations # {#security-considerations}
 TODO
