@@ -854,7 +854,7 @@ origins per <source site, destination site> pair, counted per source
 registration. This should be limited to 100 origins per 30 days.
 
 Additionally, there should be a limit of 10 reporting origins per <source site,
-destination site, 30 days>, counted for every attribution that is generated.
+destination site, 30 days>, counted for every attribution that is generated and a limit of 1 reporting origin per <source site, reporting site> counted per source registration.
 
 ### Clearing Site Data
 
