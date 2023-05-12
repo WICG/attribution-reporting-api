@@ -868,7 +868,7 @@ To limit the amount of user identity leakage between a <source site,
 destination site> pair, the browser should throttle the amount of total information
 sent through this API in a given time period for a user. The browser should set
 a maximum number of attributions per
-<source site, destination site, reporting origin, user> tuple per time period. If this
+<source site, destination site, reporting site, user> tuple per time period. If this
 threshold is hit, the browser will stop scheduling reports the API for the
 rest of the time period for attributions matching that tuple.
 
@@ -938,7 +938,7 @@ origin on a site to push the other attribution sources out of the browser. See
 the [denial of service](#denial-of-service) for more details. To prevent this
 attack, the browser should maintain these limits per reporting site. This
 effectively limits the number of unique sites covered by unexpired sources from
-any one reporting origin.
+any one reporting site.
 
 Strawman: 100 distinct destination sites per-{source site, reporting site},
 applied to all unexpired sources regardless of type at source time.
