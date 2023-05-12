@@ -285,12 +285,13 @@ A [=request=] has an associated
 Unless otherwise stated it is "<code>[=eligibility/unset=]</code>".
 
 A [=request=] has an associated
-<dfn for=request>triggerVerificationMetadata</dfn> which is null or a [=struct=] with the following items:
-<dl dfn-for="triggerVerificationMetadata">
-: <dfn>pretokens</dfn>
-:: A [=byte sequence=].
-: <dfn>ids</dfn>
-:: A  [=list=] of [=uuid=].
+<dfn for=request>Trigger Verification metadata</dfn> which is null or a [=struct=] with the following items:
+<dl dfn-for="request/Trigger Verification metadata">
+    : <dfn>pretokens</dfn>
+    :: A [=byte sequence=].
+    : <dfn>ids</dfn>
+    :: A  [=list=] of [=string=] generated using [=generating a random UUID=].
+</dl>
 
 To <dfn>get an eligibility from {{AttributionReportingRequestOptions}}</dfn>
 given an optional {{AttributionReportingRequestOptions}} |options|:
@@ -749,7 +750,7 @@ An aggregatable report is an [=attribution report=] with the following additiona
 : <dfn>effective attribution destination</dfn>
 :: A [=site=].
 : <dfn>serialized private state token</dfn>
-:: A [=byte sequence=].
+:: A [=serialized private state token=].
 : <dfn>aggregation coordinator</dfn>
 :: An [=aggregation coordinator=].
 : <dfn>source registration time configuration</dfn>
@@ -847,15 +848,19 @@ An attribution debug report is a [=struct=] with the following items:
 
 </dl>
 
+<h3 dfn-type=dfn>Serialized private state token</h3>
+
+A serialized private state token is a [=forgiving-base64 encoding=] of a [=byte sequence=].
+
 <h3 dfn-type=dfn>Trigger verification</h3>
 
 A trigger verification is a [=struct=] with the following items:
 
 <dl dfn-for="trigger verification">
 : <dfn>token</dfn>
-:: A [=string=] which is a [=forgiving-base64 encoding=] of a [=byte sequence=].
+:: A [=serialized private state token=]
 : <dfn>id</dfn>
-:: A [=uuid=] over which the [=trigger verification/token=] is signed.
+:: The result of [=generating a random UUID=] over which the [=trigger verification/token=] is signed.
 
 </dl>
 
@@ -1552,7 +1557,7 @@ a [=trigger state=] |triggerState|:
     :: false
     : [=attribution trigger/aggregation coordinator=]
     :: [=default aggregation coordinator=]
-    : [=attribution trigger/serialized private state tokens=]
+    : [=attribution trigger/verifications=]
     :: «»
     : [=attribution trigger/aggregatable source registration time configuration=]
     :: "<code>[=aggregatable source registration time configuration/exclude=]</code>"
@@ -2604,10 +2609,10 @@ an [=attribution trigger=] |trigger|:
 1. If |verifications| [=list/is empty=], return.
 1. [=shuffle a list|Shuffle=] |reports|.
 1. [=shuffle a list|Shuffle=] |verifications|.
-1. Let |n| be the minimum of |reports|'s [=list/size=] and |privateStateTokens|'s [=list/size=].
+1. Let |n| be the minimum of |reports|'s [=list/size=] and |verifications|'s [=list/size=].
 1. For each integer |i| between 0 (inclusive) and |n| (exclusive):
-    1. Set |reports|[i]'s  [=aggregatable report/id=] to |privateStateTokens|[i].
-    1. Set |reports|[i]'s [=aggregatable report/serialized private state token=] to |privateStateTokens|[i].
+    1. Set |reports|[i]'s  [=aggregatable report/report ID=] to |verifications|[i]'s [=trigger verification/id=].
+    1. Set |reports|[i]'s [=aggregatable report/serialized private state token=] to |verifications|[i]'s [=trigger verification/token=].
 
 Issue: Assign the ID associated with the private state token to [=aggregatable report/report ID=].
 
@@ -3038,10 +3043,8 @@ To <dfn noexport>set trigger verification headers</dfn> given an [=request/URL=]
 1. Let |issuer| be |issuerUrl|'s [=url/origin=].
 1. If |issuer| is not [=check if an origin is suitable|suitable=], return.
 
-1. Let (|issuerKeys|,|preTokens|,|cryptoProtocolVersion|) be the result of [=looking up the key commitments=] for |issuer|.
+1. Let (|issuerKeys|,|pretokens|,|cryptoProtocolVersion|) be the result of [=looking up the key commitments=] for |issuer|.
 1. If |issuerKeys| is null, return.
-
-1. Set |request|'s [=request/triggerVerificationMetadata=] to |preTokens|.
 
 1. Let |base64encodedMaskedMessages| be a new [=list=].
 1. While |ids|'s [=list/size=] is smaller than 3:
@@ -3051,10 +3054,10 @@ To <dfn noexport>set trigger verification headers</dfn> given an [=request/URL=]
     1. Let |base64encodedMaskedMessage| be the [=forgiving-base64 encoding=] of |maskedMessage|.
     1. [=list/Append=] |base64encodedMaskedMessage| to |base64encodedMaskedMessages|.
 
-1. Let  |request|'s [=request/triggerVerificationMetadata=] be an [=request/triggerVerificationMetadata=] with the items:
-    : [=request/triggerVerificationMetadata/pretokens=]
-    :: |preTokens|
-    : [=request/triggerVerificationMetadata/ids=]
+1. Let  |request|'s [=request/Trigger Verification metadata=] be an [=request/Trigger Verification metadata=] with the items:
+    : [=request/Trigger Verification metadata/pretokens=]
+    :: |pretokens|
+    : [=request/Trigger Verification metadata/ids=]
     :: |ids|
 
 1. [=header list/Set a structured field value=] given
@@ -3070,10 +3073,10 @@ Issue: Link to a generating masked tokens algorithm that receive messages.
 
 To <dfn noexport>receive trigger verification tokens</dfn> given a [=request=] |request| and a [=response=] |response|:
 
-1. Let |metadata| be |request|'s [=request/triggerVerificationMetadata=].
+1. Let |metadata| be |request|'s [=request/Trigger Verification metadata=].
 1. If |metadata| is null, return a new [=list=].
 
-1. Let |preTokens| be |metadata|'s [=request/triggerVerificationMetadata/pretokens=].
+1. Let |pretokens| be |metadata|'s [=request/Trigger Verification metadata/pretokens=].
 
 1. Let |issuer| be |request|'s [=request/URL=]'s [=url/origin=].
 1. Let |issuerKeys be the result of [=looking up the key commitments=] for |issuer|.
@@ -3086,7 +3089,7 @@ To <dfn noexport>receive trigger verification tokens</dfn> given a [=request=] |
 1. Let |base64encodedPrivateStateTokens| be a new [=list=].
 1.  [=list/iterate|For each=] |base64encodedMaskedToken| in |base64encodedMaskedTokens|:
     1. Let |maskedToken| be the [=forgiving-base64 decoding=] of |base64encodedMaskedToken|.
-    1. Let |token| be the result of [=unmasking tokens=] given |issuerKeys|, |preTokens| and |maskedToken|.
+    1. Let |token| be the result of [=unmasking tokens=] given |issuerKeys|, |pretokens| and |maskedToken|.
     1. If |token| is null, return a new [=list=].
     1. Let |privateStateToken| be the result of running a cryptographic redemption procedure with |token|.
     1. If |privateStateToken| is null, return a new [=list=].
@@ -3099,12 +3102,11 @@ To <dfn noexport>receive trigger verification tokens</dfn> given a [=request=] |
         : [=trigger verification/token=]
         :: |base64encodedPrivateStateTokens|[i]
         : [=trigger verification/id=]
-        :: |metadata|'s [=request/triggerVerificationMetadata/ids=][i]
+        :: |metadata|'s [=request/Trigger Verification metadata/ids=][i]
     1. [=list/Append=] |triggerVerification| to |triggerVerifications|
 
 1. Return |triggerVerifications|
 
-<h3 id="add-report-verification">Add report verification header</h3>
 
 # Security considerations # {#security-considerations}
 TODO
