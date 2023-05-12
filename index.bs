@@ -1013,6 +1013,10 @@ random delay to deliver an [=aggregatable report=].
 <dfn>Default aggregation coordinator</dfn> is the [=aggregation coordinator=] that controls how to
 obtain the public key for encrypting an [=aggregatable report=] by default.
 
+<dfn>Verification tokens per trigger</dfn> is a positive integer that controls the number of
+encoded masked messages sent for signature when [=set trigger verification headers|initiating trigger verification=]
+and the maximum number of [=serialized private state tokens=] that can be attached to an [=attribution trigger=].
+
 # General Algorithms # {#general-algorithms}
 
 <h3 id="serialize-integer">Serialize an integer</h3>
@@ -3039,27 +3043,24 @@ To <dfn noexport>set trigger verification headers</dfn> given an [=request/URL=]
 
 1. If |contextOrigin| is not [=check if an origin is suitable|suitable=], return.
 1. Let |destination| be the result of [=obtaining a site=] from |contextOrigin|.
-
 1. Let |issuer| be |issuerUrl|'s [=url/origin=].
 1. If |issuer| is not [=check if an origin is suitable|suitable=], return.
-
 1. Let (|issuerKeys|,|pretokens|,|cryptoProtocolVersion|) be the result of [=looking up the key commitments=] for |issuer|.
 1. If |issuerKeys| is null, return.
-
+1. Let |ids| be a new [=list=].
 1. Let |base64encodedMaskedMessages| be a new [=list=].
-1. While |ids|'s [=list/size=] is smaller than 3:
-    1. Let |id| be the result of [=generating a random UUID=] to |ids|.
+1. While |ids|'s [=list/size=] is smaller than [=verification tokens per trigger=]:
+    1. Let |id| be the result of [=generating a random UUID=].
+    1. [=list/Append=] |id| to |ids|.
     1. Let |message| be the [=string/concatenate|concatenation=] of |id|, |destination|.
     1. Let |maskedMessage| be the result of  [=generating masked tokens=] with |issuerKeys| and |message|.
     1. Let |base64encodedMaskedMessage| be the [=forgiving-base64 encoding=] of |maskedMessage|.
     1. [=list/Append=] |base64encodedMaskedMessage| to |base64encodedMaskedMessages|.
-
 1. Let  |request|'s [=request/Trigger Verification metadata=] be an [=request/Trigger Verification metadata=] with the items:
     : [=request/Trigger Verification metadata/pretokens=]
     :: |pretokens|
     : [=request/Trigger Verification metadata/ids=]
     :: |ids|
-
 1. [=header list/Set a structured field value=] given
     ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", |base64encodedMaskedMessages|) in |headers|.
 1. [=header list/Set a structured field value=] given
@@ -3075,17 +3076,14 @@ To <dfn noexport>receive trigger verification tokens</dfn> given a [=request=] |
 
 1. Let |metadata| be |request|'s [=request/Trigger Verification metadata=].
 1. If |metadata| is null, return a new [=list=].
-
 1. Let |pretokens| be |metadata|'s [=request/Trigger Verification metadata/pretokens=].
-
 1. Let |issuer| be |request|'s [=request/URL=]'s [=url/origin=].
 1. Let |issuerKeys be the result of [=looking up the key commitments=] for |issuer|.
 1. If |issuerKeys| is null, return a new [=list=].
-
 1. Let |base64encodedMaskedTokens| [=header list/Get a structured field value=] given
     ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", "list") from |response|'s [=response/header list=].
 1. [=header list/delete|Delete=] <code>[=Sec-Attribution-Reporting-Private-State-Token=]</code> from |response|'s [=response/header list=].
-
+1. If |base64encodedMaskedTokens|'s [=list/size=] is greater than [=verification tokens per trigger=], return a new [=list=].
 1. Let |base64encodedPrivateStateTokens| be a new [=list=].
 1.  [=list/iterate|For each=] |base64encodedMaskedToken| in |base64encodedMaskedTokens|:
     1. Let |maskedToken| be the [=forgiving-base64 decoding=] of |base64encodedMaskedToken|.
@@ -3095,7 +3093,6 @@ To <dfn noexport>receive trigger verification tokens</dfn> given a [=request=] |
     1. If |privateStateToken| is null, return a new [=list=].
     1. Let |base64encodedPrivateStateToken| be the [=forgiving-base64 encoding=] of |privateStateToken|.
     1. [=list/Append=] |base64encodedPrivateStateToken| to |base64encodedPrivateStateTokens|.
-
 1. Let |triggerVerifications| be a new [=list=].
 1. For each integer |i| between 0 (inclusive) and |base64encodedPrivateStateTokens|'s [=list/size=] (exclusive):
     1. Let |triggerVerification| be an [=trigger verification=] with the items:
@@ -3104,7 +3101,6 @@ To <dfn noexport>receive trigger verification tokens</dfn> given a [=request=] |
         : [=trigger verification/id=]
         :: |metadata|'s [=request/Trigger Verification metadata/ids=][i]
     1. [=list/Append=] |triggerVerification| to |triggerVerifications|
-
 1. Return |triggerVerifications|
 
 
