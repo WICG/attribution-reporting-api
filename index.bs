@@ -1238,7 +1238,7 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
     ::  |eligibility|
 1. [=Fetch=] |request| with [=fetch/processResponse=] being
     [=process an attributionsrc response=] with |contextOrigin|, |eligibility|,
-    , |context| and |request|'s  [=request/Trigger Verification metadata=].
+    |context| and |request|'s  [=request/Trigger Verification metadata=].
 
 Issue: Audit other properties on |request| and set them properly.
 
@@ -1246,9 +1246,9 @@ Issue: Support header-processing on redirects.
 
 Issue: Check for transient activation with "<code>[=eligibility/navigation-source=]</code>".
 
-To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
-|contextOrigin|, an [=eligibility=] |eligibility|, and [=request/Trigger Verification metadata=] |triggerVerificationMetadata|,
-an [=environment settings objects=] |context| and a [=response=] |response|:
+To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=] |contextOrigin|,
+an [=eligibility=] |eligibility|, an [=environment settings objects=] |context|,
+a [=request/Trigger Verification metadata=] |triggerVerificationMetadata|, and a [=response=] |response|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
 1. Let |reportingOrigin| be |response|'s [=response/URL=]'s [=url/origin=].
@@ -2622,7 +2622,6 @@ an [=attribution trigger=] |trigger|:
     1. Set |reports|[i]'s  [=aggregatable report/report ID=] to |verifications|[i]'s [=trigger verification/id=].
     1. Set |reports|[i]'s [=aggregatable report/serialized private state token=] to |verifications|[i]'s [=trigger verification/token=].
 
-Issue: Assign the ID associated with the private state token to [=aggregatable report/report ID=].
 
 To <dfn>generate null reports and assign private state tokens</dfn> given an [=attribution trigger=] |trigger|
 and an optional [=aggregatable report=] <dfn for="generate null reports and assign private state tokens"><var>report</var></dfn> defaulting to null:
@@ -3031,11 +3030,6 @@ To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
 "<code><dfn>Sec-Attribution-Reporting-Private-State-Token</dfn></code>" is a
 header used to orchestrate Report Verification.
 
-<a href="https://httpwg.org/specs/rfc8941.html#list">List Structured Header</a>
-set on a [=request=] that contains masked messages encoded as base64 strings. It
-can also be set on a [=response=] by a Private State Token issuer in which it case
-it would contains masked tokens encoded as base64 strings.
-
 "<code><dfn>Sec-Private-State-Token-Crypto-Version</dfn></code>" is a
 cryptographic protocol version, VOPRF.
 
@@ -3043,10 +3037,8 @@ cryptographic protocol version, VOPRF.
 <h3 id="initiate-trigger-verification">Initiate trigger verification</h3>
 
 To <dfn noexport>set trigger verification headers</dfn> given a [=request=] |request|
-and an [=origin=] |contextOrigin|:
+and an [=suitable origin=] |destination|:
 
-1. If |contextOrigin| is not [=check if an origin is suitable|suitable=], return.
-1. Let |destination| be the result of [=obtaining a site=] from |contextOrigin|.
 1. Let |issuer| be |request|'s [=request/URL]'s [=url/origin=].
 1. If |issuer| is not [=check if an origin is suitable|suitable=], return.
 1. Let (|issuerKeys|,|pretokens|,|cryptoProtocolVersion|) be the result of [=looking up the key commitments=] for |issuer|.
