@@ -333,7 +333,9 @@ and its <dfn lt="eligible key">allowed keys</dfn> are:
 </dl>
 
 To <dfn>set Attribution Reporting headers</dfn> given a
-[=header list=] |headers|, an [=eligibility=] |eligibility| and a |url| [=request/URL=]:
+[=request=] |request| and [=eligibility=] |eligibility|:
+
+Let |headers| be |request|'s [=request/header list=].
 
 1. [=header list/Delete=] "<code>[=Attribution-Reporting-Eligible=]</code>" from
     |headers|.
@@ -353,15 +355,17 @@ To <dfn>set Attribution Reporting headers</dfn> given a
         true.
     : "<code>[=eligibility/trigger=]</code>"
     :: [=map/Set=] |dict|["<code>[=eligible key/trigger=]</code>"] to true.
-    :: [=Set trigger verification headers=] with |url|, |contextOrigin| and |headers|.
+    :: [=Set trigger verification headers=] with |request| and |contextOrigin|.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: [=map/Set=] |dict|["<code>[=eligible key/event-source=]</code>"] to
         true and [=map/set=] |dict|["<code>[=eligible key/trigger=]</code>"]
         to true.
-    :: [=Set trigger verification headers=] with |url|, |contextOrigin| and |headers|.
+    :: [=Set trigger verification headers=] with |request| and |contextOrigin|.
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Eligible=]</code>", |dict|) in |headers|.
 1. [=Set an OS-support header=] in |headers|.
+
+Issue: Set |contextOrigin| properly.
 
 <h3 id="monkeypatch-fetch">Fetch monkeypatches</h4>
 
@@ -373,10 +377,8 @@ After the step
 
 add the step
 
-1. [=Set Attribution Reporting headers=] with
-    |request|'s [=request/header list=], 
-    |request|'s [=request/Attribution Reporting eligibility=] and
-    |request|'s [=request/URL=].
+1. [=Set Attribution Reporting headers=] with |request| and |request|'s
+    [=request/Attribution Reporting eligibility=].
 
 Modify {{Request/constructor(input, init)}} as follows:
 
@@ -429,7 +431,7 @@ After the step:
 
 Add the step:
 
-1. [=Set Attribution Reporting headers=] with |req|'s [=request/header list=]
+1. [=Set Attribution Reporting headers=] with |req|
     and <a>this</a>'s <a href=#xmlhttprequest-eligibility>Attribution Reporting
     eligibility</a>.
 
@@ -1236,7 +1238,7 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
     ::  |eligibility|
 1. [=Fetch=] |request| with [=fetch/processResponse=] being
     [=process an attributionsrc response=] with |contextOrigin|, |eligibility|,
-    and |context|.
+    , |context| and |request|'s  [=request/Trigger Verification metadata=].
 
 Issue: Audit other properties on |request| and set them properly.
 
@@ -1245,8 +1247,8 @@ Issue: Support header-processing on redirects.
 Issue: Check for transient activation with "<code>[=eligibility/navigation-source=]</code>".
 
 To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
-|contextOrigin|, an [=eligibility=] |eligibility|, an
-[=environment settings objects=] |context|, and a [=response=] |response|:
+|contextOrigin|, an [=eligibility=] |eligibility|, and [=request/Trigger Verification metadata=] |triggerVerificationMetadata|,
+an [=environment settings objects=] |context| and a [=response=] |response|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
 1. Let |reportingOrigin| be |response|'s [=response/URL=]'s [=url/origin=].
@@ -1297,7 +1299,9 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
         1. If |triggerHeader| is not null:
             1. Let |destinationSite| be the result of [=obtaining a site=] from
                 |contextOrigin|.
-            1. Let |triggerVerifications| be the result of [=receiving trigger verification tokens=].
+            1. Let |triggerVerifications| be the result of [=receiving trigger verification tokens=] 
+                with |response|'s [=response/URL=], |response|'s [=header list/get=]
+                and |triggerVerificationMetadata|.
             1. Let |trigger| be the result of running
                 [=create an attribution trigger=] with |triggerHeader|
                 |destinationSite|, |reportingOrigin|, |triggerVerifications|, and
@@ -3038,12 +3042,12 @@ cryptographic protocol version, VOPRF.
 
 <h3 id="initiate-trigger-verification">Initiate trigger verification</h3>
 
-To <dfn noexport>set trigger verification headers</dfn> given an [=request/URL=]
-|issuerUrl|, an [=origin=] |contextOrigin| and a [=header list=] |headers|:
+To <dfn noexport>set trigger verification headers</dfn> given a [=request=] |request|
+and an [=origin=] |contextOrigin|:
 
 1. If |contextOrigin| is not [=check if an origin is suitable|suitable=], return.
 1. Let |destination| be the result of [=obtaining a site=] from |contextOrigin|.
-1. Let |issuer| be |issuerUrl|'s [=url/origin=].
+1. Let |issuer| be |request|'s [=request/URL]'s [=url/origin=].
 1. If |issuer| is not [=check if an origin is suitable|suitable=], return.
 1. Let (|issuerKeys|,|pretokens|,|cryptoProtocolVersion|) be the result of [=looking up the key commitments=] for |issuer|.
 1. If |issuerKeys| is null, return.
@@ -3062,9 +3066,11 @@ To <dfn noexport>set trigger verification headers</dfn> given an [=request/URL=]
     : [=request/Trigger Verification metadata/ids=]
     :: |ids|
 1. [=header list/Set a structured field value=] given
-    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", |base64encodedMaskedMessages|) in |headers|.
+    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", |base64encodedMaskedMessages|)
+    in |request|'s  [=request/header list=].
 1. [=header list/Set a structured field value=] given
-    ("<code>[=Sec-Private-State-Token-Crypto-Version=]</code>", |cryptoProtocolVersion|) in |headers|.
+    ("<code>[=Sec-Private-State-Token-Crypto-Version=]</code>", |cryptoProtocolVersion|)
+    in |request|'s  [=request/header list=].
 
 
 Issue: Link to a generating masked tokens algorithm that receive messages.
@@ -3072,12 +3078,13 @@ Issue: Link to a generating masked tokens algorithm that receive messages.
 
 <h3 id="handle-trigger-verification">Handle trigger verification</h3>
 
-To <dfn noexport>receive trigger verification tokens</dfn> given a [=request=] |request| and a [=response=] |response|:
+To <dfn noexport>receive trigger verification tokens</dfn>given an
+[=request/URL=] |issuerUrl|, a [=header list=] |headers| and a
+[=request/Trigger Verification metadata=]|metadata|:
 
-1. Let |metadata| be |request|'s [=request/Trigger Verification metadata=].
 1. If |metadata| is null, return a new [=list=].
 1. Let |pretokens| be |metadata|'s [=request/Trigger Verification metadata/pretokens=].
-1. Let |issuer| be |request|'s [=request/URL=]'s [=url/origin=].
+1. Let |issuer| be |issuerUrl|'s [=url/origin=].
 1. Let |issuerKeys be the result of [=looking up the key commitments=] for |issuer|.
 1. If |issuerKeys| is null, return a new [=list=].
 1. Let |base64encodedMaskedTokens| [=header list/Get a structured field value=] given
