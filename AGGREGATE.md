@@ -493,9 +493,6 @@ differential privacy. With small enough values of epsilon, reports for a given
 source will be well-protected in an aggregate release.
 
 Note: there are a few caveats about a formal differential privacy claim:
-- In the current design, the number of encrypted reports is revealed to the
-  reporting origin in the clear without any noise. See [Hide the true number of
-  attribution reports](#hide-the-true-number-of-attribution-reports).
 - The scope of privacy in the current design is not user-level, but per-source.
   See [More advanced contribution
   bounding](#more-advanced-contribution-bounding) for follow-up work exploring
