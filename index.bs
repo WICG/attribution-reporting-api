@@ -21,7 +21,12 @@ spec:html; type:element; text:script
 spec:html; type:dfn; text:feature separators
 spec:html; type:dfn; text:follow the hyperlink
 spec:html; type:dfn; text:navigation params
+spec:html; type:dfn; text:prepare the script element
+spec:html; type:dfn; text:script fetch options
+spec:html; type:dfn; text:set up the classic script request
+spec:html; type:dfn; text:set up the module script request
 spec:html; type:dfn; text:tokenize the features argument
+spec:html; type:dfn; text:update the image data
 spec:html; type:dfn; text:window open steps
 </pre>
 <pre class="anchors">
@@ -87,25 +92,17 @@ HTMLScriptElement includes HTMLAttributionSrcElementUtils;
 Add the following <a spec=html>content attributes</a>:
 
 : <{a}>
-:: `attributionsrc` - [=URL=] for attribution registration
+:: <dfn for="a" element-attr>attributionsrc</dfn> - A [=string=] containing
+    zero or more [=URLs=] to which a background attributionsrc request will be
+    made when the <{a}> is navigated.
 : <{img}>
-:: `attributionsrc` - [=URL=] for attribution registration
+:: <dfn for="img" element-attr>attributionsrc</dfn> - A [=string=] containing
+    zero or more [=URLs=] to which a background attributionsrc request will be
+    made when set.
 : <{script}>
-:: `attributionsrc` - [=URL=] for attribution registration
-
-Add the following content attribute descriptions:
-: <{a}>
-:: The <dfn for="a" element-attr>attributionsrc</dfn> attribute is a [=string=]
-    representing the [=URL=] of the resource that will register an
-    [=attribution source=] when the <{a}> is navigated.
-: <{img}>
-:: The <dfn for="img" element-attr>attributionsrc</dfn> attribute is a
-    [=string=] representing the [=URL=] of the resource that will register an
-    [=attribution source=] or [=attribution trigger=] when set.
-: <{script}>
-:: The <dfn for="script" element-attr>attributionsrc</dfn> attribute is a
-    [=string=] representing the [=URL=] of the resource that will register an
-    [=attribution source=] or [=attribution trigger=] when set.
+:: <dfn for="script" element-attr>attributionsrc</dfn> - A [=string=] containing
+    zero or more [=URLs=] to which a background attributionsrc request will be
+    made when set.
 
 The IDL attribute {{HTMLAttributionSrcElementUtils/attributionSrc}}
 must <a spec=html>reflect</a> the respective content attribute of the same
@@ -137,11 +134,49 @@ Whenever an <{img}> or a <{script}> |element| is created or |element|'s
 run [=make background attributionsrc requests=] with |element| and
 "<code>[=eligibility/event-source-or-trigger=]</code>".
 
-Issue: Monkeypatch <{img}> and <{script}> loading so that the presence of an
-{{HTMLAttributionSrcElementUtils/attributionSrc}} attribute sets the
-{{HTMLImageElement/src}} or {{HTMLScriptElement/src}} request's
-[=request/Attribution Reporting eligibility=] to
-"<code>[=eligibility/event-source-or-trigger=]</code>".
+Issue: More precisely specify which mutations are relevant for the
+attributionsrc attribute.
+
+Modify [=update the image data=] as follows:
+
+After the step
+
+> Set |request|'s [=request/priority=] to the current state...
+
+add the step
+
+1. If the element has an <{img/attributionsrc}> attribute, set
+    |request|'s [=request/Attribution Reporting Eligibility=] to
+    "<code>[=eligibility/event-source-or-trigger=]</code>".
+
+A [=script fetch options=] has an associated <dfn for="script fetch options">
+Attribution Reporting eligibility</dfn> (an [=eligibility=]). Unless otherwise
+stated it is "<code>[=eligibility/unset=]</code>".
+
+Modify [=prepare the script element=] as follows:
+
+After the step
+
+> Let <var ignore=''>fetch priority</var> be the current state of |el|'s <{script/fetchpriority}>
+> content attribute.
+
+add the step
+
+1. Let |Attribution Reporting eligibility| be
+    "<code>[=eligibility/event-source-or-trigger=]</code>" if |el| has an
+    <{script/attributionsrc}> content attribute and
+    "<code>[=eligibility/unset=]</code>" otherwise.
+
+Add "and [=script fetch options/Attribution Reporting eligibility=] is
+|Attribution Reporting eligibility|." to the step
+
+> Let <var ignore=''>options</var> be a [=script fetch options=] whose...
+
+Modify [=set up the classic script request=] and
+[=set up the module script request=] as follows:
+
+Add "and its [=request/Attribution Reporting eligibility=] is |options|'s
+[=script fetch options/Attribution Reporting eligibility=]."
 
 Modify [=follow the hyperlink=] as follows:
 
