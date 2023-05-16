@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/WICG/attribution-reporting-api/event_level_report.schema.json",
+  "title": "Event-Level Report",
+  "description": "An Attribution Reporting event-level report",
+  "type": "object",
+  "properties": {
+    "attribution_destination": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/destination"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/destination"
+          },
+          "minItems": 1,
+          "maxItems": 3
+        }
+      ]
+    },
+    "randomized_trigger_rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "report_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "scheduled_report_time": {
+      "$ref": "#/$defs/unsigned_base10_integer",
+      "description": "Seconds since the UNIX epoch"
+    },
+    "source_debug_key": {
+      "$ref": "#/$defs/unsigned_base10_integer",
+      "default": null
+    },
+    "source_event_id": {
+      "$ref": "#/$defs/unsigned_base10_integer"
+    },
+    "source_type": {
+      "enum": ["event", "navigation"]
+    },
+    "trigger_data": {
+      "$ref": "#/$defs/unsigned_base10_integer"
+    },
+    "trigger_debug_key": {
+      "$ref": "#/$defs/unsigned_base10_integer",
+      "default": null
+    }
+  },
+  "required": [
+    "attribution_destination",
+    "randomized_trigger_rate",
+    "report_id",
+    "scheduled_report_time",
+    "source_event_id",
+    "source_type",
+    "trigger_data"
+  ],
+
+  "$defs": {
+    "destination": {
+      "type": "string",
+      "$comment": "TODO: specify format"
+    },
+    "unsigned_base10_integer": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    }
+  }
+}
