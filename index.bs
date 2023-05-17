@@ -3068,9 +3068,76 @@ To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
 
 Issue: Fill in this section.
 
-# Privacy consideration # {#privacy-considerations}
+# Privacy considerations # {#privacy-considerations}
 
 The [=attribution caches=] contain data about a user's web activity. As such,
 the user agent MAY expose controls that allow the user to delete data from them.
 
-Issue: Fill in this section.
+Issue: Discuss general principles behind design decisions for the API.
+
+## Reporting-delay concerns ## {#reporting-delay-concerns}
+
+Sending reports some time after attribution occurs enables side-channel leakage
+in some situations.
+
+### Cross-network reporting-origin leakage ### {#cross-network-reporting-origin-leakage}
+
+A report may be *stored* while the browser is connected to one network but
+*sent* while the browser is connected to a different network, potentially
+enabling cross-network leakage of the reporting origin.
+
+Example: A user runs the browser with a particular browsing profile on their
+home network. An attribution report with a particular reporting origin is stored
+with a scheduled report time in the future. After the scheduled report time is
+reached, the user runs the browser with the same browsing profile on their
+employer's network, at which point the browser sends the report to the reporting
+origin. Although the report itself may be sent over HTTPS, the reporting origin
+may be visible to the network administrator via DNS. Some reporting origins may
+be known to operate only or primarily on sensitive sites, so this could leak
+information about the user's browsing activity to the user's employer without
+their knowledge or consent.
+
+Possible mitigations:
+
+1. Only send reports with a given reporting origin when the browser has already
+    made a request to that origin on the same network. This prevents the network
+    administrator from gaining additional information from the Attribution
+    Reporting API. However, it increases report loss and report delays, which
+    reduces the utility of the API for the reporting origin. It might also
+    increase the effectiveness of timing attacks, as the origin may be able to
+    better link the report with the user's request that triggered attribution.
+1. Send reports immediately: This reduces the likelihood of a report being
+    stored and sent on different networks. However, it increases the likelihood
+    that the reporting origin can correlate the original request made to the
+    reporting origin for attribution to the report, which weakens the
+    attribution-side privacy controls of the API. This destroys the formal
+    privacy guarantees for event-level reports.
+1. Use a trusted proxy server to send reports: This effectively moves the
+    reporting origin into the report body, so only the proxy server would be
+    visible to the network administrator.
+1. Require DNS over HTTPS: This effectively hides the reporting origin from the
+    network administrator, but is likely impractical to enforce and is itself
+    perhaps circumventable by the network administrator.
+
+### User-presence tracking ### {#user-presence-tracking}
+
+The browser only tries to send reports while it is running and while it has
+internet connectivity (even without an explicit check for connectivity,
+naturally the report will fail to be sent if there is none), so receiving or not
+receiving a report at the expected time leaks information about the user's
+presence. Additionally, because the report request inherently includes an IP
+address, this could reveal the user's IP-derived whereabouts to the reporting
+origin, including at-home vs. at-work or approximate real-world geolocation,
+or reveal patterns in the user's browsing activity.
+
+Possible mitigations:
+
+1. Send reports immediately: This effectively eliminates the presence tracking,
+    as the original request made to the reporting origin is in close temporal
+    proximity to the report request. However, it increases the likelihood that
+    the reporting origin can correlate the two requests, which weakens the
+    attribution-side privacy controls of the API.
+1. Send reports immediately to a trusted proxy server, which would itself send
+    the report to the reporting origin with additional delay. This would
+    effectively hide both the user's IP address and their online-offline
+    presence from the reporting origin.
