@@ -746,7 +746,16 @@ A human-readable <a href="http://www.w3.org/community/about/agreements/cla-deed/
      </ol>
     <li><a href="#cross-app-and-web"><span class="secno">13</span> <span class="content">Cross App and Web Algorithms</span></a>
     <li><a href="#security-considerations"><span class="secno">14</span> <span class="content">Security considerations</span></a>
-    <li><a href="#privacy-considerations"><span class="secno">15</span> <span class="content">Privacy consideration</span></a>
+    <li>
+     <a href="#privacy-considerations"><span class="secno">15</span> <span class="content">Privacy considerations</span></a>
+     <ol class="toc">
+      <li>
+       <a href="#reporting-delay-concerns"><span class="secno">15.1</span> <span class="content">Reporting-delay concerns</span></a>
+       <ol class="toc">
+        <li><a href="#cross-network-reporting-origin-leakage"><span class="secno">15.1.1</span> <span class="content">Cross-network reporting-origin leakage</span></a>
+        <li><a href="#user-presence-tracking"><span class="secno">15.1.2</span> <span class="content">User-presence tracking</span></a>
+       </ol>
+     </ol>
     <li>
      <a href="#w3c-conformance"><span class="secno"></span> <span class="content">Conformance</span></a>
      <ol class="toc">
@@ -1436,7 +1445,7 @@ of <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers
     <dd data-md>
      <p>Null or a non-negative 64-bit integer.</p>
    </dl>
-   <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="6.15" data-lt="Event-level report" data-noexport id="event-level-report"><span class="secno">6.15. </span><span class="content">Event-level report</span><a class="self-link" href="#event-level-report" id="ref-for-event-level-report①③"></a></h3>
+   <h3 class="heading settled dfn-paneled" data-dfn-type="dfn" data-level="6.15" data-lt="Event-level report" data-noexport id="event-level-report"><span class="secno">6.15. </span><span class="content">Event-level report</span><a class="self-link" href="#event-level-report" id="ref-for-event-level-report①④"></a></h3>
    <p>An event-level report is an <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report②">attribution report</a> with the following additional items:</p>
    <dl>
     <dt data-md><dfn class="dfn-paneled" data-dfn-for="event-level report" data-dfn-type="dfn" data-noexport id="event-level-report-event-id">event ID</dfn>
@@ -4578,10 +4587,78 @@ its allowed keys are the <a data-link-type="dfn" href="#registrar" id="ref-for-r
    </ol>
    <h2 class="heading settled" data-level="14" id="security-considerations"><span class="secno">14. </span><span class="content">Security considerations</span><a class="self-link" href="#security-considerations"></a></h2>
    <p class="issue" id="issue-5f2a0fce"><a class="self-link" href="#issue-5f2a0fce"></a> Fill in this section.</p>
-   <h2 class="heading settled" data-level="15" id="privacy-considerations"><span class="secno">15. </span><span class="content">Privacy consideration</span><a class="self-link" href="#privacy-considerations"></a></h2>
+   <h2 class="heading settled" data-level="15" id="privacy-considerations"><span class="secno">15. </span><span class="content">Privacy considerations</span><a class="self-link" href="#privacy-considerations"></a></h2>
    <p>The <a data-link-type="dfn" href="#attribution-caches" id="ref-for-attribution-caches①">attribution caches</a> contain data about a user’s web activity. As such,
 the user agent MAY expose controls that allow the user to delete data from them.</p>
-   <p class="issue" id="issue-5f2a0fce①"><a class="self-link" href="#issue-5f2a0fce①"></a> Fill in this section.</p>
+   <p class="issue" id="issue-72cc7c1e"><a class="self-link" href="#issue-72cc7c1e"></a> Discuss general principles behind design decisions for the API.</p>
+   <h3 class="heading settled" data-level="15.1" id="reporting-delay-concerns"><span class="secno">15.1. </span><span class="content">Reporting-delay concerns</span><a class="self-link" href="#reporting-delay-concerns"></a></h3>
+   <p>Sending reports some time after attribution occurs enables side-channel leakage
+in some situations.</p>
+   <h4 class="heading settled" data-level="15.1.1" id="cross-network-reporting-origin-leakage"><span class="secno">15.1.1. </span><span class="content">Cross-network reporting-origin leakage</span><a class="self-link" href="#cross-network-reporting-origin-leakage"></a></h4>
+   <p>A report may be <em>stored</em> while the browser is connected to one network but <em>sent</em> while the browser is connected to a different network, potentially
+enabling cross-network leakage of the reporting origin.</p>
+   <p>Example: A user runs the browser with a particular browsing profile on their
+home network. An attribution report with a particular reporting origin is stored
+with a scheduled report time in the future. After the scheduled report time is
+reached, the user runs the browser with the same browsing profile on their
+employer’s network, at which point the browser sends the report to the reporting
+origin. Although the report itself may be sent over HTTPS, the reporting origin
+may be visible to the network administrator via DNS or the TLS client hello
+(which can be mitigated with <a href="https://datatracker.ietf.org/doc/html/draft-ietf-tls-esni">ECH</a>).
+Some reporting origins may be known to operate only or primarily on sensitive sites,
+so this could leak information about the user’s browsing activity to the user’s
+employer without their knowledge or consent.</p>
+   <p>Possible mitigations:</p>
+   <ol>
+    <li data-md>
+     <p>Only send reports with a given reporting origin when the browser has already
+made a request to that origin on the same network. This prevents the network
+administrator from gaining additional information from the Attribution
+Reporting API. However, it increases report loss and report delays, which
+reduces the utility of the API for the reporting origin. It might also
+increase the effectiveness of timing attacks, as the origin may be able to
+better link the report with the user’s request that allowed the report to be released.</p>
+    <li data-md>
+     <p>Send reports immediately: This reduces the likelihood of a report being
+stored and sent on different networks. However, it increases the likelihood
+that the reporting origin can correlate the original request made to the
+reporting origin for attribution to the report, which weakens the
+attribution-side privacy controls of the API. In particular, 
+this destroys the differential privacy framework we have
+for event-level reports.</p>
+    <li data-md>
+     <p>Use a trusted proxy server to send reports: This effectively moves the
+reporting origin into the report body, so only the proxy server would be
+visible to the network administrator.</p>
+    <li data-md>
+     <p>Require <a href="https://datatracker.ietf.org/doc/html/rfc8484">DNS over HTTPS</a>:
+This effectively hides the reporting origin from the network administrator, but is
+likely impractical to enforce and is itself perhaps circumventable by the network
+administrator.</p>
+   </ol>
+   <h4 class="heading settled" data-level="15.1.2" id="user-presence-tracking"><span class="secno">15.1.2. </span><span class="content">User-presence tracking</span><a class="self-link" href="#user-presence-tracking"></a></h4>
+   <p>The browser only tries to send reports while it is running and while it has
+internet connectivity (even without an explicit check for connectivity,
+naturally the report will fail to be sent if there is none), so receiving or not
+receiving an <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report①③">event-level report</a> at the expected time leaks information about the user’s
+presence. Additionally, because the report request inherently includes an IP
+address, this could reveal the user’s IP-derived whereabouts to the reporting
+origin, including at-home vs. at-work or approximate real-world geolocation,
+or reveal patterns in the user’s browsing activity.</p>
+   <p>Possible mitigations:</p>
+   <ol>
+    <li data-md>
+     <p>Send reports immediately: This effectively eliminates the presence tracking,
+as the original request made to the reporting origin is in close temporal
+proximity to the report request. However, it increases the likelihood that
+the reporting origin can correlate the two requests, which weakens the
+attribution-side privacy controls of the API.</p>
+    <li data-md>
+     <p>Send reports immediately to a trusted proxy server, which would itself send
+the report to the reporting origin with additional delay. This would
+effectively hide both the user’s IP address and their online-offline
+presence from the reporting origin.</p>
+   </ol>
   </main>
   <div data-fill-with="conformance">
    <h2 class="no-ref no-num heading settled" id="w3c-conformance"><span class="content">Conformance</span><a class="self-link" href="#w3c-conformance"></a></h2>
@@ -5378,7 +5455,7 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
    <div class="issue"> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/attribution-reporting-api/issues/220">[Issue #220]</a> <a class="issue-return" href="#issue-c8706ee1" title="Jump to section">↵</a></div>
    <div class="issue"> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/attribution-reporting-api/issues/220">[Issue #220]</a> <a class="issue-return" href="#issue-c8706ee1①" title="Jump to section">↵</a></div>
    <div class="issue"> Fill in this section. <a class="issue-return" href="#issue-5f2a0fce" title="Jump to section">↵</a></div>
-   <div class="issue"> Fill in this section. <a class="issue-return" href="#issue-5f2a0fce①" title="Jump to section">↵</a></div>
+   <div class="issue"> Discuss general principles behind design decisions for the API. <a class="issue-return" href="#issue-72cc7c1e" title="Jump to section">↵</a></div>
   </div>
 <script>/* script-dfn-panel */
 "use strict";
@@ -5797,7 +5874,7 @@ window.dfnpanelData['attribution-report-delivered'] = {"dfnID": "attribution-rep
 window.dfnpanelData['attribution-report-report-id'] = {"dfnID": "attribution-report-report-id", "url": "#attribution-report-report-id", "dfnText": "report ID", "refSections": [{"refs": [{"id": "ref-for-attribution-report-report-id"}], "title": "11.13. Obtaining an event-level report"}, {"refs": [{"id": "ref-for-attribution-report-report-id\u2460"}], "title": "11.15. Obtaining an aggregatable report"}, {"refs": [{"id": "ref-for-attribution-report-report-id\u2461"}, {"id": "ref-for-attribution-report-report-id\u2462"}], "title": "11.16. Generating randomized null reports"}, {"refs": [{"id": "ref-for-attribution-report-report-id\u2463"}], "title": "12.3. Obtaining an aggregatable report\u2019s shared info"}, {"refs": [{"id": "ref-for-attribution-report-report-id\u2464"}], "title": "12.5. Serialize attribution report body"}], "external": false};
 window.dfnpanelData['attribution-report-source-debug-key'] = {"dfnID": "attribution-report-source-debug-key", "url": "#attribution-report-source-debug-key", "dfnText": "source debug key", "refSections": [{"refs": [{"id": "ref-for-attribution-report-source-debug-key"}], "title": "11.9. Triggering event-level attribution"}, {"refs": [{"id": "ref-for-attribution-report-source-debug-key\u2460"}], "title": "11.10. Triggering aggregatable attribution"}, {"refs": [{"id": "ref-for-attribution-report-source-debug-key\u2461"}], "title": "11.13. Obtaining an event-level report"}, {"refs": [{"id": "ref-for-attribution-report-source-debug-key\u2462"}], "title": "11.15. Obtaining an aggregatable report"}, {"refs": [{"id": "ref-for-attribution-report-source-debug-key\u2463"}], "title": "11.16. Generating randomized null reports"}, {"refs": [{"id": "ref-for-attribution-report-source-debug-key\u2464"}], "title": "12.2. Obtaining an aggregatable report\u2019s debug mode"}, {"refs": [{"id": "ref-for-attribution-report-source-debug-key\u2465"}, {"id": "ref-for-attribution-report-source-debug-key\u2466"}, {"id": "ref-for-attribution-report-source-debug-key\u2467"}, {"id": "ref-for-attribution-report-source-debug-key\u2468"}], "title": "12.5. Serialize attribution report body"}], "external": false};
 window.dfnpanelData['attribution-report-trigger-debug-key'] = {"dfnID": "attribution-report-trigger-debug-key", "url": "#attribution-report-trigger-debug-key", "dfnText": "trigger debug key", "refSections": [{"refs": [{"id": "ref-for-attribution-report-trigger-debug-key"}], "title": "11.9. Triggering event-level attribution"}, {"refs": [{"id": "ref-for-attribution-report-trigger-debug-key\u2460"}], "title": "11.10. Triggering aggregatable attribution"}, {"refs": [{"id": "ref-for-attribution-report-trigger-debug-key\u2461"}], "title": "11.13. Obtaining an event-level report"}, {"refs": [{"id": "ref-for-attribution-report-trigger-debug-key\u2462"}], "title": "11.15. Obtaining an aggregatable report"}, {"refs": [{"id": "ref-for-attribution-report-trigger-debug-key\u2463"}], "title": "11.16. Generating randomized null reports"}, {"refs": [{"id": "ref-for-attribution-report-trigger-debug-key\u2464"}], "title": "12.2. Obtaining an aggregatable report\u2019s debug mode"}, {"refs": [{"id": "ref-for-attribution-report-trigger-debug-key\u2465"}, {"id": "ref-for-attribution-report-trigger-debug-key\u2466"}, {"id": "ref-for-attribution-report-trigger-debug-key\u2467"}, {"id": "ref-for-attribution-report-trigger-debug-key\u2468"}], "title": "12.5. Serialize attribution report body"}], "external": false};
-window.dfnpanelData['event-level-report'] = {"dfnID": "event-level-report", "url": "#event-level-report", "dfnText": "6.15. Event-level report", "refSections": [{"refs": [{"id": "ref-for-event-level-report"}], "title": "5. Clear Site Data integration"}, {"refs": [{"id": "ref-for-event-level-report\u2460"}], "title": "6.7. Attribution source"}, {"refs": [{"id": "ref-for-event-level-report"}], "title": "6.15. Event-level report"}, {"refs": [{"id": "ref-for-event-level-report\u2461"}], "title": "7. Storage"}, {"refs": [{"id": "ref-for-event-level-report\u2462"}, {"id": "ref-for-event-level-report\u2463"}, {"id": "ref-for-event-level-report\u2464"}, {"id": "ref-for-event-level-report\u2465"}], "title": "8. Vendor-Specific Values"}, {"refs": [{"id": "ref-for-event-level-report\u2466"}], "title": "11.8. Obtaining debug data on trigger registration"}, {"refs": [{"id": "ref-for-event-level-report\u2467"}], "title": "11.13. Obtaining an event-level report"}, {"refs": [{"id": "ref-for-event-level-report\u2468"}, {"id": "ref-for-event-level-report\u2460\u24ea"}], "title": "12.5. Serialize attribution report body"}, {"refs": [{"id": "ref-for-event-level-report\u2460\u2460"}], "title": "12.7. Get report request URL"}, {"refs": [{"id": "ref-for-event-level-report\u2460\u2461"}], "title": "12.10. Issuing a report request"}], "external": false};
+window.dfnpanelData['event-level-report'] = {"dfnID": "event-level-report", "url": "#event-level-report", "dfnText": "6.15. Event-level report", "refSections": [{"refs": [{"id": "ref-for-event-level-report"}], "title": "5. Clear Site Data integration"}, {"refs": [{"id": "ref-for-event-level-report\u2460"}], "title": "6.7. Attribution source"}, {"refs": [{"id": "ref-for-event-level-report"}], "title": "6.15. Event-level report"}, {"refs": [{"id": "ref-for-event-level-report\u2461"}], "title": "7. Storage"}, {"refs": [{"id": "ref-for-event-level-report\u2462"}, {"id": "ref-for-event-level-report\u2463"}, {"id": "ref-for-event-level-report\u2464"}, {"id": "ref-for-event-level-report\u2465"}], "title": "8. Vendor-Specific Values"}, {"refs": [{"id": "ref-for-event-level-report\u2466"}], "title": "11.8. Obtaining debug data on trigger registration"}, {"refs": [{"id": "ref-for-event-level-report\u2467"}], "title": "11.13. Obtaining an event-level report"}, {"refs": [{"id": "ref-for-event-level-report\u2468"}, {"id": "ref-for-event-level-report\u2460\u24ea"}], "title": "12.5. Serialize attribution report body"}, {"refs": [{"id": "ref-for-event-level-report\u2460\u2460"}], "title": "12.7. Get report request URL"}, {"refs": [{"id": "ref-for-event-level-report\u2460\u2461"}], "title": "12.10. Issuing a report request"}, {"refs": [{"id": "ref-for-event-level-report\u2460\u2462"}], "title": "15.1.2. User-presence tracking"}], "external": false};
 window.dfnpanelData['event-level-report-event-id'] = {"dfnID": "event-level-report-event-id", "url": "#event-level-report-event-id", "dfnText": "event ID", "refSections": [{"refs": [{"id": "ref-for-event-level-report-event-id"}], "title": "11.13. Obtaining an event-level report"}, {"refs": [{"id": "ref-for-event-level-report-event-id\u2460"}], "title": "12.5. Serialize attribution report body"}], "external": false};
 window.dfnpanelData['event-level-report-source-type'] = {"dfnID": "event-level-report-source-type", "url": "#event-level-report-source-type", "dfnText": "source type", "refSections": [{"refs": [{"id": "ref-for-event-level-report-source-type"}], "title": "12.5. Serialize attribution report body"}], "external": false};
 window.dfnpanelData['event-level-report-trigger-data'] = {"dfnID": "event-level-report-trigger-data", "url": "#event-level-report-trigger-data", "dfnText": "trigger data", "refSections": [{"refs": [{"id": "ref-for-event-level-report-trigger-data"}], "title": "11.13. Obtaining an event-level report"}, {"refs": [{"id": "ref-for-event-level-report-trigger-data\u2460"}], "title": "12.5. Serialize attribution report body"}], "external": false};
@@ -5869,7 +5946,7 @@ window.dfnpanelData['attribution-source-cache'] = {"dfnID": "attribution-source-
 window.dfnpanelData['event-level-report-cache'] = {"dfnID": "event-level-report-cache", "url": "#event-level-report-cache", "dfnText": "event-level report cache", "refSections": [{"refs": [{"id": "ref-for-event-level-report-cache"}, {"id": "ref-for-event-level-report-cache\u2460"}], "title": "5. Clear Site Data integration"}, {"refs": [{"id": "ref-for-event-level-report-cache\u2461"}], "title": "8. Vendor-Specific Values"}, {"refs": [{"id": "ref-for-event-level-report-cache\u2462"}], "title": "10.3. Processing an attribution source"}, {"refs": [{"id": "ref-for-event-level-report-cache\u2463"}, {"id": "ref-for-event-level-report-cache\u2464"}, {"id": "ref-for-event-level-report-cache\u2465"}, {"id": "ref-for-event-level-report-cache\u2466"}], "title": "11.9. Triggering event-level attribution"}, {"refs": [{"id": "ref-for-event-level-report-cache\u2467"}], "title": "12. Report delivery"}, {"refs": [{"id": "ref-for-event-level-report-cache\u2468"}], "title": "12.10. Issuing a report request"}], "external": false};
 window.dfnpanelData['aggregatable-report-cache'] = {"dfnID": "aggregatable-report-cache", "url": "#aggregatable-report-cache", "dfnText": "aggregatable report cache", "refSections": [{"refs": [{"id": "ref-for-aggregatable-report-cache"}, {"id": "ref-for-aggregatable-report-cache\u2460"}], "title": "5. Clear Site Data integration"}, {"refs": [{"id": "ref-for-aggregatable-report-cache\u2461"}], "title": "8. Vendor-Specific Values"}, {"refs": [{"id": "ref-for-aggregatable-report-cache\u2462"}, {"id": "ref-for-aggregatable-report-cache\u2463"}], "title": "11.10. Triggering aggregatable attribution"}, {"refs": [{"id": "ref-for-aggregatable-report-cache\u2464"}, {"id": "ref-for-aggregatable-report-cache\u2465"}], "title": "11.16. Generating randomized null reports"}, {"refs": [{"id": "ref-for-aggregatable-report-cache\u2466"}], "title": "12. Report delivery"}, {"refs": [{"id": "ref-for-aggregatable-report-cache\u2467"}], "title": "12.10. Issuing a report request"}], "external": false};
 window.dfnpanelData['attribution-rate-limit-cache'] = {"dfnID": "attribution-rate-limit-cache", "url": "#attribution-rate-limit-cache", "dfnText": "attribution rate-limit cache", "refSections": [{"refs": [{"id": "ref-for-attribution-rate-limit-cache"}], "title": "5. Clear Site Data integration"}, {"refs": [{"id": "ref-for-attribution-rate-limit-cache\u2460"}, {"id": "ref-for-attribution-rate-limit-cache\u2461"}, {"id": "ref-for-attribution-rate-limit-cache\u2462"}, {"id": "ref-for-attribution-rate-limit-cache\u2463"}], "title": "10.3. Processing an attribution source"}, {"refs": [{"id": "ref-for-attribution-rate-limit-cache\u2464"}], "title": "11.3. Should attribution be blocked by attribution rate limit"}, {"refs": [{"id": "ref-for-attribution-rate-limit-cache\u2465"}], "title": "11.4. Should processing be blocked by reporting-origin limit"}, {"refs": [{"id": "ref-for-attribution-rate-limit-cache\u2466"}, {"id": "ref-for-attribution-rate-limit-cache\u2467"}], "title": "11.11. Triggering attribution"}], "external": false};
-window.dfnpanelData['attribution-caches'] = {"dfnID": "attribution-caches", "url": "#attribution-caches", "dfnText": "attribution caches", "refSections": [{"refs": [{"id": "ref-for-attribution-caches"}], "title": "7. Storage"}, {"refs": [{"id": "ref-for-attribution-caches\u2460"}], "title": "15. Privacy consideration"}], "external": false};
+window.dfnpanelData['attribution-caches'] = {"dfnID": "attribution-caches", "url": "#attribution-caches", "dfnText": "attribution caches", "refSections": [{"refs": [{"id": "ref-for-attribution-caches"}], "title": "7. Storage"}, {"refs": [{"id": "ref-for-attribution-caches\u2460"}], "title": "15. Privacy considerations"}], "external": false};
 window.dfnpanelData['max-source-expiry'] = {"dfnID": "max-source-expiry", "url": "#max-source-expiry", "dfnText": "Max source expiry", "refSections": [{"refs": [{"id": "ref-for-max-source-expiry"}], "title": "10.2. Parsing source-registration JSON"}, {"refs": [{"id": "ref-for-max-source-expiry\u2460"}], "title": "11.16. Generating randomized null reports"}], "external": false};
 window.dfnpanelData['max-entries-per-filter-data'] = {"dfnID": "max-entries-per-filter-data", "url": "#max-entries-per-filter-data", "dfnText": "Max entries per filter data", "refSections": [{"refs": [{"id": "ref-for-max-entries-per-filter-data"}], "title": "9.3. Parsing filter data"}], "external": false};
 window.dfnpanelData['max-values-per-filter-data-entry'] = {"dfnID": "max-values-per-filter-data-entry", "url": "#max-values-per-filter-data-entry", "dfnText": "Max values per filter data entry", "refSections": [{"refs": [{"id": "ref-for-max-values-per-filter-data-entry"}], "title": "9.3. Parsing filter data"}], "external": false};
