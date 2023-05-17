@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/WICG/attribution-reporting-api/source.schema.json",
+  "title": "Source",
+  "description": "An Attribution Reporting source registration",
+  "type": "object",
+  "properties": {
+    "aggregatable_report_window": {
+      "$ref": "#/$defs/signed_duration_in_seconds"
+    },
+    "aggregation_keys": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/hex128"
+      },
+      "maxProperties": 20,
+      "default": {}
+    },
+    "debug_key": {
+      "$ref": "#/$defs/unsigned_base10_integer",
+      "default": null
+    },
+    "debug_reporting": {
+      "type": "boolean",
+      "default": false
+    },
+    "destination": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/destination"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/destination"
+          },
+          "minItems": 1,
+          "maxItems": 3
+        }
+      ]
+    },
+    "event_report_window": {
+      "$ref": "#/$defs/signed_duration_in_seconds"
+    },
+    "expiry": {
+      "$ref": "#/$defs/signed_duration_in_seconds"
+    },
+    "filter_data": {
+      "type": "object",
+      "propertyNames": {
+        "not": {
+          "const": "source_type"
+        }
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 50
+      },
+      "maxProperties": 50,
+      "default": {}
+    },
+    "priority": {
+      "$ref": "#/$defs/signed_base10_integer",
+      "default": "0"
+    },
+    "source_event_id": {
+      "$ref": "#/$defs/unsigned_base10_integer",
+      "default": "0"
+    }
+  },
+  "required": ["destination"],
+
+  "$defs": {
+    "destination": {
+      "type": "string",
+      "$comment": "TODO: specify format"
+    },
+    "hex128": {
+      "type": "string",
+      "pattern": "^0[xX][0-9a-fA-F]{1,32}$"
+    },
+    "signed_base10_integer": {
+      "type": "string",
+      "pattern": "^-?[0-9]+$"
+    },
+    "signed_duration_in_seconds": {
+      "$ref": "#/$defs/signed_base10_integer",
+      "description": "Seconds",
+      "default": "2592000"
+    },
+    "unsigned_base10_integer": {
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    }
+  }
+}
