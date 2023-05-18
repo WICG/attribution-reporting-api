@@ -354,13 +354,6 @@ and its <dfn lt="eligible key">allowed keys</dfn> are:
 
 </dl>
 
-To <dfn>get the list of greased eligible keys</dfn>:
-
-1. Let |greasedKeys| be a new [=list=].
-1. For each [=eligible key=] |key|, [=list/append=] the
-    [=string/concatenation=] of « "`not-`", |key| » to |greasedKeys|.
-1. Return |greasedKeys|.
-
 To <dfn>set Attribution Reporting headers</dfn> given a
 [=header list=] |headers| and an [=eligibility=] |eligibility|:
 
@@ -384,18 +377,18 @@ To <dfn>set Attribution Reporting headers</dfn> given a
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
         "<code>[=eligible key/trigger=]</code>" to |keys|.
-1. Let |greasedKeys| be
-    [=get the list of greased eligible keys|the greased eligible keys=].
-1. [=list/iterate|For each=] |key| of |greasedKeys|, optionally [=list/append=]
-    |key| to |keys|.
+1. For each [=eligible key=] |key|, optionally [=list/append=] the
+    [=string/concatenation=] of « "`not-`", |key| » to |keys|.
 1. Optionally, [=shuffle a list|shuffle=] |keys|.
 1. Let |entries| be a new [=list=].
 1. [=list/iterate|For each=] |key| of |keys|:
     1. Let |value| be true.
-    1. Optionally, set |value| to a <a href="https://httpwg.org/specs/rfc8941.html#token">token</a> corresponding to one of the |greasedKeys|.
+    1. Optionally, set |value| to a
+        <a href="https://httpwg.org/specs/rfc8941.html#token">token</a>
+        corresponding to one of the [=eligible keys=].
     1. Let |params| be an empty [=map=].
-    1. [=list/iterate|For each=] |greasedKey| of |greasedKeys|, optionally
-        set |params|[|greasedKey|] to an arbitrary
+    1. For each [=eligible key=] |key|, optionally set |params|[|key|] to an
+        arbitrary
         <a href="https://httpwg.org/specs/rfc8941.html#item">bare item</a>.
     1. [=list/Append=] a structured dictionary member with the key |key|, the
         value |value|, and the parameters |params| to |entries|.
@@ -411,12 +404,17 @@ Note: The user agent MAY
 according to the preceding algorithm to help ensure that recipients
 use a proper structured header parser, rather than naive string equality or
 `contains` operations, which makes it easier to introduce backwards-compatible
-changes to the header definition in the future. Likewise, shuffling the
-dictionary members helps ensure that, e.g., "`event-source, trigger`" is
-treated equivalently to "`trigger, event-source`".
+changes to the header definition in the future. Including the [=eligible keys=]
+as dictionary *values* or *parameters* helps ensure that only the dictionary's
+keys are interpreted by the recipient. Likewise, shuffling the dictionary
+members helps ensure that, e.g., "`event-source, trigger`" is treated
+equivalently to "`trigger, event-source`".
+
+In the following example, only the "`trigger`" key should be interpreted by the
+recipient after the header has been parsed as a structured dictionary:
 
 <pre class="example" heading="Greased Attribution-Reporting-Eligible header">
-Attribution-Reporting-Eligible: not-event-source, trigger=not-event-source;not-event-source=3
+Attribution-Reporting-Eligible: not-event-source, trigger=event-source;navigation-source=3
 </pre>
 
 <h3 id="monkeypatch-fetch">Fetch monkeypatches</h4>
