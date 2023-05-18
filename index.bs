@@ -354,6 +354,13 @@ and its <dfn lt="eligible key">allowed keys</dfn> are:
 
 </dl>
 
+To <dfn>get the list of greased eligible keys</dfn>:
+
+1. Let |greasedKeys| be a new [=list=].
+1. For each [=eligible key=] |key|, [=list/append=] the
+    [=string/concatenation=] of « "`not-`", |key| » to |greasedKeys|.
+1. Return |greasedKeys|.
+
 To <dfn>set Attribution Reporting headers</dfn> given a
 [=header list=] |headers| and an [=eligibility=] |eligibility|:
 
@@ -362,26 +369,55 @@ To <dfn>set Attribution Reporting headers</dfn> given a
 1. [=header list/Delete=] "<code>[=Attribution-Reporting-Support=]</code>" from
     |headers|.
 1. If |eligibility| is "<code>[=eligibility/unset=]</code>", return.
-1. Let |dict| be an [=ordered map=].
+1. Let |keys| be a [=list=].
 1. If |eligibility| is:
     <dl class="switch">
     : "<code>[=eligibility/empty=]</code>"
     :: Do nothing.
     : "<code>[=eligibility/event-source=]</code>"
-    :: [=map/Set=] |dict|["<code>[=eligible key/event-source=]</code>"] to
-        true.
+    :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" to |keys|.
     : "<code>[=eligibility/navigation-source=]</code>"
-    :: [=map/Set=] |dict|["<code>[=eligible key/navigation-source=]</code>"] to
-        true.
+    :: [=list/Append=] "<code>[=eligible key/navigation-source=]</code>" to
+        |keys|.
     : "<code>[=eligibility/trigger=]</code>"
-    :: [=map/Set=] |dict|["<code>[=eligible key/trigger=]</code>"] to true.
+    :: [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
-    :: [=map/Set=] |dict|["<code>[=eligible key/event-source=]</code>"] to
-        true and [=map/set=] |dict|["<code>[=eligible key/trigger=]</code>"]
-        to true.
+    :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
+        "<code>[=eligible key/trigger=]</code>" to |keys|.
+1. Let |greasedKeys| be
+    [=get the list of greased eligible keys|the greased eligible keys=].
+1. [=list/iterate|For each=] |key| of |greasedKeys|, optionally [=list/append=]
+    |key| to |keys|.
+1. Optionally, [=shuffle a list|shuffle=] |keys|.
+1. Let |entries| be a new [=list=].
+1. [=list/iterate|For each=] |key| of |keys|:
+    1. Let |value| be true.
+    1. Optionally, set |value| to a <a href="https://httpwg.org/specs/rfc8941.html#token">token</a> corresponding to one of the |greasedKeys|.
+    1. Let |params| be an empty [=map=].
+    1. [=list/iterate|For each=] |greasedKey| of |greasedKeys|, optionally
+        set |params|[|greasedKey|] to an arbitrary
+        <a href="https://httpwg.org/specs/rfc8941.html#item">bare item</a>.
+    1. [=list/Append=] a structured dictionary member with the key |key|, the
+        value |value|, and the parameters |params| to |entries|.
+1. Let |dict| be a
+    <a href="https://httpwg.org/specs/rfc8941.html#dictionary">dictionary</a>
+    containing |entries|.
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Eligible=]</code>", |dict|) in |headers|.
 1. [=Set an OS-support header=] in |headers|.
+
+Note: The user agent MAY
+<a href="https://httpwg.org/specs/rfc8941.html#specify">"grease"</a> this header
+according to the preceding algorithm to help ensure that recipients
+use a proper structured header parser, rather than naive string equality or
+`contains` operations, which makes it easier to introduce backwards-compatible
+changes to the header definition in the future. Likewise, shuffling the
+dictionary members helps ensure that, e.g., "`event-source, trigger`" is
+treated equivalently to "`trigger, event-source`".
+
+<pre class="example" heading="Greased Attribution-Reporting-Eligible header">
+Attribution-Reporting-Eligible: not-event-source, trigger=not-event-source;not-event-source=3
+</pre>
 
 <h3 id="monkeypatch-fetch">Fetch monkeypatches</h4>
 
