@@ -943,6 +943,16 @@ any one reporting origin.
 Strawman: 100 distinct destination sites per-{source site, reporting origin},
 applied to all unexpired sources regardless of type at source time.
 
+#### Limiting the number of unique destinations per source site
+
+To further reduce the possibility of a history reconstruction attack, the browser can also limit the number of `destination` eTLD+1s represented by source-sites.
+
+Strawman: 200 distinct destination sites per-{source site, 1 minute}
+
+Additionally, to prevent one origin from using up the budget in the limit above, the browser can also limit the number of `destination` eTLD+1s per reporting origin.
+
+Strawman: 50 distinct destination sites per-{source site, reporting origin, 1 minute}
+
 ### Differential privacy
 
 A goal of this work is to create a framework that would support making
