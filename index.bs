@@ -1592,7 +1592,7 @@ To <dfn>check if an [=attribution source=] exceeds the time-based destination li
 1. Let |sameReportingDestinations| be the [=set=] of every [=attribution rate-limit record/attribution destination=] in |matchingSameReportingSources|,
     [=set/union|unioned=] with |source|'s [=attribution source/attribution destinations=].
 1. Let |hitRateLimit| be whether |destinations|'s [=set/size=] is greater than [=max destinations per rate-limit window=][0].
-1. Let |hitSameReportingRateLimit| be whether |sameReportingDestinations|'s [=set/size=] is greater than [=max destinations per rate-limit window=].
+1. Let |hitSameReportingRateLimit| be whether |sameReportingDestinations|'s [=set/size=] is greater than [=max destinations per rate-limit window=][1].
 1. If (|hitRateLimit|, |hitSameReportingRateLimit|) is
     <dl class="switch">
     : (false, false)
@@ -1606,9 +1606,9 @@ To <dfn>check if an [=attribution source=] exceeds the time-based destination li
 
     </dl>
 
-Note: We do not emit an [=attribution debug report=] for "<code>[=destination rate-limit result/hit global limit=]</code>",
-so when both limits are hit, just interpret it as "<code>[=destination rate-limit result/hit reporting limit=]</code>" to ensure
-that report is sent.
+Note: We do not emit an explicit [=source debug data type=] for "<code>[=destination rate-limit result/hit global limit=]</code>",
+we only emit a [=source debug data type/source-success=] type. For this reason, when both limits are hit, just interpret
+it as "<code>[=destination rate-limit result/hit reporting limit=]</code>" to ensure that the most useful report is sent.
 
 To <dfn>check if an [=attribution source=] exceeds the unexpired destination limit</dfn> given an
 [=attribution source=] |source|, run the following steps:
@@ -1675,6 +1675,7 @@ and a [=suitable origin=] |reportingOrigin|:
 1. If |dataType| is:
     <dl class="switch">
     : "<code>[=source debug data type/source-destination-limit=]</code>"
+    : "<code>[=source debug data type/source-destination-rate-limit=]</code>"
     :: Return <strong>allowed</strong>.
     : "<code>[=source debug data type/source-noised=]</code>"
     : "<code>[=source debug data type/source-storage-limit=]</code>"
@@ -1704,6 +1705,9 @@ To <dfn>obtain and deliver a debug report on source registration</dfn> given a
     <dl class="switch">
     : "<code>[=source debug data type/source-destination-limit=]</code>"
     :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations covered by unexpired sources=],
+         [=serialize an integer|serialized=].
+    : "<code>[=source debug data type/source-destination-rate-limit=]</code>"
+    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations per rate-limit window=][1],
          [=serialize an integer|serialized=].
     : "<code>[=source debug data type/source-storage-limit=]</code>"
     :: [=map/Set=] |body|["`limit`"] to the user agent's [=max pending sources per source origin=],
