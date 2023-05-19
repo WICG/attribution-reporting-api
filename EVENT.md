@@ -868,7 +868,7 @@ To limit the amount of user identity leakage between a <source site,
 destination site> pair, the browser should throttle the amount of total information
 sent through this API in a given time period for a user. The browser should set
 a maximum number of attributions per
-<source site, destination site, reporting origin, user> tuple per time period. If this
+<source site, destination site, reporting site, user> tuple per time period. If this
 threshold is hit, the browser will stop scheduling reports the API for the
 rest of the time period for attributions matching that tuple.
 
@@ -876,13 +876,13 @@ The longer the cooldown windows are, the harder it is to abuse the API and join
 identity. Ideally attribution thresholds should be low enough to avoid leaking too
 much information, with cooldown windows as long as practically possible.
 
-Note that splitting these limits by the reporting origin introduces a possible
-leak when multiple origins collude with each other. However, the alternative
-makes it very difficult to adopt the API if all reporting origins had to share a
+Note that splitting these limits by the reporting site introduces a possible
+leak when multiple sites collude with each other. However, the alternative
+makes it very difficult to adopt the API if all reporting sites had to share a
 budget.
 
 Strawman rate limit: 100 attributions per {source site, destination site, reporting
-origin, 30 days}
+site, 30 days}
 
 ### Less trigger-side data
 
@@ -936,11 +936,11 @@ tradeoffs for privacy and utility.
 Because this limit is per source site, it is possible for different reporting
 origin on a site to push the other attribution sources out of the browser. See
 the [denial of service](#denial-of-service) for more details. To prevent this
-attack, the browser should maintain these limits per reporting origin. This
+attack, the browser should maintain these limits per reporting site. This
 effectively limits the number of unique sites covered by unexpired sources from
-any one reporting origin.
+any one reporting site.
 
-Strawman: 100 distinct destination sites per-{source site, reporting origin},
+Strawman: 100 distinct destination sites per-{source site, reporting site},
 applied to all unexpired sources regardless of type at source time.
 
 ### Differential privacy
