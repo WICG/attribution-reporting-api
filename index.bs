@@ -1051,6 +1051,17 @@ integer that controls the maximum number of distinct
 [=attribution rate-limit record/attribution destination=]) that can create
 [=attribution sources=] per [=attribution rate-limit window=].
 
+<dfn>Max source reporting origins per source reporting site</dfn> is a positive
+integer that controls the maximum number of distinct
+[=attribution source/reporting origin|reporting origins=] for a
+([=attribution rate-limit record/source site=],
+[=attribution rate-limit record/reporting origin=] [=site=]) that can create
+[=attribution sources=] per [=origin rate-limit window=].
+
+<dfn>Origin rate-limit window</dfn> is a positive [=duration=] that
+controls the rate-limiting window for
+[=max source reporting origins per source reporting site=].
+
 <dfn>Max attribution reporting origins per rate-limit window</dfn> is a
 positive integer that controls the maximum number of distinct
 [=attribution trigger/reporting origin|reporting origins=] for a
@@ -2127,14 +2138,21 @@ Given an [=attribution rate-limit record=] |newRecord|:
      * |record|'s [=attribution rate-limit record/scope=] and |newRecord|'s [=attribution rate-limit record/scope=] are equal
      * |record|'s [=attribution rate-limit record/source site=] and |newRecord|'s [=attribution rate-limit record/source site=] are equal
      * |record|'s [=attribution rate-limit record/attribution destination=] and |newRecord|'s [=attribution rate-limit record/attribution destination=] are equal
-     * |record|'s [=attribution rate-limit record/time=] is at least [=attribution rate-limit window=] before |newRecord|'s [=attribution rate-limit record/time=]
-1. Let |distinctReportingOrigins| be a new empty [=ordered set=].
-1. [=set/iterate|For each=] |record| of |matchingRateLimitRecords|, [=set/append=] |record|'s
-     [=attribution rate-limit record/reporting origin=] to |distinctReportingOrigins|.
-1. If |distinctReportingOrigins| [=list/contains=] |newRecord|'s
-    [=attribution rate-limit record/reporting origin=], return <strong>allowed</strong>.
-1. If |distinctReportingOrigins|'s [=list/size=] is greater than or equal to |max|, return
-    <strong>blocked</strong>.
+     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and  |newRecord|'s [=attribution rate-limit record/time=] is <= [=attribution rate-limit window=]
+1. Let |distinctReportingOrigins| be the [=set=] of all [=attribution rate-limit record/reporting origin=] in |matchingRateLimitRecords|,
+    [=set/union|unioned=] with «|newRecord|'s [=attribution rate-limit record/reporting origin=]»
+1. If |distinctReportingOrigins|'s [=list/size=] is greater than |max|, return <strong>blocked</strong>.
+
+NOTE: [=rate-limit scope/source=] scopes have an auxiliary [=max source reporting origins per source reporting site=] rate limit that also must be enforced.
+
+1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>", return <strong>allowed</strong>
+1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
+     * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/source=]</code>"
+     * |record|'s [=attribution rate-limit record/source site=] and |newRecord|'s [=attribution rate-limit record/source site=] are equal
+     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and  |newRecord|'s [=attribution rate-limit record/time=] is <= [=origin rate-limit window=]
+1. Let |distinctReportingOrigins| be the [=set=] of all [=attribution rate-limit record/reporting origin=] in |matchingRateLimitRecords|,
+    [=set/union|unioned=] with «|newRecord|'s [=attribution rate-limit record/reporting origin=]»
+1. If |distinctReportingOrigins|'s [=list/size=] is greater than [=max source reporting origins per source reporting site=], return <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
 
 <h3 dfn id="should-block-attribution-for-rate-limits">Should attribution be blocked by rate limits</h3>
