@@ -41,6 +41,35 @@ spec: idl; type: dfn; urlPrefix: https://webidl.spec.whatwg.org/
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
     text: generate a random UUID; url: #dfn-generate-a-random-uuid
 </pre>
+<pre class=biblio>
+{
+    "chan": {
+        "title": "Channel capacity",
+        "href": "https://en.wikipedia.org/wiki/Channel_capacity"
+    },
+     "dp": {
+        "title": "Differential privacy",
+        "href": "https://en.wikipedia.org/wiki/Differential_privacy"
+    },
+     "rr": {
+        "title": "Randomized response",
+        "href": "https://en.wikipedia.org/wiki/Randomized_response"
+    },
+     "bin-ent": {
+        "title": "Binary entropy function",
+        "href": "https://en.wikipedia.org/wiki/Binary_entropy_function"
+    },
+    "q-sc": {
+        "authors": [
+            "Claudio Weidmann",
+            "Gottfried Lechner"
+        ],
+        "title": "q-ary symmetric channel",
+        "href": "https://arxiv.org/pdf/0909.2009.pdf"
+    }
+
+}
+</pre>
 
 Introduction {#intro}
 =====================
@@ -3214,31 +3243,28 @@ history and other cross-site activity. The API aims to provide some protection f
 
 Any given [=attribution source=] has a [=obtain a set of possible trigger states|set of possible trigger states=].
 The choice of trigger state may encode cross-site information. To protect the cross-site information disclosure,
-each [=attribution source=] is subject to a [=obtain a randomized response|randomized response mechanism=],
+each [=attribution source=] is subject to a [=obtain a randomized response|randomized response mechanism=] [[RR]],
 which will choose a state at random with [=obtain a randomized source response pick rate|pick rate=]
 dependent on the user agent's [=randomized response epsilon=].
 
 This introduces some level of plausible deniability into the resulting [=event-level reports=] (or lack thereof),
 as there is always a chance that the output was generated from a random process. We can reason about the
-protection this gives an individual [=attribution source=] from the lens of differential privacy.
+protection this gives an individual [=attribution source=] from the lens of differential privacy [[DP]].
 
 Additionally, [=event-level reports=] limit the *amount* of relative cross-site information associated with
-a particular [=attribution source=]. We model this using the notion of channel capacity.  For every [=attribution source=],
+a particular [=attribution source=]. We model this using the notion of channel capacity [[CHAN]].  For every [=attribution source=],
 it is possible to model its output as a noisy channel. The number of input/output symbols is governed by its associated
 [=obtain a set of possible trigger states|set of possible trigger states=]. With the randomized response mechanism,
-this allows us to analyze the output as a q-ary symmetric channel, with `q` equal to the [=set/size=] of the
+this allows us to analyze the output as a q-ary symmetric channel [[Q-SC]], with `q` equal to the [=set/size=] of the
 [=obtain a set of possible trigger states|set of possible trigger states=].
 
 The channel capacity of a q-ary symmetric channel is equal to `log2(q) - h(p) - p log2(q - 1)` where
-`h` is the binary entropy function and `p = p'(q-1) / q` where `p'` is the
+`h` is the binary entropy function [[BIN-ENT]] and `p = p'(q-1) / q` where `p'` is the
 [=obtain a randomized source response pick rate|pick rate=].
 
 Note that [=source type/navigation=] [=attribution sources=] and [=source type/event=] [=attribution sources=] may
 have different channel capacities, given that [=source type/event=] [=attribution sources=] can be registered without
 [=user activation=] or top-level navigation.
-
-Issue: Link to a definition of channel capacity, q-ary symmetric channel, binary entropy function, randomized response, and
-differential privacy.
 
 ### Aggregatable reports ### {#cross-site-information-disclosure-aggregatable-reports}
 
