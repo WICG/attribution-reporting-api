@@ -4758,20 +4758,18 @@ history and other cross-site activity. The API aims to provide some protection f
    <h4 class="heading settled" data-level="15.2.1" id="cross-site-information-disclosure-event-level-reports"><span class="secno">15.2.1. </span><span class="content">Event-level reports</span><a class="self-link" href="#cross-site-information-disclosure-event-level-reports"></a></h4>
    <p>Any given <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑥⑤">attribution source</a> has a <a data-link-type="dfn" href="#obtain-a-set-of-possible-trigger-states" id="ref-for-obtain-a-set-of-possible-trigger-states②">set of possible trigger states</a>.
 The choice of trigger state may encode cross-site information. To protect the cross-site information disclosure,
-each <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑥⑥">attribution source</a> is subject to a <a data-link-type="dfn" href="#obtain-a-randomized-response" id="ref-for-obtain-a-randomized-response①">randomized response mechanism</a>,
+each <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑥⑥">attribution source</a> is subject to a <a data-link-type="dfn" href="#obtain-a-randomized-response" id="ref-for-obtain-a-randomized-response①">randomized response mechanism</a> <a data-link-type="biblio" href="#biblio-rr" title="Randomized response">[RR]</a>,
 which will choose a state at random with <a data-link-type="dfn" href="#obtain-a-randomized-source-response-pick-rate" id="ref-for-obtain-a-randomized-source-response-pick-rate②">pick rate</a> dependent on the user agent’s <a data-link-type="dfn" href="#randomized-response-epsilon" id="ref-for-randomized-response-epsilon①">randomized response epsilon</a>.</p>
    <p>This introduces some level of plausible deniability into the resulting <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report①③">event-level reports</a> (or lack thereof),
 as there is always a chance that the output was generated from a random process. We can reason about the
-protection this gives an individual <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑥⑦">attribution source</a> from the lens of differential privacy.</p>
+protection this gives an individual <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑥⑦">attribution source</a> from the lens of differential privacy <a data-link-type="biblio" href="#biblio-dp" title="Differential privacy">[DP]</a>.</p>
    <p>Additionally, <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report①④">event-level reports</a> limit the <em>amount</em> of relative cross-site information associated with
-a particular <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑥⑧">attribution source</a>. We model this using the notion of channel capacity.  For every <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑥⑨">attribution source</a>,
+a particular <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑥⑧">attribution source</a>. We model this using the notion of channel capacity <a data-link-type="biblio" href="#biblio-chan" title="Channel capacity">[CHAN]</a>.  For every <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑥⑨">attribution source</a>,
 it is possible to model its output as a noisy channel. The number of input/output symbols is governed by its associated <a data-link-type="dfn" href="#obtain-a-set-of-possible-trigger-states" id="ref-for-obtain-a-set-of-possible-trigger-states③">set of possible trigger states</a>. With the randomized response mechanism,
-this allows us to analyze the output as a q-ary symmetric channel, with <code>q</code> equal to the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size①⑧">size</a> of the <a data-link-type="dfn" href="#obtain-a-set-of-possible-trigger-states" id="ref-for-obtain-a-set-of-possible-trigger-states④">set of possible trigger states</a>.</p>
-   <p>The channel capacity of a q-ary symmetric channel is equal to <code>log2(q) - h(p) - p log2(q - 1)</code> where <code>h</code> is the binary entropy function and <code>p = p'(q-1) / q</code> where <code>p'</code> is the <a data-link-type="dfn" href="#obtain-a-randomized-source-response-pick-rate" id="ref-for-obtain-a-randomized-source-response-pick-rate③">pick rate</a>.</p>
+this allows us to analyze the output as a q-ary symmetric channel <a data-link-type="biblio" href="#biblio-q-sc" title="q-ary symmetric channel">[Q-SC]</a>, with <code>q</code> equal to the <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-size" id="ref-for-list-size①⑧">size</a> of the <a data-link-type="dfn" href="#obtain-a-set-of-possible-trigger-states" id="ref-for-obtain-a-set-of-possible-trigger-states④">set of possible trigger states</a>.</p>
+   <p>The channel capacity of a q-ary symmetric channel is equal to <code>log2(q) - h(p) - p log2(q - 1)</code> where <code>h</code> is the binary entropy function <a data-link-type="biblio" href="#biblio-bin-ent" title="Binary entropy function">[BIN-ENT]</a> and <code>p = p'(q-1) / q</code> where <code>p'</code> is the <a data-link-type="dfn" href="#obtain-a-randomized-source-response-pick-rate" id="ref-for-obtain-a-randomized-source-response-pick-rate③">pick rate</a>.</p>
    <p>Note that <a data-link-type="dfn" href="#source-type-navigation" id="ref-for-source-type-navigation⑥">navigation</a> <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑦⓪">attribution sources</a> and <a data-link-type="dfn" href="#source-type-event" id="ref-for-source-type-event①⓪">event</a> <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑦①">attribution sources</a> may
 have different channel capacities, given that <a data-link-type="dfn" href="#source-type-event" id="ref-for-source-type-event①①">event</a> <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑦②">attribution sources</a> can be registered without <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation" id="ref-for-tracking-user-activation">user activation</a> or top-level navigation.</p>
-   <p class="issue" id="issue-2e5cf2b0"><a class="self-link" href="#issue-2e5cf2b0"></a> Link to a definition of channel capacity, q-ary symmetric channel, binary entropy function, randomized response, and
-differential privacy.</p>
    <h4 class="heading settled" data-level="15.2.2" id="cross-site-information-disclosure-aggregatable-reports"><span class="secno">15.2.2. </span><span class="content">Aggregatable reports</span><a class="self-link" href="#cross-site-information-disclosure-aggregatable-reports"></a></h4>
    <p>Aggregatable reports protect against cross-site information disclosure in two primary ways:</p>
    <ol>
@@ -5628,6 +5626,16 @@ presence from the reporting origin.</p>
   </dl>
   <h3 class="no-num no-ref heading settled" id="informative"><span class="content">Informative References</span><a class="self-link" href="#informative"></a></h3>
   <dl>
+   <dt id="biblio-bin-ent">[BIN-ENT]
+   <dd><a href="https://en.wikipedia.org/wiki/Binary_entropy_function"><cite>Binary entropy function</cite></a>. URL: <a href="https://en.wikipedia.org/wiki/Binary_entropy_function">https://en.wikipedia.org/wiki/Binary_entropy_function</a>
+   <dt id="biblio-chan">[CHAN]
+   <dd><a href="https://en.wikipedia.org/wiki/Channel_capacity"><cite>Channel capacity</cite></a>. URL: <a href="https://en.wikipedia.org/wiki/Channel_capacity">https://en.wikipedia.org/wiki/Channel_capacity</a>
+   <dt id="biblio-dp">[DP]
+   <dd><a href="https://en.wikipedia.org/wiki/Differential_privacy"><cite>Differential privacy</cite></a>. URL: <a href="https://en.wikipedia.org/wiki/Differential_privacy">https://en.wikipedia.org/wiki/Differential_privacy</a>
+   <dt id="biblio-q-sc">[Q-SC]
+   <dd>Claudio Weidmann; Gottfried Lechner. <a href="https://arxiv.org/pdf/0909.2009.pdf"><cite>q-ary symmetric channel</cite></a>. URL: <a href="https://arxiv.org/pdf/0909.2009.pdf">https://arxiv.org/pdf/0909.2009.pdf</a>
+   <dt id="biblio-rr">[RR]
+   <dd><a href="https://en.wikipedia.org/wiki/Randomized_response"><cite>Randomized response</cite></a>. URL: <a href="https://en.wikipedia.org/wiki/Randomized_response">https://en.wikipedia.org/wiki/Randomized_response</a>
    <dt id="biblio-storage">[STORAGE]
    <dd>Anne van Kesteren. <a href="https://storage.spec.whatwg.org/"><cite>Storage Standard</cite></a>. Living Standard. URL: <a href="https://storage.spec.whatwg.org/">https://storage.spec.whatwg.org/</a>
   </dl>
@@ -5689,8 +5697,6 @@ would have to be further processed to check for the "<code>ar_debug</code>" cook
    <div class="issue"> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/attribution-reporting-api/issues/220">[Issue #220]</a> <a class="issue-return" href="#issue-c8706ee1" title="Jump to section">↵</a></div>
    <div class="issue"> This fetch should use a network partition key for an opaque origin. <a href="https://github.com/WICG/attribution-reporting-api/issues/220">[Issue #220]</a> <a class="issue-return" href="#issue-c8706ee1①" title="Jump to section">↵</a></div>
    <div class="issue"> Fill in this section. <a class="issue-return" href="#issue-5f2a0fce" title="Jump to section">↵</a></div>
-   <div class="issue"> Link to a definition of channel capacity, q-ary symmetric channel, binary entropy function, randomized response, and
-differential privacy. <a class="issue-return" href="#issue-2e5cf2b0" title="Jump to section">↵</a></div>
    <div class="issue"> add links to the aggregation service noise addition algorithm. <a class="issue-return" href="#issue-b6dec5fe" title="Jump to section">↵</a></div>
    <div class="issue"> model the channel capacity of a trigger registration. <a class="issue-return" href="#issue-42c97a9a" title="Jump to section">↵</a></div>
    <div class="issue"> fill in this section <a class="issue-return" href="#issue-1f7fff6a" title="Jump to section">↵</a></div>
