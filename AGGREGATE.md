@@ -238,7 +238,7 @@ The report will be JSON encoded with the following scheme:
   ],
 
   // The deployment option for the aggregation service.
-  "aggregation_coordinator_identifier": "aws-cloud",
+  "aggregation_coordinator_origin": "https://publickeyservice.aws.privacysandboxservices.com",
 
   // Optional debugging information (also present in event-level reports),
   // if the cookie `ar_debug` is present.
@@ -303,7 +303,8 @@ shared.
 
 The encryption will use public keys specified by the aggregation service. The
 browser will encrypt payloads just before the report is sent by fetching the
-public key endpoint with an un-credentialed request. The processing origin will
+public key endpoint (the aggregation service coordinator origin at the path
+ `.well-known/aggregation-service/publick-keys`) with an un-credentialed request. The processing origin will
 respond with a set of keys which will be stored according to standard HTTP
 caching rules, i.e. using Cache-Control headers to dictate how long to store the
 keys for (e.g. following the [freshness
@@ -455,11 +456,20 @@ certain amount of noise will be added to each output key's aggregate value.
 
 Currently the aggregation service can be deployed on Amazon Web Services (AWS). We expect to support Google Cloud Platform (GCP) and other cloud providers in the future.
 
-Trigger registration will accept an optional string field `aggregation_coordinator_identifier` to allow developers to specify the deployment option for the aggregation service. The default value is `aws-cloud`. `gcp-cloud` and other values will be supported in the future.
+Trigger registration will accept an optional string field `aggregation_coordinator_origin`
+to allow developers to specify the deployment option for the aggregation service
+supported by the browser, e.g. the origin for the aggregation service deloyed on
+AWS, and GCP and other platforms in the future.
 
-```http
-Attribution-Reporting-Register-Trigger: {..., "aggregatable_trigger_data": ..., "aggregatable_values": ..., "aggregation_coordinator_identifier": "aws-cloud"}
+```jsonc
+{
+  ..., // existing fields
+  "aggregation_coordinator_origin": "https://publickeyservice.aws.privacysandboxservices.com",
+}
 ```
+
+TODO: Consider exposing the allowlist of aggregation service coordinator
+origins.
 
 ## Privacy considerations
 

@@ -691,7 +691,7 @@ An event-level trigger configuration is a [=struct=] with the following items:
 <h3 id="aggregation-coordinator-header">Aggregation coordinator</h3>
 
 An <dfn>aggregation coordinator</dfn> is one of a user-agent-determined [=set=]
-of [=strings=] that specifies which aggregation service deployment to use.
+of [=origins=] that specifies which aggregation service deployment to use.
 
 <h3 id="aggregatable-source-registration-time-configuration-header">Aggregatable source registration time configuration</h3>
 
@@ -2041,10 +2041,12 @@ and a [=moment=] |triggerTime|:
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to value["`debug_reporting`"].
 1. Let |aggregationCoordinator| be [=default aggregation coordinator=].
-1. If |value|["`aggregation_coordinator_identifier`"] [=map/exists=]:
-    1. If |value|["`aggregation_coordinator_identifier`"] is not a [=string=], return null.
-    1. If |value|["`aggregation_coordinator_identifier`"] is not an [=aggregation coordinator=], return null.
-    1. Set |aggregationCoordinator| to |value|["`aggregation_coordinator_identifier`"].
+1. If |value|["`aggregation_coordinator_origin`"] [=map/exists=]:
+    1. If |value|["`aggregation_coordinator_origin`"] is not a [=string=], return null.
+    1. Let |url| be the result of running the [=URL parser=] on |value|["`aggregation_coordinator_origin`"].
+    1. If |url| is failure or null, return null.
+    1. If |url|'s [=url/origin=] is not an [=aggregation coordinator=], return null.
+    1. Set |aggregationCoordinator| to |url|'s [=url/origin=].
 1. Let |aggregatableSourceRegTimeConfig| be "<code>[=aggregatable source registration time configuration/exclude=]</code>".
 1. If |value|["`aggregatable_source_registration_time`"] [=map/exists=]:
     1. If |value|["`aggregatable_source_registration_time`"] is not a [=string=], return null.
@@ -2900,9 +2902,17 @@ of running the following steps:
 
 <h3 id="obtain-aggregatable-report-aggregation-service-payloads">Obtaining an aggregatable report's aggregation service payloads</h3>
 
-To <dfn>obtain the public key for encryption</dfn> given an [=aggregation coordinator=]
-<var ignore=''>aggregationCoordinator</var>, asynchronously return a user-agent-determined public key
-or an error in the event that the user agent failed to obtain the public key.
+To <dfn>obtain the public key for encryption</dfn> given an [=aggregation coordinator=] |aggregationCoordinator|:
+
+1. [=Assert=]: |aggregationCoordinator| is not an [=opaque origin=].
+1. Let |url| be a new [=URL record=].
+1. Set |url|'s [=url/scheme=] to |aggregationCoordinator|'s [=origin/scheme=].
+1. Set |url|'s [=url/host=] to |aggregationCoordinator|'s [=origin/host=].
+1. Set |url|'s [=url/port=] to |aggregationCoordinator|'s [=origin/port=].
+1. Let |path| be «"`.well-known`", "`aggregation-service`", "`public-keys`"».
+1. Set |url|'s [=url/path=] to |path|.
+1. Asynchronously return a user-agent-determined public key from |url| or an error in the event that the user
+    agent failed to obtain the public key from |url|.
 
 Note: The user agent might enforce weekly key rotation. If there are multiple keys, the user agent
 might independently pick a key uniformly at random for every encryption operation.
@@ -3008,8 +3018,8 @@ To <dfn>serialize an [=aggregatable report=] </dfn> |report|, run the following 
     :: |report|'s [=aggregatable report/shared info=]
     : "`aggregation_service_payloads`"
     :: |aggregationServicePayloads|
-    : "`aggregation_coordinator_identifier`"
-    :: |report|'s [=aggregatable report/aggregation coordinator=]
+    : "`aggregation_coordinator_origin`"
+    :: |report|'s [=aggregatable report/aggregation coordinator=], [=serialization of an origin|serialized=]
 
 1. If |report|'s [=aggregatable report/source debug key=] is not null, [=map/set=]
     |data|["`source_debug_key`"] to |report|'s [=aggregatable report/source debug key=],
