@@ -1106,6 +1106,28 @@ To <dfn>serialize an integer</dfn>, represent it as a string of the shortest pos
 Issue: This would ideally be replaced by a more descriptive algorithm in Infra. See
 <a href="https://github.com/whatwg/infra/issues/201">infra/201</a>
 
+<h3 id="parsing-json-fields">Parsing JSON fields</h3>
+
+To <dfn>parse an optional 64-bit signed integer</dfn> given a [=map=] |map|, a
+[=string=] |key|, and a possibly null 64-bit signed integer |default|:
+
+1. If |map|[|key|] does not [=map/exists|exist=], return |default|.
+1. If |map|[|key|] is not a [=string=], return an error.
+1. Return the result of applying the
+    <a spec="html">rules for parsing integers</a> to |map|[|key].
+
+Note: The last step in this function may return either a value or an error.
+
+To <dfn>parse an optional 64-bit unsigned integer</dfn> given a [=map=] |map|,
+a [=string=] |key|, and a possibly null 64-bit unsigned integer |default|:
+
+1. If |map|[|key|] does not [=map/exists|exist=], return |default|.
+1. If |map|[|key|] is not a [=string=], return an error.
+1. Return the result of applying the
+    <a spec="html">rules for parsing non-negative integers</a> to |map|[|key].
+
+Note: The last step in this function may return either a value or an error.
+
 <h3 id="serialize-destinations">Serialize attribution destinations</h3>
 
 To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destinations|, run the following steps:
@@ -1508,13 +1530,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |value| be the result of running
     [=parse JSON bytes to an Infra value=] with |json|.
 1. If |value| is not an [=ordered map=], return null.
-1. Let |sourceEventId| be 0.
-1. If |value|["`source_event_id`"] [=map/exists=]:
-    1. If |value|["`source_event_id`"] is not a [=string=], return null:
-    1. Set |sourceEventId| to the result of applying the
-        <a spec="html">rules for parsing non-negative integers</a> to
-        |value|["`source_event_id`"].
-    1. If |sourceEventId| is an error, return null.
+1. Let |sourceEventId| be the result of running
+    [=parse an optional 64-bit unsigned integer=] with |value|,
+    "`source_event_id`", and 0.
+1. If |sourceEventId| is an error, return null.
 1. If |value|["`destination`"] does not [=map/exists|exist=], return null.
 1. Let |attributionDestinations| be the result of running
     [=parse attribution destinations=] with |value|["`destination`"].
@@ -1523,12 +1542,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. If |expiry| is null, set |expiry| to 30 days.
 1. Let |eventReportWindow| be the result of running [=obtain a source expiry=] on |value|["`event_report_window`"].
 1. Let |aggregatableReportWindow| be the result of running [=obtain a source expiry=] on |value|["`aggregatable_report_window`"].
-1. Let |priority| be 0.
-1. If |value|["`priority`"] [=map/exists=]:
-    1. If |value|["`priority`"] is not a [=string=], return null.
-    1. Set |priority| to the result of applying the
-        <a spec="html">rules for parsing integers</a> to |value|["`priority`"].
-    1. If |priority| is an error, return null.
+1. Let |priority| be the result of running
+    [=parse an optional 64-bit signed integer=] with |value|, "`priority`", and
+    0.
+1. If |priority| is an error, return null.
 1. Let |filterData| be a new [=filter map=].
 1. If |value|["`filter_data`"] [=map/exists=]:
     1. Set |filterData| to the result of running [=parse filter data=] with
@@ -1852,27 +1869,18 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
 1. If |values| is not a [=list=], return null.
 1. [=list/iterate|For each=] |value| of |values|:
     1. If |value| is not an [=ordered map=], return null.
-    1. Let |triggerData| be 0.
-    1. If |value|["`trigger_data`"] [=map/exists=]:
-        1. If |value|["`trigger_data`"] is not a [=string=], return null.
-        1. Set |triggerData| to the result of applying the
-            <a spec="html">rules for parsing non-negative integers</a> to
-            |value|["`trigger_data`"].
-        1. If |triggerData| is an error, return null.
-    1. Let |dedupKey| be null.
-    1. If |value|["`deduplication_key`"] [=map/exists=]:
-        1. If |value|["`deduplication_key`"] is not a [=string=], return null.
-        1. Set |dedupKey| to the result of applying the
-            <a spec="html">rules for parsing non-negative integers</a> to
-            |value|["`deduplication_key`"].
-        1. If |dedupKey| is an error, return null.
-    1. Let |priority| be 0.
-    1. If |value|["`priority`"] [=map/exists=]:
-        1. If |value|["`priority`"] is not a [=string=], return null.
-        1. Set |priority| to the result of applying the
-            <a spec="html">rules for parsing integers</a> to
-            |value|["`priority`"].
-        1. If |priority| is an error, return null.
+    1. Let |triggerData| be the result of running
+        [=parse an optional 64-bit unsigned integer=] with |value|,
+        "`trigger_data`", and 0.
+    1. If |triggerData| is an error, return null.
+    1. Let |dedupKey| be the result of running
+        [=parse an optional 64-bit unsigned integer=] with |value|,
+        "`deduplication_key`", and null.
+    1. If |dedupKey| is an error, return null.
+    1. Let |priority| be the result of running
+        [=parse an optional 64-bit signed integer=] with |value|, "`priority`",
+        and 0.
+    1. If |priority| is an error, return null.
     1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filters=] with
@@ -1964,12 +1972,10 @@ To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
 1. If |values| is not a [=list=], return null.
 1. [=list/iterate|For each=] |value| of |values|:
     1. If |value| is not an [=ordered map=], return null.
-    1. Let |dedupKey| be null.
-    1. If |value|["`deduplication_key`"] [=map/exists=]:
-        1. If |value|["`deduplication_key`"] is not a [=string=], return null.
-        1. Set |dedupKey| to the result of applying the <a spec="html">rules for parsing non-negative integers</a> to
-            |value|["`deduplication_key`"].
-        1. If |dedupKey| is an error, return null.
+    1. Let |dedupKey| be the result of running
+        [=parse an optional 64-bit unsigned integer=] with |value|,
+        "`deduplication_key`", and null.
+    1. If |dedupKey| is an error, return null.
     1. Let |filters| be a new [=filter map=].
     1. If |values|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filter data=] with |value|["`filters`"].
