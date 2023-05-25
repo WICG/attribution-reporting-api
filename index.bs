@@ -1509,11 +1509,12 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     [=parse JSON bytes to an Infra value=] with |json|.
 1. If |value| is not an [=ordered map=], return null.
 1. Let |sourceEventId| be 0.
-1. If |value|["`source_event_id`"] [=map/exists=] and is a [=string=]:
+1. If |value|["`source_event_id`"] [=map/exists=]:
+    1. If |value|["`source_event_id`"] is not a [=string=], return null:
     1. Set |sourceEventId| to the result of applying the
         <a spec="html">rules for parsing non-negative integers</a> to
         |value|["`source_event_id`"].
-    1. If |sourceEventId| is an error, set |sourceEventId| to 0.
+    1. If |sourceEventId| is an error, return null.
 1. If |value|["`destination`"] does not [=map/exists|exist=], return null.
 1. Let |attributionDestinations| be the result of running
     [=parse attribution destinations=] with |value|["`destination`"].
