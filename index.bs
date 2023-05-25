@@ -1965,10 +1965,11 @@ To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
 1. [=list/iterate|For each=] |value| of |values|:
     1. If |value| is not an [=ordered map=], return null.
     1. Let |dedupKey| be null.
-    1. If |value|["`deduplication_key`"] [=map/exists=] and is a [=string=]:
+    1. If |value|["`deduplication_key`"] [=map/exists=]:
+        1. If |value|["`deduplication_key`"] is not a [=string=], return null.
         1. Set |dedupKey| to the result of applying the <a spec="html">rules for parsing non-negative integers</a> to
             |value|["`deduplication_key`"].
-        1. If |dedupKey| is an error, set |dedupKey| to null.
+        1. If |dedupKey| is an error, return null.
     1. Let |filters| be a new [=filter map=].
     1. If |values|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filter data=] with |value|["`filters`"].
