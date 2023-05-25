@@ -1118,6 +1118,8 @@ To <dfn>parse an optional 64-bit signed integer</dfn> given a [=map=] |map|, a
 
 Note: The last step in this function may return either a value or an error.
 
+Issue: Check that the result fits into a 64-bit signed integer.
+
 To <dfn>parse an optional 64-bit unsigned integer</dfn> given a [=map=] |map|,
 a [=string=] |key|, and a possibly null 64-bit unsigned integer |default|:
 
@@ -1127,6 +1129,8 @@ a [=string=] |key|, and a possibly null 64-bit unsigned integer |default|:
     <a spec="html">rules for parsing non-negative integers</a> to |map|[|key].
 
 Note: The last step in this function may return either a value or an error.
+
+Issue: Check that the result fits into a 64-bit unsigned integer.
 
 <h3 id="serialize-destinations">Serialize attribution destinations</h3>
 
@@ -1553,14 +1557,12 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     1. If |filterData| is null, return null.
     1. If |filterData|["`source_type`"] [=map/exists=], return null.
 1. [=map/Set=] |filterData|["`source_type`"] to « |sourceType| ».
-1. Let |debugKey| be null.
-1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
-    1. Set |debugKey| to the result of applying the
-        <a spec="html">rules for parsing non-negative integers</a> to
-        |value|["`debug_key`"].
-    1. If |debugKey| is an error, set |debugKey| to null.
-    1. If the result of running [=check if cookie-based debugging is allowed=] with
-        |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
+1. Let |debugKey| be the result of running
+    [=parse an optional 64-bit unsigned integer=] with |value|, "`debug_key`",
+    and null.
+1. If |debugKey| is an error, set |debugKey| to null.
+1. If the result of running [=check if cookie-based debugging is allowed=] with
+    |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
 1. If |aggregationKeys| is null, return null.
 1. Let |triggerDataCardinality| be the user agent's
@@ -2029,14 +2031,12 @@ and a [=moment=] |triggerTime|:
 1. Let |aggregatableDedupKeys| be the result of running [=parse aggregatable dedup keys=]
     with |value|.
 1. If |aggregatableDedupKeys| is null, return null.
-1. Let |debugKey| be null.
-1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
-    1. Set |debugKey| to the result of applying the
-        <a spec="html">rules for parsing non-negative integers</a> to
-        |value|["`debug_key`"].
-    1. If |debugKey| is an error, set |debugKey| to null.
-    1. If the result of running [=check if cookie-based debugging is allowed=] with
-        |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
+1. Let |debugKey| be the result of running
+    [=parse an optional 64-bit unsigned integer=] with |value|, "`debug_key`",
+    and null.
+1. If |debugKey| is an error, set |debugKey| to null.
+1. If the result of running [=check if cookie-based debugging is allowed=] with
+    |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
 1. If |value|["`filters`"] exists:
     1. Set |filters| to the result of running [=parse filters=] with
