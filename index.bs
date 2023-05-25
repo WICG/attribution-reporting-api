@@ -984,18 +984,24 @@ shared among all [=environment settings objects=].
 Note: This would ideally use <a spec=storage>storage bottles</a> to provide access to the attribution caches.
 However attribution data is inherently cross-site, and operations on storage would need to span across all storage bottle maps.
 
-# Vendor-Specific Values # {#vendor-specific-values}
+# Constants # {#constants}
 
 <dfn>Max source expiry</dfn> is a positive [=duration=] that controls the
-maximum value that can be used as an [=attribution source/expiry=]. It must be
-greater than or equal to 30 days.
+maximum value that can be used as an [=attribution source/expiry=]. Its value is
+30 days.
 
 <dfn>Max entries per filter data</dfn> is a positive integer that controls the
 maximum [=map/size=] of an [=attribution source=]'s [=attribution source/filter data=].
+Its value is 50.
 
 <dfn>Max values per filter data entry</dfn> is a positive integer that
 controls the maximum [=set/size=] of each [=map/value=] of an
-[=attribution source=]'s [=attribution source/filter data=].
+[=attribution source=]'s [=attribution source/filter data=]. Its value is 50.
+
+<dfn>Attribution rate-limit window</dfn> is a positive [=duration=] that
+controls the rate-limiting window for attribution. Its value is 30 days.
+
+# Vendor-Specific Values # {#vendor-specific-values}
 
 <dfn>Max aggregation keys per attribution</dfn> is a positive integer that
 controls the maximum [=map/size=] of an [=attribution source=]'s
@@ -1070,9 +1076,6 @@ The second controls the maximum number of distinct [=sites=] across all [=attrib
 for [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting origin=] [=site=])
 per [=destination rate-limit window=].
 
-<dfn>Attribution rate-limit window</dfn> is a positive [=duration=] that
-controls the rate-limiting window for attribution.
-
 <dfn>Max source reporting origins per rate-limit window</dfn> is a positive
 integer that controls the maximum number of distinct
 [=attribution source/reporting origin|reporting origins=] for a
@@ -1108,9 +1111,6 @@ controls the maximum number of attributions for a
 <dfn>Allowed aggregatable budget per source</dfn> is a positive integer that controls the total
 [=aggregatable report/required aggregatable budget=] of all [=aggregatable reports=] created for
 an [=attribution source=].
-
-<dfn>Min aggregatable report delay</dfn> is a non-negative [=duration=] that controls the minimum
-delay to deliver an [=aggregatable report=].
 
 <dfn>Randomized aggregatable report delay</dfn> is a positive [=duration=] that controls the
 random delay to deliver an [=aggregatable report=].
@@ -1170,10 +1170,10 @@ To <dfn>parse filter data</dfn> given a |value|:
 
 1. Let |map| be the result of running [=parse filter values=] with |value|.
 1. If |map| is null, return null.
-1. If |map|'s [=map/size=] is greater than the user agent's
-    [=max entries per filter data=], return null.
+1. If |map|'s [=map/size=] is greater than the [=max entries per filter data=],
+    return null.
 1. [=map/iterate|For each=] |filter| → |set| of |map|:
-    1. If |set|'s [=set/size=] is greater than the user agent's
+    1. If |set|'s [=set/size=] is greater than the
         [=max values per filter data entry=], return null.
 1. Return |map|.
 
@@ -1481,8 +1481,8 @@ To <dfn>obtain a source expiry</dfn> given a |value|:
 1. If |expirySeconds| is an error, return null.
 1. Let |expiry| be |expirySeconds| seconds.
 1. If |expiry| is less than 1 day, set |expiry| to 1 day.
-1. If |expiry| is greater than the user agent's [=max source expiry=], set
-    |expiry| to that value.
+1. If |expiry| is greater than the [=max source expiry=], set |expiry| to that
+    value.
 1. Return |expiry|.
 
 To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
@@ -2629,7 +2629,7 @@ To <dfn>obtain an aggregatable report delivery time</dfn> given a [=moment=]
 |triggerTime|, perform the following steps. They return a [=moment=].
 
 1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive) with uniform probability.
-1. Return |triggerTime| + [=min aggregatable report delay=] + |r| * [=randomized aggregatable report delay=].
+1. Return |triggerTime| + |r| * [=randomized aggregatable report delay=].
 
 <h3 algorithm id="obtaining-an-event-level-report">Obtaining an event-level report</h3>
 
