@@ -322,8 +322,8 @@ ignore invalid registrations:
    header. For those requests the browser will permit trigger registration
    only.
 
-Note: the `Attribution-Reporting-Eligible` will be subject to the browser adding
-"GREASE" parameters, to ensure that servers use a spec compliant structured
+Note: the `Attribution-Reporting-Eligible` header will be subject to the browser adding
+"GREASE" parameters, to ensure that servers use a spec-compliant structured
 header parser. See [here](https://wicg.github.io/attribution-reporting-api/#example-1c153954)
 for an example.
 
