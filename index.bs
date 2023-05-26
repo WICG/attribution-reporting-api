@@ -1497,19 +1497,22 @@ To <dfn>parse attribution destinations</dfn> from a value |val|:
 1. If |result| [=set/is empty=], return null.
 1. return |result|.
 
-To <dfn>obtain a source expiry</dfn> given a |value|:
+To <dfn>parse an expiry</dfn> given a [=map=] |map|, a [=string=] |key|, and a
+positive [=duration=] |default|:
 
-1. If |value| is not a [=string=], return null.
-1. Let |expirySeconds| be the result of applying the
-    <a spec="html">rules for parsing integers</a> to |value|.
-1. If |expirySeconds| is an error, return null.
-1. Let |expiry| be |expirySeconds| seconds.
-1. If |expiry| is less than 1 day, set |expiry| to 1 day.
-1. If |expiry| is greater than the [=max source expiry=], set |expiry| to that
-    value.
+1. [=Assert=]: |default| is greater than or equal to 1 day.
+1. [=Assert=]: |default| is less than or equal to the user agent's
+    [=max source expiry=].
+1. Let |seconds| be the result of running
+    [=parse an optional 64-bit signed integer=] with |map|, |key|, and null.
+1. If |seconds| is an error, return an error.
+1. If |seconds| is null, return |default|.
+1. Let |expiry| be |seconds| seconds.
+1. If |expiry| is less than 1 day, return 1 day.
+1. If |expiry| is greater than |default|, return |default|.
 1. Return |expiry|.
 
-Issue: Consider rejecting invalid values here instead of silently defaulting.
+Issue: Consider rejecting out-of-bounds values instead of silently clamping.
 
 To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
 
@@ -1543,10 +1546,15 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |attributionDestinations| be the result of running
     [=parse attribution destinations=] with |value|["`destination`"].
 1. If |attributionDestinations| is null, return null.
-1. Let |expiry| be the result of running [=obtain a source expiry=] on |value|["`expiry`"].
-1. If |expiry| is null, set |expiry| to 30 days.
-1. Let |eventReportWindow| be the result of running [=obtain a source expiry=] on |value|["`event_report_window`"].
-1. Let |aggregatableReportWindow| be the result of running [=obtain a source expiry=] on |value|["`aggregatable_report_window`"].
+1. Let |expiry| be the result of running [=parse an expiry=] with |value|,
+    "`expiry`", and the [=max source expiry=].
+1. If |expiry| is an error, return null.
+1. Let |eventReportWindow| be the result of running [=parse an expiry=] with
+    |value|, "`event_report_window`", and |expiry|.
+1. If |eventReportWindow| is an error, return null.
+1. Let |aggregatableReportWindow| be the result of running [=parse an expiry]
+    with |value|, "`aggregatable_report_window`", and |expiry|.
+1. If |aggregatableReportWindow| is an error, return null.
 1. Let |priority| be the result of running
     [=parse an optional 64-bit signed integer=] with |value|, "`priority`", and
     0.
@@ -1576,8 +1584,6 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
         [=event-source trigger data cardinality=].
     1. Set |maxAttributionsPerSource| to the user agent's
         [=max attributions per event source=].
-1. If |eventReportWindow| is null or greater than |expiry|, set |eventReportWindow| to |expiry|.
-1. If |aggregatableReportWindow| is null or greater than |expiry|, set |aggregatableReportWindow| to |expiry|.
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to |value|["`debug_reporting`"].
