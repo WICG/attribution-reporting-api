@@ -1113,12 +1113,11 @@ To <dfn>parse an optional 64-bit signed integer</dfn> given a [=map=] |map|, a
 
 1. If |map|[|key|] does not [=map/exists|exist=], return |default|.
 1. If |map|[|key|] is not a [=string=], return an error.
-1. Return the result of applying the
+1. Let |value| be the result of applying the
     <a spec="html">rules for parsing integers</a> to |map|[|key|].
-
-Note: The last step in this function may return either a value or an error.
-
-Issue: Check that the result fits into a 64-bit signed integer.
+1. If |value| is an error, return an error.
+1. If |value| cannot be represented by a 64-bit signed integer, return an error.
+1. Return |value|.
 
 To <dfn>parse an optional 64-bit unsigned integer</dfn> given a [=map=] |map|,
 a [=string=] |key|, and a possibly null 64-bit unsigned integer |default|:
@@ -1127,10 +1126,10 @@ a [=string=] |key|, and a possibly null 64-bit unsigned integer |default|:
 1. If |map|[|key|] is not a [=string=], return an error.
 1. Return the result of applying the
     <a spec="html">rules for parsing non-negative integers</a> to |map|[|key|].
-
-Note: The last step in this function may return either a value or an error.
-
-Issue: Check that the result fits into a 64-bit unsigned integer.
+1. If |value| is an error, return an error.
+1. If |value| cannot be represented by a 64-bit unsigned integer, return an
+    error.
+1. Return |value|.
 
 <h3 id="serialize-destinations">Serialize attribution destinations</h3>
 
