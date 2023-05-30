@@ -285,8 +285,8 @@ A [=request=] has an associated
 Unless otherwise stated it is "<code>[=eligibility/unset=]</code>".
 
 A [=request=] has an associated
-<dfn for=request>Trigger Verification metadata</dfn> which is null or a [=struct=] with the following items:
-<dl dfn-for="request/Trigger Verification metadata">
+<dfn for=request>trigger verification metadata</dfn> which is null or a [=struct=] with the following items:
+<dl dfn-for="request/trigger verification metadata">
     : <dfn>pretokens</dfn>
     :: A [=byte sequence=].
     : <dfn>ids</dfn>
@@ -332,10 +332,10 @@ and its <dfn lt="eligible key">allowed keys</dfn> are:
 
 </dl>
 
-To <dfn>set Attribution Reporting headers</dfn> given a
-[=request=] |request| and [=eligibility=] |eligibility|:
+To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|:
 
 Let |headers| be |request|'s [=request/header list=].
+Let |eligibility| be |request|'s [=request/Attribution Reporting eligibility=].
 
 1. [=header list/Delete=] "<code>[=Attribution-Reporting-Eligible=]</code>" from
     |headers|.
@@ -377,8 +377,7 @@ After the step
 
 add the step
 
-1. [=Set Attribution Reporting headers=] with |request| and |request|'s
-    [=request/Attribution Reporting eligibility=].
+1. [=Set Attribution Reporting headers=] with |request|.
 
 Modify {{Request/constructor(input, init)}} as follows:
 
@@ -431,9 +430,9 @@ After the step:
 
 Add the step:
 
-1. [=Set Attribution Reporting headers=] with |req|
-    and <a>this</a>'s <a href=#xmlhttprequest-eligibility>Attribution Reporting
+1. Let |req|'s [=request/Attribution Reporting eligibility=] be <a>this</a>'s <a href=#xmlhttprequest-eligibility>Attribution Reporting
     eligibility</a>.
+1. [=Set Attribution Reporting headers=] with |req|.
 
 # Permissions Policy integration # {#permission-policy-integration}
 
@@ -1238,7 +1237,7 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
     ::  |eligibility|
 1. [=Fetch=] |request| with [=fetch/processResponse=] being
     [=process an attributionsrc response=] with |contextOrigin|, |eligibility|,
-    |context| and |request|'s  [=request/Trigger Verification metadata=].
+    |context| and |request|'s  [=request/trigger verification metadata=].
 
 Issue: Audit other properties on |request| and set them properly.
 
@@ -1248,7 +1247,7 @@ Issue: Check for transient activation with "<code>[=eligibility/navigation-sourc
 
 To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=] |contextOrigin|,
 an [=eligibility=] |eligibility|, an [=environment settings objects=] |context|,
-a [=request/Trigger Verification metadata=] |triggerVerificationMetadata|, and a [=response=] |response|:
+a [=request/trigger verification metadata=] |triggerVerificationMetadata|, and a [=response=] |response|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
 1. Let |reportingOrigin| be |response|'s [=response/URL=]'s [=url/origin=].
@@ -3044,21 +3043,21 @@ and an [=suitable origin=] |destination|:
 1. Let (|issuerKeys|,|pretokens|,|cryptoProtocolVersion|) be the result of [=looking up the key commitments=] for |issuer|.
 1. If |issuerKeys| is null, return.
 1. Let |ids| be a new [=list=].
-1. Let |base64encodedMaskedMessages| be a new [=list=].
+1. Let |base64EncodedMaskedMessages| be a new [=list=].
 1. While |ids|'s [=list/size=] is smaller than [=verification tokens per trigger=]:
     1. Let |id| be the result of [=generating a random UUID=].
     1. [=list/Append=] |id| to |ids|.
-    1. Let |message| be the [=string/concatenate|concatenation=] of |id|, |destination|.
-    1. Let |maskedMessage| be the result of  [=generating masked tokens=] with |issuerKeys| and |message|.
-    1. Let |base64encodedMaskedMessage| be the [=forgiving-base64 encoding=] of |maskedMessage|.
-    1. [=list/Append=] |base64encodedMaskedMessage| to |base64encodedMaskedMessages|.
-1. Let  |request|'s [=request/Trigger Verification metadata=] be an [=request/Trigger Verification metadata=] with the items:
-    : [=request/Trigger Verification metadata/pretokens=]
+    1. Let |message| be the [=string/concatenate|concatenation=] of |id| and |destination|.
+    1. Let |maskedMessage| be the result of [=generating masked tokens=] with |issuerKeys| and |message|.
+    1. Let |base64EncodedMaskedMessage| be the [=forgiving-base64 encoding=] of |maskedMessage|.
+    1. [=list/Append=] |base64EncodedMaskedMessage| to |base64EncodedMaskedMessages|.
+1. Let  |request|'s [=request/trigger verification metadata=] be an [=request/trigger verification metadata=] with the items:
+    : [=request/trigger verification metadata/pretokens=]
     :: |pretokens|
-    : [=request/Trigger Verification metadata/ids=]
+    : [=request/trigger verification metadata/ids=]
     :: |ids|
 1. [=header list/Set a structured field value=] given
-    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", |base64encodedMaskedMessages|)
+    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", |base64EncodedMaskedMessages|)
     in |request|'s  [=request/header list=].
 1. [=header list/Set a structured field value=] given
     ("<code>[=Sec-Private-State-Token-Crypto-Version=]</code>", |cryptoProtocolVersion|)
@@ -3071,34 +3070,34 @@ Issue: Link to a generating masked tokens algorithm that receive messages.
 <h3 id="handle-trigger-verification">Handle trigger verification</h3>
 
 To <dfn noexport>receive trigger verification tokens</dfn>given an
-[=request/URL=] |issuerUrl|, a [=header list=] |headers| and a
-[=request/Trigger Verification metadata=]|metadata|:
+[=url/origin=] |issuer|, a [=header list=] |headers| and a
+[=request/trigger verification metadata=]|metadata|:
 
 1. If |metadata| is null, return a new [=list=].
-1. Let |pretokens| be |metadata|'s [=request/Trigger Verification metadata/pretokens=].
-1. Let |issuer| be |issuerUrl|'s [=url/origin=].
-1. Let |issuerKeys be the result of [=looking up the key commitments=] for |issuer|.
+1. If |metadata|'s [=request/trigger verification metadata/ids=] [=list/size=] is not equal to [=verification tokens per trigger=], return a new [=list=].
+1. Let |pretokens| be |metadata|'s [=request/trigger verification metadata/pretokens=].
+1. Let |issuerKeys| be the result of [=looking up the key commitments=] for |issuer|.
 1. If |issuerKeys| is null, return a new [=list=].
-1. Let |base64encodedMaskedTokens| [=header list/Get a structured field value=] given
+1. Let |base64EncodedMaskedTokens| be the result of [=header list/getting a structured field value=] given
     ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", "list") from |response|'s [=response/header list=].
 1. [=header list/delete|Delete=] <code>[=Sec-Attribution-Reporting-Private-State-Token=]</code> from |response|'s [=response/header list=].
-1. If |base64encodedMaskedTokens|'s [=list/size=] is greater than [=verification tokens per trigger=], return a new [=list=].
-1. Let |base64encodedPrivateStateTokens| be a new [=list=].
-1.  [=list/iterate|For each=] |base64encodedMaskedToken| in |base64encodedMaskedTokens|:
-    1. Let |maskedToken| be the [=forgiving-base64 decoding=] of |base64encodedMaskedToken|.
+1. If |base64EncodedMaskedTokens|'s [=list/size=] is greater than |metadata|'s [=request/trigger verification metadata/ids=] [=list/size=], return a new [=list=].
+1. Let |base64EncodedPrivateStateTokens| be a new [=list=].
+1.  [=list/iterate|For each=] |base64EncodedMaskedToken| in |base64EncodedMaskedTokens|:
+    1. Let |maskedToken| be the [=forgiving-base64 decoding=] of |base64EncodedMaskedToken|.
     1. Let |token| be the result of [=unmasking tokens=] given |issuerKeys|, |pretokens| and |maskedToken|.
     1. If |token| is null, return a new [=list=].
     1. Let |privateStateToken| be the result of running a cryptographic redemption procedure with |token|.
     1. If |privateStateToken| is null, return a new [=list=].
-    1. Let |base64encodedPrivateStateToken| be the [=forgiving-base64 encoding=] of |privateStateToken|.
-    1. [=list/Append=] |base64encodedPrivateStateToken| to |base64encodedPrivateStateTokens|.
+    1. Let |base64EncodedPrivateStateToken| be the [=forgiving-base64 encoding=] of |privateStateToken|.
+    1. [=list/Append=] |base64EncodedPrivateStateToken| to |base64EncodedPrivateStateTokens|.
 1. Let |triggerVerifications| be a new [=list=].
-1. For each integer |i| between 0 (inclusive) and |base64encodedPrivateStateTokens|'s [=list/size=] (exclusive):
+1. For each integer |i| between 0 (inclusive) and |base64EncodedPrivateStateTokens|'s [=list/size=] (exclusive):
     1. Let |triggerVerification| be an [=trigger verification=] with the items:
         : [=trigger verification/token=]
-        :: |base64encodedPrivateStateTokens|[i]
+        :: |base64EncodedPrivateStateTokens|[i]
         : [=trigger verification/id=]
-        :: |metadata|'s [=request/Trigger Verification metadata/ids=][i]
+        :: |metadata|'s [=request/trigger verification metadata/ids=][i]
     1. [=list/Append=] |triggerVerification| to |triggerVerifications|
 1. Return |triggerVerifications|
 
