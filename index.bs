@@ -39,6 +39,16 @@ spec: private-state-token-api; type: dfn; urlPrefix: https://wicg.github.io/trus
     text: look up the key commitments; url: #look-up-the-key-commitments
     text: generate masked tokens; url: #generate-masked-tokens
     text: unmask tokens; url: #unmask-tokens
+    text: sec-private-state-token-crypto-version; url: #sec-private-state-token-crypto-version
+spec: structured header; type: dfn; urlPrefix: https://tools.ietf.org/html/rfc8941; 
+    text: structured header; url: #name-introduction
+    for: structured header
+        text: list; url: #name-lists
+        text: serialize a list; url: #name-serializing-a-list
+        text: parse a list; url: #name-parsing-a-list
+        text: string; url: #name-strings
+        text: serialize a string; url: #name-serializing-a-string
+        text: parse a string; url: #name-parse-a-string
 </pre>
 
 Introduction {#intro}
@@ -355,12 +365,12 @@ Let |eligibility| be |request|'s [=request/Attribution Reporting eligibility=].
         true.
     : "<code>[=eligibility/trigger=]</code>"
     :: [=map/Set=] |dict|["<code>[=eligible key/trigger=]</code>"] to true.
-    :: [=Set trigger verification headers=] with |request| and |contextOrigin|.
+    :: [=set trigger verification request headers=] with |request| and |contextOrigin|.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: [=map/Set=] |dict|["<code>[=eligible key/event-source=]</code>"] to
         true and [=map/set=] |dict|["<code>[=eligible key/trigger=]</code>"]
         to true.
-    :: [=Set trigger verification headers=] with |request| and |contextOrigin|.
+    :: [=set trigger verification request headers=] with |request| and |contextOrigin|.
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Eligible=]</code>", |dict|) in |headers|.
 1. [=Set an OS-support header=] in |headers|.
@@ -1015,7 +1025,7 @@ random delay to deliver an [=aggregatable report=].
 obtain the public key for encrypting an [=aggregatable report=] by default.
 
 <dfn>Verification tokens per trigger</dfn> is a positive integer that controls the number of
-encoded masked messages sent for signature when [=set trigger verification headers|initiating trigger verification=]
+encoded masked messages sent for signature when [=set trigger verification request headers|initiating trigger verification=]
 and the maximum number of [=serialized private state tokens=] that can be attached to an [=attribution trigger=].
 
 # General Algorithms # {#general-algorithms}
@@ -3026,19 +3036,19 @@ To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
 
 # Report Verification Algorithms # {#report-verification}
 
-"<code><dfn>Sec-Attribution-Reporting-Private-State-Token</dfn></code>" is a
-header used to orchestrate Report Verification.
+The <dfn>Sec-Attribution-Reporting-Private-State-Token</dfn> is a [=structured header=] used
+to orchestrate report verification.
 
-"<code><dfn>Sec-Private-State-Token-Crypto-Version</dfn></code>" is a
-cryptographic protocol version, VOPRF.
-
+* When [=setting trigger verification request headers=], the field is a collection of unsigned masked tokens formatted as a [=structured header/list=] of [=structured header/string=].
+* When [=receiving trigger verification tokens=], the field is a collection of signed, masked tokens formatted as a [=structured header/list=] of [=structured header/string=].
+* When [=generating attribution report headers=], the header field is a single signed unmasked token formatted as a [=structured header/string=].
 
 <h3 id="initiate-trigger-verification">Initiate trigger verification</h3>
 
-To <dfn noexport>set trigger verification headers</dfn> given a [=request=] |request|
+To <dfn noexport>set trigger verification request headers</dfn> given a [=request=] |request|
 and an [=suitable origin=] |destination|:
 
-1. Let |issuer| be |request|'s [=request/URL]'s [=url/origin=].
+1. Let |issuer| be |request|'s [=request/URL=]'s [=url/origin=].
 1. If |issuer| is not [=check if an origin is suitable|suitable=], return.
 1. Let (|issuerKeys|,|pretokens|,|cryptoProtocolVersion|) be the result of [=looking up the key commitments=] for |issuer|.
 1. If |issuerKeys| is null, return.
@@ -3050,17 +3060,18 @@ and an [=suitable origin=] |destination|:
     1. Let |message| be the [=string/concatenate|concatenation=] of |id| and |destination|.
     1. Let |maskedMessage| be the result of [=generating masked tokens=] with |issuerKeys| and |message|.
     1. Let |base64EncodedMaskedMessage| be the [=forgiving-base64 encoding=] of |maskedMessage|.
-    1. [=list/Append=] |base64EncodedMaskedMessage| to |base64EncodedMaskedMessages|.
+    1. Let |fieldValue| be the result of [=structured header/serializing a string=] with |base64EncodedMaskedMessage|.
+    1. [=list/Append=] |fieldValue| to |base64EncodedMaskedMessages|.
 1. Let  |request|'s [=request/trigger verification metadata=] be an [=request/trigger verification metadata=] with the items:
     : [=request/trigger verification metadata/pretokens=]
     :: |pretokens|
     : [=request/trigger verification metadata/ids=]
     :: |ids|
 1. [=header list/Set a structured field value=] given
-    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", |base64EncodedMaskedMessages|)
+    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", the result of [=structured header/serializing a list=] with |base64EncodedMaskedMessages|)
     in |request|'s  [=request/header list=].
 1. [=header list/Set a structured field value=] given
-    ("<code>[=Sec-Private-State-Token-Crypto-Version=]</code>", |cryptoProtocolVersion|)
+    ("<code>[=Sec-Private-State-Token-Crypto-Version=]</code>", the result of [=structured header/serializing a string=] with |cryptoProtocolVersion|)
     in |request|'s  [=request/header list=].
 
 
@@ -3069,22 +3080,24 @@ Issue: Link to a generating masked tokens algorithm that receive messages.
 
 <h3 id="handle-trigger-verification">Handle trigger verification</h3>
 
-To <dfn noexport>receive trigger verification tokens</dfn>given an
+To <dfn noexport>receive trigger verification tokens</dfn> given an
 [=url/origin=] |issuer|, a [=header list=] |headers| and a
-[=request/trigger verification metadata=]|metadata|:
+[=request/trigger verification metadata=] |metadata|:
 
 1. If |metadata| is null, return a new [=list=].
 1. If |metadata|'s [=request/trigger verification metadata/ids=] [=list/size=] is not equal to [=verification tokens per trigger=], return a new [=list=].
 1. Let |pretokens| be |metadata|'s [=request/trigger verification metadata/pretokens=].
 1. Let |issuerKeys| be the result of [=looking up the key commitments=] for |issuer|.
 1. If |issuerKeys| is null, return a new [=list=].
-1. Let |base64EncodedMaskedTokens| be the result of [=header list/getting a structured field value=] given
+1. Let |fieldValue| be the result of [=header list/getting a structured field value=] given
     ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", "list") from |response|'s [=response/header list=].
+1. Let |base64EncodedMaskedTokens| be the result of [=structured header/parsing a list=] with |fieldValue|.
 1. [=header list/delete|Delete=] <code>[=Sec-Attribution-Reporting-Private-State-Token=]</code> from |response|'s [=response/header list=].
 1. If |base64EncodedMaskedTokens|'s [=list/size=] is greater than |metadata|'s [=request/trigger verification metadata/ids=] [=list/size=], return a new [=list=].
 1. Let |base64EncodedPrivateStateTokens| be a new [=list=].
 1.  [=list/iterate|For each=] |base64EncodedMaskedToken| in |base64EncodedMaskedTokens|:
-    1. Let |maskedToken| be the [=forgiving-base64 decoding=] of |base64EncodedMaskedToken|.
+    1. Let |base64EncodedMaskedTokenValue| be the [=structured header/parsing a string=] with |base64EncodedMaskedToken|.
+    1. Let |maskedToken| be the [=forgiving-base64 decoding=] of |base64EncodedMaskedTokenValue|.
     1. Let |token| be the result of [=unmasking tokens=] given |issuerKeys|, |pretokens| and |maskedToken|.
     1. If |token| is null, return a new [=list=].
     1. Let |privateStateToken| be the result of running a cryptographic redemption procedure with |token|.
@@ -3101,6 +3114,7 @@ To <dfn noexport>receive trigger verification tokens</dfn>given an
     1. [=list/Append=] |triggerVerification| to |triggerVerifications|
 1. Return |triggerVerifications|
 
+Issue: Specify the cryptographic redemption procedure.
 
 # Security considerations # {#security-considerations}
 TODO
