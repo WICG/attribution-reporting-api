@@ -1403,7 +1403,8 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
                 [=create an attribution trigger=] with |triggerHeader|
                 |destinationSite|, |reportingOrigin|, |privateStateTokens|, and
                 |context|'s [=current wall time=].
-            1. If |trigger| is not null, [=trigger attribution=] with |trigger|.
+            1. If |trigger| is not null:
+                1. [=Maybe defer and then complete trigger attribution=] with |trigger|.
         1. If |osSourceURLs| is not null and the user agent supports OS
             registrations, process |osSourceURLs| according to an
             [=implementation-defined=] algorithm.
@@ -2813,6 +2814,20 @@ and an optional [=aggregatable report=] <dfn for="generate null reports and assi
 1. If |report| is not null:
     1. [=list/Append=] |report| to |reports|.
 1. Run [=assign private state tokens=] with |reports| and |trigger|.
+
+<h3 id="deferring-trigger-attribution">Deferring trigger attribution</h3>
+
+To <dfn>maybe defer and then complete trigger attribution</dfn> given an [=attribution trigger=] |trigger|,
+run the following steps [=in parallel=]:
+
+1. Let |navigation| be the navigation that landed on the [=document=] from which |trigger|'s registration was initiated.
+1. If |navigation| is null, return.
+1. Let |sources| be all source registrations originating from background attributionsrc requests initiated by |navigation|.
+1. If |sources| is empty, return.
+1. Wait until all |sources| are [=process an attribution source|processed=].
+1. [=Trigger attribution=] with |trigger|.
+
+Issue: Specify this in terms of <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigating-across-documents">Navigation</a>
 
 # Report delivery # {#report-delivery}
 
