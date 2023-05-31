@@ -691,7 +691,7 @@ An event-level trigger configuration is a [=struct=] with the following items:
 <h3 id="aggregation-coordinator-header">Aggregation coordinator</h3>
 
 An <dfn>aggregation coordinator</dfn> is one of a user-agent-determined [=set=]
-of [=origins=] that specifies which aggregation service deployment to use.
+of non-[=opaque origins=] that specifies which aggregation service deployment to use.
 
 <h3 id="aggregatable-source-registration-time-configuration-header">Aggregatable source registration time configuration</h3>
 
@@ -2904,15 +2904,13 @@ of running the following steps:
 
 To <dfn>obtain the public key for encryption</dfn> given an [=aggregation coordinator=] |aggregationCoordinator|:
 
-1. [=Assert=]: |aggregationCoordinator| is not an [=opaque origin=].
 1. Let |url| be a new [=URL record=].
 1. Set |url|'s [=url/scheme=] to |aggregationCoordinator|'s [=origin/scheme=].
 1. Set |url|'s [=url/host=] to |aggregationCoordinator|'s [=origin/host=].
 1. Set |url|'s [=url/port=] to |aggregationCoordinator|'s [=origin/port=].
-1. Let |path| be «"`.well-known`", "`aggregation-service`", "`public-keys`"».
-1. Set |url|'s [=url/path=] to |path|.
-1. Asynchronously return a user-agent-determined public key from |url| or an error in the event that the user
-    agent failed to obtain the public key from |url|.
+1. Set |url|'s [=url/path=]  to «"`.well-known`", "`aggregation-service`", "`public-keys`"».
+1. Return a user-agent-determined public key from |url| or an error in the event that the user
+    agent failed to obtain the public key from |url|. This step may be asynchronous.
 
 Note: The user agent might enforce weekly key rotation. If there are multiple keys, the user agent
 might independently pick a key uniformly at random for every encryption operation.
