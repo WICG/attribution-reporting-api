@@ -945,7 +945,7 @@ applied to all unexpired sources regardless of type at source time.
 
 #### Limiting the number of unique destinations per source site
 
-To further reduce the possibility of a history reconstruction attack, the browser can also limit the number of `destination` eTLD+1s represented by source-sites.
+To further reduce the possibility of a history reconstruction attack, the browser can also limit the number of `destination` eTLD+1s registered by source-sites.
 
 Strawman: 200 distinct destination sites per-{source site, 1 minute}
 
