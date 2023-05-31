@@ -1106,6 +1106,31 @@ To <dfn>serialize an integer</dfn>, represent it as a string of the shortest pos
 Issue: This would ideally be replaced by a more descriptive algorithm in Infra. See
 <a href="https://github.com/whatwg/infra/issues/201">infra/201</a>
 
+<h3 id="parsing-json-fields">Parsing JSON fields</h3>
+
+To <dfn>parse an optional 64-bit signed integer</dfn> given a [=map=] |map|, a
+[=string=] |key|, and a possibly null 64-bit signed integer |default|:
+
+1. If |map|[|key|] does not [=map/exists|exist=], return |default|.
+1. If |map|[|key|] is not a [=string=], return an error.
+1. Let |value| be the result of applying the
+    <a spec="html">rules for parsing integers</a> to |map|[|key|].
+1. If |value| is an error, return an error.
+1. If |value| cannot be represented by a 64-bit signed integer, return an error.
+1. Return |value|.
+
+To <dfn>parse an optional 64-bit unsigned integer</dfn> given a [=map=] |map|,
+a [=string=] |key|, and a possibly null 64-bit unsigned integer |default|:
+
+1. If |map|[|key|] does not [=map/exists|exist=], return |default|.
+1. If |map|[|key|] is not a [=string=], return an error.
+1. Return the result of applying the
+    <a spec="html">rules for parsing non-negative integers</a> to |map|[|key|].
+1. If |value| is an error, return an error.
+1. If |value| cannot be represented by a 64-bit unsigned integer, return an
+    error.
+1. Return |value|.
+
 <h3 id="serialize-destinations">Serialize attribution destinations</h3>
 
 To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destinations|, run the following steps:
@@ -1472,17 +1497,21 @@ To <dfn>parse attribution destinations</dfn> from a value |val|:
 1. If |result| [=set/is empty=], return null.
 1. return |result|.
 
-To <dfn>obtain a source expiry</dfn> given a |value|:
+To <dfn>parse an expiry</dfn> given a [=map=] |map|, a [=string=] |key|, and a
+positive [=duration=] |default|:
 
-1. If |value| is not a [=string=], return null.
-1. Let |expirySeconds| be the result of applying the
-    <a spec="html">rules for parsing integers</a> to |value|.
-1. If |expirySeconds| is an error, return null.
-1. Let |expiry| be |expirySeconds| seconds.
-1. If |expiry| is less than 1 day, set |expiry| to 1 day.
-1. If |expiry| is greater than the [=max source expiry=], set |expiry| to that
-    value.
+1. [=Assert=]: |default| is greater than or equal to 1 day.
+1. [=Assert=]: |default| is less than or equal to the [=max source expiry=].
+1. Let |seconds| be the result of running
+    [=parse an optional 64-bit signed integer=] with |map|, |key|, and null.
+1. If |seconds| is an error, return an error.
+1. If |seconds| is null, return |default|.
+1. Let |expiry| be |seconds| seconds.
+1. If |expiry| is less than 1 day, return 1 day.
+1. If |expiry| is greater than |default|, return |default|.
 1. Return |expiry|.
+
+Issue: Consider rejecting out-of-bounds values instead of silently clamping.
 
 To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
 
@@ -1508,25 +1537,21 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |value| be the result of running
     [=parse JSON bytes to an Infra value=] with |json|.
 1. If |value| is not an [=ordered map=], return null.
-1. Let |sourceEventId| be 0.
-1. If |value|["`source_event_id`"] [=map/exists=] and is a [=string=]:
-    1. Set |sourceEventId| to the result of applying the
-        <a spec="html">rules for parsing non-negative integers</a> to
-        |value|["`source_event_id`"].
-    1. If |sourceEventId| is an error, set |sourceEventId| to 0.
+1. Let |sourceEventId| be the result of running
+    [=parse an optional 64-bit unsigned integer=] with |value|,
+    "`source_event_id`", and 0.
+1. If |sourceEventId| is an error, return null.
 1. If |value|["`destination`"] does not [=map/exists|exist=], return null.
 1. Let |attributionDestinations| be the result of running
     [=parse attribution destinations=] with |value|["`destination`"].
 1. If |attributionDestinations| is null, return null.
-1. Let |expiry| be the result of running [=obtain a source expiry=] on |value|["`expiry`"].
-1. If |expiry| is null, set |expiry| to 30 days.
-1. Let |eventReportWindow| be the result of running [=obtain a source expiry=] on |value|["`event_report_window`"].
-1. Let |aggregatableReportWindow| be the result of running [=obtain a source expiry=] on |value|["`aggregatable_report_window`"].
-1. Let |priority| be 0.
-1. If |value|["`priority`"] [=map/exists=] and is a [=string=]:
-    1. Set |priority| to the result of applying the
-        <a spec="html">rules for parsing integers</a> to |value|["`priority`"].
-    1. If |priority| is an error, set |priority| to 0.
+1. Let |expiry| be the result of running [=parse an expiry=] with |value|,
+    "`expiry`", and the [=max source expiry=].
+1. If |expiry| is an error, return null.
+1. Let |priority| be the result of running
+    [=parse an optional 64-bit signed integer=] with |value|, "`priority`", and
+    0.
+1. If |priority| is an error, return null.
 1. Let |filterData| be a new [=filter map=].
 1. If |value|["`filter_data`"] [=map/exists=]:
     1. Set |filterData| to the result of running [=parse filter data=] with
@@ -1534,14 +1559,12 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     1. If |filterData| is null, return null.
     1. If |filterData|["`source_type`"] [=map/exists=], return null.
 1. [=map/Set=] |filterData|["`source_type`"] to « |sourceType| ».
-1. Let |debugKey| be null.
-1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
-    1. Set |debugKey| to the result of applying the
-        <a spec="html">rules for parsing non-negative integers</a> to
-        |value|["`debug_key`"].
-    1. If |debugKey| is an error, set |debugKey| to null.
-    1. If the result of running [=check if cookie-based debugging is allowed=] with
-        |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
+1. Let |debugKey| be the result of running
+    [=parse an optional 64-bit unsigned integer=] with |value|, "`debug_key`",
+    and null.
+1. If |debugKey| is an error, set |debugKey| to null.
+1. If the result of running [=check if cookie-based debugging is allowed=] with
+    |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
 1. If |aggregationKeys| is null, return null.
 1. Let |triggerDataCardinality| be the user agent's
@@ -1554,8 +1577,12 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
         [=event-source trigger data cardinality=].
     1. Set |maxAttributionsPerSource| to the user agent's
         [=max attributions per event source=].
-1. If |eventReportWindow| is null or greater than |expiry|, set |eventReportWindow| to |expiry|.
-1. If |aggregatableReportWindow| is null or greater than |expiry|, set |aggregatableReportWindow| to |expiry|.
+1. Let |eventReportWindow| be the result of running [=parse an expiry=] with
+    |value|, "`event_report_window`", and |expiry|.
+1. If |eventReportWindow| is an error, return null.
+1. Let |aggregatableReportWindow| be the result of running [=parse an expiry=]
+    with |value|, "`aggregatable_report_window`", and |expiry|.
+1. If |aggregatableReportWindow| is an error, return null.
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to |value|["`debug_reporting`"].
@@ -1850,24 +1877,18 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
 1. If |values| is not a [=list=], return null.
 1. [=list/iterate|For each=] |value| of |values|:
     1. If |value| is not an [=ordered map=], return null.
-    1. Let |triggerData| be 0.
-    1. If |value|["`trigger_data`"] [=map/exists=] and is a [=string=]:
-        1. Set |triggerData| to the result of applying the
-            <a spec="html">rules for parsing non-negative integers</a> to
-            |value|["`trigger_data`"].
-        1. If |triggerData| is an error, set |triggerData| to 0.
-    1. Let |dedupKey| be null.
-    1. If |value|["`deduplication_key`"] [=map/exists=] and is a [=string=]:
-        1. Set |dedupKey| to the result of applying the
-            <a spec="html">rules for parsing non-negative integers</a> to
-            |value|["`deduplication_key`"].
-        1. If |dedupKey| is an error, set |dedupKey| to null.
-    1. Let |priority| be 0.
-    1. If |value|["`priority`"] [=map/exists=] and is a [=string=]:
-        1. Set |priority| to the result of applying the
-            <a spec="html">rules for parsing integers</a> to
-            |value|["`priority`"].
-        1. If |priority| is an error, set |priority| to 0.
+    1. Let |triggerData| be the result of running
+        [=parse an optional 64-bit unsigned integer=] with |value|,
+        "`trigger_data`", and 0.
+    1. If |triggerData| is an error, return null.
+    1. Let |dedupKey| be the result of running
+        [=parse an optional 64-bit unsigned integer=] with |value|,
+        "`deduplication_key`", and null.
+    1. If |dedupKey| is an error, return null.
+    1. Let |priority| be the result of running
+        [=parse an optional 64-bit signed integer=] with |value|, "`priority`",
+        and 0.
+    1. If |priority| is an error, return null.
     1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filters=] with
@@ -1959,11 +1980,10 @@ To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
 1. If |values| is not a [=list=], return null.
 1. [=list/iterate|For each=] |value| of |values|:
     1. If |value| is not an [=ordered map=], return null.
-    1. Let |dedupKey| be null.
-    1. If |value|["`deduplication_key`"] [=map/exists=] and is a [=string=]:
-        1. Set |dedupKey| to the result of applying the <a spec="html">rules for parsing non-negative integers</a> to
-            |value|["`deduplication_key`"].
-        1. If |dedupKey| is an error, set |dedupKey| to null.
+    1. Let |dedupKey| be the result of running
+        [=parse an optional 64-bit unsigned integer=] with |value|,
+        "`deduplication_key`", and null.
+    1. If |dedupKey| is an error, return null.
     1. Let |filters| be a new [=filter map=].
     1. If |values|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filter data=] with |value|["`filters`"].
@@ -2017,14 +2037,12 @@ and a [=moment=] |triggerTime|:
 1. Let |aggregatableDedupKeys| be the result of running [=parse aggregatable dedup keys=]
     with |value|.
 1. If |aggregatableDedupKeys| is null, return null.
-1. Let |debugKey| be null.
-1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
-    1. Set |debugKey| to the result of applying the
-        <a spec="html">rules for parsing non-negative integers</a> to
-        |value|["`debug_key`"].
-    1. If |debugKey| is an error, set |debugKey| to null.
-    1. If the result of running [=check if cookie-based debugging is allowed=] with
-        |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
+1. Let |debugKey| be the result of running
+    [=parse an optional 64-bit unsigned integer=] with |value|, "`debug_key`",
+    and null.
+1. If |debugKey| is an error, set |debugKey| to null.
+1. If the result of running [=check if cookie-based debugging is allowed=] with
+    |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
 1. If |value|["`filters`"] exists:
     1. Set |filters| to the result of running [=parse filters=] with
