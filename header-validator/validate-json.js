@@ -192,6 +192,7 @@ const suitableUrl = string((state, url) => {
     state.warn('contains a fragment that will be ignored')
   }
 })
+
 const destinationList = list(suitableUrl, 3, 1)
 
 const destinationValue = (state, value) => {
