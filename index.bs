@@ -3248,7 +3248,48 @@ To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
 
 # Security considerations # {#security-considerations}
 
-Issue: Fill in this section.
+## Same origin policy ## {#same-origin-policy}
+
+*This section is non-normative.*
+
+Writes to the [=attribution source cache=], [=event-level report cache=], and
+[=aggregatable report cache=] are separated by the reporting [=origin=], and reports sent
+to a given [=origin=] are generated via data only written to by that [=origin=], via
+HTTP response headers.
+
+However, the [=attribution rate-limit cache=] is not fully partitioned by [=origin=]. Reads
+to that cache involve grouping together data submitted by multiple origins. This is the case
+for the following limits:
+- [=max destinations per rate-limit window=][0]
+- [=max source reporting origins per rate-limit window=]
+- [=max source reporting origins per source reporting site=]
+- [=max attribution reporting origins per rate-limit window=]
+
+These limits are explicit relaxations of the Same Origin Policy, in that they allow
+different origins to influence the API's behavior. In particular, one risk that is
+introduced with these shared limits is denial of service attacks, where a group of
+origins could collude to intentionally hit a rate-limit, causing subsequent origins to
+be unable to access the API.
+
+This trades off security for privacy, in that the limits are there to reduce the efficiacy
+of many origins colluding together to violate privacy. API deployments should monitor
+for abuse using these vectors to evaluate the trade-off.
+
+ISSUE: Discuss Same origin policy with respect to debug reports.
+
+## Opting in to the API ## {#opting-in-to-the-api}
+
+*This section is non-normative.*
+
+As a general principle, the API cannot be used purely at the HTTP layer without some level of
+opt-in from Javascript or HTML. For HTML, this opt-in is in the form of the
+{{HTMLAttributionSrcElementUtils/attributionSrc}} attribute, and for Javascript, it is
+the various modifications to [=fetch=], {{XMLHttpRequest}} and the [=window open steps=].
+
+However, this principle is only strictly applied to registering [=attribution sources=]. For
+[=triggering attribution=], we waive this requirement for the sake of compatibility with existing
+systems, see <a href="https://github.com/WICG/attribution-reporting-api/issues/347">347</a> for
+context.
 
 # Privacy considerations # {#privacy-considerations}
 
