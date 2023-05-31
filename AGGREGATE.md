@@ -304,7 +304,7 @@ shared.
 The encryption will use public keys specified by the aggregation service. The
 browser will encrypt payloads just before the report is sent by fetching the
 public key endpoint (the aggregation service coordinator origin at the path
- `.well-known/aggregation-service/publick-keys`) with an un-credentialed request. The processing origin will
+ `/.well-known/aggregation-service/public-keys`) with an un-credentialed request. The processing origin will
 respond with a set of keys which will be stored according to standard HTTP
 caching rules, i.e. using Cache-Control headers to dictate how long to store the
 keys for (e.g. following the [freshness
@@ -458,8 +458,8 @@ Currently the aggregation service can be deployed on Amazon Web Services (AWS). 
 
 Trigger registration will accept an optional string field `aggregation_coordinator_origin`
 to allow developers to specify the deployment option for the aggregation service
-supported by the browser, e.g. the origin for the aggregation service deloyed on
-AWS, and GCP and other platforms in the future.
+supported by the browser, e.g. the origin for the aggregation service deployed on
+AWS, GCP, and other platforms in the future.
 
 ```jsonc
 {
