@@ -948,6 +948,16 @@ any one reporting site.
 Strawman: 100 distinct destination sites per-{source site, reporting site},
 applied to all unexpired sources regardless of type at source time.
 
+#### Limiting the number of unique destinations per source site
+
+To further reduce the possibility of a history reconstruction attack, the browser can also limit the number of `destination` eTLD+1s registered by source-sites.
+
+Strawman: 200 distinct destination sites per-{source site, 1 minute}
+
+Additionally, to prevent one origin from using up the budget in the limit above, the browser can also limit the number of `destination` eTLD+1s per reporting origin.
+
+Strawman: 50 distinct destination sites per-{source site, reporting origin, 1 minute}
+
 ### Differential privacy
 
 A goal of this work is to create a framework that would support making
@@ -1018,8 +1028,8 @@ sent in some cases. It is important to consider all the cases where an origin
 could utilize the API in some way to lock out other origins, and minimize that
 risk if possible.
 
-Currently, the only known limit in this proposal that could risk denial of
-service is the [reporting origin limits](#reporting-origin-limits). This is an
+Currently, the only known limits in this proposal that could risk denial of
+service are the [reporting origin limits](#reporting-origin-limits) and the [number of unique destinations per source site limits](#limiting-the-number-of-unique-destinations-per-source-site). These are an
 explicit trade-off for privacy that should be monitored for abuse.
 
 ### Top site permission model
