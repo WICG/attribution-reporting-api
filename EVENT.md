@@ -1023,8 +1023,8 @@ sent in some cases. It is important to consider all the cases where an origin
 could utilize the API in some way to lock out other origins, and minimize that
 risk if possible.
 
-Currently, the only known limit in this proposal that could risk denial of
-service is the [reporting origin limits](#reporting-origin-limits). This is an
+Currently, the only known limits in this proposal that could risk denial of
+service are the [reporting origin limits](#reporting-origin-limits) and the [number of unique destinations per source site limits](#limiting-the-number-of-unique-destinations-per-source-site). These are an
 explicit trade-off for privacy that should be monitored for abuse.
 
 ### Top site permission model
