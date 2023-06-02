@@ -3285,7 +3285,18 @@ This trades off security for privacy, in that the limits are there to reduce the
 of many origins colluding together to violate privacy. API deployments should monitor
 for abuse using these vectors to evaluate the trade-off.
 
-Issue: Discuss Same-Origin Policy with respect to debug reports.
+The generation of [=attribution debug reports=] involves reads to the [=attribution source cache=],
+[=event-level report cache=], [=aggregatable report cache=], and [=attribution rate-limit cache=],
+and the [=attribution debug data=] sent to a given [=origin=] may encode non-Same-Origin
+data that are generated from grouping together data submitted by multiple [=origins=],
+e.g. failures due to rate-limits that are not fully compliant with the Same-Origin Policy.
+This is of greater concern for source registrations as the [=attribution source/source origin=]
+could intentionally hit a rate-limit to identify sensitive user data. These [=attribution debug data=]
+cannot be reported explicitly and may be reported as a [=source debug data type/source-success=]
+[=attribution debug report=]. This is a tradeoff between security and utility, and mitigates the
+security concern with respect to the Same-Origin Policy. The risk is of less concern for
+trigger registrations as [=attribution sources=] have to be registered to start with and
+it requires browsing activity on multiple sites.
 
 ## Opting in to the API ## {#opting-in-to-the-api}
 
