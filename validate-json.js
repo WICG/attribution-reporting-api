@@ -162,7 +162,7 @@ const hex128 = string((state, value) => {
   }
 })
 
-const destination = string((state, url) => {
+const suitableUrl = string((state, url) => {
   try {
     url = new URL(url)
   } catch {
@@ -192,11 +192,12 @@ const destination = string((state, url) => {
     state.warn('contains a fragment that will be ignored')
   }
 })
-const destinationList = list(destination, 3, 1)
+
+const destinationList = list(suitableUrl, 3, 1)
 
 const destinationValue = (state, value) => {
   if (typeof value === 'string') {
-    return destination(state, value)
+    return suitableUrl(state, value)
   }
   if (isArray(value)) {
     return destinationList(state, value)
@@ -285,14 +286,6 @@ const eventTriggerData = list(
       trigger_data: optional(uint64),
     }))
 
-const aggregationCoordinator = string((state, value) => {
-  const awsCloud = 'aws-cloud'
-  if (value === awsCloud) {
-    return
-  }
-  state.error(`must match '${awsCloud}' (case-sensitive)`)
-})
-
 const aggregatableDedupKeys = list(
   (state, value) =>
     state.validate(value, {
@@ -315,7 +308,7 @@ export function validateTrigger(trigger) {
   state.validate(trigger, {
     aggregatable_trigger_data: optional(aggregatableTriggerData),
     aggregatable_values: optional(aggregatableValues),
-    aggregation_coordinator_identifier: optional(aggregationCoordinator),
+    aggregation_coordinator_origin: optional(suitableUrl),
     debug_key: optional(uint64),
     debug_reporting: optional(bool),
     event_trigger_data: optional(eventTriggerData),
