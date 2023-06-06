@@ -669,6 +669,20 @@ An aggregatable dedup key is a [=struct=] with the following items:
 :: A [=filter map=].
 
 </dl>
+        
+<h3 dfn-type=dfn>Lookback window</h3>
+
+A lookback window is a [=struct=] with the following items:
+
+<dl dfn-for="lookback window">
+: <dfn>window</dfn>
+:: a [=duration=].
+: <dfn>filters</dfn>
+:: A [=filter map=].
+: <dfn>negated filters</dfn>
+:: A [=filter map=].
+
+</dl>
 
 <h3 dfn-type=dfn>Event-level trigger configuration</h3>
 
@@ -732,6 +746,8 @@ An attribution trigger is a [=struct=] with the following items:
     [=map/value|values=] are non-negative 32-bit integers.
 : <dfn>aggregatable dedup keys</dfn>
 :: A [=list=] of [=aggregatable dedup key=].
+: <dfn>lookback windows</dfn>
+:: A [=list=] of [=lookback windows=].
 : <dfn>serialized private state tokens</dfn>
 :: A [=list=] of [=byte sequence=].
 : <dfn>debug reporting enabled</dfn>
@@ -888,6 +904,7 @@ Possible values are:
 <li>"<dfn><code>trigger-no-matching-source</code></dfn>"
 <li>"<dfn><code>trigger-no-matching-filter-data</code></dfn>"
 <li>"<dfn><code>trigger-reporting-origin-limit</code></dfn>"
+<li>"<dfn><code>trigger-source-outside-lookback</code></dfn>"
 <li>"<dfn><code>trigger-unknown-error</code></dfn>"
 </ul>
 
@@ -2018,6 +2035,37 @@ ISSUE: properly define the "finishing issuance" operation.
 ISSUE: properly define "begin redemption" operation. Consider running the algorithm at report sending time.
 
 1. Return the result of [=forgiving-base64 encoding=] |redeemedBytes|.
+    
+To <dfn>parse lookback windows</dfn> given an [=ordered map=] |map|:
+
+1. Let |lookbackWindows| be a new [=list=].
+1. If |map|["`lookback_windows`"] does not [=map/exist=], return |aggregatableDedupKeys|.
+1. Let |values| be |map|["`lookback_windows`"].
+1. If |values| is not a [=list=], return null.
+1. [=list/iterate|For each=] |value| of |values|:
+    1. If |value| is not an [=ordered map=], return null.
+    1. If |value|["`window`"] does not [=map/exist=] or is not a [=string=], return null.
+    1. Let |window| be the result of running
+        [=parse an optional 64-bit unsigned integer=] with |value|,
+        "`window`", and null.
+    1. If |window| is an error, return null.
+    1. Let |filters| be a new [=filter map=].
+    1. If |values|["`filters`"] [=map/exists=]:
+        1. Set |filters| to the result of running [=parse filter data=] with |value|["`filters`"].
+        1. If |filters| is null, return null.
+    1. Let |negatedFilters| be a new [=filter map=].
+    1. If |values|["`not_filters`"] [=map/exists=]:
+        1. Set |negatedFilters| to the result of running [=parse filter data=] with |value|["`not_filters`"].
+        1. If |negatedFilters| is null, return null.
+    1. Let  |lookbackWindow| be a new [=lookback window=] with the items:
+        : [=lookback window/window=]
+        :: |window| seconds
+        : [=lookback window/filters=]
+        :: |filters|
+        : [=lookback window/negated filters=]
+        :: |negatedFilters|
+    1. [=set/Append=] |lookbackWindow| to |lookbackWindows|.
+1. Return |lookbackWindows|.
 
 To <dfn noexport>create an attribution trigger</dfn> given a [=byte sequence=]
 |json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, a [=list=] of [=strings=] |privateStateTokens|,
@@ -2073,6 +2121,7 @@ and a [=moment=] |triggerTime|:
 1. [=list/iterate|For each=] |privateStateToken| of |privateStateTokens|:
     1. Let |serializedPrivateStateToken| be the result of [=serializing a private state token=] with |privateStateToken|.
     1. [=list/Append=] |serializedPrivateStateToken| to  |serializedPrivateStateTokens|.
+1. Let |lookbackWindows| be the result of running [=parse lookback windows=] with |value|.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -2094,6 +2143,8 @@ and a [=moment=] |triggerTime|:
     :: |aggregatableValues|
     : [=attribution trigger/aggregatable dedup keys=]
     :: |aggregatableDedupKeys|
+    : [=attribution trigger/lookback windows=]
+    :: |lookbackWindows|
     : [=attribution trigger/serialized private state tokens=]
     :: |serializedPrivateStateTokens|
     : [=attribution trigger/debug reporting enabled=]
@@ -2162,6 +2213,16 @@ To <dfn>match an attribution source's filter data against filters and negated fi
     |source|, |notFilters|, and [=match an attribution source's filter data against filters/isNegated=] set to true is false, return false.
 1. Return true.
 
+<h3 dfn id="check-source-in-window">Check if source is in lookback window</h3>
+    
+To  <dfn>check if source is in lookback window</dfn> given an [=attribution source=] |source| and [=attribution trigger=] |trigger|:
+
+1. If |trigger|'s [=attribution trigger/lookback windows=] is [=list/is empty=], return true.
+1.  [=list/iterate|For each=] |lookbackWindow| of |trigger|'s [=attribution trigger/lookback windows=]:
+    1. If the result of running [=match an attribution source's filter data against filters and negated filters=] given |source|, |lookbackWindow|'s [=lookback window/filters=], 
+         and |lookbackWindow|'s [=lookback window/negated filters=] is false, [=iteration/continue=].
+    1. If [=current wall time=] - |source|'s [=attribution source/source time=] is less than |lookbackWindow|'s [=lookback window/window=], return true. Otherwise, return false.
+ 
 <h3 dfn id="should-block-attribution-for-attribution-limit">Should attribution be blocked by attribution rate limit</h3>
 
 Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToAttribute|:
@@ -2550,6 +2611,15 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     |trigger|'s [=attribution trigger/negated filters=] is false,
     1. Run [=obtain and deliver a debug report on trigger registration=]
         with "<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>",
+        |trigger|, and |sourceToAttribute|.
+    1. If |hasAggregatableData| is true, then run [=generate null reports and assign private state tokens=]
+        with |trigger| and [=generate null reports and assign private state tokens/report=] set to null.
+    1. Return.
+1. If the result of running
+    [=check if source is in lookback window=] with
+    |sourceToAttribute| and |trigger| is false,
+    1. Run [=obtain and deliver a debug report on trigger registration=]
+        with "<code>[=trigger debug data type/trigger-source-outside-lookback=]</code>",
         |trigger|, and |sourceToAttribute|.
     1. If |hasAggregatableData| is true, then run [=generate null reports and assign private state tokens=]
         with |trigger| and [=generate null reports and assign private state tokens/report=] set to null.
