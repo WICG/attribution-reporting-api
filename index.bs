@@ -39,6 +39,8 @@ spec: hr-time; type: dfn; urlPrefix: https://w3c.github.io/hr-time/
     text: moment; url: #dfn-moment
 spec: idl; type: dfn; urlPrefix: https://webidl.spec.whatwg.org/
     text: throw; url: #dfn-throw
+spec: fenced-frame; type: dfn; urlPrefix: https://wicg.github.io/fenced-frame/
+    text: send a beacon; url:#send-a-beacon
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
     text: generate a random UUID; url: #dfn-generate-a-random-uuid
 spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
@@ -498,6 +500,10 @@ Add the step:
 1. [=Set Attribution Reporting headers=] with |req|'s [=request/header list=]
     and <a>this</a>'s <a href=#xmlhttprequest-eligibility>Attribution Reporting
     eligibility</a>.
+
+# Fenced Frame monkeypatches # {#fenced-frame-monkeypatches}
+
+Issue: Modify [=send a beacon=] when the [=fetch=] integration is specified.
 
 # Permissions Policy integration # {#permission-policy-integration}
 
@@ -1360,7 +1366,10 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
 
 Issue: Audit other properties on |request| and set them properly.
 
-Issue: Support header-processing on redirects.
+Issue(839): Support header-processing on redirects. Due to <a href=https://fetch.spec.whatwg.org/#atomic-http-redirect-handling>atomic HTTP redirect handling</a>,
+we cannot process registrations through integration with [=fetch=].
+
+Issue: Support header-processing on [=send a beacon|fenced frame reporting beacons=].
 
 Issue: Check for transient activation with "<code>[=eligibility/navigation-source=]</code>".
 
@@ -1876,8 +1885,6 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 
 Note: Because a fake report does not have a "real" effective destination, we need to subtract from the
 privacy budget of all possible destinations.
-
-Issue: Should fake reports respect the user agent's [=max event-level reports per attribution destination=]?
 
 # Triggering Algorithms # {#trigger-algorithms}
 
@@ -3434,6 +3441,14 @@ Aggregatable reports protect against cross-site information disclosure in two pr
 Issue: add links to the aggregation service noise addition algorithm.
 
 Issue: model the channel capacity of a trigger registration.
+
+### Debug reports ### {#cross-site-information-disclosure-debug-reports}
+
+Fine-grained cross-site information may be embedded in [=attribution reports=] sent with
+[=generate an attribution report URL/isDebugReport=] being true and certain [=debug data type|types=]
+of [=attribution debug reports=]. These reports will only be [=check if cookie-based debugging is allowed|allowed=]
+when third-party cookies are available, in which case the API caller
+had the capability to learn the underlying information.
 
 ## Protecting against cross-site recognition ## {#protecting-against-cross-site-recognition}
 
