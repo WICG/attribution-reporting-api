@@ -40,8 +40,8 @@ spec: idl; type: dfn; urlPrefix: https://webidl.spec.whatwg.org/
     text: throw; url: #dfn-throw
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
     text: generate a random UUID; url: #dfn-generate-a-random-uuid
-spec: fenced-frame; type: dfn; urlPrefix: https://wicg.github.io/fenced-frame/
-    text: send a beacon; url:#send-a-beacon
+urlPrefix: https://wicg.github.io/fenced-frame/; type: interface
+    text: Fence
 </pre>
 <pre class=biblio>
 {
@@ -503,7 +503,69 @@ Add the step:
 
 # Fenced Frame monkeypatches # {#fenced-frame-monkeypatches}
 
-Issue: Modify [=send a beacon=] when the [=fetch=] integration is specified.
+Modify {{Fence/reportEvent()}} as follows:
+
+Replace the step
+
+> Run <a spec=fenced-frame>report an event</a> using <var ignore>instance</var>'s
+> [=fenced frame config instance/fenced frame reporter=] with |destination|,
+> |event|'s {{FenceEvent/eventType}}, and |event|'s {{FenceEvent/eventData}}.
+
+with
+
+Run <a spec=fenced-frame>report an event</a> using <var ignore>instance</var>'s
+[=fenced frame config instance/fenced frame reporter=] with |destination|,
+|event|'s {{FenceEvent/eventType}}, |event|'s {{FenceEvent/eventData}},
+and [=this=]'s [=relevant global object=]'s [=associated Document=].
+
+Modify <a spec=fenced-frame>report an event</a> as follows:
+
+Add a [=Document=] parameter called |document|.
+
+Replace the step
+
+> <a spec=fenced-frame>Send a beacon</a> with <var ignore>reporting map</var>[|destination|],
+> |eventType|, and |eventData|.
+
+With
+
+<a spec=fenced-frame>Send a beacon</a> with <var ignore>reporting map</var>[|destination|],
+|eventType|, |eventData|, and |document|.
+
+Modify [=finalize a reporting destination=] as follows:
+
+Add a [=Document=] parameter called |document|.
+
+Replace the step
+
+> <a spec=fenced-frame>Send a beacon</a> with |destination map|, |pending event|'s [=pending event/eventType=],
+> and |pending event|'s [=pending event/eventData=].
+
+With
+
+<a spec=fenced-frame>Send a beacon</a> with |destination map|, |pending event|'s [=pending event/eventType=],
+|pending event|'s [=pending event/eventData=], and |document|.
+
+Modify <a spec=fenced-frame>send a beacon</a> as follows:
+
+Add a [=Document=] parameter called |document|.
+
+After the step
+
+> Let <var ignore>destination url</var> be <var ignore>destination map</var>[|eventType|].
+
+add the steps
+
+1. Let |attributionReportingEligibility| be "<code>[=eligibility/unset=]</code>".
+1. If the "`attribution-reporting`" feature <a href="https://w3c.github.io/webappsec-permissions-policy/#algo-is-feature-enabled">is enabled</a>
+     in |document| with |document|'s [=origin=] and the result of [=getting supported registrars=]
+     is not [=set/is empty|empty=]:
+         1. Set |attributionReportingEligibility| to "<code>[=eligibility/event-source=]</code>".
+
+         Issue: Allow "<code>[=eligibility/navigation-source=]</code>" when automatic beacon is specified.
+
+Issue: Set [=request=]'s [=request/Attribution Reporting eligibility=] to |attributionReportingEligibility|
+when the [=fetch=] integration is specified.
 
 # Permissions Policy integration # {#permission-policy-integration}
 
@@ -1365,7 +1427,7 @@ Issue: Audit other properties on |request| and set them properly.
 Issue(839): Support header-processing on redirects. Due to <a href=https://fetch.spec.whatwg.org/#atomic-http-redirect-handling>atomic HTTP redirect handling</a>,
 we cannot process registrations through integration with [=fetch=].
 
-Issue: Support header-processing on [=send a beacon|fenced frame reporting beacons=].
+Issue: Support header-processing on <a spec="fenced-frame" lt="send a beacon">fenced frame reporting beacons</a>.
 
 Issue: Check for transient activation with "<code>[=eligibility/navigation-source=]</code>".
 
