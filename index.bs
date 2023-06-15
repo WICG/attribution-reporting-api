@@ -559,7 +559,8 @@ add the steps
 1. Let |attributionReportingEligibility| be "<code>[=eligibility/unset=]</code>".
 1. If the "`attribution-reporting`" feature <a href="https://w3c.github.io/webappsec-permissions-policy/#algo-is-feature-enabled">is enabled</a>
      in |document| with |document|'s [=origin=] and the result of [=getting supported registrars=]
-     is not [=set/is empty|empty=]:
+     is not [=set/is empty|empty=] and |document|'s [=node/context origin=]
+     [=check if an origin is suitable|is suitable=]:
          1. Set |attributionReportingEligibility| to "<code>[=eligibility/event-source=]</code>".
 
          Issue: Allow "<code>[=eligibility/navigation-source=]</code>" when automatic beacon is specified.
@@ -1310,6 +1311,11 @@ but it cannot: There is no way to consider *only* cookies whose http-only-flag
 is true and whose same-site-flag is "`None`"; there is no way to prevent the
 last-access-time from being modified; and the return value is a string that
 would have to be further processed to check for the "`ar_debug`" cookie.
+
+<h3 algorithm id="obtaining-context-origin">Obtaining context origin</h3>
+
+To obtain the <dfn for=node>context origin</dfn> of a [=node=] |node|, return |node|'s [=node navigable=]'s
+<a spec=fenced-frame for=navigable>unfenced container document</a>'s [=origin=].
 
 <h3 id="obtaining-randomized-response">Obtaining a randomized response</h3>
 
