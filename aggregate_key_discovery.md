@@ -75,7 +75,7 @@ Note: the truncated Laplace noise mechanism will apply to all API calls.
 
 ##  Example call with this new proposal
 
-Assuming an adtech uses the rightmost 42 bits of keyspace to encode attribution keys, and has found that a threshold of L1*2.5 provides a good precision/recall tradeoff for their use case. In this scenario, the adtech's call to the aggregation service would look as follows:
+Assuming an ad tech uses the rightmost 42 bits of keyspace to encode attribution keys, and has found that a threshold of L1*2.5 provides a good precision/recall tradeoff for their use case. In this scenario, the ad tech's call to the aggregation service would look as follows:
 
 ```python
 filtering_key_mask = [0]*(128-42) + [1]*42
