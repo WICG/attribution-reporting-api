@@ -1,6 +1,6 @@
 # Summary reports with key discovery
 
-This document describes possible new functionality in the server-side mechanisms for the aggregation service, which allows adtechs to query the Attribution Reporting API’s and Private Aggregation API’s summary reports without [pre-declaring every aggregation bucket](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATION_SERVICE_TEE.md#pre-declaring-aggregation-buckets). 
+This document describes possible new functionality in the server-side mechanisms for the aggregation service, which allows ad techs to query the Attribution Reporting API’s and Private Aggregation API’s summary reports without [pre-declaring every aggregation bucket](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATION_SERVICE_TEE.md#pre-declaring-aggregation-buckets). 
 
 This proposal is backward compatible; adtechs can still work with pre-declared buckets.
 
