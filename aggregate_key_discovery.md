@@ -12,7 +12,7 @@ _Note: This document describes possible new functionality in the Aggregation Ser
 The approach here is to provide adtechs flexibility to query the aggregation service:
 
 * Allow querying reports when the list of buckets in the input are unknown or difficult to determine ([issue #583](https://github.com/WICG/attribution-reporting-api/issues/583), [cross-network attribution without redirects](https://developer.android.com/design-for-safety/privacy-sandbox/attribution#cross-network-attrib-without-redirects))
-* Allow controlling output buckets (the buckets that are included in the summary report(s) that is returned by the aggregation service upon being queried) with a trade-off control threshold.
+* Allow controlling output buckets (the buckets that are included in the summary reports that are returned by the aggregation service upon being queried) with a trade-off control threshold.
 
 
 ## Service changes
