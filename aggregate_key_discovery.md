@@ -57,7 +57,7 @@ Both higher precision and higher recall are better, but they are inversely relat
 
 We intend to publish a tool which demonstrates the impact of threshold selection for precision/recall tradeoff. With this tool, we intend for adtechs to be able to:
 
-* Explore impact of threshold on various key-mask, epsilon, delta, with simulated datasets.
+* Explore the impact of threshold on various values of the key-mask, epsilon, and delta with simulated datasets.
 * Find the threshold level that satisfies adtech’s expectations.
 * Learn the estimated output size for user-defined settings.
 
