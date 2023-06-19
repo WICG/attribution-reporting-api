@@ -27,7 +27,7 @@ The [aggregation service](https://github.com/WICG/attribution-reporting-api/blob
 The Attribution Reporting API and Private Aggregation API client describes a [128 bit key space](https://en.wikipedia.org/wiki/Key_size) for assigning _aggregation keys_, which are referred to as _buckets_ when associated with a value. This large space gives adtechs flexibility in how they define and use aggregated metrics. However, at this size, it's infeasible for the aggregation service to output a value for every possible bucket. To solve this, we are introducing new mechanisms to an ad tech’s query to limit the output size. At query time, ad techs can:
 
 * declare a set of buckets to be included in the output. This can be an empty set. This declaration matches the existing query option in the API.
-* declare a key-mask that specifies the set of key bits ( e.g., ‘0…0001111111111’ to represent the rightmost 10 bits of keyspace) that should be included in the output in addition to explicitly pre-declared buckets.
+* declare a key-mask that specifies the set of key bits ( e.g., `"0…0001111111111"` to represent the rightmost 10 bits of keyspace) that should be included in the output in addition to explicitly pre-declared buckets.
 * set a threshold, so that only (non pre-declared) buckets with values exceeding the threshold are included in the output.
 * supply multiple key masks with a threshold for each.
 
