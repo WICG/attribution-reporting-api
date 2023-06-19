@@ -2,7 +2,7 @@
 
 This document describes possible new functionality in the server-side mechanisms for the aggregation service, which allows ad techs to query the Attribution Reporting API’s and Private Aggregation API’s summary reports without [pre-declaring every aggregation bucket](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATION_SERVICE_TEE.md#pre-declaring-aggregation-buckets). 
 
-This proposal is backward compatible; adtechs can still work with pre-declared buckets.
+This proposal is backward compatible; ad techs can still work with pre-declared buckets.
 
 _Note: This document describes possible new functionality in the Aggregation Service. It is not necessarily a feature that will ship in the initial iterations of the API, but we are considering it as a largely backwards-compatible fast-follow. While this new functionality is being developed, we still highly encourage testing the existing API functionalities to support core utility and compatibility needs._
 
