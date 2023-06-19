@@ -47,7 +47,8 @@ The adtech-specified threshold works as a lever to control a trade off between t
 ![Precision recall tradeoff diagram](precision-recall-tradeoff.svg)
 _Fig 1: The chart shows two overlapping distributions, one in blue for false conversions (no user contribution) and one in orange for true conversions (have user contribution). Two distributions are divided by a threshold value, buckets that exceed the threshold (positive) are reported while the buckets that do not exceed the threshold (negative) are not reported in the output._
 
-Here precision is the proportion of buckets with user contribution in the output, while recall is the proportion of buckets with user contribution that are correctly reported in the output among all buckets with user contribution.
+- **precision** is the proportion of buckets with true user contributions in the final output. 
+- **recall** is the proportion of buckets with true user contributions that are correctly reported in the output (i.e. not dropped during thresholding) among all buckets with user contribution.
 
 Both higher precision and higher recall are better, but they are inversely related. Adtech can set thresholds for balancing accuracy/recall with each query. By default the threshold is set to a value that provides 100% precision (`L1 + L1/epsilon*ln(1/delta)`) though at that threshold value recall may be low, as the threshold is set to a relatively high value. Assuming the values of epsilon=10, delta=10^-8, and L1=2^16, then the threshold will be 186257 (2.84*L1) and expected recall will be ~82% for a [sample ads dataset](https://ailab.criteo.com/criteo-sponsored-search-conversion-log-dataset).
 
