@@ -64,7 +64,7 @@ We intend to publish a tool which demonstrates the impact of threshold selection
 
 ## Backward compatible API call
 
-Key-mask by default is all zero (meaning that the default threshold will never kick in) which would emulate the legacy aggregate API call where only buckets in pre_declared_labels are present in the output.
+The key-mask is all zeros by default, so no extra keys will be discovered and the default threshold will never be triggered. This means that the output will only contain buckets that are in pre_declared_labels, which is similar to the legacy aggregate API call.
 
 ```python
 def legacy_aggregate(aggregatable_reports, pre_declared_labels):
