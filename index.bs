@@ -364,20 +364,20 @@ and its <dfn lt="eligible key">allowed keys</dfn> are:
 
 </dl>
 
-To <dfn>obtain a dictionary structured header value</dfn> given a [=list=] of [=strings=] |keys| and
+To <dfn>obtain a dictionary structured header value</dfn> given a [=set=] of [=strings=] |keys| and
 a [=set=] of [=strings=] |allowedKeys|:
 
-1. [=set/iterate|For each=] |key| in |allowedKeys|, optionally [=list/append=] the
+1. [=set/iterate|For each=] |key| of |allowedKeys|, optionally [=list/append=] the
     [=string/concatenation=] of « "`not-`", |key| » to |keys|.
 1. Optionally, [=shuffle a list|shuffle=] |keys|.
 1. Let |entries| be a new [=list=].
-1. [=list/iterate|For each=] |key| of |keys|:
+1. [=set/iterate|For each=] |key| of |keys|:
     1. Let |value| be true.
     1. Optionally, set |value| to a
         <a href="https://httpwg.org/specs/rfc8941.html#token">token</a>
         corresponding to one of [=strings=] in |allowedKeys|.
     1. Let |params| be an [=map/is empty|empty=] [=map=].
-    1. [=set/iterate|For each=] |key| in |allowedKeys|, optionally [=map/set=] |params|[|key|] to an
+    1. [=set/iterate|For each=] |key| of |allowedKeys|, optionally [=map/set=] |params|[|key|] to an
         arbitrary
         <a href="https://httpwg.org/specs/rfc8941.html#item">bare item</a>.
     1. [=list/Append=] a structured dictionary member with the key |key|, the
@@ -385,6 +385,23 @@ a [=set=] of [=strings=] |allowedKeys|:
 1. Return a
     <a href="https://httpwg.org/specs/rfc8941.html#dictionary">dictionary</a>
     containing |entries|.
+
+Note: The user agent MAY
+<a href="https://httpwg.org/specs/rfc8941.html#specify">"grease"</a> the
+dictionary structured headers according to the preceding algorithm to help ensure that recipients
+use a proper structured header parser, rather than naive string equality or
+`contains` operations, which makes it easier to introduce backwards-compatible
+changes to the header definition in the future. Including the allowed keys
+as dictionary *values* or *parameters* helps ensure that only the dictionary's
+keys are interpreted by the recipient. Likewise, shuffling the dictionary
+members helps ensure that, e.g., "`key1, key2`" is treated equivalently to "`key2, key1`".
+
+In the following example, only the "`trigger`" key should be interpreted by the
+recipient after the header has been parsed as a structured dictionary:
+
+<pre class="example" heading="Greased Attribution-Reporting-Eligible header">
+Attribution-Reporting-Eligible: not-event-source, trigger=event-source;navigation-source=3
+</pre>
 
 To <dfn>set Attribution Reporting headers</dfn> given a
 [=header list=] |headers| and an [=eligibility=] |eligibility|:
@@ -394,44 +411,26 @@ To <dfn>set Attribution Reporting headers</dfn> given a
 1. [=header list/Delete=] "<code>[=Attribution-Reporting-Support=]</code>" from
     |headers|.
 1. If |eligibility| is "<code>[=eligibility/unset=]</code>", return.
-1. Let |keys| be a [=list=].
+1. Let |keys| be an [=set/is empty|empty=] [=set=].
 1. If |eligibility| is:
     <dl class="switch">
     : "<code>[=eligibility/empty=]</code>"
     :: Do nothing.
     : "<code>[=eligibility/event-source=]</code>"
-    :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" to |keys|.
+    :: [=set/Append=] "<code>[=eligible key/event-source=]</code>" to |keys|.
     : "<code>[=eligibility/navigation-source=]</code>"
-    :: [=list/Append=] "<code>[=eligible key/navigation-source=]</code>" to
+    :: [=set/Append=] "<code>[=eligible key/navigation-source=]</code>" to
         |keys|.
     : "<code>[=eligibility/trigger=]</code>"
-    :: [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
+    :: [=set/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
-    :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
+    :: [=set/Append=] "<code>[=eligible key/event-source=]</code>" and
         "<code>[=eligible key/trigger=]</code>" to |keys|.
 1. Let |dict| be the result of [=obtaining a dictionary structured header value=] with
     |keys| and the [=set=] containing all the [=eligible keys=].
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Eligible=]</code>", |dict|) in |headers|.
 1. [=Set an OS-support header=] in |headers|.
-
-Note: The user agent MAY
-<a href="https://httpwg.org/specs/rfc8941.html#specify">"grease"</a> this header
-according to the preceding algorithm to help ensure that recipients
-use a proper structured header parser, rather than naive string equality or
-`contains` operations, which makes it easier to introduce backwards-compatible
-changes to the header definition in the future. Including the [=eligible keys=]
-as dictionary *values* or *parameters* helps ensure that only the dictionary's
-keys are interpreted by the recipient. Likewise, shuffling the dictionary
-members helps ensure that, e.g., "`event-source, trigger`" is treated
-equivalently to "`trigger, event-source`".
-
-In the following example, only the "`trigger`" key should be interpreted by the
-recipient after the header has been parsed as a structured dictionary:
-
-<pre class="example" heading="Greased Attribution-Reporting-Eligible header">
-Attribution-Reporting-Eligible: not-event-source, trigger=event-source;navigation-source=3
-</pre>
 
 <h3 id="monkeypatch-fetch">Fetch monkeypatches</h4>
 
