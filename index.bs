@@ -364,6 +364,45 @@ and its <dfn lt="eligible key">allowed keys</dfn> are:
 
 </dl>
 
+To <dfn>obtain a dictionary structured header value</dfn> given a [=list=] of [=strings=] |keys| and
+a [=set=] of [=strings=] |allowedKeys|:
+
+1. [=set/iterate|For each=] |key| of |allowedKeys|, optionally [=list/append=] the
+    [=string/concatenation=] of « "`not-`", |key| » to |keys|.
+1. Optionally, [=shuffle a list|shuffle=] |keys|.
+1. Let |entries| be a new [=list=].
+1. [=list/iterate|For each=] |key| of |keys|:
+    1. Let |value| be true.
+    1. Optionally, set |value| to a
+        <a href="https://httpwg.org/specs/rfc8941.html#token">token</a>
+        corresponding to one of [=strings=] in |allowedKeys|.
+    1. Let |params| be an [=map/is empty|empty=] [=map=].
+    1. [=set/iterate|For each=] |key| of |allowedKeys|, optionally [=map/set=] |params|[|key|] to an
+        arbitrary
+        <a href="https://httpwg.org/specs/rfc8941.html#item">bare item</a>.
+    1. [=list/Append=] a structured dictionary member with the key |key|, the
+        value |value|, and the parameters |params| to |entries|.
+1. Return a
+    <a href="https://httpwg.org/specs/rfc8941.html#dictionary">dictionary</a>
+    containing |entries|.
+
+Note: The user agent MAY
+<a href="https://httpwg.org/specs/rfc8941.html#specify">"grease"</a> the
+dictionary structured headers according to the preceding algorithm to help ensure that recipients
+use a proper structured header parser, rather than naive string equality or
+`contains` operations, which makes it easier to introduce backwards-compatible
+changes to the header definition in the future. Including the allowed keys
+as dictionary *values* or *parameters* helps ensure that only the dictionary's
+keys are interpreted by the recipient. Likewise, shuffling the dictionary
+members helps ensure that, e.g., "`key1, key2`" is treated equivalently to "`key2, key1`".
+
+In the following example, only the "`trigger`" key should be interpreted by the
+recipient after the header has been parsed as a structured dictionary:
+
+<pre class="example" heading="Greased Attribution-Reporting-Eligible header">
+Attribution-Reporting-Eligible: not-event-source, trigger=event-source;navigation-source=3
+</pre>
+
 To <dfn>set Attribution Reporting headers</dfn> given a
 [=header list=] |headers| and an [=eligibility=] |eligibility|:
 
@@ -372,7 +411,7 @@ To <dfn>set Attribution Reporting headers</dfn> given a
 1. [=header list/Delete=] "<code>[=Attribution-Reporting-Support=]</code>" from
     |headers|.
 1. If |eligibility| is "<code>[=eligibility/unset=]</code>", return.
-1. Let |keys| be a [=list=].
+1. Let |keys| be an [=list/is empty|empty=] [=list=].
 1. If |eligibility| is:
     <dl class="switch">
     : "<code>[=eligibility/empty=]</code>"
@@ -387,45 +426,11 @@ To <dfn>set Attribution Reporting headers</dfn> given a
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
         "<code>[=eligible key/trigger=]</code>" to |keys|.
-1. For each [=eligible key=] |key|, optionally [=list/append=] the
-    [=string/concatenation=] of « "`not-`", |key| » to |keys|.
-1. Optionally, [=shuffle a list|shuffle=] |keys|.
-1. Let |entries| be a new [=list=].
-1. [=list/iterate|For each=] |key| of |keys|:
-    1. Let |value| be true.
-    1. Optionally, set |value| to a
-        <a href="https://httpwg.org/specs/rfc8941.html#token">token</a>
-        corresponding to one of the [=eligible keys=].
-    1. Let |params| be an empty [=map=].
-    1. For each [=eligible key=] |key|, optionally set |params|[|key|] to an
-        arbitrary
-        <a href="https://httpwg.org/specs/rfc8941.html#item">bare item</a>.
-    1. [=list/Append=] a structured dictionary member with the key |key|, the
-        value |value|, and the parameters |params| to |entries|.
-1. Let |dict| be a
-    <a href="https://httpwg.org/specs/rfc8941.html#dictionary">dictionary</a>
-    containing |entries|.
+1. Let |dict| be the result of [=obtaining a dictionary structured header value=] with
+    |keys| and the [=set=] containing all the [=eligible keys=].
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Eligible=]</code>", |dict|) in |headers|.
 1. [=Set an OS-support header=] in |headers|.
-
-Note: The user agent MAY
-<a href="https://httpwg.org/specs/rfc8941.html#specify">"grease"</a> this header
-according to the preceding algorithm to help ensure that recipients
-use a proper structured header parser, rather than naive string equality or
-`contains` operations, which makes it easier to introduce backwards-compatible
-changes to the header definition in the future. Including the [=eligible keys=]
-as dictionary *values* or *parameters* helps ensure that only the dictionary's
-keys are interpreted by the recipient. Likewise, shuffling the dictionary
-members helps ensure that, e.g., "`event-source, trigger`" is treated
-equivalently to "`trigger, event-source`".
-
-In the following example, only the "`trigger`" key should be interpreted by the
-recipient after the header has been parsed as a structured dictionary:
-
-<pre class="example" heading="Greased Attribution-Reporting-Eligible header">
-Attribution-Reporting-Eligible: not-event-source, trigger=event-source;navigation-source=3
-</pre>
 
 <h3 id="monkeypatch-fetch">Fetch monkeypatches</h4>
 
@@ -1341,7 +1346,7 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
     <a href="https://w3c.github.io/webappsec-permissions-policy/#algo-is-feature-enabled">is not enabled</a>
     in |document| with |document|'s [=url/origin=], return.
 1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
-1. If |supportedRegistrars| [=set/is empty=], return.
+1. If |supportedRegistrars| [=list/is empty=], return.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
     ::  "`GET`"
@@ -3245,10 +3250,10 @@ To <dfn noexport>get OS-registration URLs from a header list</dfn> given a
 
 To <dfn>get supported registrars</dfn>:
 
-1. Let |supportedRegistrars| be an [=set/is empty|empty=] [=ordered set=].
-1. If the user agent supports web registrations, [=set/append=] "<code>[=registrar/web=]</code>"
+1. Let |supportedRegistrars| be an [=list/is empty|empty=] [=list=].
+1. If the user agent supports web registrations, [=list/append=] "<code>[=registrar/web=]</code>"
     to |supportedRegistrars|.
-1. If the user agent supports OS registrations, [=set/append=] "<code>[=registrar/os=]</code>"
+1. If the user agent supports OS registrations, [=list/append=] "<code>[=registrar/os=]</code>"
     to |supportedRegistrars|.
 1. Return |supportedRegistrars|.
 
@@ -3262,9 +3267,8 @@ To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
 |headers|:
 
 1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
-1. Let |dict| be an [=ordered map=].
-1. [=set/iterate|For each=] |registrar| of |supportedRegistrars|:
-    1. [=map/Set=] |dict|[|registrar|] to true.
+1. Let |dict| be the result of [=obtaining a dictionary structured header value=]
+    with |supportedRegistrars| and the [=set=] containing all the [=registrars=].
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Support=]</code>", |dict|) in |headers|.
 
