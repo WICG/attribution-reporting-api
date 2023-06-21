@@ -364,14 +364,14 @@ and its <dfn lt="eligible key">allowed keys</dfn> are:
 
 </dl>
 
-To <dfn>obtain a dictionary structured header value</dfn> given a [=set=] of [=strings=] |keys| and
+To <dfn>obtain a dictionary structured header value</dfn> given a [=list=] of [=strings=] |keys| and
 a [=set=] of [=strings=] |allowedKeys|:
 
 1. [=set/iterate|For each=] |key| of |allowedKeys|, optionally [=list/append=] the
     [=string/concatenation=] of « "`not-`", |key| » to |keys|.
 1. Optionally, [=shuffle a list|shuffle=] |keys|.
 1. Let |entries| be a new [=list=].
-1. [=set/iterate|For each=] |key| of |keys|:
+1. [=list/iterate|For each=] |key| of |keys|:
     1. Let |value| be true.
     1. Optionally, set |value| to a
         <a href="https://httpwg.org/specs/rfc8941.html#token">token</a>
@@ -411,20 +411,20 @@ To <dfn>set Attribution Reporting headers</dfn> given a
 1. [=header list/Delete=] "<code>[=Attribution-Reporting-Support=]</code>" from
     |headers|.
 1. If |eligibility| is "<code>[=eligibility/unset=]</code>", return.
-1. Let |keys| be an [=set/is empty|empty=] [=set=].
+1. Let |keys| be an [=list/is empty|empty=] [=list=].
 1. If |eligibility| is:
     <dl class="switch">
     : "<code>[=eligibility/empty=]</code>"
     :: Do nothing.
     : "<code>[=eligibility/event-source=]</code>"
-    :: [=set/Append=] "<code>[=eligible key/event-source=]</code>" to |keys|.
+    :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" to |keys|.
     : "<code>[=eligibility/navigation-source=]</code>"
-    :: [=set/Append=] "<code>[=eligible key/navigation-source=]</code>" to
+    :: [=list/Append=] "<code>[=eligible key/navigation-source=]</code>" to
         |keys|.
     : "<code>[=eligibility/trigger=]</code>"
-    :: [=set/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
+    :: [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
-    :: [=set/Append=] "<code>[=eligible key/event-source=]</code>" and
+    :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
         "<code>[=eligible key/trigger=]</code>" to |keys|.
 1. Let |dict| be the result of [=obtaining a dictionary structured header value=] with
     |keys| and the [=set=] containing all the [=eligible keys=].
@@ -1346,7 +1346,7 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
     <a href="https://w3c.github.io/webappsec-permissions-policy/#algo-is-feature-enabled">is not enabled</a>
     in |document| with |document|'s [=url/origin=], return.
 1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
-1. If |supportedRegistrars| [=set/is empty=], return.
+1. If |supportedRegistrars| [=list/is empty=], return.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
     ::  "`GET`"
@@ -3250,10 +3250,10 @@ To <dfn noexport>get OS-registration URLs from a header list</dfn> given a
 
 To <dfn>get supported registrars</dfn>:
 
-1. Let |supportedRegistrars| be an [=set/is empty|empty=] [=ordered set=].
-1. If the user agent supports web registrations, [=set/append=] "<code>[=registrar/web=]</code>"
+1. Let |supportedRegistrars| be an [=list/is empty|empty=] [=list=].
+1. If the user agent supports web registrations, [=list/append=] "<code>[=registrar/web=]</code>"
     to |supportedRegistrars|.
-1. If the user agent supports OS registrations, [=set/append=] "<code>[=registrar/os=]</code>"
+1. If the user agent supports OS registrations, [=list/append=] "<code>[=registrar/os=]</code>"
     to |supportedRegistrars|.
 1. Return |supportedRegistrars|.
 
