@@ -40,6 +40,8 @@ spec: idl; type: dfn; urlPrefix: https://webidl.spec.whatwg.org/
     text: throw; url: #dfn-throw
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
     text: generate a random UUID; url: #dfn-generate-a-random-uuid
+spec: permissions-policy; type: dfn; urlPrefix: https://w3c.github.io/webappsec-permissions-policy/
+    text: is feature enabled; url: #algo-is-feature-enabled
 urlPrefix: https://wicg.github.io/fenced-frame/; type: interface
     text: Fence
 </pre>
@@ -503,6 +505,16 @@ Add the step:
 
 # Fenced Frame monkeypatches # {#fenced-frame-monkeypatches}
 
+Add the following items to [=fencedframetype/pending event=]:
+
+<dl dfn-for="pending event">
+: <dfn>attributionReportingEnabled</dfn>
+:: A [=boolean=]
+: <dfn>contextOrigin</dfn>
+:: An [=origin=]
+
+</dl>
+
 Modify {{Fence/reportEvent()}} as follows:
 
 Replace the step
@@ -522,6 +534,30 @@ Modify <a spec=fenced-frame>report an event</a> as follows:
 
 Add a [=Document=] parameter called |document|.
 
+After the step
+
+> If <var ignore>reporting map</var>[|destination|] does not [=map/exist=], return.
+
+add the steps
+
+<div algorithm="report-an-event-monkeypatch">
+1. Let <var ignore>attributionReportingEnabled</var> be the result of determining whether the
+    "`attribution-reporting`" feature [=is feature enabled|is enabled=] in |document| with |document|'s [=origin=].
+1. Let <var ignore>contextOrigin</var> be |document|'s [=node/context origin=].
+
+</div>
+
+In the step
+
+> Let <var ignore>newEvent</var> be a new [=fencedframetype/pending event=] with the following...
+
+add the properties
+
+: [=pending event/attributionReportingEnabled=]
+:: |attributionReportingEnabled|
+: [=pending event/contextOrigin=]
+:: |contextOrigin|
+
 Replace the step
 
 > <a spec=fenced-frame>Send a beacon</a> with <var ignore>reporting map</var>[|destination|],
@@ -530,11 +566,9 @@ Replace the step
 with
 
 <a spec=fenced-frame>Send a beacon</a> with <var ignore>reporting map</var>[|destination|],
-|eventType|, |eventData|, and |document|.
+|eventType|, |eventData|, |attributionReportingEnabled|, and |contextOrigin|.
 
 Modify [=finalize a reporting destination=] as follows:
-
-Add a [=Document=] parameter called |document|.
 
 Replace the step
 
@@ -544,11 +578,13 @@ Replace the step
 with
 
 <a spec=fenced-frame>Send a beacon</a> with |destination map|, |pending event|'s [=pending event/eventType=],
-|pending event|'s [=pending event/eventData=], and |document|.
+|pending event|'s [=pending event/eventData=], |pending event|'s [=pending event/attributionReportingEnabled=],
+and |pending event|'s [=pending event/contextOrigin=].
 
 Modify <a spec=fenced-frame>send a beacon</a> as follows:
 
-Add a [=Document=] parameter called |document|.
+Add a [=boolean=] parameter called |attributionReportingEnabled| and an [=origin=]
+parameter called |contextOrigin|.
 
 After the step
 
@@ -557,10 +593,8 @@ After the step
 add the steps
 
 1. Let |attributionReportingEligibility| be "<code>[=eligibility/unset=]</code>".
-1. If the "`attribution-reporting`" feature <a href="https://w3c.github.io/webappsec-permissions-policy/#algo-is-feature-enabled">is enabled</a>
-     in |document| with |document|'s [=origin=] and the result of [=getting supported registrars=]
-     is not [=set/is empty|empty=] and |document|'s [=node/context origin=]
-     [=check if an origin is suitable|is suitable=]:
+1. If |attributionReportingEnabled| is true and the result of [=getting supported registrars=]
+     is not [=list/is empty|empty=] and |contextOrigin| [=check if an origin is suitable|is suitable=]:
          1. Set |attributionReportingEligibility| to "<code>[=eligibility/event-source=]</code>".
 
          Issue: Allow "<code>[=eligibility/navigation-source=]</code>" when automatic beacon is specified.
@@ -1411,8 +1445,7 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, an
 1. If |contextOrigin| is not [=check if an origin is suitable|suitable=], return.
 1. Let |context| be |document|'s [=relevant settings object=].
 1. If |context| is not a [=secure context=], return.
-1. If the "<code>[=attribution-reporting=]</code>" feature
-    <a href="https://w3c.github.io/webappsec-permissions-policy/#algo-is-feature-enabled">is not enabled</a>
+1. If the "<code>[=attribution-reporting=]</code>" feature is not [=is feature enabled|enabled=]
     in |document| with |document|'s [=url/origin=], return.
 1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
 1. If |supportedRegistrars| [=list/is empty=], return.
