@@ -595,7 +595,7 @@ An <dfn>event-level report window</dfn> is a [=struct=] with the following items
 : <dfn>start</dfn>
 :: A [=moment=].
 : <dfn>end</dfn>
-:: A [=moment=].
+:: A [=moment=], strictly greater than [=event-level report window/start=].
 
 </dl>
 
@@ -1582,13 +1582,13 @@ a [=moment=] |sourceTime|, and a [=duration=] |eventReportWindow|:
 1. [=list/iterate|For each=] |deadline| of |deadlines|:
     1. Let |window| be a new [=event-level report window=] whose items are
 
-    : [=event-level report window/start=]
-    :: |lastEnd|
-    : [=event-level report window/end=]
-    :: |lastEnd| + |deadline|
+        : [=event-level report window/start=]
+        :: |lastEnd|
+        : [=event-level report window/end=]
+        :: |lastEnd| + |deadline|
 
     1. [=list/Append=] |window| to |windows|.
-    1. Let |lastEnd| be |deadline|.
+    1. Let |lastEnd| be |lastEnd| + |deadline|.
 1. Return |windows|.
 
 To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
