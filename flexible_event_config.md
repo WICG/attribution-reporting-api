@@ -79,7 +79,7 @@ We will add two optional parameters to the JSON in `Attribution-Reporting-Regist
   // After this maximum is hit, the source is no longer capable of producing any new
   // data. The use of priority in the trigger attribution algorithm in the case of
   // multiple attributable triggers remain unchanged.
-  // Defaults to 20.
+  // Defaults to 3 for navigation sources and 1 for event sources.
   "max_event_level_reports": <int>
 }
 ```
