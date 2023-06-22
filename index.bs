@@ -1630,18 +1630,19 @@ To <dfn>parse an attribution destination</dfn> from a [=string=] |str|:
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
-To <dfn>parse attribution destinations</dfn> from a value |val|:
-1. Let |result| be an [=ordered set=].
-1. If |val| is a [=string=], [=set/append=] the result of [=parse an attribution destination=] to |result|, and return |result|.
+To <dfn>parse attribution destinations</dfn> from a [=map=] |map|:
+1. If |map|["`destination`"] does not [=map/exists|exist=], return null.
+1. Let |val| be |map|["`destination`"].
+1. If |val| is a [=string=], set |val| to « |val| ».
 1. If |val| is not a [=list=], return null.
+1. Let |result| be an [=ordered set=].
 1. [=list/iterate|For each=] |value| of |val|:
     1. If |value| is not a [=string=], return null.
     1. Let |destination| be the result of [=parse an attribution destination=] with |value|.
     1. If |destination| is null, return null.
     1. [=set/Append=] |destination| to |result|.
-1. If |result|'s [=set/size=] is greater than 3, return null.
-1. If |result| [=set/is empty=], return null.
-1. return |result|.
+1. If |result| is [=set/is empty=] or its [=set/size=] is greater than 3, return null.
+1. Return |result|.
 
 To <dfn>parse an expiry</dfn> given a [=map=] |map|, a [=string=] |key|, and a
 positive [=duration=] |default|:
@@ -1703,14 +1704,13 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |value| be the result of running
     [=parse JSON bytes to an Infra value=] with |json|.
 1. If |value| is not an [=ordered map=], return null.
+1. Let |attributionDestinations| be the result of running
+    [=parse attribution destinations=] with |value|.
+1. If |attributionDestinations| is null, return null.
 1. Let |sourceEventId| be the result of running
     [=parse an optional 64-bit unsigned integer=] with |value|,
     "`source_event_id`", and 0.
 1. If |sourceEventId| is an error, return null.
-1. If |value|["`destination`"] does not [=map/exists|exist=], return null.
-1. Let |attributionDestinations| be the result of running
-    [=parse attribution destinations=] with |value|["`destination`"].
-1. If |attributionDestinations| is null, return null.
 1. Let |expiry| be the result of running [=parse an expiry=] with |value|,
     "`expiry`", and the [=max source expiry=].
 1. If |expiry| is an error, return null.
