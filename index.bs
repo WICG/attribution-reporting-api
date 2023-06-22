@@ -40,8 +40,8 @@ spec: idl; type: dfn; urlPrefix: https://webidl.spec.whatwg.org/
     text: throw; url: #dfn-throw
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
     text: generate a random UUID; url: #dfn-generate-a-random-uuid
-spec: fenced-frame; type: dfn; urlPrefix: https://wicg.github.io/fenced-frame/
-    text: send a beacon; url:#send-a-beacon
+urlPrefix: https://wicg.github.io/fenced-frame/; type: interface
+    text: Fence
 </pre>
 <pre class=biblio>
 {
@@ -503,7 +503,115 @@ Add the step:
 
 # Fenced Frame monkeypatches # {#fenced-frame-monkeypatches}
 
-Issue: Modify [=send a beacon=] when the [=fetch=] integration is specified.
+Add the following items to [=fencedframetype/pending event=]:
+
+<dl dfn-for="pending event">
+: <dfn>attributionReportingEnabled</dfn>
+:: A [=boolean=]
+: <dfn>contextOrigin</dfn>
+:: An [=origin=]
+
+</dl>
+
+Modify {{Fence/reportEvent()}} as follows:
+
+<div algorithm="report-event-monkeypatch">
+
+Replace the step
+
+> Run <a spec=fenced-frame>report an event</a> using |instance|'s
+> [=fenced frame config instance/fenced frame reporter=] with |destination|,
+> |event|'s {{FenceEvent/eventType}}, and |event|'s {{FenceEvent/eventData}}.
+
+with
+
+Run <a spec=fenced-frame>report an event</a> using |instance|'s
+[=fenced frame config instance/fenced frame reporter=] with |destination|,
+|event|'s {{FenceEvent/eventType}}, |event|'s {{FenceEvent/eventData}},
+and [=this=]'s [=relevant global object=]'s [=associated Document=].
+
+</div>
+
+Modify <a spec=fenced-frame>report an event</a> as follows:
+
+<div algorithm="report-an-event-monkeypatch">
+
+Add a [=Document=] parameter called |document|.
+
+After the step
+
+> If |reporting map|[|destination|] does not [=map/exist=], return.
+
+add the steps
+
+1. Let |attributionReportingEnabled| be the result of determining whether |document| is
+    [=allowed to use=] the "<code>[=attribution-reporting=]</code>" feature.
+1. Let |contextOrigin| be |document|'s [=node/context origin=].
+
+In the step
+
+> Let <var ignore>newEvent</var> be a new [=fencedframetype/pending event=] with the following...
+
+add the properties
+
+: [=pending event/attributionReportingEnabled=]
+:: |attributionReportingEnabled|
+: [=pending event/contextOrigin=]
+:: |contextOrigin|
+
+Replace the step
+
+> <a spec=fenced-frame>Send a beacon</a> with |reporting map|[|destination|],
+> |eventType|, and |eventData|.
+
+with
+
+<a spec=fenced-frame>Send a beacon</a> with |reporting map|[|destination|],
+|eventType|, |eventData|, |attributionReportingEnabled|, and |contextOrigin|.
+
+</div>
+
+Modify [=finalize a reporting destination=] as follows:
+
+<div algorithm="finalize-a-reporting-destination-monkeypatch">
+
+Replace the step
+
+> <a spec=fenced-frame>Send a beacon</a> with |destination map|, |pending event|'s [=pending event/eventType=],
+> and |pending event|'s [=pending event/eventData=].
+
+with
+
+<a spec=fenced-frame>Send a beacon</a> with |destination map|, |pending event|'s [=pending event/eventType=],
+|pending event|'s [=pending event/eventData=], |pending event|'s [=pending event/attributionReportingEnabled=],
+and |pending event|'s [=pending event/contextOrigin=].
+
+</div>
+
+Modify <a spec=fenced-frame>send a beacon</a> as follows:
+
+<div algorithm="send-a-beacon-monkeypatch"
+
+Add a [=boolean=] parameter called |attributionReportingEnabled| and an [=origin=]
+parameter called |contextOrigin|.
+
+After the step
+
+> Let <var ignore>destination url</var> be <var ignore>destination map</var>[<var ignore>eventType</var>].
+
+add the steps
+
+1. Let |attributionReportingEligibility| be "<code>[=eligibility/unset=]</code>".
+1. If |attributionReportingEnabled| is true and the result of [=getting supported registrars=]
+     is not [=list/is empty|empty=] and |contextOrigin| [=check if an origin is suitable|is suitable=]:
+         1. Set |attributionReportingEligibility| to "<code>[=eligibility/event-source=]</code>".
+
+         Issue: Allow "<code>[=eligibility/navigation-source=]</code>" when automatic beacon is specified.
+
+Issue: Set [=request=]'s [=request/Attribution Reporting eligibility=] to |attributionReportingEligibility|
+when <a href="https://wicg.github.io/fenced-frame/#issue-c137ca33">the fetch integration is specified</a>.
+
+</div>
 
 # Permissions Policy integration # {#permission-policy-integration}
 
@@ -1249,6 +1357,11 @@ is true and whose same-site-flag is "`None`"; there is no way to prevent the
 last-access-time from being modified; and the return value is a string that
 would have to be further processed to check for the "`ar_debug`" cookie.
 
+<h3 algorithm id="obtaining-context-origin">Obtaining context origin</h3>
+
+To obtain the <dfn for=node>context origin</dfn> of a [=node=] |node|, return |node|'s [=node navigable=]'s
+<a spec=fenced-frame for=navigable>unfenced container document</a>'s [=origin=].
+
 <h3 id="obtaining-randomized-response">Obtaining a randomized response</h3>
 
 To <dfn>obtain a randomized response</dfn> given |trueValue|, a [=set=] |possibleValues|, and a
@@ -1333,18 +1446,17 @@ To <dfn>validate a background attributionsrc eligibility</dfn> given an
     "<code>[=eligibility/navigation-source=]</code>" or
     "<code>[=eligibility/event-source-or-trigger=]</code>".
 
-To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
-[=suitable origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and a
+To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, an
+[=origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and a
 {{Document}} |document|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
 1. If |url|'s [=url/scheme=] is not [=check if a scheme is suitable|suitable=],
     return.
+1. If |contextOrigin| is not [=check if an origin is suitable|suitable=], return.
 1. Let |context| be |document|'s [=relevant settings object=].
 1. If |context| is not a [=secure context=], return.
-1. If the "<code>[=attribution-reporting=]</code>" feature
-    <a href="https://w3c.github.io/webappsec-permissions-policy/#algo-is-feature-enabled">is not enabled</a>
-    in |document| with |document|'s [=url/origin=], return.
+1. If |document| is not [=allowed to use=] the "<code>[=attribution-reporting=]</code>" feature, return.
 1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
 1. If |supportedRegistrars| [=list/is empty=], return.
 1. Let |request| be a new [=request=] with the following properties:
@@ -1365,7 +1477,7 @@ Issue: Audit other properties on |request| and set them properly.
 Issue(839): Support header-processing on redirects. Due to <a href=https://fetch.spec.whatwg.org/#atomic-http-redirect-handling>atomic HTTP redirect handling</a>,
 we cannot process registrations through integration with [=fetch=].
 
-Issue: Support header-processing on [=send a beacon|fenced frame reporting beacons=].
+Issue: Support header-processing on <a spec="fenced-frame" lt="send a beacon">fenced frame reporting beacons</a>.
 
 Issue: Check for transient activation with "<code>[=eligibility/navigation-source=]</code>".
 
@@ -1384,9 +1496,7 @@ To <dfn>make background attributionsrc requests</dfn> given an
         [=iteration/continue=]. Otherwise, let |url| be the resulting
         [=URL record=].
     1. Run [=make a background attributionsrc request=] with |url|,
-        |contextOrigin|, |eligibility|, and |element|'s [=Node/node document=].
-
-Issue: Set |contextOrigin| properly.
+        |element|'s [=node/context origin=], |eligibility|, and |element|'s [=Node/node document=].
 
 Issue: Consider allowing the user agent to limit the size of |tokens|.
 
