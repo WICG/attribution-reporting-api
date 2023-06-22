@@ -217,7 +217,7 @@ generate reports.
 
 - `event_report_window`: (optional) duration in seconds after source registration 
 during which event reports may be created for this source. Also controls the last
-window in which reports will be sent.
+window in which reports will be sent. The minimum value is 3600 seconds (1 hour).
 
 Once this header is received, the browser will proceed with [handling an
 attribution source event](#handling-an-attribution-source-event). Note that it
