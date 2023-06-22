@@ -695,6 +695,18 @@ A <dfn>source type</dfn> is one of the following:
 
 </dl>
 
+<h3 id="event-level-report-window-header">Event-level report window</h3>
+
+An <dfn>event-level report window</dfn> is a [=struct=] with the following items:
+
+<dl dfn-for="event-level report window">
+: <dfn>start</dfn>
+:: A [=moment=].
+: <dfn>end</dfn>
+:: A [=moment=], strictly greater than [=event-level report window/start=].
+
+</dl>
+
 <h3 dfn-type=dfn>Attribution source</h3>
 
 An attribution source is a [=struct=] with the following items:
@@ -714,8 +726,8 @@ An attribution source is a [=struct=] with the following items:
 :: A [=source type=].
 : <dfn>expiry</dfn>
 :: A [=duration=].
-: <dfn>event report window</dfn>
-:: A [=duration=].
+: <dfn>event-level report windows</dfn>
+:: A [=list=] of [=event-level report windows=].
 : <dfn>aggregatable report window</dfn>
 :: A [=duration=].
 : <dfn>priority</dfn>
@@ -752,7 +764,16 @@ An attribution source is a [=struct=] with the following items:
 
 An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
 
-An [=attribution source=] |source|'s <dfn for="attribution source">event report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/event report window=].
+An [=attribution source=] |source|'s <dfn for="attribution source">total event-level report window</dfn> is
+an [=event-level report window=] [=struct=] with the following fields:
+
+: [=event-level report window/start=]
+:: The [=event-level report window/start=] of |source|'s first [=attribution source/event-level report windows=].
+: [=event-level report window/end=]
+:: The [=event-level report window/end=] of |source|'s last [=attribution source/event-level report windows=].
+
+Note: The [=attribution source/total event-level report window=] is conceptually a union of [=event-level report windows=], because there
+are no gaps in time between any of the [=event-level report windows|windows=] in [=attribution source/event-level report windows=].
 
 An [=attribution source=] |source|'s <dfn for="attribution source">aggregatable report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/aggregatable report window=].
 
@@ -1660,6 +1681,26 @@ To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
 
 Issue: Determine whether to limit [=string/length=] or [=string/code point length=] for |key| above.
 
+To <dfn>obtain effective windows</dfn> given a [=source type=] |sourceType|,
+a [=moment=] |sourceTime|, and a [=duration=] |eventReportWindow|:
+
+1. Let |deadlines| be «» if |sourceType| is "<code>[=source type/event=]</code>", else « 2 days, 7 days ».
+1. [=list/Remove=] all elements in |deadlines| that are greater than |eventReportWindow|.
+1. [=list/Append=] |eventReportWindow| to |deadlines|.
+1. Let |lastEnd| be |sourceTime|.
+1. Let |windows| be «».
+1. [=list/iterate|For each=] |deadline| of |deadlines|:
+    1. Let |window| be a new [=event-level report window=] whose items are
+
+        : [=event-level report window/start=]
+        :: |lastEnd|
+        : [=event-level report window/end=]
+        :: |lastEnd| + |deadline|
+
+    1. [=list/Append=] |window| to |windows|.
+    1. Set |lastEnd| to |lastEnd| + |deadline|.
+1. Return |windows|.
+
 To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 |json|, a [=suitable origin=] |sourceOrigin|, a [=suitable origin=] |reportingOrigin|, a
 [=source type=] |sourceType|, and a [=moment=] |sourceTime|:
@@ -1716,12 +1757,15 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to |value|["`debug_reporting`"].
+
+1. Let |eventReportWindows| be the result of [=obtaining effective windows=] given |sourceType|, |sourceTime|, and |eventReportWindow|.
+
 1. Let |randomizedResponseConfig| be a new [=randomized response output configuration=] whose items are:
 
     : [=randomized response output configuration/max attributions per source=]
     :: |maxAttributionsPerSource|
     : [=randomized response output configuration/num report windows=]
-    :: The result of [=obtaining the number of report windows=] with |sourceType| and |eventReportWindow|
+    :: The [=list/size=] of |eventReportWindows|.
     : [=randomized response output configuration/trigger data cardinality=]
     :: |triggerDataCardinality|
 
@@ -1741,8 +1785,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |reportingOrigin|
     : [=attribution source/expiry=]
     :: |expiry|
-    : [=attribution source/event report window=]
-    :: |eventReportWindow|
+    : [=attribution source/event-level report windows=]
+    :: |eventReportWindows|
     : [=attribution source/aggregatable report window=]
     :: |aggregatableReportWindow|
     : [=attribution source/priority=]
@@ -2467,7 +2511,8 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
         with "<code>[=trigger debug data type/trigger-event-noise=]</code>", |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If |sourceToAttribute|'s [=attribution source/event report window time=] is less than |trigger|'s [=attribution trigger/trigger time=]:
+1. If |trigger|'s [=attribution trigger/trigger time=] does not [=check whether a moment falls within a window|fall within=]
+    |sourceToAttribute|'s [=attribution source/total event-level report window=]:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-event-report-window-passed=]</code>",
         |trigger|, |sourceToAttribute| and [=obtain debug data on trigger registration/report=] set to null.
@@ -2724,52 +2769,34 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 
-To <dfn>obtain early deadlines</dfn> given a [=source type=] |sourceType|:
+To <dfn>check whether a moment falls within a window</dfn> given a [=moment=] |moment| and
+an [=event-level report window=] |window|:
 
-1. If |sourceType| is "<code>[=source type/event=]</code>", return «».
-1. Return « 2 days, 7 days ».
+1. Return |moment| >= [=event-level report window/start=]
+    and |moment| < |window|'s [=event-level report window/end=].
 
-To <dfn>obtain effective deadlines</dfn> given an [=attribution source/source type=] |sourceType| and a [=duration=] |eventReportWindow|:
+To <dfn>obtain a report time from a window</dfn> given a [=moment=] |sourceTime| and
+an [=event-level report window=] |window|:
 
-1. Let |deadlines| be the result of [=obtaining early deadlines=] given |sourceType|.
-1. [=list/Remove=] all elements in |deadlines| that are greater than |eventReportWindow|.
-1. [=list/Append=] |eventReportWindow| to |deadlines|.
-1. Return |deadlines|.
-
-To <dfn>obtain the number of report windows</dfn> given a [=source type=] |sourceType|
-and a [=duration=] |eventReportWindow|:
-
-1. Let |deadlines| be the result of [=obtaining effective deadlines=] for |sourceType| and |eventReportWindow|.
-1. Return the [=list/size=] of |deadlines|.
-
-To <dfn>obtain a report time from deadline</dfn> given a [=moment=] |sourceTime| and
-a [=duration=] |deadline|:
-
-1. Return |sourceTime| + |deadline| + 1 hour.
+1. Return |sourceTime| + |window|'s [=event-level report window/end=] + 1 hour.
 
 To <dfn>obtain the report time at a window</dfn> given an
 [=attribution source=] |source| and a non-negative integer |window|:
 
-1. Let |deadlines| be the result of running [=obtain effective deadlines=]
-    with |source|'s [=attribution source/source type=] and [=attribution source/event report window=].
-1. [=Assert=]: |deadlines|[|window|] [=list/exists=].
-1. Let |deadline| be |deadlines|[|window|].
-1. Return the result of running [=obtain a report time from deadline=] with
-    |source|'s [=attribution source/source time=] and |deadline|.
+1. [=Assert=]: |source|'s [=attribution source/event-level report windows=][|window|] [=list/exists=].
+1. Let |win| be |source|'s [=attribution source/event-level report windows=][|window|].
+1. Return the result of running [=obtain a report time from a window=] with
+    |source|'s [=attribution source/source time=] and |win|.
 
 To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution source=]
 |source| and a [=moment=] |triggerTime|:
 
-1. Let |deadlines| be the result of [=obtaining effective deadlines=] with |source|.
-1. Let |deadlineToUse| be the last item in |deadlines|.
-1. [=list/iterate|For each=] |deadline| of |deadlines|:
-    1. Let |time| be |source|'s [=attribution source/source time=] +
-        |deadline|.
-    1. If |time| is less than |triggerTime|, [=iteration/continue=].
-    1. Set |deadlineToUse| to |deadline|.
-    1. [=iteration/Break=].
-1. Return the result of running [=obtain a report time from deadline=] with
-    |source|'s [=attribution source/source time=] and |deadlineToUse|.
+1. Let |windows| be |source|'s [=attribution source/event-level report windows=].
+1. Let |windowToUse| be the last item in |windows|.
+1. [=list/iterate|For each=] |window| of |windows|:
+    1. If |triggerTime| [=check whether a moment falls within a window|falls within=] |window|, set |windowToUse| to |window|.
+1. Return the result of running [=obtain a report time from a window=] with
+    |source|'s [=attribution source/source time=] and |window|.
 
 To <dfn>obtain an aggregatable report delivery time</dfn> given a [=moment=]
 |triggerTime|, perform the following steps. They return a [=moment=].
