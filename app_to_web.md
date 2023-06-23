@@ -76,6 +76,52 @@ For a site to enable App<->Web attribution after integrating with the Web API, t
 
 A reporting origin responding with the `Attribution-Reporting-Register-OS-Source` or `Attribution-Reporting-Register-OS-Trigger` headers while `Attribution-Reporting-Support` does not contain `os` will cause the entire registration to fail (including web registration).
 
+## Optional: debugging reports
+
+The Cross App and Web Attribution Measurement is a new and fairly complex way
+to do attribution measurements. A successful attribution requires both the
+browser and OS-level support. As such, we are open to introducing a mechanism to
+learn more information about OS registrations. This ensures that the API can be
+better understood and help flush out any bugs (either in browser or OS or caller
+code).
+
+The reporting origins may opt in to receiving debugging reports by adding a new
+boolean [parameter](https://httpwg.org/specs/rfc8941.html#param) `debug-reporting` to the
+[list](https://httpwg.org/specs/rfc8941.html#list)
+[item](https://httpwg.org/specs/rfc8941.html#item) in the
+`Attribution-Reporting-Register-OS-Source` and
+`Attribution-Reporting-Register-OS-Trigger` headers:
+
+```http
+Attribution-Reporting-Register-OS-Source: "https://adtech.example/register"; debug-reporting, "https://other-adtech.example/register"
+```
+
+```http
+Attribution-Reporting-Register-OS-Trigger: "https://adtech.example/register", "https://other-adtech.example/register"; debug-reporting
+```
+
+When the OS registation is successfully delegated to the OS, regardless the
+result of the native OS attribution API, the browser will send non-credentialed
+secure HTTP POST requests to the reporting endpoint:
+```
+https://adtech.example/.well-known/attribution-reporting/debug/verbose
+```
+
+The report data is included in the request body as a JSON list of objects, e.g.:
+
+```jsonc
+[{
+  "type": "os-source-delegated", // or "os-trigger-delegated"
+  "body": {
+    "context_site": "https://source.example", // or "https://trigger.example"
+    "registration_url": "https://adtech.example/register"
+  }
+}]
+```
+
+Note: The report body is a JSON list to align with the [verbose debugging reports](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#verbose-debugging-reports)
+for regular Attribution Reporting API.
+
 ## Privacy considerations
 
 This proposal explicitly links data from the web with data from apps. It enables apps to learn coarse user behavior patterns in the browser in the same way that the existing Attribution Reporting API allows websites to learn coarse user behavior patterns in the browser. In other words, we can safely think of an app as a particular "kind of website", and we can share data to apps that we’d be comfortable sharing to a (cross-site) website.
