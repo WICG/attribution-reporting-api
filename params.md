@@ -20,7 +20,7 @@ Chromium's implementation assigns the following values:
 | [Max attributions per event source][] | [1][max attributions per event source value] |
 | [Max aggregatable reports per source][] | [20][max aggregatable reports per source value] |
 | [Max destinations covered by unexpired sources][] | [100][max destinations covered by unexpired sources value] |
-| [Destination rate-limit window][] | 1 minute[][destination rate-limit window value]
+| [Destination rate-limit window][] | [1 minute][destination rate-limit window value]
 | [Max destinations per rate-limit window][] | [50][max destinations per rate-limit window per reporting site] per reporting site, [200][max destinations per rate-limit window total] total
 | [Max source reporting origins per rate-limit window][] | [100][max source reporting origins per rate-limit window value] |
 | [Max source reporting origins per source reporting site][] | [1][max source reporting origins per source reporting site value]
