@@ -603,12 +603,14 @@ add the steps
 
 1. Let |attributionReportingEligibility| be "<code>[=eligibility/unset=]</code>".
 1. Let |processResponse| be null.
+1. Let |useParallelQueue| be false.
 1. If |attributionReportingEnabled| is true and the result of [=getting supported registrars=]
      is not [=list/is empty|empty=] and |contextOrigin| [=check if an origin is suitable|is suitable=]:
          1. Set |attributionReportingEligibility| to "<code>[=eligibility/event-source=]</code>".
          1. Set |processResponse| to these steps given a [=response=] |response|:
              1. Run [=process an attribution eligible response=] with |contextOrigin|,
                  |attributionReportingEligibility|, and |response|.
+         1. Set |useParallelQueue| to true.
 
          Issue: Allow "<code>[=eligibility/navigation-source=]</code>" when automatic beacon is specified.
 
@@ -627,7 +629,8 @@ Replace the step
 
 with
 
-[=Fetch=] |request| with [=fetch/processResponse=] being |processResponse| if it is not null.
+[=Fetch=] |request| with [=fetch/processResponse=] being |processResponse| if it is not null
+and [=fetch/useParallelQueue=] being |useParallelQueue|.
 
 </div>
 
