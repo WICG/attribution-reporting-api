@@ -602,16 +602,39 @@ After the step
 add the steps
 
 1. Let |attributionReportingEligibility| be "<code>[=eligibility/unset=]</code>".
+1. Let |processResponse| be null.
+1. Let |useParallelQueue| be false.
 1. If |attributionReportingEnabled| is true and the result of [=getting supported registrars=]
      is not [=list/is empty|empty=] and |contextOrigin| [=check if an origin is suitable|is suitable=]:
          1. Set |attributionReportingEligibility| to "<code>[=eligibility/event-source=]</code>".
+         1. Set |processResponse| to these steps given a [=response=] |response|:
+             1. Run [=process an attribution eligible response=] with |contextOrigin|,
+                 |attributionReportingEligibility|, and |response|.
+         1. Set |useParallelQueue| to true.
 
          Issue: Allow "<code>[=eligibility/navigation-source=]</code>" when automatic beacon is specified.
 
-Issue: Set [=request=]'s [=request/Attribution Reporting eligibility=] to |attributionReportingEligibility|
-when <a href="https://wicg.github.io/fenced-frame/#issue-c137ca33">the fetch integration is specified</a>.
+In the step
+
+> Let |request| be a new [=request=] with the following properties...
+
+add the property:
+
+: [=request/Attribution Reporting eligibility=]
+:: |attributionReportingEligibility|
+
+Replace the step
+
+> [=Fetch=] |request|.
+
+with
+
+[=Fetch=] |request| with [=fetch/processResponse=] being |processResponse| if it is not null
+and [=fetch/useParallelQueue=] being |useParallelQueue|.
 
 </div>
+
+Issue: Move this section to <a href="https://wicg.github.io/fenced-frame/">Fenced Frame spec</a>.
 
 # Permissions Policy integration # {#permission-policy-integration}
 
@@ -1495,8 +1518,6 @@ Issue: Audit other properties on |request| and set them properly.
 Issue(839): Support header-processing on redirects. Due to <a href=https://fetch.spec.whatwg.org/#atomic-http-redirect-handling>atomic HTTP redirect handling</a>,
 we cannot process registrations through integration with [=fetch=].
 
-Issue: Support header-processing on <a spec="fenced-frame" lt="send a beacon">fenced frame reporting beacons</a>.
-
 Issue: Check for transient activation with "<code>[=eligibility/navigation-source=]</code>".
 
 To <dfn>make background attributionsrc requests</dfn> given an
@@ -1522,6 +1543,16 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
 |contextOrigin|, an [=eligibility=] |eligibility|, and a [=response=] |response|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
+1. Run [=process an attribution eligible response=] with |contextOrigin|,
+    |eligibility|, and |response|.
+
+To <dfn>process an attribution eligible response</dfn> given a [=suitable origin=]
+|contextOrigin|, an [=eligibility=] |eligibility|, and a [=response=] |response|:
+
+1. [=Assert=]: |eligibility| is
+    "<code>[=eligibility/navigation-source=]</code>" or
+    "<code>[=eligibility/event-source=]</code>" or
+    "<code>[=eligibility/event-source-or-trigger=]</code>".
 1. Let |reportingOrigin| be |response|'s [=response/URL=]'s [=url/origin=].
 1. If |reportingOrigin| is not [=check if an origin is suitable|suitable=], return.
 1. Let |sourceHeader| be the result of [=header list/get|getting=]
@@ -1541,14 +1572,17 @@ To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=]
 1. If |eligibility| is:
     <dl class="switch">
     : "<code>[=eligibility/navigation-source=]</code>"
+    : "<code>[=eligibility/event-source=]</code>"
     :: Run the following steps:
         1. If |sourceHeader| and |osSourceURLs| are both null or both not
             null, return.
         1. If |sourceHeader| is not null:
+            1. Let |sourceType| be "<code>[=source type/navigation=]</code>".
+            1. If |eligibility| is "<code>[=eligibility/event-source=]</code>",
+                set |sourceType| to "<code>[=source type/event=]</code>".
             1. Let |source| be the result of running
                 [=parse source-registration JSON=] with |sourceHeader|,
-                |contextOrigin|, |reportingOrigin|,
-                "<code>[=source type/navigation=]</code>", and [=current wall time=].
+                |contextOrigin|, |reportingOrigin|, |sourceType|, and [=current wall time=].
             1. If |source| is not null, [=process an attribution source|process=]
                 |source|.
         1. If |osSourceURLs| is not null and the user agent supports OS
