@@ -28,6 +28,7 @@ spec:html; type:dfn; text:set up the module script request
 spec:html; type:dfn; text:tokenize the features argument
 spec:html; type:dfn; text:update the image data
 spec:html; type:dfn; text:window open steps
+spec:webdriver; type:dfn; text:error
 </pre>
 <pre class="anchors">
 spec: clear-site-data; type: dfn; urlPrefix: https://w3c.github.io/webappsec-clear-site-data/
@@ -38,6 +39,10 @@ spec: hr-time; type: dfn; urlPrefix: https://w3c.github.io/hr-time/
     text: moment; url: #dfn-moment
 spec: idl; type: dfn; urlPrefix: https://webidl.spec.whatwg.org/
     text: throw; url: #dfn-throw
+spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
+    type: dfn
+        text: getting a property; url: dfn-getting-properties
+        text: error code; url: dfn-error-code
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
     text: generate a random UUID; url: #dfn-generate-a-random-uuid
 urlPrefix: https://wicg.github.io/fenced-frame/; type: interface
@@ -1168,17 +1173,20 @@ for triggers that are attributed to an [=attribution source=] whose
 0 <= [=event-level trigger configuration/trigger data=] < [=event-source trigger data cardinality=].
 
 <dfn>Randomized response epsilon</dfn> is a non-negative double that controls
-the randomized response probability of an [=attribution source=].
+the randomized response probability of an [=attribution source=]. If [=automation local testing mode=] is true,
+this is `∞`.
 
 <dfn>Randomized null report rate excluding source registration time</dfn> is a
 double between 0 and 1 (both inclusive) that controls the randomized number of null reports
 generated for an [=attribution trigger=] whose [attribution trigger/aggregatable source registration time configuration]
-is "<code>[=aggregatable source registration time configuration/exclude=]</code>".
+is "<code>[=aggregatable source registration time configuration/exclude=]</code>". If [=automation local testing mode=] is true,
+this is 0.
 
 <dfn>Randomized null report rate including source registration time</dfn> is a
 double between 0 and 1 (both inclusive) that controls the randomized number of null reports
 generated for an [=attribution trigger=] whose [attribution trigger/aggregatable source registration time configuration]
-is "<code>[=aggregatable source registration time configuration/include=]</code>".
+is "<code>[=aggregatable source registration time configuration/include=]</code>". If [=automation local testing mode=] is true,
+this is 0.
 
 <dfn>Max event-level reports per attribution destination</dfn> is a positive integer that
 controls how many [=event-level reports=] can be in the
@@ -1253,7 +1261,8 @@ controls the maximum number of attributions for a
 an [=attribution source=].
 
 <dfn>Randomized aggregatable report delay</dfn> is a positive [=duration=] that controls the
-random delay to deliver an [=aggregatable report=].
+random delay to deliver an [=aggregatable report=]. If [=automation local testing mode=] is true,
+this is 0.
 
 <dfn>Default aggregation coordinator</dfn> is the [=aggregation coordinator=] that controls how to
 obtain the public key for encrypting an [=aggregatable report=] by default.
@@ -2825,6 +2834,7 @@ To <dfn>obtain the report time at a window</dfn> given an
 To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution source=]
 |source| and a [=moment=] |triggerTime|:
 
+1. If [=automation local testing mode=] is true, return |triggerTime|. 
 1. Let |windows| be |source|'s [=attribution source/event-level report windows=].
 1. [=list/iterate|For each=] |window| of |windows|:
     1. If |triggerTime| [=check whether a moment falls within a window|falls within=] |window|,
@@ -3441,6 +3451,50 @@ To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
     with |supportedRegistrars| and the [=set=] containing all the [=registrars=].
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Support=]</code>", |dict|) in |headers|.
+
+# User-Agent Automation # {#automation}
+    
+The user-agent has an associated boolean <dfn>automation local testing mode</dfn> (default false).
+    
+For the purposes of user-agent automation and website testing, this document
+defines the below [[WebDriver]] [=extension commands=] to control the API
+configuration.
+
+## Set local testing mode ## {#webdriver-setlocaltestingmode}
+
+<figure id="table-webdriver-setlocaltestingmode" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>POST</td>
+                <td>`/session/{session id}/ara/`<dfn>`localtestingmode`</dfn></td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. If |parameters| is not a JSON [[ECMASCRIPT#sec-json-object|Object]], return a
+     [=error|WebDriver error=] with [=error code=] [=invalid argument=].
+
+1. Let |enabled| be the result of [=getting a property=] named `"enabled"` from
+    |parameters|.
+
+1. If |enabled| is {{undefined}} or is not a boolean, return a [=error|WebDriver error=]
+    with [=error code=] [=invalid argument=].
+
+1. Set [=automation local testing mode=] to |enabled|.
+
+1. Return [=success=] with data `null`.
+
+Note: Without this, reports would be subject to noise and delays, making testing difficult.
 
 # Security considerations # {#security-considerations}
 
