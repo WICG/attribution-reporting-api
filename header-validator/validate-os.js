@@ -91,13 +91,7 @@ function validate(str, paramChecks) {
   return { errors, warnings }
 }
 
-export function validateRegisterOsSource(str) {
-  return validate(str, {
-    'debug-reporting': optional(bool),
-  })
-}
-
-export function validateRegisterOsTrigger(str) {
+export function validateOsRegistration(str) {
   return validate(str, {
     'debug-reporting': optional(bool),
   })

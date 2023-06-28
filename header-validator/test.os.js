@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { validateRegisterOsSource, validateRegisterOsTrigger } from './validate-os.js'
+import { validateOsRegistration } from './validate-os.js'
 
 const tests = [
   // Valid
@@ -71,8 +71,7 @@ const tests = [
 
 tests.forEach(test => {
   [
-      validateRegisterOsSource,
-      validateRegisterOsTrigger,
+      validateOsRegistration,
   ].forEach(validate => {
     const { errors, warnings } = validate(test.input);
 

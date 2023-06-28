@@ -86,8 +86,7 @@ code).
 
 The reporting origins may opt in to receiving debugging reports by adding a new
 boolean [parameter](https://httpwg.org/specs/rfc8941.html#param) `debug-reporting` to the
-[list](https://httpwg.org/specs/rfc8941.html#list)
-[item](https://httpwg.org/specs/rfc8941.html#item) in the
+[items](https://httpwg.org/specs/rfc8941.html#item) in the
 `Attribution-Reporting-Register-OS-Source` and
 `Attribution-Reporting-Register-OS-Trigger` headers:
 
@@ -115,7 +114,7 @@ The report data is included in the request body as a JSON list of objects, e.g.:
 [{
   "type": "os-source-delegated", // or "os-trigger-delegated"
   "body": {
-    "context_site": "https://source.example", // or "https://trigger.example"
+    "context_site": "https://source.example",
     "registration_url": "https://adtech.example/register"
   }
 }]
