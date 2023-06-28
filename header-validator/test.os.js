@@ -7,6 +7,8 @@ const tests = [
   {input: '"http://localhost/"'},
   {input: '"http://127.0.0.1/"'},
   {input: '"https://a.test/", "https://b.test/"'},
+  {input: '"https://a.teset/"; debug-reporting'},
+  {input: '"https://a.teset/"; debug-reporting=?0'},
 
   // Warnings
   {
@@ -54,6 +56,15 @@ const tests = [
     errors: [{
       path: [],
       msg: 'must contain a potentially trustworthy URL',
+    }],
+  },
+
+  // debug-reporting not a boolean
+  {
+    input: '"https://a.test/"; debug-reporting=1',
+    errors: [{
+      path: ['debug-reporting'],
+      msg: 'must be a boolean',
     }],
   },
 ]
