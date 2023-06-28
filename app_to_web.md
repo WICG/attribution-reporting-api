@@ -103,13 +103,12 @@ Attribution-Reporting-Register-OS-Trigger: "https://adtech.example/register", "h
 The `debug-reporting` [parameter](https://httpwg.org/specs/rfc8941.html#param)
 is set for each registration URL independently. When the OS registation is
 successfully delegated to the OS, regardless the result of the native OS
-attribution API, the browser will send non-credentialed secure HTTP POST
-requests to the registration URL's origin at the path
-`.well-known/attribution-reporting/debug/verbose`, e.g.
+attribution API, the browser will send a non-credentialed HTTP POST
+request to the registration URL's origin at the path
+`/.well-known/attribution-reporting/debug/verbose`, e.g.
 ```
 https://adtech.example/.well-known/attribution-reporting/debug/verbose
 ```
-
 
 The report data is included in the request body as a JSON list of objects, e.g.:
 
