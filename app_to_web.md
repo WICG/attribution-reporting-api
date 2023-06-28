@@ -78,8 +78,7 @@ A reporting origin responding with the `Attribution-Reporting-Register-OS-Source
 
 ## Optional: debugging reports
 
-The Cross App and Web Attribution Measurement is a new and fairly complex way
-to do attribution measurements. A successful attribution requires both the
+The Cross App and Web Attribution Measurement is new and fairly complex. A successful attribution requires both the
 browser and OS-level support. As such, we are open to introducing a mechanism to
 learn more information about OS registrations. This ensures that the API can be
 better understood and help flush out any bugs (either in browser or OS or caller
@@ -101,7 +100,7 @@ Attribution-Reporting-Register-OS-Trigger: "https://adtech.example/register", "h
 ```
 
 The `debug-reporting` [parameter](https://httpwg.org/specs/rfc8941.html#param)
-is set for each registration URL independently. When the OS registation is
+is set for each registration URL independently. When the OS registration is
 successfully delegated to the OS, regardless the result of the native OS
 attribution API, the browser will send a non-credentialed HTTP POST
 request to the registration URL's origin at the path
@@ -123,7 +122,7 @@ The report data is included in the request body as a JSON list of objects, e.g.:
 ```
 
 Note: The report body is a JSON list to align with the [verbose debugging reports](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#verbose-debugging-reports)
-for regular Attribution Reporting API.
+for the web-based Attribution Reporting API.
 
 ## Privacy considerations
 

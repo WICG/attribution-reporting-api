@@ -7,8 +7,8 @@ const tests = [
   {input: '"http://localhost/"'},
   {input: '"http://127.0.0.1/"'},
   {input: '"https://a.test/", "https://b.test/"'},
-  {input: '"https://a.teset/"; debug-reporting'},
-  {input: '"https://a.teset/"; debug-reporting=?0'},
+  {input: '"https://a.test/"; debug-reporting'},
+  {input: '"https://a.test/"; debug-reporting=?0'},
 
   // Warnings
   {
