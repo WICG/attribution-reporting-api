@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { validateRegisterOsSource, validateRegisterOsTrigger } from './validate-os.js'
+import { validateOsRegistration } from './validate-os.js'
 
 const tests = [
   // Valid
@@ -7,6 +7,8 @@ const tests = [
   {input: '"http://localhost/"'},
   {input: '"http://127.0.0.1/"'},
   {input: '"https://a.test/", "https://b.test/"'},
+  {input: '"https://a.test/"; debug-reporting'},
+  {input: '"https://a.test/"; debug-reporting=?0'},
 
   // Warnings
   {
@@ -56,12 +58,20 @@ const tests = [
       msg: 'must contain a potentially trustworthy URL',
     }],
   },
+
+  // debug-reporting not a boolean
+  {
+    input: '"https://a.test/"; debug-reporting=1',
+    errors: [{
+      path: ['debug-reporting'],
+      msg: 'must be a boolean',
+    }],
+  },
 ]
 
 tests.forEach(test => {
   [
-      validateRegisterOsSource,
-      validateRegisterOsTrigger,
+      validateOsRegistration,
   ].forEach(validate => {
     const { errors, warnings } = validate(test.input);
 

@@ -1057,6 +1057,14 @@ Possible values are:
 <li>"<dfn><code>trigger-unknown-error</code></dfn>"
 </ul>
 
+An <dfn>OS debug data type</dfn> is a [=debug data type=] for OS registrations.
+Possible values are:
+
+<ul dfn-for="OS debug data type">
+<li>"<dfn><code>os-source-delegated</code></dfn>"
+<li>"<dfn><code>os-trigger-delegated</code></dfn>"
+</ul>
+
 An attribution debug data is a [=struct=] with the following items:
 
 <dl dfn-for="attribution debug data">
@@ -1574,12 +1582,12 @@ To <dfn>process an attribution eligible response</dfn> given a [=suitable origin
 1. Let |triggerHeader| be the result of [=header list/get|getting=]
     "`Attribution-Reporting-Register-Trigger`" from |response|'s
     [=response/header list=].
-1. Let |osSourceURLs| be the result of
-    [=get OS-registration URLs from a header list|getting OS-registration URLs=]
+1. Let |osSourceRegistrations| be the result of
+    [=get OS registrations from a header list|getting OS registrations=]
     from |response|'s [=response/header list=] with
     "`Attribution-Reporting-Register-OS-Source`".
-1. Let |osTriggerURLs| be the result of
-    [=get OS-registration URLs from a header list|getting OS-registration URLs=]
+1. Let |osTriggerRegistrations| be the result of
+    [=get OS registrations from a header list|getting OS registrations=]
     from |response|'s [=response/header list=] with
     "`Attribution-Reporting-Register-OS-Trigger`".
 1. If |eligibility| is:
@@ -1587,7 +1595,7 @@ To <dfn>process an attribution eligible response</dfn> given a [=suitable origin
     : "<code>[=eligibility/navigation-source=]</code>"
     : "<code>[=eligibility/event-source=]</code>"
     :: Run the following steps:
-        1. If |sourceHeader| and |osSourceURLs| are both null or both not
+        1. If |sourceHeader| and |osSourceRegistrations| are both null or both not
             null, return.
         1. If |sourceHeader| is not null:
             1. Let |sourceType| be "<code>[=source type/navigation=]</code>".
@@ -1598,13 +1606,16 @@ To <dfn>process an attribution eligible response</dfn> given a [=suitable origin
                 |contextOrigin|, |reportingOrigin|, |sourceType|, and [=current wall time=].
             1. If |source| is not null, [=process an attribution source|process=]
                 |source|.
-        1. If |osSourceURLs| is not null and the user agent supports OS
-            registrations, process |osSourceURLs| according to an
-            [=implementation-defined=] algorithm.
+        1. If |osSourceRegistrations| is not null and the user agent supports OS
+            registrations:
+              1. Process |osSourceRegistrations| according to an [=implementation-defined=] algorithm.
+              1. Run [=obtain and deliver debug reports on OS registrations=] with
+                  "<code>[=OS debug data type/os-source-delegated=]</code>", |osSourceRegistrations|,
+                  and |contextOrigin|.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: Run the following steps:
         1. If the number of non-null entries in «|sourceHeader|,
-            |triggerHeader|, |osSourceURLs|, |osTriggerURLs|» is not 1, return.
+            |triggerHeader|, |osSourceRegistrations|, |osTriggerRegistrations|» is not 1, return.
         1. If |sourceHeader| is not null:
             1. Let |source| be the result of running
                 [=parse source-registration JSON=] with |sourceHeader|,
@@ -1621,12 +1632,18 @@ To <dfn>process an attribution eligible response</dfn> given a [=suitable origin
                 |destinationSite|, |reportingOrigin|, |privateStateTokens|, and [=current wall time=].
             1. If |trigger| is not null:
                 1. [=Maybe defer and then complete trigger attribution=] with |trigger|.
-        1. If |osSourceURLs| is not null and the user agent supports OS
-            registrations, process |osSourceURLs| according to an
-            [=implementation-defined=] algorithm.
-        1. If |osTriggerURLs| is not null and the user agent supports OS
-            registrations, process |osTriggerURLs| according to an
-            [=implementation-defined=] algorithm.
+        1. If |osSourceRegistrations| is not null and the user agent supports OS
+            registrations:
+              1. Process |osSourceRegistrations| according to an [=implementation-defined=] algorithm.
+              1. Run [=obtain and deliver debug reports on OS registrations=] with
+                  "<code>[=OS debug data type/os-source-delegated=]</code>", |osSourceRegistrations|,
+                  and |contextOrigin|.
+        1. If |osTriggerRegistrations| is not null and the user agent supports OS
+            registrations:
+              1. Process |osTriggerRegistrations| according to an [=implementation-defined=] algorithm.
+              1. Run [=obtain and deliver debug reports on OS registrations=] with
+                  "<code>[=OS debug data type/os-trigger-delegated=]</code>", |osTriggerRegistrations|,
+                  and |contextOrigin|.
 
     </dl>
 
@@ -3418,20 +3435,40 @@ A user agent MAY retry this algorithm in the event that there was an error.
 
 # Cross App and Web Algorithms # {#cross-app-and-web}
 
-To <dfn noexport>get OS-registration URLs from a header list</dfn> given a
+An <dfn>OS registration</dfn> is a [=struct=] with the following items:
+
+<dl dfn-for="OS registration">
+: <dfn>URL</dfn>
+:: A [=URL=]
+: <dfn>debug reporting enabled</dfn>
+:: A [=boolean=]
+
+</dl>
+
+To <dfn noexport>get [=OS registrations=] from a header list</dfn> given a
 [=header list=] |headers| and a [=header name=] |name|:
 
 1. Let |values| be the result of
     [=header list/get a structured field value|getting=] |name| from |headers|
     with a type of "`list`".
 1. If |values| is not a [=list=], return null.
-1. Let |urls| be a new [=list=].
+1. Let |registrations| be a new [=list=].
 1. [=list/iterate|For each=] |value| of |values|:
      1. If |value| is not a [=string=], [=iteration/continue=].
      1. Let |url| be the result of running the [=URL parser=] on |value|.
      1. If |url| is failure or null, [=iteration/continue=].
-     1. [=list/Append=] |url| to |urls|.
-1. Return |urls|.
+     1. Let |debugReporting| be false.
+     1. Let |params| be the <a href="https://httpwg.org/specs/rfc8941.html#param">parameters</a>
+         associated with |value|.
+     1. If |params|["`debug-reporting`"] [=map/exists=] and |params|["`debug-reporting`"] is a [=boolean=],
+         set |debugReporting| to |params|["`debug-reporting`"].
+     1. Let |registration| be a new [=OS registration=] struct whose items are:
+         : [=OS registration/URL=]
+         :: |url|
+         : [=OS registration/debug reporting enabled=]
+         :: |debugReporting|
+     1. [=list/Append=] |registration| to |registrations|.
+1. Return |registrations|.
 
 To <dfn>get supported registrars</dfn>:
 
@@ -3456,6 +3493,29 @@ To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
     with |supportedRegistrars| and the [=set=] containing all the [=registrars=].
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Support=]</code>", |dict|) in |headers|.
+
+To <dfn>obtain and deliver debug reports on OS registrations</dfn> given an
+[=OS debug data type=] |dataType|, a [=list=] of [=OS registrations=] |registrations|,
+and an [=origin=] |contextOrigin|:
+
+1. If |registrations| [=list/is empty=], return.
+1. Let |contextSite| be the result of [=obtaining a site=] from |contextOrigin|.
+1. [=list/iterate|For each=] |registration| of |registrations|:
+    1. If |registration|'s [=OS registration/debug reporting enabled=] is false, [=iteration/continue=].
+    1. Let |origin| be |registration|'s [=OS registration/URL=]'s [=url/origin=].
+    1. If |origin| is not [=check if an origin is suitable|suitable=], [=iteration/continue=].
+    1. Let |body| be a new [=map=] with the following key/value pairs:
+        : "`context_site`"
+        :: |contextSite|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
+        : "`registration_url`"
+        :: |registration|'s [=OS registration/URL=], [=url serializer|serialized=].
+
+    1. Let |data| be a new [=attribution debug data=] with the items:
+        : [=attribution debug data/data type=]
+        :: |dataType|
+        : [=attribution debug data/body=]
+        :: |body|
+    1. Run [=obtain and deliver a debug report=] with « |data| » and |origin|.
 
 # User-Agent Automation # {#automation}
     
