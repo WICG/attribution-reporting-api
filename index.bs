@@ -1690,19 +1690,18 @@ To <dfn>parse attribution destinations</dfn> from a [=map=] |map|:
     [=max destinations per source=], return null.
 1. Return |result|.
 
-To <dfn>parse an expiry</dfn> given a [=map=] |map|, a [=string=] |key|, and a
-positive [=duration=] |default|:
+To <dfn>parse a duration</dfn> given a [=map=] |map|, a [=string=] |key|, a
+tuple of [=durations=] (|clampStart|, |clampEnd|):
 
-1. [=Assert=]: |default| is greater than or equal to 1 day.
-1. [=Assert=]: |default| is less than or equal to the [=max source expiry=].
 1. Let |seconds| be the result of running
     [=parse an optional 64-bit signed integer=] with |map|, |key|, and null.
 1. If |seconds| is an error, return an error.
-1. If |seconds| is null, return |default|.
-1. Let |expiry| be |seconds| seconds.
-1. If |expiry| is less than 1 day, return 1 day.
-1. If |expiry| is greater than |default|, return |default|.
-1. Return |expiry|.
+1. If |seconds| is null, return |clampEnd|.
+1. If |seconds| is less than 0, return an error.
+1. Let |duration| be the [=duration=] of |seconds| seconds.
+1. If |duration| is less than |clampStart|, return |clampStart|.
+1. If |duration| is greater than |clampEnd|, return |clampEnd|.
+1. Return |duration|.
 
 Issue: Consider rejecting out-of-bounds values instead of silently clamping.
 
@@ -1757,8 +1756,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     [=parse an optional 64-bit unsigned integer=] with |value|,
     "`source_event_id`", and 0.
 1. If |sourceEventId| is an error, return null.
-1. Let |expiry| be the result of running [=parse an expiry=] with |value|,
-    "`expiry`", and the [=max source expiry=].
+1. Let |expiry| be the result of running [=parse a duration=] with |value|,
+    "`expiry`", and (1 day, [=max source expiry=]).
 1. If |expiry| is an error, return null.
 1. Let |priority| be the result of running
     [=parse an optional 64-bit signed integer=] with |value|, "`priority`", and
@@ -1789,11 +1788,11 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
         [=event-source trigger data cardinality=].
     1. Set |maxAttributionsPerSource| to the user agent's
         [=max attributions per event source=].
-1. Let |eventReportWindow| be the result of running [=parse an expiry=] with
-    |value|, "`event_report_window`", and |expiry|.
+1. Let |eventReportWindow| be the result of running [=parse a duration=] with
+    |value|, "`event_report_window`", and (1 hour, |expiry|).
 1. If |eventReportWindow| is an error, return null.
-1. Let |aggregatableReportWindowEnd| be the result of running [=parse an expiry=]
-    with |value|, "`aggregatable_report_window`", and |expiry|.
+1. Let |aggregatableReportWindowEnd| be the result of running [=parse a duration=]
+    with |value|, "`aggregatable_report_window`", and (1 hour, |expiry|).
 1. If |aggregatableReportWindowEnd| is an error, return null.
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
