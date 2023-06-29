@@ -80,7 +80,7 @@ A reporting origin responding with the `Attribution-Reporting-Register-OS-Source
 
 The Cross App and Web Attribution Measurement is new and fairly complex. A successful attribution requires both the
 browser and OS-level support. As such, we are open to introducing a mechanism to
-learn more information about OS registrations. This ensures that the API can be
+learn more debug information about OS registrations. This ensures that the API can be
 better understood and help flush out any bugs (either in browser or OS or caller
 code).
 
@@ -100,8 +100,8 @@ Attribution-Reporting-Register-OS-Trigger: "https://adtech.example/register", "h
 
 The `debug-reporting` [parameter](https://httpwg.org/specs/rfc8941.html#param)
 is set for each registration URL independently. When the OS registration is
-successfully delegated to the OS, regardless the result of the native OS
-attribution API, the browser will send a non-credentialed HTTP POST
+successfully delegated to the OS, regardless of the native OS attribution API
+result, the browser will send a non-credentialed HTTP POST
 request to the registration URL's origin at the path
 `/.well-known/attribution-reporting/debug/verbose`, e.g.
 ```
