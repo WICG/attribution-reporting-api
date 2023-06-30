@@ -245,13 +245,13 @@ const aggregationKeys = object((state, key, value) => {
 export function validateSource(source) {
   const state = new State()
   state.validate(source, {
-    aggregatable_report_window: optional(int64),
-    event_report_window: optional(int64),
+    aggregatable_report_window: optional(uint64),
+    event_report_window: optional(uint64),
     aggregation_keys: optional(aggregationKeys),
     debug_key: optional(uint64),
     debug_reporting: optional(bool),
     destination: required(destinationValue),
-    expiry: optional(int64),
+    expiry: optional(uint64),
     filter_data: optional(filterData()),
     priority: optional(int64),
     source_event_id: optional(uint64),

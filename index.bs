@@ -1139,9 +1139,15 @@ However attribution data is inherently cross-site, and operations on storage wou
 
 # Constants # {#constants}
 
-<dfn>Max source expiry</dfn> is a positive [=duration=] that controls the
-maximum value that can be used as an [=attribution source/expiry=]. Its value is
-30 days.
+<dfn>Valid source expiry range</dfn> is a 2-tuple of positive [=durations=] that controls the
+minimum and maximum value that can be used as an [=attribution source/expiry=], respectively.
+Its value is (1 day, 30 days).
+
+<dfn>Min report window</dfn> is a positive [=duration=] that controls the
+minimum [=duration from=] an [=attribution source's=] [=attribution source/source time=]
+and any [=report window/end=] in [=attribution source/aggregatable report window=] or
+[=attribution source/event-level report windows=].
+Its value is 1 hour.
 
 <dfn>Max entries per filter data</dfn> is a positive integer that controls the
 maximum [=map/size=] of an [=attribution source=]'s [=attribution source/filter data=].
@@ -1707,19 +1713,18 @@ To <dfn>parse attribution destinations</dfn> from a [=map=] |map|:
     [=max destinations per source=], return null.
 1. Return |result|.
 
-To <dfn>parse an expiry</dfn> given a [=map=] |map|, a [=string=] |key|, and a
-positive [=duration=] |default|:
+To <dfn>parse a duration</dfn> given a [=map=] |map|, a [=string=] |key|, and a
+tuple of [=durations=] (|clampStart|, |clampEnd|):
 
-1. [=Assert=]: |default| is greater than or equal to 1 day.
-1. [=Assert=]: |default| is less than or equal to the [=max source expiry=].
+1. [=Assert=]: |clampStart| < |clampEnd|.
 1. Let |seconds| be the result of running
-    [=parse an optional 64-bit signed integer=] with |map|, |key|, and null.
+    [=parse an optional 64-bit unsigned integer=] with |map|, |key|, and null.
 1. If |seconds| is an error, return an error.
-1. If |seconds| is null, return |default|.
-1. Let |expiry| be |seconds| seconds.
-1. If |expiry| is less than 1 day, return 1 day.
-1. If |expiry| is greater than |default|, return |default|.
-1. Return |expiry|.
+1. If |seconds| is null, return |clampEnd|.
+1. Let |duration| be the [=duration=] of |seconds| seconds.
+1. If |duration| is less than |clampStart|, return |clampStart|.
+1. If |duration| is greater than |clampEnd|, return |clampEnd|.
+1. Return |duration|.
 
 Issue: Consider rejecting out-of-bounds values instead of silently clamping.
 
@@ -1774,8 +1779,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     [=parse an optional 64-bit unsigned integer=] with |value|,
     "`source_event_id`", and 0.
 1. If |sourceEventId| is an error, return null.
-1. Let |expiry| be the result of running [=parse an expiry=] with |value|,
-    "`expiry`", and the [=max source expiry=].
+1. Let |expiry| be the result of running [=parse a duration=] with |value|,
+    "`expiry`", and [=valid source expiry range=].
 1. If |expiry| is an error, return null.
 1. Let |priority| be the result of running
     [=parse an optional 64-bit signed integer=] with |value|, "`priority`", and
@@ -1806,11 +1811,11 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
         [=event-source trigger data cardinality=].
     1. Set |maxAttributionsPerSource| to the user agent's
         [=max attributions per event source=].
-1. Let |eventReportWindow| be the result of running [=parse an expiry=] with
-    |value|, "`event_report_window`", and |expiry|.
+1. Let |eventReportWindow| be the result of running [=parse a duration=] with
+    |value|, "`event_report_window`", and ([=min report window=], |expiry|).
 1. If |eventReportWindow| is an error, return null.
-1. Let |aggregatableReportWindowEnd| be the result of running [=parse an expiry=]
-    with |value|, "`aggregatable_report_window`", and |expiry|.
+1. Let |aggregatableReportWindowEnd| be the result of running [=parse a duration=]
+    with |value|, "`aggregatable_report_window`", and ([=min report window=], |expiry|).
 1. If |aggregatableReportWindowEnd| is an error, return null.
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
@@ -3013,7 +3018,7 @@ To <dfn>generate null reports</dfn> given an [=attribution trigger=] |trigger| a
         1. [=set/Append=] |nullReport| to the [=aggregatable report cache=].
         1. [=list/Append=] |nullReport| to |nullReports|.
 1. Otherwise:
-    1. Let |maxSourceExpiry| be [=max source expiry=].
+    1. Let |maxSourceExpiry| be [=valid source expiry range=][1].
     1. Round |maxSourceExpiry| away from zero to the nearest day (86400 seconds).
     1. Let |roundedAttributedSourceTime| be null.
     1. If |report| is not null, set |roundedAttributedSourceTime| to the result of [=obtaining rounded source time=] with |report|'s
