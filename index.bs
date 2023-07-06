@@ -3773,7 +3773,9 @@ Possible mitigations:
     reporting origin for attribution to the report, which weakens the
     attribution-side privacy controls of the API. In particular,
     this destroys the differential privacy framework we have
-    for event-level reports.
+    for event-level reports. It would also make the
+    [=event-level report/trigger priority=] functionality impossible, as there
+    would be no way to replace a lower-priority report that was already sent.
 1. Use a trusted proxy server to send reports: This effectively moves the
     reporting origin into the report body, so only the proxy server would be
     visible to the network administrator.
@@ -3799,8 +3801,12 @@ Possible mitigations:
     as the original request made to the reporting origin is in close temporal
     proximity to the report request. However, it increases the likelihood that
     the reporting origin can correlate the two requests, which weakens the
-    attribution-side privacy controls of the API.
+    attribution-side privacy controls of the API. It would also make the
+    [=event-level report/trigger priority=] functionality impossible, as there
+    would be no way to replace a lower-priority report that was already sent.
 1. Send reports immediately to a trusted proxy server, which would itself send
     the report to the reporting origin with additional delay. This would
     effectively hide both the user's IP address and their online-offline
-    presence from the reporting origin.
+    presence from the reporting origin. Compared to the previous mitigation, the
+    proxy server could itself handle the [=event-level report/trigger priority=]
+    functionality, at the cost of increased complexity in the proxy.
