@@ -174,20 +174,9 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Next trigger_spec
   } ...],
 
-  // Part of phase 1. Optional. This is a global parameter that acts across all trigger specs
-  // for the lifetime of this source. It restricts the total number of event-level reports
-  // that this source can generate. This parameter also restricts the total number of bucket increments as well by limiting the number of conversions per source.
-  // After this maximum is hit, the source is no longer capable of producing any new
-  // data. The use of priority in the trigger attribution algorithm in the case of
-  // multiple attributable triggers remains unchanged.
-  // Defaults to 3 for navigation sources and 1 for event sources.
+  // See description in phase 1.
   "max_event_level_reports": <int>
-  // Part of phase 1. Optional. Represents a series of time windows, starting at <start time>.
-  // Reports for this source will be delivered an hour after the end of each window.
-  // Time is encoded as seconds after source registration.
-  // If event_report_windows is omitted, will use the value specified in the 
-  // parent dict (or the default windows if none are specified).
-  // End time is exclusive.
+  // See description in phase 1.
   "event_report_windows": {
     "end_times": [<2 hours>, <12 hours>, <1 day>]
   }
