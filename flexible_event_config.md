@@ -27,7 +27,7 @@ The default configuration for event and navigation sources may not be ideal for 
 
 We plan to implement this proposal in two phases:
 * __Phase 1: Lite flexible event level configuration__
-  * This lite version would provide a subset of the full feature and can be used independently of the full version of flexible event level
+  * This lite version would provide a subset of the full feature and can be used independently of Phase 2
 * __Phase 2: Full version of flexible event level configuration__
 <br>
 
