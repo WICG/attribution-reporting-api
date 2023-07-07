@@ -223,7 +223,7 @@ Every trigger registration will match with at most one trigger spec and update i
 * Apply global attribution filters
 * For every trigger spec:
   * Evaluate the `event_trigger_data` on the spec to find a match, using the spec’s `event_reporting_window`
-    * The global `event_reporting_windows` (from Phase 1) will act as a default value in case any trigger spec is the missing `event_report_windows` sub-field
+    * The top level `event_reporting_windows` will act as a default value in case any trigger spec is the missing `event_report_windows` sub-field
 * The first matched spec is chosen for attribution, and we increment its summary value by `value`.
 
 When the `event_report_window` for a spec completes, we will map it's summary value to a bucket, and send an event-level report for every increment in the summary bucket caused by attributed trigger values. Reports will come with one extra field `trigger_summary_bucket`.
