@@ -25,7 +25,7 @@ _Note: This document describes possible new functionality in the Attribution Rep
 
 The default configuration for event and navigation sources may not be ideal for all use-cases. We can optionally support extended configurations that allow for callers to specify precisely the information they want out of reports, in order to more efficiently extract utility out of the privacy mechanism. The most efficient configuration will differ from use-case to use-case and will depend on a) the parameters of our privacy mechanism and b) the noise level that can be tolerated by the use-case.
 
-We plan to implement this proposal in two phases:
+This proposal is broken into two separate feature sets
 * __Phase 1: Lite flexible event level configuration__
   * This lite version would provide a subset of the full feature and can be used independently of Phase 2
 * __Phase 2: Full version of flexible event level configuration__
