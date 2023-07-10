@@ -37,7 +37,7 @@ We will add two optional parameters to the JSON in `Attribution-Reporting-Regist
     // trigger_data will still appear in the event-level report.
     "trigger_data": [<int>, ...]
 
-    // Represents a series of time windows, starting at <start time>.
+    // Represents a series of time windows, starting at the source registration time.
     // Reports for this spec will be delivered an hour after the end of each window.
     // Time is encoded as seconds after source registration.
     //
@@ -46,7 +46,6 @@ We will add two optional parameters to the JSON in `Attribution-Reporting-Regist
     // is omitted, will use the value specified in the parent dict (or the default
     // windows if none are specified). End time is exclusive.
     "event_report_windows": {
-      "start_time": <int>, // Optional, defaults to 0.
       "end_times": [<int>, ...]
     }
 
