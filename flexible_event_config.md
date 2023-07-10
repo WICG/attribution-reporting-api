@@ -67,13 +67,13 @@ We will add the following two optional parameters to the JSON in `Attribution-Re
   // Defaults to 3 for navigation sources and 1 for event sources
   "max_event_level_reports": <int>,
 
-  // Optional. Represents a series of time windows, starting at <start time>.
+  // Optional. Represents a series of time windows, starting at 0.
   // Reports for this source will be delivered an hour after the end of each window.
   // Time is encoded as seconds after source registration.
   // If event_report_windows is omitted, will use the default windows.
+  // This field is mutually exclusive with the existing `event_report_window` field.
   // End time is exclusive.
   "event_report_windows": {
-    "start_time": <int>, // Optional, defaults to 0.
     "end_times": [<int>, ...]
   }
 }
@@ -91,7 +91,7 @@ Here are the default configurations for `event` and `navigation` sources.
   ...  
   "max_event_level_reports": 1,
   "event_report_windows": {
-    "end_times": [<30 days>]
+    "end_times": [2592000] //This is <30 days> represented in seconds
   }
 }
 ```
@@ -103,7 +103,7 @@ Here are the default configurations for `event` and `navigation` sources.
   ...  
   "max_event_level_reports": 3,
   "event_report_windows": {
-    "end_times": [<2 days>, <7 days>, <30 days>]
+    "end_times": [172800, 604800, 2592000] //This is <2 days>, <7 days>, <30 days> represented in seconds
   }
 }
 ```
@@ -117,7 +117,7 @@ Below is an additional configuration example outside the defaults. This example 
   ...  
   "max_event_level_reports": 3,
   "event_report_windows": {
-    "end_times": [<2 hours>, <12 hours>, <1 day>]
+    "end_times": [7200, 43200, 86400] //This is <2 hours>, <12 hours>, and <1 day> represented in seconds
   }
 }
 ```
@@ -178,7 +178,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
   "max_event_level_reports": <int>
   // See description in phase 1.
   "event_report_windows": {
-    "end_times": [<2 hours>, <12 hours>, <1 day>]
+    "end_times": [7200, 43200, 86400] //This is <2 hours>, <12 hours>, and <1 day> represented in seconds
   }
 }
 ```
@@ -249,7 +249,7 @@ Here are the default configurations for event and navigation sources. Especially
   {
     "trigger_data": [0, 1, 2, 3, 4, 5, 6, 7],
     "event_report_windows": {
-      "end_times": [<2 days>, <7 days>, <30 days>]
+      "end_times": [172800, 604800, 2592000] //This is <2 days>, <7 days>, <30 days> represented in seconds
     }
   }],
   "max_event_level_reports": 3
@@ -272,7 +272,7 @@ This example configuration supports a developer who wants to optimize for value 
   {
     "trigger_data": [0],
     "event_report_windows": {
-      "end_times": [<7 days>]
+      "end_times": [604800] //This is <7 days> represented in seconds
     },
     "summary_window_operator": "value_sum",
     "summary_buckets": [5, 10, 100]
@@ -308,7 +308,7 @@ This example shows how a developer can configure a source to get a count of trig
   {
     "trigger_data": [0],
     "event_report_windows": {
-      "end_times": [<7 days>]
+      "end_times": [604800] //This is <7 days> represented in seconds
     },
     // This field could be omitted to save bandwidth since the default is "count"
     "summary_window_operator": "count",
@@ -336,7 +336,8 @@ This example configuration supports a developer who wants to learn whether at le
   {
     "trigger_data": [0],
     "event_report_windows": {
-      "end_times": [<1 days>, <2 days>, <3 days> <5 days>, <7 days>, <10 days>]
+      // This is <1 days>, <2 days>, <3 days> <5 days>, <7 days>, <10 days> represented in seconds
+      "end_times": [86400, 172800, 259200, 432000, 604800, 864000]
     },
     // This field could be omitted to save bandwidth since the default is "count"
     "summary_window_operator": "count",
@@ -355,7 +356,7 @@ Note that the `trigger_specs` registration can differ from source to source. Thi
   {
     "trigger_data": [0, 1, 2, 3],
     "event_report_windows": {
-      "end_times": [<2 days>, <7 days>, <30 days>]
+      "end_times": [172800, 604800, 2592000] //This is <2 days>, <7 days>, <30 days> represented in seconds
     }
   }],
   "max_event_level_reports": 3
@@ -368,7 +369,7 @@ Note that the `trigger_specs` registration can differ from source to source. Thi
   {
     "trigger_data": [4, 5, 6, 7],
     "event_report_windows": {
-      "end_times": [<2 days>, <7 days>, <30 days>]
+      "end_times": [172800, 604800, 2592000] //This is <2 days>, <7 days>, <30 days> represented in seconds
     }
   }],
   "max_event_level_reports": 3
