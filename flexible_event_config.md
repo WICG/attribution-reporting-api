@@ -46,7 +46,6 @@ We will add two optional parameters to the JSON in `Attribution-Reporting-Regist
     // is omitted, will use the value specified in the parent dict (or the default
     // windows if none are specified). End time is exclusive.
     "event_report_windows": {
-      "start_time": <int>, // Optional, defaults to 0.
       "end_times": [<int>, ...]
     }
 
