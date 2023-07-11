@@ -203,7 +203,7 @@ This example configuration supports a developer who wants to optimize for value 
       "end_times": [<7 days>, <14 days>]
     },
     "summary_window_operator": "value_sum",
-    "summary_buckets": [1, 5, 10, 100]
+    "summary_buckets": [5, 10, 100]
   }],
 }
 ```
@@ -223,12 +223,6 @@ The values are summed (to 8) and reported in the following reports after 7 days 
 // Report 1
 {
   ...
-  "trigger_summary_bucket": [1, 4]
-},
-
-// Report 2
-{
-  ...
   "trigger_summary_bucket": [5, 9]
 }
 ```
@@ -243,13 +237,13 @@ In the subsequent 7 days, the following triggers are registered:
 The values are summed to 8 + 50 + 45 = 103. This yields the following reports at 14 days + 1 hour:
 
 ```jsonc
-// Report 3
+// Report 2
 {
   ...
   "trigger_summary_bucket": [10, 99]
 },
 
-// Report 4
+// Report 3
 {
   ...
   "trigger_summary_bucket": [100, MAX_INT]
