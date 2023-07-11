@@ -308,7 +308,7 @@ This example shows how a developer can configure a source to get a count of trig
   {
     "trigger_data": [0],
     "event_report_windows": {
-      "end_times": [604800] //This is <7 days> represented in seconds
+      "end_times": [604800] // 7 days represented in seconds
     },
     // This field could be omitted to save bandwidth since the default is "count"
     "summary_window_operator": "count",
