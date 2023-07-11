@@ -91,7 +91,7 @@ Here are the default configurations for `event` and `navigation` sources.
   ...  
   "max_event_level_reports": 1,
   "event_report_windows": {
-    "end_times": [2592000] //This is <30 days> represented in seconds
+    "end_times": [2592000] // 30 days represented in seconds
   }
 }
 ```
