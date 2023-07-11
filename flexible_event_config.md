@@ -117,7 +117,7 @@ Below is an additional configuration example outside the defaults. This example 
   ...  
   "max_event_level_reports": 3,
   "event_report_windows": {
-    "end_times": [7200, 43200, 86400] //This is <2 hours>, <12 hours>, and <1 day> represented in seconds
+    "end_times": [7200, 43200, 86400] // 2 hours, 12 hours, 1 day represented in seconds
   }
 }
 ```
