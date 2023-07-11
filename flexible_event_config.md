@@ -146,7 +146,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     //
     // Note: specs with identical trigger_data cannot have overlapping windows;
     // this ensures that triggers match at most one spec. If event_report_windows
-    // is omitted, will use the "event_report_window" or "event_report_windows" field specified at the global level for the source (or the defaul windows if none are specified).  End time is exclusive.
+    // is omitted, will use the "event_report_window" or "event_report_windows" field specified at the global level for the source (or the default windows if none are specified).  End time is exclusive.
     "event_report_windows": {
       "start_time": <int>, // Optional, defaults to 0.
       "end_times": [<int>, ...]
@@ -356,7 +356,7 @@ Note that the `trigger_specs` registration can differ from source to source. Thi
   {
     "trigger_data": [0, 1, 2, 3],
     "event_report_windows": {
-      "end_times": [172800, 604800, 2592000] //This is <2 days>, <7 days>, <30 days> represented in seconds
+      "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
     }
   }],
   "max_event_level_reports": 3
@@ -369,7 +369,7 @@ Note that the `trigger_specs` registration can differ from source to source. Thi
   {
     "trigger_data": [4, 5, 6, 7],
     "event_report_windows": {
-      "end_times": [172800, 604800, 2592000] //This is <2 days>, <7 days>, <30 days> represented in seconds
+      "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
     }
   }],
   "max_event_level_reports": 3
