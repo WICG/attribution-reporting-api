@@ -249,7 +249,7 @@ Here are the default configurations for event and navigation sources. Especially
   {
     "trigger_data": [0, 1, 2, 3, 4, 5, 6, 7],
     "event_report_windows": {
-      "end_times": [172800, 604800, 2592000] //This is <2 days>, <7 days>, <30 days> represented in seconds
+      "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
     }
   }],
   "max_event_level_reports": 3
