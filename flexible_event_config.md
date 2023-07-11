@@ -336,7 +336,7 @@ This example configuration supports a developer who wants to learn whether at le
   {
     "trigger_data": [0],
     "event_report_windows": {
-      // This is <1 days>, <2 days>, <3 days> <5 days>, <7 days>, <10 days> represented in seconds
+      // 1 day, 2 days, 3 days, 5 days, 7 days, 10 days represented in seconds
       "end_times": [86400, 172800, 259200, 432000, 604800, 864000]
     },
     // This field could be omitted to save bandwidth since the default is "count"
