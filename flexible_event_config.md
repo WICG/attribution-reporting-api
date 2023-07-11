@@ -178,7 +178,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
   "max_event_level_reports": <int>
   // See description in phase 1.
   "event_report_windows": {
-    "end_times": [7200, 43200, 86400] //This is <2 hours>, <12 hours>, and <1 day> represented in seconds
+    "end_times": [7200, 43200, 86400] // 2 hours, 12 hours, 1 day represented in seconds
   }
 }
 ```
