@@ -63,6 +63,11 @@ We will add two optional parameters to the JSON in `Attribution-Reporting-Regist
     // e.g. [5, 10, 100] encodes the following ranges:
     // [[0, 4], [5, 9], [10, 99], [100, MAX_INT]]
     //
+    // At the end of each reporting window, triggers will be summarized into an
+    // integer which slots into one of these ranges. Reports will be sent for
+    // every new range boundary that is crossed. Reports will never be sent for
+    // the range that includes 0, as every source is initialized in this range.
+    //
     // If omitted, then represents a trivial mapping
     // [1, 2, ... , MAX_INT]
     // With MAX_INT being the maximum possible int value defined by the browser.
@@ -195,7 +200,7 @@ This example configuration supports a developer who wants to optimize for value 
   {
     "trigger_data": [0],
     "event_report_windows": {
-      "end_times": [<7 days>]
+      "end_times": [<7 days>, <14 days>]
     },
     "summary_window_operator": "value_sum",
     "summary_buckets": [5, 10, 100]
@@ -212,14 +217,39 @@ Triggers could be registered with the value field set, which are summed up and b
 { "event_trigger_data": [{"trigger_data": "0", "value": 4}] }
 ```
 
-The values are summed (to 8) and reported as bucket [5, 9]
+The values are summed (to 8) and reported in the following reports after 7 days + 1 hour:
 
 ```jsonc
+// Report 1
 {
   ...
   "trigger_summary_bucket": [5, 9]
 }
 ```
+
+In the subsequent 7 days, the following triggers are registered:
+
+```jsonc
+{ "event_trigger_data": [{"trigger_data": "0", "value": 50}] }
+{ "event_trigger_data": [{"trigger_data": "0", "value": 45}] }
+```
+
+The values are summed to 8 + 50 + 45 = 103. This yields the following reports at 14 days + 1 hour:
+
+```jsonc
+// Report 2
+{
+  ...
+  "trigger_summary_bucket": [10, 99]
+},
+
+// Report 3
+{
+  ...
+  "trigger_summary_bucket": [100, MAX_INT]
+}
+```
+
 
 ### Reporting trigger counts
 
@@ -239,9 +269,25 @@ This example shows how a developer can configure a source to get a count of trig
 }
 ```
 
-Attributed triggers with `trigger_data` set to 0 are counted and capped at 10. The trigger value is ignored since `summary_window_operator` is set to `count`. Supposing 4 triggers are registered and attributed to the source, the report would look like this:
+Attributed triggers with `trigger_data` set to 0 are counted and capped at 10. The trigger value is ignored since `summary_window_operator` is set to `count`. Supposing 4 triggers are registered and attributed to the source, the reports would look like this:
 
 ```jsonc
+// Report 1
+{
+  ...
+  "trigger_summary_bucket": [1, 1]
+}
+// Report 2
+{
+  ...
+  "trigger_summary_bucket": [2, 2]
+}
+// Report 3
+{
+  ...
+  "trigger_summary_bucket": [3, 3]
+}
+// Report 4
 {
   ...
   "trigger_summary_bucket": [4, 4]
