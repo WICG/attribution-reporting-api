@@ -140,7 +140,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // trigger_data will still appear in the event-level report.
     "trigger_data": [<int>, ...]
 
-    // Represents a series of time windows, starting at <start time>.
+    // Represents a series of time windows, starting at the source registration time.
     // Reports for this spec will be delivered an hour after the end of each window.
     // Time is encoded as seconds after source registration.
     //
@@ -148,7 +148,6 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // this ensures that triggers match at most one spec. If event_report_windows
     // is omitted, will use the "event_report_window" or "event_report_windows" field specified at the global level for the source (or the default windows if none are specified).  End time is exclusive.
     "event_report_windows": {
-      "start_time": <int>, // Optional, defaults to 0.
       "end_times": [<int>, ...]
     }
 
@@ -165,6 +164,11 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     //
     // e.g. [5, 10, 100] encodes the following ranges:
     // [[0, 4], [5, 9], [10, 99], [100, MAX_INT]]
+    //
+    // At the end of each reporting window, triggers will be summarized into an
+    // integer which slots into one of these ranges. Reports will be sent for
+    // every new range boundary that is crossed. Reports will never be sent for
+    // the range that includes 0, as every source is initialized in this range.
     //
     // If omitted, then represents a trivial mapping
     // [1, 2, ... , MAX_INT]
@@ -224,18 +228,28 @@ When the `event_report_window` for a spec completes, we will map it's summary va
 }
 ```
 
+
 ### Default configurations
 
-Here are the default configurations for event and navigation sources. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
+The following are equivalent configurations for the API's current event and navigation sources, respectively. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
+
+It is possible that there are multiple configurations that are equivalent, given that some parameters can be set as default or pruned.
 
 
 #### Default event sources
 
 ```jsonc
+// Note: most of the fields here are not required to be explicitly listed.
+// Here we list them explicitly just for clarity.
 {
   "trigger_specs": [
   {
     "trigger_data": [0, 1],
+    "event_report_windows": {
+      "end_times": [<30 days>] 
+    },
+  "summary_window_operator": "count",
+  "summary_buckets": [1],
   }],
   "max_event_level_reports": 1,
   "event_report_windows": {
@@ -247,6 +261,8 @@ Here are the default configurations for event and navigation sources. Especially
 #### Default navigation sources
 
 ```jsonc
+// Note: most of the fields here are not required to be explicitly listed.
+// Here we list them explicitly just for clarity.
 {
   "trigger_specs": [
   {
@@ -260,6 +276,7 @@ Here are the default configurations for event and navigation sources. Especially
     "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
   }
 }
+
 ```
 
 ### Custom configurations: Examples
@@ -295,16 +312,42 @@ Triggers could be registered with the value field set, which are summed up and b
 { "event_trigger_data": [{"trigger_data": "0", "value": 4}] }
 ```
 
-The values are summed (to 8) and only 1 report is sent reported as bucket [5, 9].
+
+The values are summed (to 8) and reported in the following reports after 7 days + 1 hour:
 
 ```jsonc
+// Report 1
 {
   ...
   "trigger_summary_bucket": [5, 9]
 }
 ```
 
-#### Reporting trigger counts
+In the subsequent 7 days, the following triggers are registered:
+
+```jsonc
+{ "event_trigger_data": [{"trigger_data": "0", "value": 50}] }
+{ "event_trigger_data": [{"trigger_data": "0", "value": 45}] }
+```
+
+The values are summed to 8 + 50 + 45 = 103. This yields the following reports at 14 days + 1 hour:
+
+```jsonc
+// Report 2
+{
+  ...
+  "trigger_summary_bucket": [10, 99]
+},
+
+// Report 3
+{
+  ...
+  "trigger_summary_bucket": [100, MAX_INT]
+}
+```
+
+
+### Reporting trigger counts
 
 This example shows how a developer can configure a source to get a count of triggers up to 10.
 
@@ -323,9 +366,25 @@ This example shows how a developer can configure a source to get a count of trig
 }
 ```
 
-Attributed triggers with `trigger_data` set to 0 are counted and capped at 10. The trigger value is ignored since `summary_window_operator` is set to `count`. Supposing 4 triggers are registered and attributed to the source, the report would look like this:
+Attributed triggers with `trigger_data` set to 0 are counted and capped at 10. The trigger value is ignored since `summary_window_operator` is set to `count`. Supposing 4 triggers are registered and attributed to the source, the reports would look like this:
 
 ```jsonc
+// Report 1
+{
+  ...
+  "trigger_summary_bucket": [1, 1]
+}
+// Report 2
+{
+  ...
+  "trigger_summary_bucket": [2, 2]
+}
+// Report 3
+{
+  ...
+  "trigger_summary_bucket": [3, 3]
+}
+// Report 4
 {
   ...
   "trigger_summary_bucket": [4, 4]
