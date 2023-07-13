@@ -188,7 +188,7 @@ It is possible that there are multiple configurations that are equivalent, given
     "summary_window_operator": "count",
     "summary_buckets": [1,2,3],
   }],
-  "max_event_level_reports": 3
+  "max_event_level_reports": 3,
   ...
   "expiry": <30 days> or larger,
 }
