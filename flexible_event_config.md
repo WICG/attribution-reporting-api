@@ -207,14 +207,13 @@ When the `event_report_window` for a spec completes, we will map it's summary va
 ```
 
 
-### Default configurations
+## Configurations that are equivalent to the current version
 
 The following are equivalent configurations for the API's current event and navigation sources, respectively. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
 
 It is possible that there are multiple configurations that are equivalent, given that some parameters can be set as default or pruned.
 
-
-#### Default event sources
+### Equivalent event sources
 
 ```jsonc
 // Note: most of the fields here are not required to be explicitly listed.
@@ -226,17 +225,16 @@ It is possible that there are multiple configurations that are equivalent, given
     "event_report_windows": {
       "end_times": [<30 days>] 
     },
-  "summary_window_operator": "count",
-  "summary_buckets": [1],
+    "summary_window_operator": "count",
+    "summary_buckets": [1],
   }],
   "max_event_level_reports": 1,
-  "event_report_windows": {
-    "end_times": [2592000] // 30 days represented in seconds
-  }
+  ...
+  "expiry": <30 days>, // expiry must be greater than or equal to the last element of the end_times
 }
 ```
 
-#### Default navigation sources
+### Equivalent navigation sources
 
 ```jsonc
 // Note: most of the fields here are not required to be explicitly listed.
@@ -246,13 +244,14 @@ It is possible that there are multiple configurations that are equivalent, given
   {
     "trigger_data": [0, 1, 2, 3, 4, 5, 6, 7],
     "event_report_windows": {
-      "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
-    }
+      "end_times": [<2 days>, <7 days>, <30 days>]
+    },
+    "summary_window_operator": "count",
+    "summary_buckets": [1, 2, 3],
   }],
   "max_event_level_reports": 3,
-  "event_report_windows": {
-    "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
-  }
+  ...
+  "expiry": <30 days>, // expiry must be greater than or equal to the last element of the end_times
 }
 
 ```
