@@ -237,7 +237,10 @@ Here are the default configurations for event and navigation sources. Especially
   {
     "trigger_data": [0, 1],
   }],
-  "max_event_level_reports": 1
+  "max_event_level_reports": 1,
+  "event_report_windows": {
+    "end_times": [2592000] // 30 days represented in seconds
+  }
 }
 ```
 
@@ -252,7 +255,10 @@ Here are the default configurations for event and navigation sources. Especially
       "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
     }
   }],
-  "max_event_level_reports": 3
+  "max_event_level_reports": 3,
+  "event_report_windows": {
+    "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
+  }
 }
 ```
 
