@@ -173,7 +173,7 @@ It is possible that there are multiple configurations that are equivalent, given
   }],
   "max_event_level_reports": 1,
   ...
-  "expiry": <30 days>,
+  "expiry": <30 days>, // expiry must be greater than or equal to the last element of the end_times
 }
 ```
 
@@ -194,7 +194,7 @@ It is possible that there are multiple configurations that are equivalent, given
   }],
   "max_event_level_reports": 3,
   ...
-  "expiry": <30 days> ,
+  "expiry": <30 days>, // expiry must be greater than or equal to the last element of the end_times
 }
 
 ```
