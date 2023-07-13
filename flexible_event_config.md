@@ -160,7 +160,7 @@ It is possible that there are multiple configurations that are equivalent, given
 
 ```jsonc
 // Note: most of the fields here are not required to be explicitly listed.
-// Here we list them explicitly just for claritiy.
+// Here we list them explicitly just for clarity.
 {
   "trigger_specs": [
   {
@@ -181,7 +181,7 @@ It is possible that there are multiple configurations that are equivalent, given
 
 ```jsonc
 // Note: most of the fields here are not required to be explicitly listed.
-// Here we list them explicitly just for claritiy.
+// Here we list them explicitly just for clarity.
 {
   "trigger_specs": [
   {
