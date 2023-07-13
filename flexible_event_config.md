@@ -152,13 +152,15 @@ Be mindful that using extremal values here may result in a large amount of noise
 
 ## Configurations that are equivalent to the current version
 
-The following are equivalent configurations for event and navigation sources, respectively. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
+The following are equivalent configurations for the API's current event and navigation sources, respectively. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
 
 It is possible that there are multiple configurations that are equivalent, given that some parameters can be set as default or pruned.
 
 ### Equivalent event sources
 
 ```jsonc
+// Note: most of the fields here are not required to be explicitly listed.
+// Here we list them explicitly just for claritiy.
 {
   "trigger_specs": [
   {
@@ -171,13 +173,15 @@ It is possible that there are multiple configurations that are equivalent, given
   }],
   "max_event_level_reports": 1,
   ...
-  "expiry": <30 days> or larger,
+  "expiry": <30 days>,
 }
 ```
 
 ### Equivalent navigation sources
 
 ```jsonc
+// Note: most of the fields here are not required to be explicitly listed.
+// Here we list them explicitly just for claritiy.
 {
   "trigger_specs": [
   {
@@ -186,11 +190,11 @@ It is possible that there are multiple configurations that are equivalent, given
       "end_times": [<2 days>, <7 days>, <30 days>]
     },
     "summary_window_operator": "count",
-    "summary_buckets": [1,2,3],
+    "summary_buckets": [1, 2, 3],
   }],
   "max_event_level_reports": 3,
   ...
-  "expiry": <30 days> or larger,
+  "expiry": <30 days> ,
 }
 
 ```
