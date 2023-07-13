@@ -150,24 +150,32 @@ Beyond setting noise levels, we will have some parameter limits to avoid large c
 
 Be mindful that using extremal values here may result in a large amount of noise, or failure to register if privacy levels are not met.
 
-## Default configurations
+## Configurations that are equivalent to the current version
 
-Here are the default configurations for event and navigation sources. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
+The following are equivalent configurations for event and navigation sources, respectively. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
 
+It is possible that there are multiple configurations that are equivalent, given that some parameters can be set as default or pruned.
 
-### Default event sources
+### Equivalent event sources
 
 ```jsonc
 {
   "trigger_specs": [
   {
     "trigger_data": [0, 1],
+    "event_report_windows": {
+      "end_times": [<30 days>] 
+    },
+  "summary_window_operator": "count",
+  "summary_buckets": [1],
   }],
-  "max_event_level_reports": 1
+  "max_event_level_reports": 1,
+  ...
+  "expiry": <30 days> or larger,
 }
 ```
 
-### Default navigation sources
+### Equivalent navigation sources
 
 ```jsonc
 {
@@ -176,10 +184,15 @@ Here are the default configurations for event and navigation sources. Especially
     "trigger_data": [0, 1, 2, 3, 4, 5, 6, 7],
     "event_report_windows": {
       "end_times": [<2 days>, <7 days>, <30 days>]
-    }
+    },
+    "summary_window_operator": "count",
+    "summary_buckets": [1,2,3],
   }],
   "max_event_level_reports": 3
+  ...
+  "expiry": <30 days> or larger,
 }
+
 ```
 
 ## Custom configurations: examples
