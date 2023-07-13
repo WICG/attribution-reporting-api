@@ -270,7 +270,7 @@ Below are some additional configurations outside the defaults. In all of the bel
 
 #### Reporting trigger value buckets
 
-This example configuration supports a developer who wants to optimize for value data for only one reporting window (e.g. 7 days), trading fewer reporting windows for less noise. In this example any trigger that sets trigger_data to a value other than 0 is ineligible for attribution.
+This example configuration supports a developer who wants to optimize for value data for only one reporting window (e.g. 7 days), trading fewer reporting windows for less noise. In this example any trigger that sets trigger_data to a value other than 0 is ineligible for event-level attribution.
 
 ```jsonc
 {
