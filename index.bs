@@ -1798,13 +1798,14 @@ and a [=report window list=] |default|:
 1. If |map|["`event_report_windows`"] does not [=map/exist=], return |default|.
 1. Let |values| be |map|["`event_report_windows`"].
 1. If |values| is not a [=map=], return an error.
+1. Let |startDuration| be the result of running [=parse a duration=] with |values|, "`start_time`", and (0, infinity).
+1. If |startDuration| is greater than |defaultEndDuration|, return an error.
 1. If |values|["`end_times`"] does not [=map/exist=] or is not a [=list=], return an error.
 1. Let |endDurations| be |values|["`end_times`"].
 1. If the [=list/size=] of |endDurations| is greater than [=max settable event-level report windows=], return an error.
 1. If |endDurations| [=list/is empty=], return an error.
 1. Let |windows| be an [=list/is empty|empty=] [=list=].
 1. Let |defaultEndDuration| be the [=duration from=] |sourceTime| and the [=report window/end=] of the last element of |default|.
-1. Let |startDuration| be 0 seconds.
 1. [=list/iterate|For each=] |end| of |endDurations|:
     1. If |end| is not an integer, return an error.
     1. Let |endDuration| be |end| seconds.
