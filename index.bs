@@ -345,13 +345,7 @@ A [=request=] has an associated
 Unless otherwise stated it is "<code>[=eligibility/unset=]</code>".
 
 A [=request=] has an associated
-<dfn for=request>trigger verification metadata</dfn> which is null or a [=struct=] with the following items:
-<dl dfn-for="request/trigger verification metadata">
-    : <dfn>pretokens</dfn>
-    :: A [=byte sequence=].
-    : <dfn>ids</dfn>
-    :: A [=list=] of [=string=] generated using [=generating a random UUID=].
-</dl>
+<dfn for=request>trigger verification metadata</dfn> which is null or a [=trigger verification metadata=].
 
 To <dfn>get an eligibility from {{AttributionReportingRequestOptions}}</dfn>
 given an optional {{AttributionReportingRequestOptions}} |options|:
@@ -1127,6 +1121,15 @@ A trigger verification is a [=struct=] with the following items:
 : <dfn>id</dfn>
 :: The result of [=generating a random UUID=] over which the [=trigger verification/token=] is signed.
 
+</dl>
+
+<h3 dfn-type=dfn>Trigger verification metadata</h3>
+A trigger verification metadata is a [=struct=] with the following items:
+<dl dfn-for="trigger verification metadata">
+    : <dfn>pretokens</dfn>
+    :: A [=byte sequence=].
+    : <dfn>ids</dfn>
+    :: A [=list=] of [=string=] generated using [=generating a random UUID=].
 </dl>
 
 <h3 dfn-type=dfn>Triggering result</h3>
@@ -3555,10 +3558,10 @@ and a [=suitable origin=] |destination|:
     1. Let |base64EncodedMaskedMessage| be the [=forgiving-base64 encoding=] of |maskedMessage|.
     1. Let |fieldValue| be the result of [=structured header/serializing a string=] with |base64EncodedMaskedMessage|.
     1. [=list/Append=] |fieldValue| to |base64EncodedMaskedMessages|.
-1. Let |request|'s [=request/trigger verification metadata=] be a [=request/trigger verification metadata=] with the items:
-    : [=request/trigger verification metadata/pretokens=]
+1. Let |request|'s [=request/trigger verification metadata=] be a [=trigger verification metadata=] with the items:
+    : [=trigger verification metadata/pretokens=]
     :: |pretokens|
-    : [=request/trigger verification metadata/ids=]
+    : [=trigger verification metadata/ids=]
     :: |ids|
 1. [=header list/Set a structured field value=] given
     ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", the result of [=structured header/serializing a list=] with |base64EncodedMaskedMessages|)
@@ -3576,15 +3579,15 @@ To <dfn noexport>receive trigger verification tokens</dfn> given an
 [=request/trigger verification metadata=] |metadata|:
 
 1. If |metadata| is null, return a new [=list=].
-1. If |metadata|'s [=request/trigger verification metadata/ids=] [=list/size=] is not equal to [=verification tokens per trigger=], return a new [=list=].
-1. Let |pretokens| be |metadata|'s [=request/trigger verification metadata/pretokens=].
+1. If |metadata|'s [=trigger verification metadata/ids=] [=list/size=] is not equal to [=verification tokens per trigger=], return a new [=list=].
+1. Let |pretokens| be |metadata|'s [=trigger verification metadata/pretokens=].
 1. Let |issuerKeys| be the result of [=looking up the key commitments=] for |issuer|.
 1. If |issuerKeys| is null, return a new [=list=].
 1. Let |fieldValue| be the result of [=header list/getting a structured field value=] given
     ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", "list") from |response|'s [=response/header list=].
 1. Let |base64EncodedMaskedTokens| be the result of [=structured header/parsing a list=] with |fieldValue|.
 1. [=header list/delete|Delete=] "<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>"" from |response|'s [=response/header list=].
-1. If |base64EncodedMaskedTokens|'s [=list/size=] is greater than |metadata|'s [=request/trigger verification metadata/ids=] [=list/size=], return a new [=list=].
+1. If |base64EncodedMaskedTokens|'s [=list/size=] is greater than |metadata|'s [=trigger verification metadata/ids=] [=list/size=], return a new [=list=].
 1. Let |base64EncodedPrivateStateTokens| be a new [=list=].
 1. [=list/iterate|For each=] |base64EncodedMaskedToken| of |base64EncodedMaskedTokens|:
     1. Let |base64EncodedMaskedTokenValue| be the result of [=structured header/parsing a string=] with |base64EncodedMaskedToken|.
@@ -3601,7 +3604,7 @@ To <dfn noexport>receive trigger verification tokens</dfn> given an
         : [=trigger verification/token=]
         :: |base64EncodedPrivateStateTokens|[i]
         : [=trigger verification/id=]
-        :: |metadata|'s [=request/trigger verification metadata/ids=][i]
+        :: |metadata|'s [=trigger verification metadata/ids=][i]
     1. [=list/Append=] |triggerVerification| to |triggerVerifications|.
 1. Return |triggerVerifications|.
 
