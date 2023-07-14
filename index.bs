@@ -431,7 +431,8 @@ recipient after the header has been parsed as a structured dictionary:
 Attribution-Reporting-Eligible: not-event-source, trigger=event-source;navigation-source=3
 </pre>
 
-To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|:
+To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|,
+and an [=origin=] |contextOrigin|:
 
 1. Let |headers| be |request|'s [=request/header list=].
 1. Let |eligibility| be |request|'s [=request/Attribution Reporting eligibility=].
@@ -466,13 +467,15 @@ To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|:
 
 Modify [=fetch=] as follows:
 
+Add a [=Document=] parameter called |document|.
+
 After the step
 
 > If |request|'s [=request/header list=] does not contain `Accept`...
 
 add the step
 
-1. [=Set Attribution Reporting headers=] with |request|.
+1. [=Set Attribution Reporting headers=] with |request|, and |document|'s [=node/context origin=].
 
 Modify {{Request/constructor(input, init)}} as follows:
 
@@ -1582,7 +1585,7 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, an
     ::  |eligibility|
 1. [=Fetch=] |request| with [=fetch/processResponse=] being
     [=process an attributionsrc response=] with |contextOrigin|, |eligibility|,
-    and |request|'s  [=request/trigger verification metadata=].
+    and |request|'s [=request/trigger verification metadata=].
 
 Issue: Audit other properties on |request| and set them properly.
 
@@ -3603,6 +3606,7 @@ To <dfn noexport>receive trigger verification tokens</dfn> given an
 1. Return |triggerVerifications|.
 
 Issue: Specify the cryptographic redemption procedure.
+
 To <dfn>obtain and deliver debug reports on OS registrations</dfn> given an
 [=OS debug data type=] |dataType|, a [=list=] of [=OS registrations=] |registrations|,
 and an [=origin=] |contextOrigin|:
