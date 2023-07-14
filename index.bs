@@ -1865,11 +1865,9 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     1. Round |expiry| away from zero to the nearest day (86400 seconds).
     1. Set |triggerDataCardinality| to the user agent's
         [=event-source trigger data cardinality=].
-1. Let |maxAttributionsPerSource| be the result of running
-    [=parse an optional 64-bit signed integer=] with |value|, "`max_event_level_reports`", and
-    [=default event-level attributions per source=][|sourceType|].
-1. If |maxAttributionsPerSource| is an error, return null.
-1. If |maxAttributionsPerSource| is greater than [=max settable event-level attributions per source=], return null.
+1. Let |maxAttributionsPerSource| be [=default event-level attributions per source=][|sourceType|].
+1. Set |maxAttributionsPerSource| to |value|["`max_event_level_reports`"] if it [=map/exists=].
+1. If |maxAttributionsPerSource| is not a positive integer, or is greater than [=max settable event-level attributions per source=], return null.
 1. Let |eventReportWindow| be the result of running [=parse a duration=] with
     |value|, "`event_report_window`", and ([=min report window=], |expiry|).
 1. If |eventReportWindow| is an error, return null.
