@@ -11,13 +11,13 @@ export const testCases = [
   {
     name: "all-fields",
     json: `{
-      "aggregatable_report_window": "-1",
+      "aggregatable_report_window": "1",
       "aggregation_keys": {"a": "0xf"},
       "debug_key": "1",
       "debug_reporting": true,
       "destination": "https://a.test",
-      "event_report_window": "-2",
-      "expiry": "-3",
+      "event_report_window": "2",
+      "expiry": "3",
       "filter_data": {"b": ["c"]},
       "priority": "2",
       "source_event_id": "3"
@@ -272,7 +272,18 @@ export const testCases = [
     }`,
     expectedErrors: [{
       path: ["aggregatable_report_window"],
-      msg: "must be an int64 (must match /^-?[0-9]+$/)",
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
+    }],
+  },
+  {
+    name: "aggregatable-report-window-wrong-sign",
+    json: `{
+      "destination": "https://a.test",
+      "aggregatable_report_window": "-1"
+    }`,
+    expectedErrors: [{
+      path: ["aggregatable_report_window"],
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
     }],
   },
 
@@ -295,10 +306,20 @@ export const testCases = [
     }`,
     expectedErrors: [{
       path: ["event_report_window"],
-      msg: "must be an int64 (must match /^-?[0-9]+$/)",
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
     }],
   },
-
+  {
+    name: "event-report-window-wrong-sign",
+    json: `{
+      "destination": "https://a.test",
+      "event_report_window": "-1"
+    }`,
+    expectedErrors: [{
+      path: ["event_report_window"],
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
+    }],
+  },
   {
     name: "expiry-wrong-type",
     json: `{
@@ -318,7 +339,18 @@ export const testCases = [
     }`,
     expectedErrors: [{
       path: ["expiry"],
-      msg: "must be an int64 (must match /^-?[0-9]+$/)",
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
+    }],
+  },
+  {
+    name: "expiry-wrong-sign",
+    json: `{
+      "destination": "https://a.test",
+      "expiry": "-1"
+    }`,
+    expectedErrors: [{
+      path: ["expiry"],
+      msg: "must be a uint64 (must match /^[0-9]+$/)",
     }],
   },
 

@@ -42,6 +42,21 @@ function validateURL(url) {
   }
 }
 
+function optional(f = () => {}) {
+  return (param) => {
+    if (param !== undefined) {
+      return f(param)
+    }
+  }
+}
+
+function bool(value) {
+  if (typeof value === 'boolean') {
+    return
+  }
+  return 'must be a boolean'
+}
+
 function validate(str, paramChecks) {
   const errors = []
   const warnings = []
@@ -76,10 +91,8 @@ function validate(str, paramChecks) {
   return { errors, warnings }
 }
 
-export function validateRegisterOsSource(str) {
-  return validate(str, {})
-}
-
-export function validateRegisterOsTrigger(str) {
-  return validate(str, {})
+export function validateOsRegistration(str) {
+  return validate(str, {
+    'debug-reporting': optional(bool),
+  })
 }

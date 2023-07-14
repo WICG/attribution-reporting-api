@@ -513,19 +513,27 @@ export const testCases = [
   },
 
   {
-    name: "aggregation-coordinator-identifier-wrong-type",
-    json: `{"aggregation_coordinator_identifier": 1}`,
+    name: "aggregation-coordinator-origin-wrong-type",
+    json: `{"aggregation_coordinator_origin": 1}`,
     expectedErrors: [{
-      path: ["aggregation_coordinator_identifier"],
+      path: ["aggregation_coordinator_origin"],
       msg: "must be a string",
     }],
   },
   {
-    name: "aggregation-coordinator-identifier-unknown-value",
-    json: `{"aggregation_coordinator_identifier": "AWS-CLOUD"}`,
+    name: "aggregation-coordinator-origin-not-url",
+    json: `{"aggregation_coordinator_origin": "a.test"}`,
     expectedErrors: [{
-      path: ["aggregation_coordinator_identifier"],
-      msg: "must match 'aws-cloud' (case-sensitive)",
+      path: ["aggregation_coordinator_origin"],
+      msg: "must contain a valid URL",
+    }],
+  },
+  {
+    name: "aggregation-coordinator-origin-untrustworthy",
+    json: `{"aggregation_coordinator_origin": "http://a.test"}`,
+    expectedErrors: [{
+      path: ["aggregation_coordinator_origin"],
+      msg: "must contain a potentially trustworthy URL",
     }],
   },
 

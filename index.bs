@@ -28,6 +28,7 @@ spec:html; type:dfn; text:set up the module script request
 spec:html; type:dfn; text:tokenize the features argument
 spec:html; type:dfn; text:update the image data
 spec:html; type:dfn; text:window open steps
+spec:webdriver; type:dfn; text:error
 </pre>
 <pre class="anchors">
 spec: clear-site-data; type: dfn; urlPrefix: https://w3c.github.io/webappsec-clear-site-data/
@@ -38,6 +39,10 @@ spec: hr-time; type: dfn; urlPrefix: https://w3c.github.io/hr-time/
     text: moment; url: #dfn-moment
 spec: idl; type: dfn; urlPrefix: https://webidl.spec.whatwg.org/
     text: throw; url: #dfn-throw
+spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
+    type: dfn
+        text: getting a property; url: dfn-getting-properties
+        text: error code; url: dfn-error-code
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
     text: generate a random UUID; url: #dfn-generate-a-random-uuid
 spec: private-state-token-api; type: dfn; urlPrefix: https://wicg.github.io/trust-token-api/
@@ -54,6 +59,8 @@ spec: structured header; type: dfn; urlPrefix: https://tools.ietf.org/html/rfc89
         text: string; url: #name-strings
         text: serialize a string; url: #name-serializing-a-string
         text: parse a string; url: #name-parse-a-string
+urlPrefix: https://wicg.github.io/fenced-frame/; type: interface
+    text: Fence
 </pre>
 <pre class=biblio>
 {
@@ -385,6 +392,45 @@ and its <dfn lt="eligible key">allowed keys</dfn> are:
 
 </dl>
 
+To <dfn>obtain a dictionary structured header value</dfn> given a [=list=] of [=strings=] |keys| and
+a [=set=] of [=strings=] |allowedKeys|:
+
+1. [=set/iterate|For each=] |key| of |allowedKeys|, optionally [=list/append=] the
+    [=string/concatenation=] of « "`not-`", |key| » to |keys|.
+1. Optionally, [=shuffle a list|shuffle=] |keys|.
+1. Let |entries| be a new [=list=].
+1. [=list/iterate|For each=] |key| of |keys|:
+    1. Let |value| be true.
+    1. Optionally, set |value| to a
+        <a href="https://httpwg.org/specs/rfc8941.html#token">token</a>
+        corresponding to one of [=strings=] in |allowedKeys|.
+    1. Let |params| be an [=map/is empty|empty=] [=map=].
+    1. [=set/iterate|For each=] |key| of |allowedKeys|, optionally [=map/set=] |params|[|key|] to an
+        arbitrary
+        <a href="https://httpwg.org/specs/rfc8941.html#item">bare item</a>.
+    1. [=list/Append=] a structured dictionary member with the key |key|, the
+        value |value|, and the parameters |params| to |entries|.
+1. Return a
+    <a href="https://httpwg.org/specs/rfc8941.html#dictionary">dictionary</a>
+    containing |entries|.
+
+Note: The user agent MAY
+<a href="https://httpwg.org/specs/rfc8941.html#specify">"grease"</a> the
+dictionary structured headers according to the preceding algorithm to help ensure that recipients
+use a proper structured header parser, rather than naive string equality or
+`contains` operations, which makes it easier to introduce backwards-compatible
+changes to the header definition in the future. Including the allowed keys
+as dictionary *values* or *parameters* helps ensure that only the dictionary's
+keys are interpreted by the recipient. Likewise, shuffling the dictionary
+members helps ensure that, e.g., "`key1, key2`" is treated equivalently to "`key2, key1`".
+
+In the following example, only the "`trigger`" key should be interpreted by the
+recipient after the header has been parsed as a structured dictionary:
+
+<pre class="example" heading="Greased Attribution-Reporting-Eligible header">
+Attribution-Reporting-Eligible: not-event-source, trigger=event-source;navigation-source=3
+</pre>
+
 To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|:
 
 1. Let |headers| be |request|'s [=request/header list=].
@@ -394,7 +440,7 @@ To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|:
 1. [=header list/Delete=] "<code>[=Attribution-Reporting-Support=]</code>" from
     |headers|.
 1. If |eligibility| is "<code>[=eligibility/unset=]</code>", return.
-1. Let |keys| be a [=list=].
+1. Let |keys| be an [=list/is empty|empty=] [=list=].
 1. If |eligibility| is:
     <dl class="switch">
     : "<code>[=eligibility/empty=]</code>"
@@ -410,48 +456,11 @@ To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|:
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
         "<code>[=eligible key/trigger=]</code>" to |keys|.
-    :: [=Set trigger verification request headers=] with |request| and |contextOrigin|.
-1. For each [=eligible key=] |key|, optionally [=list/append=] the
-    [=string/concatenation=] of « "`not-`", |key| » to |keys|.
-1. Optionally, [=shuffle a list|shuffle=] |keys|.
-1. Let |entries| be a new [=list=].
-1. [=list/iterate|For each=] |key| of |keys|:
-    1. Let |value| be true.
-    1. Optionally, set |value| to a
-        <a href="https://httpwg.org/specs/rfc8941.html#token">token</a>
-        corresponding to one of the [=eligible keys=].
-    1. Let |params| be an empty [=map=].
-    1. For each [=eligible key=] |key|, optionally set |params|[|key|] to an
-        arbitrary
-        <a href="https://httpwg.org/specs/rfc8941.html#item">bare item</a>.
-    1. [=list/Append=] a structured dictionary member with the key |key|, the
-        value |value|, and the parameters |params| to |entries|.
-1. Let |dict| be a
-    <a href="https://httpwg.org/specs/rfc8941.html#dictionary">dictionary</a>
-    containing |entries|.
+1. Let |dict| be the result of [=obtaining a dictionary structured header value=] with
+    |keys| and the [=set=] containing all the [=eligible keys=].
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Eligible=]</code>", |dict|) in |headers|.
 1. [=Set an OS-support header=] in |headers|.
-
-Issue: Set |contextOrigin| properly.
-
-Note: The user agent MAY
-<a href="https://httpwg.org/specs/rfc8941.html#specify">"grease"</a> this header
-according to the preceding algorithm to help ensure that recipients
-use a proper structured header parser, rather than naive string equality or
-`contains` operations, which makes it easier to introduce backwards-compatible
-changes to the header definition in the future. Including the [=eligible keys=]
-as dictionary *values* or *parameters* helps ensure that only the dictionary's
-keys are interpreted by the recipient. Likewise, shuffling the dictionary
-members helps ensure that, e.g., "`event-source, trigger`" is treated
-equivalently to "`trigger, event-source`".
-
-In the following example, only the "`trigger`" key should be interpreted by the
-recipient after the header has been parsed as a structured dictionary:
-
-<pre class="example" heading="Greased Attribution-Reporting-Eligible header">
-Attribution-Reporting-Eligible: not-event-source, trigger=event-source;navigation-source=3
-</pre>
 
 <h3 id="monkeypatch-fetch">Fetch monkeypatches</h4>
 
@@ -520,9 +529,144 @@ Add the step:
     eligibility</a>.
 1. [=Set Attribution Reporting headers=] with |req|.
 
+# Fenced Frame monkeypatches # {#fenced-frame-monkeypatches}
+
+Add the following items to [=fencedframetype/pending event=]:
+
+<dl dfn-for="pending event">
+: <dfn>attributionReportingEnabled</dfn>
+:: A [=boolean=]
+: <dfn>contextOrigin</dfn>
+:: An [=origin=]
+
+</dl>
+
+Modify {{Fence/reportEvent()}} as follows:
+
+<div algorithm="report-event-monkeypatch">
+
+Replace the step
+
+> Run <a spec=fenced-frame>report an event</a> using |instance|'s
+> [=fenced frame config instance/fenced frame reporter=] with |destination|,
+> |event|'s {{FenceEvent/eventType}}, and |event|'s {{FenceEvent/eventData}}.
+
+with
+
+Run <a spec=fenced-frame>report an event</a> using |instance|'s
+[=fenced frame config instance/fenced frame reporter=] with |destination|,
+|event|'s {{FenceEvent/eventType}}, |event|'s {{FenceEvent/eventData}},
+and [=this=]'s [=relevant global object=]'s [=associated Document=].
+
+</div>
+
+Modify <a spec=fenced-frame>report an event</a> as follows:
+
+<div algorithm="report-an-event-monkeypatch">
+
+Add a [=Document=] parameter called |document|.
+
+After the step
+
+> If |reporting map|[|destination|] does not [=map/exist=], return.
+
+add the steps
+
+1. Let |attributionReportingEnabled| be the result of determining whether |document| is
+    [=allowed to use=] the "<code>{{PermissionPolicy/attribution-reporting}}</code>" feature.
+1. Let |contextOrigin| be |document|'s [=node/context origin=].
+
+In the step
+
+> Let <var ignore>newEvent</var> be a new [=fencedframetype/pending event=] with the following...
+
+add the properties
+
+: [=pending event/attributionReportingEnabled=]
+:: |attributionReportingEnabled|
+: [=pending event/contextOrigin=]
+:: |contextOrigin|
+
+Replace the step
+
+> <a spec=fenced-frame>Send a beacon</a> with |reporting map|[|destination|],
+> |eventType|, and |eventData|.
+
+with
+
+<a spec=fenced-frame>Send a beacon</a> with |reporting map|[|destination|],
+|eventType|, |eventData|, |attributionReportingEnabled|, and |contextOrigin|.
+
+</div>
+
+Modify [=finalize a reporting destination=] as follows:
+
+<div algorithm="finalize-a-reporting-destination-monkeypatch">
+
+Replace the step
+
+> <a spec=fenced-frame>Send a beacon</a> with |destination map|, |pending event|'s [=pending event/eventType=],
+> and |pending event|'s [=pending event/eventData=].
+
+with
+
+<a spec=fenced-frame>Send a beacon</a> with |destination map|, |pending event|'s [=pending event/eventType=],
+|pending event|'s [=pending event/eventData=], |pending event|'s [=pending event/attributionReportingEnabled=],
+and |pending event|'s [=pending event/contextOrigin=].
+
+</div>
+
+Modify <a spec=fenced-frame>send a beacon</a> as follows:
+
+<div algorithm="send-a-beacon-monkeypatch">
+
+Add a [=boolean=] parameter called |attributionReportingEnabled| and an [=origin=]
+parameter called |contextOrigin|.
+
+After the step
+
+> Let <var ignore>destination url</var> be <var ignore>destination map</var>[<var ignore>eventType</var>].
+
+add the steps
+
+1. Let |attributionReportingEligibility| be "<code>[=eligibility/unset=]</code>".
+1. Let |processResponse| be null.
+1. Let |useParallelQueue| be false.
+1. If |attributionReportingEnabled| is true and the result of [=getting supported registrars=]
+     is not [=list/is empty|empty=] and |contextOrigin| [=check if an origin is suitable|is suitable=]:
+         1. Set |attributionReportingEligibility| to "<code>[=eligibility/event-source=]</code>".
+         1. Set |processResponse| to these steps given a [=response=] |response|:
+             1. Run [=process an attribution eligible response=] with |contextOrigin|,
+                 |attributionReportingEligibility|, and |response|.
+         1. Set |useParallelQueue| to true.
+
+         Issue: Allow "<code>[=eligibility/navigation-source=]</code>" when automatic beacon is specified.
+
+In the step
+
+> Let |request| be a new [=request=] with the following properties...
+
+add the property:
+
+: [=request/Attribution Reporting eligibility=]
+:: |attributionReportingEligibility|
+
+Replace the step
+
+> [=Fetch=] |request|.
+
+with
+
+[=Fetch=] |request| with [=fetch/processResponse=] being |processResponse| if it is not null
+and [=fetch/useParallelQueue=] being |useParallelQueue|.
+
+</div>
+
+Issue: Move this section to <a href="https://wicg.github.io/fenced-frame/">Fenced Frame spec</a>.
+
 # Permissions Policy integration # {#permission-policy-integration}
 
-This specification defines a [=policy-controlled feature=] identified by the string "<code><dfn noexport>attribution-reporting</dfn></code>".
+This specification defines a [=policy-controlled feature=] identified by the string "<code><dfn export for="PermissionPolicy" enum-value>attribution-reporting</dfn></code>".
 Its [=policy-controlled feature/default allowlist=] is <a href="https://w3c.github.io/webappsec-permissions-policy/#default-allowlist">`*`</a>.
 
 # Clear Site Data integration # {#clear-site-data-integration}
@@ -602,6 +746,18 @@ A <dfn>source type</dfn> is one of the following:
 
 </dl>
 
+<h3 id="report-window-header">Report window</h3>
+
+A <dfn>report window</dfn> is a [=struct=] with the following items:
+
+<dl dfn-for="report window">
+: <dfn>start</dfn>
+:: A [=moment=].
+: <dfn>end</dfn>
+:: A [=moment=], strictly greater than [=report window/start=].
+
+</dl>
+
 <h3 dfn-type=dfn>Attribution source</h3>
 
 An attribution source is a [=struct=] with the following items:
@@ -621,10 +777,10 @@ An attribution source is a [=struct=] with the following items:
 :: A [=source type=].
 : <dfn>expiry</dfn>
 :: A [=duration=].
-: <dfn>event report window</dfn>
-:: A [=duration=].
+: <dfn>event-level report windows</dfn>
+:: A [=list=] of [=report windows=].
 : <dfn>aggregatable report window</dfn>
-:: A [=duration=].
+:: A [=report window=].
 : <dfn>priority</dfn>
 :: A 64-bit integer.
 : <dfn>source time</dfn>
@@ -659,9 +815,16 @@ An attribution source is a [=struct=] with the following items:
 
 An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
 
-An [=attribution source=] |source|'s <dfn for="attribution source">event report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/event report window=].
+An [=attribution source=] |source|'s <dfn for="attribution source">total event-level report window</dfn> is
+a [=report window=] [=struct=] with the following fields:
 
-An [=attribution source=] |source|'s <dfn for="attribution source">aggregatable report window time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/aggregatable report window=].
+: [=report window/start=]
+:: The [=report window/start=] of |source|'s first [=attribution source/event-level report window=].
+: [=report window/end=]
+:: The [=report window/end=] of |source|'s last [=attribution source/event-level report window=].
+
+Note: The [=attribution source/total event-level report window=] is conceptually a union of [=report windows=], because there
+are no gaps in time between any of the [=report windows|windows=] in [=attribution source/event-level report windows=].
 
 An [=attribution source=] |source|'s <dfn for="attribution source">source site</dfn> is the result
 of [=obtain a site|obtaining a site=] from |source|'s [=attribution source/source origin=].
@@ -717,7 +880,7 @@ An event-level trigger configuration is a [=struct=] with the following items:
 <h3 id="aggregation-coordinator-header">Aggregation coordinator</h3>
 
 An <dfn>aggregation coordinator</dfn> is one of a user-agent-determined [=set=]
-of [=strings=] that specifies which aggregation service deployment to use.
+of [=suitable origins=] that specifies which aggregation service deployment to use.
 
 <h3 id="aggregatable-source-registration-time-configuration-header">Aggregatable source registration time configuration</h3>
 
@@ -917,6 +1080,14 @@ Possible values are:
 <li>"<dfn><code>trigger-unknown-error</code></dfn>"
 </ul>
 
+An <dfn>OS debug data type</dfn> is a [=debug data type=] for OS registrations.
+Possible values are:
+
+<ul dfn-for="OS debug data type">
+<li>"<dfn><code>os-source-delegated</code></dfn>"
+<li>"<dfn><code>os-trigger-delegated</code></dfn>"
+</ul>
+
 An attribution debug data is a [=struct=] with the following items:
 
 <dl dfn-for="attribution debug data">
@@ -1007,9 +1178,15 @@ However attribution data is inherently cross-site, and operations on storage wou
 
 # Constants # {#constants}
 
-<dfn>Max source expiry</dfn> is a positive [=duration=] that controls the
-maximum value that can be used as an [=attribution source/expiry=]. Its value is
-30 days.
+<dfn>Valid source expiry range</dfn> is a 2-tuple of positive [=durations=] that controls the
+minimum and maximum value that can be used as an [=attribution source/expiry=], respectively.
+Its value is (1 day, 30 days).
+
+<dfn>Min report window</dfn> is a positive [=duration=] that controls the
+minimum [=duration from=] an [=attribution source's=] [=attribution source/source time=]
+and any [=report window/end=] in [=attribution source/aggregatable report window=] or
+[=attribution source/event-level report windows=].
+Its value is 1 hour.
 
 <dfn>Max entries per filter data</dfn> is a positive integer that controls the
 maximum [=map/size=] of an [=attribution source=]'s [=attribution source/filter data=].
@@ -1021,6 +1198,10 @@ controls the maximum [=set/size=] of each [=map/value=] of an
 
 <dfn>Attribution rate-limit window</dfn> is a positive [=duration=] that
 controls the rate-limiting window for attribution. Its value is 30 days.
+
+<dfn>Max destinations per source</dfn> is a positive integer that controls the
+maximum [=set/size=] of an [=attribution source=]'s
+[=attribution source/attribution destinations=]. Its value is 3.
 
 # Vendor-Specific Values # {#vendor-specific-values}
 
@@ -1049,17 +1230,20 @@ for triggers that are attributed to an [=attribution source=] whose
 0 <= [=event-level trigger configuration/trigger data=] < [=event-source trigger data cardinality=].
 
 <dfn>Randomized response epsilon</dfn> is a non-negative double that controls
-the randomized response probability of an [=attribution source=].
+the randomized response probability of an [=attribution source=]. If [=automation local testing mode=] is true,
+this is `∞`.
 
 <dfn>Randomized null report rate excluding source registration time</dfn> is a
 double between 0 and 1 (both inclusive) that controls the randomized number of null reports
 generated for an [=attribution trigger=] whose [attribution trigger/aggregatable source registration time configuration]
-is "<code>[=aggregatable source registration time configuration/exclude=]</code>".
+is "<code>[=aggregatable source registration time configuration/exclude=]</code>". If [=automation local testing mode=] is true,
+this is 0.
 
 <dfn>Randomized null report rate including source registration time</dfn> is a
 double between 0 and 1 (both inclusive) that controls the randomized number of null reports
 generated for an [=attribution trigger=] whose [attribution trigger/aggregatable source registration time configuration]
-is "<code>[=aggregatable source registration time configuration/include=]</code>".
+is "<code>[=aggregatable source registration time configuration/include=]</code>". If [=automation local testing mode=] is true,
+this is 0.
 
 <dfn>Max event-level reports per attribution destination</dfn> is a positive integer that
 controls how many [=event-level reports=] can be in the
@@ -1134,7 +1318,8 @@ controls the maximum number of attributions for a
 an [=attribution source=].
 
 <dfn>Randomized aggregatable report delay</dfn> is a positive [=duration=] that controls the
-random delay to deliver an [=aggregatable report=].
+random delay to deliver an [=aggregatable report=]. If [=automation local testing mode=] is true,
+this is 0.
 
 <dfn>Default aggregation coordinator</dfn> is the [=aggregation coordinator=] that controls how to
 obtain the public key for encrypting an [=aggregatable report=] by default.
@@ -1151,6 +1336,37 @@ To <dfn>serialize an integer</dfn>, represent it as a string of the shortest pos
 
 Issue: This would ideally be replaced by a more descriptive algorithm in Infra. See
 <a href="https://github.com/whatwg/infra/issues/201">infra/201</a>
+
+<h3 id="parsing-json-fields">Parsing JSON fields</h3>
+
+Note: The "`Attribution-Reporting-Register-Source`" and
+"`Attribution-Reporting-Register-Trigger`" response headers contain JSON-encoded
+data, rather than <a href="https://httpwg.org/specs/rfc8941.html">structured
+values</a>, because of limitations on nesting in the latter. The recursive
+nature of JSON makes it more amenable to future extensions.
+
+To <dfn>parse an optional 64-bit signed integer</dfn> given a [=map=] |map|, a
+[=string=] |key|, and a possibly null 64-bit signed integer |default|:
+
+1. If |map|[|key|] does not [=map/exists|exist=], return |default|.
+1. If |map|[|key|] is not a [=string=], return an error.
+1. Let |value| be the result of applying the
+    <a spec="html">rules for parsing integers</a> to |map|[|key|].
+1. If |value| is an error, return an error.
+1. If |value| cannot be represented by a 64-bit signed integer, return an error.
+1. Return |value|.
+
+To <dfn>parse an optional 64-bit unsigned integer</dfn> given a [=map=] |map|,
+a [=string=] |key|, and a possibly null 64-bit unsigned integer |default|:
+
+1. If |map|[|key|] does not [=map/exists|exist=], return |default|.
+1. If |map|[|key|] is not a [=string=], return an error.
+1. Return the result of applying the
+    <a spec="html">rules for parsing non-negative integers</a> to |map|[|key|].
+1. If |value| is an error, return an error.
+1. If |value| cannot be represented by a 64-bit unsigned integer, return an
+    error.
+1. Return |value|.
 
 <h3 id="serialize-destinations">Serialize attribution destinations</h3>
 
@@ -1253,6 +1469,11 @@ is true and whose same-site-flag is "`None`"; there is no way to prevent the
 last-access-time from being modified; and the return value is a string that
 would have to be further processed to check for the "`ar_debug`" cookie.
 
+<h3 algorithm id="obtaining-context-origin">Obtaining context origin</h3>
+
+To obtain the <dfn for=node>context origin</dfn> of a [=node=] |node|, return |node|'s [=node navigable=]'s
+<a spec=fenced-frame for=navigable>unfenced container document</a>'s [=origin=].
+
 <h3 id="obtaining-randomized-response">Obtaining a randomized response</h3>
 
 To <dfn>obtain a randomized response</dfn> given |trueValue|, a [=set=] |possibleValues|, and a
@@ -1337,20 +1558,19 @@ To <dfn>validate a background attributionsrc eligibility</dfn> given an
     "<code>[=eligibility/navigation-source=]</code>" or
     "<code>[=eligibility/event-source-or-trigger=]</code>".
 
-To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
-[=suitable origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and a
+To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, an
+[=origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and a
 {{Document}} |document|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
 1. If |url|'s [=url/scheme=] is not [=check if a scheme is suitable|suitable=],
     return.
+1. If |contextOrigin| is not [=check if an origin is suitable|suitable=], return.
 1. Let |context| be |document|'s [=relevant settings object=].
 1. If |context| is not a [=secure context=], return.
-1. If the "<code>[=attribution-reporting=]</code>" feature
-    <a href="https://w3c.github.io/webappsec-permissions-policy/#algo-is-feature-enabled">is not enabled</a>
-    in |document| with |document|'s [=url/origin=], return.
+1. If |document| is not [=allowed to use=] the "<code>{{PermissionPolicy/attribution-reporting}}</code>" feature, return.
 1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
-1. If |supportedRegistrars| [=set/is empty=], return.
+1. If |supportedRegistrars| [=list/is empty=], return.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
     ::  "`GET`"
@@ -1362,11 +1582,12 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, a
     ::  |eligibility|
 1. [=Fetch=] |request| with [=fetch/processResponse=] being
     [=process an attributionsrc response=] with |contextOrigin|, |eligibility|,
-    |context|, and |request|'s  [=request/trigger verification metadata=].
+    and |request|'s  [=request/trigger verification metadata=].
 
 Issue: Audit other properties on |request| and set them properly.
 
-Issue: Support header-processing on redirects.
+Issue(839): Support header-processing on redirects. Due to <a href=https://fetch.spec.whatwg.org/#atomic-http-redirect-handling>atomic HTTP redirect handling</a>,
+we cannot process registrations through integration with [=fetch=].
 
 Issue: Check for transient activation with "<code>[=eligibility/navigation-source=]</code>".
 
@@ -1385,17 +1606,25 @@ To <dfn>make background attributionsrc requests</dfn> given an
         [=iteration/continue=]. Otherwise, let |url| be the resulting
         [=URL record=].
     1. Run [=make a background attributionsrc request=] with |url|,
-        |contextOrigin|, |eligibility|, and |element|'s [=Node/node document=].
-
-Issue: Set |contextOrigin| properly.
+        |element|'s [=node/context origin=], |eligibility|, and |element|'s [=Node/node document=].
 
 Issue: Consider allowing the user agent to limit the size of |tokens|.
 
 To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=] |contextOrigin|,
-an [=eligibility=] |eligibility|, an [=environment settings objects=] |context|,
-a [=request/trigger verification metadata=] |triggerVerificationMetadata|, and a [=response=] |response|:
+an [=eligibility=] |eligibility|, a [=request/trigger verification metadata=] |triggerVerificationMetadata|,
+and a [=response=] |response|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
+1. Run [=process an attribution eligible response=] with |contextOrigin|,
+    |eligibility|, and |response|.
+
+To <dfn>process an attribution eligible response</dfn> given a [=suitable origin=]
+|contextOrigin|, an [=eligibility=] |eligibility|, and a [=response=] |response|:
+
+1. [=Assert=]: |eligibility| is
+    "<code>[=eligibility/navigation-source=]</code>" or
+    "<code>[=eligibility/event-source=]</code>" or
+    "<code>[=eligibility/event-source-or-trigger=]</code>".
 1. Let |reportingOrigin| be |response|'s [=response/URL=]'s [=url/origin=].
 1. If |reportingOrigin| is not [=check if an origin is suitable|suitable=], return.
 1. Let |sourceHeader| be the result of [=header list/get|getting=]
@@ -1404,41 +1633,45 @@ a [=request/trigger verification metadata=] |triggerVerificationMetadata|, and a
 1. Let |triggerHeader| be the result of [=header list/get|getting=]
     "`Attribution-Reporting-Register-Trigger`" from |response|'s
     [=response/header list=].
-1. Let |osSourceURLs| be the result of
-    [=get OS-registration URLs from a header list|getting OS-registration URLs=]
+1. Let |osSourceRegistrations| be the result of
+    [=get OS registrations from a header list|getting OS registrations=]
     from |response|'s [=response/header list=] with
     "`Attribution-Reporting-Register-OS-Source`".
-1. Let |osTriggerURLs| be the result of
-    [=get OS-registration URLs from a header list|getting OS-registration URLs=]
+1. Let |osTriggerRegistrations| be the result of
+    [=get OS registrations from a header list|getting OS registrations=]
     from |response|'s [=response/header list=] with
     "`Attribution-Reporting-Register-OS-Trigger`".
 1. If |eligibility| is:
     <dl class="switch">
     : "<code>[=eligibility/navigation-source=]</code>"
+    : "<code>[=eligibility/event-source=]</code>"
     :: Run the following steps:
-        1. If |sourceHeader| and |osSourceURLs| are both null or both not
+        1. If |sourceHeader| and |osSourceRegistrations| are both null or both not
             null, return.
         1. If |sourceHeader| is not null:
+            1. Let |sourceType| be "<code>[=source type/navigation=]</code>".
+            1. If |eligibility| is "<code>[=eligibility/event-source=]</code>",
+                set |sourceType| to "<code>[=source type/event=]</code>".
             1. Let |source| be the result of running
                 [=parse source-registration JSON=] with |sourceHeader|,
-                |contextOrigin|, |reportingOrigin|,
-                "<code>[=source type/navigation=]</code>", and |context|'s
-                [=current wall time=].
+                |contextOrigin|, |reportingOrigin|, |sourceType|, and [=current wall time=].
             1. If |source| is not null, [=process an attribution source|process=]
                 |source|.
-        1. If |osSourceURLs| is not null and the user agent supports OS
-            registrations, process |osSourceURLs| according to an
-            [=implementation-defined=] algorithm.
+        1. If |osSourceRegistrations| is not null and the user agent supports OS
+            registrations:
+              1. Process |osSourceRegistrations| according to an [=implementation-defined=] algorithm.
+              1. Run [=obtain and deliver debug reports on OS registrations=] with
+                  "<code>[=OS debug data type/os-source-delegated=]</code>", |osSourceRegistrations|,
+                  and |contextOrigin|.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: Run the following steps:
         1. If the number of non-null entries in «|sourceHeader|,
-            |triggerHeader|, |osSourceURLs|, |osTriggerURLs|» is not 1, return.
+            |triggerHeader|, |osSourceRegistrations|, |osTriggerRegistrations|» is not 1, return.
         1. If |sourceHeader| is not null:
             1. Let |source| be the result of running
                 [=parse source-registration JSON=] with |sourceHeader|,
                 |contextOrigin|, |reportingOrigin|,
-                "<code>[=source type/event=]</code>", and |context|'s
-                [=current wall time=].
+                "<code>[=source type/event=]</code>", and [=current wall time=].
             1. If |source| is not null,
                 [=process an attribution source|process=] |source|.
         1. If |triggerHeader| is not null:
@@ -1449,16 +1682,21 @@ a [=request/trigger verification metadata=] |triggerVerificationMetadata|, and a
                 and |triggerVerificationMetadata|.
             1. Let |trigger| be the result of running
                 [=create an attribution trigger=] with |triggerHeader|
-                |destinationSite|, |reportingOrigin|, |triggerVerifications|, and
-                |context|'s [=current wall time=].
+                |destinationSite|, |reportingOrigin|, |triggerVerifications|, and [=current wall time=].
             1. If |trigger| is not null:
                 1. [=Maybe defer and then complete trigger attribution=] with |trigger|.
-        1. If |osSourceURLs| is not null and the user agent supports OS
-            registrations, process |osSourceURLs| according to an
-            [=implementation-defined=] algorithm.
-        1. If |osTriggerURLs| is not null and the user agent supports OS
-            registrations, process |osTriggerURLs| according to an
-            [=implementation-defined=] algorithm.
+        1. If |osSourceRegistrations| is not null and the user agent supports OS
+            registrations:
+              1. Process |osSourceRegistrations| according to an [=implementation-defined=] algorithm.
+              1. Run [=obtain and deliver debug reports on OS registrations=] with
+                  "<code>[=OS debug data type/os-source-delegated=]</code>", |osSourceRegistrations|,
+                  and |contextOrigin|.
+        1. If |osTriggerRegistrations| is not null and the user agent supports OS
+            registrations:
+              1. Process |osTriggerRegistrations| according to an [=implementation-defined=] algorithm.
+              1. Run [=obtain and deliver debug reports on OS registrations=] with
+                  "<code>[=OS debug data type/os-trigger-delegated=]</code>", |osTriggerRegistrations|,
+                  and |contextOrigin|.
 
     </dl>
 
@@ -1505,30 +1743,35 @@ To <dfn>parse an attribution destination</dfn> from a [=string=] |str|:
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
-To <dfn>parse attribution destinations</dfn> from a value |val|:
-1. Let |result| be an [=ordered set=].
-1. If |val| is a [=string=], [=set/append=] the result of [=parse an attribution destination=] to |result|, and return |result|.
+To <dfn>parse attribution destinations</dfn> from a [=map=] |map|:
+1. If |map|["`destination`"] does not [=map/exists|exist=], return null.
+1. Let |val| be |map|["`destination`"].
+1. If |val| is a [=string=], set |val| to « |val| ».
 1. If |val| is not a [=list=], return null.
+1. Let |result| be an [=ordered set=].
 1. [=list/iterate|For each=] |value| of |val|:
     1. If |value| is not a [=string=], return null.
     1. Let |destination| be the result of [=parse an attribution destination=] with |value|.
     1. If |destination| is null, return null.
     1. [=set/Append=] |destination| to |result|.
-1. If |result|'s [=set/size=] is greater than 3, return null.
-1. If |result| [=set/is empty=], return null.
-1. return |result|.
+1. If |result| [=set/is empty=] or its [=set/size=] is greater than the
+    [=max destinations per source=], return null.
+1. Return |result|.
 
-To <dfn>obtain a source expiry</dfn> given a |value|:
+To <dfn>parse a duration</dfn> given a [=map=] |map|, a [=string=] |key|, and a
+tuple of [=durations=] (|clampStart|, |clampEnd|):
 
-1. If |value| is not a [=string=], return null.
-1. Let |expirySeconds| be the result of applying the
-    <a spec="html">rules for parsing integers</a> to |value|.
-1. If |expirySeconds| is an error, return null.
-1. Let |expiry| be |expirySeconds| seconds.
-1. If |expiry| is less than 1 day, set |expiry| to 1 day.
-1. If |expiry| is greater than the [=max source expiry=], set |expiry| to that
-    value.
-1. Return |expiry|.
+1. [=Assert=]: |clampStart| < |clampEnd|.
+1. Let |seconds| be the result of running
+    [=parse an optional 64-bit unsigned integer=] with |map|, |key|, and null.
+1. If |seconds| is an error, return an error.
+1. If |seconds| is null, return |clampEnd|.
+1. Let |duration| be the [=duration=] of |seconds| seconds.
+1. If |duration| is less than |clampStart|, return |clampStart|.
+1. If |duration| is greater than |clampEnd|, return |clampEnd|.
+1. Return |duration|.
+
+Issue: Consider rejecting out-of-bounds values instead of silently clamping.
 
 To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
 
@@ -1547,6 +1790,26 @@ To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
 
 Issue: Determine whether to limit [=string/length=] or [=string/code point length=] for |key| above.
 
+To <dfn>obtain effective windows</dfn> given a [=source type=] |sourceType|,
+a [=moment=] |sourceTime|, and a [=duration=] |eventReportWindow|:
+
+1. Let |deadlines| be «» if |sourceType| is "<code>[=source type/event=]</code>", else « 2 days, 7 days ».
+1. [=list/Remove=] all elements in |deadlines| that are greater than |eventReportWindow|.
+1. [=list/Append=] |eventReportWindow| to |deadlines|.
+1. Let |lastEnd| be |sourceTime|.
+1. Let |windows| be «».
+1. [=list/iterate|For each=] |deadline| of |deadlines|:
+    1. Let |window| be a new [=report window=] whose items are
+
+        : [=report window/start=]
+        :: |lastEnd|
+        : [=report window/end=]
+        :: |lastEnd| + |deadline|
+
+    1. [=list/Append=] |window| to |windows|.
+    1. Set |lastEnd| to |lastEnd| + |deadline|.
+1. Return |windows|.
+
 To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 |json|, a [=suitable origin=] |sourceOrigin|, a [=suitable origin=] |reportingOrigin|, a
 [=source type=] |sourceType|, and a [=moment=] |sourceTime|:
@@ -1554,25 +1817,20 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |value| be the result of running
     [=parse JSON bytes to an Infra value=] with |json|.
 1. If |value| is not an [=ordered map=], return null.
-1. Let |sourceEventId| be 0.
-1. If |value|["`source_event_id`"] [=map/exists=] and is a [=string=]:
-    1. Set |sourceEventId| to the result of applying the
-        <a spec="html">rules for parsing non-negative integers</a> to
-        |value|["`source_event_id`"].
-    1. If |sourceEventId| is an error, set |sourceEventId| to 0.
-1. If |value|["`destination`"] does not [=map/exists|exist=], return null.
 1. Let |attributionDestinations| be the result of running
-    [=parse attribution destinations=] with |value|["`destination`"].
+    [=parse attribution destinations=] with |value|.
 1. If |attributionDestinations| is null, return null.
-1. Let |expiry| be the result of running [=obtain a source expiry=] on |value|["`expiry`"].
-1. If |expiry| is null, set |expiry| to 30 days.
-1. Let |eventReportWindow| be the result of running [=obtain a source expiry=] on |value|["`event_report_window`"].
-1. Let |aggregatableReportWindow| be the result of running [=obtain a source expiry=] on |value|["`aggregatable_report_window`"].
-1. Let |priority| be 0.
-1. If |value|["`priority`"] [=map/exists=] and is a [=string=]:
-    1. Set |priority| to the result of applying the
-        <a spec="html">rules for parsing integers</a> to |value|["`priority`"].
-    1. If |priority| is an error, set |priority| to 0.
+1. Let |sourceEventId| be the result of running
+    [=parse an optional 64-bit unsigned integer=] with |value|,
+    "`source_event_id`", and 0.
+1. If |sourceEventId| is an error, return null.
+1. Let |expiry| be the result of running [=parse a duration=] with |value|,
+    "`expiry`", and [=valid source expiry range=].
+1. If |expiry| is an error, return null.
+1. Let |priority| be the result of running
+    [=parse an optional 64-bit signed integer=] with |value|, "`priority`", and
+    0.
+1. If |priority| is an error, return null.
 1. Let |filterData| be a new [=filter map=].
 1. If |value|["`filter_data`"] [=map/exists=]:
     1. Set |filterData| to the result of running [=parse filter data=] with
@@ -1580,14 +1838,12 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     1. If |filterData| is null, return null.
     1. If |filterData|["`source_type`"] [=map/exists=], return null.
 1. [=map/Set=] |filterData|["`source_type`"] to « |sourceType| ».
-1. Let |debugKey| be null.
-1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
-    1. Set |debugKey| to the result of applying the
-        <a spec="html">rules for parsing non-negative integers</a> to
-        |value|["`debug_key`"].
-    1. If |debugKey| is an error, set |debugKey| to null.
-    1. If the result of running [=check if cookie-based debugging is allowed=] with
-        |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
+1. Let |debugKey| be the result of running
+    [=parse an optional 64-bit unsigned integer=] with |value|, "`debug_key`",
+    and null.
+1. If |debugKey| is an error, set |debugKey| to null.
+1. If the result of running [=check if cookie-based debugging is allowed=] with
+    |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
 1. If |aggregationKeys| is null, return null.
 1. Let |triggerDataCardinality| be the user agent's
@@ -1600,17 +1856,30 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
         [=event-source trigger data cardinality=].
     1. Set |maxAttributionsPerSource| to the user agent's
         [=max attributions per event source=].
-1. If |eventReportWindow| is null or greater than |expiry|, set |eventReportWindow| to |expiry|.
-1. If |aggregatableReportWindow| is null or greater than |expiry|, set |aggregatableReportWindow| to |expiry|.
+1. Let |eventReportWindow| be the result of running [=parse a duration=] with
+    |value|, "`event_report_window`", and ([=min report window=], |expiry|).
+1. If |eventReportWindow| is an error, return null.
+1. Let |aggregatableReportWindowEnd| be the result of running [=parse a duration=]
+    with |value|, "`aggregatable_report_window`", and ([=min report window=], |expiry|).
+1. If |aggregatableReportWindowEnd| is an error, return null.
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to |value|["`debug_reporting`"].
+
+1. Let |eventReportWindows| be the result of [=obtaining effective windows=] given |sourceType|, |sourceTime|, and |eventReportWindow|.
+1. Let |aggregatableReportWindow| be a new [=report window=] with the following items:
+
+    : [=report window/start=]
+    :: |sourceTime|
+    : [=report window/end=]
+    :: |sourceTime| + |aggregatableReportWindowEnd|
+
 1. Let |randomizedResponseConfig| be a new [=randomized response output configuration=] whose items are:
 
     : [=randomized response output configuration/max attributions per source=]
     :: |maxAttributionsPerSource|
     : [=randomized response output configuration/num report windows=]
-    :: The result of [=obtaining the number of report windows=] with |sourceType| and |eventReportWindow|
+    :: The [=list/size=] of |eventReportWindows|.
     : [=randomized response output configuration/trigger data cardinality=]
     :: |triggerDataCardinality|
 
@@ -1630,8 +1899,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |reportingOrigin|
     : [=attribution source/expiry=]
     :: |expiry|
-    : [=attribution source/event report window=]
-    :: |eventReportWindow|
+    : [=attribution source/event-level report windows=]
+    :: |eventReportWindows|
     : [=attribution source/aggregatable report window=]
     :: |aggregatableReportWindow|
     : [=attribution source/priority=]
@@ -1668,9 +1937,9 @@ To <dfn>check if an [=attribution source=] exceeds the time-based destination li
      * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
      * |record|'s [=attribution rate-limit record/expiry time=] is greater than |source|'s [=attribution source/source time=]
      * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and |source|'s [=attribution source/source time=]
-        is less than [=destination rate-limit window=] 
+        is less than [=destination rate-limit window=]
 1. Let |matchingSameReportingSources| be all the [=attribution rate-limit records|records=] in |matchingSources|
-    whose associated [=attribution rate-limit record/reporting origin=] is [=same site=] with |source|'s 
+    whose associated [=attribution rate-limit record/reporting origin=] is [=same site=] with |source|'s
     [=attribution source/reporting origin=].
 1. Let |destinations| be the [=set=] of every [=attribution rate-limit record/attribution destination=] in |matchingSources|,
     [=set/union|unioned=] with |source|'s [=attribution source/attribution destinations=].
@@ -1881,8 +2150,6 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 Note: Because a fake report does not have a "real" effective destination, we need to subtract from the
 privacy budget of all possible destinations.
 
-Issue: Should fake reports respect the user agent's [=max event-level reports per attribution destination=]?
-
 # Triggering Algorithms # {#trigger-algorithms}
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
@@ -1896,24 +2163,18 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
 1. If |values| is not a [=list=], return null.
 1. [=list/iterate|For each=] |value| of |values|:
     1. If |value| is not an [=ordered map=], return null.
-    1. Let |triggerData| be 0.
-    1. If |value|["`trigger_data`"] [=map/exists=] and is a [=string=]:
-        1. Set |triggerData| to the result of applying the
-            <a spec="html">rules for parsing non-negative integers</a> to
-            |value|["`trigger_data`"].
-        1. If |triggerData| is an error, set |triggerData| to 0.
-    1. Let |dedupKey| be null.
-    1. If |value|["`deduplication_key`"] [=map/exists=] and is a [=string=]:
-        1. Set |dedupKey| to the result of applying the
-            <a spec="html">rules for parsing non-negative integers</a> to
-            |value|["`deduplication_key`"].
-        1. If |dedupKey| is an error, set |dedupKey| to null.
-    1. Let |priority| be 0.
-    1. If |value|["`priority`"] [=map/exists=] and is a [=string=]:
-        1. Set |priority| to the result of applying the
-            <a spec="html">rules for parsing integers</a> to
-            |value|["`priority`"].
-        1. If |priority| is an error, set |priority| to 0.
+    1. Let |triggerData| be the result of running
+        [=parse an optional 64-bit unsigned integer=] with |value|,
+        "`trigger_data`", and 0.
+    1. If |triggerData| is an error, return null.
+    1. Let |dedupKey| be the result of running
+        [=parse an optional 64-bit unsigned integer=] with |value|,
+        "`deduplication_key`", and null.
+    1. If |dedupKey| is an error, return null.
+    1. Let |priority| be the result of running
+        [=parse an optional 64-bit signed integer=] with |value|, "`priority`",
+        and 0.
+    1. If |priority| is an error, return null.
     1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filters=] with
@@ -2005,11 +2266,10 @@ To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
 1. If |values| is not a [=list=], return null.
 1. [=list/iterate|For each=] |value| of |values|:
     1. If |value| is not an [=ordered map=], return null.
-    1. Let |dedupKey| be null.
-    1. If |value|["`deduplication_key`"] [=map/exists=] and is a [=string=]:
-        1. Set |dedupKey| to the result of applying the <a spec="html">rules for parsing non-negative integers</a> to
-            |value|["`deduplication_key`"].
-        1. If |dedupKey| is an error, set |dedupKey| to null.
+    1. Let |dedupKey| be the result of running
+        [=parse an optional 64-bit unsigned integer=] with |value|,
+        "`deduplication_key`", and null.
+    1. If |dedupKey| is an error, return null.
     1. Let |filters| be a new [=filter map=].
     1. If |values|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filter data=] with |value|["`filters`"].
@@ -2046,14 +2306,12 @@ and a [=moment=] |triggerTime|:
 1. Let |aggregatableDedupKeys| be the result of running [=parse aggregatable dedup keys=]
     with |value|.
 1. If |aggregatableDedupKeys| is null, return null.
-1. Let |debugKey| be null.
-1. If |value|["`debug_key`"] [=map/exists=] and is a [=string=]:
-    1. Set |debugKey| to the result of applying the
-        <a spec="html">rules for parsing non-negative integers</a> to
-        |value|["`debug_key`"].
-    1. If |debugKey| is an error, set |debugKey| to null.
-    1. If the result of running [=check if cookie-based debugging is allowed=] with
-        |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
+1. Let |debugKey| be the result of running
+    [=parse an optional 64-bit unsigned integer=] with |value|, "`debug_key`",
+    and null.
+1. If |debugKey| is an error, set |debugKey| to null.
+1. If the result of running [=check if cookie-based debugging is allowed=] with
+    |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
 1. If |value|["`filters`"] exists:
     1. Set |filters| to the result of running [=parse filters=] with
@@ -2068,10 +2326,12 @@ and a [=moment=] |triggerTime|:
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to value["`debug_reporting`"].
 1. Let |aggregationCoordinator| be [=default aggregation coordinator=].
-1. If |value|["`aggregation_coordinator_identifier`"] [=map/exists=]:
-    1. If |value|["`aggregation_coordinator_identifier`"] is not a [=string=], return null.
-    1. If |value|["`aggregation_coordinator_identifier`"] is not an [=aggregation coordinator=], return null.
-    1. Set |aggregationCoordinator| to |value|["`aggregation_coordinator_identifier`"].
+1. If |value|["`aggregation_coordinator_origin`"] [=map/exists=]:
+    1. If |value|["`aggregation_coordinator_origin`"] is not a [=string=], return null.
+    1. Let |url| be the result of running the [=URL parser=] on |value|["`aggregation_coordinator_origin`"].
+    1. If |url| is failure or null, return null.
+    1. If |url|'s [=url/origin=] is not an [=aggregation coordinator=], return null.
+    1. Set |aggregationCoordinator| to |url|'s [=url/origin=].
 1. Let |aggregatableSourceRegTimeConfig| be "<code>[=aggregatable source registration time configuration/exclude=]</code>".
 1. If |value|["`aggregatable_source_registration_time`"] [=map/exists=]:
     1. If |value|["`aggregatable_source_registration_time`"] is not a [=string=], return null.
@@ -2240,7 +2500,7 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
         is false, [=iteration/continue=].
     1. [=set/iterate|For each=] |sourceKey| of |triggerData|'s [=aggregatable trigger data/source keys=]:
         1. If |aggregationKeys|[|sourceKey|] does not [=map/exist=], [=iteration/continue=].
-        1. [=map/Set=] |aggregationKeys|[|sourceKey|] to |aggregationKeys|[|sourceKey|] OR |triggerData|'s
+        1. [=map/Set=] |aggregationKeys|[|sourceKey|] to |aggregationKeys|[|sourceKey|] bitwise-OR |triggerData|'s
             [=aggregatable trigger data/key piece=].
 1. Let |aggregatableValues| be |trigger|'s [=attribution trigger/aggregatable values=].
 1. Let |contributions| be a new empty [=list=].
@@ -2253,8 +2513,6 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
         :: |aggregatableValues|[|id|]
     1. [=list/Append=] |contribution| to |contributions|.
 1. Return |contributions|.
-
-Issue: Clarify that "OR" above refers to the bitwise operation.
 
 <h3 id="can-source-create-aggregatable-contributions">Can source create aggregatable contributions</h3>
 
@@ -2346,7 +2604,8 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
         with "<code>[=trigger debug data type/trigger-event-noise=]</code>", |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If |sourceToAttribute|'s [=attribution source/event report window time=] is less than |trigger|'s [=attribution trigger/trigger time=]:
+1. If |trigger|'s [=attribution trigger/trigger time=] does not [=check whether a moment falls within a window|fall within=]
+    |sourceToAttribute|'s [=attribution source/total event-level report window=]:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-event-report-window-passed=]</code>",
         |trigger|, |sourceToAttribute| and [=obtain debug data on trigger registration/report=] set to null.
@@ -2431,7 +2690,8 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 1. Increment |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
 1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null,
     [=list/append=] it to |sourceToAttribute|'s [=attribution source/dedup keys=].
-1. If |report|'s [=event-level report/source debug key=] is not null and |report|'s
+1. If |triggeringStatus| is "<code>[=triggering status/attributed=]</code>" and
+    |report|'s [=event-level report/source debug key=] is not null and |report|'s
     [=event-level report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
 1. Return the [=triggering result=] (|triggeringStatus|, |debugData|).
@@ -2444,7 +2704,8 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 
 1. If the result of running [=check if an attribution trigger contains aggregatable data=] is false,
     return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
-1. If |sourceToAttribute|'s [=attribution source/aggregatable report window time=] is less than |trigger|'s [=attribution trigger/trigger time=]:
+1. |trigger|'s [=attribution trigger/trigger time=] does not [=check whether a moment falls within a window|fall within=]
+    |sourceToAttribute|'s [=attribution source/aggregatable report window=]:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-aggregate-report-window-passed=]</code>", |trigger|, |sourceToAttribute|
         and [=obtain debug data on trigger registration/report=] set to null.
@@ -2559,6 +2820,9 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     1. If |hasAggregatableData| is true, then run [=generate null reports and assign private state tokens=]
         with |trigger| and [=generate null reports and assign private state tokens/report=] set to null.
     1. Return.
+1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
+1. [=list/iterate|For each=] |item| of |matchingSources|:
+    1. [=set/Remove=] |item| from the [=attribution source cache=].
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
     : [=attribution rate-limit record/scope=]
     :: "<code>[=rate-limit scope/attribution=]</code>"
@@ -2591,9 +2855,6 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     [=generate null reports and assign private state tokens/report=] set to null.
 1. If both |eventLevelResult|'s [=triggering result/status=] and |aggregatableResult|'s
     [=triggering result/status=] are "<code>[=triggering status/dropped=]</code>", return.
-1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
-1. For each |item| of |matchingSources|:
-    1. [=set/Remove=] |item| from the [=attribution source cache=].
 1. If neither |eventLevelResult|'s [=triggering result/status=] nor |aggregatableResult|'s
     [=triggering result/status=] is "<code>[=triggering status/attributed=]</code>", return.
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
@@ -2602,52 +2863,35 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 
-To <dfn>obtain early deadlines</dfn> given a [=source type=] |sourceType|:
+To <dfn>check whether a moment falls within a window</dfn> given a [=moment=] |moment| and
+a [=report window=] |window|:
 
-1. If |sourceType| is "<code>[=source type/event=]</code>", return «».
-1. Return « 2 days, 7 days ».
+1. Return |moment| >= [=report window/start=]
+    and |moment| < |window|'s [=report window/end=].
 
-To <dfn>obtain effective deadlines</dfn> given an [=attribution source/source type=] |sourceType| and a [=duration=] |eventReportWindow|:
+To <dfn>obtain a report time from a window</dfn> given a [=moment=] |sourceTime| and
+a [=report window=] |window|:
 
-1. Let |deadlines| be the result of [=obtaining early deadlines=] given |sourceType|.
-1. [=list/Remove=] all elements in |deadlines| that are greater than |eventReportWindow|.
-1. [=list/Append=] |eventReportWindow| to |deadlines|.
-1. Return |deadlines|.
-
-To <dfn>obtain the number of report windows</dfn> given a [=source type=] |sourceType|
-and a [=duration=] |eventReportWindow|:
-
-1. Let |deadlines| be the result of [=obtaining effective deadlines=] for |sourceType| and |eventReportWindow|.
-1. Return the [=list/size=] of |deadlines|.
-
-To <dfn>obtain a report time from deadline</dfn> given a [=moment=] |sourceTime| and
-a [=duration=] |deadline|:
-
-1. Return |sourceTime| + |deadline| + 1 hour.
+1. Return |sourceTime| + |window|'s [=report window/end=] + 1 hour.
 
 To <dfn>obtain the report time at a window</dfn> given an
 [=attribution source=] |source| and a non-negative integer |window|:
 
-1. Let |deadlines| be the result of running [=obtain effective deadlines=]
-    with |source|'s [=attribution source/source type=] and [=attribution source/event report window=].
-1. [=Assert=]: |deadlines|[|window|] [=list/exists=].
-1. Let |deadline| be |deadlines|[|window|].
-1. Return the result of running [=obtain a report time from deadline=] with
-    |source|'s [=attribution source/source time=] and |deadline|.
+1. [=Assert=]: |source|'s [=attribution source/event-level report windows=][|window|] [=list/exists=].
+1. Let |win| be |source|'s [=attribution source/event-level report windows=][|window|].
+1. Return the result of running [=obtain a report time from a window=] with
+    |source|'s [=attribution source/source time=] and |win|.
 
 To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution source=]
 |source| and a [=moment=] |triggerTime|:
 
-1. Let |deadlines| be the result of [=obtaining effective deadlines=] with |source|.
-1. Let |deadlineToUse| be the last item in |deadlines|.
-1. [=list/iterate|For each=] |deadline| of |deadlines|:
-    1. Let |time| be |source|'s [=attribution source/source time=] +
-        |deadline|.
-    1. If |time| is less than |triggerTime|, [=iteration/continue=].
-    1. Set |deadlineToUse| to |deadline|.
-    1. [=iteration/Break=].
-1. Return the result of running [=obtain a report time from deadline=] with
-    |source|'s [=attribution source/source time=] and |deadlineToUse|.
+1. If [=automation local testing mode=] is true, return |triggerTime|. 
+1. Let |windows| be |source|'s [=attribution source/event-level report windows=].
+1. [=list/iterate|For each=] |window| of |windows|:
+    1. If |triggerTime| [=check whether a moment falls within a window|falls within=] |window|,
+        return the result of running [=obtain a report time from a window=] with |source|'s
+        [=attribution source/source time=] and |window|.
+1. [=Assert=]: not reached.
 
 To <dfn>obtain an aggregatable report delivery time</dfn> given a [=moment=]
 |triggerTime|, perform the following steps. They return a [=moment=].
@@ -2798,7 +3042,7 @@ To <dfn>generate null reports</dfn> given an [=attribution trigger=] |trigger| a
         1. [=set/Append=] |nullReport| to the [=aggregatable report cache=].
         1. [=list/Append=] |nullReport| to |nullReports|.
 1. Otherwise:
-    1. Let |maxSourceExpiry| be [=max source expiry=].
+    1. Let |maxSourceExpiry| be [=valid source expiry range=][1].
     1. Round |maxSourceExpiry| away from zero to the nearest day (86400 seconds).
     1. Let |roundedAttributedSourceTime| be null.
     1. If |report| is not null, set |roundedAttributedSourceTime| to the result of [=obtaining rounded source time=] with |report|'s
@@ -2857,16 +3101,15 @@ Issue: Specify this in terms of <a href="https://html.spec.whatwg.org/multipage/
 The user agent MUST periodically [=set/iterate=] over its [=event-level report cache=] and
 [=aggregatable report cache=] and run [=queue a report for delivery=] on each item.
 
-To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report|
-and an [=environment settings objects=] |context|, run the following steps [=in parallel=]:
+To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report|, run the following steps [=in parallel=]:
 
 1. If |report|'s [=attribution report/delivered=] value is true, return.
 1. Set |report|'s [=attribution report/delivered=] value to true.
-1. If |report|'s [=attribution report/report time=] is less than |context|'s [=current wall time=], add an [=implementation-defined=] random non-negative [=duration=] to |report|'s [=attribution report/report time=].
+1. If |report|'s [=attribution report/report time=] is less than [=current wall time=], add an [=implementation-defined=] random non-negative [=duration=] to |report|'s [=attribution report/report time=].
 
     Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
      closed. Adding random delay prevents temporal joining of reports from different [=attribution source/source origin=]s.
-1. Wait until |context|'s [=current wall time=] is equal to |report|'s [=attribution report/report time=].
+1. Wait until [=current wall time=] is equal to |report|'s [=attribution report/report time=].
 1. Optionally, wait a further [=implementation-defined=] [=duration=].
 
     Note: This is intended to allow user agents to optimize device resource usage.
@@ -2923,9 +3166,17 @@ of running the following steps:
 
 <h3 id="obtain-aggregatable-report-aggregation-service-payloads">Obtaining an aggregatable report's aggregation service payloads</h3>
 
-To <dfn>obtain the public key for encryption</dfn> given an [=aggregation coordinator=]
-<var ignore=''>aggregationCoordinator</var>, asynchronously return a user-agent-determined public key
-or an error in the event that the user agent failed to obtain the public key.
+To <dfn>obtain the public key for encryption</dfn> given an [=aggregation coordinator=] |aggregationCoordinator|:
+
+1. Let |url| be a new [=URL record=].
+1. Set |url|'s [=url/scheme=] to |aggregationCoordinator|'s [=origin/scheme=].
+1. Set |url|'s [=url/host=] to |aggregationCoordinator|'s [=origin/host=].
+1. Set |url|'s [=url/port=] to |aggregationCoordinator|'s [=origin/port=].
+1. Set |url|'s [=url/path=]  to «"`.well-known`", "`aggregation-service`", "`public-keys`"».
+1. Return a user-agent-determined public key from |url| or an error in the event that the user
+    agent failed to obtain the public key from |url|. This step may be asynchronous.
+
+Issue: Specify this in terms of [=fetch=].
 
 Note: The user agent might enforce weekly key rotation. If there are multiple keys, the user agent
 might independently pick a key uniformly at random for every encryption operation.
@@ -3031,8 +3282,8 @@ To <dfn>serialize an [=aggregatable report=] </dfn> |report|, run the following 
     :: |report|'s [=aggregatable report/shared info=]
     : "`aggregation_service_payloads`"
     :: |aggregationServicePayloads|
-    : "`aggregation_coordinator_identifier`"
-    :: |report|'s [=aggregatable report/aggregation coordinator=]
+    : "`aggregation_coordinator_origin`"
+    :: |report|'s [=aggregatable report/aggregation coordinator=], [=serialization of an origin|serialized=]
 
 1. If |report|'s [=aggregatable report/source debug key=] is not null, [=map/set=]
     |data|["`source_debug_key`"] to |report|'s [=aggregatable report/source debug key=],
@@ -3178,7 +3429,7 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
 1. Let |url| be the result of executing [=generate an attribution report URL=] on |report|.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
 1. If |data| is an error, run [=remove a report from the cache=] with |report| and return.
-1. Let |headers| be the result of executing [=generate attribution report headers=].  
+1. Let |headers| be the result of executing [=generate attribution report headers=].
 1. Let |request| be the result of executing [=create a report request=] on |url|, |data|, and |headers|.
 1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being [=remove a report from the cache=] with |report|.
 
@@ -3213,27 +3464,47 @@ A user agent MAY retry this algorithm in the event that there was an error.
 
 # Cross App and Web Algorithms # {#cross-app-and-web}
 
-To <dfn noexport>get OS-registration URLs from a header list</dfn> given a
+An <dfn>OS registration</dfn> is a [=struct=] with the following items:
+
+<dl dfn-for="OS registration">
+: <dfn>URL</dfn>
+:: A [=URL=]
+: <dfn>debug reporting enabled</dfn>
+:: A [=boolean=]
+
+</dl>
+
+To <dfn noexport>get [=OS registrations=] from a header list</dfn> given a
 [=header list=] |headers| and a [=header name=] |name|:
 
 1. Let |values| be the result of
     [=header list/get a structured field value|getting=] |name| from |headers|
     with a type of "`list`".
 1. If |values| is not a [=list=], return null.
-1. Let |urls| be a new [=list=].
+1. Let |registrations| be a new [=list=].
 1. [=list/iterate|For each=] |value| of |values|:
      1. If |value| is not a [=string=], [=iteration/continue=].
      1. Let |url| be the result of running the [=URL parser=] on |value|.
      1. If |url| is failure or null, [=iteration/continue=].
-     1. [=list/Append=] |url| to |urls|.
-1. Return |urls|.
+     1. Let |debugReporting| be false.
+     1. Let |params| be the <a href="https://httpwg.org/specs/rfc8941.html#param">parameters</a>
+         associated with |value|.
+     1. If |params|["`debug-reporting`"] [=map/exists=] and |params|["`debug-reporting`"] is a [=boolean=],
+         set |debugReporting| to |params|["`debug-reporting`"].
+     1. Let |registration| be a new [=OS registration=] struct whose items are:
+         : [=OS registration/URL=]
+         :: |url|
+         : [=OS registration/debug reporting enabled=]
+         :: |debugReporting|
+     1. [=list/Append=] |registration| to |registrations|.
+1. Return |registrations|.
 
 To <dfn>get supported registrars</dfn>:
 
-1. Let |supportedRegistrars| be an [=set/is empty|empty=] [=ordered set=].
-1. If the user agent supports web registrations, [=set/append=] "<code>[=registrar/web=]</code>"
+1. Let |supportedRegistrars| be an [=list/is empty|empty=] [=list=].
+1. If the user agent supports web registrations, [=list/append=] "<code>[=registrar/web=]</code>"
     to |supportedRegistrars|.
-1. If the user agent supports OS registrations, [=set/append=] "<code>[=registrar/os=]</code>"
+1. If the user agent supports OS registrations, [=list/append=] "<code>[=registrar/os=]</code>"
     to |supportedRegistrars|.
 1. Return |supportedRegistrars|.
 
@@ -3247,9 +3518,8 @@ To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
 |headers|:
 
 1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
-1. Let |dict| be an [=ordered map=].
-1. [=set/iterate|For each=] |registrar| of |supportedRegistrars|:
-    1. [=map/Set=] |dict|[|registrar|] to true.
+1. Let |dict| be the result of [=obtaining a dictionary structured header value=]
+    with |supportedRegistrars| and the [=set=] containing all the [=registrars=].
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Support=]</code>", |dict|) in |headers|.
 
@@ -3333,10 +3603,128 @@ To <dfn noexport>receive trigger verification tokens</dfn> given an
 1. Return |triggerVerifications|.
 
 Issue: Specify the cryptographic redemption procedure.
+To <dfn>obtain and deliver debug reports on OS registrations</dfn> given an
+[=OS debug data type=] |dataType|, a [=list=] of [=OS registrations=] |registrations|,
+and an [=origin=] |contextOrigin|:
+
+1. If |registrations| [=list/is empty=], return.
+1. Let |contextSite| be the result of [=obtaining a site=] from |contextOrigin|.
+1. [=list/iterate|For each=] |registration| of |registrations|:
+    1. If |registration|'s [=OS registration/debug reporting enabled=] is false, [=iteration/continue=].
+    1. Let |origin| be |registration|'s [=OS registration/URL=]'s [=url/origin=].
+    1. If |origin| is not [=check if an origin is suitable|suitable=], [=iteration/continue=].
+    1. Let |body| be a new [=map=] with the following key/value pairs:
+        : "`context_site`"
+        :: |contextSite|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
+        : "`registration_url`"
+        :: |registration|'s [=OS registration/URL=], [=url serializer|serialized=].
+
+    1. Let |data| be a new [=attribution debug data=] with the items:
+        : [=attribution debug data/data type=]
+        :: |dataType|
+        : [=attribution debug data/body=]
+        :: |body|
+    1. Run [=obtain and deliver a debug report=] with « |data| » and |origin|.
+
+# User-Agent Automation # {#automation}
+    
+The user-agent has an associated boolean <dfn>automation local testing mode</dfn> (default false).
+    
+For the purposes of user-agent automation and website testing, this document
+defines the below [[WebDriver]] [=extension commands=] to control the API
+configuration.
+
+## Set local testing mode ## {#webdriver-setlocaltestingmode}
+
+<figure id="table-webdriver-setlocaltestingmode" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>POST</td>
+                <td>`/session/{session id}/ara/`<dfn>`localtestingmode`</dfn></td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. If |parameters| is not a JSON-formatted [[ECMASCRIPT#sec-objects|Object]],
+    return a [=error|WebDriver error=] with [=error code=] [=invalid argument=].
+
+1. Let |enabled| be the result of [=getting a property=] named `"enabled"` from
+    |parameters|.
+
+1. If |enabled| is {{undefined}} or is not a boolean, return a [=error|WebDriver error=]
+    with [=error code=] [=invalid argument=].
+
+1. Set [=automation local testing mode=] to |enabled|.
+
+1. Return [=success=] with data `null`.
+
+Note: Without this, reports would be subject to noise and delays, making testing difficult.
 
 # Security considerations # {#security-considerations}
 
-Issue: Fill in this section.
+## Same-Origin Policy ## {#same-origin-policy}
+
+*This section is non-normative.*
+
+Writes to the [=attribution source cache=], [=event-level report cache=], and
+[=aggregatable report cache=] are separated by the reporting [=origin=], and reports sent
+to a given [=origin=] are generated via data only written to by that [=origin=], via
+HTTP response headers.
+
+However, the [=attribution rate-limit cache=] is not fully partitioned by [=origin=]. Reads
+to that cache involve grouping together data submitted by multiple origins. This is the case
+for the following limits:
+- [=max destinations per rate-limit window=][0]
+- [=max source reporting origins per rate-limit window=]
+- [=max source reporting origins per source reporting site=]
+- [=max attribution reporting origins per rate-limit window=]
+
+These limits are explicit relaxations of the Same-Origin Policy, in that they allow
+different origins to influence the API's behavior. In particular, one risk that is
+introduced with these shared limits is denial of service attacks, where a group of
+origins could collude to intentionally hit a rate-limit, causing subsequent origins to
+be unable to access the API.
+
+This trades off security for privacy, in that the limits are there to reduce the efficacy
+of many origins colluding together to violate privacy. API deployments should monitor
+for abuse using these vectors to evaluate the trade-off.
+
+The generation of [=attribution debug reports=] involves reads to the [=attribution source cache=],
+[=event-level report cache=], [=aggregatable report cache=], and [=attribution rate-limit cache=],
+and the [=attribution debug data=] sent to a given [=origin=] may encode non-Same-Origin
+data that are generated from grouping together data submitted by multiple [=origins=],
+e.g. failures due to rate-limits that are not fully compliant with the Same-Origin Policy.
+This is of greater concern for source registrations as the [=attribution source/source origin=]
+could intentionally hit a rate-limit to identify sensitive user data. These [=attribution debug data=]
+cannot be reported explicitly and may be reported as a [=source debug data type/source-success=]
+[=attribution debug report=]. This is a tradeoff between security and utility, and mitigates the
+security concern with respect to the Same-Origin Policy. The risk is of less concern for
+trigger registrations as [=attribution sources=] have to be registered to start with and
+it requires browsing activity on multiple sites.
+
+## Opting in to the API ## {#opting-in-to-the-api}
+
+*This section is non-normative.*
+
+As a general principle, the API cannot be used purely at the HTTP layer without some level of
+opt-in from JavaScript or HTML. For HTML, this opt-in is in the form of the
+{{HTMLAttributionSrcElementUtils/attributionSrc}} attribute, and for JavaScript, it is
+the various modifications to [=fetch=], {{XMLHttpRequest}}, and the [=window open steps=].
+
+However, this principle is only strictly applied to registering [=attribution sources=]. For
+[=triggering attribution=], we waive this requirement for the sake of compatibility with existing
+systems, see <a href="https://github.com/WICG/attribution-reporting-api/issues/347">347</a> for
+context.
 
 # Privacy considerations # {#privacy-considerations}
 
@@ -3402,6 +3790,14 @@ Aggregatable reports protect against cross-site information disclosure in two pr
 Issue: add links to the aggregation service noise addition algorithm.
 
 Issue: model the channel capacity of a trigger registration.
+
+### Debug reports ### {#cross-site-information-disclosure-debug-reports}
+
+Fine-grained cross-site information may be embedded in [=attribution reports=] sent with
+[=generate an attribution report URL/isDebugReport=] being true and certain [=debug data type|types=]
+of [=attribution debug reports=]. These reports will only be [=check if cookie-based debugging is allowed|allowed=]
+when third-party cookies are available, in which case the API caller
+had the capability to learn the underlying information.
 
 ## Protecting against cross-site recognition ## {#protecting-against-cross-site-recognition}
 
@@ -3479,9 +3875,11 @@ Possible mitigations:
     stored and sent on different networks. However, it increases the likelihood
     that the reporting origin can correlate the original request made to the
     reporting origin for attribution to the report, which weakens the
-    attribution-side privacy controls of the API. In particular, 
+    attribution-side privacy controls of the API. In particular,
     this destroys the differential privacy framework we have
-    for event-level reports.
+    for event-level reports. It would also make the
+    [=event-level report/trigger priority=] functionality impossible, as there
+    would be no way to replace a lower-priority report that was already sent.
 1. Use a trusted proxy server to send reports: This effectively moves the
     reporting origin into the report body, so only the proxy server would be
     visible to the network administrator.
@@ -3507,8 +3905,12 @@ Possible mitigations:
     as the original request made to the reporting origin is in close temporal
     proximity to the report request. However, it increases the likelihood that
     the reporting origin can correlate the two requests, which weakens the
-    attribution-side privacy controls of the API.
+    attribution-side privacy controls of the API. It would also make the
+    [=event-level report/trigger priority=] functionality impossible, as there
+    would be no way to replace a lower-priority report that was already sent.
 1. Send reports immediately to a trusted proxy server, which would itself send
     the report to the reporting origin with additional delay. This would
     effectively hide both the user's IP address and their online-offline
-    presence from the reporting origin.
+    presence from the reporting origin. Compared to the previous mitigation, the
+    proxy server could itself handle the [=event-level report/trigger priority=]
+    functionality, at the cost of increased complexity in the proxy.
