@@ -19,7 +19,7 @@ function validate(validate, testCase) {
 const sourceCases = [
   {
     name: 'minimal',
-    object: {destination: ''},
+    object: { destination: '' },
   },
   {
     name: 'no-destination',
@@ -44,14 +44,14 @@ const triggerCases = [
   },
   {
     name: 'debug-key-wrong-type',
-    object: {debug_key: 1},
+    object: { debug_key: 1 },
     errors: [
       {
         instancePath: '/debug_key',
         schemaPath: '#/$defs/unsigned_base10_integer/type',
         keyword: 'type',
         params: { type: 'string' },
-        message: 'must be string'
+        message: 'must be string',
       }
     ],
   },
