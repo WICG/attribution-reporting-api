@@ -1744,7 +1744,9 @@ To <dfn>parse a duration</dfn> given a [=map=] |map|, a [=string=] |key|, and a
 tuple of [=durations=] (|clampStart|, |clampEnd|):
 
 1. [=Assert=]: |clampStart| < |clampEnd|.
-1. Let |seconds| be the result of running
+1. Let |seconds| be null.
+1. If |map|[|key|] [=map/exists=] and is a non-negative integer, set |seconds| to |map|[|key|].
+1. Otherwise, set |seconds| to the result of running
     [=parse an optional 64-bit unsigned integer=] with |map|, |key|, and null.
 1. If |seconds| is an error, return an error.
 1. If |seconds| is null, return |clampEnd|.
