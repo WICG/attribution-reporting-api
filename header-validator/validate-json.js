@@ -230,7 +230,7 @@ const destinationValue = (state, value) => {
 
 const maxEventLevelReports = (state, value) => {
   if (typeof value === 'number') {
-    if (!Number.isInteger(value) || value < 0 || value > 20) {
+    if (!Number.isInteger(value) || value < 0 || value > limits.maxEventLevelReports) {
       state.error('must be an integer in the range [0, 20]');
     }
   } else {
