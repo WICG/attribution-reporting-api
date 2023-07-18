@@ -4,6 +4,7 @@ const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const limits = {
   maxAggregationKeys: 20,
+  maxEventLevelReports: 20,
   maxEntriesPerFilterData: 50,
   maxValuesPerFilterDataEntry: 50,
 }
@@ -141,6 +142,28 @@ const uint64 = string((state, value) => {
   }
 })
 
+function number(f = () => {}) {
+  return (state, value) => {
+    if (typeof value === 'number') {
+      f(state, value)
+      return
+    }
+    state.error('must be a number')
+  }
+}
+
+const nonNegativeInteger = number((state, value) => {
+  if (!Number.isInteger(value) || value < 0) {
+    state.error("must be a non-negative integer")
+  }
+});
+
+const positiveInteger = number((state, value) => {
+  if (!Number.isInteger(value) || value <= 0) {
+    state.error("must be a positive integer")
+  }
+});
+
 const int64 = string((state, value) => {
   if (!int64Regex.test(value)) {
     state.error(`must be an int64 (must match ${int64Regex})`)
@@ -205,6 +228,25 @@ const destinationValue = (state, value) => {
   state.error('must be a list or a string')
 }
 
+const maxEventLevelReports = (state, value) => {
+  if (typeof value === 'number') {
+    if (!Number.isInteger(value) || value < 0 || value > 20) {
+      state.error('must be an integer in the range [0, 20]');
+    }
+  } else {
+    state.error('must be an integer in the range [0, 20]');
+  }
+}
+
+const eventReportWindows = (state, value) => {
+  // TODO(csharrison): Consider validating that the list of end times
+  // is properly ordered.
+  state.validate(value, {
+    start_time: optional(nonNegativeInteger),
+    end_times: required(list(positiveInteger, 5, 1))
+  });
+}
+
 const listOrObject = (f = () => {}, listMaxLength, listMinLength) => {
   return (state, value, key) => {
     if (isObject(value)) {
@@ -247,6 +289,7 @@ export function validateSource(source) {
   state.validate(source, {
     aggregatable_report_window: optional(uint64),
     event_report_window: optional(uint64),
+    event_report_windows: optional(eventReportWindows),
     aggregation_keys: optional(aggregationKeys),
     debug_key: optional(uint64),
     debug_reporting: optional(bool),
@@ -255,7 +298,11 @@ export function validateSource(source) {
     filter_data: optional(filterData()),
     priority: optional(int64),
     source_event_id: optional(uint64),
+    max_event_level_reports: optional(maxEventLevelReports),
   })
+  if (typeof source === "object" && 'event_report_window' in source && 'event_report_windows' in source) {
+    state.error("event_report_window and event_report_windows in the same source")
+  }
   return state.result()
 }
 
