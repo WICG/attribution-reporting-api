@@ -2,26 +2,27 @@
 
 _Note: This document describes possible new functionality in the Attribution Reporting API’s event-level reports. This is a forwards and backwards compatible change to event-level reports. While this new functionality is being developed, we still highly encourage testing the existing API functionalities to support core utility and compatibility needs._
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
 - [Goals](#goals)
 - [Phase 1: Lite Flexible Event Level](#phase-1-lite-flexible-event-level)
   - [API Changes](#api-changes)
-  - [Default Configurations](#default-configurations)
-    - [Default event sources](#default-event-sources)
-    - [Default navigation sources](#default-navigation-sources)
     - [Custom Configurations: Example](#custom-configurations-example)
 - [Phase 2: Full Flexible Event Level](#phase-2-full-flexible-event-level)
-  - [API Changes](#api-changes)
-  - [Default Configurations](#default-configurations)
-    - [Default event sources](#default-event-sources)
-    - [Default navigation sources](#default-navigation-sources)
-    - [Custom Configurations: Examples](#custom-configurations-examples)
-      - [Reporting trigger value buckets](#reporting-trigger-value-buckets)
-      - [Reporting trigger counts](#reporting-trigger-counts)
-      - [Binary with more frequent reporting](#binary-with-more-frequent-reporting)
-      - [Varying trigger_specs from source to source](#varying-trigger_specs-from-source-to-source)
-- [Privacy Considerations](#privacy-considerations)
+  - [API changes](#api-changes)
+- [Configurations that are equivalent to the current version](#configurations-that-are-equivalent-to-the-current-version)
+  - [Equivalent event sources](#equivalent-event-sources)
+  - [Equivalent navigation sources](#equivalent-navigation-sources)
+  - [Custom configurations: Examples](#custom-configurations-examples)
+    - [Reporting trigger value buckets](#reporting-trigger-value-buckets)
+  - [Reporting trigger counts](#reporting-trigger-counts)
+    - [Binary with more frequent reporting](#binary-with-more-frequent-reporting)
+  - [Varying `trigger_specs` from source to source](#varying-trigger_specs-from-source-to-source)
+- [Privacy considerations](#privacy-considerations)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 The default configuration for event and navigation sources may not be ideal for all use-cases. We can optionally support extended configurations that allow for callers to specify precisely the information they want out of reports, in order to more efficiently extract utility out of the privacy mechanism. The most efficient configuration will differ from use-case to use-case and will depend on a) the parameters of our privacy mechanism and b) the noise level that can be tolerated by the use-case.
 
@@ -81,33 +82,6 @@ We will add the following two optional parameters to the JSON in `Attribution-Re
 
 Note that if both `event_report_window` and `event_report_windows` are present then the source will be ignored. Only one of them can be present in the source registration.
 
-### Default Configurations
-Here are the default configurations for `event` and `navigation` sources.
-
-#### Default event sources
-
-```jsonc
-{
-  ...  
-  "max_event_level_reports": 1,
-  "event_report_windows": {
-    "end_times": [2592000] // 30 days represented in seconds
-  }
-}
-```
-
-#### Default navigation sources
-
-```jsonc
-{
-  ...  
-  "max_event_level_reports": 3,
-  "event_report_windows": {
-    "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
-  }
-}
-```
-
 #### Custom Configurations: Example
 
 Below is an additional configuration example outside the defaults. This example configuration supports a developer who wants to optimize for receiving reports at earlier reporting windows.
@@ -115,7 +89,7 @@ Below is an additional configuration example outside the defaults. This example 
 ```jsonc
 {
   ...  
-  "max_event_level_reports": 3,
+  "max_event_level_reports": 2,
   "event_report_windows": {
     "end_times": [7200, 43200, 86400] // 2 hours, 12 hours, 1 day represented in seconds
   }
@@ -231,14 +205,13 @@ When the `event_report_window` for a spec completes, we will map it's summary va
 ```
 
 
-### Default configurations
+## Configurations that are equivalent to the current version
 
 The following are equivalent configurations for the API's current event and navigation sources, respectively. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
 
 It is possible that there are multiple configurations that are equivalent, given that some parameters can be set as default or pruned.
 
-
-#### Default event sources
+### Equivalent event sources
 
 ```jsonc
 // Note: most of the fields here are not required to be explicitly listed.
@@ -250,17 +223,16 @@ It is possible that there are multiple configurations that are equivalent, given
     "event_report_windows": {
       "end_times": [<30 days>] 
     },
-  "summary_window_operator": "count",
-  "summary_buckets": [1],
+    "summary_window_operator": "count",
+    "summary_buckets": [1],
   }],
   "max_event_level_reports": 1,
-  "event_report_windows": {
-    "end_times": [2592000] // 30 days represented in seconds
-  }
+  ...
+  "expiry": <30 days>, // expiry must be greater than or equal to the last element of the end_times
 }
 ```
 
-#### Default navigation sources
+### Equivalent navigation sources
 
 ```jsonc
 // Note: most of the fields here are not required to be explicitly listed.
@@ -270,13 +242,14 @@ It is possible that there are multiple configurations that are equivalent, given
   {
     "trigger_data": [0, 1, 2, 3, 4, 5, 6, 7],
     "event_report_windows": {
-      "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
-    }
+      "end_times": [<2 days>, <7 days>, <30 days>]
+    },
+    "summary_window_operator": "count",
+    "summary_buckets": [1, 2, 3],
   }],
   "max_event_level_reports": 3,
-  "event_report_windows": {
-    "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
-  }
+  ...
+  "expiry": <30 days>, // expiry must be greater than or equal to the last element of the end_times
 }
 
 ```
@@ -297,7 +270,7 @@ This example configuration supports a developer who wants to optimize for value 
   {
     "trigger_data": [0],
     "event_report_windows": {
-      "end_times": [604800] // 7 days represented in seconds
+      "end_times": [604800, 1209600] // 7 days, 14 days represented in seconds
     },
     "summary_window_operator": "value_sum",
     "summary_buckets": [5, 10, 100]
