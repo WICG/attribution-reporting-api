@@ -268,7 +268,7 @@ This example configuration supports a developer who wants to optimize for value 
   {
     "trigger_data": [0],
     "event_report_windows": {
-      "end_times": [604800] // 7 days represented in seconds
+      "end_times": [604800, 1209600] // 7 days, 14 days represented in seconds
     },
     "summary_window_operator": "value_sum",
     "summary_buckets": [5, 10, 100]
