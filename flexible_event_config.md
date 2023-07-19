@@ -162,7 +162,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Represents a bucketization of the integers from [0, MAX_INT], encoded as
     // a list of integers where new buckets begin (excluding 0 which is
     // implicitly included).
-    // It must consist of strictly increasing positive integerss. 
+    // It must consist of strictly increasing positive integers. 
     //
     // e.g. [5, 10, 100] encodes the following ranges:
     // [[0, 4], [5, 9], [10, 99], [100, MAX_INT]]
