@@ -143,12 +143,13 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Represents a series of time windows, starting at the source registration time.
     // Reports for this spec will be delivered an hour after the end of each window.
     // Time is encoded as seconds after source registration.
+    // end_times should consist of strictly increasing integers without repetitions. 
     //
     // Note: specs with identical trigger_data cannot have overlapping windows;
     // this ensures that triggers match at most one spec. If event_report_windows
     // is omitted, will use the "event_report_window" or "event_report_windows" field specified at the global level for the source (or the default windows if none are specified).  End time is exclusive.
     "event_report_windows": {
-      "end_times": [<int>, ...]
+      "end_times": [<int>, ...],
     }
 
     // Represents an operator that summarizes the triggers within a window
@@ -156,11 +157,12 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // value_sum: sum of the value of triggers within a window
     // The summary is reported as an index into a bucketization scheme.
     // Defaults to "count"
-    "summary_window_operator": <one of "count" or "value_sum">
+    "summary_window_operator": <one of "count" or "value_sum">, 
 
     // Represents a bucketization of the integers from [0, MAX_INT], encoded as
     // a list of integers where new buckets begin (excluding 0 which is
     // implicitly included).
+    // It should consist of strictly increasing positive integers without repetitions. 
     //
     // e.g. [5, 10, 100] encodes the following ranges:
     // [[0, 4], [5, 9], [10, 99], [100, MAX_INT]]
