@@ -143,7 +143,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Represents a series of time windows, starting at the source registration time.
     // Reports for this spec will be delivered an hour after the end of each window.
     // Time is encoded as seconds after source registration.
-    // end_times should consist of strictly increasing integers without repetitions. 
+    // end_times must consist of strictly increasing positive integers. 
     //
     // Note: specs with identical trigger_data cannot have overlapping windows;
     // this ensures that triggers match at most one spec. If event_report_windows
@@ -162,7 +162,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Represents a bucketization of the integers from [0, MAX_INT], encoded as
     // a list of integers where new buckets begin (excluding 0 which is
     // implicitly included).
-    // It should consist of strictly increasing positive integers without repetitions. 
+    // It must consist of strictly increasing positive integerss. 
     //
     // e.g. [5, 10, 100] encodes the following ranges:
     // [[0, 4], [5, 9], [10, 99], [100, MAX_INT]]
