@@ -7,10 +7,10 @@ _Note: This document describes possible new functionality in the Attribution Rep
 **Table of Contents**
 
 - [Goals](#goals)
-- [Phase 1: Lite Flexible Event Level](#phase-1-lite-flexible-event-level)
+- [Phase 1: Lite Flexible Event-Level](#phase-1-lite-flexible-event-level)
   - [API Changes](#api-changes)
     - [Custom Configurations: Example](#custom-configurations-example)
-- [Phase 2: Full Flexible Event Level](#phase-2-full-flexible-event-level)
+- [Phase 2: Full Flexible Event-Level](#phase-2-full-flexible-event-level)
   - [API changes](#api-changes)
 - [Configurations that are equivalent to the current version](#configurations-that-are-equivalent-to-the-current-version)
   - [Equivalent event sources](#equivalent-event-sources)
@@ -26,20 +26,18 @@ _Note: This document describes possible new functionality in the Attribution Rep
 
 The default configuration for event and navigation sources may not be ideal for all use-cases. We can optionally support extended configurations that allow for callers to specify precisely the information they want out of reports, in order to more efficiently extract utility out of the privacy mechanism. The most efficient configuration will differ from use-case to use-case and will depend on a) the parameters of our privacy mechanism and b) the noise level that can be tolerated by the use-case.
 
-This proposal is broken into two separate feature sets
-* __Phase 1: Lite flexible event level configuration__
+This proposal is broken into two separate feature sets:
+* __Phase 1: Lite flexible event-level configuration__
   * This lite version would provide a subset of the full feature and can be used independently of Phase 2
-* __Phase 2: Full version of flexible event level configuration__
-<br>
+* __Phase 2: Full version of flexible event-level configuration__
 
-Phase 1 (Lite flexible event level) could be used to:
+Phase 1 (Lite flexible event-level) could be used to:
 * Vary the frequency of reports by specifying the number of reporting windows
 * Vary the number of attributions per source registration
 * Reduce the amount of total noise by decreasing the above parameters
 * Configure reporting windows rather than using the defaults
-<br>
 
-Phase 2 (Full flexible event level) could be used to do all of the capabilities in Phase 1 and:
+Phase 2 (Full flexible event-level) could be used to do all of the capabilities in Phase 1 and:
 * Vary the trigger data cardinality in a report
 * Reduce the amount of total noise by decreasing the trigger data cardinality
 
@@ -52,7 +50,7 @@ In general, the approach here is to more flexibly encode the output of the API f
 * Allow for choosing flexible reporting windows ([issue #46](https://github.com/WICG/attribution-reporting-api/issues/46) and [issue #736](https://github.com/WICG/attribution-reporting-api/issues/736))
 * Allow for setting the possible output space for a source based on a _prior probability distribution_ the ad tech has about the types of trigger that are possible, taking advantage of recent research into label differential privacy for [binary classification](https://arxiv.org/abs/2102.06062) and [regression problems](https://arxiv.org/abs/2212.06074).
 
-## Phase 1: Lite Flexible Event Level
+## Phase 1: Lite Flexible Event-Level
 
 ### API Changes
 
@@ -61,10 +59,11 @@ We will add the following two optional parameters to the JSON in `Attribution-Re
 ```jsonc
 {
   ...
-  // Optional. This is a parameter that acts across all trigger types for the lifetime of this source. 
-  // It restricts the total number of event-level reports that this source can generate. 
-  // After this maximum is hit, the source is no longer capable of producing any new data. 
-  // The use of priority in the trigger attribution algorithm in the case of multiple attributable triggers remains unchanged. 
+
+  // Optional. This is a parameter that acts across all trigger types for the lifetime of this source.
+  // It restricts the total number of event-level reports that this source can generate.
+  // After this maximum is hit, the source is no longer capable of producing any new data.
+  // The use of priority in the trigger attribution algorithm in the case of multiple attributable triggers remains unchanged.
   // Defaults to 3 for navigation sources and 1 for event sources
   "max_event_level_reports": <int>,
 
@@ -88,7 +87,7 @@ Below is an additional configuration example outside the defaults. This example 
 
 ```jsonc
 {
-  ...  
+  ...
   "max_event_level_reports": 2,
   "event_report_windows": {
     "end_times": [7200, 43200, 86400] // 2 hours, 12 hours, 1 day represented in seconds
@@ -96,7 +95,7 @@ Below is an additional configuration example outside the defaults. This example 
 }
 ```
 
-## Phase 2: Full Flexible Event Level
+## Phase 2: Full Flexible Event-Level
 
 ### API changes
 
@@ -112,12 +111,12 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // This spec will only apply to registrations that set one of the given
     // trigger data values (non-negative integers) in the list.
     // trigger_data will still appear in the event-level report.
-    "trigger_data": [<int>, ...]
+    "trigger_data": [<int>, ...],
 
     // Represents a series of time windows, starting at the source registration time.
     // Reports for this spec will be delivered an hour after the end of each window.
     // Time is encoded as seconds after source registration.
-    // end_times must consist of strictly increasing positive integers. 
+    // end_times must consist of strictly increasing positive integers.
     //
     // Note: specs with identical trigger_data cannot have overlapping windows;
     // this ensures that triggers match at most one spec. If event_report_windows
@@ -131,12 +130,12 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // value_sum: sum of the value of triggers within a window
     // The summary is reported as an index into a bucketization scheme.
     // Defaults to "count"
-    "summary_window_operator": <one of "count" or "value_sum">, 
+    "summary_window_operator": <one of "count" or "value_sum">,
 
     // Represents a bucketization of the integers from [0, MAX_INT], encoded as
     // a list of integers where new buckets begin (excluding 0 which is
     // implicitly included).
-    // It must consist of strictly increasing positive integers. 
+    // It must consist of strictly increasing positive integers.
     //
     // e.g. [5, 10, 100] encodes the following ranges:
     // [[0, 4], [5, 9], [10, 99], [100, MAX_INT]]
@@ -152,10 +151,11 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     "summary_buckets": [<bucket start>, ...]
   }, {
     // Next trigger_spec
-  } ...],
+  }, ...],
 
   // See description in phase 1.
-  "max_event_level_reports": <int>
+  "max_event_level_reports": <int>,
+
   // See description in phase 1.
   "event_report_windows": {
     "end_times": [<int>, ...]
@@ -192,24 +192,23 @@ Every trigger registration will match with at most one trigger spec and update i
 * Apply global attribution filters
 * For every trigger spec:
   * Evaluate the `event_trigger_data` on the spec to find a match, using the spec’s `event_reporting_window`
-    * The top level `event_reporting_windows` will act as a default value in case any trigger spec is the missing `event_report_windows` sub-field
+    * The top-level `event_reporting_windows` will act as a default value in case any trigger spec is the missing `event_report_windows` sub-field
 * The first matched spec is chosen for attribution, and we increment its summary value by `value`.
 
-When the `event_report_window` for a spec completes, we will map it's summary value to a bucket, and send an event-level report for every increment in the summary bucket caused by attributed trigger values. Reports will come with one extra field `trigger_summary_bucket`.
+When the `event_report_window` for a spec completes, we will map its summary value to a bucket, and send an event-level report for every increment in the summary bucket caused by attributed trigger values. Reports will come with one extra field `trigger_summary_bucket`.
 
 ```jsonc
 {
   ...
-  "trigger_summary_bucket": [<bucket start>, <bucket end>],
+  "trigger_summary_bucket": [<bucket start>, <bucket end>]
 }
 ```
-
 
 ## Configurations that are equivalent to the current version
 
 The following are equivalent configurations for the API's current event and navigation sources, respectively. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
 
-It is possible that there are multiple configurations that are equivalent, given that some parameters can be set as default or pruned.
+It is possible that there are multiple configurations that are equivalent, given that some parameters can be set as default or omitted.
 
 ### Equivalent event sources
 
@@ -217,18 +216,17 @@ It is possible that there are multiple configurations that are equivalent, given
 // Note: most of the fields here are not required to be explicitly listed.
 // Here we list them explicitly just for clarity.
 {
-  "trigger_specs": [
-  {
+  "trigger_specs": [{
     "trigger_data": [0, 1],
     "event_report_windows": {
-      "end_times": [<30 days>] 
+      "end_times": [<30 days>]
     },
     "summary_window_operator": "count",
-    "summary_buckets": [1],
+    "summary_buckets": [1]
   }],
   "max_event_level_reports": 1,
   ...
-  "expiry": <30 days>, // expiry must be greater than or equal to the last element of the end_times
+  "expiry": <30 days> // expiry must be greater than or equal to the last element of the end_times
 }
 ```
 
@@ -238,36 +236,33 @@ It is possible that there are multiple configurations that are equivalent, given
 // Note: most of the fields here are not required to be explicitly listed.
 // Here we list them explicitly just for clarity.
 {
-  "trigger_specs": [
-  {
+  "trigger_specs": [{
     "trigger_data": [0, 1, 2, 3, 4, 5, 6, 7],
     "event_report_windows": {
       "end_times": [<2 days>, <7 days>, <30 days>]
     },
     "summary_window_operator": "count",
-    "summary_buckets": [1, 2, 3],
+    "summary_buckets": [1, 2, 3]
   }],
   "max_event_level_reports": 3,
   ...
-  "expiry": <30 days>, // expiry must be greater than or equal to the last element of the end_times
+  "expiry": <30 days> // expiry must be greater than or equal to the last element of the end_times
 }
-
 ```
 
 ### Custom configurations: Examples
 
-Below are some additional configurations outside the defaults. In all of the below examples, the user (developer) is either trading-off
+Below are some additional configurations outside the defaults. In all of the below examples, the user (developer) is either trading off
 * reducing some dimension of the default configuration (#triggers, trigger data cardinality, #windows) for increasing another one to preserve the noise level
 * reducing some dimension of the default configuration (#triggers, trigger data cardinality, #windows) for reduced noise level
 
 #### Reporting trigger value buckets
 
-This example configuration supports a developer who wants to optimize for value data for only one reporting window (e.g. 7 days), trading fewer reporting windows for less noise. In this example any trigger that sets trigger_data to a value other than 0 is ineligible for event-level attribution.
+This example configuration supports a developer who wants to optimize for value data for only one reporting window (e.g. 7 days), trading fewer reporting windows for less noise. In this example any trigger that sets `trigger_data` to a value other than 0 is ineligible for event-level attribution.
 
 ```jsonc
 {
-  "trigger_specs": [
-  {
+  "trigger_specs": [{
     "trigger_data": [0],
     "event_report_windows": {
       "end_times": [604800, 1209600] // 7 days, 14 days represented in seconds
@@ -280,13 +275,11 @@ This example configuration supports a developer who wants to optimize for value 
 
 Triggers could be registered with the value field set, which are summed up and bucketed. For example if there are three triggers within 7 days of source registrations with values 1, 3 and 4.
 
-
 ```jsonc
 { "event_trigger_data": [{"trigger_data": "0", "value": 1}] }
 { "event_trigger_data": [{"trigger_data": "0", "value": 3}] }
 { "event_trigger_data": [{"trigger_data": "0", "value": 4}] }
 ```
-
 
 The values are summed (to 8) and reported in the following reports after 7 days + 1 hour:
 
@@ -321,15 +314,13 @@ The values are summed to 8 + 50 + 45 = 103. This yields the following reports at
 }
 ```
 
-
 ### Reporting trigger counts
 
 This example shows how a developer can configure a source to get a count of triggers up to 10.
 
 ```jsonc
 {
-  "trigger_specs": [
-  {
+  "trigger_specs": [{
     "trigger_data": [0],
     "event_report_windows": {
       "end_times": [604800] // 7 days represented in seconds
@@ -372,8 +363,7 @@ This example configuration supports a developer who wants to learn whether at le
 
 ```jsonc
 {
-  "trigger_specs": [
-  {
+  "trigger_specs": [{
     "trigger_data": [0],
     "event_report_windows": {
       // 1 day, 2 days, 3 days, 5 days, 7 days, 10 days represented in seconds
@@ -392,8 +382,7 @@ Note that the `trigger_specs` registration can differ from source to source. Thi
 
 ```jsonc
 {
-  "trigger_specs": [
-  {
+  "trigger_specs": [{
     "trigger_data": [0, 1, 2, 3],
     "event_report_windows": {
       "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
@@ -405,8 +394,7 @@ Note that the `trigger_specs` registration can differ from source to source. Thi
 
 ```jsonc
 {
-  "trigger_specs": [
-  {
+  "trigger_specs": [{
     "trigger_data": [4, 5, 6, 7],
     "event_report_windows": {
       "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
@@ -417,7 +405,6 @@ Note that the `trigger_specs` registration can differ from source to source. Thi
 ```
 
 We encourage developers to suggest different use cases they may have for this API extension, and we will update this explainer with sample configurations for those use cases.
-
 
 ## Privacy considerations
 
@@ -431,10 +418,8 @@ With these pieces we can ensure that these extensions do not regress our privacy
 
 Beyond setting noise levels, we will have some parameter limits to avoid large computation costs and avoid configurations with too many output states (where noise will increase considerably). Here is an example set of restrictions (feedback always welcome):
 
-
 * Maximum of 20 total reports, globally and per `trigger_data`
 * Maximum of 5 possible reporting windows per `trigger_data`
-* Maximum of 32 trigger data cardinality (not applicable for Phase 1: Lite Flexible Event Level)
+* Maximum of 32 trigger data cardinality (not applicable for Phase 1: Lite Flexible Event-Level)
 
 Be mindful that using extrema values here may result in a large amount of noise, or failure to register if privacy levels are not met.
-
