@@ -2637,6 +2637,13 @@ and an optional [=attribution report=] <dfn for="obtain debug data on trigger re
 
 <h3 algorithm id="triggering-event-level-attribution">Triggering event-level attribution</h3>
 
+An [=event-level report=] |a| <dfn for="event-level report">is lower-priority than</dfn>
+an [=event-level report=] |b| if any of the following are true:
+
+* |a|'s [=event-level report/trigger priority=] is less than |b|'s [=event-level report/trigger priority=].
+* |a|'s [=event-level report/trigger priority=] is equal to |b|'s [=event-level report/trigger priority=]
+     and |a|'s [=event-level report/trigger time=] is greater than |b|'s [=event-level report/trigger time=].
+
 To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |trigger|, an
 [=attribution source=] |sourceToAttribute|, and an
 [=attribution rate-limit record=] |rateLimitRecord|, run the following steps:
@@ -2695,26 +2702,24 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
      1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. If |sourceToAttribute|'s [=attribution source/number of event-level reports=] value is equal to
     |sourceToAttribute|'s [=attribution source/max number of event-level reports=], then:
-    1. Let |matchingReports| be all entries in the [=event-level report cache=] where all of the following are true:
-         * entry's [=event-level report/report time=] and |report|'s [=event-level report/report time=] are equal.
-         * entry's [=event-level report/source identifier=] [=string/is=] |report|'s [=event-level report/source identifier=]
-    1. If |matchingReports| is empty:
+    1. Let |matchingReports| be a new [=list=].
+    1. [=set/iterate|For each=] |entry| of the [=event-level report cache=]:
+        1. If |entry|'s [=event-level report/report time=] and |report|'s [=event-level report/report time=] are not equal, [=iteration/continue=].
+        1. If |entry|'s [=event-level report/source identifier=] and |report|'s [=event-level report/source identifier=] are not equal, [=iteration/continue=].
+        1. [=list/Append=] |entry| to |matchingReports|.
+    1. If |matchingReports| [=list/is empty=]:
         1. Set |sourceToAttribute|'s [=attribution source/event-level attributable=] value to false.
         1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
             with "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>", |trigger|, |sourceToAttribute| and |report|.
         1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
     1. Set |matchingReports| to the result of [=list/sort in ascending order|sorting=] |matchingReports|
-        in ascending order, with |a| being less than |b| if any of the following are true:
-             * |a|'s [=event-level report/trigger priority=] is less than |b|'s [=event-level report/trigger priority=].
-             * |a|'s [=event-level report/trigger priority=] is equal to |b|'s [=event-level report/trigger priority=]
-                and |a|'s [=event-level report/trigger time=] is greater than |b|'s [=event-level report/trigger time=].
-    1. Let |lowestPriorityReport| be the first item in |matchingReports|.
-    1. If |report|'s [=event-level report/trigger priority=] is less than or equal to
-        |lowestPriorityReport|'s [=event-level report/trigger priority=]:
+        in ascending order using [=event-level report/is lower-priority than=].
+    1. Let |lowestPriorityReport| be |matchingReports|[0].
+    1. If |report| [=event-level report/is lower-priority than=] |lowestPriorityReport|:
          1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
              with "<code>[=trigger debug data type/trigger-event-low-priority=]</code>", |trigger|, |sourceToAttribute| and |report|.
          1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-    1. [=list/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
+    1. [=set/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
     1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
 1. Let |triggeringStatus| be "<code>[=triggering status/attributed=]</code>".
 1. Let |debugData| be null.
