@@ -200,5 +200,5 @@ if __name__ == "__main__":
         api_config = ApiConfig(
             args.max_event_level_reports, per_trigger_configs)
     else:
-        api_config = get_config(json.load(sys.stdin))
+        api_config = get_config(json.load(sys.stdin), args.source_type)
     print_config_data(api_config, args.epsilon, args.source_type)
