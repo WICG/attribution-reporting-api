@@ -42,6 +42,24 @@
     "event_report_window": {
       "$ref": "#/$defs/unsigned_duration_in_seconds"
     },
+    "event_report_windows": {
+      "type": "object",
+      "properties": {
+        "start_time": {
+          "$ref": "#/$defs/non_negative_integer",
+          "default": 0
+        },
+        "end_times": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/positive_integer"
+          },
+          "maxItems": 5,
+          "minItems": 1
+        }
+      },
+      "required": ["end_times"]
+    },
     "expiry": {
       "$ref": "#/$defs/unsigned_duration_in_seconds"
     },
@@ -69,9 +87,22 @@
     "source_event_id": {
       "$ref": "#/$defs/unsigned_base10_integer",
       "default": "0"
+    },
+    "max_event_level_reports": {
+      "$ref": "#/$defs/non_negative_integer",
+      "$comment": "Default depends on source type",
+      "maximum": 20
     }
   },
   "required": ["destination"],
+
+  "dependentSchemas": {
+    "event_report_window": {
+      "not": {
+        "required": ["event_report_windows"]
+      }
+    }
+  },
 
   "$defs": {
     "destination": {
@@ -94,6 +125,14 @@
     "unsigned_base10_integer": {
       "type": "string",
       "pattern": "^[0-9]+$"
+    },
+    "non_negative_integer": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "positive_integer": {
+      "type": "integer",
+      "exclusiveMinimum": 0
     }
   }
 }

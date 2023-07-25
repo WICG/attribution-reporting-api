@@ -20,7 +20,8 @@ export const testCases = [
       "expiry": "3",
       "filter_data": {"b": ["c"]},
       "priority": "2",
-      "source_event_id": "3"
+      "source_event_id": "3",
+      "max_event_level_reports": 2
     }`,
   },
 
@@ -364,5 +365,90 @@ export const testCases = [
       path: ["debug_reporting"],
       msg: "must be a boolean",
     }],
+  },
+
+  {
+    name: "max-event-level-reports-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "max_event_level_reports": "2"
+    }`,
+    expectedErrors: [{
+      path: ["max_event_level_reports"],
+      msg: "must be an integer in the range [0, 20]",
+    }],
+  },
+  {
+    name: "max-event-level-reports-exceed-max",
+    json: `{
+      "destination": "https://a.test",
+      "max_event_level_reports": 21
+    }`,
+    expectedErrors: [{
+      path: ["max_event_level_reports"],
+      msg: "must be an integer in the range [0, 20]",
+    }],
+  },
+  {
+    name: "event-level-report-windows-and-window",
+    json: `{
+      "destination": "https://a.test",
+      "event_report_window": "21",
+      "event_report_windows": {
+        "end_times": [1000]
+      }
+    }`,
+    expectedErrors: [{
+      path: [],
+      msg: "event_report_window and event_report_windows in the same source",
+    }],
+  },
+  {
+    name: "event-level-report-windows-no-end-times",
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+      }
+    }`,
+    expectedErrors: [{
+      path: ['event_report_windows', 'end_times'],
+      msg: "missing required field",
+    }],
+  },
+  {
+    name: "event-level-report-windows-empty-end-times",
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "end_times": []
+      }
+    }`,
+    expectedErrors: [{
+      path: ['event_report_windows', 'end_times'],
+      msg: "List size out of expected bounds. Size must be within [1, 5]",
+    }],
+  },
+  {
+    name: "event-level-report-windows-excessive-end-times",
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "end_times": [1,2,3,4,5,6]
+      }
+    }`,
+    expectedErrors: [{
+      path: ['event_report_windows', 'end_times'],
+      msg: "List size out of expected bounds. Size must be within [1, 5]",
+    }],
+  },
+  {
+    name: "event-level-report-windows-start-time",
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "start_time": 10,
+        "end_times": [11,12,13,14]
+      }
+    }`
   },
 ]
