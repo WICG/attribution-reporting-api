@@ -100,6 +100,32 @@ def max_information_gain(num_states: int, epsilon: float):
                                             flip_prob*(num_states-1)/num_states)
 
 
+def epsilon_to_bound_info_gain_and_dp(num_states: int, info_gain_upper_bound: float, epsilon_upper_bound: float, tolerance=1e-5):
+    """Returns the effective epsilon and flip probability needed to satisfy an information gain bound
+       given a number of output states in the q-ary symmetric channel."""
+
+    # Just perform a simple binary search over values of epsilon.
+    eps_low = 0
+    eps_high = epsilon_upper_bound
+
+    while True:
+        epsilon = (eps_high + eps_low) / 2
+        info_gain = max_information_gain(num_states, epsilon)
+
+        if info_gain > info_gain_upper_bound:
+            eps_high = epsilon
+            continue
+
+        # Allow slack by returning something slightly non-optimal (governed by the tolerance)
+        # that still meets the privacy bar. If eps_high == eps_low we're now governed by the epsilon
+        # bound and can return.
+        if info_gain < info_gain_upper_bound - tolerance and eps_high != eps_low:
+            eps_low = epsilon
+            continue
+
+        return epsilon, flip_probability_dp(num_states, epsilon)
+
+
 def get_config(json: dict, source_type: str) -> ApiConfig:
     default_max_reports = 3 if source_type == "navigation" else 1
     max_event_level_reports = json.get('max_event_level_reports', default_max_reports)
@@ -136,11 +162,13 @@ def print_config_data(config: ApiConfig, epsilon: float, source_type: str):
     info_gain_default_event = max_information_gain(
         num_flexible_states(EVENT_DEFAULT_CONFIG), args.epsilon)
     if source_type == "navigation" and info_gain > info_gain_default_nav:
+        new_eps, flip_prob = epsilon_to_bound_info_gain_and_dp(num_states, info_gain_default_nav, args.epsilon)
         print(
-            f"WARNING: info gain of {info_gain:.2f} > {info_gain_default_nav:.2f} for navigation sources")
+            f"WARNING: info gain of {info_gain:.2f} > {info_gain_default_nav:.2f} for navigation sources. Would require a {100 * flip_prob:.5f}% flip chance (effective epsilon = {new_eps:.3f}) to resolve.")
     if source_type == "event" and info_gain > info_gain_default_event:
+        new_eps, flip_prob = epsilon_to_bound_info_gain_and_dp(num_states, info_gain_default_event, args.epsilon)
         print(
-            f"WARNING: info gain of {info_gain:.2f} > {info_gain_default_event:.2f} for event sources")
+            f"WARNING: info gain of {info_gain:.2f} > {info_gain_default_event:.2f} for event sources. Would require a {100 * flip_prob:.5f}% flip chance (effective epsilon = {new_eps:.3f}) to resolve.")
 
 
 if __name__ == "__main__":
