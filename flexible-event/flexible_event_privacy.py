@@ -100,14 +100,18 @@ def max_information_gain(num_states: int, epsilon: float):
                                             flip_prob*(num_states-1)/num_states)
 
 
-def get_config(json: dict) -> ApiConfig:
-    max_event_level_reports = json.get('max_event_level_reports', 20)
+def get_config(json: dict, source_type: str) -> ApiConfig:
+    default_max_reports = 3 if source_type == "navigation" else 1
+    max_event_level_reports = json.get('max_event_level_reports', default_max_reports)
     per_trigger_data_configs = []
     for spec in json['trigger_specs']:
         num_data_types = len(spec['trigger_data'])
         num_windows = len(spec['event_report_windows']['end_times'])
+
+        # Technically this can be larger, but we will always be constrained
+        # by `max_event_level_reports`.
         num_buckets = len(spec['summary_buckets']
-                          ) if 'summary_buckets' in spec else 20
+                          ) if 'summary_buckets' in spec else max_event_level_reports
         per_trigger_data_configs.extend(
             [(num_windows, num_buckets)] * num_data_types)
 
@@ -118,7 +122,7 @@ NAVIGATION_DEFAULT_CONFIG = ApiConfig(3, [(3, 3)] * 8)
 EVENT_DEFAULT_CONFIG = ApiConfig(1, [(1, 1)] * 2)
 
 
-def print_config_data(config: ApiConfig, epsilon):
+def print_config_data(config: ApiConfig, epsilon: float, source_type: str):
     num_states = num_flexible_states(config)
     info_gain = max_information_gain(num_states, epsilon)
     flip_prob = flip_probability_dp(num_states, epsilon)
@@ -131,10 +135,10 @@ def print_config_data(config: ApiConfig, epsilon):
         num_flexible_states(NAVIGATION_DEFAULT_CONFIG), args.epsilon)
     info_gain_default_event = max_information_gain(
         num_flexible_states(EVENT_DEFAULT_CONFIG), args.epsilon)
-    if info_gain > info_gain_default_nav:
+    if source_type == "navigation" and info_gain > info_gain_default_nav:
         print(
             f"WARNING: info gain of {info_gain:.2f} > {info_gain_default_nav:.2f} for navigation sources")
-    if info_gain > info_gain_default_event:
+    if source_type == "event" and info_gain > info_gain_default_event:
         print(
             f"WARNING: info gain of {info_gain:.2f} > {info_gain_default_event:.2f} for event sources")
 
@@ -164,6 +168,13 @@ if __name__ == "__main__":
                         type=int, default=20)
     parser.add_argument('-e', '--epsilon', type=float, default=14)
 
+    TYPE_HELP = '''\
+  Enum representing whether this source is a navigation or event source. Defaults to
+  a navigation source.
+  '''
+    parser.add_argument('-t', '--source_type',
+                        choices=["event", "navigation"], default="navigation")
+
     def comma_separated_ints(string):
         return [int(i) for i in string.split(',')]
 
@@ -190,4 +201,4 @@ if __name__ == "__main__":
             args.max_event_level_reports, per_trigger_configs)
     else:
         api_config = get_config(json.load(sys.stdin))
-    print_config_data(api_config, args.epsilon)
+    print_config_data(api_config, args.epsilon, args.source_type)
