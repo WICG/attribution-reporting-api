@@ -707,6 +707,16 @@ A <dfn>filter value</dfn> is an [=ordered set=] of [=strings=].
 A <dfn>filter map</dfn> is an [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
 [=map/value|values=] are [=filter values=].
 
+A <dfn>filter config</dfn> is a [=struct=] with the following items:
+
+<dl dfn-for="filter config">
+: <dfn>map</dfn>
+:: A [=filter map=].
+: <dfn>lookback window</dfn>
+:: A [=duration=].
+
+</dl>
+
 <h3 dfn-type=dfn>Suitable origin</h3>
 
 A suitable origin is an [=origin=] that is [=check if an origin is suitable|suitable=].
@@ -826,9 +836,9 @@ An aggregatable trigger data is a [=struct=] with the following items:
 : <dfn>source keys</dfn>
 :: An [=ordered set=] of [=strings=].
 : <dfn>filters</dfn>
-:: A [=list=] of [=filter maps=].
+:: A [=list=] of [=filter configs=].
 : <dfn>negated filters</dfn>
-:: A [=list=] of [=filter maps=].
+:: A [=list=] of [=filter configs=].
 
 </dl>
 
@@ -840,9 +850,9 @@ An aggregatable dedup key is a [=struct=] with the following items:
 : <dfn>dedup key</dfn>
 :: Null or a non-negative 64-bit integer.
 : <dfn>filters</dfn>
-:: A [=filter map=].
+:: A [=filter config=].
 : <dfn>negated filters</dfn>
-:: A [=filter map=].
+:: A [=filter config=].
 
 </dl>
 
@@ -858,9 +868,9 @@ An event-level trigger configuration is a [=struct=] with the following items:
 : <dfn>priority</dfn>
 :: A 64-bit integer.
 : <dfn>filters</dfn>
-:: A [=list=] of [=filter maps=].
+:: A [=list=] of [=filter configs=].
 : <dfn>negated filters</dfn>
-:: A [=list=] of [=filter maps=].
+:: A [=list=] of [=filter configs=].
 
 </dl>
 
@@ -894,9 +904,9 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>reporting origin</dfn>
 :: A [=suitable origin=].
 : <dfn>filters</dfn>
-:: A [=list=] of [=filter maps=].
+:: A [=list=] of [=filter configs=].
 : <dfn>negated filters</dfn>
-:: A [=list=] of [=filter maps=].
+:: A [=list=] of [=filter configs=].
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
 : <dfn>event-level trigger configurations</dfn>
@@ -1394,21 +1404,40 @@ To <dfn>parse filter data</dfn> given a |value|:
 Issue: Determine whether to limit [=string/length=] or
 [=string/code point length=] for |filter| and |d| above.
 
+To <dfn>parse filter config</dfn> given a |value|:
+
+1. If |value| is not a [=map=], return null.
+1. Let |lookbackWindow| be null.
+1. [=map/iterate|For each=] |filter| → |data| of |value|:
+    1. If |filter| is not equal to "`lookback-window`", [=iteration/continue=].
+    1. If |value| is not a non-negative integer, return null.
+    1. Set |lookbackWindow| to |value|.
+    1. [=map/Remove=] |value|[|filter|].
+    1. [=iteration/Break=].
+1. Let |map| be the result of running [=parse filter data=] with |value|.
+1. If |map| is null, return null.
+1. Let |filter| be a [=filter config=] with the items:
+        : [=filter config/map=]
+        :: |map|
+        : [=filter config/lookback window=]
+        :: |lookbackWindow|
+1. Return |filter|.
+
 <h3 id="parsing-filters">Parsing filters</h3>
 
 To <dfn>parse filters</dfn> given a |value|:
 
 1. Let |filtersList| be a new [=list=].
 1. If |value| is a [=map=], then:
-    1. Let |filterMap| be the result of running [=parse filter values=] with |value|.
-    1. If |filterMap| is null, return null.
-    1. [=list/Append=] |filterMap| to |filtersList|.
+    1. Let |filterConfig| be the result of running [=parse filter config=] with |value|.
+    1. If |filterConfig| is null, return null.
+    1. [=list/Append=] |filterConfig| to |filtersList|.
     1. Return |filtersList|.
 1. If |value| is not a [=list=], return null.
 1. [=list/iterate|For each=] |data| of |value|:
-    1. Let |filterMap| be the result of running [=parse filter values=] with |data|.
-    1. If |filterMap| is null, return null.
-    1. [=list/Append=] |filterMap| to |filtersList|.
+    1. Let |filterConfig| be the result of running [=parse filter config=] with |data|.
+    1. If |filterConfig| is null, return null.
+    1. [=list/Append=] |filterConfig| to |filtersList|.
 1. Return |filtersList|.
 
 <h3 id="debug-keys">Cookie-based debugging</h3>
@@ -2200,12 +2229,12 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
         [=parse an optional 64-bit signed integer=] with |value|, "`priority`",
         and 0.
     1. If |priority| is an error, return null.
-    1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
+    1. Let |filters| be a [=list=] of [=filter configs=], initially empty.
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filters=] with
             |value|["`filters`"].
         1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a [=list=] of [=filter maps=], initially empty.
+    1. Let |negatedFilters| be a [=list=] of [=filter configs=], initially empty.
     1. If |value|["`not_filters`"] [=map/exists=]:
         1. Set |negatedFilters| to the result of running [=parse filters=]
             with |value|["`not_filters`"].
@@ -2244,12 +2273,12 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
         1. [=list/iterate|For each=] |sourceKey| of |value|["`source_keys`"]:
             1. If |sourceKey| is not a [=string=], return null.
             1. [=set/Append=] |sourceKey| to |sourceKeys|.
-    1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
+    1. Let |filters| be a [=list=] of [=filter configs=], initially empty.
     1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filters=] with
             |value|["`filters`"].
         1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a [=list=] of [=filter maps=], initially empty.
+    1. Let |negatedFilters| be a [=list=] of [=filter configs=], initially empty.
     1. If |value|["`not_filters`"] [=map/exists=]:
         1. Set |negatedFilters| to the result of running [=parse filters=]
             with |value|["`not_filters`"].
@@ -2295,13 +2324,13 @@ To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
         [=parse an optional 64-bit unsigned integer=] with |value|,
         "`deduplication_key`", and null.
     1. If |dedupKey| is an error, return null.
-    1. Let |filters| be a new [=filter map=].
+    1. Let |filters| be a new [=filter config=].
     1. If |values|["`filters`"] [=map/exists=]:
-        1. Set |filters| to the result of running [=parse filter data=] with |value|["`filters`"].
+        1. Set |filters| to the result of running [=parse filter config=] with |value|["`filters`"].
         1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a new [=filter map=].
+    1. Let |negatedFilters| be a new [=filter config=].
     1. If |values|["`not_filters`"] [=map/exists=]:
-        1. Set |negatedFilters| to the result of running [=parse filter data=] with |value|["`not_filters`"].
+        1. Set |negatedFilters| to the result of running [=parse filter config=] with |value|["`not_filters`"].
         1. If |negatedFilters| is null, return null.
     1. Let  |aggregatableDedupKey| be a new [=aggregatable dedup key=] with the items:
         : [=aggregatable dedup key/dedup key=]
@@ -2354,12 +2383,12 @@ and a [=moment=] |triggerTime|:
 1. If |debugKey| is an error, set |debugKey| to null.
 1. If the result of running [=check if cookie-based debugging is allowed=] with
     |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
-1. Let |filters| be a [=list=] of [=filter maps=], initially empty.
+1. Let |filters| be a [=list=] of [=filter configs=], initially empty.
 1. If |value|["`filters`"] exists:
     1. Set |filters| to the result of running [=parse filters=] with
         |value|["`filters`"].
     1. If |filters| is null, return null.
-1. Let |negatedFilters| be a [=list=] of [=filter maps=], initially empty.
+1. Let |negatedFilters| be a [=list=] of [=filter configs=], initially empty.
 1. If |value|["`not_filters`"] exists:
     1. Set |negatedFilters| to the result of running [=parse filters=] with
         |value|["`not_filters`"].
@@ -2435,12 +2464,18 @@ To <dfn>match [=filter values=] with negation</dfn> given a [=filter value=] |a|
 1. If |i| is not [=set/is empty|empty=], then return false.
 1. Return true.
 
-To <dfn>match an attribution source's filter data against a filter map</dfn> given an
-[=attribution source=] |source|, a [=filter map=] |filter|, and a [=boolean=]
-<dfn for="match an attribution source's filter data against a filter map"><var>isNegated</var></dfn>:
+To <dfn>match an attribution source's filter data against a filter config</dfn> given an
+[=attribution source=] |source|, a [=filter config=] |filter|, and a [=boolean=]
+<dfn for="match an attribution source's filter data against a filter config"><var>isNegated</var></dfn>:
 
+1. Let |lookbackWindow| be |filter|'s [=filter config/lookback window=].
+1. If |lookbackWindow| is not null:
+    1. If [=current wall time=] - |source|'s [=attribution source/source time=] is less than |lookbackWindow|:
+        1. If |isNegated|, return false. Otherwise, return true. 
+
+1. Let |filterMap| be |filter|'s [=filter config/map=].
 1. Let |sourceData| be |source|'s [=attribution source/filter data=].
-1. [=map/iterate|For each=] |key| → |filterValues| of |filter|:
+1. [=map/iterate|For each=] |key| → |filterValues| of |filterMap|:
     1. If |sourceData|[|key|] does not [=map/exist=], [=iteration/continue=].
     1. Let |sourceValues| be |sourceData|[|key|].
     1. If |isNegated| is:
@@ -2456,16 +2491,16 @@ To <dfn>match an attribution source's filter data against a filter map</dfn> giv
 1. Return true.
 
 To <dfn>match an attribution source's filter data against filters</dfn> given an
-[=attribution source=] |source|, a [=list=] of [=filter maps=] |filters|, and a [=boolean=]
+[=attribution source=] |source|, a [=list=] of [=filter configs=] |filters|, and a [=boolean=]
 <dfn for="match an attribution source's filter data against filters"><var>isNegated</var></dfn>:
 
 1. If |filters| [=list/is empty=], return true.
 1. [=list/iterate|For each=] |filter| of |filters|:
-    1. If the result of running [=match an attribution source's filter data against a filter map=] with |source|, |filter| and |isNegated| is true, return true.
+    1. If the result of running [=match an attribution source's filter data against a filter config=] with |source|, |filter| and |isNegated| is true, return true.
 1. Return false.
 
 To <dfn>match an attribution source's filter data against filters and negated filters</dfn> given an
-[=attribution source=] |source|, a [=list=] of [=filter maps=] |filters|, and a [=list=] of [=filter maps=] |notFilters|:
+[=attribution source=] |source|, a [=list=] of [=filter configs=] |filters|, and a [=list=] of [=filter configs=] |notFilters|:
 
 1. If the result of running [=match an attribution source's filter data against filters=] with
     |source|, |filters|, and [=match an attribution source's filter data against filters/isNegated=] set to false is false, return false.
