@@ -425,7 +425,7 @@ recipient after the header has been parsed as a structured dictionary:
 Attribution-Reporting-Eligible: not-event-source, trigger=event-source;navigation-source=3
 </pre>
 
-To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|,
+To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|
 and an [=origin=] |contextOrigin|:
 
 1. Let |headers| be |request|'s [=request/header list=].
@@ -446,8 +446,8 @@ and an [=origin=] |contextOrigin|:
     :: [=list/Append=] "<code>[=eligible key/navigation-source=]</code>" to
         |keys|.
     : "<code>[=eligibility/trigger=]</code>"
-    :: [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
-    :: [=Set trigger verification request headers=] with |request| and |contextOrigin|.
+    :: 1. [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
+    :: 1. [=Set trigger verification request headers=] with |request| and |contextOrigin|.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
         "<code>[=eligible key/trigger=]</code>" to |keys|.
@@ -469,7 +469,7 @@ After the step
 
 add the step
 
-1. [=Set Attribution Reporting headers=] with |request|, and |document|'s [=node/context origin=].
+1. [=Set Attribution Reporting headers=] with |request| and |document|'s [=node/context origin=].
 
 Modify {{Request/constructor(input, init)}} as follows:
 
@@ -516,6 +516,8 @@ steps:
 
 Modify {{XMLHttpRequest/send(body)}} as follows:
 
+Add a [=Document=] parameter called |document|.
+
 After the step:
 
 > Let |req| be a new [=request=], initialized as follows...
@@ -524,7 +526,7 @@ Add the step:
 
 1. Set |req|'s [=request/Attribution Reporting eligibility=] to <a>this</a>'s <a href=#xmlhttprequest-eligibility>Attribution Reporting
     eligibility</a>.
-1. [=Set Attribution Reporting headers=] with |req|.
+1. [=Set Attribution Reporting headers=] with |req| and |document|'s [=node/context origin=].
 
 # Fenced Frame monkeypatches # {#fenced-frame-monkeypatches}
 
@@ -1128,10 +1130,10 @@ A trigger verification is a [=struct=] with the following items:
 A trigger verification metadata is a [=struct=] with the following items:
 
 <dl dfn-for="trigger verification metadata">
-    : <dfn>pretokens</dfn>
-    :: A [=byte sequence=].
-    : <dfn>ids</dfn>
-    :: A [=list=] of [=string=] generated using [=generating a random UUID=].
+: <dfn>pretokens</dfn>
+:: A [=byte sequence=].
+: <dfn>IDs</dfn>
+:: A [=list=] of [=string=] generated using [=generating a random UUID=].
 
 </dl>
 
@@ -1687,7 +1689,7 @@ To <dfn>process an attribution eligible response</dfn> given a [=suitable origin
             1. Let |destinationSite| be the result of [=obtaining a site=] from
                 |contextOrigin|.
             1. Let |triggerVerifications| be the result of [=receiving trigger verification tokens=] 
-                with |response|'s [=response/URL=] [=url/origin=], |response|'s [=response/header list=],
+                with |response|'s [=response/URL=]'s [=url/origin=], |response|'s [=response/header list=],
                 and |triggerVerificationMetadata|.
             1. Let |trigger| be the result of running
                 [=create an attribution trigger=] with |triggerHeader|
@@ -3564,33 +3566,33 @@ and a [=suitable origin=] |destination|:
 1. Let |request|'s [=request/trigger verification metadata=] be a [=trigger verification metadata=] with the items:
     : [=trigger verification metadata/pretokens=]
     :: |pretokens|
-    : [=trigger verification metadata/ids=]
+    : [=trigger verification metadata/IDs=]
     :: |ids|
 1. [=header list/Set a structured field value=] given
-    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", the result of [=structured header/serializing a list=] with |base64EncodedMaskedMessages|)
+    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", |base64EncodedMaskedMessages|)
     in |request|'s [=request/header list=].
 1. [=header list/Set a structured field value=] given
-    ("<code>[=Sec-Private-State-Token-Crypto-Version=]</code>", the result of [=structured header/serializing a string=] with |cryptoProtocolVersion|)
+    ("<code>[=Sec-Private-State-Token-Crypto-Version=]</code>", |cryptoProtocolVersion|)
     in |request|'s [=request/header list=].
 
-Issue: Link to a generating masked tokens algorithm that receive messages.
+Issue: Link to a generating masked tokens algorithm that receives messages.
 
 <h3 id="handle-trigger-verification">Handle trigger verification</h3>
 
 To <dfn noexport>receive trigger verification tokens</dfn> given an
-[=url/origin=] |issuer|, a [=header list=], |headers| and a
+[=url/origin=] |issuer|, a [=header list=], |headers|, and a
 [=request/trigger verification metadata=] |metadata|:
 
 1. If |metadata| is null, return a new [=list=].
-1. If |metadata|'s [=trigger verification metadata/ids=] [=list/size=] is not equal to [=verification tokens per trigger=], return a new [=list=].
+1. If |metadata|'s [=trigger verification metadata/IDs=]'s [=list/size=] is not equal to [=verification tokens per trigger=], return a new [=list=].
 1. Let |pretokens| be |metadata|'s [=trigger verification metadata/pretokens=].
 1. Let |issuerKeys| be the result of [=looking up the key commitments=] for |issuer|.
 1. If |issuerKeys| is null, return a new [=list=].
 1. Let |fieldValue| be the result of [=header list/getting a structured field value=] given
-    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", "list") from |response|'s [=response/header list=].
+    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", "`list`") from |response|'s [=response/header list=].
 1. Let |base64EncodedMaskedTokens| be the result of [=structured header/parsing a list=] with |fieldValue|.
-1. [=header list/delete|Delete=] "<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>"" from |response|'s [=response/header list=].
-1. If |base64EncodedMaskedTokens|'s [=list/size=] is greater than |metadata|'s [=trigger verification metadata/ids=] [=list/size=], return a new [=list=].
+1. [=header list/delete|Delete=] "<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>" from |response|'s [=response/header list=].
+1. If |base64EncodedMaskedTokens|'s [=list/size=] is greater than |metadata|'s [=trigger verification metadata/IDs=]'s [=list/size=], return a new [=list=].
 1. Let |base64EncodedPrivateStateTokens| be a new [=list=].
 1. [=list/iterate|For each=] |base64EncodedMaskedToken| of |base64EncodedMaskedTokens|:
     1. Let |base64EncodedMaskedTokenValue| be the result of [=structured header/parsing a string=] with |base64EncodedMaskedToken|.
@@ -3607,7 +3609,7 @@ To <dfn noexport>receive trigger verification tokens</dfn> given an
         : [=trigger verification/token=]
         :: |base64EncodedPrivateStateTokens|[i]
         : [=trigger verification/id=]
-        :: |metadata|'s [=trigger verification metadata/ids=][i]
+        :: |metadata|'s [=trigger verification metadata/IDs=][i]
     1. [=list/Append=] |triggerVerification| to |triggerVerifications|.
 1. Return |triggerVerifications|.
 
