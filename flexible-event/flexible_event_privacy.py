@@ -108,7 +108,7 @@ def get_config(json: dict, source_type: str) -> ApiConfig:
         num_data_types = len(spec['trigger_data'])
         num_windows = len(spec['event_report_windows']['end_times'])
 
-        # Technically this can be larger, but we will always be constrainted
+        # Technically this can be larger, but we will always be constrained
         # by `max_event_level_reports`.
         num_buckets = len(spec['summary_buckets']
                           ) if 'summary_buckets' in spec else max_event_level_reports
