@@ -164,7 +164,7 @@ def print_config_data(config: ApiConfig, epsilon: float, source_type: str):
     if source_type == "navigation" and info_gain > info_gain_default_nav:
         new_eps, flip_prob = epsilon_to_bound_info_gain_and_dp(num_states, info_gain_default_nav, args.epsilon)
         print(
-            f"WARNING: info gain of {info_gain:.2f} > {info_gain_default_nav:.2f} for navigation sources. Would require a {100 * flip_prob:.5f}% flip chance (effective epsilon = {new_eps:.3f}) resolve.")
+            f"WARNING: info gain of {info_gain:.2f} > {info_gain_default_nav:.2f} for navigation sources. Would require a {100 * flip_prob:.5f}% flip chance (effective epsilon = {new_eps:.3f}) to resolve.")
     if source_type == "event" and info_gain > info_gain_default_event:
         new_eps, flip_prob = epsilon_to_bound_info_gain_and_dp(num_states, info_gain_default_event, args.epsilon)
         print(
