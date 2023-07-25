@@ -255,14 +255,21 @@ export const testCases = [
   },
 
   {
-    name: "aggregatable-report-window-wrong-type",
+    name: "aggregatable-report-window-integer",
     json: `{
       "destination": "https://a.test",
       "aggregatable_report_window": 1
     }`,
+  },
+  {
+    name: "aggregatable-report-window-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "aggregatable_report_window": false
+    }`,
     expectedErrors: [{
       path: ["aggregatable_report_window"],
-      msg: "must be a string",
+      msg: "must be a non-negative integer or a string",
     }],
   },
   {
@@ -287,16 +294,34 @@ export const testCases = [
       msg: "must be a uint64 (must match /^[0-9]+$/)",
     }],
   },
+  {
+    name: "aggregatable-report-window-integer-wrong-sign",
+    json: `{
+      "destination": "https://a.test",
+      "aggregatable_report_window": -1
+    }`,
+    expectedErrors: [{
+      path: ["aggregatable_report_window"],
+      msg: "must be a non-negative integer",
+    }],
+  },
 
   {
-    name: "event-report-window-wrong-type",
+    name: "event-report-window-integer",
     json: `{
       "destination": "https://a.test",
       "event_report_window": 1
     }`,
+  },
+  {
+    name: "event-report-window-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "event_report_window": false
+    }`,
     expectedErrors: [{
       path: ["event_report_window"],
-      msg: "must be a string",
+      msg: "must be a non-negative integer or a string",
     }],
   },
   {
@@ -322,14 +347,32 @@ export const testCases = [
     }],
   },
   {
-    name: "expiry-wrong-type",
+    name: "event-report-window-integer-wrong-sign",
+    json: `{
+      "destination": "https://a.test",
+      "event_report_window": -1
+    }`,
+    expectedErrors: [{
+      path: ["event_report_window"],
+      msg: "must be a non-negative integer",
+    }],
+  },
+  {
+    name: "expiry-integer",
     json: `{
       "destination": "https://a.test",
       "expiry": 1
     }`,
+  },
+  {
+    name: "expiry-wrong-type",
+    json: `{
+      "destination": "https://a.test",
+      "expiry": false
+    }`,
     expectedErrors: [{
       path: ["expiry"],
-      msg: "must be a string",
+      msg: "must be a non-negative integer or a string",
     }],
   },
   {
@@ -352,6 +395,17 @@ export const testCases = [
     expectedErrors: [{
       path: ["expiry"],
       msg: "must be a uint64 (must match /^[0-9]+$/)",
+    }],
+  },
+  {
+    name: "expiry-integer-wrong-sign",
+    json: `{
+      "destination": "https://a.test",
+      "expiry": -1
+    }`,
+    expectedErrors: [{
+      path: ["expiry"],
+      msg: "must be a non-negative integer",
     }],
   },
 
