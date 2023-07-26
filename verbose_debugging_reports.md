@@ -139,6 +139,7 @@ This table defines the fields in the `body` dictionary.
 | [`trigger-event-no-matching-configurations`](#trigger-event-no-matching-configurations) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-noise`](#trigger-event-noise) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-storage-limit`](#trigger-event-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [`trigger-event-report-window-not-started`](#trigger-event-report-window-not-started) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-report-window-passed`](#trigger-event-report-window-passed) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-aggregate-deduplicated`](#trigger-aggregate-deduplicated) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-aggregate-excessive-reports`](#trigger-aggregate-excessive-reports) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
@@ -147,5 +148,3 @@ This table defines the fields in the `body` dictionary.
 | [`trigger-aggregate-storage-limit`](#trigger-aggregate-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-aggregate-report-window-passed`](#trigger-aggregate-report-window-passed) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-unknown-error`](#trigger-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-
-
