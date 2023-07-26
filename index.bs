@@ -713,7 +713,7 @@ A <dfn>filter config</dfn> is a [=struct=] with the following items:
 : <dfn>map</dfn>
 :: A [=filter map=].
 : <dfn>lookback window</dfn>
-:: A [=duration=].
+:: Null or a positive [=duration=].
 
 </dl>
 
@@ -1408,12 +1408,10 @@ To <dfn>parse filter config</dfn> given a |value|:
 
 1. If |value| is not a [=map=], return null.
 1. Let |lookbackWindow| be null.
-1. [=map/iterate|For each=] |filter| → |data| of |value|:
-    1. If |filter| is not equal to "`lookback-window`", [=iteration/continue=].
-    1. If |value| is not a non-negative integer, return null.
-    1. Set |lookbackWindow| to |value|.
-    1. [=map/Remove=] |value|[|filter|].
-    1. [=iteration/Break=].
+1. If |value|["`lookback-window`"] [=map/exists=]:
+    1. If |value|["`lookback_window`""] is not a non-negative integer, return null.
+    1. Let |lookbackWindow| be |value|["`lookback_window`""].
+    1. [=map/Remove=] |value|["`lookback_window`""].
 1. Let |map| be the result of running [=parse filter values=] with |value|.
 1. If |map| is null, return null.
 1. Let |filter| be a [=filter config=] with the items:
@@ -2465,12 +2463,12 @@ To <dfn>match [=filter values=] with negation</dfn> given a [=filter value=] |a|
 1. Return true.
 
 To <dfn>match an attribution source's filter data against a filter config</dfn> given an
-[=attribution source=] |source|, a [=filter config=] |filter|, and a [=boolean=]
+[=attribution source=] |source|, a [=filter config=] |filter|, a [=moment=] moment, and a [=boolean=]
 <dfn for="match an attribution source's filter data against a filter config"><var>isNegated</var></dfn>:
 
 1. Let |lookbackWindow| be |filter|'s [=filter config/lookback window=].
 1. If |lookbackWindow| is not null:
-    1. If [=current wall time=] - |source|'s [=attribution source/source time=] is greater than |lookbackWindow|:
+    1. If |moment| - |source|'s [=attribution source/source time=] is greater than |lookbackWindow|:
         1. If |isNegated|, return true. Otherwise, return false. 
 
 1. Let |filterMap| be |filter|'s [=filter config/map=].
@@ -2491,21 +2489,21 @@ To <dfn>match an attribution source's filter data against a filter config</dfn> 
 1. Return true.
 
 To <dfn>match an attribution source's filter data against filters</dfn> given an
-[=attribution source=] |source|, a [=list=] of [=filter configs=] |filters|, and a [=boolean=]
+[=attribution source=] |source|, a [=list=] of [=filter configs=] |filters|, a [=moment=] |moment|, and a [=boolean=]
 <dfn for="match an attribution source's filter data against filters"><var>isNegated</var></dfn>:
 
 1. If |filters| [=list/is empty=], return true.
 1. [=list/iterate|For each=] |filter| of |filters|:
-    1. If the result of running [=match an attribution source's filter data against a filter config=] with |source|, |filter| and |isNegated| is true, return true.
+    1. If the result of running [=match an attribution source's filter data against a filter config=] with |source|, |filter|, |moment|, and |isNegated| is true, return true.
 1. Return false.
 
 To <dfn>match an attribution source's filter data against filters and negated filters</dfn> given an
-[=attribution source=] |source|, a [=list=] of [=filter configs=] |filters|, and a [=list=] of [=filter configs=] |notFilters|:
+[=attribution source=] |source|, a [=list=] of [=filter configs=] |filters|, a [=list=] of [=filter configs=] |notFilters|, and a [=moment=] |moment|:
 
 1. If the result of running [=match an attribution source's filter data against filters=] with
-    |source|, |filters|, and [=match an attribution source's filter data against filters/isNegated=] set to false is false, return false.
+    |source|, |filters|, |moment|, and [=match an attribution source's filter data against filters/isNegated=] set to false is false, return false.
 1. If the result of running [=match an attribution source's filter data against filters=] with
-    |source|, |notFilters|, and [=match an attribution source's filter data against filters/isNegated=] set to true is false, return false.
+    |source|, |notFilters|, |moment|, and [=match an attribution source's filter data against filters/isNegated=] set to true is false, return false.
 1. Return true.
 
 <h3 dfn id="should-block-attribution-for-attribution-limit">Should attribution be blocked by attribution rate limit</h3>
@@ -2576,9 +2574,10 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
 1. Let |aggregationKeys| be the result of [=map/clone|cloning=] |source|'s [=attribution source/aggregation keys=].
 1. [=list/iterate|For each=] |triggerData| of |trigger|'s [=attribution trigger/aggregatable trigger data=]:
     1. If the result of running [=match an attribution source's filter data against filters and negated filters=] with
-        |source|, |triggerData|'s [=aggregatable trigger data/filters=], and
-        |triggerData|'s [=aggregatable trigger data/negated filters=]
-        is false, [=iteration/continue=].
+        |source|, |triggerData|'s [=aggregatable trigger data/filters=],
+        |triggerData|'s [=aggregatable trigger data/negated filters=], and
+        |trigger|'s [=attribution trigger/trigger time=]
+        is false, [=iteration/continue=]:
     1. [=set/iterate|For each=] |sourceKey| of |triggerData|'s [=aggregatable trigger data/source keys=]:
         1. If |aggregationKeys|[|sourceKey|] does not [=map/exist=], [=iteration/continue=].
         1. [=map/Set=] |aggregationKeys|[|sourceKey|] to |aggregationKeys|[|sourceKey|] bitwise-OR |triggerData|'s
@@ -2703,8 +2702,9 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     [=attribution trigger/event-level trigger configurations=]:
     1. If the result of running
         [=match an attribution source's filter data against filters and negated filters=] with |sourceToAttribute|,
-        |config|'s [=event-level trigger configuration/filters=], and
-        |config|'s [=event-level trigger configuration/negated filters=] is true:
+        |config|'s [=event-level trigger configuration/filters=],
+        |config|'s [=event-level trigger configuration/negated filters=], and
+        |trigger|'s [=attribution trigger/trigger time=] is true:
         1. Set |matchedConfig| to |config|.
         1. [=iteration/Break=].
 1. If |matchedConfig| is null:
@@ -2796,8 +2796,9 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. Let |matchedDedupKey| be null.
 1. [=list/iterate|For each=] [=aggregatable dedup key=] |aggregatableDedupKey| of |trigger|'s [=attribution trigger/aggregatable dedup keys=]:
     1. If the result of running [=match an attribution source's filter data against filters and negated filters=]
-        with |sourceToAttribute|, |aggregatableDedupKey|'s [=aggregatable dedup key/filters=], and
-        |aggregatableDedupKey|'s [=aggregatable dedup key/negated filters=] is true:
+        with |sourceToAttribute|, |aggregatableDedupKey|'s [=aggregatable dedup key/filters=],
+        |aggregatableDedupKey|'s [=aggregatable dedup key/negated filters=], and 
+        |trigger|'s [=attribution trigger/trigger time=] is true:
         1. Set |matchedDedupKey| to |aggregatableDedupKey|'s [=aggregatable dedup key/dedup key=].
         1. [=iteration/Break=].
 1. If |matchedDedupKey| is not null and |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=]
@@ -2895,8 +2896,9 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
 1. Let |sourceToAttribute| be |matchingSources|[0].
 1. If the result of running
     [=match an attribution source's filter data against filters and negated filters=] with
-    |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=], and
-    |trigger|'s [=attribution trigger/negated filters=] is false,
+    |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=],
+    |trigger|'s [=attribution trigger/negated filters=], and 
+    |trigger|'s [=attribution trigger/trigger time=] is false:
     1. Run [=obtain and deliver a debug report on trigger registration=]
         with "<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>",
         |trigger|, and |sourceToAttribute|.
