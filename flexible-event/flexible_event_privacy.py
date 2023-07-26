@@ -128,11 +128,13 @@ def epsilon_to_bound_info_gain_and_dp(num_states: int, info_gain_upper_bound: fl
 
 def get_config(json: dict, source_type: str) -> ApiConfig:
     default_max_reports = 3 if source_type == "navigation" else 1
+    default_windows = 3 if source_type == "navigation" else 1
     max_event_level_reports = json.get('max_event_level_reports', default_max_reports)
+    top_level_num_windows = len(json.get('event_report_windows')['end_times']) if 'event_report_windows' in json else default_windows
     per_trigger_data_configs = []
     for spec in json['trigger_specs']:
         num_data_types = len(spec['trigger_data'])
-        num_windows = len(spec['event_report_windows']['end_times'])
+        num_windows = len(spec['event_report_windows']['end_times']) if 'event_report_windows' in spec else top_level_num_windows
 
         # Technically this can be larger, but we will always be constrained
         # by `max_event_level_reports`.
