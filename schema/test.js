@@ -34,6 +34,50 @@ const sourceCases = [
       }
     ],
   },
+  {
+    name: 'integer-expiry',
+    object: {
+      destination: '',
+      expiry: 3,
+    },
+  },
+  {
+    name: 'string-expiry',
+    object: {
+      destination: '',
+      expiry: '3',
+    },
+  },
+  {
+    name: 'invalid-expiry',
+    object: {
+      destination: '',
+      expiry: -3,
+    },
+    errors: [
+      {
+        instancePath: '/expiry',
+        schemaPath: '#/$defs/non_negative_integer/minimum',
+        keyword: 'minimum',
+        params: { comparison: '>=', limit: 0 },
+        message: 'must be >= 0'
+      },
+      {
+        instancePath: '/expiry',
+        schemaPath: '#/$defs/unsigned_duration_in_seconds/type',
+        keyword: 'type',
+        params: { type: 'string' },
+        message: 'must be string'
+      },
+      {
+        instancePath: '/expiry',
+        schemaPath: '#/oneOf',
+        keyword: 'oneOf',
+        params: { passingSchemas: null },
+        message: 'must match exactly one schema in oneOf'
+      }
+    ],
+  },
 ]
 
 // TODO: add coverage of all requirements

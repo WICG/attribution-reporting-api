@@ -247,6 +247,16 @@ const eventReportWindows = (state, value) => {
   });
 }
 
+const legacyDuration = (state, value) => {
+  if (typeof value === 'number') {
+    return nonNegativeInteger(state, value)
+  }
+  if (typeof value === 'string') {
+    return uint64(state, value)
+  }
+  state.error('must be a non-negative integer or a string')
+}
+
 const listOrObject = (f = () => {}, listMaxLength, listMinLength) => {
   return (state, value, key) => {
     if (isObject(value)) {
@@ -287,14 +297,14 @@ const aggregationKeys = object((state, key, value) => {
 export function validateSource(source) {
   const state = new State()
   state.validate(source, {
-    aggregatable_report_window: optional(uint64),
-    event_report_window: optional(uint64),
+    aggregatable_report_window: optional(legacyDuration),
+    event_report_window: optional(legacyDuration),
     event_report_windows: optional(eventReportWindows),
     aggregation_keys: optional(aggregationKeys),
     debug_key: optional(uint64),
     debug_reporting: optional(bool),
     destination: required(destinationValue),
-    expiry: optional(uint64),
+    expiry: optional(legacyDuration),
     filter_data: optional(filterData()),
     priority: optional(int64),
     source_event_id: optional(uint64),
