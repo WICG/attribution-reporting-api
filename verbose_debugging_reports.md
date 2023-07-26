@@ -67,6 +67,9 @@ An event-level report is dropped as the [maximum number of reports](https://gith
 #### `trigger-event-storage-limit`
 An event-level report is not created due to the [storage limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#storage-limits).
 
+#### `trigger-event-report-window-not-started`
+An event-level report is not created as the [report window](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#registering-attribution-sources) has not started.
+
 #### `trigger-event-report-window-passed`
 An event-level report is not created as the [report window](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#registering-attribution-sources) has passed.
 

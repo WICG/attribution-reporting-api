@@ -1059,6 +1059,7 @@ Possible values are:
 <li>"<dfn><code>trigger-event-low-priority</code></dfn>"
 <li>"<dfn><code>trigger-event-no-matching-configurations</code></dfn>"
 <li>"<dfn><code>trigger-event-noise</code></dfn>"
+<li>"<dfn><code>trigger-event-report-window-not-started</code></dfn>"
 <li>"<dfn><code>trigger-event-report-window-passed</code></dfn>"
 <li>"<dfn><code>trigger-event-storage-limit</code></dfn>"
 <li>"<dfn><code>trigger-no-matching-source</code></dfn>"
@@ -2657,12 +2658,20 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
         with "<code>[=trigger debug data type/trigger-event-noise=]</code>", |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If |trigger|'s [=attribution trigger/trigger time=] does not [=check whether a moment falls within a window|fall within=]
-    |sourceToAttribute|'s [=attribution source/total event-level report window=]:
+1. Let |windowResult| be the result of [=check whether a moment falls within a window=]
+    with |trigger|'s [=attribution trigger/trigger time=] and
+    |sourceToAttribute|'s [=attribution source/total event-level report window=].
+1. If |windowResult| is <strong>not started</strong>:
+    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+        with "<code>[=trigger debug data type/trigger-event-report-window-not-started=]</code>",
+        |trigger|, |sourceToAttribute| and [=obtain debug data on trigger registration/report=] set to null.
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+1. If |windowResult| is <strong>passed</strong>:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-event-report-window-passed=]</code>",
         |trigger|, |sourceToAttribute| and [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+1. [=Assert=]: |windowResult| is <strong>active</strong>.
 1. Let |matchedConfig| be null.
 1. [=set/iterate|For each=] [=event-level trigger configuration=] |config| of |trigger|'s
     [=attribution trigger/event-level trigger configurations=]:
@@ -2752,12 +2761,14 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 
 1. If the result of running [=check if an attribution trigger contains aggregatable data=] is false,
     return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
-1. |trigger|'s [=attribution trigger/trigger time=] does not [=check whether a moment falls within a window|fall within=]
-    |sourceToAttribute|'s [=attribution source/aggregatable report window=]:
+1. Let |windowResult| be the result of [=check whether a moment falls within a window=] with |trigger|'s [=attribution trigger/trigger time=]
+    and |sourceToAttribute|'s [=attribution source/aggregatable report window=].
+1. If |windowResult| is <strong>passed</strong>:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-aggregate-report-window-passed=]</code>", |trigger|, |sourceToAttribute|
         and [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+1. [=Assert=]: |windowResult| is <strong>active</strong>.
 1. Let |matchedDedupKey| be null.
 1. [=list/iterate|For each=] [=aggregatable dedup key=] |aggregatableDedupKey| of |trigger|'s [=attribution trigger/aggregatable dedup keys=]:
     1. If the result of running [=match an attribution source's filter data against filters and negated filters=]
@@ -2914,8 +2925,11 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
 To <dfn>check whether a moment falls within a window</dfn> given a [=moment=] |moment| and
 a [=report window=] |window|:
 
-1. Return whether |moment| is greater than or equal to [=report window/start=]
-    and |moment| is less than |window|'s [=report window/end=].
+1. If |moment| is less than |window|'s [=report window/start=], return
+    <strong>not started</strong>.
+1. If |moment| is greater than or equal to |window|'s [=report window/end=],
+    return <strong>passed</strong>.
+1. Return <strong>active</strong>.
 
 To <dfn>obtain a report time from a window</dfn> given a [=moment=] |sourceTime| and
 a [=report window=] |window|:
@@ -2933,11 +2947,12 @@ To <dfn>obtain the report time at a window</dfn> given an
 To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution source=]
 |source| and a [=moment=] |triggerTime|:
 
-1. If [=automation local testing mode=] is true, return |triggerTime|. 
+1. If [=automation local testing mode=] is true, return |triggerTime|.
 1. Let |windows| be |source|'s [=attribution source/event-level report windows=].
 1. [=list/iterate|For each=] |window| of |windows|:
-    1. If |triggerTime| [=check whether a moment falls within a window|falls within=] |window|,
-        return the result of running [=obtain a report time from a window=] with |source|'s
+    1. If the result of [=check whether a moment falls within a window=] with
+        |triggerTime| and |window| is <strong>active</strong>, return the result
+        of running [=obtain a report time from a window=] with |source|'s
         [=attribution source/source time=] and |window|.
 1. [=Assert=]: not reached.
 
