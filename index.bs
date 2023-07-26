@@ -1409,9 +1409,9 @@ To <dfn>parse filter config</dfn> given a |value|:
 1. If |value| is not a [=map=], return null.
 1. Let |lookbackWindow| be null.
 1. If |value|["`lookback_window`"] [=map/exists=]:
-    1. If |value|["`lookback_window`"] is not a non-negative integer, return null.
+    1. If |value|["`lookback_window`"] is not a positive integer, return null.
     1. Set |lookbackWindow| to the [=duration=] of |value|["`lookback_window`"] seconds.
-    1. [=map/Remove=] |value|["`lookback_window`""].
+    1. [=map/Remove=] |value|["`lookback_window`"].
 1. Let |map| be the result of running [=parse filter values=] with |value|.
 1. If |map| is null, return null.
 1. Let |filter| be a [=filter config=] with the items:
@@ -2468,7 +2468,7 @@ To <dfn>match an attribution source's filter data against a filter config</dfn> 
 
 1. Let |lookbackWindow| be |filter|'s [=filter config/lookback window=].
 1. If |lookbackWindow| is not null:
-    1. If |moment| - |source|'s [=attribution source/source time=] is greater than |lookbackWindow|:
+    1. If the [=duration from=] |moment| and the |source|'s [=attribution source/source time=] is greater than |lookbackWindow|:
         1. If |isNegated|, return true. Otherwise, return false. 
 
 1. Let |filterMap| be |filter|'s [=filter config/map=].
