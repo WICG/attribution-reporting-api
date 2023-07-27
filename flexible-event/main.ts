@@ -8,7 +8,7 @@ function commaSeparatedInts(str: string): number[] {
 }
 
 function parseSourceType(str: string): SourceType {
-  if (!(str in SourceType)) {
+  if (!(str in DefaultConfig)) {
     throw 'unknown source type'
   }
   return str as SourceType
