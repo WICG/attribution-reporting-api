@@ -161,6 +161,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
 
   // See description in phase 1.
   "event_report_windows": {
+    "start_time": <int>,
     "end_times": [<int>, ...]
   }
 }
