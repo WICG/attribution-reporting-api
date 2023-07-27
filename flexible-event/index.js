@@ -104,7 +104,7 @@ function maxInformationGain(numStates, epsilon) {
       flipProb * (numStates - 1) / numStates)
 }
 
-// Returns the effective epsilon and flip probability needed to satisfy an information gain bound
+// Returns the effective epsilon needed to satisfy an information gain bound
 // given a number of output states in the q-ary symmetric channel.
 function epsilonToBoundInfoGainAndDp(
     numStates,
@@ -132,7 +132,7 @@ function epsilonToBoundInfoGainAndDp(
       continue
     }
 
-    return [epsilon, flipProbabilityDp(numStates, epsilon)]
+    return epsilon
   }
 }
 
@@ -149,7 +149,8 @@ function printConfigData(config, epsilon, sourceType) {
         numFlexibleStates(DEFAULT_CONFIG[sourceType]), epsilon)
 
   if (infoGain > infoGainDefault) {
-      const [newEps, flipProb] = epsilonToBoundInfoGainAndDp(numStates, infoGainDefault, epsilon)
+      const newEps = epsilonToBoundInfoGainAndDp(numStates, infoGainDefault, epsilon)
+      const flipProb = flipProbabilityDp(numStates, newEps)
       console.log(
           `WARNING: info gain of ${infoGain} > ${infoGainDefault} for ${sourceType} sources. Would require a ${100 * flipProb}% flip chance (effective epsilon = ${newEps}) to resolve.`)
   }
