@@ -67,13 +67,14 @@ We will add the following two optional parameters to the JSON in `Attribution-Re
   // Defaults to 3 for navigation sources and 1 for event sources
   "max_event_level_reports": <int>,
 
-  // Optional. Represents a series of time windows, starting at 0.
+  // Optional. Represents a series of time windows, starting at start_time.
   // Reports for this source will be delivered an hour after the end of each window.
   // Time is encoded as seconds after source registration.
   // If event_report_windows is omitted, will use the default windows.
   // This field is mutually exclusive with the existing `event_report_window` field.
-  // End time is exclusive.
+  // Start time is inclusive, end time is exclusive.
   "event_report_windows": {
+    "start_time": <int>, // optional, defaults to 0
     "end_times": [<int>, ...]
   }
 }
@@ -114,13 +115,16 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Entries in trigger_data must be distinct, and the sets of all trigger_data fields within trigger_specs must be disjoint.
     "trigger_data": [<int>, ...],
 
-    // Represents a series of time windows, starting at the source registration time.
+    // Represents a series of time windows, starting at start_time offset from the source registration time.
     // Reports for this spec will be delivered an hour after the end of each window.
     // Time is encoded as seconds after source registration.
     // end_times must consist of strictly increasing positive integers.
     // If event_report_windows
-    // is omitted, will use the "event_report_window" or "event_report_windows" field specified at the global level for the source (or the default windows if none are specified).  End time is exclusive.
+    // is omitted, will use the "event_report_window" or "event_report_windows" field specified at the global level for the
+    // source (or the default windows if none are specified).
+    // Start time is inclusive, End time is exclusive.
     "event_report_windows": {
+      "start_time": <int>, // optional, defaults to 0
       "end_times": [<int>, ...],
     }
 
@@ -157,6 +161,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
 
   // See description in phase 1.
   "event_report_windows": {
+    "start_time": <int>,
     "end_times": [<int>, ...]
   }
 }
