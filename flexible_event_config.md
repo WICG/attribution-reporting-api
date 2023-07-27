@@ -111,14 +111,13 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // This spec will only apply to registrations that set one of the given
     // trigger data values (non-negative integers) in the list.
     // trigger_data will still appear in the event-level report.
+    // Entries in trigger_data must be distinct, and the sets of all trigger_data fields within trigger_specs must be disjoint.
     "trigger_data": [<int>, ...],
 
     // Represents a series of time windows, starting at the source registration time.
     // Reports for this spec will be delivered an hour after the end of each window.
     // Time is encoded as seconds after source registration.
     // end_times must consist of strictly increasing positive integers.
-    //
-    // Note: trigger_data should not have duplication within the source.
     // If event_report_windows
     // is omitted, will use the "event_report_window" or "event_report_windows" field specified at the global level for the source (or the default windows if none are specified).  End time is exclusive.
     "event_report_windows": {
