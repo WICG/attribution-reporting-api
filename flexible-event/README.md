@@ -1,7 +1,7 @@
 Setup:
 
 ```sh
-npm install
+npm install && npm run tsc
 ```
 
 Examples:
