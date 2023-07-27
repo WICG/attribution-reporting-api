@@ -118,8 +118,8 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Time is encoded as seconds after source registration.
     // end_times must consist of strictly increasing positive integers.
     //
-    // Note: specs with identical trigger_data cannot have overlapping windows;
-    // this ensures that triggers match at most one spec. If event_report_windows
+    // Note: trigger_data should not have duplication within the source.
+    // If event_report_windows
     // is omitted, will use the "event_report_window" or "event_report_windows" field specified at the global level for the source (or the default windows if none are specified).  End time is exclusive.
     "event_report_windows": {
       "end_times": [<int>, ...],
