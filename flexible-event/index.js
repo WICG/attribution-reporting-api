@@ -52,7 +52,7 @@ function numFlexibleStates({
     }
 
     let sum = 0
-    const end = c < totalCap ? c : totalCap
+    const end = Math.min(c, totalCap)
     for (let i = 0; i <= end; i++) {
       sum += helper(totalCap - i, index, w - 1, c - i)
     }
