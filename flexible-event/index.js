@@ -142,8 +142,8 @@ function printConfigData(config, epsilon, sourceType) {
   const flipProb = flipProbabilityDp(numStates, epsilon)
 
   console.log(`Number of possible different output states: ${numStates}`)
-  console.log(`Information gain: ${infoGain} bits`)
-  console.log(`Flip percent: ${100 * flipProb}%`)
+  console.log(`Information gain: ${infoGain.toFixed(2)} bits`)
+  console.log(`Flip percent: ${100 * flipProb.toFixed(5)}%`)
 
   const infoGainDefault = maxInformationGain(
         numFlexibleStates(DEFAULT_CONFIG[sourceType]), epsilon)
@@ -152,7 +152,8 @@ function printConfigData(config, epsilon, sourceType) {
       const newEps = epsilonToBoundInfoGainAndDp(numStates, infoGainDefault, epsilon)
       const flipProb = flipProbabilityDp(numStates, newEps)
       console.log(
-          `WARNING: info gain of ${infoGain} > ${infoGainDefault} for ${sourceType} sources. Would require a ${100 * flipProb}% flip chance (effective epsilon = ${newEps}) to resolve.`)
+          `WARNING: info gain of ${infoGain.toFixed(2)} > ${infoGainDefault.toFixed(2)} for ${sourceType} sources. Would require a ${100 *
+            flipProb.toFixed(5)}% flip chance (effective epsilon = ${newEps.toFixed(3)}) to resolve.`)
   }
 }
 
