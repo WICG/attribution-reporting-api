@@ -1,3 +1,9 @@
+Setup:
+
+```sh
+npm install
+```
+
 Examples:
 
 ```sh
