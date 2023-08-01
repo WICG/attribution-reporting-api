@@ -1,5 +1,24 @@
-# Run tests
+# Header Validator
 
-`npm run test`
+Validates headers related to the Attribution Reporting API.
 
-<img width="882" alt="Screenshot 2022-07-19 at 16 13 56" src="https://user-images.githubusercontent.com/9762897/179772019-231b0c01-f9de-4cd6-a7c5-9ae1abff5231.png">
+Interactive form deployed at
+https://wicg.github.io/attribution-reporting-api/validate-headers.
+
+On requests:
+
+- `Attribution-Reporting-Eligible`
+
+On responses:
+
+- `Attribution-Reporting-Register-OS-Source`
+- `Attribution-Reporting-Register-OS-Trigger`
+- `Attribution-Reporting-Register-Source`
+- `Attribution-Reporting-Register-Trigger`
+
+## Development
+
+```sh
+npm run build
+npm run test
+```
