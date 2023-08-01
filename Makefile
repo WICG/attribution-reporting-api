@@ -30,6 +30,7 @@ $(OUT_DIR):
 	@ mkdir -p $@
 
 header-validator/dist/main.js: header-validator/package.json header-validator/src/*.js
+	@ npm ci --prefix ./header-validator
 	@ npm run build --prefix ./header-validator
 
 clean:
