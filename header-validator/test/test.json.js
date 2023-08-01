@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { validateJSON, validateSource, validateTrigger } from './validate-json.js'
+import { validateJSON, validateSource, validateTrigger } from '../src/validate-json.js'
 import { testCases as sourceTestCases } from './data.source.js'
 import { testCases as triggerTestCases } from './data.trigger.js'
 

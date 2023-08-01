@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { validateOsRegistration } from './validate-os.js'
+import { validateOsRegistration } from '../src/validate-os.js'
 
 const tests = [
   // Valid

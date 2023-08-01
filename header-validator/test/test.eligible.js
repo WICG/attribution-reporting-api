@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { validateEligible } from './validate-eligible.js'
+import { validateEligible } from '../src/validate-eligible.js'
 
 const tests = [
   // Valid

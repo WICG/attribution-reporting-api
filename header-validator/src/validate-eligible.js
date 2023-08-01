@@ -1,20 +1,4 @@
-
-
-async function getParseDictionaryFunctionFromEnvironment() {
-  let parseDictionary = null
-  if (typeof window === 'undefined') {
-    // Environment = nodeJS -> Take structured header functions from the locally installed node module
-    const structuredHeaderLib = await import('structured-headers')
-    parseDictionary = structuredHeaderLib.default.parseDictionary
-  } else {
-    // Environment = browser -> Take structured header functions from the lib loaded from the CDN (see HTML)
-    parseDictionary = window.structuredHeader.parseDictionary
-  }
-  return parseDictionary
-}
-
-const parseDictionary = await getParseDictionaryFunctionFromEnvironment()
-
+import { parseDictionary } from 'structured-headers'
 
 export function validateEligible(str) {
   const errors = []
