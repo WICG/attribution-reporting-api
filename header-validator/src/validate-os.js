@@ -1,17 +1,4 @@
-async function getParseListFunctionFromEnvironment() {
-  let parseList = null
-  if (typeof window === 'undefined') {
-    // Environment = nodeJS -> Take structured header functions from the locally installed node module
-    const structuredHeaderLib = await import('structured-headers')
-    parseList = structuredHeaderLib.default.parseList
-  } else {
-    // Environment = browser -> Take structured header functions from the lib loaded from the CDN (see HTML)
-    parseList = window.structuredHeader.parseList
-  }
-  return parseList
-}
-
-const parseList = await getParseListFunctionFromEnvironment()
+import { parseList } from 'structured-headers'
 
 function validateString(item) {
   if (typeof item !== 'string') {
