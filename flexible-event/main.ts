@@ -14,7 +14,7 @@ function parseSourceType(str: string): SourceType {
   return str as SourceType
 }
 
-function getNumWindowsFromJson(defaultVal: number, windows?: object): number {
+function getNumWindowsFromJson(defaultVal: number, windows: any): number {
   if (typeof windows === 'undefined') {
     return defaultVal
   }
@@ -31,7 +31,11 @@ function getNumWindowsFromJson(defaultVal: number, windows?: object): number {
   return endTimes.length
 }
 
-function getConfig(json: object, sourceType: SourceType): Config {
+function getConfig(json: any, sourceType: SourceType): Config {
+  if (typeof json !== 'object') {
+    throw 'root JSON must be an object'
+  }
+
   const defaultMaxReports = DefaultConfig[sourceType].maxEventLevelReports
   const defaultWindows = defaultMaxReports
 
@@ -50,7 +54,11 @@ function getConfig(json: object, sourceType: SourceType): Config {
   }
 
   const perTriggerDataConfigs: PerTriggerDataConfig[] = []
-  triggerSpecs.forEach((spec: object) => {
+  triggerSpecs.forEach((spec: any) => {
+    if (typeof spec !== 'object') {
+      throw 'trigger_specs item must be an object'
+    }
+
     const triggerData = spec['trigger_data']
     if (!Array.isArray(triggerData)) {
       throw 'trigger_data must be an array'
@@ -127,7 +135,7 @@ if ('json_file' in options) {
   }
   config = new Config(
     options.max_event_level_reports,
-    options.windows.map((w, i) => new PerTriggerDataConfig(w, options.buckets[i])),
+    options.windows.map((w: number, i: number) => new PerTriggerDataConfig(w, options.buckets[i])),
   )
 }
 
