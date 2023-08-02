@@ -1,19 +1,21 @@
-import { parseList } from 'structured-headers'
+import { Issue, ValidationResult } from './issue'
+const { parseList } = require('structured-headers')
 
-function validateString(item) {
+function validateString(item): string {
   if (typeof item !== 'string') {
     return 'must be a string'
   }
 }
 
-function validateURL(url) {
-  const err = validateString(url)
+function validateURL(urlStr: string): string {
+  const err = validateString(urlStr)
   if (err) {
     return err
   }
 
+  let url
   try {
-    url = new URL(url)
+    url = new URL(urlStr)
   } catch {
     return 'must contain a valid URL'
   }
@@ -29,22 +31,26 @@ function validateURL(url) {
   }
 }
 
-function optional(f = () => {}) {
-  return (param) => {
+type ParamCheck = (value: any) => string
+
+type ParamChecks = Record<string, ParamCheck>
+
+function optional(f: ParamCheck): ParamCheck {
+  return (param: any) => {
     if (param !== undefined) {
       return f(param)
     }
   }
 }
 
-function bool(value) {
+function bool(value: any): string {
   if (typeof value === 'boolean') {
     return
   }
   return 'must be a boolean'
 }
 
-function validate(str, paramChecks) {
+function validate(str: string, paramChecks: ParamChecks): ValidationResult {
   const errors = []
   const warnings = []
 
@@ -67,8 +73,8 @@ function validate(str, paramChecks) {
       if (err) {
         errors.push({ msg: err, path: [param] })
       }
-      params.delete(param);
-    });
+      params.delete(param)
+    })
 
     for (const key of params.keys()) {
       warnings.push({ msg: 'unknown parameter', path: [key] })
@@ -78,7 +84,7 @@ function validate(str, paramChecks) {
   return { errors, warnings }
 }
 
-export function validateOsRegistration(str) {
+export function validateOsRegistration(str: string): ValidationResult {
   return validate(str, {
     'debug-reporting': optional(bool),
   })

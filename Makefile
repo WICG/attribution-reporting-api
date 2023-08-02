@@ -29,7 +29,7 @@ $(OUT_DIR)/validate-headers.js: header-validator/dist/main.js $(OUT_DIR)
 $(OUT_DIR):
 	@ mkdir -p $@
 
-header-validator/dist/main.js: header-validator/package.json header-validator/src/*.js
+header-validator/dist/main.js: header-validator/package.json header-validator/webpack.config.js header-validator/src/*.ts
 	@ npm ci --prefix ./header-validator
 	@ npm run build --prefix ./header-validator
 

@@ -1,3 +1,5 @@
+import { Issue, PathComponent, ValidationResult } from './issue'
+
 const uint64Regex = /^[0-9]+$/
 const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
@@ -9,67 +11,71 @@ const limits = {
   maxValuesPerFilterDataEntry: 50,
 }
 
-class State {
-  constructor() {
-    this.path = []
-    this.errors = []
-    this.warnings = []
-  }
+type FieldCheck = (state: State, obj: object, key: string) => void
 
-  error(msg) {
+type FieldChecks = Record<string, FieldCheck>
+
+class State {
+  private readonly path: Array<PathComponent> = []
+  private readonly errors: Array<Issue> = []
+  private readonly warnings: Array<Issue> = []
+
+  error(msg: string): void {
     this.errors.push({ path: [...this.path], msg })
   }
 
-  warn(msg) {
+  warn(msg: string): void {
     this.warnings.push({ path: [...this.path], msg })
   }
 
-  scope(scope, f) {
+  scope(scope: PathComponent, f: () => void): void {
     this.path.push(scope)
     f()
     this.path.pop()
   }
 
-  result() {
+  result(): ValidationResult {
     return { errors: this.errors, warnings: this.warnings }
   }
 
-  validate(obj, checks) {
-    if (!object()(this, obj)) {
-      return
-    }
+  validate(obj: any, checks: FieldChecks): void {
+    record((state, obj) => {
+      Object.entries(checks).forEach(([key, check]) =>
+        this.scope(key, () => check(this, obj, key))
+      )
 
-    Object.entries(checks).forEach(([key, check]) =>
-      this.scope(key, () => check(this, obj, key))
-    )
-
-    Object.keys(obj).forEach((key) => {
-      if (!(key in checks)) {
-        this.scope(key, () => this.warn('unknown field'))
-      }
-    })
+      Object.keys(obj).forEach((key) => {
+        if (!(key in checks)) {
+          this.scope(key, () => this.warn('unknown field'))
+        }
+      })
+    })(this, obj)
   }
 }
 
-function required(f = () => {}) {
-  return (state, object, key) => {
-    if (key in object) {
-      f(state, object[key])
+type ValueCheck = (state: State, value: any) => void
+
+function required(f: ValueCheck): FieldCheck {
+  return (state, obj, key) => {
+    if (key in obj) {
+      f(state, obj[key])
       return
     }
     state.error('missing required field')
   }
 }
 
-function optional(f = () => {}) {
-  return (state, object, key) => {
-    if (key in object) {
-      f(state, object[key])
+function optional(f: ValueCheck): FieldCheck {
+  return (state, obj, key) => {
+    if (key in obj) {
+      f(state, obj[key])
     }
   }
 }
 
-function string(f = () => {}) {
+type StringCheck = (state: State, value: string) => void
+
+function string(f: StringCheck = (a, b) => {}): ValueCheck {
   return (state, value) => {
     if (typeof value === 'string') {
       f(state, value)
@@ -79,42 +85,48 @@ function string(f = () => {}) {
   }
 }
 
-function bool(state, value) {
+function bool(state: State, value: any): void {
   if (typeof value === 'boolean') {
     return
   }
   state.error('must be a boolean')
 }
 
-function isObject(value) {
+function isObject(value: any): boolean {
   return typeof value === 'object' && value.constructor === Object
 }
 
-function isArray(value) {
-  return value instanceof Array
-}
+type RecordCheck = (state: State, value: object) => void
 
-function object(f = () => {}, maxKeys = Infinity) {
+function record(f: RecordCheck): ValueCheck {
   return (state, value) => {
     if (isObject(value)) {
-      const entries = Object.entries(value)
-
-      if (entries.length > maxKeys) {
-        state.error(`exceeds the maximum number of keys (${maxKeys})`)
-      }
-
-      entries.forEach(([key, value]) =>
-        state.scope(key, () => f(state, key, value))
-      )
-      return true
+      f(state, value)
+      return
     }
     state.error('must be an object')
   }
 }
 
-function list(f = () => {}, maxLength = Infinity, minLength = 0) {
+type KeyValueCheck = (state: State, key: string, value: any) => void
+
+function keyValues(f: KeyValueCheck, maxKeys = Infinity): ValueCheck {
+  return record((state, value) => {
+    const entries = Object.entries(value)
+
+    if (entries.length > maxKeys) {
+      state.error(`exceeds the maximum number of keys (${maxKeys})`)
+    }
+
+    entries.forEach(([key, value]) =>
+      state.scope(key, () => f(state, key, value))
+    )
+  })
+}
+
+function list(f: ValueCheck, maxLength: number = Infinity, minLength: number = 0): ValueCheck {
   return (state, values) => {
-    if (isArray(values)) {
+    if (Array.isArray(values)) {
       if (values.length > maxLength || values.length < minLength) {
         state.error(
           `List size out of expected bounds. Size must be within [${minLength}, ${maxLength}]`
@@ -142,7 +154,9 @@ const uint64 = string((state, value) => {
   }
 })
 
-function number(f = () => {}) {
+type NumberCheck = (state: State, value: number) => void
+
+function number(f: NumberCheck): ValueCheck {
   return (state, value) => {
     if (typeof value === 'number') {
       f(state, value)
@@ -154,23 +168,23 @@ function number(f = () => {}) {
 
 const nonNegativeInteger = number((state, value) => {
   if (!Number.isInteger(value) || value < 0) {
-    state.error("must be a non-negative integer")
+    state.error('must be a non-negative integer')
   }
-});
+})
 
 const positiveInteger = number((state, value) => {
   if (!Number.isInteger(value) || value <= 0) {
-    state.error("must be a positive integer")
+    state.error('must be a positive integer')
   }
-});
+})
 
-const int64 = string((state, value) => {
-  if (!int64Regex.test(value)) {
+const int64 = string((state, str) => {
+  if (!int64Regex.test(str)) {
     state.error(`must be an int64 (must match ${int64Regex})`)
     return
   }
 
-  value = BigInt(value)
+  const value = BigInt(str)
 
   const max = 2n ** (64n - 1n) - 1n
   const min = (-2n) ** (64n - 1n)
@@ -185,9 +199,10 @@ const hex128 = string((state, value) => {
   }
 })
 
-const suitableUrl = string((state, url) => {
+const suitableUrl = string((state, value) => {
+  let url
   try {
-    url = new URL(url)
+    url = new URL(value)
   } catch {
     state.error('must contain a valid URL')
     return
@@ -218,36 +233,36 @@ const suitableUrl = string((state, url) => {
 
 const destinationList = list(suitableUrl, 3, 1)
 
-const destinationValue = (state, value) => {
+function destinationValue(state: State, value: any): void {
   if (typeof value === 'string') {
     return suitableUrl(state, value)
   }
-  if (isArray(value)) {
+  if (Array.isArray(value)) {
     return destinationList(state, value)
   }
   state.error('must be a list or a string')
 }
 
-const maxEventLevelReports = (state, value) => {
+function maxEventLevelReports(state: State, value: any): void {
   if (typeof value === 'number') {
     if (!Number.isInteger(value) || value < 0 || value > limits.maxEventLevelReports) {
-      state.error('must be an integer in the range [0, 20]');
+      state.error('must be an integer in the range [0, 20]')
     }
   } else {
-    state.error('must be an integer in the range [0, 20]');
+    state.error('must be an integer in the range [0, 20]')
   }
 }
 
-const eventReportWindows = (state, value) => {
+function eventReportWindows(state: State, value: any): void {
   // TODO(csharrison): Consider validating that the list of end times
   // is properly ordered.
   state.validate(value, {
     start_time: optional(nonNegativeInteger),
     end_times: required(list(positiveInteger, 5, 1))
-  });
+  })
 }
 
-const legacyDuration = (state, value) => {
+function legacyDuration(state: State, value: any): void {
   if (typeof value === 'number') {
     return nonNegativeInteger(state, value)
   }
@@ -257,14 +272,14 @@ const legacyDuration = (state, value) => {
   state.error('must be a non-negative integer or a string')
 }
 
-const listOrObject = (f = () => {}, listMaxLength, listMinLength) => {
-  return (state, value, key) => {
+function listOrKeyValues(f: ValueCheck, listMaxLength: number = Infinity, listMinLength: number = 0): ValueCheck {
+  return (state, value) => {
     if (isObject(value)) {
-      return f(state, value, key)
+      return f(state, value)
     }
 
-    if (isArray(value)) {
-      return list(f, listMaxLength, listMinLength)(state, value, key)
+    if (Array.isArray(value)) {
+      return list(f, listMaxLength, listMinLength)(state, value)
     }
 
     state.error('must be a list or an object')
@@ -273,7 +288,7 @@ const listOrObject = (f = () => {}, listMaxLength, listMinLength) => {
 
 // TODO: Check length of strings.
 const filterData = () =>
-  object((state, filter, values) => {
+  keyValues((state, filter, values) => {
     if (filter === 'source_type') {
       state.error('is prohibited because it is implicitly set')
       return
@@ -283,18 +298,18 @@ const filterData = () =>
   }, limits.maxEntriesPerFilterData)
 
 const filters = () =>
-  object((state, filter, values) => {
+  keyValues((state, filter, values) => {
     list(string())(state, values)
   })
 
-const orFilters = listOrObject(filters())
+const orFilters = listOrKeyValues(filters())
 
 // TODO: check length of key
-const aggregationKeys = object((state, key, value) => {
+const aggregationKeys = keyValues((state, key, value) => {
   hex128(state, value)
 }, limits.maxAggregationKeys)
 
-export function validateSource(source) {
+export function validateSource(source: any): ValidationResult {
   const state = new State()
   state.validate(source, {
     aggregatable_report_window: optional(legacyDuration),
@@ -310,8 +325,8 @@ export function validateSource(source) {
     source_event_id: optional(uint64),
     max_event_level_reports: optional(maxEventLevelReports),
   })
-  if (typeof source === "object" && 'event_report_window' in source && 'event_report_windows' in source) {
-    state.error("event_report_window and event_report_windows in the same source")
+  if (typeof source === 'object' && 'event_report_window' in source && 'event_report_windows' in source) {
+    state.error('event_report_window and event_report_windows in the same source')
   }
   return state.result()
 }
@@ -326,7 +341,7 @@ const aggregatableTriggerData = list(
     }))
 
 // TODO: check length of key
-const aggregatableValues = object((state, key, value) => {
+const aggregatableValues = keyValues((state, key, value) => {
   const max = 65536
   if (!Number.isInteger(value) || value <= 0 || value > max) {
     state.error(`must be an integer in the range (1, ${max}]`)
@@ -360,7 +375,7 @@ const aggregatableSourceRegistrationTime = string((state, value) => {
   state.error(`must match '${exclude}' or '${include}' (case-sensitive)`)
 })
 
-export function validateTrigger(trigger) {
+export function validateTrigger(trigger: any): ValidationResult {
   const state = new State()
   state.validate(trigger, {
     aggregatable_trigger_data: optional(aggregatableTriggerData),
@@ -377,7 +392,7 @@ export function validateTrigger(trigger) {
   return state.result()
 }
 
-export function validateJSON(json, f) {
+export function validateJSON(json: string, f: (value: any) => ValidationResult) {
   let value
   try {
     value = JSON.parse(json)
