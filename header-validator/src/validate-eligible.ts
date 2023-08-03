@@ -1,6 +1,7 @@
-import { parseDictionary } from 'structured-headers'
+import { ValidationResult } from './issue'
+const { parseDictionary } = require('structured-headers')
 
-export function validateEligible(str) {
+export function validateEligible(str: string): ValidationResult {
   const errors = []
   const warnings = []
 

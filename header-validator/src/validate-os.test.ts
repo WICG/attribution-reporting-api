@@ -1,5 +1,5 @@
-import assert from 'node:assert/strict'
-import { validateOsRegistration } from '../src/validate-os.js'
+import { strict as assert } from 'assert'
+import { validateOsRegistration } from './validate-os'
 
 const tests = [
   // Valid
@@ -73,9 +73,9 @@ tests.forEach(test => {
   [
       validateOsRegistration,
   ].forEach(validate => {
-    const { errors, warnings } = validate(test.input);
+    const { errors, warnings } = validate(test.input)
 
-    assert.deepEqual(errors, test.errors || [], test.input);
-    assert.deepEqual(warnings, test.warnings || [], test.input);
-  });
-});
+    assert.deepStrictEqual(errors, test.errors || [], test.input)
+    assert.deepStrictEqual(warnings, test.warnings || [], test.input)
+  })
+})
