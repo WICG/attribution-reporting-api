@@ -114,7 +114,7 @@ function h(x: number): number {
 // Returns the flip probability to satisfy epsilon differential privacy.
 // Uses the k-RR privacy mechanism.
 function flipProbabilityDp(numStates: number, epsilon: number): number {
-  return numStates / (numStates * Math.exp(epsilon) - 1)
+  return numStates / (numStates + Math.exp(epsilon) - 1)
 }
 
 /**
