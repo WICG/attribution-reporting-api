@@ -104,7 +104,7 @@ export const DefaultConfig: Readonly<Record<SourceType, Config>> = {
 }
 
 // Evaluates the binary entropy function.
-function h(x: number): number {
+export function binaryEntropy(x: number): number {
   if (x == 0 || x == 1) {
     return 0
   }
@@ -132,10 +132,10 @@ export function flipProbabilityDp(numStates: number, epsilon: number): number {
  *   closed-form expression is known, which we use here.
  */
 function capacityQarySymmetricChannel(log2q: number, flipProbability: number): number {
-  return log2q - h(flipProbability) - flipProbability * Math.log2(Math.pow(2, log2q) - 1)
+  return log2q - binaryEntropy(flipProbability) - flipProbability * Math.log2(Math.pow(2, log2q) - 1)
 }
 
-function maxInformationGain(numStates: number, epsilon: number): number {
+export function maxInformationGain(numStates: number, epsilon: number): number {
   const flipProb = flipProbabilityDp(numStates, epsilon)
   return capacityQarySymmetricChannel(Math.log2(numStates),
       flipProb * (numStates - 1) / numStates)
