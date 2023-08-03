@@ -14,7 +14,7 @@ const tests = [
   {
     input: '"https://a.test/"; x=1',
     warnings: [{
-      path: ['x'],
+      path: [0, 'x'],
       msg: 'unknown parameter',
     }],
   },
@@ -27,16 +27,16 @@ const tests = [
 
   // Not a string
   {
-    input: 'x',
+    input: '"https://a.test", x',
     errors: [{
-      path: [],
+      path: [1],
       msg: 'must be a string',
     }],
   },
   {
     input: '("https://a.test/")',
     errors: [{
-      path: [],
+      path: [0],
       msg: 'must be a string',
     }],
   },
@@ -45,7 +45,7 @@ const tests = [
   {
     input: '"a.test"',
     errors: [{
-      path: [],
+      path: [0],
       msg: 'must contain a valid URL',
     }],
   },
@@ -54,16 +54,16 @@ const tests = [
   {
     input: '"http://a.test"',
     errors: [{
-      path: [],
+      path: [0],
       msg: 'must contain a potentially trustworthy URL',
     }],
   },
 
   // debug-reporting not a boolean
   {
-    input: '"https://a.test/"; debug-reporting=1',
+    input: '"https://b.test/", "https://a.test/"; debug-reporting=1',
     errors: [{
-      path: ['debug-reporting'],
+      path: [1, 'debug-reporting'],
       msg: 'must be a boolean',
     }],
   },

@@ -62,22 +62,23 @@ function validate(str: string, paramChecks: ParamChecks): ValidationResult {
     return { errors, warnings }
   }
 
-  for (const [item, params] of list) {
-    const err = validateURL(item)
+  for (let i = 0; i < list.length; i++) {
+    const [member, params] = list[i]
+    const err = validateURL(member)
     if (err) {
-      errors.push({ msg: err, path: [] })
+      errors.push({ msg: err, path: [i] })
     }
 
     Object.entries(paramChecks).forEach(([param, check]) => {
       const err = check(params.get(param))
       if (err) {
-        errors.push({ msg: err, path: [param] })
+        errors.push({ msg: err, path: [i, param] })
       }
       params.delete(param)
     })
 
     for (const key of params.keys()) {
-      warnings.push({ msg: 'unknown parameter', path: [key] })
+      warnings.push({ msg: 'unknown parameter', path: [i, key] })
     }
   }
 
