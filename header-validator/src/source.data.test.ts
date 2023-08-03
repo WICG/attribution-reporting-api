@@ -27,7 +27,7 @@ export const testCases = [
 
   // warnings
   {
-    name: "unknown-field123",
+    name: "unknown-field",
     json: `{
       "destination": "https://a.test",
       "x": true
