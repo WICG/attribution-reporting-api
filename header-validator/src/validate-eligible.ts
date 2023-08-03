@@ -2,15 +2,15 @@ import { ValidationResult } from './issue'
 const { parseDictionary } = require('structured-headers')
 
 export function validateEligible(str: string): ValidationResult {
-  const errors = []
-  const warnings = []
+  const result: ValidationResult = { errors: [], warnings: [] }
 
   let dict
   try {
     dict = parseDictionary(str)
   } catch (err) {
-    errors.push({ msg: err.toString() })
-    return { errors, warnings }
+    const msg = err instanceof Error ? err.toString() : 'unknown error'
+    result.errors.push({ msg })
+    return result
   }
 
   for (const [key, value] of dict) {
@@ -19,24 +19,24 @@ export function validateEligible(str: string): ValidationResult {
       case 'trigger':
         break
       case 'navigation-source':
-        warnings.push({
+        result.warnings.push({
           msg: 'may only be specified in browser-initiated requests',
           path: [key],
         })
         break
       default:
-        warnings.push({ msg: 'unknown dictionary key', path: [key] })
+        result.warnings.push({ msg: 'unknown dictionary key', path: [key] })
         break
     }
 
     if (value[0] !== true) {
-      warnings.push({ msg: 'ignoring dictionary value', path: [key] })
+      result.warnings.push({ msg: 'ignoring dictionary value', path: [key] })
     }
 
     if (value[1].size !== 0) {
-      warnings.push({ msg: 'ignoring parameters', path: [key] })
+      result.warnings.push({ msg: 'ignoring parameters', path: [key] })
     }
   }
 
-  return { errors, warnings }
+  return result
 }
