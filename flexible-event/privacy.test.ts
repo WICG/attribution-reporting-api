@@ -25,8 +25,8 @@ const flipProbabilityTests = [
 ]
 
 flipProbabilityTests.forEach(test => {
-    const flipProb = flipProbabilityDp(test.numStates, test.epsilon);
-    assert.deepStrictEqual(flipProb, test.expected);
+    const flipProb = flipProbabilityDp(test.numStates, test.epsilon)
+    assert.deepStrictEqual(flipProb, test.expected)
 })
 
 const infoGainTests = [
