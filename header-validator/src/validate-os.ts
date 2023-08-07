@@ -1,21 +1,14 @@
 import { Issue, ValidationResult } from './issue'
 const { parseList } = require('structured-headers')
 
-function validateString(item): string {
+function validateURL(item: any): string|undefined {
   if (typeof item !== 'string') {
     return 'must be a string'
-  }
-}
-
-function validateURL(urlStr: string): string {
-  const err = validateString(urlStr)
-  if (err) {
-    return err
   }
 
   let url
   try {
-    url = new URL(urlStr)
+    url = new URL(item)
   } catch {
     return 'must contain a valid URL'
   }
@@ -31,62 +24,36 @@ function validateURL(urlStr: string): string {
   }
 }
 
-type ParamCheck = (value: any) => string
-
-type ParamChecks = Record<string, ParamCheck>
-
-function optional(f: ParamCheck): ParamCheck {
-  return (param: any) => {
-    if (param !== undefined) {
-      return f(param)
-    }
-  }
-}
-
-function bool(value: any): string {
-  if (typeof value === 'boolean') {
-    return
-  }
-  return 'must be a boolean'
-}
-
-function validate(str: string, paramChecks: ParamChecks): ValidationResult {
-  const errors = []
-  const warnings = []
+export function validateOsRegistration(str: string): ValidationResult {
+  const result: ValidationResult = { errors: [], warnings: [] }
 
   let list
   try {
     list = parseList(str)
   } catch (err) {
-    errors.push({ msg: err.toString() })
-    return { errors, warnings }
+    const msg = err instanceof Error ? err.toString() : 'unknown error'
+    result.errors.push({ msg })
+    return result
   }
 
   for (let i = 0; i < list.length; i++) {
     const [member, params] = list[i]
     const err = validateURL(member)
     if (err) {
-      errors.push({ msg: err, path: [i] })
+      result.errors.push({ msg: err, path: [i] })
+      continue
     }
 
-    Object.entries(paramChecks).forEach(([param, check]) => {
-      const err = check(params.get(param))
-      if (err) {
-        errors.push({ msg: err, path: [i, param] })
+    for (const [key, value] of params) {
+      if (key === 'debug-reporting') {
+        if (typeof value !== 'boolean') {
+          result.errors.push({ msg: 'must be a boolean', path: [i, key] })
+        }
+      } else {
+        result.warnings.push({ msg: 'unknown parameter', path: [i, key] })
       }
-      params.delete(param)
-    })
-
-    for (const key of params.keys()) {
-      warnings.push({ msg: 'unknown parameter', path: [i, key] })
     }
   }
 
-  return { errors, warnings }
-}
-
-export function validateOsRegistration(str: string): ValidationResult {
-  return validate(str, {
-    'debug-reporting': optional(bool),
-  })
+  return result
 }
