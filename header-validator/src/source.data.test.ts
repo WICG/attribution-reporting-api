@@ -60,7 +60,7 @@ export const testCases = [
   {
     name: "invalid-json",
     json: ``,
-    expectedErrors: [{msg: "Unexpected end of JSON input"}],
+    expectedErrors: [{msg: "SyntaxError: Unexpected end of JSON input"}],
   },
   {
     name: "wrong-root-type",

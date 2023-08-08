@@ -1,5 +1,8 @@
 import { Issue, PathComponent, ValidationResult } from './issue'
 
+export type JsonDict = { [key: string]: Json }
+export type Json = null|boolean|number|string|Array<Json>|JsonDict
+
 const uint64Regex = /^[0-9]+$/
 const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
@@ -11,7 +14,7 @@ const limits = {
   maxValuesPerFilterDataEntry: 50,
 }
 
-type FieldCheck = (state: State, obj: object, key: string) => void
+type FieldCheck = (state: State, obj: JsonDict, key: string) => void
 
 type FieldChecks = Record<string, FieldCheck>
 
@@ -38,7 +41,7 @@ class State {
     return { errors: this.errors, warnings: this.warnings }
   }
 
-  validate(obj: any, checks: FieldChecks): void {
+  validate(obj: Json, checks: FieldChecks): void {
     record((state, obj) => {
       Object.entries(checks).forEach(([key, check]) =>
         this.scope(key, () => check(this, obj, key))
@@ -53,7 +56,7 @@ class State {
   }
 }
 
-type ValueCheck = (state: State, value: any) => void
+type ValueCheck = (state: State, value: Json) => void
 
 function required(f: ValueCheck): FieldCheck {
   return (state, obj, key) => {
@@ -85,18 +88,18 @@ function string(f: StringCheck = (a, b) => {}): ValueCheck {
   }
 }
 
-function bool(state: State, value: any): void {
+function bool(state: State, value: Json): void {
   if (typeof value === 'boolean') {
     return
   }
   state.error('must be a boolean')
 }
 
-function isObject(value: any): boolean {
+function isObject(value: Json): value is JsonDict {
   return value !== null && typeof value === 'object' && value.constructor === Object
 }
 
-type RecordCheck = (state: State, value: object) => void
+type RecordCheck = (state: State, value: JsonDict) => void
 
 function record(f: RecordCheck): ValueCheck {
   return (state, value) => {
@@ -108,7 +111,7 @@ function record(f: RecordCheck): ValueCheck {
   }
 }
 
-type KeyValueCheck = (state: State, key: string, value: any) => void
+type KeyValueCheck = (state: State, key: string, value: Json) => void
 
 function keyValues(f: KeyValueCheck, maxKeys = Infinity): ValueCheck {
   return record((state, value) => {
@@ -233,7 +236,7 @@ const suitableUrl = string((state, value) => {
 
 const destinationList = list(suitableUrl, 3, 1)
 
-function destinationValue(state: State, value: any): void {
+function destinationValue(state: State, value: Json): void {
   if (typeof value === 'string') {
     return suitableUrl(state, value)
   }
@@ -243,7 +246,7 @@ function destinationValue(state: State, value: any): void {
   state.error('must be a list or a string')
 }
 
-function maxEventLevelReports(state: State, value: any): void {
+function maxEventLevelReports(state: State, value: Json): void {
   if (typeof value === 'number') {
     if (!Number.isInteger(value) || value < 0 || value > limits.maxEventLevelReports) {
       state.error('must be an integer in the range [0, 20]')
@@ -253,7 +256,7 @@ function maxEventLevelReports(state: State, value: any): void {
   }
 }
 
-function eventReportWindows(state: State, value: any): void {
+function eventReportWindows(state: State, value: Json): void {
   // TODO(csharrison): Consider validating that the list of end times
   // is properly ordered.
   state.validate(value, {
@@ -262,7 +265,7 @@ function eventReportWindows(state: State, value: any): void {
   })
 }
 
-function legacyDuration(state: State, value: any): void {
+function legacyDuration(state: State, value: Json): void {
   if (typeof value === 'number') {
     return nonNegativeInteger(state, value)
   }
@@ -309,7 +312,7 @@ const aggregationKeys = keyValues((state, key, value) => {
   hex128(state, value)
 }, limits.maxAggregationKeys)
 
-export function validateSource(source: any): ValidationResult {
+export function validateSource(source: Json): ValidationResult {
   const state = new State()
   state.validate(source, {
     aggregatable_report_window: optional(legacyDuration),
@@ -343,7 +346,7 @@ const aggregatableTriggerData = list(
 // TODO: check length of key
 const aggregatableValues = keyValues((state, key, value) => {
   const max = 65536
-  if (!Number.isInteger(value) || value <= 0 || value > max) {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0 || value > max) {
     state.error(`must be an integer in the range (1, ${max}]`)
   }
 }, limits.maxAggregationKeys)
@@ -375,7 +378,7 @@ const aggregatableSourceRegistrationTime = string((state, value) => {
   state.error(`must match '${exclude}' or '${include}' (case-sensitive)`)
 })
 
-export function validateTrigger(trigger: any): ValidationResult {
+export function validateTrigger(trigger: Json): ValidationResult {
   const state = new State()
   state.validate(trigger, {
     aggregatable_trigger_data: optional(aggregatableTriggerData),
@@ -392,12 +395,13 @@ export function validateTrigger(trigger: any): ValidationResult {
   return state.result()
 }
 
-export function validateJSON(json: string, f: (value: any) => ValidationResult) {
+export function validateJSON(json: string, f: (value: Json) => ValidationResult) {
   let value
   try {
     value = JSON.parse(json)
   } catch (err) {
-    return { errors: [{ msg: err.message }], warnings: [] }
+    const msg = err instanceof Error ? err.toString() : 'unknown error'
+    return { errors: [{ msg }], warnings: [] }
   }
   return f(value)
 }
