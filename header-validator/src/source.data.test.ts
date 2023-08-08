@@ -167,6 +167,17 @@ export const testCases = [
       msg: "is prohibited because it is implicitly set",
     }],
   },
+  {
+    name: "filter-data-lookback-window-key",
+    json: `{
+      "destination": "https://a.test",
+      "filter_data": {"_lookback_window": []}
+    }`,
+    expectedErrors: [{
+      path: ["filter_data", "_lookback_window"],
+      msg: "is prohibited because it is implicitly set",
+    }],
+  },
   // TODO: add tests for exceeding size limits
 
   {

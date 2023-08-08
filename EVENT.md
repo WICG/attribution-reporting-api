@@ -495,6 +495,9 @@ Source registration:
     "product": ["1234"]
     // Note that "source_type" will be automatically generated as
     // one of {"navigation", "event"}
+
+    // Note that "_lookback_window" cannot be used as it would be
+    // ignored. The reserved key is used to support lookback window.
   }
 }
 ```
@@ -568,6 +571,19 @@ will be created.
 
 If the filters match for multiple event triggers, the first matching event
 trigger is used.
+
+#### Lookback window
+
+Lookback window is supported with an optional reserved keyword
+`_lookback_window` which can be added to trigger's filters.
+
+Unlike other filter keys whose values must be a list of strings, the
+`_lookback_window` value must be a positive integer that represents a positive
+duration in seconds.
+
+When available on a filter, the duration since the source was registered must be
+less than or equal to the parsed lookback window duration for the filter to
+match.
 
 ### Optional: transitional debugging reports
 
