@@ -401,7 +401,7 @@ export function validateJSON(json: string, f: (value: Json) => ValidationResult)
     value = JSON.parse(json)
   } catch (err) {
     const msg = err instanceof Error ? err.toString() : 'unknown error'
-    return { errors: [{ msg: msg }], warnings: [] }
+    return { errors: [{ msg }], warnings: [] }
   }
   return f(value)
 }
