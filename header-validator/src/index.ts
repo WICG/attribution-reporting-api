@@ -3,11 +3,11 @@ import { validateJSON, validateSource, validateTrigger } from './validate-json'
 import { validateEligible } from './validate-eligible'
 import { validateOsRegistration } from './validate-os'
 
-const form = document.querySelector('form')
-const input = form.querySelector('textarea')
-const errorList = document.querySelector('#errors')
-const warningList = document.querySelector('#warnings')
-const successDiv = document.querySelector('#success')
+const form = document.querySelector('form')! as HTMLFormElement
+const input = form.querySelector('textarea')! as HTMLTextAreaElement
+const errorList = document.querySelector('#errors')!
+const warningList = document.querySelector('#warnings')!
+const successDiv = document.querySelector('#success')!
 
 const pathfulTmpl = document.querySelector('#pathful-issue') as HTMLTemplateElement
 
@@ -21,11 +21,11 @@ function makeLi({path, msg}: Issue): HTMLElement {
   if (Array.isArray(path)) {
     if (path.length === 0) {
       li = document.createElement('li')
-      li.textContent = `JSON root ${msg}`
+      li.textContent = msg
     } else {
-      li = pathfulTmpl.content.cloneNode(true)
-      li.querySelector('code').textContent = path.map(pathPart).join('')
-      li.querySelector('span').textContent = msg
+      li = pathfulTmpl.content.cloneNode(true) as HTMLElement
+      li.querySelector('code')!.textContent = path.map(pathPart).join('')
+      li.querySelector('span')!.textContent = msg
     }
   } else {
     li = document.createElement('li')
@@ -35,7 +35,10 @@ function makeLi({path, msg}: Issue): HTMLElement {
   return li
 }
 
-function header(): string { return form.elements['header'].value }
+function header(): string {
+  const el = form.elements.namedItem('header')! as RadioNodeList
+  return el.value
+}
 
 form.addEventListener('input', () => {
   let result
@@ -71,7 +74,7 @@ form.addEventListener('input', () => {
   warningList.replaceChildren(...result.warnings.map(makeLi))
 })
 
-document.querySelector('#linkify').addEventListener('click', async () => {
+document.querySelector('#linkify')!.addEventListener('click', async () => {
   const url = new URL(location.toString())
   url.search = ''
   url.searchParams.set('header', header())
@@ -98,7 +101,7 @@ const allowedValues = new Set([
 ])
 
 let selection = params.get('header')
-if (!allowedValues.has(selection)) {
+if (selection === null || !allowedValues.has(selection)) {
   selection = 'source'
 }
 (form.querySelector(`input[value=${selection}]`) as HTMLInputElement).click()
