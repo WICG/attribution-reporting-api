@@ -115,6 +115,22 @@ export const testCases = [
       msg: "must be a string",
     }],
   },
+  {
+    name: "filters-lookback-window-wrong-type",
+    json: `{"filters": {"_lookback_window": []}}`,
+    expectedErrors: [{
+      path: ["filters", "_lookback_window"],
+      msg: "must be a number",
+    }],
+  },
+  {
+    name: "filters-lookback-window-negative",
+    json: `{"filters": {"_lookback_window": 0}}`,
+    expectedErrors: [{
+      path: ["filters", "_lookback_window"],
+      msg: "must be a positive integer",
+    }],
+  },
 
   {
     name: "not-filters-wrong-type",

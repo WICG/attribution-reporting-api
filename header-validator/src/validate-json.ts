@@ -296,12 +296,21 @@ const filterData = () =>
       state.error('is prohibited because it is implicitly set')
       return
     }
+    if (filter === '_lookback_window') {
+      state.error('is prohibited because it would be ignored')
+      return
+    }
 
     list(string(), limits.maxValuesPerFilterDataEntry)(state, values)
   }, limits.maxEntriesPerFilterData)
 
 const filters = () =>
   keyValues((state, filter, values) => {
+    if (filter === '_lookback_window') {
+      positiveInteger(state, values);
+      return
+    }
+    
     list(string())(state, values)
   })
 
