@@ -70,6 +70,14 @@ export const testCases = [
       msg: "must be an object",
     }],
   },
+  {
+    name: "wrong-root-type-null",
+    json: `null`,
+    expectedErrors: [{
+      path: [],
+      msg: "must be an object",
+    }],
+  },
 
   {
     name: "destination-missing",
@@ -109,6 +117,17 @@ export const testCases = [
     json: `{
       "destination": "https://a.test",
       "filter_data": 1
+    }`,
+    expectedErrors: [{
+      path: ["filter_data"],
+      msg: "must be an object",
+    }],
+  },
+  {
+    name: "filter-data-wrong-type-null",
+    json: `{
+      "destination": "https://a.test",
+      "filter_data": null
     }`,
     expectedErrors: [{
       path: ["filter_data"],
