@@ -175,7 +175,7 @@ export const testCases = [
     }`,
     expectedErrors: [{
       path: ["filter_data", "_lookback_window"],
-      msg: "is prohibited because it would be ignored",
+      msg: "is prohibited because it is implicitly set",
     }],
   },
   // TODO: add tests for exceeding size limits

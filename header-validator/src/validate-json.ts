@@ -292,12 +292,8 @@ function listOrKeyValues(f: ValueCheck, listMaxLength: number = Infinity, listMi
 // TODO: Check length of strings.
 const filterData = () =>
   keyValues((state, filter, values) => {
-    if (filter === 'source_type') {
+    if (filter === 'source_type' || filter === '_lookback_window') {
       state.error('is prohibited because it is implicitly set')
-      return
-    }
-    if (filter === '_lookback_window') {
-      state.error('is prohibited because it would be ignored')
       return
     }
 

@@ -577,12 +577,13 @@ trigger is used.
 Lookback window is supported with an optional reserved keyword
 `_lookback_window` which can be added to trigger's filters.
 
-Unlike other filter keys whose values must be a list of strings. The
-`_lookback_window` key value must be a positive integer which represents a
+Unlike other filter keys whose values must be a list of strings, the
+`_lookback_window` value must be a positive integer that represents a positive
 duration in seconds.
 
 When available on a filter, the duration since the source was registered must be
-smaller or equal to the parsed lookback window duration for the filter to match.
+less than or equal to the parsed lookback window duration for the filter to
+match.
 
 ### Optional: transitional debugging reports
 
