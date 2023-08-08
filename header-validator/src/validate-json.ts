@@ -93,7 +93,7 @@ function bool(state: State, value: any): void {
 }
 
 function isObject(value: any): boolean {
-  return typeof value === 'object' && value.constructor === Object
+  return value !== null && typeof value === 'object' && value.constructor === Object
 }
 
 type RecordCheck = (state: State, value: object) => void
@@ -325,7 +325,7 @@ export function validateSource(source: any): ValidationResult {
     source_event_id: optional(uint64),
     max_event_level_reports: optional(maxEventLevelReports),
   })
-  if (typeof source === 'object' && 'event_report_window' in source && 'event_report_windows' in source) {
+  if (isObject(source) && 'event_report_window' in source && 'event_report_windows' in source) {
     state.error('event_report_window and event_report_windows in the same source')
   }
   return state.result()
