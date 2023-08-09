@@ -178,6 +178,20 @@ export const testCases = [
       msg: "is prohibited because it is implicitly set",
     }],
   },
+  {
+    name: "filter-data-duplicate-value",
+    json: `{
+      "destination": "https://a.test",
+      "filter_data": {
+        "a": ["x", "y", "x"],
+        "b": ["y"]
+      }
+    }`,
+    expectedWarnings: [{
+      path: ["filter_data", "a", 2],
+      msg: "duplicate value x",
+    }],
+  },
   // TODO: add tests for exceeding size limits
 
   {
