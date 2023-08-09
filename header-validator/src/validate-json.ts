@@ -289,6 +289,17 @@ function listOrKeyValues(f: ValueCheck, listMaxLength: number = Infinity, listMi
   }
 }
 
+function unique(): StringCheck {
+  const set = new Set()
+  return (state, value) => {
+    if (set.has(value)) {
+      state.warn(`duplicate value ${value}`)
+    } else {
+      set.add(value)
+    }
+  }
+}
+
 // TODO: Check length of strings.
 const filterData = () =>
   keyValues((state, filter, values) => {
@@ -297,7 +308,7 @@ const filterData = () =>
       return
     }
 
-    list(string(), limits.maxValuesPerFilterDataEntry)(state, values)
+    list(string(unique()), limits.maxValuesPerFilterDataEntry)(state, values)
   }, limits.maxEntriesPerFilterData)
 
 const filters = () =>
@@ -306,7 +317,7 @@ const filters = () =>
       positiveInteger(state, values);
       return
     }
-    
+
     list(string())(state, values)
   })
 
