@@ -550,7 +550,7 @@ export const testCases = [
     json: `{"aggregation_coordinator_origin": "a.test"}`,
     expectedErrors: [{
       path: ["aggregation_coordinator_origin"],
-      msg: "must contain a valid URL",
+      msg: "invalid URL",
     }],
   },
   {
@@ -558,7 +558,15 @@ export const testCases = [
     json: `{"aggregation_coordinator_origin": "http://a.test"}`,
     expectedErrors: [{
       path: ["aggregation_coordinator_origin"],
-      msg: "must contain a potentially trustworthy URL",
+      msg: "URL must be potentially trustworthy",
+    }],
+  },
+  {
+    name: "aggregation-coordinator-origin-untrustworthy",
+    json: `{"aggregation_coordinator_origin": "https://b.a.test/x"}`,
+    expectedWarnings: [{
+      path: ["aggregation_coordinator_origin"],
+      msg: "URL components other than origin (https://b.a.test) will be ignored",
     }],
   },
 
