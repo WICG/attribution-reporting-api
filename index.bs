@@ -1256,18 +1256,9 @@ and the maximum [=map/size=] of an [=attribution trigger=]'s
 controls how many [=attribution sources=] can be in the
 [=attribution source cache=] per [=attribution source/source origin=].
 
-<dfn>Navigation-source trigger data cardinality</dfn> is a positive integer
-that controls the valid range of
-[=event-level trigger configuration/trigger data=] for triggers that are
-attributed to an [=attribution source=] whose
-[=attribution source/source type=] is "<code>[=source type/navigation=]</code>":
-0 <= [=event-level trigger configuration/trigger data=] < [=navigation-source trigger data cardinality=].
-
-<dfn>Event-source trigger data cardinality</dfn> is a positive integer that
-controls the valid range of [=event-level trigger configuration/trigger data=]
-for triggers that are attributed to an [=attribution source=] whose
-[=attribution source/source type=] is "<code>[=source type/event=]</code>":
-0 <= [=event-level trigger configuration/trigger data=] < [=event-source trigger data cardinality=].
+<dfn>Default trigger data cardinality</dfn> is a [=map=] that
+controls the valid range of [=event-level trigger configuration/trigger data=].
+The keys are «[=source type/navigation=], [=source type/event=]». The values are positive integers.
 
 <dfn>Randomized response epsilon</dfn> is a non-negative double that controls
 the randomized response probability of an [=attribution source=]. If [=automation local testing mode=] is true,
@@ -1936,6 +1927,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |expiry| be the result of running [=parse a duration=] with |value|,
     "`expiry`", and [=valid source expiry range=].
 1. If |expiry| is an error, return null.
+1. If |sourceType| is "<code>[=source type/event=]</code>", round |expiry| away
+    from zero to the nearest day (86400 seconds).
 1. Let |priority| be the result of running
     [=parse an optional 64-bit signed integer=] with |value|, "`priority`", and
     0.
@@ -1956,12 +1949,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
 1. If |aggregationKeys| is null, return null.
-1. Let |triggerDataCardinality| be the user agent's
-    [=navigation-source trigger data cardinality=].
-1. If |sourceType| is "<code>[=source type/event=]</code>":
-    1. Round |expiry| away from zero to the nearest day (86400 seconds).
-    1. Set |triggerDataCardinality| to the user agent's
-        [=event-source trigger data cardinality=].
+1. Let |triggerDataCardinality| be the user agent's [=default trigger data cardinality=][|sourceType|].
 1. Let |maxAttributionsPerSource| be [=default event-level attributions per source=][|sourceType|].
 1. Set |maxAttributionsPerSource| to |value|["`max_event_level_reports`"] if it [=map/exists=].
 1. If |maxAttributionsPerSource| is not a non-negative integer, or is greater than [=max settable event-level attributions per source=], return null.
@@ -3046,9 +3034,7 @@ To <dfn>obtain an aggregatable report delivery time</dfn> given a [=moment=]
 To <dfn>obtain an event-level report</dfn> given an [=attribution source=] |source|, an [=attribution trigger=]
 |trigger|, and an [=event-level trigger configuration=] |config|:
 
-1. Let |triggerDataCardinality| be the user agent's [=navigation-source trigger data cardinality=].
-1. If |source|'s [=attribution source/source type=] is "<code>[=source type/event=]</code>", set |triggerDataCardinality| to
-    the user agent's [=event-source trigger data cardinality=].
+1. Let |triggerDataCardinality| be the user agent's [=default trigger data cardinality=][|source|'s [=attribution source/source type=].
 1. Let |reportTime| be the result of running [=obtain an event-level report delivery time=] with |source| and |trigger|'s [=attribution trigger/trigger time=].
 1. Let |report| be a new [=event-level report=] struct whose items are:
 
