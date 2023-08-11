@@ -425,7 +425,7 @@ export const testCases = [
 
   {
     name: "key-piece-missing",
-    json: `{"aggregatable_trigger_data": [{"source_keys": []}]}`,
+    json: `{"aggregatable_trigger_data": [{}]}`,
     expectedErrors: [{
       path: ["aggregatable_trigger_data", 0, "key_piece"],
       msg: "missing required field",
@@ -434,8 +434,7 @@ export const testCases = [
   {
     name: "key-piece-wrong-type",
     json: `{"aggregatable_trigger_data": [{
-      "key_piece": 1,
-      "source_keys": []
+      "key_piece": 1
     }]}`,
     expectedErrors: [{
       path: ["aggregatable_trigger_data", 0, "key_piece"],
@@ -445,8 +444,7 @@ export const testCases = [
   {
     name: "key-piece-wrong-format",
     json: `{"aggregatable_trigger_data": [{
-      "key_piece": "f",
-      "source_keys": []
+      "key_piece": "f"
     }]}`,
     expectedErrors: [{
       path: ["aggregatable_trigger_data", 0, "key_piece"],
@@ -458,7 +456,6 @@ export const testCases = [
     name: "aggregatable_trigger_data-filters-wrong-type",
     json: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
-      "source_keys": ["x"],
       "filters": 1
     }]}`,
     expectedErrors: [{
@@ -470,7 +467,6 @@ export const testCases = [
     name: "aggregatable_trigger_data-filters-values-wrong-type",
     json: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
-      "source_keys": ["x"],
       "filters": {"a": "b"}
     }]}`,
     expectedErrors: [{
@@ -482,7 +478,6 @@ export const testCases = [
     name: "aggregatable_trigger_data-filters-value-wrong-type",
     json: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
-      "source_keys": ["x"],
       "filters": {"a": [1]}
     }]}`,
     expectedErrors: [{
@@ -495,7 +490,6 @@ export const testCases = [
     name: "aggregatable_trigger_data-not-filters-wrong-type",
     json: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
-      "source_keys": ["x"],
       "not_filters": 1
     }]}`,
     expectedErrors: [{
@@ -507,7 +501,6 @@ export const testCases = [
     name: "aggregatable_trigger_data-not-filters-values-wrong-type",
     json: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
-      "source_keys": ["x"],
       "not_filters": {"a": "b"}
     }]}`,
     expectedErrors: [{
@@ -519,7 +512,6 @@ export const testCases = [
     name: "aggregatable_trigger_data-not-filters-value-wrong-type",
     json: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
-      "source_keys": ["x"],
       "not_filters": {"a": [1]}
     }]}`,
     expectedErrors: [{
