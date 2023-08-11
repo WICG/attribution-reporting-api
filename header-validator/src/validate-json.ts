@@ -356,7 +356,7 @@ const aggregatableTriggerData = list(
       filters: optional(orFilters),
       key_piece: required(hex128),
       not_filters: optional(orFilters),
-      source_keys: optional(list(string(), limits.maxAggregationKeys)),
+      source_keys: optional(list(string(unique()), limits.maxAggregationKeys)),
     }))
 
 // TODO: check length of key

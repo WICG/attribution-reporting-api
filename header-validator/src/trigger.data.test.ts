@@ -422,6 +422,23 @@ export const testCases = [
       msg: "must be a string",
     }],
   },
+  {
+    name: "source-keys-duplicate-value",
+    json: `{"aggregatable_trigger_data": [
+      {
+        "key_piece": "0x1",
+        "source_keys": ["a", "x", "a"]
+      },
+      {
+        "key_piece": "0x2",
+        "source_keys": ["x"]
+      }
+    ]}`,
+    expectedWarnings: [{
+      path: ["aggregatable_trigger_data", 0, "source_keys", 2],
+      msg: "duplicate value a",
+    }],
+  },
 
   {
     name: "key-piece-missing",
