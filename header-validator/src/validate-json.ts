@@ -203,8 +203,6 @@ const hex128 = string((state, value) => {
   }
 })
 
-type OriginCheck = (state: State, value: URL) => void
-
 enum SuitableScope {
   Origin = 'origin',
   Site = 'site',
