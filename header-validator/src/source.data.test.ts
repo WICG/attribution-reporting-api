@@ -39,19 +39,15 @@ export const testCases = [
   },
   {
     name: "destination-url-components",
-    json: `{"destination": "https://a.test/b?c=d#e"}`,
+    json: `{"destination": ["https://a.test/b?c=d#e", "https://x.y.test"]}`,
     expectedWarnings: [
       {
-        path: ["destination"],
-        msg: "contains a path that will be ignored",
+        path: ["destination", 0],
+        msg: "URL components other than site (https://a.test) will be ignored",
       },
       {
-        path: ["destination"],
-        msg: "contains a query string that will be ignored",
-      },
-      {
-        path: ["destination"],
-        msg: "contains a fragment that will be ignored",
+        path: ["destination", 1],
+        msg: "URL components other than site (https://y.test) will be ignored",
       },
     ],
   },
@@ -100,7 +96,7 @@ export const testCases = [
     json: `{"destination": "a.test"}`,
     expectedErrors: [{
       path: ["destination"],
-      msg: "must contain a valid URL",
+      msg: "invalid URL",
     }],
   },
   {
@@ -108,7 +104,7 @@ export const testCases = [
     json: `{"destination": "http://a.test"}`,
     expectedErrors: [{
       path: ["destination"],
-      msg: "must contain a potentially trustworthy URL",
+      msg: "URL must be potentially trustworthy",
     }],
   },
 

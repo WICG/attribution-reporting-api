@@ -1,3 +1,4 @@
+import * as psl from 'psl'
 import { Issue, PathComponent, ValidationResult } from './issue'
 
 export type JsonDict = { [key: string]: Json }
@@ -202,43 +203,55 @@ const hex128 = string((state, value) => {
   }
 })
 
-const suitableUrl = string((state, value) => {
-  let url
-  try {
-    url = new URL(value)
-  } catch {
-    state.error('must contain a valid URL')
-    return
-  }
+enum SuitableScope {
+  Origin = 'origin',
+  Site = 'site',
+}
 
-  if (
-    url.protocol !== 'https:' &&
-    !(
-      url.protocol === 'http:' &&
-      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
-    )
-  ) {
-    state.error('must contain a potentially trustworthy URL')
-  }
+function suitableOriginOrSite(scope: SuitableScope): ValueCheck {
+  return string((state, value) => {
+    let url
+    try {
+      url = new URL(value)
+    } catch {
+      state.error('invalid URL')
+      return
+    }
 
-  if (url.pathname !== '/') {
-    state.warn('contains a path that will be ignored')
-  }
+    if (
+      url.protocol !== 'https:' &&
+      !(
+        url.protocol === 'http:' &&
+        (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
+      )
+    ) {
+      state.error('URL must be potentially trustworthy')
+    }
 
-  if (url.search !== '') {
-    state.warn('contains a query string that will be ignored')
-  }
+    let scoped
+    switch (scope) {
+      case SuitableScope.Origin:
+        scoped = url.origin
+        break
+      case SuitableScope.Site:
+        scoped = `${url.protocol}//${psl.get(url.hostname)}`
+        break
+    }
 
-  if (url.hash !== '') {
-    state.warn('contains a fragment that will be ignored')
-  }
-})
+    if (value !== scoped) {
+      state.warn(`URL components other than ${scope} (${scoped}) will be ignored`)
+    }
+  })
+}
 
-const destinationList = list(suitableUrl, 3, 1)
+const suitableOrigin = suitableOriginOrSite(SuitableScope.Origin)
+const suitableSite = suitableOriginOrSite(SuitableScope.Site)
+
+const destinationList = list(suitableSite, 3, 1)
 
 function destinationValue(state: State, value: Json): void {
   if (typeof value === 'string') {
-    return suitableUrl(state, value)
+    return suitableSite(state, value)
   }
   if (Array.isArray(value)) {
     return destinationList(state, value)
@@ -399,7 +412,7 @@ export function validateTrigger(trigger: Json): ValidationResult {
   state.validate(trigger, {
     aggregatable_trigger_data: optional(aggregatableTriggerData),
     aggregatable_values: optional(aggregatableValues),
-    aggregation_coordinator_origin: optional(suitableUrl),
+    aggregation_coordinator_origin: optional(suitableOrigin),
     debug_key: optional(uint64),
     debug_reporting: optional(bool),
     event_trigger_data: optional(eventTriggerData),
