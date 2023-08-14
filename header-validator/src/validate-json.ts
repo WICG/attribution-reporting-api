@@ -15,6 +15,15 @@ const limits = {
   maxValuesPerFilterDataEntry: 50,
 }
 
+export enum SourceType {
+  Event = 'event',
+  Navigation = 'navigation',
+}
+
+export type VendorSpecificValues = {
+  triggerDataCardinality: Record<SourceType, bigint>,
+}
+
 type FieldCheck = (state: State, obj: JsonDict, key: string) => void
 
 type FieldChecks = Record<string, FieldCheck>
@@ -23,6 +32,8 @@ class State {
   private readonly path: Array<PathComponent> = []
   private readonly errors: Array<Issue> = []
   private readonly warnings: Array<Issue> = []
+
+  constructor(public readonly vsv?: VendorSpecificValues) {}
 
   error(msg: string): void {
     this.errors.push({ path: [...this.path], msg })
@@ -146,15 +157,32 @@ function list(f: ValueCheck, maxLength: number = Infinity, minLength: number = 0
   }
 }
 
-const uint64 = string((state, value) => {
-  if (!uint64Regex.test(value)) {
-    state.error(`must be a uint64 (must match ${uint64Regex})`)
-    return
-  }
+type Uint64Check = (state: State, value: bigint) => void
 
-  const max = 2n ** 64n - 1n
-  if (BigInt(value) > max) {
-    state.error('must fit in an unsigned 64-bit integer')
+function uint64(f: Uint64Check = () => {}): ValueCheck {
+  return string((state, value) => {
+    if (!uint64Regex.test(value)) {
+      state.error(`must be a uint64 (must match ${uint64Regex})`)
+      return
+    }
+
+    const int = BigInt(value)
+    const max = 2n ** 64n - 1n
+    if (int > max) {
+      state.error('must fit in an unsigned 64-bit integer')
+    }
+
+    f(state, int)
+  })
+}
+
+const triggerData = uint64((state, value) => {
+  if (typeof state.vsv !== 'undefined') {
+    Object.entries(state.vsv.triggerDataCardinality).forEach(([t, c]) => {
+      if (value >= c) {
+        state.warn(`will be sanitized to ${value % c} if trigger is attributed to ${t} source`)
+      }
+    })
   }
 })
 
@@ -283,7 +311,7 @@ function legacyDuration(state: State, value: Json): void {
     return nonNegativeInteger(state, value)
   }
   if (typeof value === 'string') {
-    return uint64(state, value)
+    return uint64()(state, value)
   }
   state.error('must be a non-negative integer or a string')
 }
@@ -341,20 +369,20 @@ const aggregationKeys = keyValues((state, key, value) => {
   hex128(state, value)
 }, limits.maxAggregationKeys)
 
-export function validateSource(source: Json): ValidationResult {
-  const state = new State()
+export function validateSource(source: Json, vsv?: VendorSpecificValues): ValidationResult {
+  const state = new State(vsv)
   state.validate(source, {
     aggregatable_report_window: optional(legacyDuration),
     event_report_window: optional(legacyDuration),
     event_report_windows: optional(eventReportWindows),
     aggregation_keys: optional(aggregationKeys),
-    debug_key: optional(uint64),
+    debug_key: optional(uint64()),
     debug_reporting: optional(bool),
     destination: required(destinationValue),
     expiry: optional(legacyDuration),
     filter_data: optional(filterData()),
     priority: optional(int64),
-    source_event_id: optional(uint64),
+    source_event_id: optional(uint64()),
     max_event_level_reports: optional(maxEventLevelReports),
   })
   if (isObject(source) && 'event_report_window' in source && 'event_report_windows' in source) {
@@ -383,17 +411,17 @@ const aggregatableValues = keyValues((state, key, value) => {
 const eventTriggerData = list(
   (state, value) =>
     state.validate(value, {
-      deduplication_key: optional(uint64),
+      deduplication_key: optional(uint64()),
       filters: optional(orFilters),
       not_filters: optional(orFilters),
       priority: optional(int64),
-      trigger_data: optional(uint64),
+      trigger_data: optional(triggerData),
     }))
 
 const aggregatableDedupKeys = list(
   (state, value) =>
     state.validate(value, {
-      deduplication_key: optional(uint64),
+      deduplication_key: optional(uint64()),
       filters: optional(filters()),
       not_filters: optional(filters()),
     }))
@@ -407,13 +435,13 @@ const aggregatableSourceRegistrationTime = string((state, value) => {
   state.error(`must match '${exclude}' or '${include}' (case-sensitive)`)
 })
 
-export function validateTrigger(trigger: Json): ValidationResult {
-  const state = new State()
+export function validateTrigger(trigger: Json, vsv?: VendorSpecificValues): ValidationResult {
+  const state = new State(vsv)
   state.validate(trigger, {
     aggregatable_trigger_data: optional(aggregatableTriggerData),
     aggregatable_values: optional(aggregatableValues),
     aggregation_coordinator_origin: optional(suitableOrigin),
-    debug_key: optional(uint64),
+    debug_key: optional(uint64()),
     debug_reporting: optional(bool),
     event_trigger_data: optional(eventTriggerData),
     filters: optional(orFilters),
@@ -424,7 +452,7 @@ export function validateTrigger(trigger: Json): ValidationResult {
   return state.result()
 }
 
-export function validateJSON(json: string, f: (value: Json) => ValidationResult) {
+export function validateJSON(json: string, f: (value: Json, vsv?: VendorSpecificValues) => ValidationResult, vsv?: VendorSpecificValues) {
   let value
   try {
     value = JSON.parse(json)
@@ -432,5 +460,5 @@ export function validateJSON(json: string, f: (value: Json) => ValidationResult)
     const msg = err instanceof Error ? err.toString() : 'unknown error'
     return { errors: [{ msg }], warnings: [] }
   }
-  return f(value)
+  return f(value, vsv)
 }
