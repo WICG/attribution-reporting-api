@@ -445,7 +445,7 @@ export const testCases = [
     json: `{"aggregatable_trigger_data": [{}]}`,
     expectedErrors: [{
       path: ["aggregatable_trigger_data", 0, "key_piece"],
-      msg: "missing required field",
+      msg: "required",
     }],
   },
   {
