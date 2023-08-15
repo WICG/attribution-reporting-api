@@ -29,8 +29,8 @@ Chromium's implementation assigns the following values:
 | [Max attributions per rate-limit window][] | [100][max attributions per rate-limit window value] |
 | [Allowed aggregatable budget per source][] | [65536][allowed aggregatable budget per source value] |
 | [Randomized aggregatable report delay][] | [10 minutes][randomized aggregatable report delay value] |
-| Max information gain for navigations | 11.46 bits |
-| Max information gain for events | 6.5 bits |
+| [Max information gain for navigations][] | [11.46 bits][max information gain for navigations] |
+| [Max information gain for events][] | [6.5 bits][max information gain for events] |
 
 [Max aggregation keys per attribution]: https://wicg.github.io/attribution-reporting-api/#max-aggregation-keys-per-attribution
 [max aggregation keys per attribution value]: https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:components/attribution_reporting/constants.h;l=19;drc=b646f894a92491033bde5d1e75aba6f44c524f0e
@@ -77,3 +77,7 @@ Chromium's implementation assigns the following values:
 [allowed aggregatable budget per source value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=97;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Randomized aggregatable report delay]: https://wicg.github.io/attribution-reporting-api/#randomized-aggregatable-report-delay
 [randomized aggregatable report delay value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=106;drc=3733a639d724a4353463a872605119d11a1e4d37
+[Max information gain for navigations]: https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source
+[max information gain for navigations]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=113;drc=c8a629d7be311323904c523d33693af8f52d17e9
+[Max information gain for events]: https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source
+[max information gain for events]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=114;drc=c8a629d7be311323904c523d33693af8f52d17e9
