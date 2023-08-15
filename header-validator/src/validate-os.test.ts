@@ -70,12 +70,8 @@ const tests = [
 ]
 
 tests.forEach(test => {
-  [
-      validateOsRegistration,
-  ].forEach(validate => {
-    const { errors, warnings } = validate(test.input)
+  const { errors, warnings } = validateOsRegistration(test.input)
 
-    assert.deepStrictEqual(errors, test.errors || [], test.input)
-    assert.deepStrictEqual(warnings, test.warnings || [], test.input)
-  })
+  assert.deepStrictEqual(errors, test.errors || [], test.input)
+  assert.deepStrictEqual(warnings, test.warnings || [], test.input)
 })

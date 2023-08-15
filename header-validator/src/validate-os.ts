@@ -1,16 +1,18 @@
-import { Issue, ValidationResult } from './issue'
-const { parseList } = require('structured-headers')
+import { Context, ValidationResult } from './context'
+import { InnerList, Item, parseList } from 'structured-headers'
 
-function validateURL(item: any): string|undefined {
-  if (typeof item !== 'string') {
-    return 'must be a string'
+function validateURL(ctx: Context, member: InnerList|Item): void {
+  if (typeof member[0] !== 'string') {
+    ctx.error('must be a string')
+    return
   }
 
   let url
   try {
-    url = new URL(item)
+    url = new URL(member[0])
   } catch {
-    return 'must contain a valid URL'
+    ctx.error('must contain a valid URL')
+    return
   }
 
   if (
@@ -20,40 +22,34 @@ function validateURL(item: any): string|undefined {
       (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
     )
   ) {
-    return 'must contain a potentially trustworthy URL'
+    ctx.error('must contain a potentially trustworthy URL')
+    return
+  }
+
+  for (const [key, value] of member[1]) {
+    ctx.scope(key, () => {
+      if (key === 'debug-reporting') {
+        if (typeof value !== 'boolean') {
+          ctx.error('must be a boolean')
+        }
+      } else {
+        ctx.warning('unknown parameter')
+      }
+    })
   }
 }
 
 export function validateOsRegistration(str: string): ValidationResult {
-  const result: ValidationResult = { errors: [], warnings: [] }
+  const ctx = new Context()
 
   let list
   try {
     list = parseList(str)
   } catch (err) {
     const msg = err instanceof Error ? err.toString() : 'unknown error'
-    result.errors.push({ msg })
-    return result
+    return ctx.finish(msg)
   }
 
-  for (let i = 0; i < list.length; i++) {
-    const [member, params] = list[i]
-    const err = validateURL(member)
-    if (err) {
-      result.errors.push({ msg: err, path: [i] })
-      continue
-    }
-
-    for (const [key, value] of params) {
-      if (key === 'debug-reporting') {
-        if (typeof value !== 'boolean') {
-          result.errors.push({ msg: 'must be a boolean', path: [i, key] })
-        }
-      } else {
-        result.warnings.push({ msg: 'unknown parameter', path: [i, key] })
-      }
-    }
-  }
-
-  return result
+  list.forEach((member, i) => ctx.scope(i, () => validateURL(ctx, member)))
+  return ctx.finish()
 }

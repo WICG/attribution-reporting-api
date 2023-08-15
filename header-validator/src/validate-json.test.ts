@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert'
-import { Issue, ValidationResult } from './issue'
+import { Context, Issue } from './context'
 import { Json, validateJSON, validateSource, validateTrigger } from './validate-json'
 import { testCases as sourceTestCases } from './source.data.test'
 import { testCases as triggerTestCases } from './trigger.data.test'
@@ -7,11 +7,11 @@ import { testCases as triggerTestCases } from './trigger.data.test'
 type TestCase = {
   name: string,
   json: string,
-  expectedWarnings?: Array<Issue>,
-  expectedErrors?: Array<Issue>,
+  expectedWarnings?: Issue[],
+  expectedErrors?: Issue[],
 }
 
-function runTest(testCase: TestCase, validate: (value: Json) => ValidationResult) {
+function runTest(testCase: TestCase, validate: (ctx: Context, value: Json) => void) {
   const { errors, warnings } = validateJSON(testCase.json, validate)
 
   assert.deepEqual(errors, testCase.expectedErrors || [], testCase.name)
