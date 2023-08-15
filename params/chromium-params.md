@@ -29,6 +29,8 @@ Chromium's implementation assigns the following values:
 | [Max attributions per rate-limit window][] | [100][max attributions per rate-limit window value] |
 | [Allowed aggregatable budget per source][] | [65536][allowed aggregatable budget per source value] |
 | [Randomized aggregatable report delay][] | [10 minutes][randomized aggregatable report delay value] |
+| Max information gain for navigations | 11.46 bits |
+| Max information gain for events | 6.5 bits |
 
 [Max aggregation keys per attribution]: https://wicg.github.io/attribution-reporting-api/#max-aggregation-keys-per-attribution
 [max aggregation keys per attribution value]: https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:components/attribution_reporting/constants.h;l=19;drc=b646f894a92491033bde5d1e75aba6f44c524f0e
