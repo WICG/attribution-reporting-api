@@ -65,7 +65,7 @@ function required(f: ValueCheck): FieldCheck {
       f(state, obj[key])
       return
     }
-    state.error('missing required field')
+    state.error('required')
   }
 }
 
@@ -132,9 +132,7 @@ function list(f: ValueCheck, maxLength: number = Infinity, minLength: number = 0
   return (state, values) => {
     if (Array.isArray(values)) {
       if (values.length > maxLength || values.length < minLength) {
-        state.error(
-          `List size out of expected bounds. Size must be within [${minLength}, ${maxLength}]`
-        )
+        state.error(`length must be in the range [${minLength}, ${maxLength}]`)
       }
 
       values.forEach((value, index) =>

@@ -80,7 +80,7 @@ export const testCases = [
     json: `{}`,
     expectedErrors: [{
       path: ["destination"],
-      msg: "missing required field",
+      msg: "required",
     }],
   },
   {
@@ -506,7 +506,7 @@ export const testCases = [
     }`,
     expectedErrors: [{
       path: ['event_report_windows', 'end_times'],
-      msg: "missing required field",
+      msg: "required",
     }],
   },
   {
@@ -519,7 +519,7 @@ export const testCases = [
     }`,
     expectedErrors: [{
       path: ['event_report_windows', 'end_times'],
-      msg: "List size out of expected bounds. Size must be within [1, 5]",
+      msg: "length must be in the range [1, 5]",
     }],
   },
   {
@@ -532,7 +532,7 @@ export const testCases = [
     }`,
     expectedErrors: [{
       path: ['event_report_windows', 'end_times'],
-      msg: "List size out of expected bounds. Size must be within [1, 5]",
+      msg: "length must be in the range [1, 5]",
     }],
   },
   {
