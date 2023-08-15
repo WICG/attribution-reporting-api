@@ -2709,6 +2709,45 @@ an [=event-level report=] |b| if any of the following are true:
 * |a|'s [=event-level report/trigger priority=] is equal to |b|'s [=event-level report/trigger priority=]
      and |a|'s [=event-level report/trigger time=] is greater than |b|'s [=event-level report/trigger time=].
 
+An <dfn>event-level-report-replacement result</dfn> is one of the following:
+
+<dl dfn-for="event-level-report-replacement result">
+: "<dfn><code>add-new-report</code></dfn>"
+:: The new report should be added.
+: "<dfn><code>drop-new-report-none-to-replace</code></dfn>"
+:: The new report should be dropped because the attributed source has reached
+    its attribution limit and there is no pending report to replace.
+: "<dfn><code>drop-new-report-low-priority</code></dfn>"
+:: The new report should be dropped because the attributed source has reached
+    its attribution limit and the new report
+    [=event-level report/is lower-priority than=] all pending reports.
+
+</dl>
+
+To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
+|sourceToAttribute| and an [=event-level report=] |report|:
+
+1. [=Assert=]: |sourceToAttribute|'s [=attribution source/number of event-level reports=] is less than or equal to
+    |sourceToAttribute|'s [=attribution source/max number of event-level reports=].
+1. If |sourceToAttribute|'s [=attribution source/number of event-level reports=] is less than
+    |sourceToAttribute|'s [=attribution source/max number of event-level reports=], return "<code>[=event-level-report-replacement result/add-new-report=]</code>".
+1. Let |matchingReports| be a new [=list=].
+1. [=set/iterate|For each=] |entry| of the [=event-level report cache=]:
+    1. If |entry|'s [=event-level report/report time=] and |report|'s [=event-level report/report time=] are not equal, [=iteration/continue=].
+    1. If |entry|'s [=event-level report/source identifier=] and |report|'s [=event-level report/source identifier=] are not equal, [=iteration/continue=].
+    1. [=list/Append=] |entry| to |matchingReports|.
+1. If |matchingReports| [=list/is empty=]:
+    1. Set |sourceToAttribute|'s [=attribution source/event-level attributable=] value to false.
+    1. Return "<code>[=event-level-report-replacement result/drop-new-report-none-to-replace=]</code>".
+1. Set |matchingReports| to the result of [=list/sort in ascending order|sorting=] |matchingReports|
+    in ascending order using [=event-level report/is lower-priority than=].
+1. Let |lowestPriorityReport| be |matchingReports|[0].
+1. If |report| [=event-level report/is lower-priority than=] |lowestPriorityReport|,
+    return "<code>[=event-level-report-replacement result/drop-new-report-low-priority=]</code>".
+1. [=set/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
+1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
+1. Return "<code>[=event-level-report-replacement result/add-new-report=]</code>".
+
 To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |trigger|, an
 [=attribution source=] |sourceToAttribute|, and an
 [=attribution rate-limit record=] |rateLimitRecord|, run the following steps:
@@ -2774,27 +2813,22 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
      1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
          with "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>", |trigger|, |sourceToAttribute| and |report|.
      1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If |sourceToAttribute|'s [=attribution source/number of event-level reports=] value is equal to
-    |sourceToAttribute|'s [=attribution source/max number of event-level reports=], then:
-    1. Let |matchingReports| be a new [=list=].
-    1. [=set/iterate|For each=] |entry| of the [=event-level report cache=]:
-        1. If |entry|'s [=event-level report/report time=] and |report|'s [=event-level report/report time=] are not equal, [=iteration/continue=].
-        1. If |entry|'s [=event-level report/source identifier=] and |report|'s [=event-level report/source identifier=] are not equal, [=iteration/continue=].
-        1. [=list/Append=] |entry| to |matchingReports|.
-    1. If |matchingReports| [=list/is empty=]:
-        1. Set |sourceToAttribute|'s [=attribution source/event-level attributable=] value to false.
-        1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-            with "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>", |trigger|, |sourceToAttribute| and |report|.
-        1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-    1. Set |matchingReports| to the result of [=list/sort in ascending order|sorting=] |matchingReports|
-        in ascending order using [=event-level report/is lower-priority than=].
-    1. Let |lowestPriorityReport| be |matchingReports|[0].
-    1. If |report| [=event-level report/is lower-priority than=] |lowestPriorityReport|:
+1. If the result of running [=maybe replace event-level report=] with |sourceToAttribute| and |report| is:
+    <dl class="switch">
+    : "<code>[=event-level-report-replacement result/add-new-report=]</code>"
+    :: Do nothing.
+    : "<code>[=event-level-report-replacement result/drop-new-report-none-to-replace=]</code>"
+    ::
+         1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+             with "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>", |trigger|, |sourceToAttribute| and |report|.
+         1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    : "<code>[=event-level-report-replacement result/drop-new-report-low-priority=]</code>"]
+    ::
          1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
              with "<code>[=trigger debug data type/trigger-event-low-priority=]</code>", |trigger|, |sourceToAttribute| and |report|.
          1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-    1. [=set/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
-    1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
+
+    </dl>
 1. Let |triggeringStatus| be "<code>[=triggering status/attributed=]</code>".
 1. Let |debugData| be null.
 1. If |sourceToAttribute|'s [=attribution source/randomized response=] is:
