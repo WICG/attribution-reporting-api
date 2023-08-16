@@ -144,7 +144,7 @@ export const testCases = [
   },
   {
     name: "filters-unknown-source-type",
-    json: `{"filters": {"source_type": ["EVENT"]}}`,
+    json: `{"filters": {"source_type": ["EVENT", "event", "navigation"]}}`,
     expectedWarnings: [{
       path: ["filters", "source_type", 0],
       msg: "unknown value EVENT (source_type can only match one of event, navigation)",
