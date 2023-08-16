@@ -131,6 +131,17 @@ export const testCases = [
       msg: "must be a positive integer",
     }],
   },
+  {
+    name: "filters-duplicate-value",
+    json: `{"filters": {
+      "a": ["x", "y", "x"],
+      "b": ["y"]
+    }}`,
+    expectedWarnings: [{
+      path: ["filters", "a", 2],
+      msg: "duplicate value x",
+    }],
+  },
 
   {
     name: "not-filters-wrong-type",

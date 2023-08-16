@@ -329,7 +329,7 @@ const filters = () =>
       return
     }
 
-    list(string())(state, values)
+    list(string(unique()))(state, values)
   })
 
 const orFilters = listOrKeyValues(filters())
