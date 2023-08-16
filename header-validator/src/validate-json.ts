@@ -296,6 +296,11 @@ const filterData = () =>
     list(string(unique()), limits.maxValuesPerFilterDataEntry)(ctx, values)
   }, limits.maxEntriesPerFilterData)
 
+enum SourceType {
+  event = 'event',
+  navigation = 'navigation',
+}
+
 const filters = () =>
   keyValues((ctx, filter, values) => {
     if (filter === '_lookback_window') {
@@ -303,7 +308,16 @@ const filters = () =>
       return
     }
 
-    list(string(unique()))(ctx, values)
+    const checkUnique = unique()
+
+    list(string((ctx, value) => {
+      if (filter === 'source_type' && !(value in SourceType)) {
+        const allowed = Object.keys(SourceType).join(', ')
+        ctx.warning(`unknown value ${value} (${filter} can only match one of ${allowed})`)
+      }
+
+      checkUnique(ctx, value)
+    }))(ctx, values)
   })
 
 const orFilters = listOrKeyValues(filters())
