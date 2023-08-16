@@ -1,4 +1,4 @@
-import { Issue, PathComponent } from './issue'
+import { Issue, PathComponent } from './context'
 import { validateJSON, validateSource, validateTrigger } from './validate-json'
 import { validateEligible } from './validate-eligible'
 import { validateOsRegistration } from './validate-os'
