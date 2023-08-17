@@ -104,7 +104,15 @@ function keyValues(f: KeyValueCheck, maxKeys = Infinity): ValueCheck {
   })
 }
 
-function list(f: ValueCheck, maxLength: number = Infinity, minLength: number = 0): ValueCheck {
+type ListOpts = {
+  minLength?: number,
+  maxLength?: number,
+}
+
+function list(f: ValueCheck, {
+  minLength = 0,
+  maxLength = Infinity,
+}: ListOpts = {}): ValueCheck {
   return (ctx, values) => {
     if (Array.isArray(values)) {
       if (values.length > maxLength || values.length < minLength) {
@@ -219,7 +227,7 @@ function suitableOriginOrSite(scope: SuitableScope): ValueCheck {
 const suitableOrigin = suitableOriginOrSite(SuitableScope.Origin)
 const suitableSite = suitableOriginOrSite(SuitableScope.Site)
 
-const destinationList = list(suitableSite, 3, 1)
+const destinationList = list(suitableSite, {minLength: 1, maxLength: 3})
 
 function destinationValue(ctx: Context, value: Json): void {
   if (typeof value === 'string') {
@@ -246,7 +254,7 @@ function eventReportWindows(ctx: Context, value: Json): void {
   // is properly ordered.
   validate(ctx, value, {
     start_time: optional(nonNegativeInteger),
-    end_times: required(list(positiveInteger, 5, 1))
+    end_times: required(list(positiveInteger, {minLength: 1, maxLength: 5})),
   })
 }
 
@@ -260,14 +268,14 @@ function legacyDuration(ctx: Context, value: Json): void {
   ctx.error('must be a non-negative integer or a string')
 }
 
-function listOrKeyValues(f: ValueCheck, listMaxLength: number = Infinity, listMinLength: number = 0): ValueCheck {
+function listOrKeyValues(f: ValueCheck, listOpts: ListOpts = {}): ValueCheck {
   return (ctx, value) => {
     if (isObject(value)) {
       return f(ctx, value)
     }
 
     if (Array.isArray(value)) {
-      return list(f, listMaxLength, listMinLength)(ctx, value)
+      return list(f, listOpts)(ctx, value)
     }
 
     ctx.error('must be a list or an object')
@@ -293,7 +301,7 @@ const filterData = () =>
       return
     }
 
-    list(string(unique()), limits.maxValuesPerFilterDataEntry)(ctx, values)
+    list(string(unique()), {maxLength: limits.maxValuesPerFilterDataEntry})(ctx, values)
   }, limits.maxEntriesPerFilterData)
 
 enum SourceType {
@@ -351,7 +359,7 @@ const aggregatableTriggerData = list((ctx, value) => validate(ctx, value, {
   filters: optional(orFilters),
   key_piece: required(hex128),
   not_filters: optional(orFilters),
-  source_keys: optional(list(string(unique()), limits.maxAggregationKeys)),
+  source_keys: optional(list(string(unique()), {maxLength: limits.maxAggregationKeys})),
 }))
 
 // TODO: check length of key
