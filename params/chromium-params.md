@@ -80,4 +80,4 @@ Chromium's implementation assigns the following values:
 [Max information gain for navigation sources]: https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source
 [max information gain for navigations value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=113;drc=c8a629d7be311323904c523d33693af8f52d17e9
 [Max information gain for event sources]: https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source
-[max information gain for events value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=114;drc=c8a629d7be311323904c523d33693af8f52d17e9
+[max information gain for events value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=114;bpv=0;bpt=1
