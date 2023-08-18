@@ -1,4 +1,4 @@
-import { strict as assert } from 'assert'
+import * as testutil from './util.test'
 import { validateOsRegistration } from './validate-os'
 
 const tests = [
@@ -13,7 +13,7 @@ const tests = [
   // Warnings
   {
     input: '"https://a.test/"; x=1',
-    warnings: [{
+    expectedWarnings: [{
       path: [0, 'x'],
       msg: 'unknown parameter',
     }],
@@ -22,20 +22,20 @@ const tests = [
   // Invalid header syntax
   {
     input: '!',
-    errors: [{msg: 'Error: Parse error: Unexpected input at offset 0'}],
+    expectedErrors: [{msg: 'Error: Parse error: Unexpected input at offset 0'}],
   },
 
   // Not a string
   {
     input: '"https://a.test", x',
-    errors: [{
+    expectedErrors: [{
       path: [1],
       msg: 'must be a string',
     }],
   },
   {
     input: '("https://a.test/")',
-    errors: [{
+    expectedErrors: [{
       path: [0],
       msg: 'must be a string',
     }],
@@ -44,7 +44,7 @@ const tests = [
   // Invalid URL
   {
     input: '"a.test"',
-    errors: [{
+    expectedErrors: [{
       path: [0],
       msg: 'must contain a valid URL',
     }],
@@ -53,7 +53,7 @@ const tests = [
   // Untrustworthy URL
   {
     input: '"http://a.test"',
-    errors: [{
+    expectedErrors: [{
       path: [0],
       msg: 'must contain a potentially trustworthy URL',
     }],
@@ -62,16 +62,11 @@ const tests = [
   // debug-reporting not a boolean
   {
     input: '"https://b.test/", "https://a.test/"; debug-reporting=1',
-    errors: [{
+    expectedErrors: [{
       path: [1, 'debug-reporting'],
       msg: 'must be a boolean',
     }],
   },
 ]
 
-tests.forEach(test => {
-  const { errors, warnings } = validateOsRegistration(test.input)
-
-  assert.deepStrictEqual(errors, test.errors || [], test.input)
-  assert.deepStrictEqual(warnings, test.warnings || [], test.input)
-})
+tests.forEach(tc => testutil.run(tc, /*name=*/tc.input, () => validateOsRegistration(tc.input)))
