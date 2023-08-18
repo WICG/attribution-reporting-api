@@ -78,6 +78,6 @@ Chromium's implementation assigns the following values:
 [Randomized aggregatable report delay]: https://wicg.github.io/attribution-reporting-api/#randomized-aggregatable-report-delay
 [randomized aggregatable report delay value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=106;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Max information gain for navigation sources]: https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source
-[max information gain for navigations value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=113;drc=c8a629d7be311323904c523d33693af8f52d17e9
+[max information gain for navigations value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=113
 [Max information gain for event sources]: https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source
 [max information gain for events value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=114;bpv=0;bpt=1
