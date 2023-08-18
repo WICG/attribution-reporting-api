@@ -79,7 +79,7 @@ export class Config {
     const flipProb = flipProbabilityDp(numStates, epsilon)
 
     let excessive
-    const infoGainDefault = (sourceType == 'event' ? 6.5 : maxInformationGain(
+    const infoGainDefault = (sourceType === 'event' ? 6.5 : maxInformationGain(
           DefaultConfig[sourceType].numFlexibleStates(), epsilon))
 
     if (infoGain > infoGainDefault) {
