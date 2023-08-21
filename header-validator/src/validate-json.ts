@@ -380,8 +380,8 @@ const eventTriggerData = list((ctx, value) => validate(ctx, value, {
 
 const aggregatableDedupKeys = list((ctx, value) => validate(ctx, value, {
   deduplication_key: optional(uint64),
-  filters: optional(filters()),
-  not_filters: optional(filters()),
+  filters: optional(orFilters),
+  not_filters: optional(orFilters),
 }))
 
 const aggregatableSourceRegistrationTime = string((ctx, value) => {

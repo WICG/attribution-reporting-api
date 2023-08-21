@@ -275,6 +275,13 @@ runAll(validateTrigger, [
       msg: "must be a uint64 (must match /^[0-9]+$/)",
     }],
   },
+  {
+    name: "aggregatable-deduplication-key-or-filters",
+    json: `{"aggregatable_deduplication_keys": [{
+      "filters": [],
+      "not_filters": []
+    }]}`,
+  },
 
   {
     name: "event-trigger-data-wrong-type",
