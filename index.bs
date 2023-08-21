@@ -872,9 +872,9 @@ An aggregatable dedup key is a [=struct=] with the following items:
 : <dfn>dedup key</dfn>
 :: Null or a non-negative 64-bit integer.
 : <dfn>filters</dfn>
-:: A [=filter config=].
+:: A [=list=] of [=filter configs=].
 : <dfn>negated filters</dfn>
-:: A [=filter config=].
+:: A [=list=] of [=filter configs=].
 
 </dl>
 
@@ -2374,12 +2374,12 @@ To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
         [=parse an optional 64-bit unsigned integer=] with |value|,
         "`deduplication_key`", and null.
     1. If |dedupKey| is an error, return null.
-    1. Let |filters| be a new [=filter config=].
-    1. If |values|["`filters`"] [=map/exists=]:
+    1. Let |filters| be a [=list=] of [=filter configs=], initially empty.
+    1. If |value|["`filters`"] [=map/exists=]:
         1. Set |filters| to the result of running [=parse filter config=] with |value|["`filters`"].
         1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a new [=filter config=].
-    1. If |values|["`not_filters`"] [=map/exists=]:
+    1. Let |negatedFilters| be a [=list=] of [=filter configs=], initially empty.
+    1. If |value|["`not_filters`"] [=map/exists=]:
         1. Set |negatedFilters| to the result of running [=parse filter config=] with |value|["`not_filters`"].
         1. If |negatedFilters| is null, return null.
     1. Let  |aggregatableDedupKey| be a new [=aggregatable dedup key=] with the items:
