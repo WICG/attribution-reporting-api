@@ -1,4 +1,7 @@
-export const testCases = [
+import { validateSource } from './validate-json'
+import { runAll } from './validate-json.test'
+
+runAll(validateSource, [
   // no errors or warnings
   {
     name: "required-fields-only",
@@ -545,4 +548,4 @@ export const testCases = [
       }
     }`
   },
-]
+])

@@ -1,4 +1,4 @@
-import { strict as assert } from 'assert'
+import * as testutil from './util.test'
 import { validateEligible } from './validate-eligible'
 
 const tests = [
@@ -11,28 +11,28 @@ const tests = [
   // Warnings
   {
     input: 'navigation-source',
-    warnings: [{
+    expectedWarnings: [{
       path: ['navigation-source'],
       msg: 'may only be specified in browser-initiated requests',
     }]
   },
   {
     input: 'x',
-    warnings: [{
+    expectedWarnings: [{
       path: ['x'],
       msg: 'unknown dictionary key',
     }],
   },
   {
     input: 'event-source=2',
-    warnings: [{
+    expectedWarnings: [{
       path: ['event-source'],
       msg: 'ignoring dictionary value',
     }],
   },
   {
     input: 'event-source;x=2',
-    warnings: [{
+    expectedWarnings: [{
       path: ['event-source'],
       msg: 'ignoring parameters',
     }],
@@ -41,13 +41,8 @@ const tests = [
   // Invalid header syntax
   {
     input: '!',
-    errors: [{msg: 'Error: Parse error: A key must begin with an asterisk or letter (a-z) at offset 0'}],
+    expectedErrors: [{msg: 'Error: Parse error: A key must begin with an asterisk or letter (a-z) at offset 0'}],
   },
 ]
 
-tests.forEach(test => {
-  const { errors, warnings } = validateEligible(test.input);
-
-  assert.deepEqual(errors, test.errors || [], test.input);
-  assert.deepEqual(warnings, test.warnings || [], test.input);
-});
+tests.forEach(tc => testutil.run(tc, /*name=*/tc.input, () => validateEligible(tc.input)))

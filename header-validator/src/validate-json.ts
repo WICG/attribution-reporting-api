@@ -33,7 +33,7 @@ function validate(ctx: Context, obj: Json, checks: FieldChecks): void {
   })(ctx, obj)
 }
 
-type ValueCheck = (ctx: Context, value: Json) => void
+export type ValueCheck = (ctx: Context, value: Json) => void
 
 function required(f: ValueCheck): FieldCheck {
   return (ctx, obj, key) => {
@@ -408,7 +408,7 @@ export function validateTrigger(ctx: Context, trigger: Json): void {
   })
 }
 
-export function validateJSON(json: string, f: (ctx: Context, value: Json) => void): ValidationResult {
+export function validateJSON(json: string, f: ValueCheck): ValidationResult {
   const ctx = new Context()
 
   let value

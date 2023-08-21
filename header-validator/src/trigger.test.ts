@@ -1,4 +1,7 @@
-export const testCases = [
+import { validateTrigger } from './validate-json'
+import { runAll } from './validate-json.test'
+
+runAll(validateTrigger, [
   // no errors or warnings
   {
     name: "required-fields-only",
@@ -605,4 +608,4 @@ export const testCases = [
       msg: "must match 'exclude' or 'include' (case-sensitive)",
     }],
   },
-];
+])
