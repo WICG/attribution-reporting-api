@@ -1484,6 +1484,18 @@ To <dfn>parse filters</dfn> given a |value|:
     1. [=list/Append=] |filterConfig| to |filtersList|.
 1. Return |filtersList|.
 
+To <dfn>parse a filter pair</dfn> given a [=map=] |map|:
+
+1. Let |positive| be a [=list=] of [=filter config=], initially empty.
+1. If |map|["`filters`"] [=map/exists=], set |positive| to the result of running
+    [=parse filters=] with |map|["`filters`"].
+1. If |positive| is null, return null.
+1. Let |negative| be a [=list=] of [=filter config=], initially empty.
+1. If |map|["`not_filters`"] [=map/exists=], set |negative| to the result of
+    running [=parse filters=] with |map|["`not_filters`"].
+1. If |negative| is null, return null.
+1. Return the tuple (|positive|, |negative|).
+
 <h3 id="debug-keys">Cookie-based debugging</h3>
 
 To <dfn>check if cookie-based debugging is allowed</dfn> given a
@@ -2279,16 +2291,9 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
         [=parse an optional 64-bit signed integer=] with |value|, "`priority`",
         and 0.
     1. If |priority| is an error, return null.
-    1. Let |filters| be a [=list=] of [=filter configs=], initially empty.
-    1. If |value|["`filters`"] [=map/exists=]:
-        1. Set |filters| to the result of running [=parse filters=] with
-            |value|["`filters`"].
-        1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a [=list=] of [=filter configs=], initially empty.
-    1. If |value|["`not_filters`"] [=map/exists=]:
-        1. Set |negatedFilters| to the result of running [=parse filters=]
-            with |value|["`not_filters`"].
-        1. If |negatedFilters| is null, return null.
+    1. Let |filterPair| be the result of running [=parse a filter pair=] with
+        |value|.
+    1. If |filterPair| is null, return null.
     1. Let |eventTrigger| be a new [=event-level trigger configuration=] with
         the items:
         : [=event-level trigger configuration/trigger data=]
@@ -2298,9 +2303,9 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
         : [=event-level trigger configuration/priority=]
         :: |priority|
         : [=event-level trigger configuration/filters=]
-        :: |filters|
+        :: |filterPair|[0]
         : [=event-level trigger configuration/negated filters=]
-        :: |negatedFilters|
+        :: |filterPair|[1]
     1. [=set/Append=] |eventTrigger| to |eventTriggers|.
 1. Return |eventTriggers|.
 
@@ -2323,25 +2328,18 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
         1. [=list/iterate|For each=] |sourceKey| of |value|["`source_keys`"]:
             1. If |sourceKey| is not a [=string=], return null.
             1. [=set/Append=] |sourceKey| to |sourceKeys|.
-    1. Let |filters| be a [=list=] of [=filter configs=], initially empty.
-    1. If |value|["`filters`"] [=map/exists=]:
-        1. Set |filters| to the result of running [=parse filters=] with
-            |value|["`filters`"].
-        1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a [=list=] of [=filter configs=], initially empty.
-    1. If |value|["`not_filters`"] [=map/exists=]:
-        1. Set |negatedFilters| to the result of running [=parse filters=]
-            with |value|["`not_filters`"].
-        1. If |negatedFilters| is null, return null.
+    1. Let |filterPair| be the result of running [=parse a filter pair=] with
+        |value|.
+    1. If |filterPair| is null, return null.
     1. Let |aggregatableTrigger| be a new [=aggregatable trigger data=] with the items:
         : [=aggregatable trigger data/key piece=]
         :: |keyPiece|
         : [=aggregatable trigger data/source keys=]
         :: |sourceKeys|
         : [=aggregatable trigger data/filters=]
-        :: |filters|
+        :: |filterPair|[0]
         : [=aggregatable trigger data/negated filters=]
-        :: |negatedFilters|
+        :: |filterPair|[1]
     1. [=list/Append=] |aggregatableTrigger| to |aggregatableTriggerData|.
 1. Return |aggregatableTriggerData|.
 
@@ -2374,21 +2372,16 @@ To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
         [=parse an optional 64-bit unsigned integer=] with |value|,
         "`deduplication_key`", and null.
     1. If |dedupKey| is an error, return null.
-    1. Let |filters| be a [=list=] of [=filter configs=], initially empty.
-    1. If |value|["`filters`"] [=map/exists=]:
-        1. Set |filters| to the result of running [=parse filter config=] with |value|["`filters`"].
-        1. If |filters| is null, return null.
-    1. Let |negatedFilters| be a [=list=] of [=filter configs=], initially empty.
-    1. If |value|["`not_filters`"] [=map/exists=]:
-        1. Set |negatedFilters| to the result of running [=parse filter config=] with |value|["`not_filters`"].
-        1. If |negatedFilters| is null, return null.
+    1. Let |filterPair| be the result of running [=parse a filter pair=] with
+        |value|.
+    1. If |filterPair| is null, return null.
     1. Let  |aggregatableDedupKey| be a new [=aggregatable dedup key=] with the items:
         : [=aggregatable dedup key/dedup key=]
         :: |dedupKey|
         : [=aggregatable dedup key/filters=]
-        :: |filters|
+        :: |filterPair|[0]
         : [=aggregatable dedup key/negated filters=]
-        :: |negatedFilters|
+        :: |filterPair|[1]
     1. [=set/Append=] |aggregatableDedupKey| to |aggregatableDedupKeys|.
 1. Return |aggregatableDedupKeys|.
 
@@ -2416,16 +2409,8 @@ and a [=moment=] |triggerTime|:
 1. If |debugKey| is an error, set |debugKey| to null.
 1. If the result of running [=check if cookie-based debugging is allowed=] with
     |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
-1. Let |filters| be a [=list=] of [=filter configs=], initially empty.
-1. If |value|["`filters`"] exists:
-    1. Set |filters| to the result of running [=parse filters=] with
-        |value|["`filters`"].
-    1. If |filters| is null, return null.
-1. Let |negatedFilters| be a [=list=] of [=filter configs=], initially empty.
-1. If |value|["`not_filters`"] exists:
-    1. Set |negatedFilters| to the result of running [=parse filters=] with
-        |value|["`not_filters`"].
-    1. If |negatedFilters| is null, return null.
+1. Let |filterPair| be the result of running [=parse a filter pair=] with |value|.
+1. If |filterPair| is null, return null.
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to value["`debug_reporting`"].
@@ -2450,9 +2435,9 @@ and a [=moment=] |triggerTime|:
     : [=attribution trigger/reporting origin=]
     :: |reportingOrigin|
     : [=attribution trigger/filters=]
-    :: |filters|
+    :: |filterPair|[0]
     : [=attribution trigger/negated filters=]
-    :: |negatedFilters|
+    :: |filterPair|[1]
     : [=attribution trigger/debug key=]
     :: |debugKey|
     : [=attribution trigger/event-level trigger configurations=]
