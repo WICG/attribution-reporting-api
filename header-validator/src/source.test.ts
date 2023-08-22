@@ -178,6 +178,17 @@ runAll(validateSource, [
     }],
   },
   {
+    name: "filter-data-reserved-key",
+    json: `{
+      "destination": "https://a.test",
+      "filter_data": {"_some_key": []}
+    }`,
+    expectedErrors: [{
+      path: ["filter_data", "_some_key"],
+      msg: 'is prohibited as keys starting with "_" are reserved',
+    }],
+  },
+  {
     name: "filter-data-duplicate-value",
     json: `{
       "destination": "https://a.test",

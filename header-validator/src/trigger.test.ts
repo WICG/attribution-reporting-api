@@ -135,6 +135,14 @@ runAll(validateTrigger, [
     }],
   },
   {
+    name: "filters-reserved-key",
+    json: `{"filters": {"_some_key": []}}`,
+    expectedErrors: [{
+      path: ["filters", "_some_key"],
+      msg: 'is prohibited as keys starting with "_" are reserved',
+    }],
+  },
+  {
     name: "filters-duplicate-value",
     json: `{"filters": {
       "a": ["x", "y", "x"],
@@ -176,6 +184,14 @@ runAll(validateTrigger, [
     expectedErrors: [{
       path: ["not_filters", "a", 0],
       msg: "must be a string",
+    }],
+  },
+  {
+    name: "not-filters-reserved-key",
+    json: `{"not_filters": {"_some_key": []}}`,
+    expectedErrors: [{
+      path: ["not_filters", "_some_key"],
+      msg: 'is prohibited as keys starting with "_" are reserved',
     }],
   },
 
@@ -316,6 +332,16 @@ runAll(validateTrigger, [
       msg: "must be a string",
     }],
   },
+  {
+    name: "event-trigger-data-filters-reserved-key",
+    json: `{"event_trigger_data": [{
+      "filters": {"_some_key": []}
+    }]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "filters", "_some_key"],
+      msg: 'is prohibited as keys starting with "_" are reserved',
+    }],
+  },
 
   {
     name: "event-trigger-data-not-filters-wrong-type",
@@ -339,6 +365,16 @@ runAll(validateTrigger, [
     expectedErrors: [{
       path: ["event_trigger_data", 0, "not_filters", "a", 0],
       msg: "must be a string",
+    }],
+  },
+  {
+    name: "event-trigger-data-not-filters-reserved-key",
+    json: `{"event_trigger_data": [{
+      "not_filters": {"_some_key": []}
+    }]}`,
+    expectedErrors: [{
+      path: ["event_trigger_data", 0, "not_filters", "_some_key"],
+      msg: 'is prohibited as keys starting with "_" are reserved',
     }],
   },
 
@@ -524,6 +560,17 @@ runAll(validateTrigger, [
       msg: "must be a string",
     }],
   },
+  {
+    name: "aggregatable_trigger_data-filters-reserved-key",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "filters": {"_some_key": []}
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "filters", "_some_key"],
+      msg: 'is prohibited as keys starting with "_" are reserved',
+    }],
+  },
 
   {
     name: "aggregatable_trigger_data-not-filters-wrong-type",
@@ -556,6 +603,17 @@ runAll(validateTrigger, [
     expectedErrors: [{
       path: ["aggregatable_trigger_data", 0, "not_filters", "a", 0],
       msg: "must be a string",
+    }],
+  },
+  {
+    name: "aggregatable_trigger_data-not-filters-reserved-key",
+    json: `{"aggregatable_trigger_data": [{
+      "key_piece": "0x1",
+      "not_filters": {"_some_key": []}
+    }]}`,
+    expectedErrors: [{
+      path: ["aggregatable_trigger_data", 0, "not_filters", "_some_key"],
+      msg: 'is prohibited as keys starting with "_" are reserved',
     }],
   },
 
