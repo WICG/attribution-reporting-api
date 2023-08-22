@@ -585,7 +585,7 @@ When available on a filter (in `filters`), the duration since the source was
 registered must be less than or equal to the parsed lookback window duration for
 the filter to match. i.e. it must be inside the lookback window.
 
-When available on a negated filter (in `not filters`), the duration since the
+When available on a negated filter (in `not_filters`), the duration since the
 source was registered must be greater than the parsed lookback window duration
 for the filter to match. i.e. it must be outside the lookback window.
 
