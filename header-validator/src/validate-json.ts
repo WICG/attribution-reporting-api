@@ -300,6 +300,10 @@ const filterData = () =>
       ctx.error('is prohibited because it is implicitly set')
       return
     }
+    if (filter.startsWith('_')) {
+      ctx.error('is prohibited as keys starting with "_" are reserved')
+      return
+    }
 
     list(string(unique()), {maxLength: limits.maxValuesPerFilterDataEntry})(ctx, values)
   }, limits.maxEntriesPerFilterData)
@@ -313,6 +317,10 @@ const filters = () =>
   keyValues((ctx, filter, values) => {
     if (filter === '_lookback_window') {
       positiveInteger(ctx, values);
+      return
+    }
+    if (filter.startsWith('_')) {
+      ctx.error('is prohibited as keys starting with "_" are reserved')
       return
     }
 
