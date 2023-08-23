@@ -574,7 +574,7 @@ trigger is used.
 
 #### Reserved keys
 
-Keys prefixed with `_` are reserved, they cannot be used other than for
+Keys prefixed with `_` are reserved: they cannot be used other than for
 specified features, e.g., lookback window.
 
 #### Lookback window
