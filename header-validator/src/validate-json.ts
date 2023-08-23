@@ -346,9 +346,9 @@ export function validateSource(ctx: Context, source: Json): void {
   validate(ctx, source, {
     aggregatable_report_window: optional(legacyDuration),
     aggregation_keys: optional(aggregationKeys),
+    destination: required(destinationValue),
     event_report_window: optional(legacyDuration),
     event_report_windows: optional(eventReportWindows),
-    destination: required(destinationValue),
     expiry: optional(legacyDuration),
     filter_data: optional(filterData()),
     max_event_level_reports: optional(maxEventLevelReports),
@@ -401,10 +401,10 @@ export function validateTrigger(ctx: Context, trigger: Json): void {
   validate(ctx, trigger, {
     aggregatable_trigger_data: optional(aggregatableTriggerData),
     aggregatable_values: optional(aggregatableValues),
-    aggregation_coordinator_origin: optional(suitableOrigin),
-    event_trigger_data: optional(eventTriggerData),
     aggregatable_deduplication_keys: optional(aggregatableDedupKeys),
     aggregatable_source_registration_time : optional(aggregatableSourceRegistrationTime),
+    aggregation_coordinator_origin: optional(suitableOrigin),
+    event_trigger_data: optional(eventTriggerData),
     ...commonDebugFields,
     ...filterFields,
   })
