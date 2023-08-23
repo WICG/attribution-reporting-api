@@ -181,7 +181,7 @@ const hex128 = string((ctx, value) => {
   }
 })
 
-function suitableOriginOrSite(label: string, scope: (url: URL) => string): ValueCheck {
+function suitableScope(label: string, scope: (url: URL) => string): ValueCheck {
   return string((ctx, value) => {
     let url
     try {
@@ -209,8 +209,8 @@ function suitableOriginOrSite(label: string, scope: (url: URL) => string): Value
   })
 }
 
-const suitableOrigin = suitableOriginOrSite('origin', u => u.origin)
-const suitableSite = suitableOriginOrSite('site', u => `${u.protocol}//${psl.get(u.hostname)}`)
+const suitableOrigin = suitableScope('origin', u => u.origin)
+const suitableSite = suitableScope('site', u => `${u.protocol}//${psl.get(u.hostname)}`)
 
 const destinationList = list(suitableSite, {minLength: 1, maxLength: 3})
 
@@ -369,9 +369,10 @@ const aggregatableTriggerData = list((ctx, value) => validate(ctx, value, {
 
 // TODO: check length of key
 const aggregatableValues = keyValues((ctx, key, value) => {
+  const min = 1
   const max = 65536
-  if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0 || value > max) {
-    ctx.error(`must be an integer in the range [1, ${max}]`)
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max) {
+    ctx.error(`must be an integer in the range [${min}, ${max}]`)
   }
 }, limits.maxAggregationKeys)
 
