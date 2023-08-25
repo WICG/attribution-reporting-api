@@ -13,7 +13,7 @@ Chromium's implementation assigns the following values:
 | [Event-source trigger data cardinality][] | [2][event-source trigger data cardinality value] |
 | [Randomized response epsilon][] | [14][randomized response epsilon value] |
 | [Randomized null report rate excluding source registration time][] | [0.05][randomized null report rate excluding source registration time value] |
-| [Randomized null report rate including source registration time][] | [0.008][randomized null report rate including source registration time value] |
+| [Randomized null report rate including source registration time][] | [0.24][randomized null report rate including source registration time value] |
 | [Max event-level reports per attribution destination][] | [1024][max event-level reports per attribution destination value] |
 | [Max aggregatable reports per attribution destination][] | [1024][max aggregatable reports per attribution destination value] |
 | [Max attributions per navigation source][] | [3][max attributions per navigation source value] |
