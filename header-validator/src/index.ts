@@ -9,13 +9,15 @@ const errorList = document.querySelector('#errors')!
 const warningList = document.querySelector('#warnings')!
 const successDiv = document.querySelector('#success')!
 
-const pathfulTmpl = document.querySelector('#pathful-issue') as HTMLTemplateElement
+const pathfulTmpl = document.querySelector(
+  '#pathful-issue'
+) as HTMLTemplateElement
 
 function pathPart(p: PathComponent): string {
   return typeof p === 'string' ? `["${p}"]` : `[${p}]`
 }
 
-function makeLi({path, msg}: Issue): HTMLElement {
+function makeLi({ path, msg }: Issue): HTMLElement {
   let li
 
   if (Array.isArray(path)) {
@@ -43,23 +45,23 @@ function header(): string {
 form.addEventListener('input', () => {
   let result
   switch (header()) {
-  case 'source':
-    result = validateJSON(input.value, validateSource)
-    break
-  case 'trigger':
-    result = validateJSON(input.value, validateTrigger)
-    break
-  case 'os-source':
-    result = validateOsRegistration(input.value)
-    break
-  case 'os-trigger':
-    result = validateOsRegistration(input.value)
-    break
-  case 'eligible':
-    result = validateEligible(input.value)
-    break
-  default:
-    return
+    case 'source':
+      result = validateJSON(input.value, validateSource)
+      break
+    case 'trigger':
+      result = validateJSON(input.value, validateTrigger)
+      break
+    case 'os-source':
+      result = validateOsRegistration(input.value)
+      break
+    case 'os-trigger':
+      result = validateOsRegistration(input.value)
+      break
+    case 'eligible':
+      result = validateEligible(input.value)
+      break
+    default:
+      return
   }
 
   const successEl = document.createElement('div')
@@ -104,4 +106,4 @@ let selection = params.get('header')
 if (selection === null || !allowedValues.has(selection)) {
   selection = 'source'
 }
-(form.querySelector(`input[value=${selection}]`) as HTMLInputElement).click()
+;(form.querySelector(`input[value=${selection}]`) as HTMLInputElement).click()
