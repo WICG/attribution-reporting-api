@@ -208,7 +208,7 @@ runAll(validateTrigger, [
     json: `{"aggregatable_values": {"a": "1"}}`,
     expectedErrors: [{
       path: ["aggregatable_values", "a"],
-      msg: "must be an integer in the range (1, 65536]",
+      msg: "must be an integer in the range [1, 65536]",
     }],
   },
   {
@@ -216,7 +216,7 @@ runAll(validateTrigger, [
     json: `{"aggregatable_values": {"a": 0}}`,
     expectedErrors: [{
       path: ["aggregatable_values", "a"],
-      msg: "must be an integer in the range (1, 65536]",
+      msg: "must be an integer in the range [1, 65536]",
     }],
   },
   {
@@ -224,7 +224,7 @@ runAll(validateTrigger, [
     json: `{"aggregatable_values": {"a": 65537}}`,
     expectedErrors: [{
       path: ["aggregatable_values", "a"],
-      msg: "must be an integer in the range (1, 65536]",
+      msg: "must be an integer in the range [1, 65536]",
     }],
   },
   // TODO: add tests for exceeding size limits
@@ -645,7 +645,7 @@ runAll(validateTrigger, [
     json: `{"aggregation_coordinator_origin": "http://a.test"}`,
     expectedErrors: [{
       path: ["aggregation_coordinator_origin"],
-      msg: "URL must be potentially trustworthy",
+      msg: "URL must use HTTP/HTTPS and be potentially trustworthy",
     }],
   },
   {

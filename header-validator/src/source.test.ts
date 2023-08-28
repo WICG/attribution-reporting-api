@@ -107,7 +107,7 @@ runAll(validateSource, [
     json: `{"destination": "http://a.test"}`,
     expectedErrors: [{
       path: ["destination"],
-      msg: "URL must be potentially trustworthy",
+      msg: "URL must use HTTP/HTTPS and be potentially trustworthy",
     }],
   },
 

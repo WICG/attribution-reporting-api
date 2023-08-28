@@ -35,23 +35,21 @@ function validate(ctx: Context, obj: Json, checks: FieldChecks): void {
 
 export type ValueCheck = (ctx: Context, value: Json) => void
 
-function required(f: ValueCheck): FieldCheck {
+function field(f: ValueCheck, required: boolean): FieldCheck {
   return (ctx, obj, key) => {
-    if (key in obj) {
-      f(ctx, obj[key])
+    const v = obj[key]
+    if (v === undefined) {
+      if (required) {
+        ctx.error('required')
+      }
       return
     }
-    ctx.error('required')
+    f(ctx, v)
   }
 }
 
-function optional(f: ValueCheck): FieldCheck {
-  return (ctx, obj, key) => {
-    if (key in obj) {
-      f(ctx, obj[key])
-    }
-  }
-}
+const required = (f: ValueCheck) => field(f, /*required=*/true)
+const optional = (f: ValueCheck) => field(f, /*required=*/false)
 
 type StringCheck = (ctx: Context, value: string) => void
 
@@ -183,12 +181,7 @@ const hex128 = string((ctx, value) => {
   }
 })
 
-enum SuitableScope {
-  Origin = 'origin',
-  Site = 'site',
-}
-
-function suitableOriginOrSite(scope: SuitableScope): ValueCheck {
+function suitableScope(label: string, scope: (url: URL) => string): ValueCheck {
   return string((ctx, value) => {
     let url
     try {
@@ -205,27 +198,19 @@ function suitableOriginOrSite(scope: SuitableScope): ValueCheck {
         (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
       )
     ) {
-      ctx.error('URL must be potentially trustworthy')
+      ctx.error('URL must use HTTP/HTTPS and be potentially trustworthy')
+      return
     }
 
-    let scoped
-    switch (scope) {
-      case SuitableScope.Origin:
-        scoped = url.origin
-        break
-      case SuitableScope.Site:
-        scoped = `${url.protocol}//${psl.get(url.hostname)}`
-        break
-    }
-
+    const scoped = scope(url)
     if (value !== scoped) {
-      ctx.warning(`URL components other than ${scope} (${scoped}) will be ignored`)
+      ctx.warning(`URL components other than ${label} (${scoped}) will be ignored`)
     }
   })
 }
 
-const suitableOrigin = suitableOriginOrSite(SuitableScope.Origin)
-const suitableSite = suitableOriginOrSite(SuitableScope.Site)
+const suitableOrigin = suitableScope('origin', u => u.origin)
+const suitableSite = suitableScope('site', u => `${u.protocol}//${psl.get(u.hostname)}`)
 
 const destinationList = list(suitableSite, {minLength: 1, maxLength: 3})
 
@@ -240,13 +225,14 @@ function destinationValue(ctx: Context, value: Json): void {
 }
 
 function maxEventLevelReports(ctx: Context, value: Json): void {
-  if (typeof value === 'number') {
-    if (!Number.isInteger(value) || value < 0 || value > limits.maxEventLevelReports) {
-      ctx.error('must be an integer in the range [0, 20]')
-    }
-  } else {
-    ctx.error('must be an integer in the range [0, 20]')
+  if (typeof value === 'number' &&
+      Number.isInteger(value) &&
+      value >= 0 &&
+      value <= limits.maxEventLevelReports) {
+    return
   }
+
+  ctx.error(`must be an integer in the range [0, ${limits.maxEventLevelReports}]`)
 }
 
 function eventReportWindows(ctx: Context, value: Json): void {
@@ -316,7 +302,7 @@ enum SourceType {
 const filters = () =>
   keyValues((ctx, filter, values) => {
     if (filter === '_lookback_window') {
-      positiveInteger(ctx, values);
+      positiveInteger(ctx, values)
       return
     }
     if (filter.startsWith('_')) {
@@ -338,6 +324,19 @@ const filters = () =>
 
 const orFilters = listOrKeyValues(filters())
 
+const filterFields = {
+  filters: optional(orFilters),
+  not_filters: optional(orFilters),
+}
+
+const commonDebugFields = {
+  debug_key: optional(uint64),
+  debug_reporting: optional(bool),
+}
+
+const dedupKeyField = { deduplication_key: optional(uint64) }
+const priorityField = { priority: optional(int64) }
+
 // TODO: check length of key
 const aggregationKeys = keyValues((ctx, key, value) => {
   hex128(ctx, value)
@@ -346,17 +345,16 @@ const aggregationKeys = keyValues((ctx, key, value) => {
 export function validateSource(ctx: Context, source: Json): void {
   validate(ctx, source, {
     aggregatable_report_window: optional(legacyDuration),
+    aggregation_keys: optional(aggregationKeys),
+    destination: required(destinationValue),
     event_report_window: optional(legacyDuration),
     event_report_windows: optional(eventReportWindows),
-    aggregation_keys: optional(aggregationKeys),
-    debug_key: optional(uint64),
-    debug_reporting: optional(bool),
-    destination: required(destinationValue),
     expiry: optional(legacyDuration),
     filter_data: optional(filterData()),
-    priority: optional(int64),
-    source_event_id: optional(uint64),
     max_event_level_reports: optional(maxEventLevelReports),
+    source_event_id: optional(uint64),
+    ...commonDebugFields,
+    ...priorityField,
   })
   if (isObject(source) && 'event_report_window' in source && 'event_report_windows' in source) {
     ctx.error('event_report_window and event_report_windows in the same source')
@@ -364,32 +362,30 @@ export function validateSource(ctx: Context, source: Json): void {
 }
 
 const aggregatableTriggerData = list((ctx, value) => validate(ctx, value, {
-  filters: optional(orFilters),
   key_piece: required(hex128),
-  not_filters: optional(orFilters),
   source_keys: optional(list(string(unique()), {maxLength: limits.maxAggregationKeys})),
+  ...filterFields,
 }))
 
 // TODO: check length of key
 const aggregatableValues = keyValues((ctx, key, value) => {
+  const min = 1
   const max = 65536
-  if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0 || value > max) {
-    ctx.error(`must be an integer in the range (1, ${max}]`)
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max) {
+    ctx.error(`must be an integer in the range [${min}, ${max}]`)
   }
 }, limits.maxAggregationKeys)
 
 const eventTriggerData = list((ctx, value) => validate(ctx, value, {
-  deduplication_key: optional(uint64),
-  filters: optional(orFilters),
-  not_filters: optional(orFilters),
-  priority: optional(int64),
   trigger_data: optional(uint64),
+  ...filterFields,
+  ...dedupKeyField,
+  ...priorityField,
 }))
 
 const aggregatableDedupKeys = list((ctx, value) => validate(ctx, value, {
-  deduplication_key: optional(uint64),
-  filters: optional(orFilters),
-  not_filters: optional(orFilters),
+  ...dedupKeyField,
+  ...filterFields,
 }))
 
 const aggregatableSourceRegistrationTime = string((ctx, value) => {
@@ -405,14 +401,12 @@ export function validateTrigger(ctx: Context, trigger: Json): void {
   validate(ctx, trigger, {
     aggregatable_trigger_data: optional(aggregatableTriggerData),
     aggregatable_values: optional(aggregatableValues),
-    aggregation_coordinator_origin: optional(suitableOrigin),
-    debug_key: optional(uint64),
-    debug_reporting: optional(bool),
-    event_trigger_data: optional(eventTriggerData),
-    filters: optional(orFilters),
-    not_filters: optional(orFilters),
     aggregatable_deduplication_keys: optional(aggregatableDedupKeys),
     aggregatable_source_registration_time : optional(aggregatableSourceRegistrationTime),
+    aggregation_coordinator_origin: optional(suitableOrigin),
+    event_trigger_data: optional(eventTriggerData),
+    ...commonDebugFields,
+    ...filterFields,
   })
 }
 
