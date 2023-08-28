@@ -30,20 +30,25 @@ type FieldCheck = (ctx: Context, obj: JsonDict, key: string) => void
 type FieldChecks = Record<string, FieldCheck>
 
 function validate(ctx: Context, obj: Json, checks: FieldChecks): void {
-  record((ctx, obj) => {
-    Object.entries(checks).forEach(([key, check]) =>
-      ctx.scope(key, () => check(ctx, obj, key))
-    )
+  const d = object(ctx, obj)
+  if (d === undefined) {
+    return
+  }
 
-    Object.keys(obj).forEach((key) => {
-      if (!(key in checks)) {
-        ctx.scope(key, () => ctx.warning('unknown field'))
-      }
-    })
-  })(ctx, obj)
+  Object.entries(checks).forEach(([key, check]) =>
+    ctx.scope(key, () => check(ctx, d, key))
+  )
+
+  Object.keys(d).forEach((key) => {
+    if (!(key in checks)) {
+      ctx.scope(key, () => ctx.warning('unknown field'))
+    }
+  })
 }
 
-export type ValueCheck = (ctx: Context, value: Json) => void
+type CtxFunc<I, O> = (ctx: Context, i: I) => O
+
+export type ValueCheck = CtxFunc<Json, void>
 
 function field(f: ValueCheck, required: boolean): FieldCheck {
   return (ctx, obj, key) => {
@@ -61,55 +66,63 @@ function field(f: ValueCheck, required: boolean): FieldCheck {
 const required = (f: ValueCheck) => field(f, /*required=*/ true)
 const optional = (f: ValueCheck) => field(f, /*required=*/ false)
 
-type StringCheck = (ctx: Context, value: string) => void
-
-function string(f: StringCheck = (a, b) => {}): ValueCheck {
-  return (ctx, value) => {
-    if (typeof value === 'string') {
-      f(ctx, value)
-      return
-    }
-    ctx.error('must be a string')
+function string(ctx: Context, j: Json): string | undefined {
+  if (typeof j === 'string') {
+    return j
   }
+  ctx.error('must be a string')
 }
 
-function bool(ctx: Context, value: Json): void {
-  if (typeof value === 'boolean') {
+function bool(ctx: Context, j: Json): boolean | undefined {
+  if (typeof j === 'boolean') {
     return
   }
   ctx.error('must be a boolean')
 }
 
-function isObject(value: Json): value is JsonDict {
-  return (
-    value !== null && typeof value === 'object' && value.constructor === Object
-  )
+function isObject(j: Json): j is JsonDict {
+  return j !== null && typeof j === 'object' && j.constructor === Object
 }
 
-type RecordCheck = (ctx: Context, value: JsonDict) => void
-
-function record(f: RecordCheck): ValueCheck {
-  return (ctx, value) => {
-    if (isObject(value)) {
-      f(ctx, value)
-      return
-    }
-    ctx.error('must be an object')
+function object(ctx: Context, j: Json): JsonDict | undefined {
+  if (isObject(j)) {
+    return j
   }
+  ctx.error('must be an object')
 }
 
-type KeyValueCheck = (ctx: Context, key: string, value: Json) => void
+function keyValues<V>(
+  ctx: Context,
+  j: Json,
+  f: CtxFunc<[key: string, val: Json], V | undefined>,
+  maxKeys: number = Infinity
+): Map<string, V> | undefined {
+  const d = object(ctx, j)
+  if (d === undefined) {
+    return
+  }
 
-function keyValues(f: KeyValueCheck, maxKeys = Infinity): ValueCheck {
-  return record((ctx, value) => {
-    const entries = Object.entries(value)
+  const entries = Object.entries(d)
 
-    if (entries.length > maxKeys) {
-      ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
-    }
+  if (entries.length > maxKeys) {
+    ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
+  }
 
-    entries.forEach(([key, value]) => ctx.scope(key, () => f(ctx, key, value)))
-  })
+  const map = new Map<string, V>()
+  let ok = true
+
+  entries.forEach(([key, j]) =>
+    ctx.scope(key, () => {
+      const v = f(ctx, [key, j])
+      if (v === undefined) {
+        ok = false
+        return
+      }
+      map.set(key, v)
+    })
+  )
+
+  return ok ? map : undefined
 }
 
 type ListOpts = {
@@ -118,155 +131,203 @@ type ListOpts = {
 }
 
 function list(
-  f: ValueCheck,
+  ctx: Context,
+  j: Json,
   { minLength = 0, maxLength = Infinity }: ListOpts = {}
-): ValueCheck {
-  return (ctx, values) => {
-    if (Array.isArray(values)) {
-      if (values.length > maxLength || values.length < minLength) {
-        ctx.error(`length must be in the range [${minLength}, ${maxLength}]`)
-      }
-
-      values.forEach((value, index) => ctx.scope(index, () => f(ctx, value)))
-      return
-    }
+): Json[] | undefined {
+  if (!Array.isArray(j)) {
     ctx.error('must be a list')
+    return
   }
+
+  if (j.length > maxLength || j.length < minLength) {
+    ctx.error(`length must be in the range [${minLength}, ${maxLength}]`)
+  }
+
+  return j
 }
 
-type Uint64Check = (ctx: Context, value: bigint) => void
+function uint64(ctx: Context, j: Json): bigint | undefined {
+  const s = string(ctx, j)
+  if (s === undefined) {
+    return
+  }
 
-function uint64(f: Uint64Check = () => {}): ValueCheck {
-  return string((ctx, value) => {
-    if (!uint64Regex.test(value)) {
-      ctx.error(`must be a uint64 (must match ${uint64Regex})`)
-      return
-    }
+  if (!uint64Regex.test(s)) {
+    ctx.error(`must be a uint64 (must match ${uint64Regex})`)
+    return
+  }
 
-    const int = BigInt(value)
-    const max = 2n ** 64n - 1n
-    if (int > max) {
-      ctx.error('must fit in an unsigned 64-bit integer')
-      return
-    }
+  const int = BigInt(s)
+  const max = 2n ** 64n - 1n
+  if (int > max) {
+    ctx.error('must fit in an unsigned 64-bit integer')
+    return
+  }
 
-    f(ctx, int)
-  })
+  return int
 }
 
-const triggerData = uint64((ctx, value) => {
-  Object.entries(ctx.vsv.triggerDataCardinality ?? []).forEach(([t, c]) => {
-    if (value >= c) {
+function triggerData(ctx: Context, j: Json): bigint | undefined {
+  const n = uint64(ctx, j)
+  if (n === undefined || ctx.vsv.triggerDataCardinality === undefined) {
+    return
+  }
+
+  Object.entries(ctx.vsv.triggerDataCardinality).forEach(([t, c]) => {
+    if (n >= c) {
       ctx.warning(
-        `will be sanitized to ${
-          value % c
-        } if trigger is attributed to ${t} source`
+        `will be sanitized to ${n % c} if trigger is attributed to ${t} source`
       )
     }
   })
-})
 
-type NumberCheck = (ctx: Context, value: number) => void
-
-function number(f: NumberCheck): ValueCheck {
-  return (ctx, value) => {
-    if (typeof value === 'number') {
-      f(ctx, value)
-      return
-    }
-    ctx.error('must be a number')
-  }
+  return n
 }
 
-const nonNegativeInteger = number((ctx, value) => {
-  if (!Number.isInteger(value) || value < 0) {
+function number(ctx: Context, j: Json): number | undefined {
+  if (typeof j === 'number') {
+    return j
+  }
+  ctx.error('must be a number')
+}
+
+function nonNegativeInteger(ctx: Context, j: Json): number | undefined {
+  const n = number(ctx, j)
+  if (n === undefined) {
+    return
+  }
+
+  if (!Number.isInteger(n) || n < 0) {
     ctx.error('must be a non-negative integer')
+    return
   }
-})
 
-const positiveInteger = number((ctx, value) => {
-  if (!Number.isInteger(value) || value <= 0) {
+  return n
+}
+
+function positiveInteger(ctx: Context, j: Json): number | undefined {
+  const n = number(ctx, j)
+  if (n === undefined) {
+    return
+  }
+
+  if (!Number.isInteger(n) || n <= 0) {
     ctx.error('must be a positive integer')
+    return
   }
-})
 
-const int64 = string((ctx, str) => {
-  if (!int64Regex.test(str)) {
+  return n
+}
+
+function int64(ctx: Context, j: Json): bigint | undefined {
+  const s = string(ctx, j)
+  if (s === undefined) {
+    return
+  }
+
+  if (!int64Regex.test(s)) {
     ctx.error(`must be an int64 (must match ${int64Regex})`)
     return
   }
 
-  const value = BigInt(str)
+  const n = BigInt(s)
 
   const max = 2n ** (64n - 1n) - 1n
   const min = (-2n) ** (64n - 1n)
-  if (value < min || value > max) {
+  if (n < min || n > max) {
     ctx.error('must fit in a signed 64-bit integer')
+    return
   }
-})
 
-const hex128 = string((ctx, value) => {
-  if (!hex128Regex.test(value)) {
-    return ctx.error(`must be a hex128 (must match ${hex128Regex})`)
-  }
-})
-
-function suitableScope(label: string, scope: (url: URL) => string): ValueCheck {
-  return string((ctx, value) => {
-    let url
-    try {
-      url = new URL(value)
-    } catch {
-      ctx.error('invalid URL')
-      return
-    }
-
-    if (
-      url.protocol !== 'https:' &&
-      !(
-        url.protocol === 'http:' &&
-        (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
-      )
-    ) {
-      ctx.error('URL must use HTTP/HTTPS and be potentially trustworthy')
-      return
-    }
-
-    const scoped = scope(url)
-    if (value !== scoped) {
-      ctx.warning(
-        `URL components other than ${label} (${scoped}) will be ignored`
-      )
-    }
-  })
+  return n
 }
 
-const suitableOrigin = suitableScope('origin', (u) => u.origin)
-const suitableSite = suitableScope(
-  'site',
-  (u) => `${u.protocol}//${psl.get(u.hostname)}`
-)
-
-const destinationList = list(suitableSite, { minLength: 1, maxLength: 3 })
-
-function destinationValue(ctx: Context, value: Json): void {
-  if (typeof value === 'string') {
-    return suitableSite(ctx, value)
+function hex128(ctx: Context, j: Json): bigint | undefined {
+  const s = string(ctx, j)
+  if (s === undefined) {
+    return
   }
-  if (Array.isArray(value)) {
-    return destinationList(ctx, value)
+
+  if (!hex128Regex.test(s)) {
+    ctx.error(`must be a hex128 (must match ${hex128Regex})`)
+    return
+  }
+
+  return BigInt(s)
+}
+
+function suitableScope(
+  ctx: Context,
+  j: Json,
+  label: string,
+  scope: (url: URL) => string
+): string | undefined {
+  const s = string(ctx, j)
+  if (s === undefined) {
+    return
+  }
+
+  let url
+  try {
+    url = new URL(s)
+  } catch {
+    ctx.error('invalid URL')
+    return
+  }
+
+  if (
+    url.protocol !== 'https:' &&
+    !(
+      url.protocol === 'http:' &&
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
+    )
+  ) {
+    ctx.error('URL must use HTTP/HTTPS and be potentially trustworthy')
+    return
+  }
+
+  const scoped = scope(url)
+  if (s !== scoped) {
+    ctx.warning(
+      `URL components other than ${label} (${scoped}) will be ignored`
+    )
+  }
+  return scoped
+}
+
+function suitableOrigin(ctx: Context, j: Json): string | undefined {
+  return suitableScope(ctx, j, 'origin', (u) => u.origin)
+}
+
+function suitableSite(ctx: Context, j: Json): string | undefined {
+  return suitableScope(
+    ctx,
+    j,
+    'site',
+    (u) => `${u.protocol}//${psl.get(u.hostname)}`
+  )
+}
+
+function destination(ctx: Context, j: Json): Set<string> | undefined {
+  if (typeof j === 'string') {
+    const s = suitableSite(ctx, j)
+    return s === undefined ? undefined : new Set([s])
+  }
+  if (Array.isArray(j)) {
+    return set(ctx, j, suitableSite, { minLength: 1, maxLength: 3 })
   }
   ctx.error('must be a list or a string')
 }
 
-function maxEventLevelReports(ctx: Context, value: Json): void {
+function maxEventLevelReports(ctx: Context, j: Json): number | undefined {
   if (
-    typeof value === 'number' &&
-    Number.isInteger(value) &&
-    value >= 0 &&
-    value <= limits.maxEventLevelReports
+    typeof j === 'number' &&
+    Number.isInteger(j) &&
+    j >= 0 &&
+    j <= limits.maxEventLevelReports
   ) {
-    return
+    return j
   }
 
   ctx.error(
@@ -274,101 +335,180 @@ function maxEventLevelReports(ctx: Context, value: Json): void {
   )
 }
 
-function eventReportWindows(ctx: Context, value: Json): void {
-  // TODO(csharrison): Consider validating that the list of end times
-  // is properly ordered.
-  validate(ctx, value, {
+function endTimes(ctx: Context, j: Json): number[] | undefined {
+  // TODO: Validate that end times are propertly ordered with respect to each
+  // other and to start_time
+  return array(ctx, j, positiveInteger, { minLength: 1, maxLength: 5 })
+}
+
+function eventReportWindows(ctx: Context, j: Json): void {
+  validate(ctx, j, {
     start_time: optional(nonNegativeInteger),
-    end_times: required(list(positiveInteger, { minLength: 1, maxLength: 5 })),
+    end_times: required(endTimes),
   })
 }
 
-function legacyDuration(ctx: Context, value: Json): void {
-  if (typeof value === 'number') {
-    return nonNegativeInteger(ctx, value)
+function legacyDuration(ctx: Context, j: Json): number | bigint | undefined {
+  if (typeof j === 'number') {
+    return nonNegativeInteger(ctx, j)
   }
-  if (typeof value === 'string') {
-    return uint64()(ctx, value)
+  if (typeof j === 'string') {
+    return uint64(ctx, j)
   }
   ctx.error('must be a non-negative integer or a string')
 }
 
-function listOrKeyValues(f: ValueCheck, listOpts: ListOpts = {}): ValueCheck {
-  return (ctx, value) => {
-    if (isObject(value)) {
-      return f(ctx, value)
-    }
-
-    if (Array.isArray(value)) {
-      return list(f, listOpts)(ctx, value)
-    }
-
-    ctx.error('must be a list or an object')
+function collection(
+  ctx: Context,
+  j: Json,
+  f: CtxFunc<Json, boolean>,
+  opts?: ListOpts
+): boolean {
+  const js = list(ctx, j, opts)
+  if (js === undefined) {
+    return false
   }
+
+  let ok = true
+  js.forEach((j, i) =>
+    ctx.scope(i, () => {
+      if (!f(ctx, j)) {
+        ok = false
+      }
+    })
+  )
+  return ok
 }
 
-function unique(): StringCheck {
-  const set = new Set()
-  return (ctx, value) => {
-    if (set.has(value)) {
-      ctx.warning(`duplicate value ${value}`)
-    } else {
-      set.add(value)
-    }
-  }
+function set(
+  ctx: Context,
+  j: Json,
+  f: CtxFunc<Json, string | undefined>,
+  opts?: ListOpts
+): Set<string> | undefined {
+  const set = new Set<string>()
+
+  const ok = collection(
+    ctx,
+    j,
+    (ctx, j) => {
+      const v = f(ctx, j)
+      if (v === undefined) {
+        return false
+      }
+      if (set.has(v)) {
+        ctx.warning(`duplicate value ${v}`)
+      } else {
+        set.add(v)
+      }
+      return true
+    },
+    opts
+  )
+
+  return ok ? set : undefined
+}
+
+function array<T>(
+  ctx: Context,
+  j: Json,
+  f: CtxFunc<Json, T | undefined>,
+  opts?: ListOpts
+): T[] | undefined {
+  const arr: T[] = []
+
+  const ok = collection(
+    ctx,
+    j,
+    (ctx, j) => {
+      const v = f(ctx, j)
+      if (v === undefined) {
+        return false
+      }
+      arr.push(v)
+      return true
+    },
+    opts
+  )
+
+  return ok ? arr : undefined
 }
 
 // TODO: Check length of strings.
-const filterData = () =>
-  keyValues((ctx, filter, values) => {
-    if (filter === 'source_type' || filter === '_lookback_window') {
-      ctx.error('is prohibited because it is implicitly set')
-      return
-    }
-    if (filter.startsWith('_')) {
-      ctx.error('is prohibited as keys starting with "_" are reserved')
-      return
-    }
+function filterDataKeyValue(
+  ctx: Context,
+  [key, j]: [string, Json]
+): Set<string> | undefined {
+  if (key === 'source_type' || key === '_lookback_window') {
+    ctx.error('is prohibited because it is implicitly set')
+    return
+  }
+  if (key.startsWith('_')) {
+    ctx.error('is prohibited as keys starting with "_" are reserved')
+    return
+  }
 
-    list(string(unique()), { maxLength: limits.maxValuesPerFilterDataEntry })(
-      ctx,
-      values
-    )
-  }, limits.maxEntriesPerFilterData)
+  return set(ctx, j, string, { maxLength: limits.maxValuesPerFilterDataEntry })
+}
+
+type FilterData = Map<string, Set<string>>
+
+function filterData(ctx: Context, j: Json): FilterData | undefined {
+  return keyValues(ctx, j, filterDataKeyValue, limits.maxEntriesPerFilterData)
+}
 
 export enum SourceType {
   event = 'event',
   navigation = 'navigation',
 }
 
-const filters = () =>
-  keyValues((ctx, filter, values) => {
-    if (filter === '_lookback_window') {
-      positiveInteger(ctx, values)
+type FilterValue = Set<string> | number
+
+function filterKeyValue(
+  ctx: Context,
+  [key, j]: [string, Json]
+): FilterValue | undefined {
+  if (key === '_lookback_window') {
+    return positiveInteger(ctx, j)
+  }
+  if (key.startsWith('_')) {
+    ctx.error('is prohibited as keys starting with "_" are reserved')
+    return
+  }
+
+  return set(ctx, j, (ctx, j) => {
+    const s = string(ctx, j)
+    if (s === undefined) {
       return
     }
-    if (filter.startsWith('_')) {
-      ctx.error('is prohibited as keys starting with "_" are reserved')
-      return
+
+    if (key === 'source_type' && !(s in SourceType)) {
+      const allowed = Object.keys(SourceType).join(', ')
+      ctx.warning(
+        `unknown value ${s} (${key} can only match one of ${allowed})`
+      )
     }
 
-    const checkUnique = unique()
-
-    list(
-      string((ctx, value) => {
-        if (filter === 'source_type' && !(value in SourceType)) {
-          const allowed = Object.keys(SourceType).join(', ')
-          ctx.warning(
-            `unknown value ${value} (${filter} can only match one of ${allowed})`
-          )
-        }
-
-        checkUnique(ctx, value)
-      })
-    )(ctx, values)
+    return s
   })
+}
 
-const orFilters = listOrKeyValues(filters())
+type Filters = Map<string, FilterValue>
+
+function filters(ctx: Context, j: Json): Filters | undefined {
+  return keyValues(ctx, j, filterKeyValue)
+}
+
+function orFilters(ctx: Context, j: Json): Filters[] | undefined {
+  if (Array.isArray(j)) {
+    return array(ctx, j, filters)
+  }
+  if (isObject(j)) {
+    const v = filters(ctx, j)
+    return v === undefined ? undefined : [v]
+  }
+  ctx.error('must be a list or an object')
+}
 
 const filterFields = {
   filters: optional(orFilters),
@@ -376,31 +516,44 @@ const filterFields = {
 }
 
 const commonDebugFields = {
-  debug_key: optional(uint64()),
+  debug_key: optional(uint64),
   debug_reporting: optional(bool),
 }
 
-const dedupKeyField = { deduplication_key: optional(uint64()) }
+const dedupKeyField = { deduplication_key: optional(uint64) }
 const priorityField = { priority: optional(int64) }
 
 // TODO: check length of key
-function aggregationKeys(ctx: Context, j: Json): void {
-  keyValues((ctx, key, value) => {
-    hex128(ctx, value)
-  }, ctx.vsv.maxAggregationKeysPerAttribution)(ctx, j)
+function aggregationKey(
+  ctx: Context,
+  [key, j]: [string, Json]
+): bigint | undefined {
+  return hex128(ctx, j)
+}
+
+function aggregationKeys(
+  ctx: Context,
+  j: Json
+): Map<string, bigint> | undefined {
+  return keyValues(
+    ctx,
+    j,
+    aggregationKey,
+    ctx.vsv.maxAggregationKeysPerAttribution
+  )
 }
 
 export function validateSource(ctx: Context, source: Json): void {
   validate(ctx, source, {
     aggregatable_report_window: optional(legacyDuration),
     aggregation_keys: optional(aggregationKeys),
-    destination: required(destinationValue),
+    destination: required(destination),
     event_report_window: optional(legacyDuration),
     event_report_windows: optional(eventReportWindows),
     expiry: optional(legacyDuration),
-    filter_data: optional(filterData()),
+    filter_data: optional(filterData),
     max_event_level_reports: optional(maxEventLevelReports),
-    source_event_id: optional(uint64()),
+    source_event_id: optional(uint64),
     ...commonDebugFields,
     ...priorityField,
   })
@@ -413,58 +566,84 @@ export function validateSource(ctx: Context, source: Json): void {
   }
 }
 
-const aggregatableTriggerData = list((ctx, value) =>
-  validate(ctx, value, {
-    key_piece: required(hex128),
-    source_keys: optional(
-      list(string(unique()), {
-        maxLength: ctx.vsv.maxAggregationKeysPerAttribution,
-      })
-    ),
-    ...filterFields,
+function sourceKeys(ctx: Context, j: Json): Set<string> | undefined {
+  return set(ctx, j, string, {
+    maxLength: ctx.vsv.maxAggregationKeysPerAttribution,
   })
-)
-
-// TODO: check length of key
-function aggregatableValues(ctx: Context, j: Json): void {
-  keyValues((ctx, key, value) => {
-    const min = 1
-    const max = 65536
-    if (
-      typeof value !== 'number' ||
-      !Number.isInteger(value) ||
-      value < min ||
-      value > max
-    ) {
-      ctx.error(`must be an integer in the range [${min}, ${max}]`)
-    }
-  }, ctx.vsv.maxAggregationKeysPerAttribution)(ctx, j)
 }
 
-const eventTriggerData = list((ctx, value) =>
-  validate(ctx, value, {
-    trigger_data: optional(triggerData),
-    ...filterFields,
-    ...dedupKeyField,
-    ...priorityField,
-  })
-)
+function aggregatableTriggerData(ctx: Context, j: Json): void[] | undefined {
+  return array(ctx, j, (ctx, j) =>
+    validate(ctx, j, {
+      key_piece: required(hex128),
+      source_keys: optional(sourceKeys),
+      ...filterFields,
+    })
+  )
+}
 
-const aggregatableDedupKeys = list((ctx, value) =>
-  validate(ctx, value, {
-    ...dedupKeyField,
-    ...filterFields,
-  })
-)
-
-const aggregatableSourceRegistrationTime = string((ctx, value) => {
-  const exclude = 'exclude'
-  const include = 'include'
-  if (value === exclude || value === include) {
+// TODO: check length of key
+function aggregatableKeyValue(
+  ctx: Context,
+  [key, j]: [string, Json]
+): number | undefined {
+  const min = 1
+  const max = 65536
+  if (typeof j !== 'number' || !Number.isInteger(j) || j < min || j > max) {
+    ctx.error(`must be an integer in the range [${min}, ${max}]`)
     return
   }
+  return j
+}
+
+function aggregatableValues(
+  ctx: Context,
+  j: Json
+): Map<string, number> | undefined {
+  return keyValues(
+    ctx,
+    j,
+    aggregatableKeyValue,
+    ctx.vsv.maxAggregationKeysPerAttribution
+  )
+}
+
+function eventTriggerData(ctx: Context, j: Json): void[] | undefined {
+  return array(ctx, j, (ctx, j) =>
+    validate(ctx, j, {
+      trigger_data: optional(triggerData),
+      ...filterFields,
+      ...dedupKeyField,
+      ...priorityField,
+    })
+  )
+}
+
+function aggregatableDedupKeys(ctx: Context, j: Json): void[] | undefined {
+  return array(ctx, j, (ctx, j) =>
+    validate(ctx, j, {
+      ...dedupKeyField,
+      ...filterFields,
+    })
+  )
+}
+
+function aggregatableSourceRegistrationTime(
+  ctx: Context,
+  j: Json
+): string | undefined {
+  const s = string(ctx, j)
+  if (s === undefined) {
+    return
+  }
+
+  const exclude = 'exclude'
+  const include = 'include'
+  if (s === exclude || s === include) {
+    return s
+  }
   ctx.error(`must match '${exclude}' or '${include}' (case-sensitive)`)
-})
+}
 
 export function validateTrigger(ctx: Context, trigger: Json): void {
   validate(ctx, trigger, {
