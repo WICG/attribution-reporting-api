@@ -273,7 +273,23 @@ runAll(validateSource, [
       },
     ],
   },
-  // TODO: add tests for exceeding size limits
+  {
+    name: 'aggregation-keys-too-many',
+    json: `{
+      "destination": "https://a.test",
+      "aggregation_keys": {
+        "a": "0x1",
+        "b": "0x2"
+      }
+    }`,
+    vsv: { maxAggregationKeysPerAttribution: 1 },
+    expectedErrors: [
+      {
+        path: ['aggregation_keys'],
+        msg: 'exceeds the maximum number of keys (1)',
+      },
+    ],
+  },
 
   {
     name: 'source-event-id-wrong-type',

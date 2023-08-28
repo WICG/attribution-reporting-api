@@ -9,18 +9,18 @@ const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const limits = {
-  maxAggregationKeys: 20,
   maxEventLevelReports: 20,
   maxEntriesPerFilterData: 50,
   maxValuesPerFilterDataEntry: 50,
 }
 
 export type VendorSpecificValues = {
+  maxAggregationKeysPerAttribution: number
   triggerDataCardinality: Record<SourceType, bigint>
 }
 
 class Context extends context.Context {
-  constructor(readonly vsv?: VendorSpecificValues) {
+  constructor(readonly vsv: Partial<VendorSpecificValues>) {
     super()
   }
 }
@@ -155,17 +155,15 @@ function uint64(f: Uint64Check = () => {}): ValueCheck {
 }
 
 const triggerData = uint64((ctx, value) => {
-  if (typeof ctx.vsv !== 'undefined') {
-    Object.entries(ctx.vsv.triggerDataCardinality).forEach(([t, c]) => {
-      if (value >= c) {
-        ctx.warning(
-          `will be sanitized to ${
-            value % c
-          } if trigger is attributed to ${t} source`
-        )
-      }
-    })
-  }
+  Object.entries(ctx.vsv.triggerDataCardinality ?? []).forEach(([t, c]) => {
+    if (value >= c) {
+      ctx.warning(
+        `will be sanitized to ${
+          value % c
+        } if trigger is attributed to ${t} source`
+      )
+    }
+  })
 })
 
 type NumberCheck = (ctx: Context, value: number) => void
@@ -386,9 +384,11 @@ const dedupKeyField = { deduplication_key: optional(uint64()) }
 const priorityField = { priority: optional(int64) }
 
 // TODO: check length of key
-const aggregationKeys = keyValues((ctx, key, value) => {
-  hex128(ctx, value)
-}, limits.maxAggregationKeys)
+function aggregationKeys(ctx: Context, j: Json): void {
+  keyValues((ctx, key, value) => {
+    hex128(ctx, value)
+  }, ctx.vsv.maxAggregationKeysPerAttribution)(ctx, j)
+}
 
 export function validateSource(ctx: Context, source: Json): void {
   validate(ctx, source, {
@@ -417,25 +417,29 @@ const aggregatableTriggerData = list((ctx, value) =>
   validate(ctx, value, {
     key_piece: required(hex128),
     source_keys: optional(
-      list(string(unique()), { maxLength: limits.maxAggregationKeys })
+      list(string(unique()), {
+        maxLength: ctx.vsv.maxAggregationKeysPerAttribution,
+      })
     ),
     ...filterFields,
   })
 )
 
 // TODO: check length of key
-const aggregatableValues = keyValues((ctx, key, value) => {
-  const min = 1
-  const max = 65536
-  if (
-    typeof value !== 'number' ||
-    !Number.isInteger(value) ||
-    value < min ||
-    value > max
-  ) {
-    ctx.error(`must be an integer in the range [${min}, ${max}]`)
-  }
-}, limits.maxAggregationKeys)
+function aggregatableValues(ctx: Context, j: Json): void {
+  keyValues((ctx, key, value) => {
+    const min = 1
+    const max = 65536
+    if (
+      typeof value !== 'number' ||
+      !Number.isInteger(value) ||
+      value < min ||
+      value > max
+    ) {
+      ctx.error(`must be an integer in the range [${min}, ${max}]`)
+    }
+  }, ctx.vsv.maxAggregationKeysPerAttribution)(ctx, j)
+}
 
 const eventTriggerData = list((ctx, value) =>
   validate(ctx, value, {
@@ -480,7 +484,7 @@ export function validateTrigger(ctx: Context, trigger: Json): void {
 export function validateJSON(
   json: string,
   f: ValueCheck,
-  vsv?: VendorSpecificValues
+  vsv: Partial<VendorSpecificValues>
 ): context.ValidationResult {
   const ctx = new Context(vsv)
 

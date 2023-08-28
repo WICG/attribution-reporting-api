@@ -4,11 +4,13 @@ import { ValueCheck, VendorSpecificValues, validateJSON } from './validate-json'
 export type TestCase = testutil.TestCase & {
   name: string
   json: string
-  vsv?: VendorSpecificValues
+  vsv?: Partial<VendorSpecificValues>
 }
 
 export function runAll(validate: ValueCheck, tcs: TestCase[]) {
   tcs.forEach((tc) =>
-    testutil.run(tc, tc.name, () => validateJSON(tc.json, validate, tc.vsv))
+    testutil.run(tc, tc.name, () =>
+      validateJSON(tc.json, validate, tc.vsv ?? {})
+    )
   )
 }
