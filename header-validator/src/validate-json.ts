@@ -1,5 +1,5 @@
 import * as psl from 'psl'
-import { Context, ValidationResult } from './context'
+import * as context from './context'
 
 export type JsonDict = { [key: string]: Json }
 export type Json = null | boolean | number | string | Json[] | JsonDict
@@ -13,6 +13,16 @@ const limits = {
   maxEventLevelReports: 20,
   maxEntriesPerFilterData: 50,
   maxValuesPerFilterDataEntry: 50,
+}
+
+export type VendorSpecificValues = {
+  triggerDataCardinality: Record<SourceType, bigint>
+}
+
+class Context extends context.Context {
+  constructor(readonly vsv?: VendorSpecificValues) {
+    super()
+  }
 }
 
 type FieldCheck = (ctx: Context, obj: JsonDict, key: string) => void
@@ -124,15 +134,37 @@ function list(
   }
 }
 
-const uint64 = string((ctx, value) => {
-  if (!uint64Regex.test(value)) {
-    ctx.error(`must be a uint64 (must match ${uint64Regex})`)
-    return
-  }
+type Uint64Check = (ctx: Context, value: bigint) => void
 
-  const max = 2n ** 64n - 1n
-  if (BigInt(value) > max) {
-    ctx.error('must fit in an unsigned 64-bit integer')
+function uint64(f: Uint64Check = () => {}): ValueCheck {
+  return string((ctx, value) => {
+    if (!uint64Regex.test(value)) {
+      ctx.error(`must be a uint64 (must match ${uint64Regex})`)
+      return
+    }
+
+    const int = BigInt(value)
+    const max = 2n ** 64n - 1n
+    if (int > max) {
+      ctx.error('must fit in an unsigned 64-bit integer')
+      return
+    }
+
+    f(ctx, int)
+  })
+}
+
+const triggerData = uint64((ctx, value) => {
+  if (typeof ctx.vsv !== 'undefined') {
+    Object.entries(ctx.vsv.triggerDataCardinality).forEach(([t, c]) => {
+      if (value >= c) {
+        ctx.warning(
+          `will be sanitized to ${
+            value % c
+          } if trigger is attributed to ${t} source`
+        )
+      }
+    })
   }
 })
 
@@ -258,7 +290,7 @@ function legacyDuration(ctx: Context, value: Json): void {
     return nonNegativeInteger(ctx, value)
   }
   if (typeof value === 'string') {
-    return uint64(ctx, value)
+    return uint64()(ctx, value)
   }
   ctx.error('must be a non-negative integer or a string')
 }
@@ -306,7 +338,7 @@ const filterData = () =>
     )
   }, limits.maxEntriesPerFilterData)
 
-enum SourceType {
+export enum SourceType {
   event = 'event',
   navigation = 'navigation',
 }
@@ -346,11 +378,11 @@ const filterFields = {
 }
 
 const commonDebugFields = {
-  debug_key: optional(uint64),
+  debug_key: optional(uint64()),
   debug_reporting: optional(bool),
 }
 
-const dedupKeyField = { deduplication_key: optional(uint64) }
+const dedupKeyField = { deduplication_key: optional(uint64()) }
 const priorityField = { priority: optional(int64) }
 
 // TODO: check length of key
@@ -368,7 +400,7 @@ export function validateSource(ctx: Context, source: Json): void {
     expiry: optional(legacyDuration),
     filter_data: optional(filterData()),
     max_event_level_reports: optional(maxEventLevelReports),
-    source_event_id: optional(uint64),
+    source_event_id: optional(uint64()),
     ...commonDebugFields,
     ...priorityField,
   })
@@ -407,7 +439,7 @@ const aggregatableValues = keyValues((ctx, key, value) => {
 
 const eventTriggerData = list((ctx, value) =>
   validate(ctx, value, {
-    trigger_data: optional(uint64),
+    trigger_data: optional(triggerData),
     ...filterFields,
     ...dedupKeyField,
     ...priorityField,
@@ -445,8 +477,12 @@ export function validateTrigger(ctx: Context, trigger: Json): void {
   })
 }
 
-export function validateJSON(json: string, f: ValueCheck): ValidationResult {
-  const ctx = new Context()
+export function validateJSON(
+  json: string,
+  f: ValueCheck,
+  vsv?: VendorSpecificValues
+): context.ValidationResult {
+  const ctx = new Context(vsv)
 
   let value
   try {

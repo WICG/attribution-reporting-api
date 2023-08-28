@@ -1,10 +1,19 @@
 import { Issue, PathComponent } from './context'
-import { validateJSON, validateSource, validateTrigger } from './validate-json'
+import {
+  SourceType,
+  VendorSpecificValues,
+  validateJSON,
+  validateSource,
+  validateTrigger,
+} from './validate-json'
 import { validateEligible } from './validate-eligible'
 import { validateOsRegistration } from './validate-os'
 
 const form = document.querySelector('form')! as HTMLFormElement
 const input = form.querySelector('textarea')! as HTMLTextAreaElement
+const useChromiumVsvCheckbox = document.querySelector(
+  '#chromium-vsv'
+)! as HTMLInputElement
 const errorList = document.querySelector('#errors')!
 const warningList = document.querySelector('#warnings')!
 const successDiv = document.querySelector('#success')!
@@ -42,14 +51,23 @@ function header(): string {
   return el.value
 }
 
-form.addEventListener('input', () => {
+const ChromiumVsv: VendorSpecificValues = {
+  triggerDataCardinality: {
+    [SourceType.event]: 2n,
+    [SourceType.navigation]: 8n,
+  },
+}
+
+function validate(): void {
+  const vsv = useChromiumVsvCheckbox.checked ? ChromiumVsv : undefined
+
   let result
   switch (header()) {
     case 'source':
-      result = validateJSON(input.value, validateSource)
+      result = validateJSON(input.value, validateSource, vsv)
       break
     case 'trigger':
-      result = validateJSON(input.value, validateTrigger)
+      result = validateJSON(input.value, validateTrigger, vsv)
       break
     case 'os-source':
       result = validateOsRegistration(input.value)
@@ -74,13 +92,21 @@ form.addEventListener('input', () => {
 
   errorList.replaceChildren(...result.errors.map(makeLi))
   warningList.replaceChildren(...result.warnings.map(makeLi))
-})
+}
+
+useChromiumVsvCheckbox.addEventListener('change', validate)
+form.addEventListener('input', validate)
 
 document.querySelector('#linkify')!.addEventListener('click', async () => {
   const url = new URL(location.toString())
   url.search = ''
   url.searchParams.set('header', header())
   url.searchParams.set('json', input.value)
+
+  if (useChromiumVsvCheckbox.checked) {
+    url.searchParams.set('vsv', 'chromium')
+  }
+
   await navigator.clipboard.writeText(url.toString())
 })
 
@@ -92,6 +118,11 @@ const params = new URLSearchParams(location.search)
 const json = params.get('json')
 if (json) {
   input.value = json
+}
+
+const vsv = params.get('vsv')
+if (vsv === 'chromium') {
+  useChromiumVsvCheckbox.checked = true
 }
 
 const allowedValues = new Set([

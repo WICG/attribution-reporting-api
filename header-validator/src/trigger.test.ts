@@ -1,4 +1,4 @@
-import { validateTrigger } from './validate-json'
+import { SourceType, validateTrigger } from './validate-json'
 import { runAll } from './validate-json.test'
 
 runAll(validateTrigger, [
@@ -497,6 +497,26 @@ runAll(validateTrigger, [
       {
         path: ['event_trigger_data', 0, 'trigger_data'],
         msg: 'must be a uint64 (must match /^[0-9]+$/)',
+      },
+    ],
+  },
+  {
+    name: 'trigger-data-sanitized',
+    json: `{"event_trigger_data": [{"trigger_data": "10"}]}`,
+    vsv: {
+      triggerDataCardinality: {
+        [SourceType.event]: 2n,
+        [SourceType.navigation]: 8n,
+      },
+    },
+    expectedWarnings: [
+      {
+        path: ['event_trigger_data', 0, 'trigger_data'],
+        msg: 'will be sanitized to 0 if trigger is attributed to event source',
+      },
+      {
+        path: ['event_trigger_data', 0, 'trigger_data'],
+        msg: 'will be sanitized to 2 if trigger is attributed to navigation source',
       },
     ],
   },
