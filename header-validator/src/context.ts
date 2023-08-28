@@ -1,13 +1,13 @@
-export type PathComponent = string|number
+export type PathComponent = string | number
 
 export type Issue = {
-  path?: PathComponent[],
-  msg: string,
+  path?: PathComponent[]
+  msg: string
 }
 
 export type ValidationResult = {
-  errors: Issue[],
-  warnings: Issue[],
+  errors: Issue[]
+  warnings: Issue[]
 }
 
 export class Context {

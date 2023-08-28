@@ -1,7 +1,7 @@
 import { Context, ValidationResult } from './context'
 import { InnerList, Item, parseList } from 'structured-headers'
 
-function validateURL(ctx: Context, member: InnerList|Item): void {
+function validateURL(ctx: Context, member: InnerList | Item): void {
   if (typeof member[0] !== 'string') {
     ctx.error('must be a string')
     return
