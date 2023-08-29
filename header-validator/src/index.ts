@@ -52,6 +52,7 @@ function header(): string {
 }
 
 const ChromiumVsv: VendorSpecificValues = {
+  maxAggregationKeysPerAttribution: 20,
   triggerDataCardinality: {
     [SourceType.event]: 2n,
     [SourceType.navigation]: 8n,
@@ -59,7 +60,9 @@ const ChromiumVsv: VendorSpecificValues = {
 }
 
 function validate(): void {
-  const vsv = useChromiumVsvCheckbox.checked ? ChromiumVsv : undefined
+  const vsv: Partial<VendorSpecificValues> = useChromiumVsvCheckbox.checked
+    ? ChromiumVsv
+    : {}
 
   let result
   switch (header()) {
