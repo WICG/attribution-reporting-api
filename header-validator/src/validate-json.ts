@@ -170,8 +170,11 @@ function uint64(ctx: Context, j: Json): bigint | undefined {
 
 function triggerData(ctx: Context, j: Json): bigint | undefined {
   const n = uint64(ctx, j)
-  if (n === undefined || ctx.vsv.triggerDataCardinality === undefined) {
+  if (n === undefined) {
     return
+  }
+  if (ctx.vsv.triggerDataCardinality === undefined) {
+    return n
   }
 
   Object.entries(ctx.vsv.triggerDataCardinality).forEach(([t, c]) => {
