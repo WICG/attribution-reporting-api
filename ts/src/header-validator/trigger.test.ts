@@ -345,17 +345,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
     ],
   },
-  {
-    name: 'aggregatable-values-too-many',
-    json: `{"aggregatable_values": {"a": 1, "b": 2}}`,
-    vsv: { maxAggregationKeysPerAttribution: 1 },
-    expectedErrors: [
-      {
-        path: ['aggregatable_values'],
-        msg: 'exceeds the maximum number of keys (1)',
-      },
-    ],
-  },
 
   {
     name: 'debug-reporting-wrong-type',
@@ -705,22 +694,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['aggregatable_trigger_data', 0, 'source_keys', 2],
         msg: 'duplicate value a',
-      },
-    ],
-  },
-  {
-    name: 'source-keys-too-many',
-    json: `{"aggregatable_trigger_data": [
-      {
-        "key_piece": "0x1",
-        "source_keys": ["a", "b"]
-      }
-    ]}`,
-    vsv: { maxAggregationKeysPerAttribution: 1 },
-    expectedErrors: [
-      {
-        path: ['aggregatable_trigger_data', 0, 'source_keys'],
-        msg: 'length must be in the range [0, 1]',
       },
     ],
   },

@@ -662,7 +662,7 @@ function aggregationKeys(ctx: Context, j: Json): Maybe<Map<string, bigint>> {
     ctx,
     j,
     aggregationKey,
-    ctx.vsv.maxAggregationKeysPerAttribution
+    ctx.vsv.maxAggregationKeysPerSource
   )
 }
 
@@ -848,9 +848,7 @@ function source(ctx: Context, j: Json): Maybe<Source> {
 }
 
 function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
-  return set(ctx, j, string, {
-    maxLength: ctx.vsv.maxAggregationKeysPerAttribution,
-  })
+  return set(ctx, j, string)
 }
 
 export type AggregatableTriggerDatum = FilterPair & {
@@ -885,8 +883,7 @@ function aggregatableValues(ctx: Context, j: Json): Maybe<Map<string, number>> {
   return keyValues(
     ctx,
     j,
-    aggregatableKeyValue,
-    ctx.vsv.maxAggregationKeysPerAttribution
+    aggregatableKeyValue
   )
 }
 
