@@ -41,7 +41,10 @@ function struct<T extends object>(
     let ok = true
     for (const prop in fields) {
       let itemOk = false
-      fields[prop](ctx, d).peek((v) => (t[prop] = v))
+      fields[prop](ctx, d).peek((v) => {
+        itemOk = true
+        t[prop] = v
+      })
       ok = ok && itemOk
     }
 
@@ -673,8 +676,8 @@ function aggregatableDedupKeys(
 ): Maybe<AggregatableDedupKey[]> {
   return array(ctx, j, (ctx, j) =>
     struct(ctx, j, {
-      ...filterFields,
       ...dedupKeyField,
+      ...filterFields,
     })
   )
 }
