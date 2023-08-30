@@ -68,7 +68,7 @@ We will add the following two optional parameters to the JSON in `Attribution-Re
   "max_event_level_reports": <int>,
 
   // Optional. Represents a series of time windows, starting at start_time.
-  // Reports for this source will be delivered an hour after the end of each window.
+  // Reports for this source will be delivered after the end of each window.
   // Time is encoded as seconds after source registration.
   // If event_report_windows is omitted, will use the default windows.
   // This field is mutually exclusive with the existing `event_report_window` field.
@@ -116,7 +116,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     "trigger_data": [<int>, ...],
 
     // Represents a series of time windows, starting at start_time offset from the source registration time.
-    // Reports for this spec will be delivered an hour after the end of each window.
+    // Reports for this spec will be delivered after the end of each window.
     // Time is encoded as seconds after source registration.
     // end_times must consist of strictly increasing positive integers.
     // If event_report_windows
@@ -285,7 +285,7 @@ Triggers could be registered with the value field set, which are summed up and b
 { "event_trigger_data": [{"trigger_data": "0", "value": 4}] }
 ```
 
-The values are summed (to 8) and reported in the following reports after 7 days + 1 hour:
+The values are summed (to 8) and reported in the following reports after 7 days:
 
 ```jsonc
 // Report 1
@@ -302,7 +302,7 @@ In the subsequent 7 days, the following triggers are registered:
 { "event_trigger_data": [{"trigger_data": "0", "value": 45}] }
 ```
 
-The values are summed to 8 + 50 + 45 = 103. This yields the following reports at 14 days + 1 hour:
+The values are summed to 8 + 50 + 45 = 103. This yields the following reports at 14 days:
 
 ```jsonc
 // Report 2
