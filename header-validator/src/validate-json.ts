@@ -1,5 +1,6 @@
 import * as psl from 'psl'
 import * as context from './context'
+import { Maybe, None, Some } from './maybe'
 
 export type JsonDict = { [key: string]: Json }
 export type Json = null | boolean | number | string | Json[] | JsonDict
@@ -25,30 +26,36 @@ class Context extends context.Context {
   }
 }
 
-type FieldCheck = (ctx: Context, obj: JsonDict, key: string) => void
+type FieldCheck = (ctx: Context, obj: JsonDict, key: string) => Maybe<any>
 
 type FieldChecks = Record<string, FieldCheck>
 
-function validate(ctx: Context, obj: Json, checks: FieldChecks): void {
-  const d = object(ctx, obj)
-  if (d === undefined) {
-    return
-  }
+function validate(
+  ctx: Context,
+  obj: Json,
+  checks: FieldChecks
+): Maybe<JsonDict> {
+  return object(ctx, obj).filter((d) => {
+    let ok = true
+    Object.entries(checks).forEach(([key, check]) => {
+      let itemOk = false
+      ctx.scope(key, () => check(ctx, d, key).peek(() => (itemOk = true)))
+      ok = ok && itemOk
+    })
 
-  Object.entries(checks).forEach(([key, check]) =>
-    ctx.scope(key, () => check(ctx, d, key))
-  )
+    Object.keys(d).forEach((key) => {
+      if (!(key in checks)) {
+        ctx.scope(key, () => ctx.warning('unknown field'))
+      }
+    })
 
-  Object.keys(d).forEach((key) => {
-    if (!(key in checks)) {
-      ctx.scope(key, () => ctx.warning('unknown field'))
-    }
+    return ok
   })
 }
 
 type CtxFunc<I, O> = (ctx: Context, i: I) => O
 
-export type ValueCheck = CtxFunc<Json, void>
+export type ValueCheck = CtxFunc<Json, Maybe<any>>
 
 function field(f: ValueCheck, required: boolean): FieldCheck {
   return (ctx, obj, key) => {
@@ -56,73 +63,66 @@ function field(f: ValueCheck, required: boolean): FieldCheck {
     if (v === undefined) {
       if (required) {
         ctx.error('required')
+        return None
       }
-      return
+      return new Some(undefined)
     }
-    f(ctx, v)
+    return f(ctx, v)
   }
 }
 
 const required = (f: ValueCheck) => field(f, /*required=*/ true)
 const optional = (f: ValueCheck) => field(f, /*required=*/ false)
 
-function string(ctx: Context, j: Json): string | undefined {
+function string(ctx: Context, j: Json): Maybe<string> {
   if (typeof j === 'string') {
-    return j
+    return new Some(j)
   }
   ctx.error('must be a string')
+  return None
 }
 
-function bool(ctx: Context, j: Json): boolean | undefined {
+function bool(ctx: Context, j: Json): Maybe<boolean> {
   if (typeof j === 'boolean') {
-    return
+    return new Some(j)
   }
   ctx.error('must be a boolean')
+  return None
 }
 
 function isObject(j: Json): j is JsonDict {
   return j !== null && typeof j === 'object' && j.constructor === Object
 }
 
-function object(ctx: Context, j: Json): JsonDict | undefined {
+function object(ctx: Context, j: Json): Maybe<JsonDict> {
   if (isObject(j)) {
-    return j
+    return new Some(j)
   }
   ctx.error('must be an object')
+  return None
 }
 
 function keyValues<V>(
   ctx: Context,
   j: Json,
-  f: CtxFunc<[key: string, val: Json], V | undefined>,
+  f: CtxFunc<[key: string, val: Json], Maybe<V>>,
   maxKeys: number = Infinity
-): Map<string, V> | undefined {
-  const d = object(ctx, j)
-  if (d === undefined) {
-    return
-  }
-
-  const entries = Object.entries(d)
-
-  if (entries.length > maxKeys) {
-    ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
-  }
-
+): Maybe<Map<string, V>> {
   const map = new Map<string, V>()
-  let ok = true
 
-  entries.forEach(([key, j]) =>
-    ctx.scope(key, () => {
-      const v = f(ctx, [key, j])
-      if (v === undefined) {
-        ok = false
-        return
+  return object(ctx, j)
+    .filter((d) => {
+      const entries = Object.entries(d)
+
+      if (entries.length > maxKeys) {
+        ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
       }
-      map.set(key, v)
-    })
-  )
 
-  return ok ? map : undefined
+      return collection(ctx, entries, (ctx, [key, j]) =>
+        f(ctx, [key, j]).peek((v) => map.set(key, v))
+      )
+    })
+    .map(() => map)
 }
 
 type ListOpts = {
@@ -134,149 +134,136 @@ function list(
   ctx: Context,
   j: Json,
   { minLength = 0, maxLength = Infinity }: ListOpts = {}
-): Json[] | undefined {
+): Maybe<Json[]> {
   if (!Array.isArray(j)) {
     ctx.error('must be a list')
-    return
+    return None
   }
 
   if (j.length > maxLength || j.length < minLength) {
     ctx.error(`length must be in the range [${minLength}, ${maxLength}]`)
   }
 
-  return j
+  return new Some(j)
 }
 
-function uint64(ctx: Context, j: Json): bigint | undefined {
-  const s = string(ctx, j)
-  if (s === undefined) {
-    return
+function pattern(
+  ctx: Context,
+  s: string,
+  p: RegExp,
+  errPrefix: string
+): boolean {
+  if (!p.test(s)) {
+    ctx.error(`${errPrefix} (must match ${p})`)
+    return false
   }
-
-  if (!uint64Regex.test(s)) {
-    ctx.error(`must be a uint64 (must match ${uint64Regex})`)
-    return
-  }
-
-  const int = BigInt(s)
-  const max = 2n ** 64n - 1n
-  if (int > max) {
-    ctx.error('must fit in an unsigned 64-bit integer')
-    return
-  }
-
-  return int
+  return true
 }
 
-function triggerData(ctx: Context, j: Json): bigint | undefined {
-  const n = uint64(ctx, j)
-  if (n === undefined) {
-    return
-  }
-  if (ctx.vsv.triggerDataCardinality === undefined) {
-    return n
-  }
-
-  Object.entries(ctx.vsv.triggerDataCardinality).forEach(([t, c]) => {
-    if (n >= c) {
-      ctx.warning(
-        `will be sanitized to ${n % c} if trigger is attributed to ${t} source`
+function uint64(ctx: Context, j: Json): Maybe<bigint> {
+  return string(ctx, j)
+    .filter((s) => pattern(ctx, s, uint64Regex, 'must be a uint64'))
+    .map(BigInt)
+    .filter((n) =>
+      range(
+        ctx,
+        n,
+        0n,
+        2n ** 64n - 1n,
+        'must fit in an unsigned 64-bit integer'
       )
-    }
-  })
-
-  return n
+    )
 }
 
-function number(ctx: Context, j: Json): number | undefined {
+function triggerData(ctx: Context, j: Json): Maybe<bigint> {
+  return uint64(ctx, j).peek((n) => {
+    Object.entries(ctx.vsv.triggerDataCardinality ?? []).forEach(([t, c]) => {
+      if (n >= c) {
+        ctx.warning(
+          `will be sanitized to ${
+            n % c
+          } if trigger is attributed to ${t} source`
+        )
+      }
+    })
+  })
+}
+
+function number(ctx: Context, j: Json): Maybe<number> {
   if (typeof j === 'number') {
-    return j
+    return new Some(j)
   }
   ctx.error('must be a number')
+  return None
 }
 
-function nonNegativeInteger(ctx: Context, j: Json): number | undefined {
-  const n = number(ctx, j)
-  if (n === undefined) {
-    return
+function integer(ctx: Context, n: number): boolean {
+  if (!Number.isInteger(n)) {
+    ctx.error('must be an integer')
+    return false
   }
-
-  if (!Number.isInteger(n) || n < 0) {
-    ctx.error('must be a non-negative integer')
-    return
-  }
-
-  return n
+  return true
 }
 
-function positiveInteger(ctx: Context, j: Json): number | undefined {
-  const n = number(ctx, j)
-  if (n === undefined) {
-    return
-  }
-
-  if (!Number.isInteger(n) || n <= 0) {
-    ctx.error('must be a positive integer')
-    return
-  }
-
-  return n
-}
-
-function int64(ctx: Context, j: Json): bigint | undefined {
-  const s = string(ctx, j)
-  if (s === undefined) {
-    return
-  }
-
-  if (!int64Regex.test(s)) {
-    ctx.error(`must be an int64 (must match ${int64Regex})`)
-    return
-  }
-
-  const n = BigInt(s)
-
-  const max = 2n ** (64n - 1n) - 1n
-  const min = (-2n) ** (64n - 1n)
+function range<N extends bigint | number>(
+  ctx: Context,
+  n: N,
+  min: N,
+  max: N,
+  msg: string = `must be in the range [${min}, ${max}]`
+): boolean {
   if (n < min || n > max) {
-    ctx.error('must fit in a signed 64-bit integer')
-    return
+    ctx.error(msg)
+    return false
   }
-
-  return n
+  return true
 }
 
-function hex128(ctx: Context, j: Json): bigint | undefined {
-  const s = string(ctx, j)
-  if (s === undefined) {
-    return
-  }
+function nonNegativeInteger(ctx: Context, j: Json): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => integer(ctx, n))
+    .filter((n) => range(ctx, n, 0, Infinity, 'must be non-negative'))
+}
 
-  if (!hex128Regex.test(s)) {
-    ctx.error(`must be a hex128 (must match ${hex128Regex})`)
-    return
-  }
+function positiveInteger(ctx: Context, j: Json): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => integer(ctx, n))
+    .filter((n) => range(ctx, n, 1, Infinity, 'must be positive'))
+}
 
-  return BigInt(s)
+function int64(ctx: Context, j: Json): Maybe<bigint> {
+  return string(ctx, j)
+    .filter((s) => pattern(ctx, s, int64Regex, 'must be an int64'))
+    .map(BigInt)
+    .filter((n) =>
+      range(
+        ctx,
+        n,
+        (-2n) ** (64n - 1n),
+        2n ** (64n - 1n) - 1n,
+        'must fit in a signed 64-bit integer'
+      )
+    )
+}
+
+function hex128(ctx: Context, j: Json): Maybe<bigint> {
+  return string(ctx, j)
+    .filter((s) => pattern(ctx, s, hex128Regex, 'must be a hex128'))
+    .map(BigInt)
 }
 
 function suitableScope(
   ctx: Context,
-  j: Json,
+  s: string,
   label: string,
   scope: (url: URL) => string
-): string | undefined {
-  const s = string(ctx, j)
-  if (s === undefined) {
-    return
-  }
-
+): Maybe<string> {
   let url
   try {
     url = new URL(s)
   } catch {
     ctx.error('invalid URL')
-    return
+    return None
   }
 
   if (
@@ -287,7 +274,7 @@ function suitableScope(
     )
   ) {
     ctx.error('URL must use HTTP/HTTPS and be potentially trustworthy')
-    return
+    return None
   }
 
   const scoped = scope(url)
@@ -296,62 +283,57 @@ function suitableScope(
       `URL components other than ${label} (${scoped}) will be ignored`
     )
   }
-  return scoped
+  return new Some(scoped)
 }
 
-function suitableOrigin(ctx: Context, j: Json): string | undefined {
-  return suitableScope(ctx, j, 'origin', (u) => u.origin)
-}
-
-function suitableSite(ctx: Context, j: Json): string | undefined {
-  return suitableScope(
-    ctx,
-    j,
-    'site',
-    (u) => `${u.protocol}//${psl.get(u.hostname)}`
+function suitableOrigin(ctx: Context, j: Json): Maybe<string> {
+  return string(ctx, j).flatMap((s) =>
+    suitableScope(ctx, s, 'origin', (u) => u.origin)
   )
 }
 
-function destination(ctx: Context, j: Json): Set<string> | undefined {
+function suitableSite(ctx: Context, j: Json): Maybe<string> {
+  return string(ctx, j).flatMap((s) =>
+    suitableScope(
+      ctx,
+      s,
+      'site',
+      (u) => `${u.protocol}//${psl.get(u.hostname)}`
+    )
+  )
+}
+
+function destination(ctx: Context, j: Json): Maybe<Set<string>> {
   if (typeof j === 'string') {
-    const s = suitableSite(ctx, j)
-    return s === undefined ? undefined : new Set([s])
+    return suitableSite(ctx, j).map((s) => new Set([s]))
   }
   if (Array.isArray(j)) {
     return set(ctx, j, suitableSite, { minLength: 1, maxLength: 3 })
   }
   ctx.error('must be a list or a string')
+  return None
 }
 
-function maxEventLevelReports(ctx: Context, j: Json): number | undefined {
-  if (
-    typeof j === 'number' &&
-    Number.isInteger(j) &&
-    j >= 0 &&
-    j <= limits.maxEventLevelReports
-  ) {
-    return j
-  }
-
-  ctx.error(
-    `must be an integer in the range [0, ${limits.maxEventLevelReports}]`
-  )
+function maxEventLevelReports(ctx: Context, j: Json): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => integer(ctx, n))
+    .filter((n) => range(ctx, n, 0, limits.maxEventLevelReports))
 }
 
-function endTimes(ctx: Context, j: Json): number[] | undefined {
+function endTimes(ctx: Context, j: Json): Maybe<number[]> {
   // TODO: Validate that end times are propertly ordered with respect to each
   // other and to start_time
   return array(ctx, j, positiveInteger, { minLength: 1, maxLength: 5 })
 }
 
-function eventReportWindows(ctx: Context, j: Json): void {
-  validate(ctx, j, {
+function eventReportWindows(ctx: Context, j: Json): Maybe<JsonDict> {
+  return validate(ctx, j, {
     start_time: optional(nonNegativeInteger),
     end_times: required(endTimes),
   })
 }
 
-function legacyDuration(ctx: Context, j: Json): number | bigint | undefined {
+function legacyDuration(ctx: Context, j: Json): Maybe<number | bigint> {
   if (typeof j === 'number') {
     return nonNegativeInteger(ctx, j)
   }
@@ -359,96 +341,73 @@ function legacyDuration(ctx: Context, j: Json): number | bigint | undefined {
     return uint64(ctx, j)
   }
   ctx.error('must be a non-negative integer or a string')
+  return None
 }
 
-function collection(
+function collection<C extends context.PathComponent>(
   ctx: Context,
-  j: Json,
-  f: CtxFunc<Json, boolean>,
-  opts?: ListOpts
+  js: Iterable<[C, Json]>,
+  f: CtxFunc<[C, Json], Maybe<unknown>>
 ): boolean {
-  const js = list(ctx, j, opts)
-  if (js === undefined) {
-    return false
-  }
-
   let ok = true
-  js.forEach((j, i) =>
-    ctx.scope(i, () => {
-      if (!f(ctx, j)) {
-        ok = false
-      }
+  for (const [c, j] of js) {
+    ctx.scope(c, () => {
+      let itemOk = false
+      f(ctx, [c, j]).peek(() => (itemOk = true))
+      ok = ok && itemOk
     })
-  )
+  }
   return ok
 }
 
 function set(
   ctx: Context,
   j: Json,
-  f: CtxFunc<Json, string | undefined>,
+  f: CtxFunc<Json, Maybe<string>>,
   opts?: ListOpts
-): Set<string> | undefined {
+): Maybe<Set<string>> {
   const set = new Set<string>()
 
-  const ok = collection(
-    ctx,
-    j,
-    (ctx, j) => {
-      const v = f(ctx, j)
-      if (v === undefined) {
-        return false
-      }
-      if (set.has(v)) {
-        ctx.warning(`duplicate value ${v}`)
-      } else {
-        set.add(v)
-      }
-      return true
-    },
-    opts
-  )
-
-  return ok ? set : undefined
+  return list(ctx, j, opts)
+    .filter((js) =>
+      collection(ctx, js.entries(), (ctx, [i, j]) =>
+        f(ctx, j).peek((v) =>
+          set.has(v) ? ctx.warning(`duplicate value ${v}`) : set.add(v)
+        )
+      )
+    )
+    .map(() => set)
 }
 
 function array<T>(
   ctx: Context,
   j: Json,
-  f: CtxFunc<Json, T | undefined>,
+  f: CtxFunc<Json, Maybe<T>>,
   opts?: ListOpts
-): T[] | undefined {
+): Maybe<T[]> {
   const arr: T[] = []
 
-  const ok = collection(
-    ctx,
-    j,
-    (ctx, j) => {
-      const v = f(ctx, j)
-      if (v === undefined) {
-        return false
-      }
-      arr.push(v)
-      return true
-    },
-    opts
-  )
-
-  return ok ? arr : undefined
+  return list(ctx, j, opts)
+    .filter((js) =>
+      collection(ctx, js.entries(), (ctx, [i, j]) =>
+        f(ctx, j).peek((v) => arr.push(v))
+      )
+    )
+    .map(() => arr)
 }
 
 // TODO: Check length of strings.
 function filterDataKeyValue(
   ctx: Context,
   [key, j]: [string, Json]
-): Set<string> | undefined {
+): Maybe<Set<string>> {
   if (key === 'source_type' || key === '_lookback_window') {
     ctx.error('is prohibited because it is implicitly set')
-    return
+    return None
   }
   if (key.startsWith('_')) {
     ctx.error('is prohibited as keys starting with "_" are reserved')
-    return
+    return None
   }
 
   return set(ctx, j, string, { maxLength: limits.maxValuesPerFilterDataEntry })
@@ -456,7 +415,7 @@ function filterDataKeyValue(
 
 type FilterData = Map<string, Set<string>>
 
-function filterData(ctx: Context, j: Json): FilterData | undefined {
+function filterData(ctx: Context, j: Json): Maybe<FilterData> {
   return keyValues(ctx, j, filterDataKeyValue, limits.maxEntriesPerFilterData)
 }
 
@@ -470,47 +429,45 @@ type FilterValue = Set<string> | number
 function filterKeyValue(
   ctx: Context,
   [key, j]: [string, Json]
-): FilterValue | undefined {
+): Maybe<FilterValue> {
   if (key === '_lookback_window') {
     return positiveInteger(ctx, j)
   }
   if (key.startsWith('_')) {
     ctx.error('is prohibited as keys starting with "_" are reserved')
-    return
+    return None
   }
 
-  return set(ctx, j, (ctx, j) => {
-    const s = string(ctx, j)
-    if (s === undefined) {
-      return
-    }
+  const peek =
+    key === 'source_type'
+      ? (s: string) => {
+          if (!(s in SourceType)) {
+            const allowed = Object.keys(SourceType).join(', ')
+            ctx.warning(
+              `unknown value ${s} (${key} can only match one of ${allowed})`
+            )
+          }
+        }
+      : () => {}
 
-    if (key === 'source_type' && !(s in SourceType)) {
-      const allowed = Object.keys(SourceType).join(', ')
-      ctx.warning(
-        `unknown value ${s} (${key} can only match one of ${allowed})`
-      )
-    }
-
-    return s
-  })
+  return set(ctx, j, (ctx, j) => string(ctx, j).peek(peek))
 }
 
 type Filters = Map<string, FilterValue>
 
-function filters(ctx: Context, j: Json): Filters | undefined {
+function filters(ctx: Context, j: Json): Maybe<Filters> {
   return keyValues(ctx, j, filterKeyValue)
 }
 
-function orFilters(ctx: Context, j: Json): Filters[] | undefined {
+function orFilters(ctx: Context, j: Json): Maybe<Filters[]> {
   if (Array.isArray(j)) {
     return array(ctx, j, filters)
   }
   if (isObject(j)) {
-    const v = filters(ctx, j)
-    return v === undefined ? undefined : [v]
+    return filters(ctx, j).map((v) => [v])
   }
   ctx.error('must be a list or an object')
+  return None
 }
 
 const filterFields = {
@@ -527,17 +484,11 @@ const dedupKeyField = { deduplication_key: optional(uint64) }
 const priorityField = { priority: optional(int64) }
 
 // TODO: check length of key
-function aggregationKey(
-  ctx: Context,
-  [key, j]: [string, Json]
-): bigint | undefined {
+function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
   return hex128(ctx, j)
 }
 
-function aggregationKeys(
-  ctx: Context,
-  j: Json
-): Map<string, bigint> | undefined {
+function aggregationKeys(ctx: Context, j: Json): Maybe<Map<string, bigint>> {
   return keyValues(
     ctx,
     j,
@@ -546,8 +497,8 @@ function aggregationKeys(
   )
 }
 
-export function validateSource(ctx: Context, source: Json): void {
-  validate(ctx, source, {
+export function validateSource(ctx: Context, source: Json): Maybe<JsonDict> {
+  return validate(ctx, source, {
     aggregatable_report_window: optional(legacyDuration),
     aggregation_keys: optional(aggregationKeys),
     destination: required(destination),
@@ -559,23 +510,24 @@ export function validateSource(ctx: Context, source: Json): void {
     source_event_id: optional(uint64),
     ...commonDebugFields,
     ...priorityField,
+  }).filter((d) => {
+    if ('event_report_window' in d && 'event_report_windows' in d) {
+      ctx.error(
+        'event_report_window and event_report_windows in the same source'
+      )
+      return false
+    }
+    return true
   })
-  if (
-    isObject(source) &&
-    'event_report_window' in source &&
-    'event_report_windows' in source
-  ) {
-    ctx.error('event_report_window and event_report_windows in the same source')
-  }
 }
 
-function sourceKeys(ctx: Context, j: Json): Set<string> | undefined {
+function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
   return set(ctx, j, string, {
     maxLength: ctx.vsv.maxAggregationKeysPerAttribution,
   })
 }
 
-function aggregatableTriggerData(ctx: Context, j: Json): void[] | undefined {
+function aggregatableTriggerData(ctx: Context, j: Json): Maybe<JsonDict[]> {
   return array(ctx, j, (ctx, j) =>
     validate(ctx, j, {
       key_piece: required(hex128),
@@ -589,20 +541,13 @@ function aggregatableTriggerData(ctx: Context, j: Json): void[] | undefined {
 function aggregatableKeyValue(
   ctx: Context,
   [key, j]: [string, Json]
-): number | undefined {
-  const min = 1
-  const max = 65536
-  if (typeof j !== 'number' || !Number.isInteger(j) || j < min || j > max) {
-    ctx.error(`must be an integer in the range [${min}, ${max}]`)
-    return
-  }
-  return j
+): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => integer(ctx, n))
+    .filter((n) => range(ctx, n, 1, 65536))
 }
 
-function aggregatableValues(
-  ctx: Context,
-  j: Json
-): Map<string, number> | undefined {
+function aggregatableValues(ctx: Context, j: Json): Maybe<Map<string, number>> {
   return keyValues(
     ctx,
     j,
@@ -611,7 +556,7 @@ function aggregatableValues(
   )
 }
 
-function eventTriggerData(ctx: Context, j: Json): void[] | undefined {
+function eventTriggerData(ctx: Context, j: Json): Maybe<JsonDict[]> {
   return array(ctx, j, (ctx, j) =>
     validate(ctx, j, {
       trigger_data: optional(triggerData),
@@ -622,7 +567,7 @@ function eventTriggerData(ctx: Context, j: Json): void[] | undefined {
   )
 }
 
-function aggregatableDedupKeys(ctx: Context, j: Json): void[] | undefined {
+function aggregatableDedupKeys(ctx: Context, j: Json): Maybe<JsonDict[]> {
   return array(ctx, j, (ctx, j) =>
     validate(ctx, j, {
       ...dedupKeyField,
@@ -634,22 +579,20 @@ function aggregatableDedupKeys(ctx: Context, j: Json): void[] | undefined {
 function aggregatableSourceRegistrationTime(
   ctx: Context,
   j: Json
-): string | undefined {
-  const s = string(ctx, j)
-  if (s === undefined) {
-    return
-  }
-
-  const exclude = 'exclude'
-  const include = 'include'
-  if (s === exclude || s === include) {
-    return s
-  }
-  ctx.error(`must match '${exclude}' or '${include}' (case-sensitive)`)
+): Maybe<string> {
+  return string(ctx, j).filter((s) => {
+    const exclude = 'exclude'
+    const include = 'include'
+    if (s === exclude || s === include) {
+      return true
+    }
+    ctx.error(`must match '${exclude}' or '${include}' (case-sensitive)`)
+    return false
+  })
 }
 
-export function validateTrigger(ctx: Context, trigger: Json): void {
-  validate(ctx, trigger, {
+export function validateTrigger(ctx: Context, trigger: Json): Maybe<JsonDict> {
+  return validate(ctx, trigger, {
     aggregatable_trigger_data: optional(aggregatableTriggerData),
     aggregatable_values: optional(aggregatableValues),
     aggregatable_deduplication_keys: optional(aggregatableDedupKeys),

@@ -435,7 +435,7 @@ runAll(validateSource, [
     expectedErrors: [
       {
         path: ['aggregatable_report_window'],
-        msg: 'must be a non-negative integer',
+        msg: 'must be non-negative',
       },
     ],
   },
@@ -495,7 +495,7 @@ runAll(validateSource, [
     expectedErrors: [
       {
         path: ['event_report_window'],
-        msg: 'must be a non-negative integer',
+        msg: 'must be non-negative',
       },
     ],
   },
@@ -554,7 +554,7 @@ runAll(validateSource, [
     expectedErrors: [
       {
         path: ['expiry'],
-        msg: 'must be a non-negative integer',
+        msg: 'must be non-negative',
       },
     ],
   },
@@ -582,7 +582,7 @@ runAll(validateSource, [
     expectedErrors: [
       {
         path: ['max_event_level_reports'],
-        msg: 'must be an integer in the range [0, 20]',
+        msg: 'must be a number',
       },
     ],
   },
@@ -595,7 +595,7 @@ runAll(validateSource, [
     expectedErrors: [
       {
         path: ['max_event_level_reports'],
-        msg: 'must be an integer in the range [0, 20]',
+        msg: 'must be in the range [0, 20]',
       },
     ],
   },
