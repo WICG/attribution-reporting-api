@@ -144,7 +144,7 @@ runAll(validateTrigger, [
     expectedErrors: [
       {
         path: ['filters', '_lookback_window'],
-        msg: 'must be a positive integer',
+        msg: 'must be positive',
       },
     ],
   },
@@ -239,7 +239,7 @@ runAll(validateTrigger, [
     expectedErrors: [
       {
         path: ['aggregatable_values', 'a'],
-        msg: 'must be an integer in the range [1, 65536]',
+        msg: 'must be a number',
       },
     ],
   },
@@ -249,7 +249,7 @@ runAll(validateTrigger, [
     expectedErrors: [
       {
         path: ['aggregatable_values', 'a'],
-        msg: 'must be an integer in the range [1, 65536]',
+        msg: 'must be in the range [1, 65536]',
       },
     ],
   },
@@ -259,7 +259,7 @@ runAll(validateTrigger, [
     expectedErrors: [
       {
         path: ['aggregatable_values', 'a'],
-        msg: 'must be an integer in the range [1, 65536]',
+        msg: 'must be in the range [1, 65536]',
       },
     ],
   },
