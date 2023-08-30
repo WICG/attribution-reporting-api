@@ -26,6 +26,25 @@ class Context extends context.Context {
   }
 }
 
+type Fields<T extends object> = {
+  [K in keyof T]-?: CtxFunc<Json, T[K] | undefined>
+}
+
+function struct<T extends object>(ctx: Context, d: JsonDict, t: T, fields: Fields<T>): T | undefined {
+  let ok = true
+
+  for (const prop in fields) {
+    const v = fields[prop](ctx, d)
+    if (v === undefined) {
+      ok = false
+    } else {
+      t[prop] = v
+    }
+  }
+
+  return ok ? t : undefined
+}
+
 type FieldCheck = (ctx: Context, obj: JsonDict, key: string) => Maybe<any>
 
 type FieldChecks = Record<string, FieldCheck>
