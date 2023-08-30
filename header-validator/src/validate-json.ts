@@ -8,10 +8,13 @@ const uint64Regex = /^[0-9]+$/
 const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
+const secondsPerHour: number = 60 * 60
+
 const limits = {
   maxEventLevelReports: 20,
   maxEntriesPerFilterData: 50,
   maxValuesPerFilterDataEntry: 50,
+  minReportWindow: 1 * secondsPerHour,
 }
 
 export type VendorSpecificValues = {
@@ -345,9 +348,17 @@ function endTimes(ctx: Context, j: Json): number[] | undefined {
     ctx,
     j,
     (ctx, j) => {
-      const n = positiveInteger(ctx, j)
+      let n = positiveInteger(ctx, j)
       if (n === undefined) {
         return
+      }
+
+      // TODO: this needs access to `defaultEndDuration` from the spec in order
+      // to perform clamping
+
+      if (n < limits.minReportWindow) {
+        n = limits.minReportWindow
+        ctx.warning(`will be clamped to min of ${n}`)
       }
 
       if (n <= last) {

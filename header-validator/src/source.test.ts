@@ -605,7 +605,7 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "event_report_window": "21",
       "event_report_windows": {
-        "end_times": [1000]
+        "end_times": [3600]
       }
     }`,
     expectedErrors: [
@@ -649,7 +649,7 @@ runAll(validateSource, [
     json: `{
       "destination": "https://a.test",
       "event_report_windows": {
-        "end_times": [1,2,3,4,5,6]
+        "end_times": [3601,3602,3603,3604,3605,3606]
       }
     }`,
     expectedErrors: [
@@ -660,21 +660,42 @@ runAll(validateSource, [
     ],
   },
   {
+    name: 'event-level-report-windows-end-times-clamped-min',
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "end_times": [3599]
+      }
+    }`,
+    expectedWarnings: [
+      {
+        path: ['event_report_windows', 'end_times', 0],
+        msg: 'will be clamped to min of 3600',
+      },
+    ],
+  },
+  {
     name: 'event-level-report-windows-end-times-non-increasing',
     json: `{
       "destination": "https://a.test",
       "event_report_windows": {
-        "end_times": [3, 3, 4, 2]
+        "end_times": [3599, 3600, 3604, 3602]
       }
     }`,
+    expectedWarnings: [
+      {
+        path: ['event_report_windows', 'end_times', 0],
+        msg: 'will be clamped to min of 3600',
+      },
+    ],
     expectedErrors: [
       {
         path: ['event_report_windows', 'end_times', 1],
-        msg: 'must be > previous value (3)',
+        msg: 'must be > previous value (3600)',
       },
       {
         path: ['event_report_windows', 'end_times', 3],
-        msg: 'must be > previous value (4)',
+        msg: 'must be > previous value (3604)',
       },
     ],
   },
@@ -684,7 +705,7 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": 10,
-        "end_times": [11,12,13,14]
+        "end_times": [3611,3612,3613,3614]
       }
     }`,
   },
