@@ -660,6 +660,25 @@ runAll(validateSource, [
     ],
   },
   {
+    name: 'event-level-report-windows-end-times-non-increasing',
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "end_times": [3, 3, 4, 2]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_report_windows', 'end_times', 1],
+        msg: 'must be > previous value (3)',
+      },
+      {
+        path: ['event_report_windows', 'end_times', 3],
+        msg: 'must be > previous value (4)',
+      },
+    ],
+  },
+  {
     name: 'event-level-report-windows-start-time',
     json: `{
       "destination": "https://a.test",

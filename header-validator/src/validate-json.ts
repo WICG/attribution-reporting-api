@@ -338,10 +338,28 @@ function maxEventLevelReports(ctx: Context, j: Json): number | undefined {
   )
 }
 
+// TODO: ensure that first end_time is greater than start_time
 function endTimes(ctx: Context, j: Json): number[] | undefined {
-  // TODO: Validate that end times are propertly ordered with respect to each
-  // other and to start_time
-  return array(ctx, j, positiveInteger, { minLength: 1, maxLength: 5 })
+  let last = 0
+  return array(
+    ctx,
+    j,
+    (ctx, j) => {
+      const n = positiveInteger(ctx, j)
+      if (n === undefined) {
+        return
+      }
+
+      if (n <= last) {
+        ctx.error(`must be > previous value (${last})`)
+        return
+      }
+
+      last = n
+      return n
+    },
+    { minLength: 1, maxLength: 5 }
+  )
 }
 
 function eventReportWindows(ctx: Context, j: Json): void {
