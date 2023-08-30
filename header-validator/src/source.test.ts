@@ -44,7 +44,7 @@ runAll(validateSource, [
   },
   {
     name: 'destination-url-components',
-    json: `{"destination": ["https://a.test/b?c=d#e", "https://x.y.test"]}`,
+    json: `{"destination": ["https://a.test/b?c=d#e", "https://x.y.test", "https://sub.a.test/z"]}`,
     expectedWarnings: [
       {
         path: ['destination', 0],
@@ -53,6 +53,14 @@ runAll(validateSource, [
       {
         path: ['destination', 1],
         msg: 'URL components other than site (https://y.test) will be ignored',
+      },
+      {
+        path: ['destination', 2],
+        msg: 'URL components other than site (https://a.test) will be ignored',
+      },
+      {
+        path: ['destination', 2],
+        msg: 'duplicate value https://a.test',
       },
     ],
   },
