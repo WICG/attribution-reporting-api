@@ -114,20 +114,48 @@ function exclusive<T>(
   }
 }
 
-function string(ctx: Context, j: Json): Maybe<string> {
-  if (typeof j === 'string') {
-    return new Some(j)
+type TypeSwitch<T> = {
+  null?: CtxFunc<null, Maybe<T>>
+  boolean?: CtxFunc<boolean, Maybe<T>>
+  number?: CtxFunc<number, Maybe<T>>
+  string?: CtxFunc<string, Maybe<T>>
+  list?: CtxFunc<Json[], Maybe<T>>
+  object?: CtxFunc<JsonDict, Maybe<T>>
+}
+
+function typeSwitch<T>(ctx: Context, j: Json, ts: TypeSwitch<T>): Maybe<T> {
+  if (j === null && ts.null !== undefined) {
+    return ts.null(ctx, j)
   }
-  ctx.error('must be a string')
+  if (typeof j === 'boolean' && ts.boolean !== undefined) {
+    return ts.boolean(ctx, j)
+  }
+  if (typeof j === 'number' && ts.number !== undefined) {
+    return ts.number(ctx, j)
+  }
+  if (typeof j === 'string' && ts.string !== undefined) {
+    return ts.string(ctx, j)
+  }
+  if (Array.isArray(j) && ts.list !== undefined) {
+    return ts.list(ctx, j)
+  }
+  if (isObject(j) && ts.object !== undefined) {
+    return ts.object(ctx, j)
+  }
+
+  const allowed = Object.keys(ts)
+    .map((t) => `${t === 'object' ? 'an' : 'a'} ${t}`)
+    .join(' or ')
+  ctx.error(`must be ${allowed}`)
   return None
 }
 
+function string(ctx: Context, j: Json): Maybe<string> {
+  return typeSwitch(ctx, j, { string: (ctx, j) => new Some(j) })
+}
+
 function bool(ctx: Context, j: Json): Maybe<boolean> {
-  if (typeof j === 'boolean') {
-    return new Some(j)
-  }
-  ctx.error('must be a boolean')
-  return None
+  return typeSwitch(ctx, j, { boolean: (ctx, j) => new Some(j) })
 }
 
 function isObject(j: Json): j is JsonDict {
@@ -135,11 +163,7 @@ function isObject(j: Json): j is JsonDict {
 }
 
 function object(ctx: Context, j: Json): Maybe<JsonDict> {
-  if (isObject(j)) {
-    return new Some(j)
-  }
-  ctx.error('must be an object')
-  return None
+  return typeSwitch(ctx, j, { object: (ctx, j) => new Some(j) })
 }
 
 function keyValues<V>(
@@ -175,16 +199,11 @@ function list(
   j: Json,
   { minLength = 0, maxLength = Infinity }: ListOpts = {}
 ): Maybe<Json[]> {
-  if (!Array.isArray(j)) {
-    ctx.error('must be a list')
-    return None
-  }
-
-  if (j.length > maxLength || j.length < minLength) {
-    ctx.error(`length must be in the range [${minLength}, ${maxLength}]`)
-  }
-
-  return new Some(j)
+  return typeSwitch(ctx, j, { list: (ctx, j) => new Some(j) }).peek((j) => {
+    if (j.length > maxLength || j.length < minLength) {
+      ctx.error(`length must be in the range [${minLength}, ${maxLength}]`)
+    }
+  })
 }
 
 function pattern(
@@ -230,11 +249,7 @@ function triggerData(ctx: Context, j: Json): Maybe<bigint> {
 }
 
 function number(ctx: Context, j: Json): Maybe<number> {
-  if (typeof j === 'number') {
-    return new Some(j)
-  }
-  ctx.error('must be a number')
-  return None
+  return typeSwitch(ctx, j, { number: (ctx, j) => new Some(j) })
 }
 
 function integer(ctx: Context, n: number): boolean {
@@ -344,14 +359,10 @@ function suitableSite(ctx: Context, j: Json): Maybe<string> {
 }
 
 function destination(ctx: Context, j: Json): Maybe<Set<string>> {
-  if (typeof j === 'string') {
-    return suitableSite(ctx, j).map((s) => new Set([s]))
-  }
-  if (Array.isArray(j)) {
-    return set(ctx, j, suitableSite, { minLength: 1, maxLength: 3 })
-  }
-  ctx.error('must be a list or a string')
-  return None
+  return typeSwitch(ctx, j, {
+    string: (ctx, j) => suitableSite(ctx, j).map((s) => new Set([s])),
+    list: (ctx, j) => set(ctx, j, suitableSite, { minLength: 1, maxLength: 3 }),
+  })
 }
 
 function maxEventLevelReports(ctx: Context, j: Json): Maybe<number> {
@@ -379,14 +390,10 @@ function eventReportWindows(ctx: Context, j: Json): Maybe<EventReportWindows> {
 }
 
 function legacyDuration(ctx: Context, j: Json): Maybe<number | bigint> {
-  if (typeof j === 'number') {
-    return nonNegativeInteger(ctx, j)
-  }
-  if (typeof j === 'string') {
-    return uint64(ctx, j)
-  }
-  ctx.error('must be a non-negative integer or a string')
-  return None
+  return typeSwitch<number | bigint>(ctx, j, {
+    number: nonNegativeInteger,
+    string: uint64,
+  })
 }
 
 function collection<C extends context.PathComponent>(
@@ -505,14 +512,10 @@ function filters(ctx: Context, j: Json): Maybe<Filters> {
 }
 
 function orFilters(ctx: Context, j: Json): Maybe<Filters[]> {
-  if (Array.isArray(j)) {
-    return array(ctx, j, filters)
-  }
-  if (isObject(j)) {
-    return filters(ctx, j).map((v) => [v])
-  }
-  ctx.error('must be a list or an object')
-  return None
+  return typeSwitch(ctx, j, {
+    list: (ctx, j) => array(ctx, j, filters),
+    object: (ctx, j) => filters(ctx, j).map((v) => [v]),
+  })
 }
 
 type FilterPair = {
