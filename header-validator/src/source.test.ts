@@ -611,7 +611,7 @@ runAll(validateSource, [
     expectedErrors: [
       {
         path: [],
-        msg: 'event_report_window and event_report_windows in the same source',
+        msg: 'mutually exclusive fields: event_report_window, event_report_windows',
       },
     ],
   },

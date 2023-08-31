@@ -14,10 +14,11 @@ export class Context {
   private readonly path: PathComponent[] = []
   private readonly result: ValidationResult = { errors: [], warnings: [] }
 
-  scope(c: PathComponent, f: () => void): void {
+  scope<T>(c: PathComponent, f: () => T): T {
     this.path.push(c)
-    f()
+    const t = f()
     this.path.pop()
+    return t
   }
 
   private issue(msg: string): Issue {

@@ -26,30 +26,33 @@ class Context extends context.Context {
   }
 }
 
-type FieldCheck = (ctx: Context, obj: JsonDict, key: string) => Maybe<any>
+type StructFields<T extends object> = {
+  [K in keyof T]-?: CtxFunc<JsonDict, Maybe<T[K]>>
+}
 
-type FieldChecks = Record<string, FieldCheck>
-
-function validate(
+function struct<T extends object>(
   ctx: Context,
-  obj: Json,
-  checks: FieldChecks
-): Maybe<JsonDict> {
-  return object(ctx, obj).filter((d) => {
+  d: Json,
+  fields: StructFields<T>
+): Maybe<T> {
+  return object(ctx, d).flatMap((d) => {
+    let t: Partial<T> = {}
+
     let ok = true
-    Object.entries(checks).forEach(([key, check]) => {
+    for (const prop in fields) {
       let itemOk = false
-      ctx.scope(key, () => check(ctx, d, key).peek(() => (itemOk = true)))
+      fields[prop](ctx, d).peek((v) => {
+        itemOk = true
+        t[prop] = v
+      })
       ok = ok && itemOk
-    })
+    }
 
-    Object.keys(d).forEach((key) => {
-      if (!(key in checks)) {
-        ctx.scope(key, () => ctx.warning('unknown field'))
-      }
-    })
+    for (const key in d) {
+      ctx.scope(key, () => ctx.warning('unknown field'))
+    }
 
-    return ok
+    return ok ? new Some(t as T) : None
   })
 }
 
@@ -57,22 +60,59 @@ type CtxFunc<I, O> = (ctx: Context, i: I) => O
 
 export type ValueCheck = CtxFunc<Json, Maybe<any>>
 
-function field(f: ValueCheck, required: boolean): FieldCheck {
-  return (ctx, obj, key) => {
-    const v = obj[key]
-    if (v === undefined) {
-      if (required) {
-        ctx.error('required')
-        return None
+function field<T>(
+  name: string,
+  f: CtxFunc<Json, Maybe<T>>,
+  valueIfAbsent?: T
+): CtxFunc<JsonDict, Maybe<T>> {
+  return (ctx: Context, d: JsonDict): Maybe<T> =>
+    ctx.scope(name, () => {
+      const v = d[name]
+      if (v === undefined) {
+        if (valueIfAbsent === undefined) {
+          ctx.error('required')
+          return None
+        }
+        return new Some(valueIfAbsent)
       }
-      return new Some(undefined)
-    }
-    return f(ctx, v)
-  }
+      delete d[name] // for unknown field warning
+      return f(ctx, v)
+    })
 }
 
-const required = (f: ValueCheck) => field(f, /*required=*/ true)
-const optional = (f: ValueCheck) => field(f, /*required=*/ false)
+type Exclusive<T> = {
+  [key: string]: CtxFunc<Json, Maybe<T>>
+}
+
+function exclusive<T>(
+  x: Exclusive<T>,
+  valueIfAbsent: T
+): CtxFunc<JsonDict, Maybe<T>> {
+  return (ctx: Context, d: JsonDict): Maybe<T> => {
+    const found: string[] = []
+    let v: Maybe<T> = None
+
+    for (const [key, f] of Object.entries(x)) {
+      const j = d[key]
+      if (j !== undefined) {
+        found.push(key)
+        v = ctx.scope(key, () => f(ctx, j))
+        delete d[key] // for unknown field warning
+      }
+    }
+
+    if (found.length === 1) {
+      return v
+    }
+
+    if (found.length > 1) {
+      ctx.error(`mutually exclusive fields: ${found.join(', ')}`)
+      return None
+    }
+
+    return new Some(valueIfAbsent)
+  }
+}
 
 function string(ctx: Context, j: Json): Maybe<string> {
   if (typeof j === 'string') {
@@ -326,10 +366,15 @@ function endTimes(ctx: Context, j: Json): Maybe<number[]> {
   return array(ctx, j, positiveInteger, { minLength: 1, maxLength: 5 })
 }
 
-function eventReportWindows(ctx: Context, j: Json): Maybe<JsonDict> {
-  return validate(ctx, j, {
-    start_time: optional(nonNegativeInteger),
-    end_times: required(endTimes),
+type EventReportWindows = {
+  startTime: number
+  endTimes: number[]
+}
+
+function eventReportWindows(ctx: Context, j: Json): Maybe<EventReportWindows> {
+  return struct(ctx, j, {
+    startTime: field('start_time', nonNegativeInteger, 0),
+    endTimes: field('end_times', endTimes),
   })
 }
 
@@ -470,18 +515,41 @@ function orFilters(ctx: Context, j: Json): Maybe<Filters[]> {
   return None
 }
 
-const filterFields = {
-  filters: optional(orFilters),
-  not_filters: optional(orFilters),
+type FilterPair = {
+  positive: Filters[]
+  negative: Filters[]
 }
 
-const commonDebugFields = {
-  debug_key: optional(uint64),
-  debug_reporting: optional(bool),
+const filterFields: StructFields<FilterPair> = {
+  positive: field('filters', orFilters, []),
+  negative: field('not_filters', orFilters, []),
 }
 
-const dedupKeyField = { deduplication_key: optional(uint64) }
-const priorityField = { priority: optional(int64) }
+type CommonDebug = {
+  debugKey: bigint | null
+  debugReporting: boolean
+}
+
+const commonDebugFields: StructFields<CommonDebug> = {
+  debugKey: field('debug_key', uint64, null),
+  debugReporting: field('debug_reporting', bool, false),
+}
+
+type DedupKey = {
+  dedupKey: bigint | null
+}
+
+const dedupKeyField: StructFields<DedupKey> = {
+  dedupKey: field('deduplication_key', uint64, null),
+}
+
+type Priority = {
+  priority: bigint
+}
+
+const priorityField: StructFields<Priority> = {
+  priority: field('priority', int64, 0n),
+}
 
 // TODO: check length of key
 function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
@@ -497,27 +565,46 @@ function aggregationKeys(ctx: Context, j: Json): Maybe<Map<string, bigint>> {
   )
 }
 
-export function validateSource(ctx: Context, source: Json): Maybe<JsonDict> {
-  return validate(ctx, source, {
-    aggregatable_report_window: optional(legacyDuration),
-    aggregation_keys: optional(aggregationKeys),
-    destination: required(destination),
-    event_report_window: optional(legacyDuration),
-    event_report_windows: optional(eventReportWindows),
-    expiry: optional(legacyDuration),
-    filter_data: optional(filterData),
-    max_event_level_reports: optional(maxEventLevelReports),
-    source_event_id: optional(uint64),
+type Source = CommonDebug &
+  Priority & {
+    aggregatableReportWindow: bigint | number | null
+    aggregationKeys: Map<string, bigint>
+    destination: Set<string>
+    eventReportWindow: bigint | number | EventReportWindows | null
+    expiry: bigint | number | null
+    filterData: FilterData
+    maxEventLevelReports: number | null
+    sourceEventId: bigint
+  }
+
+export function validateSource(ctx: Context, source: Json): Maybe<Source> {
+  return struct(ctx, source, {
+    aggregatableReportWindow: field(
+      'aggregatable_report_window',
+      legacyDuration,
+      null
+    ),
+    aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
+    destination: field('destination', destination),
+    expiry: field('expiry', legacyDuration, null),
+    filterData: field('filter_data', filterData, new Map()),
+    maxEventLevelReports: field(
+      'max_event_level_reports',
+      maxEventLevelReports,
+      null
+    ),
+    sourceEventId: field('source_event_id', uint64, 0n),
+
+    eventReportWindow: exclusive<bigint | number | EventReportWindows | null>(
+      {
+        event_report_window: legacyDuration,
+        event_report_windows: eventReportWindows,
+      },
+      null
+    ),
+
     ...commonDebugFields,
     ...priorityField,
-  }).filter((d) => {
-    if ('event_report_window' in d && 'event_report_windows' in d) {
-      ctx.error(
-        'event_report_window and event_report_windows in the same source'
-      )
-      return false
-    }
-    return true
   })
 }
 
@@ -527,11 +614,19 @@ function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
   })
 }
 
-function aggregatableTriggerData(ctx: Context, j: Json): Maybe<JsonDict[]> {
+type AggregatableTriggerDatum = FilterPair & {
+  keyPiece: bigint
+  sourceKeys: Set<string>
+}
+
+function aggregatableTriggerData(
+  ctx: Context,
+  j: Json
+): Maybe<AggregatableTriggerDatum[]> {
   return array(ctx, j, (ctx, j) =>
-    validate(ctx, j, {
-      key_piece: required(hex128),
-      source_keys: optional(sourceKeys),
+    struct(ctx, j, {
+      keyPiece: field('key_piece', hex128),
+      sourceKeys: field('source_keys', sourceKeys, new Set<string>()),
       ...filterFields,
     })
   )
@@ -556,10 +651,16 @@ function aggregatableValues(ctx: Context, j: Json): Maybe<Map<string, number>> {
   )
 }
 
-function eventTriggerData(ctx: Context, j: Json): Maybe<JsonDict[]> {
+type EventTriggerDatum = FilterPair &
+  Priority &
+  DedupKey & {
+    triggerData: bigint
+  }
+
+function eventTriggerData(ctx: Context, j: Json): Maybe<EventTriggerDatum[]> {
   return array(ctx, j, (ctx, j) =>
-    validate(ctx, j, {
-      trigger_data: optional(triggerData),
+    struct(ctx, j, {
+      triggerData: field('trigger_data', triggerData, 0n),
       ...filterFields,
       ...dedupKeyField,
       ...priorityField,
@@ -567,9 +668,14 @@ function eventTriggerData(ctx: Context, j: Json): Maybe<JsonDict[]> {
   )
 }
 
-function aggregatableDedupKeys(ctx: Context, j: Json): Maybe<JsonDict[]> {
+type AggregatableDedupKey = FilterPair & DedupKey
+
+function aggregatableDedupKeys(
+  ctx: Context,
+  j: Json
+): Maybe<AggregatableDedupKey[]> {
   return array(ctx, j, (ctx, j) =>
-    validate(ctx, j, {
+    struct(ctx, j, {
       ...dedupKeyField,
       ...filterFields,
     })
@@ -591,16 +697,44 @@ function aggregatableSourceRegistrationTime(
   })
 }
 
-export function validateTrigger(ctx: Context, trigger: Json): Maybe<JsonDict> {
-  return validate(ctx, trigger, {
-    aggregatable_trigger_data: optional(aggregatableTriggerData),
-    aggregatable_values: optional(aggregatableValues),
-    aggregatable_deduplication_keys: optional(aggregatableDedupKeys),
-    aggregatable_source_registration_time: optional(
-      aggregatableSourceRegistrationTime
+type Trigger = CommonDebug &
+  FilterPair & {
+    aggregatableDedupKeys: AggregatableDedupKey[]
+    aggregatableTriggerData: AggregatableTriggerDatum[]
+    aggregatableSourceRegistrationTime: string
+    aggregatableValues: Map<string, number>
+    aggregationCoordinatorOrigin: string | null
+    eventTriggerData: EventTriggerDatum[]
+  }
+
+export function validateTrigger(ctx: Context, trigger: Json): Maybe<Trigger> {
+  return struct(ctx, trigger, {
+    aggregatableTriggerData: field(
+      'aggregatable_trigger_data',
+      aggregatableTriggerData,
+      []
     ),
-    aggregation_coordinator_origin: optional(suitableOrigin),
-    event_trigger_data: optional(eventTriggerData),
+    aggregatableValues: field(
+      'aggregatable_values',
+      aggregatableValues,
+      new Map()
+    ),
+    aggregatableDedupKeys: field(
+      'aggregatable_deduplication_keys',
+      aggregatableDedupKeys,
+      []
+    ),
+    aggregatableSourceRegistrationTime: field(
+      'aggregatable_source_registration_time',
+      aggregatableSourceRegistrationTime,
+      'include'
+    ),
+    aggregationCoordinatorOrigin: field(
+      'aggregation_coordinator_origin',
+      suitableOrigin,
+      null
+    ),
+    eventTriggerData: field('event_trigger_data', eventTriggerData, []),
     ...commonDebugFields,
     ...filterFields,
   })
