@@ -75,7 +75,7 @@ function field<T>(
         }
         return new Some(valueIfAbsent)
       }
-      delete d[name]
+      delete d[name] // for unknown field warning
       return f(ctx, v)
     })
 }
@@ -97,7 +97,7 @@ function exclusive<T>(
       if (j !== undefined) {
         found.push(key)
         v = ctx.scope(key, () => f(ctx, j))
-        delete d[key]
+        delete d[key] // for unknown field warning
       }
     }
 
