@@ -36,7 +36,8 @@ type StructFields<T extends object> = {
 function struct<T extends object>(
   ctx: Context,
   d: Json,
-  fields: StructFields<T>
+  fields: StructFields<T>,
+  warnUnknown: boolean = true
 ): Maybe<T> {
   return object(ctx, d).flatMap((d) => {
     let t: Partial<T> = {}
@@ -51,8 +52,10 @@ function struct<T extends object>(
       ok = ok && itemOk
     }
 
-    for (const key in d) {
-      ctx.scope(key, () => ctx.warning('unknown field'))
+    if (warnUnknown) {
+      for (const key in d) {
+        ctx.scope(key, () => ctx.warning('unknown field'))
+      }
     }
 
     return ok ? new Some(t as T) : None
@@ -479,15 +482,10 @@ export enum SourceType {
   navigation = 'navigation',
 }
 
-type FilterValue = Set<string> | number
-
 function filterKeyValue(
   ctx: Context,
   [key, j]: [string, Json]
-): Maybe<FilterValue> {
-  if (key === '_lookback_window') {
-    return positiveInteger(ctx, j)
-  }
+): Maybe<Set<string>> {
   if (key.startsWith('_')) {
     ctx.error('is prohibited as keys starting with "_" are reserved')
     return None
@@ -508,22 +506,34 @@ function filterKeyValue(
   return set(ctx, j, (ctx, j) => string(ctx, j).peek(peek))
 }
 
-type Filters = Map<string, FilterValue>
-
-function filters(ctx: Context, j: Json): Maybe<Filters> {
-  return keyValues(ctx, j, filterKeyValue)
+type FilterConfig = {
+  lookbackWindow: number | null
+  map: Map<string, Set<string>>
 }
 
-function orFilters(ctx: Context, j: Json): Maybe<Filters[]> {
+function filterConfig(ctx: Context, j: Json): Maybe<FilterConfig> {
+  // `lookbackWindow` must come before `map` to ensure it is processed first.
+  return struct(
+    ctx,
+    j,
+    {
+      lookbackWindow: field('_lookback_window', positiveInteger, null),
+      map: (ctx, j) => keyValues(ctx, j, filterKeyValue),
+    },
+    /*warnUnknown=*/ false
+  )
+}
+
+function orFilters(ctx: Context, j: Json): Maybe<FilterConfig[]> {
   return typeSwitch(ctx, j, {
-    list: (ctx, j) => array(ctx, j, filters),
-    object: (ctx, j) => filters(ctx, j).map((v) => [v]),
+    list: (ctx, j) => array(ctx, j, filterConfig),
+    object: (ctx, j) => filterConfig(ctx, j).map((v) => [v]),
   })
 }
 
 type FilterPair = {
-  positive: Filters[]
-  negative: Filters[]
+  positive: FilterConfig[]
+  negative: FilterConfig[]
 }
 
 const filterFields: StructFields<FilterPair> = {
