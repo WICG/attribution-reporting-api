@@ -477,38 +477,34 @@ function collection<C extends context.PathComponent>(
   return ok
 }
 
-type CollectionOpts = ListOpts & {
-  keepGoing?: boolean
-}
-
 function set(
   ctx: Context,
   j: Json,
   f: CtxFunc<Json, Maybe<string>>,
-  opts?: CollectionOpts
+  opts?: ListOpts
 ): Maybe<Set<string>> {
   const set = new Set<string>()
 
   return list(ctx, j, opts)
     .filter((js) =>
-      collection(
-        ctx,
-        js.entries(),
-        (ctx, [i, j]) =>
-          f(ctx, j).peek((v) =>
-            set.has(v) ? ctx.warning(`duplicate value ${v}`) : set.add(v)
-          ),
-        opts?.keepGoing
+      collection(ctx, js.entries(), (ctx, [i, j]) =>
+        f(ctx, j).peek((v) =>
+          set.has(v) ? ctx.warning(`duplicate value ${v}`) : set.add(v)
+        )
       )
     )
     .map(() => set)
+}
+
+type ArrayOpts = ListOpts & {
+  keepGoing?: boolean
 }
 
 function array<T>(
   ctx: Context,
   j: Json,
   f: CtxFunc<Json, Maybe<T>>,
-  opts?: CollectionOpts
+  opts?: ArrayOpts
 ): Maybe<T[]> {
   const arr: T[] = []
 
