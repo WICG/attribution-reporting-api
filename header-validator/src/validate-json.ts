@@ -11,12 +11,14 @@ const uint64Regex = /^[0-9]+$/
 const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
-const SECONDS_PER_DAY: number = 24 * 60 * 60
+const SECONDS_PER_HOUR = 60 * 60
+const SECONDS_PER_DAY: number = 24 * SECONDS_PER_HOUR
 
 const limits = {
   maxEventLevelReports: 20,
   maxEntriesPerFilterData: 50,
   maxValuesPerFilterDataEntry: 50,
+  minReportWindow: 1 * SECONDS_PER_HOUR,
   sourceExpiryRange: [1 * SECONDS_PER_DAY, 30 * SECONDS_PER_DAY],
 }
 
@@ -31,8 +33,10 @@ class Context extends context.Context {
   }
 }
 
+type FieldFunc<I, T, V> = (ctx: Context, i: I, t: Readonly<Partial<T>>) => V
+
 type StructFields<T extends object> = {
-  [K in keyof T]-?: CtxFunc<JsonDict, Maybe<T[K]>>
+  [K in keyof T]-?: FieldFunc<JsonDict, T, Maybe<T[K]>>
 }
 
 function struct<T extends object>(
@@ -47,7 +51,7 @@ function struct<T extends object>(
     let ok = true
     for (const prop in fields) {
       let itemOk = false
-      fields[prop](ctx, d).peek((v) => {
+      fields[prop](ctx, d, t).peek((v) => {
         itemOk = true
         t[prop] = v
       })
@@ -68,12 +72,14 @@ type CtxFunc<I, O> = (ctx: Context, i: I) => O
 
 export type ValueCheck = CtxFunc<Json, Maybe<any>>
 
-function field<T>(
+type ValueFunc<T, V> = (t: Readonly<Partial<T>>) => V
+
+function field<T, V>(
   name: string,
-  f: CtxFunc<Json, Maybe<T>>,
-  valueIfAbsent?: T
-): CtxFunc<JsonDict, Maybe<T>> {
-  return (ctx: Context, d: JsonDict): Maybe<T> =>
+  f: FieldFunc<Json, T, Maybe<V>>,
+  valueIfAbsent?: V | ValueFunc<T, V>
+): FieldFunc<JsonDict, T, Maybe<V>> {
+  return (ctx: Context, d: JsonDict, t: Readonly<Partial<T>>): Maybe<V> =>
     ctx.scope(name, () => {
       const v = d[name]
       if (v === undefined) {
@@ -81,30 +87,33 @@ function field<T>(
           ctx.error('required')
           return None
         }
+        if (valueIfAbsent instanceof Function) {
+          return some(valueIfAbsent(t))
+        }
         return some(valueIfAbsent)
       }
       delete d[name] // for unknown field warning
-      return f(ctx, v)
+      return f(ctx, v, t)
     })
 }
 
-type Exclusive<T> = {
-  [key: string]: CtxFunc<Json, Maybe<T>>
+type Exclusive<T, V> = {
+  [key: string]: FieldFunc<Json, T, Maybe<V>>
 }
 
-function exclusive<T>(
-  x: Exclusive<T>,
-  valueIfAbsent: T
-): CtxFunc<JsonDict, Maybe<T>> {
-  return (ctx: Context, d: JsonDict): Maybe<T> => {
+function exclusive<T, V>(
+  x: Exclusive<T, V>,
+  valueIfAbsent: V | ValueFunc<T, V>
+): FieldFunc<JsonDict, T, Maybe<V>> {
+  return (ctx: Context, d: JsonDict, t: Readonly<Partial<T>>): Maybe<V> => {
     const found: string[] = []
-    let v: Maybe<T> = None
+    let v: Maybe<V> = None
 
     for (const [key, f] of Object.entries(x)) {
       const j = d[key]
       if (j !== undefined) {
         found.push(key)
-        v = ctx.scope(key, () => f(ctx, j))
+        v = ctx.scope(key, () => f(ctx, j, t))
         delete d[key] // for unknown field warning
       }
     }
@@ -118,6 +127,9 @@ function exclusive<T>(
       return None
     }
 
+    if (valueIfAbsent instanceof Function) {
+      return some(valueIfAbsent(t))
+    }
     return some(valueIfAbsent)
   }
 }
@@ -379,10 +391,42 @@ function maxEventLevelReports(ctx: Context, j: Json): Maybe<number> {
     .filter((n) => range(ctx, n, 0, limits.maxEventLevelReports))
 }
 
-function endTimes(ctx: Context, j: Json): Maybe<number[]> {
-  // TODO: Validate that end times are propertly ordered with respect to each
-  // other and to start_time
-  return array(ctx, j, positiveInteger, { minLength: 1, maxLength: 5 })
+function startTime(ctx: Context, j: Json, expiry: number): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => integer(ctx, n))
+    .filter((n) =>
+      range(ctx, n, 0, expiry, `must be non-negative and <= expiry (${expiry})`)
+    )
+}
+
+function endTimes(
+  ctx: Context,
+  j: Json,
+  t: Readonly<Partial<EventReportWindows>>,
+  expiry: number
+): Maybe<number[]> {
+  // Assume startTime was 0 if invalid
+  const startTime = t.startTime ?? 0
+
+  let prev = startTime
+  let prevDesc = 'start_time'
+
+  const endTime = (ctx: Context, j: Json): Maybe<number> =>
+    positiveInteger(ctx, j)
+      .map((n) => clamp(ctx, n, limits.minReportWindow, expiry, ' (expiry)'))
+      .filter((n) =>
+        range(ctx, n, prev + 1, Infinity, `must be > ${prevDesc} (${prev})`)
+      )
+      .peek((n) => {
+        prev = n
+        prevDesc = 'previous end_time'
+      })
+
+  return array(ctx, j, endTime, {
+    minLength: 1,
+    maxLength: 5,
+    keepGoing: false, // suppress unhelpful cascaded errors
+  })
 }
 
 type EventReportWindows = {
@@ -390,10 +434,17 @@ type EventReportWindows = {
   endTimes: number[]
 }
 
-function eventReportWindows(ctx: Context, j: Json): Maybe<EventReportWindows> {
+function eventReportWindows(
+  ctx: Context,
+  j: Json,
+  t: Readonly<Partial<Source>>
+): Maybe<EventReportWindows> {
+  const expiry = expiryOrMax(t)
+
   return struct(ctx, j, {
-    startTime: field('start_time', nonNegativeInteger, 0),
-    endTimes: field('end_times', endTimes),
+    startTime: field('start_time', (ctx, j) => startTime(ctx, j, expiry), 0),
+    // Must come after `startTime` to ensure fields are processed in correct order.
+    endTimes: field('end_times', (ctx, j, t) => endTimes(ctx, j, t, expiry)),
   })
 }
 
@@ -407,33 +458,47 @@ function legacyDuration(ctx: Context, j: Json): Maybe<number | bigint> {
 function collection<C extends context.PathComponent>(
   ctx: Context,
   js: Iterable<[C, Json]>,
-  f: CtxFunc<[C, Json], Maybe<unknown>>
+  f: CtxFunc<[C, Json], Maybe<unknown>>,
+  keepGoing: boolean = true
 ): boolean {
   let ok = true
   for (const [c, j] of js) {
     ctx.scope(c, () => {
       let itemOk = false
       f(ctx, [c, j]).peek(() => (itemOk = true))
-      ok = ok && itemOk
+      if (!itemOk) {
+        if (!keepGoing) {
+          return false
+        }
+        ok = false
+      }
     })
   }
   return ok
+}
+
+type CollectionOpts = ListOpts & {
+  keepGoing?: boolean
 }
 
 function set(
   ctx: Context,
   j: Json,
   f: CtxFunc<Json, Maybe<string>>,
-  opts?: ListOpts
+  opts?: CollectionOpts
 ): Maybe<Set<string>> {
   const set = new Set<string>()
 
   return list(ctx, j, opts)
     .filter((js) =>
-      collection(ctx, js.entries(), (ctx, [i, j]) =>
-        f(ctx, j).peek((v) =>
-          set.has(v) ? ctx.warning(`duplicate value ${v}`) : set.add(v)
-        )
+      collection(
+        ctx,
+        js.entries(),
+        (ctx, [i, j]) =>
+          f(ctx, j).peek((v) =>
+            set.has(v) ? ctx.warning(`duplicate value ${v}`) : set.add(v)
+          ),
+        opts?.keepGoing
       )
     )
     .map(() => set)
@@ -443,14 +508,17 @@ function array<T>(
   ctx: Context,
   j: Json,
   f: CtxFunc<Json, Maybe<T>>,
-  opts?: ListOpts
+  opts?: CollectionOpts
 ): Maybe<T[]> {
   const arr: T[] = []
 
   return list(ctx, j, opts)
     .filter((js) =>
-      collection(ctx, js.entries(), (ctx, [i, j]) =>
-        f(ctx, j).peek((v) => arr.push(v))
+      collection(
+        ctx,
+        js.entries(),
+        (ctx, [i, j]) => f(ctx, j).peek((v) => arr.push(v)),
+        opts?.keepGoing
       )
     )
     .map(() => arr)
@@ -587,14 +655,15 @@ function clamp<N extends bigint | number>(
   ctx: Context,
   n: N,
   min: N,
-  max: N
+  max: N,
+  maxSuffix: string = ''
 ): N {
   if (n < min) {
     ctx.warning(`will be clamped to min of ${min}`)
     return min
   }
   if (n > max) {
-    ctx.warning(`will be clamped to max of ${max}`)
+    ctx.warning(`will be clamped to max of ${max}${maxSuffix}`)
     return max
   }
   return n
@@ -625,12 +694,29 @@ function expiry(ctx: Context, j: Json): Maybe<number> {
     })
 }
 
+function expiryOrMax(t: Readonly<Partial<Source>>): number {
+  // Assume expiry was max if invalid
+  return t.expiry ?? limits.sourceExpiryRange[1]
+}
+
+function singleReportWindow(
+  ctx: Context,
+  j: Json,
+  t: Readonly<Partial<Source>>
+): Maybe<number> {
+  return legacyDuration(ctx, j)
+    .map((n) =>
+      clamp(ctx, n, limits.minReportWindow, expiryOrMax(t), ' (expiry)')
+    )
+    .map(Number)
+}
+
 type Source = CommonDebug &
   Priority & {
-    aggregatableReportWindow: bigint | number | null
+    aggregatableReportWindow: number
     aggregationKeys: Map<string, bigint>
     destination: Set<string>
-    eventReportWindow: bigint | number | EventReportWindows | null
+    eventReportWindow: number | EventReportWindows
     expiry: number
     filterData: FilterData
     maxEventLevelReports: number | null
@@ -638,12 +724,7 @@ type Source = CommonDebug &
   }
 
 export function validateSource(ctx: Context, source: Json): Maybe<Source> {
-  return struct(ctx, source, {
-    aggregatableReportWindow: field(
-      'aggregatable_report_window',
-      legacyDuration,
-      null
-    ),
+  return struct<Source>(ctx, source, {
     aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
     destination: field('destination', destination),
     expiry: field('expiry', expiry, limits.sourceExpiryRange[1]),
@@ -655,12 +736,20 @@ export function validateSource(ctx: Context, source: Json): Maybe<Source> {
     ),
     sourceEventId: field('source_event_id', uint64, 0n),
 
-    eventReportWindow: exclusive<bigint | number | EventReportWindows | null>(
+    // Must come after `expiry` to ensure fields are processed in correct order.
+    aggregatableReportWindow: field(
+      'aggregatable_report_window',
+      singleReportWindow,
+      expiryOrMax
+    ),
+
+    // Must come after `expiry` to ensure fields are processed in correct order.
+    eventReportWindow: exclusive<Source, number | EventReportWindows>(
       {
-        event_report_window: legacyDuration,
+        event_report_window: singleReportWindow,
         event_report_windows: eventReportWindows,
       },
-      null
+      expiryOrMax
     ),
 
     ...commonDebugFields,

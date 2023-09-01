@@ -14,12 +14,12 @@ runAll(validateSource, [
   {
     name: 'all-fields',
     json: `{
-      "aggregatable_report_window": "1",
+      "aggregatable_report_window": "3601",
       "aggregation_keys": {"a": "0xf"},
       "debug_key": "1",
       "debug_reporting": true,
       "destination": "https://a.test",
-      "event_report_window": "2",
+      "event_report_window": "3601",
       "expiry": "86400",
       "filter_data": {"b": ["c"]},
       "priority": "2",
@@ -384,8 +384,35 @@ runAll(validateSource, [
     name: 'aggregatable-report-window-integer',
     json: `{
       "destination": "https://a.test",
-      "aggregatable_report_window": 1
+      "aggregatable_report_window": 3601
     }`,
+  },
+  {
+    name: 'aggregatable-report-window-clamp-min',
+    json: `{
+      "destination": "https://a.test",
+      "aggregatable_report_window": 3599
+    }`,
+    expectedWarnings: [
+      {
+        path: ['aggregatable_report_window'],
+        msg: 'will be clamped to min of 3600',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-report-window-clamp-max',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": 259200,
+      "aggregatable_report_window": 259201
+    }`,
+    expectedWarnings: [
+      {
+        path: ['aggregatable_report_window'],
+        msg: 'will be clamped to max of 259200 (expiry)',
+      },
+    ],
   },
   {
     name: 'aggregatable-report-window-wrong-type',
@@ -444,8 +471,35 @@ runAll(validateSource, [
     name: 'event-report-window-integer',
     json: `{
       "destination": "https://a.test",
-      "event_report_window": 1
+      "event_report_window": 3601
     }`,
+  },
+  {
+    name: 'event-report-window-clamp-min',
+    json: `{
+      "destination": "https://a.test",
+      "event_report_window": 3599
+    }`,
+    expectedWarnings: [
+      {
+        path: ['event_report_window'],
+        msg: 'will be clamped to min of 3600',
+      },
+    ],
+  },
+  {
+    name: 'event-report-window-clamp-max',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": 259200,
+      "event_report_window": 259201
+    }`,
+    expectedWarnings: [
+      {
+        path: ['event_report_window'],
+        msg: 'will be clamped to max of 259200 (expiry)',
+      },
+    ],
   },
   {
     name: 'event-report-window-wrong-type',
@@ -733,9 +787,9 @@ runAll(validateSource, [
     name: 'event-level-report-windows-and-window',
     json: `{
       "destination": "https://a.test",
-      "event_report_window": "21",
+      "event_report_window": "3601",
       "event_report_windows": {
-        "end_times": [1000]
+        "end_times": [3601]
       }
     }`,
     expectedErrors: [
@@ -779,7 +833,7 @@ runAll(validateSource, [
     json: `{
       "destination": "https://a.test",
       "event_report_windows": {
-        "end_times": [1,2,3,4,5,6]
+        "end_times": [3601,3602,3603,3604,3605,3606]
       }
     }`,
     expectedErrors: [
@@ -795,7 +849,7 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": 10,
-        "end_times": [11,12,13,14]
+        "end_times": [3611,3612,3613,3614]
       }
     }`,
   },
@@ -805,7 +859,7 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": "10",
-        "end_times": [11,12,13,14]
+        "end_times": [3611,3612,3613,3614]
       }
     }`,
     expectedErrors: [
@@ -821,7 +875,7 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": 10.5,
-        "end_times": [11,12,13,14]
+        "end_times": [3611,3612,3613,3614]
       }
     }`,
     expectedErrors: [
@@ -837,13 +891,126 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": -1,
-        "end_times": [11,12,13,14]
+        "end_times": [3611,3612,3613,3614]
       }
     }`,
     expectedErrors: [
       {
         path: ['event_report_windows', 'start_time'],
-        msg: 'must be non-negative',
+        msg: 'must be non-negative and <= expiry (2592000)',
+      },
+    ],
+  },
+  {
+    name: 'event-level-report-windows-start-time-after-expiry',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": 259200,
+      "event_report_windows": {
+        "start_time": 259201
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_report_windows', 'start_time'],
+        msg: 'must be non-negative and <= expiry (259200)',
+      },
+      {
+        path: ['event_report_windows', 'end_times'],
+        msg: 'required',
+      },
+    ],
+  },
+  {
+    name: 'event-level-report-windows-end-time-<-start-time',
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "start_time": 3601,
+        "end_times": [3600]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_report_windows', 'end_times', 0],
+        msg: 'must be > start_time (3601)',
+      },
+    ],
+  },
+  {
+    name: 'event-level-report-windows-end-time-=-start-time',
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "start_time": 3601,
+        "end_times": [3601]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_report_windows', 'end_times', 0],
+        msg: 'must be > start_time (3601)',
+      },
+    ],
+  },
+  {
+    name: 'event-level-report-windows-end-times-=',
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "end_times": [3601, 3601, 3602]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_report_windows', 'end_times', 1],
+        msg: 'must be > previous end_time (3601)',
+      },
+    ],
+  },
+  {
+    name: 'event-level-report-windows-end-times-<',
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "end_times": [3602, 3601, 3603]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_report_windows', 'end_times', 1],
+        msg: 'must be > previous end_time (3602)',
+      },
+    ],
+  },
+  {
+    name: 'event-level-report-windows-end-times-clamp-min',
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "end_times": [3599]
+      }
+    }`,
+    expectedWarnings: [
+      {
+        path: ['event_report_windows', 'end_times', 0],
+        msg: 'will be clamped to min of 3600',
+      },
+    ],
+  },
+  {
+    name: 'event-level-report-windows-end-times-clamp-max',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": 259200,
+      "event_report_windows": {
+        "end_times": [259201]
+      }
+    }`,
+    expectedWarnings: [
+      {
+        path: ['event_report_windows', 'end_times', 0],
+        msg: 'will be clamped to max of 259200 (expiry)',
       },
     ],
   },
