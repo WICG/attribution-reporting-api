@@ -108,7 +108,7 @@ runAll(validateSource, [
     expectedErrors: [
       {
         path: ['destination'],
-        msg: 'must be a list or a string',
+        msg: 'must be a string or a list',
       },
     ],
   },
@@ -396,7 +396,7 @@ runAll(validateSource, [
     expectedErrors: [
       {
         path: ['aggregatable_report_window'],
-        msg: 'must be a non-negative integer or a string',
+        msg: 'must be a number or a string',
       },
     ],
   },
@@ -456,7 +456,7 @@ runAll(validateSource, [
     expectedErrors: [
       {
         path: ['event_report_window'],
-        msg: 'must be a non-negative integer or a string',
+        msg: 'must be a number or a string',
       },
     ],
   },
@@ -515,7 +515,7 @@ runAll(validateSource, [
     expectedErrors: [
       {
         path: ['expiry'],
-        msg: 'must be a non-negative integer or a string',
+        msg: 'must be a number or a string',
       },
     ],
   },
