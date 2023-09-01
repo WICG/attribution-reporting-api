@@ -20,7 +20,7 @@ runAll(validateSource, [
       "debug_reporting": true,
       "destination": "https://a.test",
       "event_report_window": "2",
-      "expiry": "3",
+      "expiry": "86400",
       "filter_data": {"b": ["c"]},
       "priority": "2",
       "source_event_id": "3",
@@ -503,7 +503,7 @@ runAll(validateSource, [
     name: 'expiry-integer',
     json: `{
       "destination": "https://a.test",
-      "expiry": 1
+      "expiry": 86400
     }`,
   },
   {
@@ -555,6 +555,58 @@ runAll(validateSource, [
       {
         path: ['expiry'],
         msg: 'must be non-negative',
+      },
+    ],
+  },
+  {
+    name: 'expiry-integer-clamp-min',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": 1
+    }`,
+    expectedWarnings: [
+      {
+        path: ['expiry'],
+        msg: 'will be clamped to min of 86400',
+      },
+    ],
+  },
+  {
+    name: 'expiry-integer-clamp-max',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": 2592001
+    }`,
+    expectedWarnings: [
+      {
+        path: ['expiry'],
+        msg: 'will be clamped to max of 2592000',
+      },
+    ],
+  },
+  {
+    name: 'expiry-string-clamp-min',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": "1"
+    }`,
+    expectedWarnings: [
+      {
+        path: ['expiry'],
+        msg: 'will be clamped to min of 86400',
+      },
+    ],
+  },
+  {
+    name: 'expiry-string-clamp-max',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": "2592001"
+    }`,
+    expectedWarnings: [
+      {
+        path: ['expiry'],
+        msg: 'will be clamped to max of 2592000',
       },
     ],
   },

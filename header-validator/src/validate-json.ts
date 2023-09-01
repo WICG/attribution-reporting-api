@@ -9,10 +9,13 @@ const uint64Regex = /^[0-9]+$/
 const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
+const secondsPerDay: number = 24 * 60 * 60
+
 const limits = {
   maxEventLevelReports: 20,
   maxEntriesPerFilterData: 50,
   maxValuesPerFilterDataEntry: 50,
+  sourceExpiryRange: [1 * secondsPerDay, 30 * secondsPerDay],
 }
 
 export type VendorSpecificValues = {
@@ -568,6 +571,29 @@ function aggregationKeys(ctx: Context, j: Json): Maybe<Map<string, bigint>> {
   )
 }
 
+function clamp<N extends bigint | number>(
+  ctx: Context,
+  n: N,
+  min: N,
+  max: N
+): N {
+  if (n < min) {
+    ctx.warning(`will be clamped to min of ${min}`)
+    return min
+  }
+  if (n > max) {
+    ctx.warning(`will be clamped to max of ${max}`)
+    return max
+  }
+  return n
+}
+
+function expiry(ctx: Context, j: Json): Maybe<number | bigint> {
+  return legacyDuration(ctx, j).map((n) =>
+    clamp(ctx, n, limits.sourceExpiryRange[0], limits.sourceExpiryRange[1])
+  )
+}
+
 type Source = CommonDebug &
   Priority & {
     aggregatableReportWindow: bigint | number | null
@@ -589,7 +615,7 @@ export function validateSource(ctx: Context, source: Json): Maybe<Source> {
     ),
     aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
     destination: field('destination', destination),
-    expiry: field('expiry', legacyDuration, null),
+    expiry: field('expiry', expiry, null),
     filterData: field('filter_data', filterData, new Map()),
     maxEventLevelReports: field(
       'max_event_level_reports',
