@@ -593,8 +593,8 @@ function roundAwayFromZeroToNearestDay(n: number): number {
     throw new RangeError()
   }
 
-  n += secondsPerDay / 2
-  return n - (n % secondsPerDay)
+  const r = n + secondsPerDay / 2
+  return r - (r % secondsPerDay)
 }
 
 function expiry(ctx: Context, j: Json): Maybe<number> {
