@@ -598,10 +598,29 @@ function clamp<N extends bigint | number>(
   return n
 }
 
-function expiry(ctx: Context, j: Json): Maybe<number | bigint> {
-  return legacyDuration(ctx, j).map((n) =>
-    clamp(ctx, n, limits.sourceExpiryRange[0], limits.sourceExpiryRange[1])
-  )
+function roundAwayFromZeroToNearestDay(n: number): number {
+  if (n <= 0 || !Number.isInteger(n)) {
+    throw new RangeError()
+  }
+
+  const r = n + secondsPerDay / 2
+  return r - (r % secondsPerDay)
+}
+
+function expiry(ctx: Context, j: Json): Maybe<number> {
+  return legacyDuration(ctx, j)
+    .map((n) =>
+      clamp(ctx, n, limits.sourceExpiryRange[0], limits.sourceExpiryRange[1])
+    )
+    .map(Number) // guaranteed to fit based on the clamping
+    .peek((n) => {
+      const r = roundAwayFromZeroToNearestDay(n)
+      if (n !== r) {
+        ctx.warning(
+          `will be rounded to nearest day (${r}) if source type is event`
+        )
+      }
+    })
 }
 
 type Source = CommonDebug &
@@ -610,7 +629,7 @@ type Source = CommonDebug &
     aggregationKeys: Map<string, bigint>
     destination: Set<string>
     eventReportWindow: bigint | number | EventReportWindows | null
-    expiry: bigint | number
+    expiry: number
     filterData: FilterData
     maxEventLevelReports: number | null
     sourceEventId: bigint

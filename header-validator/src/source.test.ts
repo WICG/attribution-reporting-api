@@ -610,6 +610,84 @@ runAll(validateSource, [
       },
     ],
   },
+  {
+    name: 'expiry-string-rounding-<-half-day',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": "129599"
+    }`,
+    expectedWarnings: [
+      {
+        path: ['expiry'],
+        msg: 'will be rounded to nearest day (86400) if source type is event',
+      },
+    ],
+  },
+  {
+    name: 'expiry-string-rounding-=-half-day',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": "129600"
+    }`,
+    expectedWarnings: [
+      {
+        path: ['expiry'],
+        msg: 'will be rounded to nearest day (172800) if source type is event',
+      },
+    ],
+  },
+  {
+    name: 'expiry-string-rounding->-half-day',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": "129601"
+    }`,
+    expectedWarnings: [
+      {
+        path: ['expiry'],
+        msg: 'will be rounded to nearest day (172800) if source type is event',
+      },
+    ],
+  },
+  {
+    name: 'expiry-integer-rounding-<-half-day',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": 129599
+    }`,
+    expectedWarnings: [
+      {
+        path: ['expiry'],
+        msg: 'will be rounded to nearest day (86400) if source type is event',
+      },
+    ],
+  },
+  {
+    name: 'expiry-integer-rounding-=-half-day',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": 129600
+    }`,
+    expectedWarnings: [
+      {
+        path: ['expiry'],
+        msg: 'will be rounded to nearest day (172800) if source type is event',
+      },
+    ],
+  },
+  {
+    name: 'expiry-integer-rounding->-half-day',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": 129601
+    }`,
+    expectedWarnings: [
+      {
+        path: ['expiry'],
+        msg: 'will be rounded to nearest day (172800) if source type is event',
+      },
+    ],
+  },
 
   {
     name: 'debug-reporting-wrong-type',
