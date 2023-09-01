@@ -600,7 +600,7 @@ type Source = CommonDebug &
     aggregationKeys: Map<string, bigint>
     destination: Set<string>
     eventReportWindow: bigint | number | EventReportWindows | null
-    expiry: bigint | number | null
+    expiry: bigint | number
     filterData: FilterData
     maxEventLevelReports: number | null
     sourceEventId: bigint
@@ -615,7 +615,7 @@ export function validateSource(ctx: Context, source: Json): Maybe<Source> {
     ),
     aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
     destination: field('destination', destination),
-    expiry: field('expiry', expiry, null),
+    expiry: field('expiry', expiry, limits.sourceExpiryRange[1]),
     filterData: field('filter_data', filterData, new Map()),
     maxEventLevelReports: field(
       'max_event_level_reports',
