@@ -144,7 +144,7 @@ function typeSwitch<T>(ctx: Context, j: Json, ts: TypeSwitch<T>): Maybe<T> {
   }
 
   const allowed = Object.keys(ts)
-    .map((t) => `${t === 'object' ? 'an' : 'a'} ${t}`)
+    .map((t) => `${t === 'object' ? 'an' : t === 'null' ? '' : 'a'} ${t}`)
     .join(' or ')
   ctx.error(`must be ${allowed}`)
   return None
