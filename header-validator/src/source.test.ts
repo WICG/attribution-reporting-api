@@ -721,4 +721,52 @@ runAll(validateSource, [
       }
     }`,
   },
+  {
+    name: 'event-level-report-windows-start-time-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "start_time": "10",
+        "end_times": [11,12,13,14]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_report_windows', 'start_time'],
+        msg: 'must be a number',
+      },
+    ],
+  },
+  {
+    name: 'event-level-report-windows-start-time-not-integer',
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "start_time": 10.5,
+        "end_times": [11,12,13,14]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_report_windows', 'start_time'],
+        msg: 'must be an integer',
+      },
+    ],
+  },
+  {
+    name: 'event-level-report-windows-start-time-negative',
+    json: `{
+      "destination": "https://a.test",
+      "event_report_windows": {
+        "start_time": -1,
+        "end_times": [11,12,13,14]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_report_windows', 'start_time'],
+        msg: 'must be non-negative',
+      },
+    ],
+  },
 ])
