@@ -466,6 +466,24 @@ runAll(validateSource, [
       },
     ],
   },
+  {
+    name: 'aggregatable-report-window-invalid-expiry',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": -1,
+      "aggregatable_report_window": 3601
+    }`,
+    expectedErrors: [
+      {
+        path: ['expiry'],
+        msg: 'must be non-negative',
+      },
+      {
+        path: ['aggregatable_report_window'],
+        msg: 'cannot be fully validated without a valid expiry',
+      },
+    ],
+  },
 
   {
     name: 'event-report-window-integer',
@@ -867,6 +885,10 @@ runAll(validateSource, [
         path: ['event_report_windows', 'start_time'],
         msg: 'must be a number',
       },
+      {
+        path: ['event_report_windows', 'end_times', 0],
+        msg: 'cannot be fully validated without a valid start_time',
+      },
     ],
   },
   {
@@ -883,6 +905,10 @@ runAll(validateSource, [
         path: ['event_report_windows', 'start_time'],
         msg: 'must be an integer',
       },
+      {
+        path: ['event_report_windows', 'end_times', 0],
+        msg: 'cannot be fully validated without a valid start_time',
+      },
     ],
   },
   {
@@ -898,6 +924,10 @@ runAll(validateSource, [
       {
         path: ['event_report_windows', 'start_time'],
         msg: 'must be non-negative and <= expiry (2592000)',
+      },
+      {
+        path: ['event_report_windows', 'end_times', 0],
+        msg: 'cannot be fully validated without a valid start_time',
       },
     ],
   },

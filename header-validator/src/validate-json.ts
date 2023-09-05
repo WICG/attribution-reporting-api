@@ -33,10 +33,8 @@ class Context extends context.Context {
   }
 }
 
-type FieldFunc<I, T, V> = (ctx: Context, i: I, t: Readonly<Partial<T>>) => V
-
 type StructFields<T extends object> = {
-  [K in keyof T]-?: FieldFunc<JsonDict, T, Maybe<T[K]>>
+  [K in keyof T]-?: CtxFunc<JsonDict, Maybe<T[K]>>
 }
 
 function struct<T extends object>(
@@ -51,7 +49,7 @@ function struct<T extends object>(
     let ok = true
     for (const prop in fields) {
       let itemOk = false
-      fields[prop](ctx, d, t).peek((v) => {
+      fields[prop](ctx, d).peek((v) => {
         itemOk = true
         t[prop] = v
       })
@@ -72,14 +70,12 @@ type CtxFunc<I, O> = (ctx: Context, i: I) => O
 
 export type ValueCheck = CtxFunc<Json, Maybe<any>>
 
-type ValueFunc<T, V> = (t: Readonly<Partial<T>>) => V
-
-function field<T, V>(
+function field<T>(
   name: string,
-  f: FieldFunc<Json, T, Maybe<V>>,
-  valueIfAbsent?: V | ValueFunc<T, V>
-): FieldFunc<JsonDict, T, Maybe<V>> {
-  return (ctx: Context, d: JsonDict, t: Readonly<Partial<T>>): Maybe<V> =>
+  f: CtxFunc<Json, Maybe<T>>,
+  valueIfAbsent?: T | Maybe<T>
+): CtxFunc<JsonDict, Maybe<T>> {
+  return (ctx: Context, d: JsonDict): Maybe<T> =>
     ctx.scope(name, () => {
       const v = d[name]
       if (v === undefined) {
@@ -87,33 +83,30 @@ function field<T, V>(
           ctx.error('required')
           return None
         }
-        if (valueIfAbsent instanceof Function) {
-          return some(valueIfAbsent(t))
-        }
-        return some(valueIfAbsent)
+        return Maybe.flatten(valueIfAbsent)
       }
       delete d[name] // for unknown field warning
-      return f(ctx, v, t)
+      return f(ctx, v)
     })
 }
 
-type Exclusive<T, V> = {
-  [key: string]: FieldFunc<Json, T, Maybe<V>>
+type Exclusive<T> = {
+  [key: string]: CtxFunc<Json, Maybe<T>>
 }
 
-function exclusive<T, V>(
-  x: Exclusive<T, V>,
-  valueIfAbsent: V | ValueFunc<T, V>
-): FieldFunc<JsonDict, T, Maybe<V>> {
-  return (ctx: Context, d: JsonDict, t: Readonly<Partial<T>>): Maybe<V> => {
+function exclusive<T>(
+  x: Exclusive<T>,
+  valueIfAbsent: T | Maybe<T>
+): CtxFunc<JsonDict, Maybe<T>> {
+  return (ctx: Context, d: JsonDict): Maybe<T> => {
     const found: string[] = []
-    let v: Maybe<V> = None
+    let v: Maybe<T> = None
 
     for (const [key, f] of Object.entries(x)) {
       const j = d[key]
       if (j !== undefined) {
         found.push(key)
-        v = ctx.scope(key, () => f(ctx, j, t))
+        v = ctx.scope(key, () => f(ctx, j))
         delete d[key] // for unknown field warning
       }
     }
@@ -127,10 +120,7 @@ function exclusive<T, V>(
       return None
     }
 
-    if (valueIfAbsent instanceof Function) {
-      return some(valueIfAbsent(t))
-    }
-    return some(valueIfAbsent)
+    return Maybe.flatten(valueIfAbsent)
   }
 }
 
@@ -391,34 +381,61 @@ function maxEventLevelReports(ctx: Context, j: Json): Maybe<number> {
     .filter((n) => range(ctx, n, 0, limits.maxEventLevelReports))
 }
 
-function startTime(ctx: Context, j: Json, expiry: number): Maybe<number> {
+function startTime(
+  ctx: Context,
+  j: Json,
+  expiry: Maybe<number>
+): Maybe<number> {
   return number(ctx, j)
     .filter((n) => integer(ctx, n))
-    .filter((n) =>
-      range(ctx, n, 0, expiry, `must be non-negative and <= expiry (${expiry})`)
-    )
+    .filter((n) => {
+      if (expiry.value === undefined) {
+        ctx.error('cannot be fully validated without a valid expiry')
+        return false
+      }
+      return range(
+        ctx,
+        n,
+        0,
+        expiry.value,
+        `must be non-negative and <= expiry (${expiry.value})`
+      )
+    })
 }
 
 function endTimes(
   ctx: Context,
   j: Json,
-  t: Readonly<Partial<EventReportWindows>>,
-  expiry: number
+  expiry: Maybe<number>,
+  startTime: Maybe<number>
 ): Maybe<number[]> {
-  // Assume startTime was 0 if invalid
-  const startTime = t.startTime ?? 0
-
   let prev = startTime
   let prevDesc = 'start_time'
 
   const endTime = (ctx: Context, j: Json): Maybe<number> =>
     positiveInteger(ctx, j)
-      .map((n) => clamp(ctx, n, limits.minReportWindow, expiry, ' (expiry)'))
-      .filter((n) =>
-        range(ctx, n, prev + 1, Infinity, `must be > ${prevDesc} (${prev})`)
-      )
+      .map((n) => {
+        if (expiry.value === undefined) {
+          ctx.error('cannot be fully validated without a valid expiry')
+          return None
+        }
+        return clamp(ctx, n, limits.minReportWindow, expiry.value, ' (expiry)')
+      })
+      .filter((n) => {
+        if (prev.value === undefined) {
+          ctx.error(`cannot be fully validated without a valid ${prevDesc}`)
+          return false
+        }
+        return range(
+          ctx,
+          n,
+          prev.value + 1,
+          Infinity,
+          `must be > ${prevDesc} (${prev.value})`
+        )
+      })
       .peek((n) => {
-        prev = n
+        prev = some(n)
         prevDesc = 'previous end_time'
       })
 
@@ -437,14 +454,21 @@ type EventReportWindows = {
 function eventReportWindows(
   ctx: Context,
   j: Json,
-  t: Readonly<Partial<Source>>
+  expiry: Maybe<number>
 ): Maybe<EventReportWindows> {
-  const expiry = expiryOrMax(t)
+  return object(ctx, j).map((j) => {
+    const startTimeValue = field(
+      'start_time',
+      (ctx, j) => startTime(ctx, j, expiry),
+      0
+    )(ctx, j)
 
-  return struct(ctx, j, {
-    startTime: field('start_time', (ctx, j) => startTime(ctx, j, expiry), 0),
-    // Must come after `startTime` to ensure fields are processed in correct order.
-    endTimes: field('end_times', (ctx, j, t) => endTimes(ctx, j, t, expiry)),
+    return struct(ctx, j, {
+      startTime: () => startTimeValue,
+      endTimes: field('end_times', (ctx, j) =>
+        endTimes(ctx, j, expiry, startTimeValue)
+      ),
+    })
   })
 }
 
@@ -686,20 +710,19 @@ function expiry(ctx: Context, j: Json): Maybe<number> {
     })
 }
 
-function expiryOrMax(t: Readonly<Partial<Source>>): number {
-  // Assume expiry was max if invalid
-  return t.expiry ?? limits.sourceExpiryRange[1]
-}
-
 function singleReportWindow(
   ctx: Context,
   j: Json,
-  t: Readonly<Partial<Source>>
+  expiry: Maybe<number>
 ): Maybe<number> {
   return legacyDuration(ctx, j)
-    .map((n) =>
-      clamp(ctx, n, limits.minReportWindow, expiryOrMax(t), ' (expiry)')
-    )
+    .map((n) => {
+      if (expiry.value === undefined) {
+        ctx.error('cannot be fully validated without a valid expiry')
+        return None
+      }
+      return clamp(ctx, n, limits.minReportWindow, expiry.value, ' (expiry)')
+    })
     .map(Number)
 }
 
@@ -715,37 +738,44 @@ type Source = CommonDebug &
     sourceEventId: bigint
   }
 
-export function validateSource(ctx: Context, source: Json): Maybe<Source> {
-  return struct<Source>(ctx, source, {
-    aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
-    destination: field('destination', destination),
-    expiry: field('expiry', expiry, limits.sourceExpiryRange[1]),
-    filterData: field('filter_data', filterData, new Map()),
-    maxEventLevelReports: field(
-      'max_event_level_reports',
-      maxEventLevelReports,
-      null
-    ),
-    sourceEventId: field('source_event_id', uint64, 0n),
+export function validateSource(ctx: Context, j: Json): Maybe<Source> {
+  return object(ctx, j).map((j) => {
+    const expiryVal = field(
+      'expiry',
+      expiry,
+      limits.sourceExpiryRange[1]
+    )(ctx, j)
 
-    // Must come after `expiry` to ensure fields are processed in correct order.
-    aggregatableReportWindow: field(
-      'aggregatable_report_window',
-      singleReportWindow,
-      expiryOrMax
-    ),
+    return struct(ctx, j, {
+      aggregatableReportWindow: field(
+        'aggregatable_report_window',
+        (ctx, j) => singleReportWindow(ctx, j, expiryVal),
+        expiryVal
+      ),
+      aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
+      destination: field('destination', destination),
+      expiry: () => expiryVal,
+      filterData: field('filter_data', filterData, new Map()),
+      maxEventLevelReports: field(
+        'max_event_level_reports',
+        maxEventLevelReports,
+        null
+      ),
+      sourceEventId: field('source_event_id', uint64, 0n),
 
-    // Must come after `expiry` to ensure fields are processed in correct order.
-    eventReportWindow: exclusive<Source, number | EventReportWindows>(
-      {
-        event_report_window: singleReportWindow,
-        event_report_windows: eventReportWindows,
-      },
-      expiryOrMax
-    ),
+      eventReportWindow: exclusive<number | EventReportWindows>(
+        {
+          event_report_window: (ctx, j) =>
+            singleReportWindow(ctx, j, expiryVal),
+          event_report_windows: (ctx, j) =>
+            eventReportWindows(ctx, j, expiryVal),
+        },
+        expiryVal
+      ),
 
-    ...commonDebugFields,
-    ...priorityField,
+      ...commonDebugFields,
+      ...priorityField,
+    })
   })
 }
 
