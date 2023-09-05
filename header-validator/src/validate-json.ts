@@ -9,13 +9,13 @@ const uint64Regex = /^[0-9]+$/
 const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
-const secondsPerDay: number = 24 * 60 * 60
+const SECONDS_PER_DAY: number = 24 * 60 * 60
 
 const limits = {
   maxEventLevelReports: 20,
   maxEntriesPerFilterData: 50,
   maxValuesPerFilterDataEntry: 50,
-  sourceExpiryRange: [1 * secondsPerDay, 30 * secondsPerDay],
+  sourceExpiryRange: [1 * SECONDS_PER_DAY, 30 * SECONDS_PER_DAY],
 }
 
 export type VendorSpecificValues = {
@@ -603,8 +603,8 @@ function roundAwayFromZeroToNearestDay(n: number): number {
     throw new RangeError()
   }
 
-  const r = n + secondsPerDay / 2
-  return r - (r % secondsPerDay)
+  const r = n + SECONDS_PER_DAY / 2
+  return r - (r % SECONDS_PER_DAY)
 }
 
 function expiry(ctx: Context, j: Json): Maybe<number> {
