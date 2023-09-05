@@ -27,4 +27,8 @@ export class Maybe<T> {
     }
     return this
   }
+
+  get value(): T | undefined {
+    return this.t
+  }
 }

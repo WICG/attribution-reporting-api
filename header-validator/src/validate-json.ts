@@ -1,6 +1,6 @@
 import * as psl from 'psl'
 import * as context from './context'
-import { Maybe } from './maybe'
+import { Maybe, Maybeable } from './maybe'
 
 const { None, some } = Maybe
 
@@ -11,12 +11,14 @@ const uint64Regex = /^[0-9]+$/
 const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
-const SECONDS_PER_DAY: number = 24 * 60 * 60
+const SECONDS_PER_HOUR = 60 * 60
+const SECONDS_PER_DAY: number = 24 * SECONDS_PER_HOUR
 
 const limits = {
   maxEventLevelReports: 20,
   maxEntriesPerFilterData: 50,
   maxValuesPerFilterDataEntry: 50,
+  minReportWindow: 1 * SECONDS_PER_HOUR,
   sourceExpiryRange: [1 * SECONDS_PER_DAY, 30 * SECONDS_PER_DAY],
 }
 
@@ -71,7 +73,7 @@ export type ValueCheck = CtxFunc<Json, Maybe<any>>
 function field<T>(
   name: string,
   f: CtxFunc<Json, Maybe<T>>,
-  valueIfAbsent?: T
+  valueIfAbsent?: Maybeable<T>
 ): CtxFunc<JsonDict, Maybe<T>> {
   return (ctx: Context, d: JsonDict): Maybe<T> =>
     ctx.scope(name, () => {
@@ -81,7 +83,7 @@ function field<T>(
           ctx.error('required')
           return None
         }
-        return some(valueIfAbsent)
+        return Maybe.flatten(valueIfAbsent)
       }
       delete d[name] // for unknown field warning
       return f(ctx, v)
@@ -94,7 +96,7 @@ type Exclusive<T> = {
 
 function exclusive<T>(
   x: Exclusive<T>,
-  valueIfAbsent: T
+  valueIfAbsent: Maybeable<T>
 ): CtxFunc<JsonDict, Maybe<T>> {
   return (ctx: Context, d: JsonDict): Maybe<T> => {
     const found: string[] = []
@@ -118,7 +120,7 @@ function exclusive<T>(
       return None
     }
 
-    return some(valueIfAbsent)
+    return Maybe.flatten(valueIfAbsent)
   }
 }
 
@@ -379,10 +381,69 @@ function maxEventLevelReports(ctx: Context, j: Json): Maybe<number> {
     .filter((n) => range(ctx, n, 0, limits.maxEventLevelReports))
 }
 
-function endTimes(ctx: Context, j: Json): Maybe<number[]> {
-  // TODO: Validate that end times are propertly ordered with respect to each
-  // other and to start_time
-  return array(ctx, j, positiveInteger, { minLength: 1, maxLength: 5 })
+function startTime(
+  ctx: Context,
+  j: Json,
+  expiry: Maybe<number>
+): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => integer(ctx, n))
+    .filter((n) => {
+      if (expiry.value === undefined) {
+        ctx.error('cannot be fully validated without a valid expiry')
+        return false
+      }
+      return range(
+        ctx,
+        n,
+        0,
+        expiry.value,
+        `must be non-negative and <= expiry (${expiry.value})`
+      )
+    })
+}
+
+function endTimes(
+  ctx: Context,
+  j: Json,
+  expiry: Maybe<number>,
+  startTime: Maybe<number>
+): Maybe<number[]> {
+  let prev = startTime
+  let prevDesc = 'start_time'
+
+  const endTime = (ctx: Context, j: Json): Maybe<number> =>
+    positiveInteger(ctx, j)
+      .map((n) => {
+        if (expiry.value === undefined) {
+          ctx.error('cannot be fully validated without a valid expiry')
+          return None
+        }
+        return clamp(ctx, n, limits.minReportWindow, expiry.value, ' (expiry)')
+      })
+      .filter((n) => {
+        if (prev.value === undefined) {
+          ctx.error(`cannot be fully validated without a valid ${prevDesc}`)
+          return false
+        }
+        return range(
+          ctx,
+          n,
+          prev.value + 1,
+          Infinity,
+          `must be > ${prevDesc} (${prev.value})`
+        )
+      })
+      .peek((n) => {
+        prev = some(n)
+        prevDesc = 'previous end_time'
+      })
+
+  return array(ctx, j, endTime, {
+    minLength: 1,
+    maxLength: 5,
+    keepGoing: false, // suppress unhelpful cascaded errors
+  })
 }
 
 type EventReportWindows = {
@@ -390,10 +451,24 @@ type EventReportWindows = {
   endTimes: number[]
 }
 
-function eventReportWindows(ctx: Context, j: Json): Maybe<EventReportWindows> {
-  return struct(ctx, j, {
-    startTime: field('start_time', nonNegativeInteger, 0),
-    endTimes: field('end_times', endTimes),
+function eventReportWindows(
+  ctx: Context,
+  j: Json,
+  expiry: Maybe<number>
+): Maybe<EventReportWindows> {
+  return object(ctx, j).map((j) => {
+    const startTimeValue = field(
+      'start_time',
+      (ctx, j) => startTime(ctx, j, expiry),
+      0
+    )(ctx, j)
+
+    return struct(ctx, j, {
+      startTime: () => startTimeValue,
+      endTimes: field('end_times', (ctx, j) =>
+        endTimes(ctx, j, expiry, startTimeValue)
+      ),
+    })
   })
 }
 
@@ -407,15 +482,17 @@ function legacyDuration(ctx: Context, j: Json): Maybe<number | bigint> {
 function collection<C extends context.PathComponent>(
   ctx: Context,
   js: Iterable<[C, Json]>,
-  f: CtxFunc<[C, Json], Maybe<unknown>>
+  f: CtxFunc<[C, Json], Maybe<unknown>>,
+  keepGoing: boolean = true
 ): boolean {
   let ok = true
   for (const [c, j] of js) {
-    ctx.scope(c, () => {
-      let itemOk = false
-      f(ctx, [c, j]).peek(() => (itemOk = true))
-      ok = ok && itemOk
-    })
+    let itemOk = false
+    ctx.scope(c, () => f(ctx, [c, j]).peek(() => (itemOk = true)))
+    if (!itemOk && !keepGoing) {
+      return false
+    }
+    ok = ok && itemOk
   }
   return ok
 }
@@ -439,18 +516,25 @@ function set(
     .map(() => set)
 }
 
+type ArrayOpts = ListOpts & {
+  keepGoing?: boolean
+}
+
 function array<T>(
   ctx: Context,
   j: Json,
   f: CtxFunc<Json, Maybe<T>>,
-  opts?: ListOpts
+  opts?: ArrayOpts
 ): Maybe<T[]> {
   const arr: T[] = []
 
   return list(ctx, j, opts)
     .filter((js) =>
-      collection(ctx, js.entries(), (ctx, [i, j]) =>
-        f(ctx, j).peek((v) => arr.push(v))
+      collection(
+        ctx,
+        js.entries(),
+        (ctx, [i, j]) => f(ctx, j).peek((v) => arr.push(v)),
+        opts?.keepGoing
       )
     )
     .map(() => arr)
@@ -587,14 +671,15 @@ function clamp<N extends bigint | number>(
   ctx: Context,
   n: N,
   min: N,
-  max: N
+  max: N,
+  maxSuffix: string = ''
 ): N {
   if (n < min) {
     ctx.warning(`will be clamped to min of ${min}`)
     return min
   }
   if (n > max) {
-    ctx.warning(`will be clamped to max of ${max}`)
+    ctx.warning(`will be clamped to max of ${max}${maxSuffix}`)
     return max
   }
   return n
@@ -625,46 +710,72 @@ function expiry(ctx: Context, j: Json): Maybe<number> {
     })
 }
 
+function singleReportWindow(
+  ctx: Context,
+  j: Json,
+  expiry: Maybe<number>
+): Maybe<number> {
+  return legacyDuration(ctx, j)
+    .map((n) => {
+      if (expiry.value === undefined) {
+        ctx.error('cannot be fully validated without a valid expiry')
+        return None
+      }
+      return clamp(ctx, n, limits.minReportWindow, expiry.value, ' (expiry)')
+    })
+    .map(Number)
+}
+
 type Source = CommonDebug &
   Priority & {
-    aggregatableReportWindow: bigint | number | null
+    aggregatableReportWindow: number
     aggregationKeys: Map<string, bigint>
     destination: Set<string>
-    eventReportWindow: bigint | number | EventReportWindows | null
+    eventReportWindow: number | EventReportWindows
     expiry: number
     filterData: FilterData
     maxEventLevelReports: number | null
     sourceEventId: bigint
   }
 
-export function validateSource(ctx: Context, source: Json): Maybe<Source> {
-  return struct(ctx, source, {
-    aggregatableReportWindow: field(
-      'aggregatable_report_window',
-      legacyDuration,
-      null
-    ),
-    aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
-    destination: field('destination', destination),
-    expiry: field('expiry', expiry, limits.sourceExpiryRange[1]),
-    filterData: field('filter_data', filterData, new Map()),
-    maxEventLevelReports: field(
-      'max_event_level_reports',
-      maxEventLevelReports,
-      null
-    ),
-    sourceEventId: field('source_event_id', uint64, 0n),
+export function validateSource(ctx: Context, j: Json): Maybe<Source> {
+  return object(ctx, j).map((j) => {
+    const expiryVal = field(
+      'expiry',
+      expiry,
+      limits.sourceExpiryRange[1]
+    )(ctx, j)
 
-    eventReportWindow: exclusive<bigint | number | EventReportWindows | null>(
-      {
-        event_report_window: legacyDuration,
-        event_report_windows: eventReportWindows,
-      },
-      null
-    ),
+    return struct(ctx, j, {
+      aggregatableReportWindow: field(
+        'aggregatable_report_window',
+        (ctx, j) => singleReportWindow(ctx, j, expiryVal),
+        expiryVal
+      ),
+      aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
+      destination: field('destination', destination),
+      expiry: () => expiryVal,
+      filterData: field('filter_data', filterData, new Map()),
+      maxEventLevelReports: field(
+        'max_event_level_reports',
+        maxEventLevelReports,
+        null
+      ),
+      sourceEventId: field('source_event_id', uint64, 0n),
 
-    ...commonDebugFields,
-    ...priorityField,
+      eventReportWindow: exclusive<number | EventReportWindows>(
+        {
+          event_report_window: (ctx, j) =>
+            singleReportWindow(ctx, j, expiryVal),
+          event_report_windows: (ctx, j) =>
+            eventReportWindows(ctx, j, expiryVal),
+        },
+        expiryVal
+      ),
+
+      ...commonDebugFields,
+      ...priorityField,
+    })
   })
 }
 
