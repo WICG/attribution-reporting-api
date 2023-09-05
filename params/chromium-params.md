@@ -33,7 +33,7 @@ Chromium's implementation assigns the following values:
 | [Max information gain for event sources][] | [6.5 bits][max information gain for events value] |
 
 [Max aggregation keys per source registration]: https://wicg.github.io/attribution-reporting-api/#max-aggregation-keys-per-source-registration
-[max aggregation keys per attribution value]: https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:components/attribution_reporting/constants.h;l=19;drc=b646f894a92491033bde5d1e75aba6f44c524f0e
+[max aggregation keys per source registration value]: https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:components/attribution_reporting/constants.h;l=19;drc=b646f894a92491033bde5d1e75aba6f44c524f0e
 [Max pending sources per source origin]: https://wicg.github.io/attribution-reporting-api/#max-pending-sources-per-source-origin
 [max pending sources per source origin value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=122;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Navigation-source trigger data cardinality]: https://wicg.github.io/attribution-reporting-api/#navigation-source-trigger-data-cardinality
