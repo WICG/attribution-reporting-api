@@ -1,6 +1,6 @@
 import * as psl from 'psl'
 import * as context from './context'
-import { Maybe } from './maybe'
+import { Maybe, Maybeable } from './maybe'
 
 const { None, some } = Maybe
 
@@ -73,7 +73,7 @@ export type ValueCheck = CtxFunc<Json, Maybe<any>>
 function field<T>(
   name: string,
   f: CtxFunc<Json, Maybe<T>>,
-  valueIfAbsent?: T | Maybe<T>
+  valueIfAbsent?: Maybeable<T>
 ): CtxFunc<JsonDict, Maybe<T>> {
   return (ctx: Context, d: JsonDict): Maybe<T> =>
     ctx.scope(name, () => {
@@ -96,7 +96,7 @@ type Exclusive<T> = {
 
 function exclusive<T>(
   x: Exclusive<T>,
-  valueIfAbsent: T | Maybe<T>
+  valueIfAbsent: Maybeable<T>
 ): CtxFunc<JsonDict, Maybe<T>> {
   return (ctx: Context, d: JsonDict): Maybe<T> => {
     const found: string[] = []
