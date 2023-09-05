@@ -1,6 +1,8 @@
 import * as psl from 'psl'
 import * as context from './context'
-import { Maybe, None, Some } from './maybe'
+import { Maybe } from './maybe'
+
+const { None, some } = Maybe
 
 export type JsonDict = { [key: string]: Json }
 export type Json = null | boolean | number | string | Json[] | JsonDict
@@ -39,7 +41,7 @@ function struct<T extends object>(
   fields: StructFields<T>,
   warnUnknown: boolean = true
 ): Maybe<T> {
-  return object(ctx, d).flatMap((d) => {
+  return object(ctx, d).map((d) => {
     let t: Partial<T> = {}
 
     let ok = true
@@ -58,7 +60,7 @@ function struct<T extends object>(
       }
     }
 
-    return ok ? new Some(t as T) : None
+    return ok ? some(t as T) : None
   })
 }
 
@@ -79,7 +81,7 @@ function field<T>(
           ctx.error('required')
           return None
         }
-        return new Some(valueIfAbsent)
+        return some(valueIfAbsent)
       }
       delete d[name] // for unknown field warning
       return f(ctx, v)
@@ -116,7 +118,7 @@ function exclusive<T>(
       return None
     }
 
-    return new Some(valueIfAbsent)
+    return some(valueIfAbsent)
   }
 }
 
@@ -157,11 +159,11 @@ function typeSwitch<T>(ctx: Context, j: Json, ts: TypeSwitch<T>): Maybe<T> {
 }
 
 function string(ctx: Context, j: Json): Maybe<string> {
-  return typeSwitch(ctx, j, { string: (ctx, j) => new Some(j) })
+  return typeSwitch(ctx, j, { string: (ctx, j) => some(j) })
 }
 
 function bool(ctx: Context, j: Json): Maybe<boolean> {
-  return typeSwitch(ctx, j, { boolean: (ctx, j) => new Some(j) })
+  return typeSwitch(ctx, j, { boolean: (ctx, j) => some(j) })
 }
 
 function isObject(j: Json): j is JsonDict {
@@ -169,7 +171,7 @@ function isObject(j: Json): j is JsonDict {
 }
 
 function object(ctx: Context, j: Json): Maybe<JsonDict> {
-  return typeSwitch(ctx, j, { object: (ctx, j) => new Some(j) })
+  return typeSwitch(ctx, j, { object: (ctx, j) => some(j) })
 }
 
 function keyValues<V>(
@@ -205,7 +207,7 @@ function list(
   j: Json,
   { minLength = 0, maxLength = Infinity }: ListOpts = {}
 ): Maybe<Json[]> {
-  return typeSwitch(ctx, j, { list: (ctx, j) => new Some(j) }).peek((j) => {
+  return typeSwitch(ctx, j, { list: (ctx, j) => some(j) }).peek((j) => {
     if (j.length > maxLength || j.length < minLength) {
       ctx.error(`length must be in the range [${minLength}, ${maxLength}]`)
     }
@@ -255,7 +257,7 @@ function triggerData(ctx: Context, j: Json): Maybe<bigint> {
 }
 
 function number(ctx: Context, j: Json): Maybe<number> {
-  return typeSwitch(ctx, j, { number: (ctx, j) => new Some(j) })
+  return typeSwitch(ctx, j, { number: (ctx, j) => some(j) })
 }
 
 function integer(ctx: Context, n: number): boolean {
@@ -344,17 +346,17 @@ function suitableScope(
       `URL components other than ${label} (${scoped}) will be ignored`
     )
   }
-  return new Some(scoped)
+  return some(scoped)
 }
 
 function suitableOrigin(ctx: Context, j: Json): Maybe<string> {
-  return string(ctx, j).flatMap((s) =>
+  return string(ctx, j).map((s) =>
     suitableScope(ctx, s, 'origin', (u) => u.origin)
   )
 }
 
 function suitableSite(ctx: Context, j: Json): Maybe<string> {
-  return string(ctx, j).flatMap((s) =>
+  return string(ctx, j).map((s) =>
     suitableScope(
       ctx,
       s,

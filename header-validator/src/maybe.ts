@@ -1,29 +1,30 @@
-export type Maybe<T> = typeof None | Some<T>
+export type Maybeable<T> = T | Maybe<T>
 
-export const None = {
-  filter: () => None,
-  map: () => None,
-  flatMap: () => None,
-  peek: () => None,
-}
+export class Maybe<T> {
+  static readonly None: Maybe<any> = new Maybe()
 
-export class Some<T> {
-  constructor(private readonly t: T) {}
+  static some<T>(t: T): Maybe<T> {
+    return new Maybe(t)
+  }
+
+  static flatten<T>(t: Maybeable<T>): Maybe<T> {
+    return t instanceof Maybe ? t : Maybe.some(t)
+  }
+
+  private constructor(private readonly t?: T) {}
 
   filter(f: (t: T) => boolean): Maybe<T> {
-    return f(this.t) ? this : None
+    return this.t === undefined || !f(this.t) ? Maybe.None : this
   }
 
-  map<U>(f: (t: T) => U): Some<U> {
-    return new Some(f(this.t))
+  map<U>(f: (t: T) => Maybeable<U>): Maybe<U> {
+    return this.t === undefined ? Maybe.None : Maybe.flatten(f(this.t))
   }
 
-  flatMap<U>(f: (t: T) => Maybe<U>): Maybe<U> {
-    return f(this.t)
-  }
-
-  peek(f: (t: T) => void): Some<T> {
-    f(this.t)
+  peek(f: (t: T) => void): Maybe<T> {
+    if (this.t !== undefined) {
+      f(this.t)
+    }
     return this
   }
 }
