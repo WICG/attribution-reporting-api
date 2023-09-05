@@ -463,16 +463,12 @@ function collection<C extends context.PathComponent>(
 ): boolean {
   let ok = true
   for (const [c, j] of js) {
-    ctx.scope(c, () => {
-      let itemOk = false
-      f(ctx, [c, j]).peek(() => (itemOk = true))
-      if (!itemOk) {
-        if (!keepGoing) {
-          return false
-        }
-        ok = false
-      }
-    })
+    let itemOk = false
+    ctx.scope(c, () => f(ctx, [c, j]).peek(() => (itemOk = true)))
+    if (!itemOk && !keepGoing) {
+      return false
+    }
+    ok = ok && itemOk
   }
   return ok
 }
