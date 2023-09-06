@@ -192,7 +192,7 @@ function keyValues<V>(
         ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
       }
 
-      return collection(ctx, entries, (ctx, [key, j]) =>
+      return isCollection(ctx, entries, (ctx, [key, j]) =>
         f(ctx, [key, j]).peek((v) => map.set(key, v))
       )
     })
@@ -216,7 +216,7 @@ function list(
   })
 }
 
-function pattern(
+function matchesPattern(
   ctx: Context,
   s: string,
   p: RegExp,
@@ -231,10 +231,10 @@ function pattern(
 
 function uint64(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) => pattern(ctx, s, uint64Regex, 'must be a uint64'))
+    .filter((s) => matchesPattern(ctx, s, uint64Regex, 'must be a uint64'))
     .map(BigInt)
     .filter((n) =>
-      range(
+      isInRange(
         ctx,
         n,
         0n,
@@ -262,7 +262,7 @@ function number(ctx: Context, j: Json): Maybe<number> {
   return typeSwitch(ctx, j, { number: (ctx, j) => some(j) })
 }
 
-function integer(ctx: Context, n: number): boolean {
+function isInteger(ctx: Context, n: number): boolean {
   if (!Number.isInteger(n)) {
     ctx.error('must be an integer')
     return false
@@ -270,7 +270,7 @@ function integer(ctx: Context, n: number): boolean {
   return true
 }
 
-function range<N extends bigint | number>(
+function isInRange<N extends bigint | number>(
   ctx: Context,
   n: N,
   min: N,
@@ -286,22 +286,22 @@ function range<N extends bigint | number>(
 
 function nonNegativeInteger(ctx: Context, j: Json): Maybe<number> {
   return number(ctx, j)
-    .filter((n) => integer(ctx, n))
-    .filter((n) => range(ctx, n, 0, Infinity, 'must be non-negative'))
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) => isInRange(ctx, n, 0, Infinity, 'must be non-negative'))
 }
 
 function positiveInteger(ctx: Context, j: Json): Maybe<number> {
   return number(ctx, j)
-    .filter((n) => integer(ctx, n))
-    .filter((n) => range(ctx, n, 1, Infinity, 'must be positive'))
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) => isInRange(ctx, n, 1, Infinity, 'must be positive'))
 }
 
 function int64(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) => pattern(ctx, s, int64Regex, 'must be an int64'))
+    .filter((s) => matchesPattern(ctx, s, int64Regex, 'must be an int64'))
     .map(BigInt)
     .filter((n) =>
-      range(
+      isInRange(
         ctx,
         n,
         (-2n) ** (64n - 1n),
@@ -313,7 +313,7 @@ function int64(ctx: Context, j: Json): Maybe<bigint> {
 
 function hex128(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) => pattern(ctx, s, hex128Regex, 'must be a hex128'))
+    .filter((s) => matchesPattern(ctx, s, hex128Regex, 'must be a hex128'))
     .map(BigInt)
 }
 
@@ -377,8 +377,8 @@ function destination(ctx: Context, j: Json): Maybe<Set<string>> {
 
 function maxEventLevelReports(ctx: Context, j: Json): Maybe<number> {
   return number(ctx, j)
-    .filter((n) => integer(ctx, n))
-    .filter((n) => range(ctx, n, 0, limits.maxEventLevelReports))
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) => isInRange(ctx, n, 0, limits.maxEventLevelReports))
 }
 
 function startTime(
@@ -387,13 +387,13 @@ function startTime(
   expiry: Maybe<number>
 ): Maybe<number> {
   return number(ctx, j)
-    .filter((n) => integer(ctx, n))
+    .filter((n) => isInteger(ctx, n))
     .filter((n) => {
       if (expiry.value === undefined) {
         ctx.error('cannot be fully validated without a valid expiry')
         return false
       }
-      return range(
+      return isInRange(
         ctx,
         n,
         0,
@@ -426,7 +426,7 @@ function endTimes(
           ctx.error(`cannot be fully validated without a valid ${prevDesc}`)
           return false
         }
-        return range(
+        return isInRange(
           ctx,
           n,
           prev.value + 1,
@@ -479,7 +479,7 @@ function legacyDuration(ctx: Context, j: Json): Maybe<number | bigint> {
   })
 }
 
-function collection<C extends context.PathComponent>(
+function isCollection<C extends context.PathComponent>(
   ctx: Context,
   js: Iterable<[C, Json]>,
   f: CtxFunc<[C, Json], Maybe<unknown>>,
@@ -507,7 +507,7 @@ function set(
 
   return list(ctx, j, opts)
     .filter((js) =>
-      collection(ctx, js.entries(), (ctx, [i, j]) =>
+      isCollection(ctx, js.entries(), (ctx, [i, j]) =>
         f(ctx, j).peek((v) =>
           set.has(v) ? ctx.warning(`duplicate value ${v}`) : set.add(v)
         )
@@ -530,7 +530,7 @@ function array<T>(
 
   return list(ctx, j, opts)
     .filter((js) =>
-      collection(
+      isCollection(
         ctx,
         js.entries(),
         (ctx, [i, j]) => f(ctx, j).peek((v) => arr.push(v)),
@@ -809,8 +809,8 @@ function aggregatableKeyValue(
   [key, j]: [string, Json]
 ): Maybe<number> {
   return number(ctx, j)
-    .filter((n) => integer(ctx, n))
-    .filter((n) => range(ctx, n, 1, 65536))
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) => isInRange(ctx, n, 1, 65536))
 }
 
 function aggregatableValues(ctx: Context, j: Json): Maybe<Map<string, number>> {
