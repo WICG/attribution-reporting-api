@@ -216,7 +216,7 @@ function list(
   })
 }
 
-function matchPattern(
+function matchesPattern(
   ctx: Context,
   s: string,
   p: RegExp,
@@ -231,7 +231,7 @@ function matchPattern(
 
 function uint64(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) => matchPattern(ctx, s, uint64Regex, 'must be a uint64'))
+    .filter((s) => matchesPattern(ctx, s, uint64Regex, 'must be a uint64'))
     .map(BigInt)
     .filter((n) =>
       isInRange(
@@ -298,7 +298,7 @@ function positiveInteger(ctx: Context, j: Json): Maybe<number> {
 
 function int64(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) => matchPattern(ctx, s, int64Regex, 'must be an int64'))
+    .filter((s) => matchesPattern(ctx, s, int64Regex, 'must be an int64'))
     .map(BigInt)
     .filter((n) =>
       isInRange(
@@ -313,7 +313,7 @@ function int64(ctx: Context, j: Json): Maybe<bigint> {
 
 function hex128(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) => matchPattern(ctx, s, hex128Regex, 'must be a hex128'))
+    .filter((s) => matchesPattern(ctx, s, hex128Regex, 'must be a hex128'))
     .map(BigInt)
 }
 
