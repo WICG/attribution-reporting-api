@@ -28,7 +28,10 @@ export type VendorSpecificValues = {
 }
 
 class Context extends context.Context {
-  constructor(readonly vsv: Partial<VendorSpecificValues>) {
+  constructor(
+    readonly vsv: Partial<VendorSpecificValues>,
+    readonly sourceType: SourceType
+  ) {
     super()
   }
 }
@@ -67,8 +70,6 @@ function struct<T extends object>(
 }
 
 type CtxFunc<I, O> = (ctx: Context, i: I) => O
-
-export type ValueCheck = CtxFunc<Json, Maybe<any>>
 
 function field<T>(
   name: string,
@@ -700,12 +701,18 @@ function expiry(ctx: Context, j: Json): Maybe<number> {
       clamp(ctx, n, limits.sourceExpiryRange[0], limits.sourceExpiryRange[1])
     )
     .map(Number) // guaranteed to fit based on the clamping
-    .peek((n) => {
-      const r = roundAwayFromZeroToNearestDay(n)
-      if (n !== r) {
-        ctx.warning(
-          `will be rounded to nearest day (${r}) if source type is event`
-        )
+    .map((n) => {
+      switch (ctx.sourceType) {
+        case SourceType.event:
+          const r = roundAwayFromZeroToNearestDay(n)
+          if (n !== r) {
+            ctx.warning(
+              `will be rounded to nearest day (${r}) as source type is event`
+            )
+          }
+          return r
+        case SourceType.navigation:
+          return n
       }
     })
 }
@@ -738,7 +745,7 @@ type Source = CommonDebug &
     sourceEventId: bigint
   }
 
-export function validateSource(ctx: Context, j: Json): Maybe<Source> {
+function source(ctx: Context, j: Json): Maybe<Source> {
   return object(ctx, j).map((j) => {
     const expiryVal = field(
       'expiry',
@@ -878,8 +885,8 @@ type Trigger = CommonDebug &
     eventTriggerData: EventTriggerDatum[]
   }
 
-export function validateTrigger(ctx: Context, trigger: Json): Maybe<Trigger> {
-  return struct(ctx, trigger, {
+function trigger(ctx: Context, j: Json): Maybe<Trigger> {
+  return struct(ctx, j, {
     aggregatableTriggerData: field(
       'aggregatable_trigger_data',
       aggregatableTriggerData,
@@ -911,12 +918,13 @@ export function validateTrigger(ctx: Context, trigger: Json): Maybe<Trigger> {
   })
 }
 
-export function validateJSON(
+function validateJSON(
   json: string,
-  f: ValueCheck,
-  vsv: Partial<VendorSpecificValues>
+  f: CtxFunc<Json, Maybe<any>>,
+  vsv: Partial<VendorSpecificValues>,
+  sourceType: SourceType // irrelevant for triggers
 ): context.ValidationResult {
-  const ctx = new Context(vsv)
+  const ctx = new Context(vsv, sourceType)
 
   let value
   try {
@@ -928,4 +936,19 @@ export function validateJSON(
 
   f(ctx, value)
   return ctx.finish()
+}
+
+export function validateSource(
+  json: string,
+  vsv: Partial<VendorSpecificValues>,
+  sourceType: SourceType
+): context.ValidationResult {
+  return validateJSON(json, source, vsv, sourceType)
+}
+
+export function validateTrigger(
+  json: string,
+  vsv: Partial<VendorSpecificValues>
+): context.ValidationResult {
+  return validateJSON(json, trigger, vsv, SourceType.navigation)
 }

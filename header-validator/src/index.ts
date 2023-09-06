@@ -2,7 +2,6 @@ import { Issue, PathComponent } from './context'
 import {
   SourceType,
   VendorSpecificValues,
-  validateJSON,
   validateSource,
   validateTrigger,
 } from './validate-json'
@@ -17,6 +16,9 @@ const useChromiumVsvCheckbox = document.querySelector(
 const errorList = document.querySelector('#errors')!
 const warningList = document.querySelector('#warnings')!
 const successDiv = document.querySelector('#success')!
+const sourceTypeFieldset = document.querySelector(
+  '#source-type'
+)! as HTMLFieldSetElement
 
 const pathfulTmpl = document.querySelector(
   '#pathful-issue'
@@ -51,6 +53,14 @@ function header(): string {
   return el.value
 }
 
+function sourceType(): SourceType {
+  const el = form.elements.namedItem('source-type')! as RadioNodeList
+  if (el.value in SourceType) {
+    return el.value as SourceType
+  }
+  throw new TypeError()
+}
+
 const ChromiumVsv: VendorSpecificValues = {
   maxAggregationKeysPerAttribution: 20,
   triggerDataCardinality: {
@@ -64,13 +74,16 @@ function validate(): void {
     ? ChromiumVsv
     : {}
 
+  sourceTypeFieldset.disabled = true
+
   let result
   switch (header()) {
     case 'source':
-      result = validateJSON(input.value, validateSource, vsv)
+      sourceTypeFieldset.disabled = false
+      result = validateSource(input.value, vsv, sourceType())
       break
     case 'trigger':
-      result = validateJSON(input.value, validateTrigger, vsv)
+      result = validateTrigger(input.value, vsv)
       break
     case 'os-source':
       result = validateOsRegistration(input.value)
@@ -110,6 +123,10 @@ document.querySelector('#linkify')!.addEventListener('click', async () => {
     url.searchParams.set('vsv', 'chromium')
   }
 
+  if (url.searchParams.get('header') === 'source') {
+    url.searchParams.set('source-type', sourceType())
+  }
+
   await navigator.clipboard.writeText(url.toString())
 })
 
@@ -141,3 +158,13 @@ if (selection === null || !allowedValues.has(selection)) {
   selection = 'source'
 }
 ;(form.querySelector(`input[value=${selection}]`) as HTMLInputElement).click()
+
+let st = params.get('source-type')
+if (st !== null && st in SourceType) {
+  st = st as SourceType
+} else {
+  st = SourceType.event
+}
+;(form.querySelector(`input[value=${st}]`) as HTMLInputElement).click()
+
+validate()
