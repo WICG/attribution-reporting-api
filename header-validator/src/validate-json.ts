@@ -223,14 +223,15 @@ function matchesPattern(
   errPrefix: string
 ): boolean {
   if (!p.test(s)) {
+
+
     ctx.error(`${errPrefix} (must match ${p})`)
     return false
   }
   return true
 }
 
-function uint64(ctx: Context, j: Json): Maybe<bigint> {
-  return string(ctx, j)
+function uint64(ctx: Context, j: Json): Maybe<bigint> { return string(ctx, j)
     .filter((s) => matchesPattern(ctx, s, uint64Regex, 'must be a uint64'))
     .map(BigInt)
     .filter((n) =>
