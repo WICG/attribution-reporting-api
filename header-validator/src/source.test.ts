@@ -1,7 +1,12 @@
-import { validateSource } from './validate-json'
-import { runAll } from './validate-json.test'
+import * as testutil from './util.test'
+import { SourceType, validateSource } from './validate-json'
+import * as jsontest from './validate-json.test'
 
-runAll(validateSource, [
+type TestCase = jsontest.TestCase & {
+  sourceType?: SourceType
+}
+
+const testCases: TestCase[] = [
   // no errors or warnings
   {
     name: 'required-fields-only',
@@ -688,10 +693,11 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "expiry": "129599"
     }`,
+    sourceType: SourceType.event,
     expectedWarnings: [
       {
         path: ['expiry'],
-        msg: 'will be rounded to nearest day (86400) if source type is event',
+        msg: 'will be rounded to nearest day (86400) as source type is event',
       },
     ],
   },
@@ -701,10 +707,11 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "expiry": "129600"
     }`,
+    sourceType: SourceType.event,
     expectedWarnings: [
       {
         path: ['expiry'],
-        msg: 'will be rounded to nearest day (172800) if source type is event',
+        msg: 'will be rounded to nearest day (172800) as source type is event',
       },
     ],
   },
@@ -714,10 +721,11 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "expiry": "129601"
     }`,
+    sourceType: SourceType.event,
     expectedWarnings: [
       {
         path: ['expiry'],
-        msg: 'will be rounded to nearest day (172800) if source type is event',
+        msg: 'will be rounded to nearest day (172800) as source type is event',
       },
     ],
   },
@@ -727,10 +735,11 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "expiry": 129599
     }`,
+    sourceType: SourceType.event,
     expectedWarnings: [
       {
         path: ['expiry'],
-        msg: 'will be rounded to nearest day (86400) if source type is event',
+        msg: 'will be rounded to nearest day (86400) as source type is event',
       },
     ],
   },
@@ -740,10 +749,11 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "expiry": 129600
     }`,
+    sourceType: SourceType.event,
     expectedWarnings: [
       {
         path: ['expiry'],
-        msg: 'will be rounded to nearest day (172800) if source type is event',
+        msg: 'will be rounded to nearest day (172800) as source type is event',
       },
     ],
   },
@@ -753,12 +763,21 @@ runAll(validateSource, [
       "destination": "https://a.test",
       "expiry": 129601
     }`,
+    sourceType: SourceType.event,
     expectedWarnings: [
       {
         path: ['expiry'],
-        msg: 'will be rounded to nearest day (172800) if source type is event',
+        msg: 'will be rounded to nearest day (172800) as source type is event',
       },
     ],
+  },
+  {
+    name: 'expiry-integer-no-rounding-navigation-source',
+    json: `{
+      "destination": "https://a.test",
+      "expiry": 129601
+    }`,
+    sourceType: SourceType.navigation,
   },
 
   {
@@ -1044,4 +1063,14 @@ runAll(validateSource, [
       },
     ],
   },
-])
+]
+
+testCases.forEach((tc) =>
+  testutil.run(tc, tc.name, () =>
+    validateSource(
+      tc.json,
+      tc.vsv ?? {},
+      tc.sourceType ?? SourceType.navigation
+    )
+  )
+)

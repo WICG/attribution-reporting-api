@@ -1,7 +1,8 @@
+import * as testutil from './util.test'
 import { SourceType, validateTrigger } from './validate-json'
-import { runAll } from './validate-json.test'
+import * as jsontest from './validate-json.test'
 
-runAll(validateTrigger, [
+const testCases: jsontest.TestCase[] = [
   // no errors or warnings
   {
     name: 'required-fields-only',
@@ -845,4 +846,8 @@ runAll(validateTrigger, [
       },
     ],
   },
-])
+]
+
+testCases.forEach((tc) =>
+  testutil.run(tc, tc.name, () => validateTrigger(tc.json, tc.vsv ?? {}))
+)
