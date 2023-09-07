@@ -3,6 +3,7 @@ import { SourceType } from '../source-type'
 import { VendorSpecificValues } from '../vendor-specific-values'
 import * as context from './context'
 import { Maybe, Maybeable } from './maybe'
+import * as privacy from '../flexible-event/privacy'
 
 const { None, some } = Maybe
 
@@ -747,6 +748,47 @@ function eventReportWindow(
   )
 }
 
+function channelCapacity(ctx: Context, s: Source): void {
+  if (
+    ctx.vsv.maxEventLevelChannelCapacityPerSource === undefined ||
+    ctx.vsv.randomizedResponseEpsilon === undefined ||
+    ctx.vsv.triggerDataCardinality === undefined ||
+    s.maxEventLevelReports === null
+  ) {
+    // TODO: consider warning when this cannot be checked
+    return
+  }
+
+  const perTriggerDataConfigs = []
+  for (let i = 0n; i < ctx.vsv.triggerDataCardinality[ctx.sourceType]; i++) {
+    perTriggerDataConfigs.push(
+      new privacy.PerTriggerDataConfig(
+        s.eventReportWindows.endTimes.length,
+        /*numSummaryBuckets=*/ s.maxEventLevelReports
+      )
+    )
+  }
+
+  const config = new privacy.Config(
+    s.maxEventLevelReports,
+    perTriggerDataConfigs
+  )
+
+  const { infoGain } = config.computeConfigData(
+    ctx.vsv.randomizedResponseEpsilon,
+    ctx.sourceType
+  )
+
+  const max = ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
+  if (infoGain > max) {
+    ctx.error(
+      `exceeds max event-level channel capacity per ${
+        ctx.sourceType
+      } source (${infoGain.toFixed(2)} > ${max.toFixed(2)})`
+    )
+  }
+}
+
 export type Source = CommonDebug &
   Priority & {
     aggregatableReportWindow: number
@@ -760,43 +802,47 @@ export type Source = CommonDebug &
   }
 
 function source(ctx: Context, j: Json): Maybe<Source> {
-  return object(ctx, j).map((j) => {
-    const expiryVal = field(
-      'expiry',
-      expiry,
-      limits.sourceExpiryRange[1]
-    )(ctx, j)
+  return object(ctx, j)
+    .map((j) => {
+      const expiryVal = field(
+        'expiry',
+        expiry,
+        limits.sourceExpiryRange[1]
+      )(ctx, j)
 
-    return struct(ctx, j, {
-      aggregatableReportWindow: field(
-        'aggregatable_report_window',
-        (ctx, j) => singleReportWindow(ctx, j, expiryVal),
-        expiryVal
-      ),
-      aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
-      destination: field('destination', destination),
-      expiry: () => expiryVal,
-      filterData: field('filter_data', filterData, new Map()),
-      maxEventLevelReports: field(
-        'max_event_level_reports',
-        maxEventLevelReports,
-        ctx.vsv.defaultEventLevelAttributionsPerSource?.[ctx.sourceType] ?? null
-      ),
-      sourceEventId: field('source_event_id', uint64, 0n),
+      return struct(ctx, j, {
+        aggregatableReportWindow: field(
+          'aggregatable_report_window',
+          (ctx, j) => singleReportWindow(ctx, j, expiryVal),
+          expiryVal
+        ),
+        aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
+        destination: field('destination', destination),
+        expiry: () => expiryVal,
+        filterData: field('filter_data', filterData, new Map()),
+        maxEventLevelReports: field(
+          'max_event_level_reports',
+          maxEventLevelReports,
+          ctx.vsv.defaultEventLevelAttributionsPerSource?.[ctx.sourceType] ??
+            null
+        ),
+        sourceEventId: field('source_event_id', uint64, 0n),
 
-      eventReportWindows: exclusive(
-        {
-          event_report_window: (ctx, j) => eventReportWindow(ctx, j, expiryVal),
-          event_report_windows: (ctx, j) =>
-            eventReportWindows(ctx, j, expiryVal),
-        },
-        expiryVal.map((n) => defaultEventReportWindows(ctx, n))
-      ),
+        eventReportWindows: exclusive(
+          {
+            event_report_window: (ctx, j) =>
+              eventReportWindow(ctx, j, expiryVal),
+            event_report_windows: (ctx, j) =>
+              eventReportWindows(ctx, j, expiryVal),
+          },
+          expiryVal.map((n) => defaultEventReportWindows(ctx, n))
+        ),
 
-      ...commonDebugFields,
-      ...priorityField,
+        ...commonDebugFields,
+        ...priorityField,
+      })
     })
-  })
+    .peek((s) => channelCapacity(ctx, s))
 }
 
 function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
