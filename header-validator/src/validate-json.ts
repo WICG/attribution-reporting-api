@@ -448,7 +448,7 @@ function endTimes(
   })
 }
 
-type EventReportWindows = {
+export type EventReportWindows = {
   startTime: number
   endTimes: number[]
 }
@@ -559,7 +559,7 @@ function filterDataKeyValue(
   return set(ctx, j, string, { maxLength: limits.maxValuesPerFilterDataEntry })
 }
 
-type FilterData = Map<string, Set<string>>
+export type FilterData = Map<string, Set<string>>
 
 function filterData(ctx: Context, j: Json): Maybe<FilterData> {
   return keyValues(ctx, j, filterDataKeyValue, limits.maxEntriesPerFilterData)
@@ -594,7 +594,7 @@ function filterKeyValue(
   return set(ctx, j, (ctx, j) => string(ctx, j).peek(peek))
 }
 
-type FilterConfig = {
+export type FilterConfig = {
   lookbackWindow: number | null
   map: Map<string, Set<string>>
 }
@@ -619,7 +619,7 @@ function orFilters(ctx: Context, j: Json): Maybe<FilterConfig[]> {
   })
 }
 
-type FilterPair = {
+export type FilterPair = {
   positive: FilterConfig[]
   negative: FilterConfig[]
 }
@@ -629,7 +629,7 @@ const filterFields: StructFields<FilterPair> = {
   negative: field('not_filters', orFilters, []),
 }
 
-type CommonDebug = {
+export type CommonDebug = {
   debugKey: bigint | null
   debugReporting: boolean
 }
@@ -639,7 +639,7 @@ const commonDebugFields: StructFields<CommonDebug> = {
   debugReporting: field('debug_reporting', bool, false),
 }
 
-type DedupKey = {
+export type DedupKey = {
   dedupKey: bigint | null
 }
 
@@ -647,7 +647,7 @@ const dedupKeyField: StructFields<DedupKey> = {
   dedupKey: field('deduplication_key', uint64, null),
 }
 
-type Priority = {
+export type Priority = {
   priority: bigint
 }
 
@@ -756,7 +756,7 @@ function eventReportWindow(
   )
 }
 
-type Source = CommonDebug &
+export type Source = CommonDebug &
   Priority & {
     aggregatableReportWindow: number
     aggregationKeys: Map<string, bigint>
@@ -814,7 +814,7 @@ function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
   })
 }
 
-type AggregatableTriggerDatum = FilterPair & {
+export type AggregatableTriggerDatum = FilterPair & {
   keyPiece: bigint
   sourceKeys: Set<string>
 }
@@ -851,7 +851,7 @@ function aggregatableValues(ctx: Context, j: Json): Maybe<Map<string, number>> {
   )
 }
 
-type EventTriggerDatum = FilterPair &
+export type EventTriggerDatum = FilterPair &
   Priority &
   DedupKey & {
     triggerData: bigint
@@ -868,7 +868,7 @@ function eventTriggerData(ctx: Context, j: Json): Maybe<EventTriggerDatum[]> {
   )
 }
 
-type AggregatableDedupKey = FilterPair & DedupKey
+export type AggregatableDedupKey = FilterPair & DedupKey
 
 function aggregatableDedupKeys(
   ctx: Context,
@@ -897,7 +897,7 @@ function aggregatableSourceRegistrationTime(
   })
 }
 
-type Trigger = CommonDebug &
+export type Trigger = CommonDebug &
   FilterPair & {
     aggregatableDedupKeys: AggregatableDedupKey[]
     aggregatableTriggerData: AggregatableTriggerDatum[]
@@ -940,12 +940,12 @@ function trigger(ctx: Context, j: Json): Maybe<Trigger> {
   })
 }
 
-function validateJSON(
+function validateJSON<T>(
   json: string,
-  f: CtxFunc<Json, Maybe<any>>,
+  f: CtxFunc<Json, Maybe<T>>,
   vsv: Partial<VendorSpecificValues>,
   sourceType: SourceType // irrelevant for triggers
-): context.ValidationResult {
+): [context.ValidationResult, Maybe<T>] {
   const ctx = new Context(vsv, sourceType)
 
   let value
@@ -953,24 +953,24 @@ function validateJSON(
     value = JSON.parse(json)
   } catch (err) {
     const msg = err instanceof Error ? err.toString() : 'unknown error'
-    return ctx.finish(msg)
+    return [ctx.finish(msg), None]
   }
 
-  f(ctx, value)
-  return ctx.finish()
+  const v = f(ctx, value)
+  return [ctx.finish(), v]
 }
 
 export function validateSource(
   json: string,
   vsv: Partial<VendorSpecificValues>,
   sourceType: SourceType
-): context.ValidationResult {
+): [context.ValidationResult, Maybe<Source>] {
   return validateJSON(json, source, vsv, sourceType)
 }
 
 export function validateTrigger(
   json: string,
   vsv: Partial<VendorSpecificValues>
-): context.ValidationResult {
+): [context.ValidationResult, Maybe<Trigger>] {
   return validateJSON(json, trigger, vsv, SourceType.navigation)
 }

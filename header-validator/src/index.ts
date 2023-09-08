@@ -83,10 +83,10 @@ function validate(): void {
   switch (headerRadios.value) {
     case 'source':
       sourceTypeFieldset.disabled = false
-      result = validateSource(input.value, vsv, sourceType())
+      ;[result] = validateSource(input.value, vsv, sourceType())
       break
     case 'trigger':
-      result = validateTrigger(input.value, vsv)
+      ;[result] = validateTrigger(input.value, vsv)
       break
     case 'os-source':
       result = validateOsRegistration(input.value)

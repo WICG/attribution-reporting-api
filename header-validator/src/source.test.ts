@@ -1,8 +1,8 @@
-import * as testutil from './util.test'
-import { SourceType, validateSource } from './validate-json'
+import { Maybe } from './maybe'
+import { Source, SourceType, validateSource } from './validate-json'
 import * as jsontest from './validate-json.test'
 
-type TestCase = jsontest.TestCase & {
+type TestCase = jsontest.TestCase<Source> & {
   sourceType?: SourceType
 }
 
@@ -31,6 +31,23 @@ const testCases: TestCase[] = [
       "source_event_id": "3",
       "max_event_level_reports": 2
     }`,
+    sourceType: SourceType.navigation,
+    expected: Maybe.some({
+      aggregatableReportWindow: 3601,
+      aggregationKeys: new Map([['a', 15n]]),
+      debugKey: 1n,
+      debugReporting: true,
+      destination: new Set(['https://a.test']),
+      eventReportWindow: {
+        startTime: 0,
+        endTimes: [3601],
+      },
+      expiry: 86400,
+      filterData: new Map([['b', new Set(['c'])]]),
+      priority: 2n,
+      sourceEventId: 3n,
+      maxEventLevelReports: 2,
+    }),
   },
 
   // warnings
@@ -75,6 +92,7 @@ const testCases: TestCase[] = [
     name: 'invalid-json',
     json: ``,
     expectedErrors: [{ msg: 'SyntaxError: Unexpected end of JSON input' }],
+    expected: Maybe.None,
   },
   {
     name: 'wrong-root-type',
@@ -85,6 +103,7 @@ const testCases: TestCase[] = [
         msg: 'must be an object',
       },
     ],
+    expected: Maybe.None,
   },
   {
     name: 'wrong-root-type-null',
@@ -1066,7 +1085,7 @@ const testCases: TestCase[] = [
 ]
 
 testCases.forEach((tc) =>
-  testutil.run(tc, tc.name, () =>
+  jsontest.run(tc, () =>
     validateSource(
       tc.json,
       tc.vsv ?? {},
