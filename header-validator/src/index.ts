@@ -61,6 +61,10 @@ function sourceType(): SourceType {
 }
 
 const ChromiumVsv: VendorSpecificValues = {
+  defaultEventLevelAttributionsPerSource: {
+    [SourceType.event]: 1,
+    [SourceType.navigation]: 3,
+  },
   maxAggregationKeysPerAttribution: 20,
   triggerDataCardinality: {
     [SourceType.event]: 2n,

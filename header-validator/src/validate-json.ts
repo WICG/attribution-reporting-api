@@ -23,6 +23,7 @@ const limits = {
 }
 
 export type VendorSpecificValues = {
+  defaultEventLevelAttributionsPerSource: Record<SourceType, number>
   maxAggregationKeysPerAttribution: number
   triggerDataCardinality: Record<SourceType, bigint>
 }
@@ -788,7 +789,7 @@ function source(ctx: Context, j: Json): Maybe<Source> {
       maxEventLevelReports: field(
         'max_event_level_reports',
         maxEventLevelReports,
-        null
+        ctx.vsv.defaultEventLevelAttributionsPerSource?.[ctx.sourceType] ?? null
       ),
       sourceEventId: field('source_event_id', uint64, 0n),
 
