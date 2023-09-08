@@ -1,415 +1,952 @@
 import * as psl from 'psl'
-import { Context, ValidationResult } from './context'
+import * as context from './context'
+import { Maybe, Maybeable } from './maybe'
+
+const { None, some } = Maybe
 
 export type JsonDict = { [key: string]: Json }
-export type Json = null|boolean|number|string|Json[]|JsonDict
+export type Json = null | boolean | number | string | Json[] | JsonDict
 
 const uint64Regex = /^[0-9]+$/
 const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
+const SECONDS_PER_HOUR = 60 * 60
+const SECONDS_PER_DAY: number = 24 * SECONDS_PER_HOUR
+
 const limits = {
-  maxAggregationKeys: 20,
   maxEventLevelReports: 20,
   maxEntriesPerFilterData: 50,
   maxValuesPerFilterDataEntry: 50,
+  minReportWindow: 1 * SECONDS_PER_HOUR,
+  sourceExpiryRange: [1 * SECONDS_PER_DAY, 30 * SECONDS_PER_DAY],
 }
 
-type FieldCheck = (ctx: Context, obj: JsonDict, key: string) => void
+export type VendorSpecificValues = {
+  defaultEventLevelAttributionsPerSource: Record<SourceType, number>
+  maxAggregationKeysPerAttribution: number
+  triggerDataCardinality: Record<SourceType, bigint>
+}
 
-type FieldChecks = Record<string, FieldCheck>
+class Context extends context.Context {
+  constructor(
+    readonly vsv: Partial<VendorSpecificValues>,
+    readonly sourceType: SourceType
+  ) {
+    super()
+  }
+}
 
-function validate(ctx: Context, obj: Json, checks: FieldChecks): void {
-  record((ctx, obj) => {
-    Object.entries(checks).forEach(([key, check]) =>
-      ctx.scope(key, () => check(ctx, obj, key))
-    )
+type StructFields<T extends object> = {
+  [K in keyof T]-?: CtxFunc<JsonDict, Maybe<T[K]>>
+}
 
-    Object.keys(obj).forEach((key) => {
-      if (!(key in checks)) {
+function struct<T extends object>(
+  ctx: Context,
+  d: Json,
+  fields: StructFields<T>,
+  warnUnknown: boolean = true
+): Maybe<T> {
+  return object(ctx, d).map((d) => {
+    let t: Partial<T> = {}
+
+    let ok = true
+    for (const prop in fields) {
+      let itemOk = false
+      fields[prop](ctx, d).peek((v) => {
+        itemOk = true
+        t[prop] = v
+      })
+      ok = ok && itemOk
+    }
+
+    if (warnUnknown) {
+      for (const key in d) {
         ctx.scope(key, () => ctx.warning('unknown field'))
       }
-    })
-  })(ctx, obj)
-}
-
-export type ValueCheck = (ctx: Context, value: Json) => void
-
-function required(f: ValueCheck): FieldCheck {
-  return (ctx, obj, key) => {
-    if (key in obj) {
-      f(ctx, obj[key])
-      return
-    }
-    ctx.error('required')
-  }
-}
-
-function optional(f: ValueCheck): FieldCheck {
-  return (ctx, obj, key) => {
-    if (key in obj) {
-      f(ctx, obj[key])
-    }
-  }
-}
-
-type StringCheck = (ctx: Context, value: string) => void
-
-function string(f: StringCheck = (a, b) => {}): ValueCheck {
-  return (ctx, value) => {
-    if (typeof value === 'string') {
-      f(ctx, value)
-      return
-    }
-    ctx.error('must be a string')
-  }
-}
-
-function bool(ctx: Context, value: Json): void {
-  if (typeof value === 'boolean') {
-    return
-  }
-  ctx.error('must be a boolean')
-}
-
-function isObject(value: Json): value is JsonDict {
-  return value !== null && typeof value === 'object' && value.constructor === Object
-}
-
-type RecordCheck = (ctx: Context, value: JsonDict) => void
-
-function record(f: RecordCheck): ValueCheck {
-  return (ctx, value) => {
-    if (isObject(value)) {
-      f(ctx, value)
-      return
-    }
-    ctx.error('must be an object')
-  }
-}
-
-type KeyValueCheck = (ctx: Context, key: string, value: Json) => void
-
-function keyValues(f: KeyValueCheck, maxKeys = Infinity): ValueCheck {
-  return record((ctx, value) => {
-    const entries = Object.entries(value)
-
-    if (entries.length > maxKeys) {
-      ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
     }
 
-    entries.forEach(([key, value]) =>
-      ctx.scope(key, () => f(ctx, key, value))
-    )
+    return ok ? some(t as T) : None
   })
+}
+
+type CtxFunc<I, O> = (ctx: Context, i: I) => O
+
+function field<T>(
+  name: string,
+  f: CtxFunc<Json, Maybe<T>>,
+  valueIfAbsent?: Maybeable<T>
+): CtxFunc<JsonDict, Maybe<T>> {
+  return (ctx: Context, d: JsonDict): Maybe<T> =>
+    ctx.scope(name, () => {
+      const v = d[name]
+      if (v === undefined) {
+        if (valueIfAbsent === undefined) {
+          ctx.error('required')
+          return None
+        }
+        return Maybe.flatten(valueIfAbsent)
+      }
+      delete d[name] // for unknown field warning
+      return f(ctx, v)
+    })
+}
+
+type Exclusive<T> = {
+  [key: string]: CtxFunc<Json, Maybe<T>>
+}
+
+function exclusive<T>(
+  x: Exclusive<T>,
+  valueIfAbsent: Maybeable<T>
+): CtxFunc<JsonDict, Maybe<T>> {
+  return (ctx: Context, d: JsonDict): Maybe<T> => {
+    const found: string[] = []
+    let v: Maybe<T> = None
+
+    for (const [key, f] of Object.entries(x)) {
+      const j = d[key]
+      if (j !== undefined) {
+        found.push(key)
+        v = ctx.scope(key, () => f(ctx, j))
+        delete d[key] // for unknown field warning
+      }
+    }
+
+    if (found.length === 1) {
+      return v
+    }
+
+    if (found.length > 1) {
+      ctx.error(`mutually exclusive fields: ${found.join(', ')}`)
+      return None
+    }
+
+    return Maybe.flatten(valueIfAbsent)
+  }
+}
+
+type TypeSwitch<T> = {
+  null?: CtxFunc<null, Maybe<T>>
+  boolean?: CtxFunc<boolean, Maybe<T>>
+  number?: CtxFunc<number, Maybe<T>>
+  string?: CtxFunc<string, Maybe<T>>
+  list?: CtxFunc<Json[], Maybe<T>>
+  object?: CtxFunc<JsonDict, Maybe<T>>
+}
+
+function typeSwitch<T>(ctx: Context, j: Json, ts: TypeSwitch<T>): Maybe<T> {
+  if (j === null && ts.null !== undefined) {
+    return ts.null(ctx, j)
+  }
+  if (typeof j === 'boolean' && ts.boolean !== undefined) {
+    return ts.boolean(ctx, j)
+  }
+  if (typeof j === 'number' && ts.number !== undefined) {
+    return ts.number(ctx, j)
+  }
+  if (typeof j === 'string' && ts.string !== undefined) {
+    return ts.string(ctx, j)
+  }
+  if (Array.isArray(j) && ts.list !== undefined) {
+    return ts.list(ctx, j)
+  }
+  if (isObject(j) && ts.object !== undefined) {
+    return ts.object(ctx, j)
+  }
+
+  const allowed = Object.keys(ts)
+    .map((t) => `${t === 'object' ? 'an' : t === 'null' ? '' : 'a'} ${t}`)
+    .join(' or ')
+  ctx.error(`must be ${allowed}`)
+  return None
+}
+
+function string(ctx: Context, j: Json): Maybe<string> {
+  return typeSwitch(ctx, j, { string: (ctx, j) => some(j) })
+}
+
+function bool(ctx: Context, j: Json): Maybe<boolean> {
+  return typeSwitch(ctx, j, { boolean: (ctx, j) => some(j) })
+}
+
+function isObject(j: Json): j is JsonDict {
+  return j !== null && typeof j === 'object' && j.constructor === Object
+}
+
+function object(ctx: Context, j: Json): Maybe<JsonDict> {
+  return typeSwitch(ctx, j, { object: (ctx, j) => some(j) })
+}
+
+function keyValues<V>(
+  ctx: Context,
+  j: Json,
+  f: CtxFunc<[key: string, val: Json], Maybe<V>>,
+  maxKeys: number = Infinity
+): Maybe<Map<string, V>> {
+  const map = new Map<string, V>()
+
+  return object(ctx, j)
+    .filter((d) => {
+      const entries = Object.entries(d)
+
+      if (entries.length > maxKeys) {
+        ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
+      }
+
+      return isCollection(ctx, entries, (ctx, [key, j]) =>
+        f(ctx, [key, j]).peek((v) => map.set(key, v))
+      )
+    })
+    .map(() => map)
 }
 
 type ListOpts = {
-  minLength?: number,
-  maxLength?: number,
+  minLength?: number
+  maxLength?: number
 }
 
-function list(f: ValueCheck, {
-  minLength = 0,
-  maxLength = Infinity,
-}: ListOpts = {}): ValueCheck {
-  return (ctx, values) => {
-    if (Array.isArray(values)) {
-      if (values.length > maxLength || values.length < minLength) {
-        ctx.error(`length must be in the range [${minLength}, ${maxLength}]`)
-      }
-
-      values.forEach((value, index) => ctx.scope(index, () => f(ctx, value)))
-      return
+function list(
+  ctx: Context,
+  j: Json,
+  { minLength = 0, maxLength = Infinity }: ListOpts = {}
+): Maybe<Json[]> {
+  return typeSwitch(ctx, j, { list: (ctx, j) => some(j) }).peek((j) => {
+    if (j.length > maxLength || j.length < minLength) {
+      ctx.error(`length must be in the range [${minLength}, ${maxLength}]`)
     }
-    ctx.error('must be a list')
-  }
+  })
 }
 
-const uint64 = string((ctx, value) => {
-  if (!uint64Regex.test(value)) {
-    ctx.error(`must be a uint64 (must match ${uint64Regex})`)
-    return
+function matchesPattern(
+  ctx: Context,
+  s: string,
+  p: RegExp,
+  errPrefix: string
+): boolean {
+  if (!p.test(s)) {
+    ctx.error(`${errPrefix} (must match ${p})`)
+    return false
   }
-
-  const max = 2n ** 64n - 1n
-  if (BigInt(value) > max) {
-    ctx.error('must fit in an unsigned 64-bit integer')
-  }
-})
-
-type NumberCheck = (ctx: Context, value: number) => void
-
-function number(f: NumberCheck): ValueCheck {
-  return (ctx, value) => {
-    if (typeof value === 'number') {
-      f(ctx, value)
-      return
-    }
-    ctx.error('must be a number')
-  }
+  return true
 }
 
-const nonNegativeInteger = number((ctx, value) => {
-  if (!Number.isInteger(value) || value < 0) {
-    ctx.error('must be a non-negative integer')
-  }
-})
-
-const positiveInteger = number((ctx, value) => {
-  if (!Number.isInteger(value) || value <= 0) {
-    ctx.error('must be a positive integer')
-  }
-})
-
-const int64 = string((ctx, str) => {
-  if (!int64Regex.test(str)) {
-    ctx.error(`must be an int64 (must match ${int64Regex})`)
-    return
-  }
-
-  const value = BigInt(str)
-
-  const max = 2n ** (64n - 1n) - 1n
-  const min = (-2n) ** (64n - 1n)
-  if (value < min || value > max) {
-    ctx.error('must fit in a signed 64-bit integer')
-  }
-})
-
-const hex128 = string((ctx, value) => {
-  if (!hex128Regex.test(value)) {
-    return ctx.error(`must be a hex128 (must match ${hex128Regex})`)
-  }
-})
-
-enum SuitableScope {
-  Origin = 'origin',
-  Site = 'site',
-}
-
-function suitableOriginOrSite(scope: SuitableScope): ValueCheck {
-  return string((ctx, value) => {
-    let url
-    try {
-      url = new URL(value)
-    } catch {
-      ctx.error('invalid URL')
-      return
-    }
-
-    if (
-      url.protocol !== 'https:' &&
-      !(
-        url.protocol === 'http:' &&
-        (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
+function uint64(ctx: Context, j: Json): Maybe<bigint> {
+  return string(ctx, j)
+    .filter((s) => matchesPattern(ctx, s, uint64Regex, 'must be a uint64'))
+    .map(BigInt)
+    .filter((n) =>
+      isInRange(
+        ctx,
+        n,
+        0n,
+        2n ** 64n - 1n,
+        'must fit in an unsigned 64-bit integer'
       )
-    ) {
-      ctx.error('URL must be potentially trustworthy')
-    }
+    )
+}
 
-    let scoped
-    switch (scope) {
-      case SuitableScope.Origin:
-        scoped = url.origin
-        break
-      case SuitableScope.Site:
-        scoped = `${url.protocol}//${psl.get(url.hostname)}`
-        break
-    }
-
-    if (value !== scoped) {
-      ctx.warning(`URL components other than ${scope} (${scoped}) will be ignored`)
-    }
+function triggerData(ctx: Context, j: Json): Maybe<bigint> {
+  return uint64(ctx, j).peek((n) => {
+    Object.entries(ctx.vsv.triggerDataCardinality ?? []).forEach(([t, c]) => {
+      if (n >= c) {
+        ctx.warning(
+          `will be sanitized to ${
+            n % c
+          } if trigger is attributed to ${t} source`
+        )
+      }
+    })
   })
 }
 
-const suitableOrigin = suitableOriginOrSite(SuitableScope.Origin)
-const suitableSite = suitableOriginOrSite(SuitableScope.Site)
-
-const destinationList = list(suitableSite, {minLength: 1, maxLength: 3})
-
-function destinationValue(ctx: Context, value: Json): void {
-  if (typeof value === 'string') {
-    return suitableSite(ctx, value)
-  }
-  if (Array.isArray(value)) {
-    return destinationList(ctx, value)
-  }
-  ctx.error('must be a list or a string')
+function number(ctx: Context, j: Json): Maybe<number> {
+  return typeSwitch(ctx, j, { number: (ctx, j) => some(j) })
 }
 
-function maxEventLevelReports(ctx: Context, value: Json): void {
-  if (typeof value === 'number') {
-    if (!Number.isInteger(value) || value < 0 || value > limits.maxEventLevelReports) {
-      ctx.error('must be an integer in the range [0, 20]')
-    }
-  } else {
-    ctx.error('must be an integer in the range [0, 20]')
+function isInteger(ctx: Context, n: number): boolean {
+  if (!Number.isInteger(n)) {
+    ctx.error('must be an integer')
+    return false
   }
+  return true
 }
 
-function eventReportWindows(ctx: Context, value: Json): void {
-  // TODO(csharrison): Consider validating that the list of end times
-  // is properly ordered.
-  validate(ctx, value, {
-    start_time: optional(nonNegativeInteger),
-    end_times: required(list(positiveInteger, {minLength: 1, maxLength: 5})),
+function isInRange<N extends bigint | number>(
+  ctx: Context,
+  n: N,
+  min: N,
+  max: N,
+  msg: string = `must be in the range [${min}, ${max}]`
+): boolean {
+  if (n < min || n > max) {
+    ctx.error(msg)
+    return false
+  }
+  return true
+}
+
+function nonNegativeInteger(ctx: Context, j: Json): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) => isInRange(ctx, n, 0, Infinity, 'must be non-negative'))
+}
+
+function positiveInteger(ctx: Context, j: Json): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) => isInRange(ctx, n, 1, Infinity, 'must be positive'))
+}
+
+function int64(ctx: Context, j: Json): Maybe<bigint> {
+  return string(ctx, j)
+    .filter((s) => matchesPattern(ctx, s, int64Regex, 'must be an int64'))
+    .map(BigInt)
+    .filter((n) =>
+      isInRange(
+        ctx,
+        n,
+        (-2n) ** (64n - 1n),
+        2n ** (64n - 1n) - 1n,
+        'must fit in a signed 64-bit integer'
+      )
+    )
+}
+
+function hex128(ctx: Context, j: Json): Maybe<bigint> {
+  return string(ctx, j)
+    .filter((s) => matchesPattern(ctx, s, hex128Regex, 'must be a hex128'))
+    .map(BigInt)
+}
+
+function suitableScope(
+  ctx: Context,
+  s: string,
+  label: string,
+  scope: (url: URL) => string
+): Maybe<string> {
+  let url
+  try {
+    url = new URL(s)
+  } catch {
+    ctx.error('invalid URL')
+    return None
+  }
+
+  if (
+    url.protocol !== 'https:' &&
+    !(
+      url.protocol === 'http:' &&
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
+    )
+  ) {
+    ctx.error('URL must use HTTP/HTTPS and be potentially trustworthy')
+    return None
+  }
+
+  const scoped = scope(url)
+  if (s !== scoped) {
+    ctx.warning(
+      `URL components other than ${label} (${scoped}) will be ignored`
+    )
+  }
+  return some(scoped)
+}
+
+function suitableOrigin(ctx: Context, j: Json): Maybe<string> {
+  return string(ctx, j).map((s) =>
+    suitableScope(ctx, s, 'origin', (u) => u.origin)
+  )
+}
+
+function suitableSite(ctx: Context, j: Json): Maybe<string> {
+  return string(ctx, j).map((s) =>
+    suitableScope(
+      ctx,
+      s,
+      'site',
+      (u) => `${u.protocol}//${psl.get(u.hostname)}`
+    )
+  )
+}
+
+function destination(ctx: Context, j: Json): Maybe<Set<string>> {
+  return typeSwitch(ctx, j, {
+    string: (ctx, j) => suitableSite(ctx, j).map((s) => new Set([s])),
+    list: (ctx, j) => set(ctx, j, suitableSite, { minLength: 1, maxLength: 3 }),
   })
 }
 
-function legacyDuration(ctx: Context, value: Json): void {
-  if (typeof value === 'number') {
-    return nonNegativeInteger(ctx, value)
-  }
-  if (typeof value === 'string') {
-    return uint64(ctx, value)
-  }
-  ctx.error('must be a non-negative integer or a string')
+function maxEventLevelReports(ctx: Context, j: Json): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) => isInRange(ctx, n, 0, limits.maxEventLevelReports))
 }
 
-function listOrKeyValues(f: ValueCheck, listOpts: ListOpts = {}): ValueCheck {
-  return (ctx, value) => {
-    if (isObject(value)) {
-      return f(ctx, value)
-    }
-
-    if (Array.isArray(value)) {
-      return list(f, listOpts)(ctx, value)
-    }
-
-    ctx.error('must be a list or an object')
-  }
+function startTime(
+  ctx: Context,
+  j: Json,
+  expiry: Maybe<number>
+): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) => {
+      if (expiry.value === undefined) {
+        ctx.error('cannot be fully validated without a valid expiry')
+        return false
+      }
+      return isInRange(
+        ctx,
+        n,
+        0,
+        expiry.value,
+        `must be non-negative and <= expiry (${expiry.value})`
+      )
+    })
 }
 
-function unique(): StringCheck {
-  const set = new Set()
-  return (ctx, value) => {
-    if (set.has(value)) {
-      ctx.warning(`duplicate value ${value}`)
-    } else {
-      set.add(value)
+function endTimes(
+  ctx: Context,
+  j: Json,
+  expiry: Maybe<number>,
+  startTime: Maybe<number>
+): Maybe<number[]> {
+  let prev = startTime
+  let prevDesc = 'start_time'
+
+  const endTime = (ctx: Context, j: Json): Maybe<number> =>
+    positiveInteger(ctx, j)
+      .map((n) => {
+        if (expiry.value === undefined) {
+          ctx.error('cannot be fully validated without a valid expiry')
+          return None
+        }
+        return clamp(ctx, n, limits.minReportWindow, expiry.value, ' (expiry)')
+      })
+      .filter((n) => {
+        if (prev.value === undefined) {
+          ctx.error(`cannot be fully validated without a valid ${prevDesc}`)
+          return false
+        }
+        return isInRange(
+          ctx,
+          n,
+          prev.value + 1,
+          Infinity,
+          `must be > ${prevDesc} (${prev.value})`
+        )
+      })
+      .peek((n) => {
+        prev = some(n)
+        prevDesc = 'previous end_time'
+      })
+
+  return array(ctx, j, endTime, {
+    minLength: 1,
+    maxLength: 5,
+    keepGoing: false, // suppress unhelpful cascaded errors
+  })
+}
+
+type EventReportWindows = {
+  startTime: number
+  endTimes: number[]
+}
+
+function eventReportWindows(
+  ctx: Context,
+  j: Json,
+  expiry: Maybe<number>
+): Maybe<EventReportWindows> {
+  return object(ctx, j).map((j) => {
+    const startTimeValue = field(
+      'start_time',
+      (ctx, j) => startTime(ctx, j, expiry),
+      0
+    )(ctx, j)
+
+    return struct(ctx, j, {
+      startTime: () => startTimeValue,
+      endTimes: field('end_times', (ctx, j) =>
+        endTimes(ctx, j, expiry, startTimeValue)
+      ),
+    })
+  })
+}
+
+function legacyDuration(ctx: Context, j: Json): Maybe<number | bigint> {
+  return typeSwitch<number | bigint>(ctx, j, {
+    number: nonNegativeInteger,
+    string: uint64,
+  })
+}
+
+function isCollection<C extends context.PathComponent>(
+  ctx: Context,
+  js: Iterable<[C, Json]>,
+  f: CtxFunc<[C, Json], Maybe<unknown>>,
+  keepGoing: boolean = true
+): boolean {
+  let ok = true
+  for (const [c, j] of js) {
+    let itemOk = false
+    ctx.scope(c, () => f(ctx, [c, j]).peek(() => (itemOk = true)))
+    if (!itemOk && !keepGoing) {
+      return false
     }
+    ok = ok && itemOk
   }
+  return ok
+}
+
+function set(
+  ctx: Context,
+  j: Json,
+  f: CtxFunc<Json, Maybe<string>>,
+  opts?: ListOpts
+): Maybe<Set<string>> {
+  const set = new Set<string>()
+
+  return list(ctx, j, opts)
+    .filter((js) =>
+      isCollection(ctx, js.entries(), (ctx, [i, j]) =>
+        f(ctx, j).peek((v) =>
+          set.has(v) ? ctx.warning(`duplicate value ${v}`) : set.add(v)
+        )
+      )
+    )
+    .map(() => set)
+}
+
+type ArrayOpts = ListOpts & {
+  keepGoing?: boolean
+}
+
+function array<T>(
+  ctx: Context,
+  j: Json,
+  f: CtxFunc<Json, Maybe<T>>,
+  opts?: ArrayOpts
+): Maybe<T[]> {
+  const arr: T[] = []
+
+  return list(ctx, j, opts)
+    .filter((js) =>
+      isCollection(
+        ctx,
+        js.entries(),
+        (ctx, [i, j]) => f(ctx, j).peek((v) => arr.push(v)),
+        opts?.keepGoing
+      )
+    )
+    .map(() => arr)
 }
 
 // TODO: Check length of strings.
-const filterData = () =>
-  keyValues((ctx, filter, values) => {
-    if (filter === 'source_type' || filter === '_lookback_window') {
-      ctx.error('is prohibited because it is implicitly set')
-      return
-    }
+function filterDataKeyValue(
+  ctx: Context,
+  [key, j]: [string, Json]
+): Maybe<Set<string>> {
+  if (key === 'source_type' || key === '_lookback_window') {
+    ctx.error('is prohibited because it is implicitly set')
+    return None
+  }
+  if (key.startsWith('_')) {
+    ctx.error('is prohibited as keys starting with "_" are reserved')
+    return None
+  }
 
-    list(string(unique()), {maxLength: limits.maxValuesPerFilterDataEntry})(ctx, values)
-  }, limits.maxEntriesPerFilterData)
+  return set(ctx, j, string, { maxLength: limits.maxValuesPerFilterDataEntry })
+}
 
-enum SourceType {
+type FilterData = Map<string, Set<string>>
+
+function filterData(ctx: Context, j: Json): Maybe<FilterData> {
+  return keyValues(ctx, j, filterDataKeyValue, limits.maxEntriesPerFilterData)
+}
+
+export enum SourceType {
   event = 'event',
   navigation = 'navigation',
 }
 
-const filters = () =>
-  keyValues((ctx, filter, values) => {
-    if (filter === '_lookback_window') {
-      positiveInteger(ctx, values);
-      return
-    }
+function filterKeyValue(
+  ctx: Context,
+  [key, j]: [string, Json]
+): Maybe<Set<string>> {
+  if (key.startsWith('_')) {
+    ctx.error('is prohibited as keys starting with "_" are reserved')
+    return None
+  }
 
-    const checkUnique = unique()
+  const peek =
+    key === 'source_type'
+      ? (s: string) => {
+          if (!(s in SourceType)) {
+            const allowed = Object.keys(SourceType).join(', ')
+            ctx.warning(
+              `unknown value ${s} (${key} can only match one of ${allowed})`
+            )
+          }
+        }
+      : () => {}
 
-    list(string((ctx, value) => {
-      if (filter === 'source_type' && !(value in SourceType)) {
-        const allowed = Object.keys(SourceType).join(', ')
-        ctx.warning(`unknown value ${value} (${filter} can only match one of ${allowed})`)
+  return set(ctx, j, (ctx, j) => string(ctx, j).peek(peek))
+}
+
+type FilterConfig = {
+  lookbackWindow: number | null
+  map: Map<string, Set<string>>
+}
+
+function filterConfig(ctx: Context, j: Json): Maybe<FilterConfig> {
+  // `lookbackWindow` must come before `map` to ensure it is processed first.
+  return struct(
+    ctx,
+    j,
+    {
+      lookbackWindow: field('_lookback_window', positiveInteger, null),
+      map: (ctx, j) => keyValues(ctx, j, filterKeyValue),
+    },
+    /*warnUnknown=*/ false
+  )
+}
+
+function orFilters(ctx: Context, j: Json): Maybe<FilterConfig[]> {
+  return typeSwitch(ctx, j, {
+    list: (ctx, j) => array(ctx, j, filterConfig),
+    object: (ctx, j) => filterConfig(ctx, j).map((v) => [v]),
+  })
+}
+
+type FilterPair = {
+  positive: FilterConfig[]
+  negative: FilterConfig[]
+}
+
+const filterFields: StructFields<FilterPair> = {
+  positive: field('filters', orFilters, []),
+  negative: field('not_filters', orFilters, []),
+}
+
+type CommonDebug = {
+  debugKey: bigint | null
+  debugReporting: boolean
+}
+
+const commonDebugFields: StructFields<CommonDebug> = {
+  debugKey: field('debug_key', uint64, null),
+  debugReporting: field('debug_reporting', bool, false),
+}
+
+type DedupKey = {
+  dedupKey: bigint | null
+}
+
+const dedupKeyField: StructFields<DedupKey> = {
+  dedupKey: field('deduplication_key', uint64, null),
+}
+
+type Priority = {
+  priority: bigint
+}
+
+const priorityField: StructFields<Priority> = {
+  priority: field('priority', int64, 0n),
+}
+
+// TODO: check length of key
+function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
+  return hex128(ctx, j)
+}
+
+function aggregationKeys(ctx: Context, j: Json): Maybe<Map<string, bigint>> {
+  return keyValues(
+    ctx,
+    j,
+    aggregationKey,
+    ctx.vsv.maxAggregationKeysPerAttribution
+  )
+}
+
+function clamp<N extends bigint | number>(
+  ctx: Context,
+  n: N,
+  min: N,
+  max: N,
+  maxSuffix: string = ''
+): N {
+  if (n < min) {
+    ctx.warning(`will be clamped to min of ${min}`)
+    return min
+  }
+  if (n > max) {
+    ctx.warning(`will be clamped to max of ${max}${maxSuffix}`)
+    return max
+  }
+  return n
+}
+
+function roundAwayFromZeroToNearestDay(n: number): number {
+  if (n <= 0 || !Number.isInteger(n)) {
+    throw new RangeError()
+  }
+
+  const r = n + SECONDS_PER_DAY / 2
+  return r - (r % SECONDS_PER_DAY)
+}
+
+function expiry(ctx: Context, j: Json): Maybe<number> {
+  return legacyDuration(ctx, j)
+    .map((n) =>
+      clamp(ctx, n, limits.sourceExpiryRange[0], limits.sourceExpiryRange[1])
+    )
+    .map(Number) // guaranteed to fit based on the clamping
+    .map((n) => {
+      switch (ctx.sourceType) {
+        case SourceType.event:
+          const r = roundAwayFromZeroToNearestDay(n)
+          if (n !== r) {
+            ctx.warning(
+              `will be rounded to nearest day (${r}) as source type is event`
+            )
+          }
+          return r
+        case SourceType.navigation:
+          return n
       }
-
-      checkUnique(ctx, value)
-    }))(ctx, values)
-  })
-
-const orFilters = listOrKeyValues(filters())
-
-// TODO: check length of key
-const aggregationKeys = keyValues((ctx, key, value) => {
-  hex128(ctx, value)
-}, limits.maxAggregationKeys)
-
-export function validateSource(ctx: Context, source: Json): void {
-  validate(ctx, source, {
-    aggregatable_report_window: optional(legacyDuration),
-    event_report_window: optional(legacyDuration),
-    event_report_windows: optional(eventReportWindows),
-    aggregation_keys: optional(aggregationKeys),
-    debug_key: optional(uint64),
-    debug_reporting: optional(bool),
-    destination: required(destinationValue),
-    expiry: optional(legacyDuration),
-    filter_data: optional(filterData()),
-    priority: optional(int64),
-    source_event_id: optional(uint64),
-    max_event_level_reports: optional(maxEventLevelReports),
-  })
-  if (isObject(source) && 'event_report_window' in source && 'event_report_windows' in source) {
-    ctx.error('event_report_window and event_report_windows in the same source')
-  }
+    })
 }
 
-const aggregatableTriggerData = list((ctx, value) => validate(ctx, value, {
-  filters: optional(orFilters),
-  key_piece: required(hex128),
-  not_filters: optional(orFilters),
-  source_keys: optional(list(string(unique()), {maxLength: limits.maxAggregationKeys})),
-}))
+function singleReportWindow(
+  ctx: Context,
+  j: Json,
+  expiry: Maybe<number>
+): Maybe<number> {
+  return legacyDuration(ctx, j)
+    .map((n) => {
+      if (expiry.value === undefined) {
+        ctx.error('cannot be fully validated without a valid expiry')
+        return None
+      }
+      return clamp(ctx, n, limits.minReportWindow, expiry.value, ' (expiry)')
+    })
+    .map(Number)
+}
 
-// TODO: check length of key
-const aggregatableValues = keyValues((ctx, key, value) => {
-  const max = 65536
-  if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0 || value > max) {
-    ctx.error(`must be an integer in the range (1, ${max}]`)
+function defaultEventReportWindows(
+  ctx: Context,
+  end: number
+): EventReportWindows {
+  let endTimes: number[] = []
+  if (ctx.sourceType === SourceType.navigation) {
+    endTimes = [2 * SECONDS_PER_DAY, 7 * SECONDS_PER_DAY].filter((e) => e < end)
   }
-}, limits.maxAggregationKeys)
+  endTimes.push(end)
+  return { startTime: 0, endTimes }
+}
 
-const eventTriggerData = list((ctx, value) => validate(ctx, value, {
-  deduplication_key: optional(uint64),
-  filters: optional(orFilters),
-  not_filters: optional(orFilters),
-  priority: optional(int64),
-  trigger_data: optional(uint64),
-}))
+function eventReportWindow(
+  ctx: Context,
+  j: Json,
+  expiry: Maybe<number>
+): Maybe<EventReportWindows> {
+  return singleReportWindow(ctx, j, expiry).map((n) =>
+    defaultEventReportWindows(ctx, n)
+  )
+}
 
-const aggregatableDedupKeys = list((ctx, value) => validate(ctx, value, {
-  deduplication_key: optional(uint64),
-  filters: optional(orFilters),
-  not_filters: optional(orFilters),
-}))
-
-const aggregatableSourceRegistrationTime = string((ctx, value) => {
-  const exclude = 'exclude'
-  const include = 'include'
-  if (value === exclude || value === include) {
-    return
+type Source = CommonDebug &
+  Priority & {
+    aggregatableReportWindow: number
+    aggregationKeys: Map<string, bigint>
+    destination: Set<string>
+    eventReportWindow: EventReportWindows
+    expiry: number
+    filterData: FilterData
+    maxEventLevelReports: number | null
+    sourceEventId: bigint
   }
-  ctx.error(`must match '${exclude}' or '${include}' (case-sensitive)`)
-})
 
-export function validateTrigger(ctx: Context, trigger: Json): void {
-  validate(ctx, trigger, {
-    aggregatable_trigger_data: optional(aggregatableTriggerData),
-    aggregatable_values: optional(aggregatableValues),
-    aggregation_coordinator_origin: optional(suitableOrigin),
-    debug_key: optional(uint64),
-    debug_reporting: optional(bool),
-    event_trigger_data: optional(eventTriggerData),
-    filters: optional(orFilters),
-    not_filters: optional(orFilters),
-    aggregatable_deduplication_keys: optional(aggregatableDedupKeys),
-    aggregatable_source_registration_time : optional(aggregatableSourceRegistrationTime),
+function source(ctx: Context, j: Json): Maybe<Source> {
+  return object(ctx, j).map((j) => {
+    const expiryVal = field(
+      'expiry',
+      expiry,
+      limits.sourceExpiryRange[1]
+    )(ctx, j)
+
+    return struct(ctx, j, {
+      aggregatableReportWindow: field(
+        'aggregatable_report_window',
+        (ctx, j) => singleReportWindow(ctx, j, expiryVal),
+        expiryVal
+      ),
+      aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
+      destination: field('destination', destination),
+      expiry: () => expiryVal,
+      filterData: field('filter_data', filterData, new Map()),
+      maxEventLevelReports: field(
+        'max_event_level_reports',
+        maxEventLevelReports,
+        ctx.vsv.defaultEventLevelAttributionsPerSource?.[ctx.sourceType] ?? null
+      ),
+      sourceEventId: field('source_event_id', uint64, 0n),
+
+      eventReportWindow: exclusive(
+        {
+          event_report_window: (ctx, j) => eventReportWindow(ctx, j, expiryVal),
+          event_report_windows: (ctx, j) =>
+            eventReportWindows(ctx, j, expiryVal),
+        },
+        expiryVal.map((n) => defaultEventReportWindows(ctx, n))
+      ),
+
+      ...commonDebugFields,
+      ...priorityField,
+    })
   })
 }
 
-export function validateJSON(json: string, f: ValueCheck): ValidationResult {
-  const ctx = new Context()
+function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
+  return set(ctx, j, string, {
+    maxLength: ctx.vsv.maxAggregationKeysPerAttribution,
+  })
+}
+
+type AggregatableTriggerDatum = FilterPair & {
+  keyPiece: bigint
+  sourceKeys: Set<string>
+}
+
+function aggregatableTriggerData(
+  ctx: Context,
+  j: Json
+): Maybe<AggregatableTriggerDatum[]> {
+  return array(ctx, j, (ctx, j) =>
+    struct(ctx, j, {
+      keyPiece: field('key_piece', hex128),
+      sourceKeys: field('source_keys', sourceKeys, new Set<string>()),
+      ...filterFields,
+    })
+  )
+}
+
+// TODO: check length of key
+function aggregatableKeyValue(
+  ctx: Context,
+  [key, j]: [string, Json]
+): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) => isInRange(ctx, n, 1, 65536))
+}
+
+function aggregatableValues(ctx: Context, j: Json): Maybe<Map<string, number>> {
+  return keyValues(
+    ctx,
+    j,
+    aggregatableKeyValue,
+    ctx.vsv.maxAggregationKeysPerAttribution
+  )
+}
+
+type EventTriggerDatum = FilterPair &
+  Priority &
+  DedupKey & {
+    triggerData: bigint
+  }
+
+function eventTriggerData(ctx: Context, j: Json): Maybe<EventTriggerDatum[]> {
+  return array(ctx, j, (ctx, j) =>
+    struct(ctx, j, {
+      triggerData: field('trigger_data', triggerData, 0n),
+      ...filterFields,
+      ...dedupKeyField,
+      ...priorityField,
+    })
+  )
+}
+
+type AggregatableDedupKey = FilterPair & DedupKey
+
+function aggregatableDedupKeys(
+  ctx: Context,
+  j: Json
+): Maybe<AggregatableDedupKey[]> {
+  return array(ctx, j, (ctx, j) =>
+    struct(ctx, j, {
+      ...dedupKeyField,
+      ...filterFields,
+    })
+  )
+}
+
+function aggregatableSourceRegistrationTime(
+  ctx: Context,
+  j: Json
+): Maybe<string> {
+  return string(ctx, j).filter((s) => {
+    const exclude = 'exclude'
+    const include = 'include'
+    if (s === exclude || s === include) {
+      return true
+    }
+    ctx.error(`must match '${exclude}' or '${include}' (case-sensitive)`)
+    return false
+  })
+}
+
+type Trigger = CommonDebug &
+  FilterPair & {
+    aggregatableDedupKeys: AggregatableDedupKey[]
+    aggregatableTriggerData: AggregatableTriggerDatum[]
+    aggregatableSourceRegistrationTime: string
+    aggregatableValues: Map<string, number>
+    aggregationCoordinatorOrigin: string | null
+    eventTriggerData: EventTriggerDatum[]
+  }
+
+function trigger(ctx: Context, j: Json): Maybe<Trigger> {
+  return struct(ctx, j, {
+    aggregatableTriggerData: field(
+      'aggregatable_trigger_data',
+      aggregatableTriggerData,
+      []
+    ),
+    aggregatableValues: field(
+      'aggregatable_values',
+      aggregatableValues,
+      new Map()
+    ),
+    aggregatableDedupKeys: field(
+      'aggregatable_deduplication_keys',
+      aggregatableDedupKeys,
+      []
+    ),
+    aggregatableSourceRegistrationTime: field(
+      'aggregatable_source_registration_time',
+      aggregatableSourceRegistrationTime,
+      'include'
+    ),
+    aggregationCoordinatorOrigin: field(
+      'aggregation_coordinator_origin',
+      suitableOrigin,
+      null
+    ),
+    eventTriggerData: field('event_trigger_data', eventTriggerData, []),
+    ...commonDebugFields,
+    ...filterFields,
+  })
+}
+
+function validateJSON(
+  json: string,
+  f: CtxFunc<Json, Maybe<any>>,
+  vsv: Partial<VendorSpecificValues>,
+  sourceType: SourceType // irrelevant for triggers
+): context.ValidationResult {
+  const ctx = new Context(vsv, sourceType)
 
   let value
   try {
@@ -421,4 +958,19 @@ export function validateJSON(json: string, f: ValueCheck): ValidationResult {
 
   f(ctx, value)
   return ctx.finish()
+}
+
+export function validateSource(
+  json: string,
+  vsv: Partial<VendorSpecificValues>,
+  sourceType: SourceType
+): context.ValidationResult {
+  return validateJSON(json, source, vsv, sourceType)
+}
+
+export function validateTrigger(
+  json: string,
+  vsv: Partial<VendorSpecificValues>
+): context.ValidationResult {
+  return validateJSON(json, trigger, vsv, SourceType.navigation)
 }

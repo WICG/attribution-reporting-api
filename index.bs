@@ -59,6 +59,8 @@ spec: structured header; type: dfn; urlPrefix: https://tools.ietf.org/html/rfc89
         text: string; url: #name-strings
         text: serialize a string; url: #name-serializing-a-string
         text: parse a string; url: #name-parse-a-string
+spec: infra; type: dfn; urlPrefix: https://infra.spec.whatwg.org/
+    text: starts with; url: #string-starts-with
 urlPrefix: https://wicg.github.io/fenced-frame/; type: interface
     text: Fence
 </pre>
@@ -1428,6 +1430,7 @@ To <dfn>parse filter values</dfn> given a |value|:
 1. If |value| is not a [=map=], return null.
 1. Let |result| be a new [=filter map=].
 1. [=map/iterate|For each=] |filter| → |data| of |value|:
+    1. If |filter| [=starts with=] "`_`", return null.
     1. If |data| is not a [=list=], return null.
     1. Let |set| be a new [=ordered set=].
     1. [=list/iterate|For each=] |d| of |data|:
@@ -1559,7 +1562,7 @@ This algorithm will return either a non-negative 128-bit integer or an error.
 <h3 dfn id="can-attribution-rate-limit-record-be-removed">Can attribution rate-limit record be removed</h3>
 
 Given an [=attribution rate-limit record=] |record| and a [=moment=] |now|:
-1. If |record|'s [=attribution rate-limit record|time=] is after |now|, return false.
+1. If the [=duration from=] |record|'s [=attribution rate-limit record|time=] and |now| is <= [=attribution rate-limit window=] , return false.
 1. If |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>", return true.
 1. If |record|'s [=attribution rate-limit record/expiry time=] is after |now|, return false.
 1. Return true.
@@ -1681,10 +1684,10 @@ To <dfn>process an attribution eligible response</dfn> given a [=suitable origin
 
 1. The user-agent MAY ignore the response; if so, return.
 
-Note: The user-agent may prevent attribution for a number of reasons, such as user opt-out. In these
-cases, it is preferred to abort the API flow at response time rather than at request time so this
-state is not immediately detectable. Attribution may also be blocked if the reporting origin is not
-<a href="https://github.com/privacysandbox/attestation">enrolled</a>.
+    Note: The user-agent may prevent attribution for a number of reasons, such as user opt-out. In these
+    cases, it is preferred to abort the API flow at response time rather than at request time so this
+    state is not immediately detectable. Attribution may also be blocked if the reporting origin is not
+    <a href="https://github.com/privacysandbox/attestation">enrolled</a>.
 
 1. [=Assert=]: |eligibility| is
     "<code>[=eligibility/navigation-source=]</code>" or
@@ -1872,7 +1875,7 @@ To <dfn>obtain default effective windows</dfn> given a [=source type=] |sourceTy
 a [=moment=] |sourceTime|, and a [=duration=] |eventReportWindow|:
 
 1. Let |deadlines| be «» if |sourceType| is "<code>[=source type/event=]</code>", else « 2 days, 7 days ».
-1. [=list/Remove=] all elements in |deadlines| that are greater than |eventReportWindow|.
+1. [=list/Remove=] all elements in |deadlines| that are greater than or equal to |eventReportWindow|.
 1. [=list/Append=] |eventReportWindow| to |deadlines|.
 1. Let |lastEnd| be |sourceTime|.
 1. Let |windows| be «».
@@ -1952,7 +1955,6 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
         |value|["`filter_data`"].
     1. If |filterData| is null, return null.
     1. If |filterData|["`source_type`"] [=map/exists=], return null.
-    1. If |filterData|["`_lookback_window`"] [=map/exists=], return null.
 1. [=map/Set=] |filterData|["`source_type`"] to « |sourceType| ».
 1. Let |debugKey| be the result of running
     [=parse an optional 64-bit unsigned integer=] with |value|, "`debug_key`",
@@ -2486,7 +2488,11 @@ To <dfn>match an attribution source's filter data against a filter config</dfn> 
 1. Let |lookbackWindow| be |filter|'s [=filter config/lookback window=].
 1. If |lookbackWindow| is not null:
     1. If the [=duration from=] |moment| and the |source|'s [=attribution source/source time=] is greater than |lookbackWindow|:
-        1. If |isNegated|, return true. Otherwise, return false. 
+        1. If |isNegated| is false, return false.
+    1. Else if |isNegated| is true, return false.
+    
+    Note: If non-negated, the source must have been registered inside of the
+    lookback window. If negated, it must be outside of the lookback window.
 
 1. Let |filterMap| be |filter|'s [=filter config/map=].
 1. Let |sourceData| be |source|'s [=attribution source/filter data=].
@@ -2552,7 +2558,7 @@ Given an [=attribution rate-limit record=] |newRecord|:
     [=set/union|unioned=] with «|newRecord|'s [=attribution rate-limit record/reporting origin=]»
 1. If |distinctReportingOrigins|'s [=list/size=] is greater than |max|, return <strong>blocked</strong>.
 
-NOTE: [=rate-limit scope/source=] scopes have an auxiliary [=max source reporting origins per source reporting site=] rate limit that also must be enforced.
+    NOTE: [=rate-limit scope/source=] scopes have an auxiliary [=max source reporting origins per source reporting site=] rate limit that also must be enforced.
 
 1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>", return <strong>allowed</strong>
 1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
@@ -2695,6 +2701,45 @@ an [=event-level report=] |b| if any of the following are true:
 * |a|'s [=event-level report/trigger priority=] is equal to |b|'s [=event-level report/trigger priority=]
      and |a|'s [=event-level report/trigger time=] is greater than |b|'s [=event-level report/trigger time=].
 
+An <dfn>event-level-report-replacement result</dfn> is one of the following:
+
+<dl dfn-for="event-level-report-replacement result">
+: "<dfn><code>add-new-report</code></dfn>"
+:: The new report should be added.
+: "<dfn><code>drop-new-report-none-to-replace</code></dfn>"
+:: The new report should be dropped because the attributed source has reached
+    its [=attribution source/max number of event-level reports|report limit=]
+    and there is no pending report to consider for replacement.
+: "<dfn><code>drop-new-report-low-priority</code></dfn>"
+:: The new report should be dropped because the attributed source has reached
+    its [=attribution source/max number of event-level reports|report limit=]
+    and the new report [=event-level report/is lower-priority than=] all pending
+    reports.
+
+</dl>
+
+To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
+|sourceToAttribute| and an [=event-level report=] |report|:
+
+1. [=Assert=]: |sourceToAttribute|'s [=attribution source/number of event-level reports=] is less than or equal to
+    |sourceToAttribute|'s [=attribution source/max number of event-level reports=].
+1. If |sourceToAttribute|'s [=attribution source/number of event-level reports=] is less than
+    |sourceToAttribute|'s [=attribution source/max number of event-level reports=], return "<code>[=event-level-report-replacement result/add-new-report=]</code>".
+1. Let |matchingReports| be a new [=list=] whose elements are all the elements in the [=event-level report cache=] whose [=event-level report/report time=] and [=event-level report/source identifier=] are equal to |report|'s, [=list/sorted in ascending order=] using [=event-level report/is lower-priority than=].
+1. If |matchingReports| [=list/is empty=]:
+    1. Set |sourceToAttribute|'s [=attribution source/event-level attributable=] value to false.
+    1. Return "<code>[=event-level-report-replacement result/drop-new-report-none-to-replace=]</code>".
+1. [=Assert=]: |sourceToAttribute|'s [=attribution source/number of event-level reports=]
+    is greater than or equal to |matchingReports|'s [=list/size=].
+1. Set |matchingReports| to the result of [=list/sort in ascending order|sorting=] |matchingReports|
+    in ascending order using [=event-level report/is lower-priority than=].
+1. Let |lowestPriorityReport| be |matchingReports|[0].
+1. If |report| [=event-level report/is lower-priority than=] |lowestPriorityReport|,
+    return "<code>[=event-level-report-replacement result/drop-new-report-low-priority=]</code>".
+1. [=set/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
+1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
+1. Return "<code>[=event-level-report-replacement result/add-new-report=]</code>".
+
 To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |trigger|, an
 [=attribution source=] |sourceToAttribute|, and an
 [=attribution rate-limit record=] |rateLimitRecord|, run the following steps:
@@ -2760,27 +2805,22 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
      1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
          with "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>", |trigger|, |sourceToAttribute| and |report|.
      1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If |sourceToAttribute|'s [=attribution source/number of event-level reports=] value is equal to
-    |sourceToAttribute|'s [=attribution source/max number of event-level reports=], then:
-    1. Let |matchingReports| be a new [=list=].
-    1. [=set/iterate|For each=] |entry| of the [=event-level report cache=]:
-        1. If |entry|'s [=event-level report/report time=] and |report|'s [=event-level report/report time=] are not equal, [=iteration/continue=].
-        1. If |entry|'s [=event-level report/source identifier=] and |report|'s [=event-level report/source identifier=] are not equal, [=iteration/continue=].
-        1. [=list/Append=] |entry| to |matchingReports|.
-    1. If |matchingReports| [=list/is empty=]:
-        1. Set |sourceToAttribute|'s [=attribution source/event-level attributable=] value to false.
-        1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-            with "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>", |trigger|, |sourceToAttribute| and |report|.
-        1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-    1. Set |matchingReports| to the result of [=list/sort in ascending order|sorting=] |matchingReports|
-        in ascending order using [=event-level report/is lower-priority than=].
-    1. Let |lowestPriorityReport| be |matchingReports|[0].
-    1. If |report| [=event-level report/is lower-priority than=] |lowestPriorityReport|:
+1. If the result of running [=maybe replace event-level report=] with |sourceToAttribute| and |report| is:
+    <dl class="switch">
+    : "<code>[=event-level-report-replacement result/add-new-report=]</code>"
+    :: Do nothing.
+    : "<code>[=event-level-report-replacement result/drop-new-report-none-to-replace=]</code>"
+    ::
+         1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+             with "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>", |trigger|, |sourceToAttribute| and |report|.
+         1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    : "<code>[=event-level-report-replacement result/drop-new-report-low-priority=]</code>"
+    ::
          1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
              with "<code>[=trigger debug data type/trigger-event-low-priority=]</code>", |trigger|, |sourceToAttribute| and |report|.
          1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-    1. [=set/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
-    1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
+
+    </dl>
 1. Let |triggeringStatus| be "<code>[=triggering status/attributed=]</code>".
 1. Let |debugData| be null.
 1. If |sourceToAttribute|'s [=attribution source/randomized response=] is:
@@ -2987,7 +3027,7 @@ a [=report window=] |window|:
 To <dfn>obtain a report time from a window</dfn> given a [=moment=] |sourceTime| and
 a [=report window=] |window|:
 
-1. Return |sourceTime| + |window|'s [=report window/end=] + 1 hour.
+1. Return |sourceTime| + |window|'s [=report window/end=].
 
 To <dfn>obtain the report time at a window</dfn> given an
 [=attribution source=] |source| and a non-negative integer |window|:

@@ -412,7 +412,7 @@ different sites.
 
 ### Sending Scheduled Reports
 
-Reports for `event` sources will be sent 1 hour after the source's `event_report_window`.
+Reports for `event` sources will be sent after the source's `event_report_window`.
 
 Reports for `navigation` sources may be reported earlier than the source's
 `event_report_window`, at specified points in time relative to when the source event was
@@ -572,6 +572,11 @@ will be created.
 If the filters match for multiple event triggers, the first matching event
 trigger is used.
 
+#### Reserved keys
+
+Keys prefixed with `_` are reserved: they cannot be used other than for
+specified features, e.g., lookback window.
+
 #### Lookback window
 
 Lookback window is supported with an optional reserved keyword
@@ -581,9 +586,13 @@ Unlike other filter keys whose values must be a list of strings, the
 `_lookback_window` value must be a positive integer that represents a positive
 duration in seconds.
 
-When available on a filter, the duration since the source was registered must be
-less than or equal to the parsed lookback window duration for the filter to
-match.
+When present on a filter (in `filters`), the duration since the source was
+registered must be less than or equal to the parsed lookback window duration for
+the filter to match, i.e., it must be inside the lookback window.
+
+When present on a negated filter (in `not_filters`), the duration since the
+source was registered must be greater than the parsed lookback window duration
+for the filter to match, i.e., it must be outside the lookback window.
 
 ### Optional: transitional debugging reports
 
