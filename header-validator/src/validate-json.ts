@@ -733,12 +733,34 @@ function singleReportWindow(
     .map(Number)
 }
 
+function defaultEventReportWindows(
+  ctx: Context,
+  end: number
+): EventReportWindows {
+  let endTimes: number[] = []
+  if (ctx.sourceType === SourceType.navigation) {
+    endTimes = [2 * SECONDS_PER_DAY, 7 * SECONDS_PER_DAY].filter((e) => e < end)
+  }
+  endTimes.push(end)
+  return { startTime: 0, endTimes }
+}
+
+function eventReportWindow(
+  ctx: Context,
+  j: Json,
+  expiry: Maybe<number>
+): Maybe<EventReportWindows> {
+  return singleReportWindow(ctx, j, expiry).map((n) =>
+    defaultEventReportWindows(ctx, n)
+  )
+}
+
 type Source = CommonDebug &
   Priority & {
     aggregatableReportWindow: number
     aggregationKeys: Map<string, bigint>
     destination: Set<string>
-    eventReportWindow: number | EventReportWindows
+    eventReportWindow: EventReportWindows
     expiry: number
     filterData: FilterData
     maxEventLevelReports: number | null
@@ -770,14 +792,13 @@ function source(ctx: Context, j: Json): Maybe<Source> {
       ),
       sourceEventId: field('source_event_id', uint64, 0n),
 
-      eventReportWindow: exclusive<number | EventReportWindows>(
+      eventReportWindow: exclusive(
         {
-          event_report_window: (ctx, j) =>
-            singleReportWindow(ctx, j, expiryVal),
+          event_report_window: (ctx, j) => eventReportWindow(ctx, j, expiryVal),
           event_report_windows: (ctx, j) =>
             eventReportWindows(ctx, j, expiryVal),
         },
-        expiryVal
+        expiryVal.map((n) => defaultEventReportWindows(ctx, n))
       ),
 
       ...commonDebugFields,
