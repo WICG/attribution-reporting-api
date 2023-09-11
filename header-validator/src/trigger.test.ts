@@ -1,8 +1,8 @@
-import * as testutil from './util.test'
-import { SourceType, validateTrigger } from './validate-json'
+import { Maybe } from './maybe'
+import { SourceType, Trigger, validateTrigger } from './validate-json'
 import * as jsontest from './validate-json.test'
 
-const testCases: jsontest.TestCase[] = [
+const testCases: jsontest.TestCase<Trigger>[] = [
   // no errors or warnings
   {
     name: 'required-fields-only',
@@ -36,6 +36,79 @@ const testCases: jsontest.TestCase[] = [
       "filters": {"f": []},
       "not_filters": {"g": []}
     }`,
+    expected: Maybe.some({
+      aggregatableDedupKeys: [
+        {
+          dedupKey: 123n,
+          positive: [
+            {
+              lookbackWindow: null,
+              map: new Map([['x', new Set()]]),
+            },
+          ],
+          negative: [
+            {
+              lookbackWindow: null,
+              map: new Map([['y', new Set()]]),
+            },
+          ],
+        },
+      ],
+      aggregatableSourceRegistrationTime: 'include',
+      aggregationCoordinatorOrigin: null,
+      aggregatableTriggerData: [
+        {
+          positive: [
+            {
+              lookbackWindow: null,
+              map: new Map([['a', new Set(['b'])]]),
+            },
+          ],
+          keyPiece: 1n,
+          negative: [
+            {
+              lookbackWindow: null,
+              map: new Map([['c', new Set(['d'])]]),
+            },
+          ],
+          sourceKeys: new Set(['x']),
+        },
+      ],
+      aggregatableValues: new Map([['e', 5]]),
+      debugKey: 5n,
+      debugReporting: true,
+      eventTriggerData: [
+        {
+          dedupKey: 123n,
+          priority: -7n,
+          triggerData: 6n,
+          positive: [
+            {
+              lookbackWindow: null,
+              map: new Map([['x', new Set()]]),
+            },
+          ],
+          negative: [
+            {
+              lookbackWindow: null,
+              map: new Map([['y', new Set()]]),
+            },
+          ],
+        },
+      ],
+      positive: [
+        {
+          lookbackWindow: null,
+          map: new Map([['f', new Set()]]),
+        },
+      ],
+      negative: [
+        {
+          lookbackWindow: null,
+          map: new Map([['g', new Set()]]),
+        },
+      ],
+    }),
   },
   {
     name: 'or-filters',
@@ -87,6 +160,7 @@ const testCases: jsontest.TestCase[] = [
     name: 'invalid-json',
     json: ``,
     expectedErrors: [{ msg: 'SyntaxError: Unexpected end of JSON input' }],
+    expected: Maybe.None,
   },
   {
     name: 'wrong-root-type',
@@ -97,6 +171,7 @@ const testCases: jsontest.TestCase[] = [
         msg: 'must be an object',
       },
     ],
+    expected: Maybe.None,
   },
 
   {
@@ -849,5 +924,5 @@ const testCases: jsontest.TestCase[] = [
 ]
 
 testCases.forEach((tc) =>
-  testutil.run(tc, tc.name, () => validateTrigger(tc.json, tc.vsv ?? {}))
+  jsontest.run(tc, () => validateTrigger(tc.json, tc.vsv ?? {}))
 )
