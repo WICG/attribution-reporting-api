@@ -757,7 +757,7 @@ export type Source = CommonDebug &
     aggregatableReportWindow: number
     aggregationKeys: Map<string, bigint>
     destination: Set<string>
-    eventReportWindow: EventReportWindows
+    eventReportWindows: EventReportWindows
     expiry: number
     filterData: FilterData
     maxEventLevelReports: number | null
@@ -789,7 +789,7 @@ function source(ctx: Context, j: Json): Maybe<Source> {
       ),
       sourceEventId: field('source_event_id', uint64, 0n),
 
-      eventReportWindow: exclusive(
+      eventReportWindows: exclusive(
         {
           event_report_window: (ctx, j) => eventReportWindow(ctx, j, expiryVal),
           event_report_windows: (ctx, j) =>

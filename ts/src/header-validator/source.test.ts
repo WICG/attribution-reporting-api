@@ -39,7 +39,7 @@ const testCases: TestCase[] = [
       debugKey: 1n,
       debugReporting: true,
       destination: new Set(['https://a.test']),
-      eventReportWindow: {
+      eventReportWindows: {
         startTime: 0,
         endTimes: [3601],
       },
