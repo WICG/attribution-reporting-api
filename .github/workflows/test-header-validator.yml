@@ -5,23 +5,25 @@ on:
     branches: [ main ]
     paths:
       - '.github/workflow/test-header-validator.yml'
+      - '.prettierrc.json'
       - 'header-validator/**'
   pull_request:
     branches: [ main ]
     paths:
       - '.github/workflow/test-header-validator.yml'
+      - '.prettierrc.json'
       - 'header-validator/**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: 'header-validator'
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
       - run: npm ci
-        working-directory: 'header-validator'
       - run: npm run build --if-present
-        working-directory: 'header-validator'
       - run: npm test
-        working-directory: 'header-validator'
+      - run: npm run lint:check
