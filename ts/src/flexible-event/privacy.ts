@@ -1,9 +1,5 @@
 const memoize = require('memoizee')
-
-export enum SourceType {
-  Event = 'event',
-  Navigation = 'navigation',
-}
+import { SourceType } from '../source-type'
 
 export type ExcessiveInfoGainData = {
   infoGainDefault: number
@@ -120,13 +116,13 @@ export class Config {
 }
 
 export const DefaultConfig: Readonly<Record<SourceType, Config>> = {
-  [SourceType.Navigation]: new Config(
+  [SourceType.navigation]: new Config(
     /*maxEventLevelReports=*/ 3,
     new Array(8).fill(
       new PerTriggerDataConfig(/*numWindows=*/ 3, /*numSummaryBuckets=*/ 3)
     )
   ),
-  [SourceType.Event]: new Config(
+  [SourceType.event]: new Config(
     /*maxEventLevelReports=*/ 1,
     new Array(2).fill(
       new PerTriggerDataConfig(/*numWindows=*/ 1, /*numSummaryBuckets=*/ 1)
