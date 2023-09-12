@@ -1,4 +1,12 @@
-# Header Validator
+# Attribution Reporting Node package
+
+Setup:
+
+```sh
+npm install && npm run build && npm run test
+```
+
+## Header Validator
 
 Validates headers related to the Attribution Reporting API.
 
@@ -16,9 +24,14 @@ On responses:
 - `Attribution-Reporting-Register-Source`
 - `Attribution-Reporting-Register-Trigger`
 
-## Development
+## Flexible Event
+
+Examples:
 
 ```sh
-npm run build
-npm run test
+npm run flexible-event -- -w 1,2,3 -b 4,5,6
+```
+
+```sh
+npm run flexible-event -- -f /path/to/source_registration.json
 ```

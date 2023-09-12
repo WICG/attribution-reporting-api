@@ -20,18 +20,18 @@ $(OUT_DIR)/index.html: index.bs $(OUT_DIR)
 
 validator: $(OUT_DIR)/validate-headers.html $(OUT_DIR)/validate-headers.js
 
-$(OUT_DIR)/validate-headers.html: header-validator/index.html $(OUT_DIR)
+$(OUT_DIR)/validate-headers.html: ts/src/header-validator/index.html $(OUT_DIR)
 	@ cp $< $@
 
-$(OUT_DIR)/validate-headers.js: header-validator/dist/main.js $(OUT_DIR)
+$(OUT_DIR)/validate-headers.js: ts/dist/header-validator/main.js $(OUT_DIR)
 	@ cp $< $@
 
 $(OUT_DIR):
 	@ mkdir -p $@
 
-header-validator/dist/main.js: header-validator/package.json header-validator/tsconfig.json header-validator/webpack.config.js header-validator/src/*.ts
-	@ npm ci --prefix ./header-validator
-	@ npm run build --prefix ./header-validator
+ts/dist/header-validator/main.js: ts/package.json ts/tsconfig.json ts/webpack.config.js ts/src/*.ts
+	@ npm ci --prefix ./ts
+	@ npm run build --prefix ./ts
 
 clean:
 	@ rm -rf $(OUT_DIR)

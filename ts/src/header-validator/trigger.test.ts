@@ -1,5 +1,6 @@
+import { SourceType } from '../source-type'
 import { Maybe } from './maybe'
-import { SourceType, Trigger, validateTrigger } from './validate-json'
+import { Trigger, validateTrigger } from './validate-json'
 import * as jsontest from './validate-json.test'
 
 const testCases: jsontest.TestCase<Trigger>[] = [
