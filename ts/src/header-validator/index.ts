@@ -1,6 +1,6 @@
+import { SourceType } from '../source-type'
 import { Issue, PathComponent } from './context'
 import {
-  SourceType,
   VendorSpecificValues,
   validateSource,
   validateTrigger,

@@ -1,5 +1,6 @@
+import { SourceType } from '../source-type'
 import { Maybe } from './maybe'
-import { Source, SourceType, validateSource } from './validate-json'
+import { Source, validateSource } from './validate-json'
 import * as jsontest from './validate-json.test'
 
 type TestCase = jsontest.TestCase<Source> & {

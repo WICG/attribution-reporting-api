@@ -1,19 +1,15 @@
 const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 
-import {
-  Config,
-  DefaultConfig,
-  PerTriggerDataConfig,
-  SourceType,
-} from './privacy'
+import { SourceType } from '../source-type'
+import { Config, DefaultConfig, PerTriggerDataConfig } from './privacy'
 
 function commaSeparatedInts(str: string): number[] {
   return str.split(',').map((v) => Number(v))
 }
 
 function parseSourceType(str: string): SourceType {
-  if (!(str in DefaultConfig)) {
+  if (!(str in SourceType)) {
     throw 'unknown source type'
   }
   return str as SourceType
@@ -117,7 +113,7 @@ const optionDefs = [
     name: 'source_type',
     alias: 't',
     type: parseSourceType,
-    defaultValue: SourceType.Navigation,
+    defaultValue: SourceType.navigation,
   },
   {
     name: 'windows',

@@ -1,4 +1,5 @@
 import * as psl from 'psl'
+import { SourceType } from '../source-type'
 import * as context from './context'
 import { Maybe, Maybeable } from './maybe'
 
@@ -563,11 +564,6 @@ export type FilterData = Map<string, Set<string>>
 
 function filterData(ctx: Context, j: Json): Maybe<FilterData> {
   return keyValues(ctx, j, filterDataKeyValue, limits.maxEntriesPerFilterData)
-}
-
-export enum SourceType {
-  event = 'event',
-  navigation = 'navigation',
 }
 
 function filterKeyValue(
