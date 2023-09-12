@@ -1,4 +1,5 @@
 import { strict as assert } from 'assert'
+import test from 'node:test'
 import * as context from './context'
 
 export type TestCase = {
@@ -11,13 +12,11 @@ export function run(
   name: string,
   f: () => context.ValidationResult
 ): void {
-  const result = f()
-  assert.deepEqual(
-    result,
-    {
+  test(name, () => {
+    const result = f()
+    assert.deepEqual(result, {
       errors: tc.expectedErrors ?? [],
       warnings: tc.expectedWarnings ?? [],
-    },
-    name
-  )
+    })
+  })
 }

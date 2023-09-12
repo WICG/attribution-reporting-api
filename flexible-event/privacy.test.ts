@@ -1,3 +1,5 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
 import {
   flipProbabilityDp,
   maxInformationGain,
@@ -5,7 +7,6 @@ import {
   DefaultConfig,
   SourceType,
 } from './privacy'
-import { strict as assert } from 'assert'
 
 const flipProbabilityTests = [
   {
@@ -30,9 +31,15 @@ const flipProbabilityTests = [
   },
 ]
 
-flipProbabilityTests.forEach((test) => {
-  const flipProb = flipProbabilityDp(test.numStates, test.epsilon)
-  assert.deepStrictEqual(flipProb, test.expected)
+test('flipProbabilityDp', async (t) => {
+  await Promise.all(
+    flipProbabilityTests.map((tc, i) =>
+      t.test(`${i}`, () => {
+        const actual = flipProbabilityDp(tc.numStates, tc.epsilon)
+        assert.deepStrictEqual(actual, tc.expected)
+      })
+    )
+  )
 })
 
 const infoGainTests = [
@@ -68,9 +75,15 @@ const infoGainTests = [
   },
 ]
 
-infoGainTests.forEach((test) => {
-  const infoGain = maxInformationGain(test.numStates, test.epsilon)
-  assert.deepStrictEqual(infoGain, test.expected)
+test('maxInformationGain', async (t) => {
+  await Promise.all(
+    infoGainTests.map((tc, i) =>
+      t.test(`${i}`, () => {
+        const actual = maxInformationGain(tc.numStates, tc.epsilon)
+        assert.deepStrictEqual(actual, tc.expected)
+      })
+    )
+  )
 })
 
 const binaryEntropyTests = [
@@ -81,29 +94,41 @@ const binaryEntropyTests = [
   { x: 0.99, expected: 0.08079313589591124 },
 ]
 
-binaryEntropyTests.forEach((test) => {
-  assert.deepStrictEqual(binaryEntropy(test.x), test.expected)
+test('binaryEntropy', async (t) => {
+  await Promise.all(
+    binaryEntropyTests.map((tc) =>
+      t.test(`${tc.x}`, () => {
+        assert.deepStrictEqual(binaryEntropy(tc.x), tc.expected)
+      })
+    )
+  )
 })
 
-assert.deepStrictEqual(
-  DefaultConfig[SourceType.Navigation].computeConfigData(
-    14,
-    SourceType.Navigation
-  ),
-  {
-    numStates: 2925,
-    infoGain: 11.461727965384876,
-    flipProb: 0.0024263221679834087,
-    excessive: undefined,
-  }
-)
+test('computeConfigData', async (t) => {
+  await t.test('navigation', () => {
+    assert.deepStrictEqual(
+      DefaultConfig[SourceType.Navigation].computeConfigData(
+        14,
+        SourceType.Navigation
+      ),
+      {
+        numStates: 2925,
+        infoGain: 11.461727965384876,
+        flipProb: 0.0024263221679834087,
+        excessive: undefined,
+      }
+    )
+  })
 
-assert.deepStrictEqual(
-  DefaultConfig[SourceType.Event].computeConfigData(14, SourceType.Event),
-  {
-    numStates: 3,
-    infoGain: 1.584926511508231,
-    flipProb: 0.000002494582008677539,
-    excessive: undefined,
-  }
-)
+  await t.test('event', () => {
+    assert.deepStrictEqual(
+      DefaultConfig[SourceType.Event].computeConfigData(14, SourceType.Event),
+      {
+        numStates: 3,
+        infoGain: 1.584926511508231,
+        flipProb: 0.000002494582008677539,
+        excessive: undefined,
+      }
+    )
+  })
+})
