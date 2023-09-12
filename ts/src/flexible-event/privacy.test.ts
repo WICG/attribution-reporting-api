@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { SourceType } from '../source-type'
 import {
   flipProbabilityDp,
   maxInformationGain,
   binaryEntropy,
   DefaultConfig,
-  SourceType,
 } from './privacy'
 
 const flipProbabilityTests = [
@@ -107,9 +107,9 @@ test('binaryEntropy', async (t) => {
 test('computeConfigData', async (t) => {
   await t.test('navigation', () => {
     assert.deepStrictEqual(
-      DefaultConfig[SourceType.Navigation].computeConfigData(
+      DefaultConfig[SourceType.navigation].computeConfigData(
         14,
-        SourceType.Navigation
+        SourceType.navigation
       ),
       {
         numStates: 2925,
@@ -122,7 +122,7 @@ test('computeConfigData', async (t) => {
 
   await t.test('event', () => {
     assert.deepStrictEqual(
-      DefaultConfig[SourceType.Event].computeConfigData(14, SourceType.Event),
+      DefaultConfig[SourceType.event].computeConfigData(14, SourceType.event),
       {
         numStates: 3,
         infoGain: 1.584926511508231,
