@@ -1,7 +1,11 @@
 import * as testutil from './util.test'
 import { validateOsRegistration } from './validate-os'
 
-const tests = [
+type TestCase = testutil.TestCase & {
+  input: string
+}
+
+const tests: TestCase[] = [
   // Valid
   { input: '"https://a.test/"' },
   { input: '"http://localhost/"' },

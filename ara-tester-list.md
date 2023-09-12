@@ -39,8 +39,8 @@ The usefulness of this page depends on testers sharing information and updates; 
 
 | Company / Party | Industry or vertical | Est. Testing Timeframe | Link to testing plan and/or learnings (optional) | How to contact you (optional) |
 | --------------- | -------------------- | ---------------------- | ------------------------------------- | ------------------ |
-| Criteo | Ad tech services |  |  | privacy-sandbox-testing@criteo.com | 
-| Teads | Ad tech services |  |  | privacysandbox@teads.com |  
+| Criteo | Demand-side platform (DSP) | Started in 2022, long term commitment | [Criteo’s First Look at the Attribution Reporting API](https://medium.com/criteo-engineering/an-update-on-fledge-chrome-testing-d0046430a3ec) | privacy-sandbox-testing@criteo.com | 
+| Teads | DSP & SSP | January 2024 | | privacysandbox@teads.com |
 | SMN | Ad tech services |  |  | privacy-sandbox-testing@so-netmedia.jp |
 | Yahoo! JAPAN | Ad tech services | 2022-2023 | [Report](https://github.com/WICG/attribution-reporting-api/issues/201) |  | 
 | NextRoll | Demand-side platform (DSP) | | | privacysandbox@nextroll.com |
@@ -50,6 +50,7 @@ The usefulness of this page depends on testers sharing information and updates; 
 | MicroAd | SSP & DSP | | | privacysandbox@microad.co.jp |
 | Tremor International | SSP & DSP| 2023-2024 | coming soon | subhag.oak@amobee.com |
 | Seedtag | SSP & DSP| 2023-2024 | coming soon | privacysandbox@seedtag.com |
+| PubMatic | SSP | Jan 2024 | | privacysandbox@pubmatic.com |
 | Adform | DSP | H1 2024 | | privacysandbox@adform.com |
 
 ## Table - Publishers and Advertisers Interested in Testing or Early Adoption
