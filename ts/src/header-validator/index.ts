@@ -1,10 +1,10 @@
 import { SourceType } from '../source-type'
 import { Issue, PathComponent } from './context'
 import {
+  Chromium as ChromiumVsv,
   VendorSpecificValues,
-  validateSource,
-  validateTrigger,
-} from './validate-json'
+} from '../vendor-specific-values'
+import { validateSource, validateTrigger } from './validate-json'
 import { validateEligible } from './validate-eligible'
 import { validateOsRegistration } from './validate-os'
 
@@ -60,22 +60,9 @@ function sourceType(): SourceType {
   throw new TypeError()
 }
 
-const ChromiumVsv: VendorSpecificValues = {
-  defaultEventLevelAttributionsPerSource: {
-    [SourceType.event]: 1,
-    [SourceType.navigation]: 3,
-  },
-  maxAggregationKeysPerAttribution: 20,
-  triggerDataCardinality: {
-    [SourceType.event]: 2n,
-    [SourceType.navigation]: 8n,
-  },
-}
-
 function validate(): void {
-  const vsv: Partial<VendorSpecificValues> = useChromiumVsvCheckbox.checked
-    ? ChromiumVsv
-    : {}
+  const vsv: Readonly<Partial<VendorSpecificValues>> =
+    useChromiumVsvCheckbox.checked ? ChromiumVsv : {}
 
   sourceTypeFieldset.disabled = true
 
