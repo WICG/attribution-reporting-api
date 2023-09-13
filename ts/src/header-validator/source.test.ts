@@ -1083,6 +1083,59 @@ const testCases: TestCase[] = [
       },
     ],
   },
+
+  {
+    name: 'channel-capacity-default-event',
+    json: `{"destination": "https://a.test"}`,
+    sourceType: SourceType.event,
+    vsv: {
+      defaultEventLevelAttributionsPerSource: {
+        [SourceType.event]: 1,
+        [SourceType.navigation]: 3,
+      },
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: 0,
+        [SourceType.navigation]: Infinity,
+      },
+      randomizedResponseEpsilon: 14,
+      triggerDataCardinality: {
+        [SourceType.event]: 2n,
+        [SourceType.navigation]: 8n,
+      },
+    },
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'exceeds max event-level channel capacity per event source (1.58 > 0.00)',
+      },
+    ],
+  },
+  {
+    name: 'channel-capacity-default-navigation',
+    json: `{"destination": "https://a.test"}`,
+    sourceType: SourceType.navigation,
+    vsv: {
+      defaultEventLevelAttributionsPerSource: {
+        [SourceType.event]: 1,
+        [SourceType.navigation]: 3,
+      },
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: 0,
+      },
+      randomizedResponseEpsilon: 14,
+      triggerDataCardinality: {
+        [SourceType.event]: 2n,
+        [SourceType.navigation]: 8n,
+      },
+    },
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'exceeds max event-level channel capacity per navigation source (11.46 > 0.00)',
+      },
+    ],
+  },
 ]
 
 testCases.forEach((tc) =>
