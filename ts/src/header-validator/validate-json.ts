@@ -873,26 +873,35 @@ function aggregatableDedupKeys(
   )
 }
 
+function enumerated<T>(ctx: Context, j: Json, e: Record<string, T>): Maybe<T> {
+  return string(ctx, j).map((s) => {
+    const v = e[s]
+    if (v !== undefined) {
+      return v
+    }
+    const allowed = Object.keys(e).join(', ')
+    ctx.error(`must be one of the following (case-sensitive): ${allowed}`)
+    return None
+  })
+}
+
+export enum AggregatableSourceRegistrationTime {
+  exclude = 'exclude',
+  include = 'include',
+}
+
 function aggregatableSourceRegistrationTime(
   ctx: Context,
   j: Json
-): Maybe<string> {
-  return string(ctx, j).filter((s) => {
-    const exclude = 'exclude'
-    const include = 'include'
-    if (s === exclude || s === include) {
-      return true
-    }
-    ctx.error(`must match '${exclude}' or '${include}' (case-sensitive)`)
-    return false
-  })
+): Maybe<AggregatableSourceRegistrationTime> {
+  return enumerated(ctx, j, AggregatableSourceRegistrationTime)
 }
 
 export type Trigger = CommonDebug &
   FilterPair & {
     aggregatableDedupKeys: AggregatableDedupKey[]
     aggregatableTriggerData: AggregatableTriggerDatum[]
-    aggregatableSourceRegistrationTime: string
+    aggregatableSourceRegistrationTime: AggregatableSourceRegistrationTime
     aggregatableValues: Map<string, number>
     aggregationCoordinatorOrigin: string | null
     eventTriggerData: EventTriggerDatum[]
@@ -918,7 +927,7 @@ function trigger(ctx: Context, j: Json): Maybe<Trigger> {
     aggregatableSourceRegistrationTime: field(
       'aggregatable_source_registration_time',
       aggregatableSourceRegistrationTime,
-      'include'
+      AggregatableSourceRegistrationTime.include
     ),
     aggregationCoordinatorOrigin: field(
       'aggregation_coordinator_origin',

@@ -1,6 +1,10 @@
 import { SourceType } from '../source-type'
 import { Maybe } from './maybe'
-import { Trigger, validateTrigger } from './validate-json'
+import {
+  AggregatableSourceRegistrationTime,
+  Trigger,
+  validateTrigger,
+} from './validate-json'
 import * as jsontest from './validate-json.test'
 
 const testCases: jsontest.TestCase<Trigger>[] = [
@@ -55,7 +59,8 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           ],
         },
       ],
-      aggregatableSourceRegistrationTime: 'include',
+      aggregatableSourceRegistrationTime:
+        AggregatableSourceRegistrationTime.include,
       aggregationCoordinatorOrigin: null,
       aggregatableTriggerData: [
         {
@@ -918,7 +923,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['aggregatable_source_registration_time'],
-        msg: "must match 'exclude' or 'include' (case-sensitive)",
+        msg: 'must be one of the following (case-sensitive): exclude, include',
       },
     ],
   },
