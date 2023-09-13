@@ -2,12 +2,12 @@ import { strict as assert } from 'assert'
 import * as context from './context'
 import { Maybe } from './maybe'
 import * as testutil from './util.test'
-import * as json from './validate-json'
+import * as vsv from '../vendor-specific-values'
 
 export type TestCase<T> = testutil.TestCase & {
   name: string
   json: string
-  vsv?: Partial<json.VendorSpecificValues>
+  vsv?: Readonly<Partial<vsv.VendorSpecificValues>>
   expected?: Maybe<T>
 }
 

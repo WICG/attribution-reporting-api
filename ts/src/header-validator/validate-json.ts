@@ -1,5 +1,6 @@
 import * as psl from 'psl'
 import { SourceType } from '../source-type'
+import { VendorSpecificValues } from '../vendor-specific-values'
 import * as context from './context'
 import { Maybe, Maybeable } from './maybe'
 
@@ -23,15 +24,9 @@ const limits = {
   sourceExpiryRange: [1 * SECONDS_PER_DAY, 30 * SECONDS_PER_DAY],
 }
 
-export type VendorSpecificValues = {
-  defaultEventLevelAttributionsPerSource: Record<SourceType, number>
-  maxAggregationKeysPerAttribution: number
-  triggerDataCardinality: Record<SourceType, bigint>
-}
-
 class Context extends context.Context {
   constructor(
-    readonly vsv: Partial<VendorSpecificValues>,
+    readonly vsv: Readonly<Partial<VendorSpecificValues>>,
     readonly sourceType: SourceType
   ) {
     super()
@@ -939,7 +934,7 @@ function trigger(ctx: Context, j: Json): Maybe<Trigger> {
 function validateJSON<T>(
   json: string,
   f: CtxFunc<Json, Maybe<T>>,
-  vsv: Partial<VendorSpecificValues>,
+  vsv: Readonly<Partial<VendorSpecificValues>>,
   sourceType: SourceType // irrelevant for triggers
 ): [context.ValidationResult, Maybe<T>] {
   const ctx = new Context(vsv, sourceType)
@@ -958,7 +953,7 @@ function validateJSON<T>(
 
 export function validateSource(
   json: string,
-  vsv: Partial<VendorSpecificValues>,
+  vsv: Readonly<Partial<VendorSpecificValues>>,
   sourceType: SourceType
 ): [context.ValidationResult, Maybe<Source>] {
   return validateJSON(json, source, vsv, sourceType)
@@ -966,7 +961,7 @@ export function validateSource(
 
 export function validateTrigger(
   json: string,
-  vsv: Partial<VendorSpecificValues>
+  vsv: Readonly<Partial<VendorSpecificValues>>
 ): [context.ValidationResult, Maybe<Trigger>] {
   return validateJSON(json, trigger, vsv, SourceType.navigation)
 }
