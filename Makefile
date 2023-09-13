@@ -31,7 +31,7 @@ $(OUT_DIR):
 
 ts/dist/header-validator/main.js: ts/package.json ts/tsconfig.json ts/webpack.config.js ts/src/*.ts
 	@ npm ci --prefix ./ts
-	@ npm run build --prefix ./ts
+	@ npm run deploy --prefix ./ts
 
 clean:
 	@ rm -rf $(OUT_DIR)
