@@ -24,3 +24,10 @@ export const defaultEarlyEventLevelReportWindows: Readonly<
   [SourceType.event]: [],
   [SourceType.navigation]: [2 * SECONDS_PER_DAY, 7 * SECONDS_PER_DAY],
 }
+
+export const defaultEventLevelAttributionsPerSource: Readonly<
+  Record<SourceType, number>
+> = {
+  [SourceType.event]: 1,
+  [SourceType.navigation]: 3,
+}

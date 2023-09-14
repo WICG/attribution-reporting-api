@@ -1,6 +1,7 @@
 const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 
+import * as constants from '../constants'
 import { SourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Config, defaultConfig, PerTriggerDataConfig } from './privacy'
@@ -39,7 +40,7 @@ function getConfig(json: any, sourceType: SourceType): Config {
   }
 
   const defaultMaxReports =
-    vsv.Chromium.defaultEventLevelAttributionsPerSource[sourceType]
+    constants.defaultEventLevelAttributionsPerSource[sourceType]
   const defaultWindows = defaultMaxReports
 
   let maxEventLevelReports = json['max_event_level_reports']
