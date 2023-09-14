@@ -139,7 +139,8 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Represents a bucketization of the integers from [0, MAX_UINT32], encoded as
     // a list of integers where new buckets begin (excluding 0 which is
     // implicitly included).
-    // It must consist of strictly increasing positive integers.
+    // It must consist of strictly increasing positive integers, must be
+    // non-empty, and must have at most max_event_level_reports values.
     //
     // e.g. [5, 10, 100] encodes the following ranges:
     // [[0, 4], [5, 9], [10, 99], [100, MAX_UINT32]]
@@ -149,7 +150,8 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // every new range boundary that is crossed. Reports will never be sent for
     // the range that includes 0, as every source is initialized in this range.
     //
-    // If omitted, then represents a trivial mapping [1, 2, ... , MAX_UINT32].
+    // If omitted, then represents a trivial mapping
+    // [1, 2, ... , max_event_level_reports].
     "summary_buckets": [<bucket start>, ...]
   }, {
     // Next trigger_spec
