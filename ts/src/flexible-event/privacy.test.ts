@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { SourceType } from '../source-type'
+import * as vsv from '../vendor-specific-values'
 import {
   flipProbabilityDp,
   maxInformationGain,
   binaryEntropy,
-  DefaultConfig,
+  defaultConfig,
 } from './privacy'
 
 const flipProbabilityTests = [
@@ -107,9 +108,11 @@ test('binaryEntropy', async (t) => {
 test('computeConfigData', async (t) => {
   await t.test('navigation', () => {
     assert.deepStrictEqual(
-      DefaultConfig[SourceType.navigation].computeConfigData(
+      defaultConfig(SourceType.navigation, vsv.Chromium).computeConfigData(
         14,
-        SourceType.navigation
+        vsv.Chromium.maxEventLevelChannelCapacityPerSource[
+          SourceType.navigation
+        ]
       ),
       {
         numStates: 2925,
@@ -122,7 +125,10 @@ test('computeConfigData', async (t) => {
 
   await t.test('event', () => {
     assert.deepStrictEqual(
-      DefaultConfig[SourceType.event].computeConfigData(14, SourceType.event),
+      defaultConfig(SourceType.event, vsv.Chromium).computeConfigData(
+        14,
+        vsv.Chromium.maxEventLevelChannelCapacityPerSource[SourceType.event]
+      ),
       {
         numStates: 3,
         infoGain: 1.584926511508231,

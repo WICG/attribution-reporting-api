@@ -2,7 +2,8 @@ const commandLineArgs = require('command-line-args')
 const fs = require('fs')
 
 import { SourceType } from '../source-type'
-import { Config, DefaultConfig, PerTriggerDataConfig } from './privacy'
+import * as vsv from '../vendor-specific-values'
+import { Config, defaultConfig, PerTriggerDataConfig } from './privacy'
 
 function commaSeparatedInts(str: string): number[] {
   return str.split(',').map((v) => Number(v))
@@ -37,7 +38,8 @@ function getConfig(json: any, sourceType: SourceType): Config {
     throw 'root JSON must be an object'
   }
 
-  const defaultMaxReports = DefaultConfig[sourceType].maxEventLevelReports
+  const defaultMaxReports =
+    vsv.Chromium.defaultEventLevelAttributionsPerSource[sourceType]
   const defaultWindows = defaultMaxReports
 
   let maxEventLevelReports = json['max_event_level_reports']
@@ -152,7 +154,11 @@ if ('json_file' in options) {
   )
 }
 
-const out = config.computeConfigData(options.epsilon, options.source_type)
+const infoGainMax =
+  vsv.Chromium.maxEventLevelChannelCapacityPerSource[
+    options.source_type as SourceType
+  ]
+const out = config.computeConfigData(options.epsilon, infoGainMax)
 
 console.log(`Number of possible different output states: ${out.numStates}`)
 console.log(`Information gain: ${out.infoGain.toFixed(2)} bits`)
@@ -161,7 +167,7 @@ console.log(`Flip percent: ${(100 * out.flipProb).toFixed(5)}%`)
 if (out.excessive) {
   const e = out.excessive
   console.log(
-    `WARNING: info gain > ${e.infoGainMax.toFixed(2)} for ${
+    `WARNING: info gain > ${infoGainMax.toFixed(2)} for ${
       options.source_type
     } sources. Would require a ${(100 * e.newFlipProb).toFixed(
       5

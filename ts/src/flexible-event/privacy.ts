@@ -1,8 +1,8 @@
 const memoize = require('memoizee')
 import { SourceType } from '../source-type'
+import { VendorSpecificValues } from '../vendor-specific-values'
 
 export type ExcessiveInfoGainData = {
-  infoGainMax: number
   newEps: number
   newFlipProb: number
 }
@@ -87,19 +87,12 @@ export class Config {
     )
   }
 
-  computeConfigData(epsilon: number, sourceType: SourceType): ConfigData {
+  computeConfigData(epsilon: number, infoGainMax: number): ConfigData {
     const numStates = this.numFlexibleStates()
     const infoGain = maxInformationGain(numStates, epsilon)
     const flipProb = flipProbabilityDp(numStates, epsilon)
 
     let excessive
-    const infoGainMax =
-      sourceType === 'event'
-        ? 6.5
-        : maxInformationGain(
-            DefaultConfig[sourceType].numFlexibleStates(),
-            epsilon
-          )
 
     if (infoGain > infoGainMax) {
       const newEps = epsilonToBoundInfoGainAndDp(
@@ -108,26 +101,27 @@ export class Config {
         epsilon
       )
       const newFlipProb = flipProbabilityDp(numStates, newEps)
-      excessive = { infoGainMax, newEps, newFlipProb }
+      excessive = { newEps, newFlipProb }
     }
 
     return { numStates, infoGain, flipProb, excessive }
   }
 }
 
-export const DefaultConfig: Readonly<Record<SourceType, Config>> = {
-  [SourceType.navigation]: new Config(
-    /*maxEventLevelReports=*/ 3,
-    new Array(8).fill(
-      new PerTriggerDataConfig(/*numWindows=*/ 3, /*numSummaryBuckets=*/ 3)
+export function defaultConfig(
+  sourceType: SourceType,
+  vsv: VendorSpecificValues
+): Config {
+  const maxReports = vsv.defaultEventLevelAttributionsPerSource[sourceType]
+  return new Config(
+    /*maxEventLevelReports=*/ maxReports,
+    new Array(Number(vsv.triggerDataCardinality[sourceType])).fill(
+      new PerTriggerDataConfig(
+        /*numWindows=*/ maxReports,
+        /*numSummaryBuckets=*/ maxReports
+      )
     )
-  ),
-  [SourceType.event]: new Config(
-    /*maxEventLevelReports=*/ 1,
-    new Array(2).fill(
-      new PerTriggerDataConfig(/*numWindows=*/ 1, /*numSummaryBuckets=*/ 1)
-    )
-  ),
+  )
 }
 
 // Evaluates the binary entropy function.
