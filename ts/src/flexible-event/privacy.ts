@@ -2,7 +2,7 @@ const memoize = require('memoizee')
 import { SourceType } from '../source-type'
 
 export type ExcessiveInfoGainData = {
-  infoGainDefault: number
+  infoGainMax: number
   newEps: number
   newFlipProb: number
 }
@@ -93,7 +93,7 @@ export class Config {
     const flipProb = flipProbabilityDp(numStates, epsilon)
 
     let excessive
-    const infoGainDefault =
+    const infoGainMax =
       sourceType === 'event'
         ? 6.5
         : maxInformationGain(
@@ -101,14 +101,14 @@ export class Config {
             epsilon
           )
 
-    if (infoGain > infoGainDefault) {
+    if (infoGain > infoGainMax) {
       const newEps = epsilonToBoundInfoGainAndDp(
         numStates,
-        infoGainDefault,
+        infoGainMax,
         epsilon
       )
       const newFlipProb = flipProbabilityDp(numStates, newEps)
-      excessive = { infoGainDefault, newEps, newFlipProb }
+      excessive = { infoGainMax, newEps, newFlipProb }
     }
 
     return { numStates, infoGain, flipProb, excessive }
