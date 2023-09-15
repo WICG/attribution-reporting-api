@@ -315,7 +315,7 @@ const testCases: TestCase[] = [
         "b": "0x2"
       }
     }`,
-    vsv: { maxAggregationKeysPerAttribution: 1 },
+    vsv: { maxAggregationKeysPerSource: 1 },
     expectedErrors: [
       {
         path: ['aggregation_keys'],
