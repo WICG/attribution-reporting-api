@@ -15,10 +15,13 @@ const uint64Regex = /^[0-9]+$/
 const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
+const UINT32_MAX: number = 2 ** 32 - 1
+
 class Context extends context.Context {
   constructor(
     readonly vsv: Readonly<VendorSpecificValues>,
-    readonly sourceType: SourceType
+    readonly sourceType: SourceType,
+    readonly parseFullFlex: boolean
   ) {
     super()
   }
@@ -487,20 +490,34 @@ function isCollection<C extends context.PathComponent>(
   return ok
 }
 
-function set(
+type SetOpts = ListOpts & {
+  requireDistinct?: boolean
+}
+
+function set<T extends number | string>(
   ctx: Context,
   j: Json,
-  f: CtxFunc<Json, Maybe<string>>,
-  opts?: ListOpts
-): Maybe<Set<string>> {
-  const set = new Set<string>()
+  f: CtxFunc<Json, Maybe<T>>,
+  opts?: SetOpts
+): Maybe<Set<T>> {
+  const set = new Set<T>()
 
   return list(ctx, j, opts)
     .filter((js) =>
       isCollection(ctx, js.entries(), (ctx, [_i, j]) =>
-        f(ctx, j).peek((v) =>
-          set.has(v) ? ctx.warning(`duplicate value ${v}`) : set.add(v)
-        )
+        f(ctx, j).filter((v) => {
+          if (set.has(v)) {
+            const msg = `duplicate value ${v}`
+            if (opts?.requireDistinct) {
+              ctx.error(msg)
+              return false
+            }
+            ctx.warning(msg)
+          } else {
+            set.add(v)
+          }
+          return true
+        })
       )
     )
     .map(() => set)
@@ -742,15 +759,14 @@ function eventReportWindow(
 }
 
 function channelCapacity(ctx: Context, s: Source): void {
-  const perTriggerDataConfigs = []
-  for (let i = 0n; i < ctx.vsv.triggerDataCardinality[ctx.sourceType]; i++) {
-    perTriggerDataConfigs.push(
+  const perTriggerDataConfigs = s.triggerSpecs.flatMap((spec) =>
+    new Array(spec.triggerData.size).fill(
       new privacy.PerTriggerDataConfig(
-        s.eventReportWindows.endTimes.length,
-        /*numSummaryBuckets=*/ s.maxEventLevelReports
+        spec.eventReportWindows.endTimes.length,
+        spec.summaryBuckets.length
       )
     )
-  }
+  )
 
   const config = new privacy.Config(
     s.maxEventLevelReports,
@@ -772,6 +788,173 @@ function channelCapacity(ctx: Context, s: Source): void {
   }
 }
 
+export enum SummaryWindowOperator {
+  count = 'count',
+  value_sum = 'value_sum',
+}
+
+export type TriggerSpec = {
+  eventReportWindows: EventReportWindows
+  summaryBuckets: number[]
+  summaryWindowOperator: SummaryWindowOperator
+  triggerData: Set<number>
+}
+
+function summaryBuckets(
+  ctx: Context,
+  j: Json,
+  maxEventLevelReports: Maybe<number>
+): Maybe<number[]> {
+  let prev = 0
+  let prevDesc = 'implicit minimum'
+
+  const bucket = (ctx: Context, j: Json): Maybe<number> =>
+    number(ctx, j)
+      .filter((n) => isInteger(ctx, n))
+      .filter((n) => {
+        return isInRange(
+          ctx,
+          n,
+          prev + 1,
+          UINT32_MAX,
+          `must be > ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
+        )
+      })
+      .peek((n) => {
+        prev = n
+        prevDesc = 'previous value'
+      })
+
+  return array(ctx, j, bucket, {
+    minLength: 1,
+    keepGoing: false, // suppress unhelpful cascaded errors
+  }).peek((buckets) =>
+    maxEventLevelReports.peek((n) => {
+      if (buckets.length > n) {
+        ctx.warning(
+          `will be truncated to first ${n} buckets (max event-level reports)`
+        )
+      }
+    })
+  )
+}
+
+function fullFlexTriggerDatum(ctx: Context, j: Json): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) => isInRange(ctx, n, 0, UINT32_MAX))
+}
+
+function triggerDataSet(ctx: Context, j: Json): Maybe<Set<number>> {
+  return set(ctx, j, fullFlexTriggerDatum, {
+    minLength: 1,
+    maxLength: constants.maxTriggerDataPerSource,
+    requireDistinct: true,
+  })
+}
+
+type TriggerSpecDeps = {
+  expiry: Maybe<number>
+  eventReportWindows: Maybe<EventReportWindows>
+  maxEventLevelReports: Maybe<number>
+}
+
+function triggerSpec(
+  ctx: Context,
+  j: Json,
+  deps: TriggerSpecDeps
+): Maybe<TriggerSpec> {
+  const defaultSummaryBuckets = deps.maxEventLevelReports.map((n) => {
+    const buckets: number[] = []
+    for (let i = 1; i <= n; ++i) {
+      buckets.push(i)
+    }
+    return buckets
+  })
+
+  return struct(ctx, j, {
+    eventReportWindows: field(
+      'event_report_windows',
+      (ctx, j) => eventReportWindows(ctx, j, deps.expiry),
+      deps.eventReportWindows
+    ),
+
+    summaryBuckets: field(
+      'summary_buckets',
+      (ctx, j) => summaryBuckets(ctx, j, deps.maxEventLevelReports),
+      defaultSummaryBuckets
+    ),
+
+    summaryWindowOperator: field(
+      'summary_window_operator',
+      (ctx, j) => enumerated(ctx, j, SummaryWindowOperator),
+      SummaryWindowOperator.count
+    ),
+
+    triggerData: field('trigger_data', triggerDataSet),
+  })
+}
+
+function triggerSpecs(
+  ctx: Context,
+  j: Json,
+  deps: TriggerSpecDeps
+): Maybe<TriggerSpec[]> {
+  return array(ctx, j, (ctx, j) => triggerSpec(ctx, j, deps), {
+    maxLength: constants.maxTriggerDataPerSource,
+  }).filter((specs) => {
+    const triggerData = new Set<number>()
+    const dups = new Set<number>()
+    for (const spec of specs) {
+      for (const triggerDatum of spec.triggerData) {
+        if (triggerData.has(triggerDatum)) {
+          dups.add(triggerDatum)
+        } else {
+          triggerData.add(triggerDatum)
+        }
+      }
+    }
+
+    let ok = true
+    if (triggerData.size > constants.maxTriggerDataPerSource) {
+      ctx.error(
+        `exceeds maximum number of distinct trigger_data (${triggerData.size} > ${constants.maxTriggerDataPerSource})`
+      )
+      ok = false
+    }
+
+    if (dups.size > 0) {
+      ctx.error(`duplicate trigger_data: ${Array.from(dups).join(', ')}`)
+      ok = false
+    }
+
+    return ok
+  })
+}
+
+function defaultTriggerSpecs(
+  ctx: Context,
+  eventReportWindows: Maybe<EventReportWindows>,
+  maxEventLevelReports: Maybe<number>
+): Maybe<TriggerSpec[]> {
+  return eventReportWindows.map((eventReportWindows) =>
+    maxEventLevelReports.map((maxEventLevelReports) => [
+      {
+        eventReportWindows,
+        summaryBuckets: Array(maxEventLevelReports)
+          .fill(0)
+          .map((_, i) => i + 1),
+        summaryWindowOperator: SummaryWindowOperator.count,
+        triggerData: new Set(
+          Array(Number(ctx.vsv.triggerDataCardinality[ctx.sourceType]))
+            .fill(0)
+            .map((_, i) => i)
+        ),
+      },
+    ])
+  )
+}
+
 export type Source = CommonDebug &
   Priority & {
     aggregatableReportWindow: number
@@ -782,6 +965,8 @@ export type Source = CommonDebug &
     filterData: FilterData
     maxEventLevelReports: number
     sourceEventId: bigint
+
+    triggerSpecs: TriggerSpec[]
   }
 
 function source(ctx: Context, j: Json): Maybe<Source> {
@@ -793,6 +978,27 @@ function source(ctx: Context, j: Json): Maybe<Source> {
         constants.validSourceExpiryRange[1]
       )(ctx, j)
 
+      const eventReportWindowsVal = exclusive(
+        {
+          event_report_window: (ctx, j) => eventReportWindow(ctx, j, expiryVal),
+          event_report_windows: (ctx, j) =>
+            eventReportWindows(ctx, j, expiryVal),
+        },
+        expiryVal.map((n) => defaultEventReportWindows(ctx, n))
+      )(ctx, j)
+
+      const maxEventLevelReportsVal = field(
+        'max_event_level_reports',
+        maxEventLevelReports,
+        constants.defaultEventLevelAttributionsPerSource[ctx.sourceType]
+      )(ctx, j)
+
+      const defaultTriggerSpecsVal = defaultTriggerSpecs(
+        ctx,
+        eventReportWindowsVal,
+        maxEventLevelReportsVal
+      )
+
       return struct(ctx, j, {
         aggregatableReportWindow: field(
           'aggregatable_report_window',
@@ -801,24 +1007,24 @@ function source(ctx: Context, j: Json): Maybe<Source> {
         ),
         aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
         destination: field('destination', destination),
+        eventReportWindows: () => eventReportWindowsVal,
         expiry: () => expiryVal,
         filterData: field('filter_data', filterData, new Map()),
-        maxEventLevelReports: field(
-          'max_event_level_reports',
-          maxEventLevelReports,
-          constants.defaultEventLevelAttributionsPerSource[ctx.sourceType]
-        ),
+        maxEventLevelReports: () => maxEventLevelReportsVal,
         sourceEventId: field('source_event_id', uint64, 0n),
 
-        eventReportWindows: exclusive(
-          {
-            event_report_window: (ctx, j) =>
-              eventReportWindow(ctx, j, expiryVal),
-            event_report_windows: (ctx, j) =>
-              eventReportWindows(ctx, j, expiryVal),
-          },
-          expiryVal.map((n) => defaultEventReportWindows(ctx, n))
-        ),
+        triggerSpecs: ctx.parseFullFlex
+          ? field(
+              'trigger_specs',
+              (ctx, j) =>
+                triggerSpecs(ctx, j, {
+                  expiry: expiryVal,
+                  eventReportWindows: eventReportWindowsVal,
+                  maxEventLevelReports: maxEventLevelReportsVal,
+                }),
+              defaultTriggerSpecsVal
+            )
+          : () => defaultTriggerSpecsVal,
 
         ...commonDebugFields,
         ...priorityField,
@@ -867,12 +1073,18 @@ export type EventTriggerDatum = FilterPair &
   Priority &
   DedupKey & {
     triggerData: bigint
+    value: number
   }
 
 function eventTriggerData(ctx: Context, j: Json): Maybe<EventTriggerDatum[]> {
   return array(ctx, j, (ctx, j) =>
     struct(ctx, j, {
       triggerData: field('trigger_data', triggerData, 0n),
+
+      value: ctx.parseFullFlex
+        ? field('value', positiveInteger, 1)
+        : () => some(1),
+
       ...filterFields,
       ...dedupKeyField,
       ...priorityField,
@@ -965,9 +1177,10 @@ function validateJSON<T>(
   json: string,
   f: CtxFunc<Json, Maybe<T>>,
   vsv: Readonly<VendorSpecificValues>,
-  sourceType: SourceType // irrelevant for triggers
+  sourceType: SourceType, // irrelevant for triggers
+  parseFullFlex: boolean
 ): [context.ValidationResult, Maybe<T>] {
-  const ctx = new Context(vsv, sourceType)
+  const ctx = new Context(vsv, sourceType, parseFullFlex)
 
   let value
   try {
@@ -984,14 +1197,16 @@ function validateJSON<T>(
 export function validateSource(
   json: string,
   vsv: Readonly<VendorSpecificValues>,
-  sourceType: SourceType
+  sourceType: SourceType,
+  parseFullFlex: boolean = false
 ): [context.ValidationResult, Maybe<Source>] {
-  return validateJSON(json, source, vsv, sourceType)
+  return validateJSON(json, source, vsv, sourceType, parseFullFlex)
 }
 
 export function validateTrigger(
   json: string,
-  vsv: Readonly<VendorSpecificValues>
+  vsv: Readonly<VendorSpecificValues>,
+  parseFullFlex: boolean = false
 ): [context.ValidationResult, Maybe<Trigger>] {
-  return validateJSON(json, trigger, vsv, SourceType.navigation)
+  return validateJSON(json, trigger, vsv, SourceType.navigation, parseFullFlex)
 }

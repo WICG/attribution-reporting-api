@@ -1,7 +1,4 @@
 import memoize from 'memoizee'
-import * as constants from '../constants'
-import { SourceType } from '../source-type'
-import { VendorSpecificValues } from '../vendor-specific-values'
 
 export type ExcessiveInfoGainData = {
   newEps: number
@@ -106,24 +103,6 @@ export class Config {
 
     return data
   }
-}
-
-export function defaultConfig(
-  sourceType: SourceType,
-  vsv: VendorSpecificValues
-): Config {
-  const defaultMaxReports =
-    constants.defaultEventLevelAttributionsPerSource[sourceType]
-  return new Config(
-    /*maxEventLevelReports=*/ defaultMaxReports,
-    new Array(Number(vsv.triggerDataCardinality[sourceType])).fill(
-      new PerTriggerDataConfig(
-        /*numWindows=*/
-        constants.defaultEarlyEventLevelReportWindows[sourceType].length + 1,
-        /*numSummaryBuckets=*/ defaultMaxReports
-      )
-    )
-  )
 }
 
 // Evaluates the binary entropy function.

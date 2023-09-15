@@ -31,3 +31,5 @@ export const defaultEventLevelAttributionsPerSource: Readonly<
   [SourceType.event]: 1,
   [SourceType.navigation]: 3,
 }
+
+export const maxTriggerDataPerSource: number = 32
