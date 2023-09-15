@@ -1,4 +1,5 @@
 const memoize = require('memoizee')
+import * as constants from '../constants'
 import { SourceType } from '../source-type'
 import { VendorSpecificValues } from '../vendor-specific-values'
 
@@ -118,7 +119,8 @@ export function defaultConfig(
     /*maxEventLevelReports=*/ defaultMaxReports,
     new Array(Number(vsv.triggerDataCardinality[sourceType])).fill(
       new PerTriggerDataConfig(
-        /*numWindows=*/ defaultMaxReports,
+        /*numWindows=*/
+        constants.defaultEarlyEventLevelReportWindows[sourceType].length + 1,
         /*numSummaryBuckets=*/ defaultMaxReports
       )
     )
