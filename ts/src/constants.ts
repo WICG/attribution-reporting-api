@@ -1,3 +1,5 @@
+// https://wicg.github.io/attribution-reporting-api/#constants
+
 import { SourceType } from './source-type'
 
 export const SECONDS_PER_HOUR: number = 60 * 60
