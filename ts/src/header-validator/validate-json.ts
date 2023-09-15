@@ -1,4 +1,5 @@
 import * as psl from 'psl'
+import * as constants from '../constants'
 import { SourceType } from '../source-type'
 import { VendorSpecificValues } from '../vendor-specific-values'
 import * as context from './context'
@@ -13,17 +14,6 @@ export type Json = null | boolean | number | string | Json[] | JsonDict
 const uint64Regex = /^[0-9]+$/
 const int64Regex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
-
-const SECONDS_PER_HOUR = 60 * 60
-const SECONDS_PER_DAY: number = 24 * SECONDS_PER_HOUR
-
-const limits = {
-  maxEventLevelReports: 20,
-  maxEntriesPerFilterData: 50,
-  maxValuesPerFilterDataEntry: 50,
-  minReportWindow: 1 * SECONDS_PER_HOUR,
-  sourceExpiryRange: [1 * SECONDS_PER_DAY, 30 * SECONDS_PER_DAY],
-}
 
 class Context extends context.Context {
   constructor(
@@ -377,7 +367,9 @@ function destination(ctx: Context, j: Json): Maybe<Set<string>> {
 function maxEventLevelReports(ctx: Context, j: Json): Maybe<number> {
   return number(ctx, j)
     .filter((n) => isInteger(ctx, n))
-    .filter((n) => isInRange(ctx, n, 0, limits.maxEventLevelReports))
+    .filter((n) =>
+      isInRange(ctx, n, 0, constants.maxSettableEventLevelAttributionsPerSource)
+    )
 }
 
 function startTime(
@@ -418,7 +410,13 @@ function endTimes(
           ctx.error('cannot be fully validated without a valid expiry')
           return None
         }
-        return clamp(ctx, n, limits.minReportWindow, expiry.value, ' (expiry)')
+        return clamp(
+          ctx,
+          n,
+          constants.minReportWindow,
+          expiry.value,
+          ' (expiry)'
+        )
       })
       .filter((n) => {
         if (prev.value === undefined) {
@@ -553,13 +551,20 @@ function filterDataKeyValue(
     return None
   }
 
-  return set(ctx, j, string, { maxLength: limits.maxValuesPerFilterDataEntry })
+  return set(ctx, j, string, {
+    maxLength: constants.maxValuesPerFilterDataEntry,
+  })
 }
 
 export type FilterData = Map<string, Set<string>>
 
 function filterData(ctx: Context, j: Json): Maybe<FilterData> {
-  return keyValues(ctx, j, filterDataKeyValue, limits.maxEntriesPerFilterData)
+  return keyValues(
+    ctx,
+    j,
+    filterDataKeyValue,
+    constants.maxEntriesPerFilterData
+  )
 }
 
 function filterKeyValue(
@@ -684,15 +689,13 @@ function roundAwayFromZeroToNearestDay(n: number): number {
     throw new RangeError()
   }
 
-  const r = n + SECONDS_PER_DAY / 2
-  return r - (r % SECONDS_PER_DAY)
+  const r = n + constants.SECONDS_PER_DAY / 2
+  return r - (r % constants.SECONDS_PER_DAY)
 }
 
 function expiry(ctx: Context, j: Json): Maybe<number> {
   return legacyDuration(ctx, j)
-    .map((n) =>
-      clamp(ctx, n, limits.sourceExpiryRange[0], limits.sourceExpiryRange[1])
-    )
+    .map((n) => clamp(ctx, n, ...constants.validSourceExpiryRange))
     .map(Number) // guaranteed to fit based on the clamping
     .map((n) => {
       switch (ctx.sourceType) {
@@ -721,7 +724,7 @@ function singleReportWindow(
         ctx.error('cannot be fully validated without a valid expiry')
         return None
       }
-      return clamp(ctx, n, limits.minReportWindow, expiry.value, ' (expiry)')
+      return clamp(ctx, n, constants.minReportWindow, expiry.value, ' (expiry)')
     })
     .map(Number)
 }
@@ -730,10 +733,9 @@ function defaultEventReportWindows(
   ctx: Context,
   end: number
 ): EventReportWindows {
-  let endTimes: number[] = []
-  if (ctx.sourceType === SourceType.navigation) {
-    endTimes = [2 * SECONDS_PER_DAY, 7 * SECONDS_PER_DAY].filter((e) => e < end)
-  }
+  const endTimes = constants.defaultEarlyEventLevelReportWindows[
+    ctx.sourceType
+  ].filter((e) => e < end)
   endTimes.push(end)
   return { startTime: 0, endTimes }
 }
@@ -807,7 +809,7 @@ function source(ctx: Context, j: Json): Maybe<Source> {
       const expiryVal = field(
         'expiry',
         expiry,
-        limits.sourceExpiryRange[1]
+        constants.validSourceExpiryRange[1]
       )(ctx, j)
 
       return struct(ctx, j, {
