@@ -778,7 +778,7 @@ function channelCapacity(ctx: Context, s: Source): void {
 
   const { infoGain } = config.computeConfigData(
     ctx.vsv.randomizedResponseEpsilon,
-    ctx.sourceType
+    ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
   )
 
   const max = ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
