@@ -3132,12 +3132,6 @@ To <dfn>obtain a null report</dfn> given an [=attribution trigger=] |trigger| an
 
 1. Let |reportTime| be the result of running [=obtain an aggregatable report delivery time=] with |trigger|'s
     [=attribution trigger/trigger time=].
-1. Let |contribution| be a new [=aggregatable contribution=] with the items:
-
-    : [=aggregatable contribution/key=]
-    :: 0
-    : [=aggregatable contribution/value=]
-    :: 0
 1. Let |report| be a new [=aggregatable report=] struct whose items are:
 
     : [=aggregatable report/reporting origin=]
@@ -3157,7 +3151,7 @@ To <dfn>obtain a null report</dfn> given an [=attribution trigger=] |trigger| an
     : [=aggregatable report/trigger debug key=]
     :: |trigger|'s [=attribution trigger/debug key=]
     : [=aggregatable report/contributions=]
-    :: « |contribution| »
+    :: «»
     : [=aggregatable report/serialized private state token=]
     :: null
     : [=aggregatable report/aggregation coordinator=]
@@ -3333,7 +3327,19 @@ An [=aggregatable report=] |report|'s <dfn for="aggregatable report">plaintext p
 is the result of running the following steps:
 
 1. Let |payloadData| be a new [=list/is empty|empty=] [=list=].
-1. [=list/iterate|For each=] |contribution| of |report|'s [=aggregatable report/contributions=]:
+1. Let |contributions| be |report|'s [=aggregatable report/contributions=].
+1. [=iteration/While=] |contributions|' [=list/size=] is less than [=maximum
+    aggregation keys per source registration=]:
+    1. Let |nullContribution| be a new [=aggregatable contribution=] with the
+        items:
+
+        : [=aggregatable contribution/key=]
+        :: 0
+        : [=aggregatable contribution/value=]
+        :: 0
+
+    1. [=list/Append=] |nullContribution| to |contributions|.
+1. [=list/iterate|For each=] |contribution| of |contributions|:
     1. Let |contributionData| be a [=map=] of the following key/value pairs:
 
         : "`bucket`"
