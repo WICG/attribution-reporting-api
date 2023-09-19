@@ -618,6 +618,11 @@ Note that in the context of proposals such as
 [CHIPS](https://github.com/privacycg/CHIPS), the cookie must be unpartitioned in
 order to allow debug keys to be registered.
 
+Responses that register sources/triggers can also set the `ar_debug` cookie to
+ensure that registration is eligible for debug reports. When using the `fetch`
+APIs to do this, it will require ensuring the request is allowed to include
+[`credentials`](https://developer.mozilla.org/en-US/docs/Web/API/fetch).
+
 #### Attribution-success debugging reports
 
 Source and trigger registrations will both accept a new field `debug_key`:
