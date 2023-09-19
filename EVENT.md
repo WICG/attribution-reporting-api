@@ -619,9 +619,9 @@ Note that in the context of proposals such as
 order to allow debug keys to be registered.
 
 Responses that register sources/triggers can also set the `ar_debug` cookie to
-ensure that registeration is eligible for debug reports. When using the `fetch`
+ensure that registration is eligible for debug reports. When using the `fetch`
 APIs to do this, it will require ensuring the request is allowed to include
-[`credentials`]([url](https://developer.mozilla.org/en-US/docs/Web/API/fetch)).
+[`credentials`](https://developer.mozilla.org/en-US/docs/Web/API/fetch).
 
 #### Attribution-success debugging reports
 
