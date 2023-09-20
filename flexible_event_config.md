@@ -155,6 +155,21 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Next trigger_spec
   }, ...],
 
+  // Specifies how to match the trigger's trigger_data, which is a 64-bit
+  // unsigned integer, against the source's trigger specs, whose trigger data
+  // is constrained to a maximum of 32 distinct values, each of which is in the
+  // range [0, MAX_UINT32]:
+  //
+  // "exact":   The trigger data must exactly match one of the source's trigger
+  //            specs. Otherwise, no event-level attribution occurs.
+  // "modulus": The trigger data is taken modulus the number of distinct trigger
+  //            data across all of the source's trigger specs, and the resulting
+  //            value is used to index into that set of trigger data sorted in
+  //            ascending order.
+  //
+  // Defaults to "modulus".
+  "trigger_data_matching": <one of "exact" or "modulus">,
+
   // See description in phase 1.
   "max_event_level_reports": <int>,
 
@@ -168,7 +183,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
 
 This configuration fully specifies the output space of the event-level reports, per source registration. For every trigger spec, we fully specify:
 * A set of matching criteria:
-  * Which specific trigger data this spec applies to. This source is eligible to be matched only with triggers that have one of the specified `trigger_data` values in the `trigger_specs`. In other words, if the trigger would have matched this source but its `trigger_data` is not one of the values in the source's configuration, the trigger is ignored.
+  * Which specific trigger data this spec applies to, according to the source's `trigger_data_matching` field. This source is eligible to be matched only with triggers that have one of the specified `trigger_data` values in the `trigger_specs`. In other words, if the trigger would have matched this source but its `trigger_data` is not one of the values in the source's configuration, the trigger is ignored.
   * When a specific trigger matches this spec (via `event_report_windows`).
 Note that the trigger could still be matched with a source for aggregatable reports despite failing the above two match criteria.
 * A specific algorithm for summarizing and bucketizing all the triggers within an attribution window. This allows triggers to specify a `value` parameter that gets summed up for a particular spec, but reported as a bucketized value
