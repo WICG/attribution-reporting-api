@@ -114,7 +114,7 @@ export function defaultConfig(
   vsv: VendorSpecificValues
 ): Config {
   const defaultMaxReports =
-    vsv.defaultEventLevelAttributionsPerSource[sourceType]
+    constants.defaultEventLevelAttributionsPerSource[sourceType]
   return new Config(
     /*maxEventLevelReports=*/ defaultMaxReports,
     new Array(Number(vsv.triggerDataCardinality[sourceType])).fill(

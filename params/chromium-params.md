@@ -16,8 +16,6 @@ Chromium's implementation assigns the following values:
 | [Randomized null report rate including source registration time][] | [0.008][randomized null report rate including source registration time value] |
 | [Max event-level reports per attribution destination][] | [1024][max event-level reports per attribution destination value] |
 | [Max aggregatable reports per attribution destination][] | [1024][max aggregatable reports per attribution destination value] |
-| [Max attributions per navigation source][] | [3][max attributions per navigation source value] |
-| [Max attributions per event source][] | [1][max attributions per event source value] |
 | [Max aggregatable reports per source][] | [20][max aggregatable reports per source value] |
 | [Max destinations covered by unexpired sources][] | [100][max destinations covered by unexpired sources value] |
 | [Destination rate-limit window][] | [1 minute][destination rate-limit window value]
@@ -50,10 +48,6 @@ Chromium's implementation assigns the following values:
 [max event-level reports per attribution destination value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=61;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Max aggregatable reports per attribution destination]: https://wicg.github.io/attribution-reporting-api/#max-aggregatable-reports-per-attribution-destination
 [max aggregatable reports per attribution destination value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=90;drc=3733a639d724a4353463a872605119d11a1e4d37
-[Max attributions per navigation source]: https://wicg.github.io/attribution-reporting-api/#max-attributions-per-navigation-source
-[max attributions per navigation source value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=64;drc=3733a639d724a4353463a872605119d11a1e4d37
-[Max attributions per event source]: https://wicg.github.io/attribution-reporting-api/#max-attributions-per-event-source
-[max attributions per event source value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=65;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Max aggregatable reports per source]: https://wicg.github.io/attribution-reporting-api/#max-aggregatable-reports-per-source
 [max aggregatable reports per source value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=111;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Max destinations covered by unexpired sources]: https://wicg.github.io/attribution-reporting-api/#max-destinations-covered-by-unexpired-sources

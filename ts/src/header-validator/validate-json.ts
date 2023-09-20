@@ -749,8 +749,7 @@ function channelCapacity(ctx: Context, s: Source): void {
   if (
     ctx.vsv.maxEventLevelChannelCapacityPerSource === undefined ||
     ctx.vsv.randomizedResponseEpsilon === undefined ||
-    ctx.vsv.triggerDataCardinality === undefined ||
-    s.maxEventLevelReports === null
+    ctx.vsv.triggerDataCardinality === undefined
   ) {
     // TODO: consider warning when this cannot be checked
     return
@@ -794,7 +793,7 @@ export type Source = CommonDebug &
     eventReportWindows: EventReportWindows
     expiry: number
     filterData: FilterData
-    maxEventLevelReports: number | null
+    maxEventLevelReports: number
     sourceEventId: bigint
   }
 
@@ -820,8 +819,7 @@ function source(ctx: Context, j: Json): Maybe<Source> {
         maxEventLevelReports: field(
           'max_event_level_reports',
           maxEventLevelReports,
-          ctx.vsv.defaultEventLevelAttributionsPerSource?.[ctx.sourceType] ??
-            null
+          constants.defaultEventLevelAttributionsPerSource[ctx.sourceType]
         ),
         sourceEventId: field('source_event_id', uint64, 0n),
 

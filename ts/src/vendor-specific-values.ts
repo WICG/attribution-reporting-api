@@ -1,7 +1,6 @@
 import { SourceType } from './source-type'
 
 export type VendorSpecificValues = {
-  defaultEventLevelAttributionsPerSource: Record<SourceType, number>
   maxAggregationKeysPerSource: number
   maxEventLevelChannelCapacityPerSource: Record<SourceType, number>
   randomizedResponseEpsilon: number
@@ -9,10 +8,6 @@ export type VendorSpecificValues = {
 }
 
 export const Chromium: Readonly<VendorSpecificValues> = {
-  defaultEventLevelAttributionsPerSource: {
-    [SourceType.event]: 1,
-    [SourceType.navigation]: 3,
-  },
   maxAggregationKeysPerSource: 20,
   maxEventLevelChannelCapacityPerSource: {
     [SourceType.event]: 6.5,

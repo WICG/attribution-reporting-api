@@ -1089,10 +1089,6 @@ const testCases: TestCase[] = [
     json: `{"destination": "https://a.test"}`,
     sourceType: SourceType.event,
     vsv: {
-      defaultEventLevelAttributionsPerSource: {
-        [SourceType.event]: 1,
-        [SourceType.navigation]: 3,
-      },
       maxEventLevelChannelCapacityPerSource: {
         [SourceType.event]: 0,
         [SourceType.navigation]: Infinity,
@@ -1115,10 +1111,6 @@ const testCases: TestCase[] = [
     json: `{"destination": "https://a.test"}`,
     sourceType: SourceType.navigation,
     vsv: {
-      defaultEventLevelAttributionsPerSource: {
-        [SourceType.event]: 1,
-        [SourceType.navigation]: 3,
-      },
       maxEventLevelChannelCapacityPerSource: {
         [SourceType.event]: Infinity,
         [SourceType.navigation]: 0,
