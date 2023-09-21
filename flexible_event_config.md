@@ -149,7 +149,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // the range that includes 0, as every source is initialized in this range.
     //
     // If omitted, then represents a trivial mapping
-    // [1, 2, ... , MAX_INT]
+    // [1, 2, ... , MAX_INT - 1]
     // With MAX_INT being the maximum int value defined by the browser.
     "summary_buckets": [<bucket start>, ...]
   }, {
