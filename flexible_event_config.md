@@ -108,9 +108,10 @@ In addition to the parameters that were added in Phase 1, we will add one additi
   // generate bucketized output based on accumulated values across multiple
   // triggers within the specified event_report_window.
   // There will be a limit on the number of specs possible to define for a source.
+  // MAX_UINT32 is 2^32 - 1 (4294967295).
   "trigger_specs": [{
     // This spec will only apply to registrations that set one of the given
-    // trigger data values (non-negative integers) in the list.
+    // trigger data values (integers in the range [0, MAX_UINT32]) in the list.
     // trigger_data will still appear in the event-level report.
     // Entries in trigger_data must be distinct, and the sets of all trigger_data fields within trigger_specs must be disjoint.
     "trigger_data": [<int>, ...],
@@ -135,22 +136,20 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Defaults to "count"
     "summary_window_operator": <one of "count" or "value_sum">,
 
-    // Represents a bucketization of the integers from [0, MAX_INT], encoded as
+    // Represents a bucketization of the integers from [0, MAX_UINT32], encoded as
     // a list of integers where new buckets begin (excluding 0 which is
     // implicitly included).
     // It must consist of strictly increasing positive integers.
     //
     // e.g. [5, 10, 100] encodes the following ranges:
-    // [[0, 4], [5, 9], [10, 99], [100, MAX_INT]]
+    // [[0, 4], [5, 9], [10, 99], [100, MAX_UINT32]]
     //
     // At the end of each reporting window, triggers will be summarized into an
     // integer which slots into one of these ranges. Reports will be sent for
     // every new range boundary that is crossed. Reports will never be sent for
     // the range that includes 0, as every source is initialized in this range.
     //
-    // If omitted, then represents a trivial mapping
-    // [1, 2, ... , MAX_INT]
-    // With MAX_INT being the maximum int value defined by the browser.
+    // If omitted, then represents a trivial mapping [1, 2, ... , MAX_UINT32 - 1].
     "summary_buckets": [<bucket start>, ...]
   }, {
     // Next trigger_spec
@@ -197,7 +196,7 @@ Every trigger registration will match with at most one trigger spec and update i
 * For every trigger spec:
   * Evaluate the `event_trigger_data` on the spec to find a match, using the spec’s `event_reporting_window`
     * The top-level `event_reporting_windows` will act as a default value in case any trigger spec is the missing `event_report_windows` sub-field
-* The first matched spec is chosen for attribution, and we increment its summary value by `value` if the spec's `summary_window_operator` is `value_sum`, or by `1` if it is `count`.
+* The first matched spec is chosen for attribution, and we increment its summary value by `value` if the spec's `summary_window_operator` is `value_sum`, or by `1` if it is `count`, saturating in both cases at `MAX_UINT32`.
 
 When the `event_report_window` for a spec completes, we will map its summary value to a bucket, and send an event-level report for every increment in the summary bucket caused by attributed trigger values. Reports will come with one extra field `trigger_summary_bucket`.
 
@@ -314,7 +313,7 @@ The values are summed to 8 + 50 + 45 = 103. This yields the following reports at
 // Report 3
 {
   ...
-  "trigger_summary_bucket": [100, MAX_INT]
+  "trigger_summary_bucket": [100, MAX_UINT32]
 }
 ```
 
