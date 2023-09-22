@@ -11,6 +11,7 @@
   - [Attribution source registration](#attribution-source-registration)
   - [Attribution trigger registration](#attribution-trigger-registration)
   - [Aggregatable reports](#aggregatable-reports)
+    - [Encrypted payload](#encrypted-payload)
   - [Optional: transitional debugging reports](#optional-transitional-debugging-reports)
     - [Attribution-success debugging reports](#attribution-success-debugging-reports)
     - [Verbose debugging reports](#verbose-debugging-reports)

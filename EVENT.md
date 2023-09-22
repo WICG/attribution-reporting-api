@@ -21,25 +21,26 @@ extension on top of this.
 - [Related work](#related-work)
 - [API Overview](#api-overview)
   - [Registering attribution sources](#registering-attribution-sources)
-  - [Handling an attribution source
-    event](#handling-an-attribution-source-event)
-  - [Publisher-side Controls for Attribution Source
-    Declaration](#publisher-side-controls-for-attribution-source-declaration)
+  - [Handling an attribution source event](#handling-an-attribution-source-event)
+  - [Publisher-side Controls for Attribution Source Declaration](#publisher-side-controls-for-attribution-source-declaration)
   - [Triggering Attribution](#triggering-attribution)
   - [Registration requests](#registration-requests)
   - [Data limits and noise](#data-limits-and-noise)
   - [Trigger attribution algorithm](#trigger-attribution-algorithm)
-  - [Multiple sources for the same trigger
-    (Multi-touch)](#multiple-sources-for-the-same-trigger-multi-touch)
+  - [Multiple sources for the same trigger (Multi-touch)](#multiple-sources-for-the-same-trigger-multi-touch)
   - [Sending Scheduled Reports](#sending-scheduled-reports)
   - [Attribution Reports](#attribution-reports)
   - [Data Encoding](#data-encoding)
   - [Optional attribution filters](#optional-attribution-filters)
+    - [Reserved keys](#reserved-keys)
+    - [Lookback window](#lookback-window)
   - [Optional: transitional debugging reports](#optional-transitional-debugging-reports)
     - [Attribution-success debugging reports](#attribution-success-debugging-reports)
     - [Verbose debugging reports](#verbose-debugging-reports)
+      - [Reporting endpoints](#reporting-endpoints)
+- [Sample Usage](#sample-usage)
   - [Noisy fake conversion example](#noisy-fake-conversion-example)
-  - [Storage limits](#storage-limits)
+- [Storage limits](#storage-limits)
 - [Privacy Considerations](#privacy-considerations)
   - [Trigger Data](#trigger-data)
   - [Reporting Delay](#reporting-delay)
@@ -48,13 +49,11 @@ extension on top of this.
   - [Reporting cooldown / rate limits](#reporting-cooldown--rate-limits)
   - [Less trigger-side data](#less-trigger-side-data)
   - [Browsing history reconstruction](#browsing-history-reconstruction)
-    - [Adding noise to whether a trigger is
-      genuine](#adding-noise-to-whether-a-trigger-is-genuine)
-    - [Limiting the number of unique destinations covered by unexpired
-      sources](#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources)
+    - [Adding noise to whether a trigger is genuine](#adding-noise-to-whether-a-trigger-is-genuine)
+    - [Limiting the number of unique destinations covered by unexpired sources](#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources)
+    - [Limiting the number of unique destinations per source site](#limiting-the-number-of-unique-destinations-per-source-site)
   - [Differential privacy](#differential-privacy)
-  - [Speculative: Limits based on first party
-    storage](#speculative-limits-based-on-first-party-storage)
+  - [Speculative: Limits based on first party storage](#speculative-limits-based-on-first-party-storage)
 - [Security considerations](#security-considerations)
   - [Reporting origin control](#reporting-origin-control)
   - [Denial of service](#denial-of-service)
@@ -703,7 +702,7 @@ https://<reporting origin>/.well-known/attribution-reporting/debug/verbose
 TODO: Consider adding support for the top-level site to opt in to receiving
 debug reports without cross-site leak.
 
-TODO: Consider supporting debug reports for attirbution registrations inside a
+TODO: Consider supporting debug reports for attribution registrations inside a
 fenced frame tree.
 
 ## Sample Usage
@@ -801,7 +800,7 @@ In the above example, the browser could have chosen to generate three reports:
 * One report with metadata "3", sent 7 days after the click
 * One report with metadata "0", also sent 7 days after the click
 
-### Storage limits
+## Storage limits
 
 The browser may apply storage limits in order to prevent excessive resource
 usage.
