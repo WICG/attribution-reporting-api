@@ -472,7 +472,7 @@ function getData(input, max_value) {
 ```
 
 The benefit of this method over using a fixed bit mask is that it allows
-browsers to implement max\_values that aren’t multiples of 2. That is, browers
+browsers to implement max\_values that aren’t multiples of 2. That is, browsers
 can choose a "fractional" bit limit if they want to.
 
 ### Optional attribution filters
@@ -879,7 +879,7 @@ on a delay.
 ### Reporting origin limits
 
 If the advertiser is allowed to cycle through many possible reporting origins,
-then the publisher and advertiser don’t necessarily have to agree apriori on
+then the publisher and advertiser don’t necessarily have to agree a priori on
 what origin to use, and which origin actually ends up getting used reveals some
 extra information.
 
