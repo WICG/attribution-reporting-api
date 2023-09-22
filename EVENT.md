@@ -34,6 +34,8 @@ extension on top of this.
   - [Optional attribution filters](#optional-attribution-filters)
     - [Reserved keys](#reserved-keys)
     - [Lookback window](#lookback-window)
+  - [Optional: Varying frequency and number of reports](#optional-varying-frequency-and-number-of-reports)
+    - [Example {#flex-lite-example}](#example-flex-lite-example)
   - [Optional: transitional debugging reports](#optional-transitional-debugging-reports)
     - [Attribution-success debugging reports](#attribution-success-debugging-reports)
     - [Verbose debugging reports](#verbose-debugging-reports)
@@ -592,6 +594,60 @@ the filter to match, i.e., it must be inside the lookback window.
 When present on a negated filter (in `not_filters`), the duration since the
 source was registered must be greater than the parsed lookback window duration
 for the filter to match, i.e., it must be outside the lookback window.
+
+### Optional: Varying frequency and number of reports
+
+Sources have two additional optional top-level fields:
+
+```jsonc
+{
+  ...
+
+  // Restricts the total number of event-level reports that this source can generate.
+  // After this maximum is hit, the source is no longer capable of producing any new data.
+  // Must be greater than or equal to 0 and less than or equal to 20.
+  // Defaults to 3 for navigation sources and 1 for event sources.
+  "max_event_level_reports": <int>,
+
+  // Represents a series of time windows, starting at start_time.
+  // Reports for this source will be delivered after the end of each window.
+  // Time is encoded as seconds after source registration.
+  // If omitted, will use the default windows.
+  // It is an error to set both this field and the event_report_window field in
+  // the same source.
+  // Start time is inclusive, end times are exclusive.
+  "event_report_windows": {
+
+    // Optional. Defaults to 0.
+    "start_time": <non-negative int>,
+
+    // Required. Must be non-empty, strictly increasing, and greater than
+    // start_time.
+    "end_times": [<positive int>, ...]
+  }
+}
+```
+
+This may be used to:
+
+* Vary the frequency of reports by specifying the number of reporting windows
+* Vary the number of attributions per source registration
+* Reduce the amount of total noise by decreasing the above parameters
+* Configure reporting windows rather than using the defaults
+
+#### Example {#flex-lite-example}
+
+This example configuration supports optimizing for receiving reports at earlier reporting windows:
+
+```jsonc
+{
+  ...
+  "max_event_level_reports": 2,
+  "event_report_windows": {
+    "end_times": [7200, 43200, 86400] // 2 hours, 12 hours, 1 day in seconds
+  }
+}
+```
 
 ### Optional: transitional debugging reports
 
