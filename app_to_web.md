@@ -141,7 +141,7 @@ Attribution between two websites within the browser doesn't require specific OS 
 
 This design places trust in the OS to process potentially sensitive user data. Additionally, it requires the OS to place trust in the browser.
 
-Further discussion on the Android-specific measurement APIs security considerations can be [found here](https://developer.android.com/design-for-safety/privacy-sandbox/attribution-app-to-web#apps-privacy-security).
+Further discussion on the Android-specific measurement API's security considerations can be [found here](https://developer.android.com/design-for-safety/privacy-sandbox/attribution-app-to-web#apps-privacy-security).
 
 # Appendix
 ## Alternative design considered: Sending app events directly to browsers
