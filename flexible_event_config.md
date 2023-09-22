@@ -149,7 +149,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // every new range boundary that is crossed. Reports will never be sent for
     // the range that includes 0, as every source is initialized in this range.
     //
-    // If omitted, then represents a trivial mapping [1, 2, ... , MAX_UINT32 - 1].
+    // If omitted, then represents a trivial mapping [1, 2, ... , MAX_UINT32].
     "summary_buckets": [<bucket start>, ...]
   }, {
     // Next trigger_spec
