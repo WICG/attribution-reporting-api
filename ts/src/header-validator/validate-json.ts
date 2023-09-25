@@ -150,11 +150,11 @@ function typeSwitch<T>(ctx: Context, j: Json, ts: TypeSwitch<T>): Maybe<T> {
 }
 
 function string(ctx: Context, j: Json): Maybe<string> {
-  return typeSwitch(ctx, j, { string: (ctx, j) => some(j) })
+  return typeSwitch(ctx, j, { string: (_ctx, j) => some(j) })
 }
 
 function bool(ctx: Context, j: Json): Maybe<boolean> {
-  return typeSwitch(ctx, j, { boolean: (ctx, j) => some(j) })
+  return typeSwitch(ctx, j, { boolean: (_ctx, j) => some(j) })
 }
 
 function isObject(j: Json): j is JsonDict {
@@ -162,7 +162,7 @@ function isObject(j: Json): j is JsonDict {
 }
 
 function object(ctx: Context, j: Json): Maybe<JsonDict> {
-  return typeSwitch(ctx, j, { object: (ctx, j) => some(j) })
+  return typeSwitch(ctx, j, { object: (_ctx, j) => some(j) })
 }
 
 function keyValues<V>(
@@ -198,7 +198,7 @@ function list(
   j: Json,
   { minLength = 0, maxLength = Infinity }: ListOpts = {}
 ): Maybe<Json[]> {
-  return typeSwitch(ctx, j, { list: (ctx, j) => some(j) }).peek((j) => {
+  return typeSwitch(ctx, j, { list: (_ctx, j) => some(j) }).peek((j) => {
     if (j.length > maxLength || j.length < minLength) {
       ctx.error(`length must be in the range [${minLength}, ${maxLength}]`)
     }
@@ -248,7 +248,7 @@ function triggerData(ctx: Context, j: Json): Maybe<bigint> {
 }
 
 function number(ctx: Context, j: Json): Maybe<number> {
-  return typeSwitch(ctx, j, { number: (ctx, j) => some(j) })
+  return typeSwitch(ctx, j, { number: (_ctx, j) => some(j) })
 }
 
 function isInteger(ctx: Context, n: number): boolean {
@@ -504,7 +504,7 @@ function set(
 
   return list(ctx, j, opts)
     .filter((js) =>
-      isCollection(ctx, js.entries(), (ctx, [i, j]) =>
+      isCollection(ctx, js.entries(), (ctx, [_i, j]) =>
         f(ctx, j).peek((v) =>
           set.has(v) ? ctx.warning(`duplicate value ${v}`) : set.add(v)
         )
@@ -530,7 +530,7 @@ function array<T>(
       isCollection(
         ctx,
         js.entries(),
-        (ctx, [i, j]) => f(ctx, j).peek((v) => arr.push(v)),
+        (ctx, [_i, j]) => f(ctx, j).peek((v) => arr.push(v)),
         opts?.keepGoing
       )
     )
@@ -653,7 +653,10 @@ const priorityField: StructFields<Priority> = {
 }
 
 // TODO: check length of key
-function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
+function aggregationKey(
+  ctx: Context,
+  [_key, j]: [string, Json]
+): Maybe<bigint> {
   return hex128(ctx, j)
 }
 
@@ -865,7 +868,7 @@ function aggregatableTriggerData(
 // TODO: check length of key
 function aggregatableKeyValue(
   ctx: Context,
-  [key, j]: [string, Json]
+  [_key, j]: [string, Json]
 ): Maybe<number> {
   return number(ctx, j)
     .filter((n) => isInteger(ctx, n))

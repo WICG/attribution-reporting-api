@@ -1,5 +1,5 @@
 import { Context, ValidationResult } from './context'
-const { parseDictionary } = require('structured-headers')
+import { parseDictionary } from 'structured-headers'
 
 export function validateEligible(str: string): ValidationResult {
   const ctx = new Context()

@@ -118,7 +118,6 @@ test('computeConfigData', async (t) => {
         numStates: 2925,
         infoGain: 11.461727965384876,
         flipProb: 0.0024263221679834087,
-        excessive: undefined,
       }
     )
   })
@@ -133,7 +132,6 @@ test('computeConfigData', async (t) => {
         numStates: 3,
         infoGain: 1.584926511508231,
         flipProb: 0.000002494582008677539,
-        excessive: undefined,
       }
     )
   })

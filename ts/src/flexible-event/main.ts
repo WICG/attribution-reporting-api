@@ -1,10 +1,10 @@
 const commandLineArgs = require('command-line-args')
-const fs = require('fs')
+import { readFileSync } from 'fs'
 
 import * as constants from '../constants'
 import { SourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
-import { Config, defaultConfig, PerTriggerDataConfig } from './privacy'
+import { Config, PerTriggerDataConfig } from './privacy'
 
 function commaSeparatedInts(str: string): number[] {
   return str.split(',').map((v) => Number(v))
@@ -18,7 +18,7 @@ function parseSourceType(str: string): SourceType {
 }
 
 function getNumWindowsFromJson(defaultVal: number, windows: any): number {
-  if (typeof windows === 'undefined') {
+  if (windows === undefined) {
     return defaultVal
   }
 
@@ -44,7 +44,7 @@ function getConfig(json: any, sourceType: SourceType): Config {
   const defaultWindows = defaultMaxReports
 
   let maxEventLevelReports = json['max_event_level_reports']
-  if (typeof maxEventLevelReports === 'undefined') {
+  if (maxEventLevelReports === undefined) {
     maxEventLevelReports = defaultMaxReports
   } else if (typeof maxEventLevelReports !== 'number') {
     throw 'max_event_level_reports must be a number'
@@ -82,7 +82,7 @@ function getConfig(json: any, sourceType: SourceType): Config {
     // by `max_event_level_reports`.
     let numBuckets = maxEventLevelReports
     const summaryBuckets = spec['summary_buckets']
-    if (typeof summaryBuckets !== 'undefined') {
+    if (summaryBuckets !== undefined) {
       if (!Array.isArray(summaryBuckets)) {
         throw 'summary_buckets must be an array'
       }
@@ -139,12 +139,10 @@ const options = commandLineArgs(optionDefs)
 
 let config: Config
 if ('json_file' in options) {
-  const json = JSON.parse(
-    fs.readFileSync(options.json_file, { encoding: 'utf8' })
-  )
+  const json = JSON.parse(readFileSync(options.json_file, { encoding: 'utf8' }))
   config = getConfig(json, options.source_type)
 } else {
-  if (options.windows.length != options.buckets.length) {
+  if (options.windows.length !== options.buckets.length) {
     throw 'windows and buckets must have same length'
   }
   config = new Config(
