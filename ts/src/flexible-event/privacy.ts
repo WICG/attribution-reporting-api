@@ -59,7 +59,7 @@ export class Config {
         }
 
         if (w === 0) {
-          const triggerConfig = this.perTriggerDataConfigs[index - 1]!
+          const triggerConfig = this.perTriggerDataConfigs.at(index - 1)!
           return helper(
             totalCap,
             index - 1,
