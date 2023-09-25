@@ -1,4 +1,4 @@
-const memoize = require('memoizee')
+import memoize from 'memoizee'
 import * as constants from '../constants'
 import { SourceType } from '../source-type'
 import { VendorSpecificValues } from '../vendor-specific-values'
@@ -54,12 +54,12 @@ export class Config {
     // 3. A[C, w_1, ..., w_B, c_1, ... , c_B] = sum(A[C - j, w_1, ..., w_B - 1, c_1, ... , c_B - j], j from 0 to min(c_B, C)) otherwise
     const helper = memoize(
       (totalCap: number, index: number, w: number, c: number): number => {
-        if (index == 0 && w == 0) {
+        if (index === 0 && w === 0) {
           return 1
         }
 
-        if (w == 0) {
-          const triggerConfig = this.perTriggerDataConfigs[index - 1]
+        if (w === 0) {
+          const triggerConfig = this.perTriggerDataConfigs.at(index - 1)!
           return helper(
             totalCap,
             index - 1,
@@ -77,8 +77,7 @@ export class Config {
       }
     )
 
-    const lastConfig =
-      this.perTriggerDataConfigs[this.perTriggerDataConfigs.length - 1]
+    const lastConfig = this.perTriggerDataConfigs.at(-1)!
     const dataCardinality = this.perTriggerDataConfigs.length
     return helper(
       this.maxEventLevelReports,
@@ -93,7 +92,7 @@ export class Config {
     const infoGain = maxInformationGain(numStates, epsilon)
     const flipProb = flipProbabilityDp(numStates, epsilon)
 
-    let excessive
+    const data: ConfigData = { numStates, infoGain, flipProb }
 
     if (infoGain > infoGainMax) {
       const newEps = epsilonToBoundInfoGainAndDp(
@@ -102,10 +101,10 @@ export class Config {
         epsilon
       )
       const newFlipProb = flipProbabilityDp(numStates, newEps)
-      excessive = { newEps, newFlipProb }
+      data.excessive = { newEps, newFlipProb }
     }
 
-    return { numStates, infoGain, flipProb, excessive }
+    return data
   }
 }
 
@@ -129,7 +128,7 @@ export function defaultConfig(
 
 // Evaluates the binary entropy function.
 export function binaryEntropy(x: number): number {
-  if (x == 0 || x == 1) {
+  if (x === 0 || x === 1) {
     return 0
   }
   return -x * Math.log2(x) - (1 - x) * Math.log2(1 - x)
@@ -198,7 +197,7 @@ function epsilonToBoundInfoGainAndDp(
     // Allow slack by returning something slightly non-optimal (governed by the tolerance)
     // that still meets the privacy bar. If epsHigh == epsLow we're now governed by the epsilon
     // bound and can return.
-    if (infoGain < infoGainUpperBound - tolerance && epsHigh != epsLow) {
+    if (infoGain < infoGainUpperBound - tolerance && epsHigh !== epsLow) {
       epsLow = epsilon
       continue
     }
