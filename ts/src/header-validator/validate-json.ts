@@ -953,6 +953,41 @@ function defaultTriggerSpecs(
   )
 }
 
+export enum TriggerDataMatching {
+  exact = 'exact',
+  modulus = 'modulus',
+}
+
+function triggerDataMatching(
+  ctx: Context,
+  j: Json,
+  specs: Maybe<TriggerSpec[]>
+): Maybe<TriggerDataMatching> {
+  return enumerated(ctx, j, TriggerDataMatching).filter((v) => {
+    if (v !== TriggerDataMatching.modulus) {
+      return true
+    }
+
+    if (specs.value === undefined) {
+      ctx.error('cannot be fully validated without valid trigger specs')
+      return false
+    }
+
+    const triggerData: number[] = specs.value
+      .flatMap((spec) => Array.from(spec.triggerData))
+      .sort()
+
+    if (triggerData.some((triggerDatum, i) => triggerDatum !== i)) {
+      ctx.error(
+        'trigger_data must form a contiguous sequence of integers starting at 0 for modulus'
+      )
+      return false
+    }
+
+    return true
+  })
+}
+
 export type Source = CommonDebug &
   Priority & {
     aggregatableReportWindow: number
@@ -965,6 +1000,7 @@ export type Source = CommonDebug &
     sourceEventId: bigint
 
     triggerSpecs: TriggerSpec[]
+    triggerDataMatching: TriggerDataMatching
   }
 
 function source(ctx: Context, j: Json): Maybe<Source> {
@@ -997,6 +1033,19 @@ function source(ctx: Context, j: Json): Maybe<Source> {
         maxEventLevelReportsVal
       )
 
+      const triggerSpecsVal = ctx.parseFullFlex
+        ? field(
+            'trigger_specs',
+            (ctx, j) =>
+              triggerSpecs(ctx, j, {
+                expiry: expiryVal,
+                eventReportWindows: eventReportWindowsVal,
+                maxEventLevelReports: maxEventLevelReportsVal,
+              }),
+            defaultTriggerSpecsVal
+          )(ctx, j)
+        : defaultTriggerSpecsVal
+
       return struct(ctx, j, {
         aggregatableReportWindow: field(
           'aggregatable_report_window',
@@ -1010,19 +1059,15 @@ function source(ctx: Context, j: Json): Maybe<Source> {
         filterData: field('filter_data', filterData, new Map()),
         maxEventLevelReports: () => maxEventLevelReportsVal,
         sourceEventId: field('source_event_id', uint64, 0n),
+        triggerSpecs: () => triggerSpecsVal,
 
-        triggerSpecs: ctx.parseFullFlex
+        triggerDataMatching: ctx.parseFullFlex
           ? field(
-              'trigger_specs',
-              (ctx, j) =>
-                triggerSpecs(ctx, j, {
-                  expiry: expiryVal,
-                  eventReportWindows: eventReportWindowsVal,
-                  maxEventLevelReports: maxEventLevelReportsVal,
-                }),
-              defaultTriggerSpecsVal
+              'trigger_data_matching',
+              (ctx, j) => triggerDataMatching(ctx, j, triggerSpecsVal),
+              TriggerDataMatching.modulus
             )
-          : () => defaultTriggerSpecsVal,
+          : () => some(TriggerDataMatching.modulus),
 
         ...commonDebugFields,
         ...priorityField,

@@ -1,7 +1,12 @@
 import { SourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
-import { Source, SummaryWindowOperator, validateSource } from './validate-json'
+import {
+  Source,
+  SummaryWindowOperator,
+  TriggerDataMatching,
+  validateSource,
+} from './validate-json'
 import * as jsontest from './validate-json.test'
 
 type TestCase = jsontest.TestCase<Source> & {
@@ -60,6 +65,7 @@ const testCases: TestCase[] = [
           triggerData: new Set([0, 1, 2, 3, 4, 5, 6, 7]),
         },
       ],
+      triggerDataMatching: TriggerDataMatching.modulus,
     }),
   },
 
@@ -1517,6 +1523,80 @@ const testCases: TestCase[] = [
         msg: 'required',
       },
     ],
+  },
+  {
+    name: 'trigger-data-matching-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "trigger_data_matching": 3
+    }`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: ['trigger_data_matching'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'trigger-data-matching-wrong-value',
+    json: `{
+      "destination": "https://a.test",
+      "trigger_data_matching": "EXACT"
+    }`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: ['trigger_data_matching'],
+        msg: 'must be one of the following (case-sensitive): exact, modulus',
+      },
+    ],
+  },
+  {
+    name: 'trigger-data-matching-modulus-trigger-data-start-not-0',
+    json: `{
+      "destination": "https://a.test",
+      "trigger_data_matching": "modulus",
+      "trigger_specs": [{"trigger_data": [1]}]
+    }`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: ['trigger_data_matching'],
+        msg: 'trigger_data must form a contiguous sequence of integers starting at 0 for modulus',
+      },
+    ],
+  },
+  {
+    name: 'trigger-data-matching-modulus-trigger-data-not-contiguous',
+    json: `{
+      "destination": "https://a.test",
+      "trigger_data_matching": "modulus",
+      "trigger_specs": [
+        {"trigger_data": [0, 1]},
+        {"trigger_data": [3]}
+      ]
+    }`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: ['trigger_data_matching'],
+        msg: 'trigger_data must form a contiguous sequence of integers starting at 0 for modulus',
+      },
+    ],
+  },
+  {
+    name: 'trigger-data-matching-modulus-valid',
+    json: `{
+      "destination": "https://a.test",
+      "trigger_data_matching": "modulus",
+      "trigger_specs": [
+        {"trigger_data": [1, 0]},
+        {"trigger_data": [3]},
+        {"trigger_data": [2]}
+      ]
+    }`,
+    parseFullFlex: true,
   },
 ]
 
