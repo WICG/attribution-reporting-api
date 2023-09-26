@@ -403,39 +403,29 @@ function endTimes(
   expiry: Maybe<number>,
   startTime: Maybe<number>
 ): Maybe<number[]> {
-  let prev = startTime
+  if (startTime.value === undefined) {
+    ctx.error('cannot be fully validated without a valid start_time')
+    return None
+  }
+
+  if (expiry.value === undefined) {
+    ctx.error('cannot be fully validated without a valid expiry')
+    return None
+  }
+
+  let prev = startTime.value
   let prevDesc = 'start_time'
 
   const endTime = (ctx: Context, j: Json): Maybe<number> =>
     positiveInteger(ctx, j)
-      .map((n) => {
-        if (expiry.value === undefined) {
-          ctx.error('cannot be fully validated without a valid expiry')
-          return None
-        }
-        return clamp(
-          ctx,
-          n,
-          constants.minReportWindow,
-          expiry.value,
-          ' (expiry)'
-        )
-      })
-      .filter((n) => {
-        if (prev.value === undefined) {
-          ctx.error(`cannot be fully validated without a valid ${prevDesc}`)
-          return false
-        }
-        return isInRange(
-          ctx,
-          n,
-          prev.value + 1,
-          Infinity,
-          `must be > ${prevDesc} (${prev.value})`
-        )
-      })
+      .map((n) =>
+        clamp(ctx, n, constants.minReportWindow, expiry.value!, ' (expiry)')
+      )
+      .filter((n) =>
+        isInRange(ctx, n, prev + 1, Infinity, `must be > ${prevDesc} (${prev})`)
+      )
       .peek((n) => {
-        prev = some(n)
+        prev = n
         prevDesc = 'previous end_time'
       })
 
