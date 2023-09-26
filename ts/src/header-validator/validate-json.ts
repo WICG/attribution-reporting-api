@@ -179,6 +179,7 @@ function keyValues<V>(
 
       if (entries.length > maxKeys) {
         ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
+        return false
       }
 
       return isCollection(ctx, entries, (ctx, [key, j]) =>
@@ -198,10 +199,12 @@ function list(
   j: Json,
   { minLength = 0, maxLength = Infinity }: ListOpts = {}
 ): Maybe<Json[]> {
-  return typeSwitch(ctx, j, { list: (_ctx, j) => some(j) }).peek((j) => {
+  return typeSwitch(ctx, j, { list: (_ctx, j) => some(j) }).filter((j) => {
     if (j.length > maxLength || j.length < minLength) {
       ctx.error(`length must be in the range [${minLength}, ${maxLength}]`)
+      return false
     }
+    return true
   })
 }
 
