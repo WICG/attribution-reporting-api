@@ -290,9 +290,12 @@ encoded. The map will have the following structure:
   }, ...]
 }
 ```
-Optionally, the browser may encode multiple contributions in the same payload;
-this is only possible if all other fields in the report/payload are identical
-for the contributions.
+The browser may encode multiple contributions in the same payload; this is only
+possible if all other fields in the report/payload are identical for the
+contributions. To avoid revealing the number of contributions in the payload
+through its encrypted size, the browser should pad the list of payloads with
+'null' (zero value) contributions up to the maximum. In the future, a more
+direct padding scheme could be considered.
 
 This encryption should use [AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption)
 to ensure that the information in `shared_info` is not tampered with, since the
