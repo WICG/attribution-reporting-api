@@ -1,4 +1,5 @@
 import { SourceType } from '../source-type'
+import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
 import { Source, validateSource } from './validate-json'
 import * as jsontest from './validate-json.test'
@@ -906,7 +907,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": 10,
-        "end_times": [3611,3612,3613,3614]
+        "end_times": [3611,3612,3613]
       }
     }`,
   },
@@ -1134,7 +1135,7 @@ testCases.forEach((tc) =>
   jsontest.run(tc, () =>
     validateSource(
       tc.json,
-      tc.vsv ?? {},
+      { ...vsv.Chromium, ...tc.vsv },
       tc.sourceType ?? SourceType.navigation
     )
   )

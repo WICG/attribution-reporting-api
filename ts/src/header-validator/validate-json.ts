@@ -17,7 +17,7 @@ const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 class Context extends context.Context {
   constructor(
-    readonly vsv: Readonly<Partial<VendorSpecificValues>>,
+    readonly vsv: Readonly<VendorSpecificValues>,
     readonly sourceType: SourceType
   ) {
     super()
@@ -238,7 +238,7 @@ function uint64(ctx: Context, j: Json): Maybe<bigint> {
 
 function triggerData(ctx: Context, j: Json): Maybe<bigint> {
   return uint64(ctx, j).peek((n) => {
-    Object.entries(ctx.vsv.triggerDataCardinality ?? []).forEach(([t, c]) => {
+    Object.entries(ctx.vsv.triggerDataCardinality).forEach(([t, c]) => {
       if (n >= c) {
         ctx.warning(
           `will be sanitized to ${
@@ -752,15 +752,6 @@ function eventReportWindow(
 }
 
 function channelCapacity(ctx: Context, s: Source): void {
-  if (
-    ctx.vsv.maxEventLevelChannelCapacityPerSource === undefined ||
-    ctx.vsv.randomizedResponseEpsilon === undefined ||
-    ctx.vsv.triggerDataCardinality === undefined
-  ) {
-    // TODO: consider warning when this cannot be checked
-    return
-  }
-
   const perTriggerDataConfigs = []
   for (let i = 0n; i < ctx.vsv.triggerDataCardinality[ctx.sourceType]; i++) {
     perTriggerDataConfigs.push(
@@ -983,7 +974,7 @@ function trigger(ctx: Context, j: Json): Maybe<Trigger> {
 function validateJSON<T>(
   json: string,
   f: CtxFunc<Json, Maybe<T>>,
-  vsv: Readonly<Partial<VendorSpecificValues>>,
+  vsv: Readonly<VendorSpecificValues>,
   sourceType: SourceType // irrelevant for triggers
 ): [context.ValidationResult, Maybe<T>] {
   const ctx = new Context(vsv, sourceType)
@@ -1002,7 +993,7 @@ function validateJSON<T>(
 
 export function validateSource(
   json: string,
-  vsv: Readonly<Partial<VendorSpecificValues>>,
+  vsv: Readonly<VendorSpecificValues>,
   sourceType: SourceType
 ): [context.ValidationResult, Maybe<Source>] {
   return validateJSON(json, source, vsv, sourceType)
@@ -1010,7 +1001,7 @@ export function validateSource(
 
 export function validateTrigger(
   json: string,
-  vsv: Readonly<Partial<VendorSpecificValues>>
+  vsv: Readonly<VendorSpecificValues>
 ): [context.ValidationResult, Maybe<Trigger>] {
   return validateJSON(json, trigger, vsv, SourceType.navigation)
 }

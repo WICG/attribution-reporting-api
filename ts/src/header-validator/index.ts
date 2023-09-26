@@ -1,18 +1,12 @@
 import { SourceType } from '../source-type'
 import { Issue, PathComponent } from './context'
-import {
-  Chromium as ChromiumVsv,
-  VendorSpecificValues,
-} from '../vendor-specific-values'
+import * as vsv from '../vendor-specific-values'
 import { validateSource, validateTrigger } from './validate-json'
 import { validateEligible } from './validate-eligible'
 import { validateOsRegistration } from './validate-os'
 
 const form = document.querySelector('form')! as HTMLFormElement
 const input = form.querySelector('textarea')! as HTMLTextAreaElement
-const useChromiumVsvCheckbox = document.querySelector(
-  '#chromium-vsv'
-)! as HTMLInputElement
 const headerRadios = form.elements.namedItem('header')! as RadioNodeList
 const sourceTypeRadios = form.elements.namedItem(
   'source-type'
@@ -61,19 +55,16 @@ function sourceType(): SourceType {
 }
 
 function validate(): void {
-  const vsv: Readonly<Partial<VendorSpecificValues>> =
-    useChromiumVsvCheckbox.checked ? ChromiumVsv : {}
-
   sourceTypeFieldset.disabled = true
 
   let result
   switch (headerRadios.value) {
     case 'source':
       sourceTypeFieldset.disabled = false
-      result = validateSource(input.value, vsv, sourceType())[0]
+      result = validateSource(input.value, vsv.Chromium, sourceType())[0]
       break
     case 'trigger':
-      result = validateTrigger(input.value, vsv)[0]
+      result = validateTrigger(input.value, vsv.Chromium)[0]
       break
     case 'os-source':
       result = validateOsRegistration(input.value)
@@ -100,7 +91,6 @@ function validate(): void {
   warningList.replaceChildren(...result.warnings.map(makeLi))
 }
 
-useChromiumVsvCheckbox.addEventListener('change', validate)
 form.addEventListener('input', validate)
 
 document.querySelector('#linkify')!.addEventListener('click', async () => {
@@ -108,10 +98,6 @@ document.querySelector('#linkify')!.addEventListener('click', async () => {
   url.search = ''
   url.searchParams.set('header', headerRadios.value)
   url.searchParams.set('json', input.value)
-
-  if (useChromiumVsvCheckbox.checked) {
-    url.searchParams.set('vsv', 'chromium')
-  }
 
   if (url.searchParams.get('header') === 'source') {
     url.searchParams.set('source-type', sourceType())
@@ -128,11 +114,6 @@ const params = new URLSearchParams(location.search)
 const json = params.get('json')
 if (json) {
   input.value = json
-}
-
-const vsv = params.get('vsv')
-if (vsv === 'chromium') {
-  useChromiumVsvCheckbox.checked = true
 }
 
 const allowedValues = new Set([
