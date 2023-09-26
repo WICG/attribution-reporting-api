@@ -18,7 +18,7 @@ export function run<T>(
   testutil.run(tc, tc.name, () => {
     const [validationResult, value] = f()
     if (tc.expected !== undefined) {
-      assert.deepEqual(value, tc.expected, tc.name)
+      assert.deepEqual(value, tc.expected)
     }
     return validationResult
   })
