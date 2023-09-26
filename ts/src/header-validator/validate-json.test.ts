@@ -15,10 +15,11 @@ export function run<T>(
   tc: TestCase<T>,
   f: () => [context.ValidationResult, Maybe<T>]
 ): void {
-  const [validationResult, value] = f()
-  testutil.run(tc, tc.name, () => validationResult)
-
-  if (tc.expected !== undefined) {
-    assert.deepEqual(value, tc.expected, tc.name)
-  }
+  testutil.run(tc, tc.name, () => {
+    const [validationResult, value] = f()
+    if (tc.expected !== undefined) {
+      assert.deepEqual(value, tc.expected, tc.name)
+    }
+    return validationResult
+  })
 }
