@@ -1,4 +1,5 @@
 import { SourceType } from '../source-type'
+import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
 import {
   AggregatableSourceRegistrationTime,
@@ -36,7 +37,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "filters": {"x": []},
         "not_filters": {"y": []},
         "priority": "-7",
-        "trigger_data": "6"
+        "trigger_data": "1"
       }],
       "filters": {"f": []},
       "not_filters": {"g": []}
@@ -87,7 +88,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         {
           dedupKey: 123n,
           priority: -7n,
-          triggerData: 6n,
+          triggerData: 1n,
           positive: [
             {
               lookbackWindow: null,
@@ -903,5 +904,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 ]
 
 testCases.forEach((tc) =>
-  jsontest.run(tc, () => validateTrigger(tc.json, tc.vsv ?? {}))
+  jsontest.run(tc, () =>
+    validateTrigger(tc.json, { ...vsv.Chromium, ...tc.vsv })
+  )
 )
