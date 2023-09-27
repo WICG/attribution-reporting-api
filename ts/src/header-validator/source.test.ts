@@ -926,7 +926,7 @@ const testCases: TestCase[] = [
         msg: 'must be a number',
       },
       {
-        path: ['event_report_windows', 'end_times', 0],
+        path: ['event_report_windows', 'end_times'],
         msg: 'cannot be fully validated without a valid start_time',
       },
     ],
@@ -946,7 +946,7 @@ const testCases: TestCase[] = [
         msg: 'must be an integer',
       },
       {
-        path: ['event_report_windows', 'end_times', 0],
+        path: ['event_report_windows', 'end_times'],
         msg: 'cannot be fully validated without a valid start_time',
       },
     ],
@@ -966,7 +966,7 @@ const testCases: TestCase[] = [
         msg: 'must be non-negative and <= expiry (2592000)',
       },
       {
-        path: ['event_report_windows', 'end_times', 0],
+        path: ['event_report_windows', 'end_times'],
         msg: 'cannot be fully validated without a valid start_time',
       },
     ],
