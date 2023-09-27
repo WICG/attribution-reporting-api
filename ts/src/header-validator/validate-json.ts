@@ -760,7 +760,7 @@ function eventReportWindow(
 
 function channelCapacity(ctx: Context, s: Source): void {
   const perTriggerDataConfigs = s.triggerSpecs.flatMap((spec) =>
-    new Array(spec.triggerData.size).fill(
+    Array(spec.triggerData.size).fill(
       new privacy.PerTriggerDataConfig(
         spec.eventReportWindows.endTimes.length,
         spec.summaryBuckets.length
@@ -811,15 +811,15 @@ function summaryBuckets(
   const bucket = (ctx: Context, j: Json): Maybe<number> =>
     number(ctx, j)
       .filter((n) => isInteger(ctx, n))
-      .filter((n) => {
-        return isInRange(
+      .filter((n) =>
+        isInRange(
           ctx,
           n,
           prev + 1,
           UINT32_MAX,
           `must be > ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
         )
-      })
+      )
       .peek((n) => {
         prev = n
         prevDesc = 'previous value'
@@ -864,13 +864,9 @@ function triggerSpec(
   j: Json,
   deps: TriggerSpecDeps
 ): Maybe<TriggerSpec> {
-  const defaultSummaryBuckets = deps.maxEventLevelReports.map((n) => {
-    const buckets: number[] = []
-    for (let i = 1; i <= n; ++i) {
-      buckets.push(i)
-    }
-    return buckets
-  })
+  const defaultSummaryBuckets = deps.maxEventLevelReports.map((n) =>
+    Array.from({ length: n }, (_, i) => i + 1)
+  )
 
   return struct(ctx, j, {
     eventReportWindows: field(
@@ -941,14 +937,16 @@ function defaultTriggerSpecs(
     maxEventLevelReports.map((maxEventLevelReports) => [
       {
         eventReportWindows,
-        summaryBuckets: Array(maxEventLevelReports)
-          .fill(0)
-          .map((_, i) => i + 1),
+        summaryBuckets: Array.from(
+          { length: maxEventLevelReports },
+          (_, i) => i + 1
+        ),
         summaryWindowOperator: SummaryWindowOperator.count,
         triggerData: new Set(
-          Array(Number(ctx.vsv.triggerDataCardinality[ctx.sourceType]))
-            .fill(0)
-            .map((_, i) => i)
+          Array.from(
+            { length: Number(ctx.vsv.triggerDataCardinality[ctx.sourceType]) },
+            (_, i) => i
+          )
         ),
       },
     ])
