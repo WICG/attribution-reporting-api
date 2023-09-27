@@ -48,7 +48,7 @@ The usefulness of this page depends on testers sharing information and updates; 
 | CyberAgent(Dynalyst) | Demand-side platform (DSP) | no later than January 31, 2024 | | privacysandbox@cyberagent.co.jp |
 | Google (Ads Products & Platforms) | Ad tech services | Testing ongoing | | Clients can reach out to their account manager directly |
 | MicroAd | SSP & DSP | | | privacysandbox@microad.co.jp |
-| Nexxen (Unruly/Tremor/Amobee) | SSP & DSP| 2023-2024 | coming soon | soak@nexxen.com |
+| Nexxen (Unruly/Tremor/Amobee) | SSP & DSP| 2023-2024 | coming soon | privacysandbox@nexxen.com |
 | Seedtag | SSP & DSP| 2023-2024 | coming soon | privacysandbox@seedtag.com |
 | Adform | DSP | Beginning January 1, 2024 | | privacysandbox@adform.com |
 | Yahoo Inc | DSP | beginning 15 Jan 2024 | | googleprivacysandbox@yahooinc.com |
