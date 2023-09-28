@@ -101,6 +101,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
               map: new Map([['y', new Set()]]),
             },
           ],
+          value: 1,
         },
       ],
       positive: [
@@ -153,8 +154,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   // warnings
   {
     name: 'unknown-field',
-    json: `{"x": true}`,
+    json: `{
+      "event_trigger_data": [{"value": 3}],
+      "x": true
+    }`,
     expectedWarnings: [
+      {
+        path: ['event_trigger_data', 0, 'value'],
+        msg: 'unknown field',
+      },
       {
         path: ['x'],
         msg: 'unknown field',
@@ -901,10 +909,61 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
     ],
   },
+
+  // Full Flex
+
+  {
+    name: 'value-wrong-type',
+    json: `{"event_trigger_data": [{"value":"1"}]}`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: ['event_trigger_data', 0, 'value'],
+        msg: 'must be a number',
+      },
+    ],
+  },
+  {
+    name: 'value-zero',
+    json: `{"event_trigger_data": [{"value":0}]}`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: ['event_trigger_data', 0, 'value'],
+        msg: 'must be positive',
+      },
+    ],
+  },
+  {
+    name: 'value-negative',
+    json: `{"event_trigger_data": [{"value":-1}]}`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: ['event_trigger_data', 0, 'value'],
+        msg: 'must be positive',
+      },
+    ],
+  },
+  {
+    name: 'value-not-integer',
+    json: `{"event_trigger_data": [{"value":1.5}]}`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: ['event_trigger_data', 0, 'value'],
+        msg: 'must be an integer',
+      },
+    ],
+  },
 ]
 
 testCases.forEach((tc) =>
   jsontest.run(tc, () =>
-    validateTrigger(tc.json, { ...vsv.Chromium, ...tc.vsv })
+    validateTrigger(
+      tc.json,
+      { ...vsv.Chromium, ...tc.vsv },
+      tc.parseFullFlex ?? false
+    )
   )
 )

@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import * as constants from '../constants'
 import { SourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import {
+  Config,
+  PerTriggerDataConfig,
+  binaryEntropy,
   flipProbabilityDp,
   maxInformationGain,
-  binaryEntropy,
-  defaultConfig,
 } from './privacy'
 
 const flipProbabilityTests = [
@@ -104,6 +106,24 @@ test('binaryEntropy', async (t) => {
     )
   )
 })
+
+function defaultConfig(
+  sourceType: SourceType,
+  vsv: vsv.VendorSpecificValues
+): Config {
+  const defaultMaxReports =
+    constants.defaultEventLevelAttributionsPerSource[sourceType]
+  return new Config(
+    /*maxEventLevelReports=*/ defaultMaxReports,
+    new Array(Number(vsv.triggerDataCardinality[sourceType])).fill(
+      new PerTriggerDataConfig(
+        /*numWindows=*/
+        constants.defaultEarlyEventLevelReportWindows[sourceType].length + 1,
+        /*numSummaryBuckets=*/ defaultMaxReports
+      )
+    )
+  )
+}
 
 test('computeConfigData', async (t) => {
   await t.test('navigation', () => {
