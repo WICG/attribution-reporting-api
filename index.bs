@@ -532,9 +532,9 @@ Add the step:
 
 # Fenced Frame monkeypatches # {#fenced-frame-monkeypatches}
 
-Add the following items to [=fencedframetype/pending event=]:
+Add the following items to [=fencedframetype/destination enum event=]:
 
-<dl dfn-for="pending event">
+<dl dfn-for="destination enum event">
 : <dfn>attributionReportingEnabled</dfn>
 :: A [=boolean=]
 : <dfn>contextOrigin</dfn>
@@ -546,74 +546,29 @@ Modify {{Fence/reportEvent()}} as follows:
 
 <div algorithm="report-event-monkeypatch">
 
-Replace the step
+Before the step
 
-> Run <a spec=fenced-frame>report an event</a> using |instance|'s
-> [=fenced frame config instance/fenced frame reporter=] with |destination|,
-> |event|'s {{FenceEvent/eventType}}, and |event|'s {{FenceEvent/eventData}}.
-
-with
-
-Run <a spec=fenced-frame>report an event</a> using |instance|'s
-[=fenced frame config instance/fenced frame reporter=] with |destination|,
-|event|'s {{FenceEvent/eventType}}, |event|'s {{FenceEvent/eventData}},
-and [=this=]'s [=relevant global object=]'s [=associated Document=].
-
-</div>
-
-Modify <a spec=fenced-frame>report an event</a> as follows:
-
-<div algorithm="report-an-event-monkeypatch">
-
-Add a [=Document=] parameter called |document|.
-
-After the step
-
-> If |reporting map|[|destination|] does not [=map/exist=], return.
+> [=list/For each=] |destination| of <var ignore=''>event</var>'s {{FenceEvent/destination}}:
 
 add the steps
 
+1. Let |document| be [=this=]'s [=relevant global object=]'s [=associated Document=].
 1. Let |attributionReportingEnabled| be the result of determining whether |document| is
     [=allowed to use=] the "<code>{{PermissionPolicy/attribution-reporting}}</code>" feature.
 1. Let |contextOrigin| be |document|'s [=node/context origin=].
 
 In the step
 
-> Let <var ignore>newEvent</var> be a new [=fencedframetype/pending event=] with the following...
+> Run <a spec=fenced-frame>report an event</a> using <var ignore=''>instance</var>'s
+> [=fenced frame config instance/fenced frame reporter=] with |destination| and
+> a [=fencedframetype/destination enum event=] with the following [=struct/items=]:
 
 add the properties
 
-: [=pending event/attributionReportingEnabled=]
+: [=destination enum event/attributionReportingEnabled=]
 :: |attributionReportingEnabled|
-: [=pending event/contextOrigin=]
+: [=destination enum event/contextOrigin=]
 :: |contextOrigin|
-
-Replace the step
-
-> <a spec=fenced-frame>Send a beacon</a> with |reporting map|[|destination|],
-> |eventType|, and |eventData|.
-
-with
-
-<a spec=fenced-frame>Send a beacon</a> with |reporting map|[|destination|],
-|eventType|, |eventData|, |attributionReportingEnabled|, and |contextOrigin|.
-
-</div>
-
-Modify [=finalize a reporting destination=] as follows:
-
-<div algorithm="finalize-a-reporting-destination-monkeypatch">
-
-Replace the step
-
-> <a spec=fenced-frame>Send a beacon</a> with |destination map|, |pending event|'s [=pending event/eventType=],
-> and |pending event|'s [=pending event/eventData=].
-
-with
-
-<a spec=fenced-frame>Send a beacon</a> with |destination map|, |pending event|'s [=pending event/eventType=],
-|pending event|'s [=pending event/eventData=], |pending event|'s [=pending event/attributionReportingEnabled=],
-and |pending event|'s [=pending event/contextOrigin=].
 
 </div>
 
@@ -626,13 +581,20 @@ parameter called |contextOrigin|.
 
 After the step
 
-> Let <var ignore>destination url</var> be <var ignore>destination map</var>[<var ignore>eventType</var>].
+> Let <var ignore=''>destination url</var> be an empty [=string=].
 
 add the steps
 
 1. Let |attributionReportingEligibility| be "<code>[=eligibility/unset=]</code>".
 1. Let |processResponse| be null.
 1. Let |useParallelQueue| be false.
+
+In the step
+
+> If <var ignore=''>event</var> is a [=fencedframetype/destination enum event=], then
+
+add the steps
+
 1. If |attributionReportingEnabled| is true and the result of [=getting supported registrars=]
      is not [=list/is empty|empty=] and |contextOrigin| [=check if an origin is suitable|is suitable=]:
          1. Set |attributionReportingEligibility| to "<code>[=eligibility/event-source=]</code>".
