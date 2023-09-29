@@ -576,9 +576,6 @@ Modify <a spec=fenced-frame>send a beacon</a> as follows:
 
 <div algorithm="send-a-beacon-monkeypatch">
 
-Add a [=boolean=] parameter called |attributionReportingEnabled| and an [=origin=]
-parameter called |contextOrigin|.
-
 After the step
 
 > Let <var ignore=''>destination url</var> be an empty [=string=].
@@ -591,15 +588,15 @@ add the steps
 
 In the step
 
-> If <var ignore=''>event</var> is a [=fencedframetype/destination enum event=], then
+> If |event| is a [=fencedframetype/destination enum event=], then
 
 add the steps
 
-1. If |attributionReportingEnabled| is true and the result of [=getting supported registrars=]
-     is not [=list/is empty|empty=] and |contextOrigin| [=check if an origin is suitable|is suitable=]:
+1. If |event|'s [=destination enum event/attributionReportingEnabled=] is true and the result of [=getting supported registrars=]
+     is not [=list/is empty|empty=] and |event|'s [=destination enum event/contextOrigin=] [=check if an origin is suitable|is suitable=]:
          1. Set |attributionReportingEligibility| to "<code>[=eligibility/event-source=]</code>".
          1. Set |processResponse| to these steps given a [=response=] |response|:
-             1. Run [=process an attribution eligible response=] with |contextOrigin|,
+             1. Run [=process an attribution eligible response=] with |event}|'s [=destination enum event/contextOrigin=],
                  |attributionReportingEligibility|, and |response|.
          1. Set |useParallelQueue| to true.
 
