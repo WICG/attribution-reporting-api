@@ -163,7 +163,7 @@ name.
 Whenever an <{img}> or a <{script}> |element| is created or |element|'s
 {{HTMLAttributionSrcElementUtils/attributionSrc}} attribute is set or changed,
 run [=make background attributionsrc requests=] with |element| and
-"<code>[=attributionreporting/eligibility/event-source-or-trigger=]</code>".
+"<code>[=eligibility/event-source-or-trigger=]</code>".
 
 Issue: More precisely specify which mutations are relevant for the
 attributionsrc attribute.
@@ -178,11 +178,11 @@ add the step
 
 1. If the element has an <{img/attributionsrc}> attribute, set
     |request|'s [=request/Attribution Reporting Eligibility=] to
-    "<code>[=attributionreporting/eligibility/event-source-or-trigger=]</code>".
+    "<code>[=eligibility/event-source-or-trigger=]</code>".
 
 A [=script fetch options=] has an associated <dfn for="script fetch options">
-Attribution Reporting eligibility</dfn> (an [=attributionreporting/eligibility=]). Unless otherwise
-stated it is "<code>[=attributionreporting/eligibility/unset=]</code>".
+Attribution Reporting eligibility</dfn> (an [=eligibility=]). Unless otherwise
+stated it is "<code>[=eligibility/unset=]</code>".
 
 Modify [=prepare the script element=] as follows:
 
@@ -194,9 +194,9 @@ After the step
 add the step
 
 1. Let |Attribution Reporting eligibility| be
-    "<code>[=attributionreporting/eligibility/event-source-or-trigger=]</code>" if |el| has an
+    "<code>[=eligibility/event-source-or-trigger=]</code>" if |el| has an
     <{script/attributionsrc}> content attribute and
-    "<code>[=attributionreporting/eligibility/unset=]</code>" otherwise.
+    "<code>[=eligibility/unset=]</code>" otherwise.
 
 Add "and [=script fetch options/Attribution Reporting eligibility=] is
 |Attribution Reporting eligibility|." to the step
@@ -221,7 +221,7 @@ add the steps
 1. If |subject| has an `attributionsrc` attribute:
     1. Set |navigationSourceEligible| to true.
     1. [=Make background attributionsrc requests=] with |subject| and
-        "<code>[=attributionreporting/eligibility/navigation-source=]</code>".
+        "<code>[=eligibility/navigation-source=]</code>".
 
 Add "and [=navigate/navigationSourceEligible=] set to
 |navigationSourceEligible|" to the step
@@ -343,8 +343,8 @@ partial interface XMLHttpRequest {
 </pre>
 
 A [=request=] has an associated
-<dfn for=request>Attribution Reporting eligibility</dfn> (an [=attributionreporting/eligibility=]).
-Unless otherwise stated it is "<code>[=attributionreporting/eligibility/unset=]</code>".
+<dfn for=request>Attribution Reporting eligibility</dfn> (an [=eligibility=]).
+Unless otherwise stated it is "<code>[=eligibility/unset=]</code>".
 
 A [=request=] has an associated
 <dfn for=request>trigger verification metadata</dfn> which is null or a [=trigger verification metadata=].
@@ -352,7 +352,7 @@ A [=request=] has an associated
 To <dfn>get an eligibility from {{AttributionReportingRequestOptions}}</dfn>
 given an optional {{AttributionReportingRequestOptions}} |options|:
 
-1. If |options| is null, return "<code>[=attributionreporting/eligibility/unset=]</code>".
+1. If |options| is null, return "<code>[=eligibility/unset=]</code>".
 1. Let |eventSourceEligible| be |options|'s
     {{AttributionReportingRequestOptions/eventSourceEligible}}.
 1. Let |triggerEligible| be |options|'s
@@ -360,13 +360,13 @@ given an optional {{AttributionReportingRequestOptions}} |options|:
 1. If (|eventSourceEligible|, |triggerEligible|) is:
     <dl class="switch">
     : (false, false)
-    :: Return "<code>[=attributionreporting/eligibility/empty=]</code>".
+    :: Return "<code>[=eligibility/empty=]</code>".
     : (false, true)
-    :: Return "<code>[=attributionreporting/eligibility/trigger=]</code>".
+    :: Return "<code>[=eligibility/trigger=]</code>".
     : (true, false)
-    :: Return "<code>[=attributionreporting/eligibility/event-source=]</code>".
+    :: Return "<code>[=eligibility/event-source=]</code>".
     : (true, true)
-    :: Return "<code>[=attributionreporting/eligibility/event-source-or-trigger=]</code>".
+    :: Return "<code>[=eligibility/event-source-or-trigger=]</code>".
 
     </dl>
 
@@ -436,21 +436,21 @@ and an [=origin=] |contextOrigin|:
     |headers|.
 1. [=header list/Delete=] "<code>[=Attribution-Reporting-Support=]</code>" from
     |headers|.
-1. If |eligibility| is "<code>[=attributionreporting/eligibility/unset=]</code>", return.
+1. If |eligibility| is "<code>[=eligibility/unset=]</code>", return.
 1. Let |keys| be an [=list/is empty|empty=] [=list=].
 1. If |eligibility| is:
     <dl class="switch">
-    : "<code>[=attributionreporting/eligibility/empty=]</code>"
+    : "<code>[=eligibility/empty=]</code>"
     :: Do nothing.
-    : "<code>[=attributionreporting/eligibility/event-source=]</code>"
+    : "<code>[=eligibility/event-source=]</code>"
     :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" to |keys|.
-    : "<code>[=attributionreporting/eligibility/navigation-source=]</code>"
+    : "<code>[=eligibility/navigation-source=]</code>"
     :: [=list/Append=] "<code>[=eligible key/navigation-source=]</code>" to
         |keys|.
-    : "<code>[=attributionreporting/eligibility/trigger=]</code>"
+    : "<code>[=eligibility/trigger=]</code>"
     :: 1. [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
     :: 1. [=Set trigger verification request headers=] with |request| and |contextOrigin|.
-    : "<code>[=attributionreporting/eligibility/event-source-or-trigger=]</code>"
+    : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
         "<code>[=eligible key/trigger=]</code>" to |keys|.
 1. Let |dict| be the result of [=obtaining a dictionary structured header value=] with
@@ -498,8 +498,8 @@ add the step
 
 An {{XMLHttpRequest}} object has an associated
 <dfn id="xmlhttprequest-eligibility">Attribution Reporting eligibility</dfn> (an
-[=attributionreporting/eligibility=]). Unless otherwise stated it is
-"<code>[=attributionreporting/eligibility/unset=]</code>".
+[=eligibility=]). Unless otherwise stated it is
+"<code>[=eligibility/unset=]</code>".
 
 The {{XMLHttpRequest/setAttributionReporting(options)}} method must run these
 steps:
@@ -590,7 +590,7 @@ After the step
 
 add the steps
 
-1. Let |attributionReportingEligibility| be "<code>[=attributionreporting/eligibility/unset=]</code>".
+1. Let |attributionReportingEligibility| be "<code>[=eligibility/unset=]</code>".
 1. Let |processResponse| be null.
 1. Let |useParallelQueue| be false.
 
@@ -602,13 +602,13 @@ add the steps
 
 1. If |event|'s [=destination enum event/attributionReportingEnabled=] is true and the result of [=getting supported registrars=]
      is not [=list/is empty|empty=] and |event|'s [=destination enum event/contextOrigin=] [=check if an origin is suitable|is suitable=]:
-         1. Set |attributionReportingEligibility| to "<code>[=attributionreporting/eligibility/event-source=]</code>".
+         1. Set |attributionReportingEligibility| to "<code>[=eligibility/event-source=]</code>".
          1. Set |processResponse| to these steps given a [=response=] |response|:
              1. Run [=process an attribution eligible response=] with |event}|'s [=destination enum event/contextOrigin=],
                  |attributionReportingEligibility|, and |response|.
          1. Set |useParallelQueue| to true.
 
-         Issue: Allow "<code>[=attributionreporting/eligibility/navigation-source=]</code>" when automatic beacon is specified.
+         Issue: Allow "<code>[=eligibility/navigation-source=]</code>" when automatic beacon is specified.
 
 In the step
 
@@ -1545,9 +1545,9 @@ and a [=suitable origin=] |reportingOrigin|:
 
 <h3 id="making-a-background-attributionsrc-request">Making a background attributionsrc request</h3>
 
-An <dfn export for=attributionreporting>eligibility</dfn> is one of the following:
+An <dfn export>eligibility</dfn> is one of the following:
 
-<dl dfn-for="attributionreporting/eligibility">
+<dl dfn-for="eligibility">
 : "<dfn><code>unset</code></dfn>"
 :: Depending on context, a [=attribution trigger|trigger=] may or may not be
     registered.
@@ -1577,14 +1577,14 @@ A <dfn>registrar</dfn> is one of the following:
 </dl>
 
 To <dfn>validate a background attributionsrc eligibility</dfn> given an
-[=attributionreporting/eligibility=] |eligibility|:
+[=eligibility=] |eligibility|:
 
 1. [=Assert=]: |eligibility| is
-    "<code>[=attributionreporting/eligibility/navigation-source=]</code>" or
-    "<code>[=attributionreporting/eligibility/event-source-or-trigger=]</code>".
+    "<code>[=eligibility/navigation-source=]</code>" or
+    "<code>[=eligibility/event-source-or-trigger=]</code>".
 
 To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, an
-[=origin=] |contextOrigin|, an [=attributionreporting/eligibility=] |eligibility|, and a
+[=origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and a
 {{Document}} |document|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
@@ -1614,10 +1614,10 @@ Issue: Audit other properties on |request| and set them properly.
 Issue(839): Support header-processing on redirects. Due to <a href=https://fetch.spec.whatwg.org/#atomic-http-redirect-handling>atomic HTTP redirect handling</a>,
 we cannot process registrations through integration with [=fetch=].
 
-Issue: Check for transient activation with "<code>[=attributionreporting/eligibility/navigation-source=]</code>".
+Issue: Check for transient activation with "<code>[=eligibility/navigation-source=]</code>".
 
 To <dfn>make background attributionsrc requests</dfn> given an
-{{HTMLAttributionSrcElementUtils}} |element| and an [=attributionreporting/eligibility=]
+{{HTMLAttributionSrcElementUtils}} |element| and an [=eligibility=]
 |eligibility|:
 
 1. Let |attributionSrc| be |element|'s
@@ -1636,7 +1636,7 @@ To <dfn>make background attributionsrc requests</dfn> given an
 Issue: Consider allowing the user agent to limit the size of |tokens|.
 
 To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=] |contextOrigin|,
-an [=attributionreporting/eligibility=] |eligibility|, a [=request/trigger verification metadata=] |triggerVerificationMetadata|,
+an [=eligibility=] |eligibility|, a [=request/trigger verification metadata=] |triggerVerificationMetadata|,
 and a [=response=] |response|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
@@ -1644,7 +1644,7 @@ and a [=response=] |response|:
     |eligibility|, and |response|.
 
 To <dfn>process an attribution eligible response</dfn> given a [=suitable origin=]
-|contextOrigin|, an [=attributionreporting/eligibility=] |eligibility|, and a [=response=] |response|:
+|contextOrigin|, an [=eligibility=] |eligibility|, and a [=response=] |response|:
 
 1. The user-agent MAY ignore the response; if so, return.
 
@@ -1654,9 +1654,9 @@ To <dfn>process an attribution eligible response</dfn> given a [=suitable origin
     <a href="https://github.com/privacysandbox/attestation">enrolled</a>.
 
 1. [=Assert=]: |eligibility| is
-    "<code>[=attributionreporting/eligibility/navigation-source=]</code>" or
-    "<code>[=attributionreporting/eligibility/event-source=]</code>" or
-    "<code>[=attributionreporting/eligibility/event-source-or-trigger=]</code>".
+    "<code>[=eligibility/navigation-source=]</code>" or
+    "<code>[=eligibility/event-source=]</code>" or
+    "<code>[=eligibility/event-source-or-trigger=]</code>".
 1. Let |reportingOrigin| be |response|'s [=response/URL=]'s [=url/origin=].
 1. If |reportingOrigin| is not [=check if an origin is suitable|suitable=], return.
 1. Let |sourceHeader| be the result of [=header list/get|getting=]
@@ -1675,14 +1675,14 @@ To <dfn>process an attribution eligible response</dfn> given a [=suitable origin
     "`Attribution-Reporting-Register-OS-Trigger`".
 1. If |eligibility| is:
     <dl class="switch">
-    : "<code>[=attributionreporting/eligibility/navigation-source=]</code>"
-    : "<code>[=attributionreporting/eligibility/event-source=]</code>"
+    : "<code>[=eligibility/navigation-source=]</code>"
+    : "<code>[=eligibility/event-source=]</code>"
     :: Run the following steps:
         1. If |sourceHeader| and |osSourceRegistrations| are both null or both not
             null, return.
         1. If |sourceHeader| is not null:
             1. Let |sourceType| be "<code>[=source type/navigation=]</code>".
-            1. If |eligibility| is "<code>[=attributionreporting/eligibility/event-source=]</code>",
+            1. If |eligibility| is "<code>[=eligibility/event-source=]</code>",
                 set |sourceType| to "<code>[=source type/event=]</code>".
             1. Let |source| be the result of running
                 [=parse source-registration JSON=] with |sourceHeader|,
@@ -1695,7 +1695,7 @@ To <dfn>process an attribution eligible response</dfn> given a [=suitable origin
               1. Run [=obtain and deliver debug reports on OS registrations=] with
                   "<code>[=OS debug data type/os-source-delegated=]</code>", |osSourceRegistrations|,
                   and |contextOrigin|.
-    : "<code>[=attributionreporting/eligibility/event-source-or-trigger=]</code>"
+    : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: Run the following steps:
         1. If the number of non-null entries in «|sourceHeader|,
             |triggerHeader|, |osSourceRegistrations|, |osTriggerRegistrations|» is not 1, return.
