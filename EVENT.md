@@ -35,7 +35,7 @@ extension on top of this.
     - [Reserved keys](#reserved-keys)
     - [Lookback window](#lookback-window)
   - [Optional: Varying frequency and number of reports](#optional-varying-frequency-and-number-of-reports)
-    - [Example {#flex-lite-example}](#example-flex-lite-example)
+    - [Example](#example)
   - [Optional: transitional debugging reports](#optional-transitional-debugging-reports)
     - [Attribution-success debugging reports](#attribution-success-debugging-reports)
     - [Verbose debugging reports](#verbose-debugging-reports)
@@ -635,7 +635,7 @@ This may be used to:
 * Reduce the amount of total noise by decreasing the above parameters
 * Configure reporting windows rather than using the defaults
 
-#### Example {#flex-lite-example}
+#### Example
 
 This example configuration supports optimizing for receiving reports at earlier reporting windows:
 
