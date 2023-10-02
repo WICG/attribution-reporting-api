@@ -7,9 +7,6 @@ _Note: This document describes possible new functionality in the Attribution Rep
 **Table of Contents**
 
 - [Goals](#goals)
-- [Phase 1: Lite Flexible Event-Level](#phase-1-lite-flexible-event-level)
-  - [API Changes](#api-changes)
-    - [Custom Configurations: Example](#custom-configurations-example)
 - [Phase 2: Full Flexible Event-Level](#phase-2-full-flexible-event-level)
   - [API changes](#api-changes)
 - [Configurations that are equivalent to the current version](#configurations-that-are-equivalent-to-the-current-version)
@@ -28,14 +25,9 @@ The default configuration for event and navigation sources may not be ideal for 
 
 This proposal is broken into two separate feature sets:
 * __Phase 1: Lite flexible event-level configuration__
-  * This lite version would provide a subset of the full feature and can be used independently of Phase 2
+  * This lite version provides a subset of the full feature and can be used independently of Phase 2.
+  * Implemented [as described in the primary explainer](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-varying-frequency-and-number-of-reports).
 * __Phase 2: Full version of flexible event-level configuration__
-
-Phase 1 (Lite flexible event-level) could be used to:
-* Vary the frequency of reports by specifying the number of reporting windows
-* Vary the number of attributions per source registration
-* Reduce the amount of total noise by decreasing the above parameters
-* Configure reporting windows rather than using the defaults
 
 Phase 2 (Full flexible event-level) could be used to do all of the capabilities in Phase 1 and:
 * Vary the trigger data cardinality in a report
@@ -49,52 +41,6 @@ In general, the approach here is to more flexibly encode the output of the API f
 * Allow for value-based reporting (via bucketization) in addition to count-based reporting ([issue #55](https://github.com/WICG/attribution-reporting-api/issues/55))
 * Allow for choosing flexible reporting windows ([issue #46](https://github.com/WICG/attribution-reporting-api/issues/46) and [issue #736](https://github.com/WICG/attribution-reporting-api/issues/736))
 * Allow for setting the possible output space for a source based on a _prior probability distribution_ the ad tech has about the types of trigger that are possible, taking advantage of recent research into label differential privacy for [binary classification](https://arxiv.org/abs/2102.06062) and [regression problems](https://arxiv.org/abs/2212.06074).
-
-## Phase 1: Lite Flexible Event-Level
-
-### API Changes
-
-We will add the following two optional parameters to the JSON in `Attribution-Reporting-Register-Source`: `max_event_level_reports` and `event_report_windows`:
-
-```jsonc
-{
-  ...
-
-  // Optional. This is a parameter that acts across all trigger types for the lifetime of this source.
-  // It restricts the total number of event-level reports that this source can generate.
-  // After this maximum is hit, the source is no longer capable of producing any new data.
-  // The use of priority in the trigger attribution algorithm in the case of multiple attributable triggers remains unchanged.
-  // Defaults to 3 for navigation sources and 1 for event sources
-  "max_event_level_reports": <int>,
-
-  // Optional. Represents a series of time windows, starting at start_time.
-  // Reports for this source will be delivered after the end of each window.
-  // Time is encoded as seconds after source registration.
-  // If event_report_windows is omitted, will use the default windows.
-  // This field is mutually exclusive with the existing `event_report_window` field.
-  // Start time is inclusive, end time is exclusive.
-  "event_report_windows": {
-    "start_time": <int>, // optional, defaults to 0
-    "end_times": [<int>, ...]
-  }
-}
-```
-
-Note that if both `event_report_window` and `event_report_windows` are present then the source will be ignored. Only one of them can be present in the source registration.
-
-#### Custom Configurations: Example
-
-Below is an additional configuration example outside the defaults. This example configuration supports a developer who wants to optimize for receiving reports at earlier reporting windows.
-
-```jsonc
-{
-  ...
-  "max_event_level_reports": 2,
-  "event_report_windows": {
-    "end_times": [7200, 43200, 86400] // 2 hours, 12 hours, 1 day represented in seconds
-  }
-}
-```
 
 ## Phase 2: Full Flexible Event-Level
 
