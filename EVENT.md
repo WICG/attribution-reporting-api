@@ -82,9 +82,9 @@ in a way that provides better privacy to users.
 
 This API alone will not be able to support all conversion measurement use cases.
 We envision this API as one of potentially many new APIs that will seek to
-reproduce valid advertising use cases in the web platform in a privacy
-preserving way. In particular, we think this API could be extended by using
-server side aggregation to provide richer data, which we are continuing to
+reproduce valid advertising use cases in the web platform in a privacy-preserving
+way. In particular, we think this API could be extended by using
+server-side aggregation to provide richer data, which we are continuing to
 explore.
 
 ## Related work
@@ -186,39 +186,40 @@ window.fetch("https://adtech.example/attribution_source?my_ad_id=123",
              { keepalive: true, attributionReporting });
 ```
 
-The response to these requests will configure the API via a new JSON HTTP
-header `Attribution-Reporting-Register-Source` of the form:
+The response to these requests will configure the API via a new JSON-encoded HTTP
+header called `Attribution-Reporting-Register-Source` of the form:
 
 ```jsonc
 {
-  "source_event_id": "12340873456",
   "destination": "[eTLD+1]",
+  "source_event_id": "[64-bit unsigned integer]",
   "expiry": "[64-bit signed integer]",
   "priority": "[64-bit signed integer]",
-  "event_report_window": "[64-bit signed integer]"
+  "event_report_window": "[64-bit signed integer]",
 }
 ```
 
-- `destination`: an origin whose eTLD+1 is where attribution will be triggered
+- `destination`: Required. An origin whose eTLD+1 is where attribution will be triggered
 for this source. The field may also be specified as a list (JSON array) of no more than three elements.
 
-- `source_event_id`: (optional) A string encoding a 64-bit unsigned integer which
+- `source_event_id`: Optional. A string encoding a 64-bit unsigned integer which
 represents the event-level data associated with this source. This will be
 limited to 64 bits of information but the value can vary. Defaults to 0.
 
-- `expiry`: (optional) expiry in seconds for when the source should be
-deleted. Default is 30 days, with a maximum value of 30 days. The maximum expiry
-can also vary between browsers. This will be rounded to the nearest day.
+- `expiry`: Optional. A duration in seconds from registration after which the source can no longer
+be attributed. Defaults to 30 days, which is also the maximum. The minimum is 1
+day. For event sources, this is rounded to the nearest day.
 
-- `priority`: (optional) a signed 64-bit integer used to prioritize
-this source with respect to other matching sources. When a trigger redirect is
-received, the browser will find the matching source with highest
-`priority` value and generate a report. The other sources will not
-generate reports.
+- `priority`: Optional. A signed 64-bit integer used to prioritize
+this source with respect to other matching sources. When a trigger is
+registered, the browser finds the matching source with highest
+`priority` value and generates a report. The other sources will not
+generate reports. Defaults to 0.
 
-- `event_report_window`: (optional) duration in seconds after source registration 
-during which event reports may be created for this source. Also controls the last
+- `event_report_window`: Optional. A duration in seconds from registration
+during which reports may be created for this source. Also controls the last
 window in which reports will be sent. The minimum value is 3600 seconds (1 hour).
+The maximum value is `expiry`.
 
 Once this header is received, the browser will proceed with [handling an
 attribution source event](#handling-an-attribution-source-event). Note that it
@@ -230,24 +231,24 @@ since it is the origin that will end up receiving attribution reports.
 
 ### Handling an attribution source event
 
-A `navigation` attribution source event will be logged to storage if  the navigation occurs with [transient
+A `navigation` attribution source stored only if the navigation occurs with [transient
 user activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation). `event` sources don’t require activation.
 
-An attribution source will be eligible for reporting if any page on any of the
+An attribution source is eligible for reporting if any page on any of the
 associated `destination` eTLD+1s (advertiser sites) triggers attribution for the associated
 reporting origin.
 
 ### Publisher-side Controls for Attribution Source Declaration
 
 This API is governed by a [Permissions Policy](https://www.w3.org/TR/permissions-policy/) with
-a default allowlist of `*`. This means that publishers can opt-out of the API for themselves or
+a default allowlist of `*`. This means that publishers can opt out of the API for themselves or
 third parties, but by default anyone on the page can use the API. See
 [issue 558](https://github.com/WICG/attribution-reporting-api/issues/558) for more details.
 
 ### Triggering Attribution
 
 Attribution can only be triggered for a source on a page whose eTLD+1 matches
-the eTLD+1 of (one of) the site(s) provided in `destination`. To trigger attribution, a
+the eTLD+1 of one of the sites provided in `destination`. To trigger attribution, a
 similar mechanism is used as source event registration, via HTML:
 ```html
 <img src="https://ad-tech.example/conversionpixel"
@@ -269,9 +270,9 @@ As a stop-gap to support pre-existing conversion tags which do not include the
 process trigger registration headers for all subresource requests on the page
 where the `attribution-reporting` Permissions Policy is enabled.
 
-Like source event registrations, these requests should respond with a new HTTP
-header `Attribution-Reporting-Register-Trigger` which contains information
-about how to treat the trigger event:
+Like source registrations, these requests should respond with a new HTTP
+header called `Attribution-Reporting-Register-Trigger`, which contains information
+about how to treat the trigger:
 ```jsonc
 {
   "event_trigger_data": [{
@@ -282,14 +283,14 @@ about how to treat the trigger event:
 }
 ```
 
-- `trigger_data`: optional coarse-grained data to identify the triggering
-  event. The value will be limited to either 3 bits or 1 bit [depending on the
-  attributed source type](#data-limits-and-noise).
-- `priority`: optional signed 64-bit integer representing the priority
-of this trigger compared to other triggers for the same source.
-- `deduplication_key`: optional unsigned 64-bit integer which will be used to
-deduplicate multiple triggers which contain the same `deduplication_key` for a
-single source.
+- `trigger_data`: Optional. Coarse-grained data to identify the trigger.
+  The value will be limited [depending on the
+  attributed source type](#data-limits-and-noise). Defaults to 0.
+- `priority`: Optional. A signed 64-bit integer representing the priority
+of this trigger compared to other triggers for the same source. Defaults to 0.
+- `deduplication_key`: Optional. An unsigned 64-bit integer that will be used to
+deduplicate multiple triggers that contain the same `deduplication_key` for a
+single source. Defaults to no deduplication.
 
 When this header is received, the browser will schedule an attribution report as
 detailed in [Trigger attribution algorithm](#trigger-attribution-algorithm).
@@ -300,7 +301,7 @@ to be enabled in the context the request is made. See [Publisher
 Controls for Attribution Source
 Declaration](#publisher-side-controls-for-attribution-source-declaration).
 
-Navigation sources may be attributed up to 3 times. Event sources may be
+By default, navigation sources may be attributed up to 3 times. Event sources may be
 attributed up to 1 time.
 
 ### Registration requests
@@ -323,22 +324,22 @@ ignore invalid registrations:
    header. For those requests the browser will permit trigger registration
    only.
 
-Note: the `Attribution-Reporting-Eligible` header will be subject to the browser adding
+Note: the `Attribution-Reporting-Eligible` header is subject to the browser adding
 "GREASE" parameters, to ensure that servers use a spec-compliant structured
 header parser. See [here](https://wicg.github.io/attribution-reporting-api/#example-1c153954)
 for an example.
 
 ### Data limits and noise
 
-The `source_event_id` will be limited to 64 bits of information to enable
+The `source_event_id` is limited to 64 bits of information to enable
 uniquely identifying an ad click.
 
-The advertiser-side data must therefore be limited quite strictly, by limiting
+The trigger-side data must therefore be limited quite strictly, by limiting
 the amount of data and by applying noise to the data. `navigation` sources will
 be limited to only 3 bits of `trigger_data`, while `event` sources will be
 limited to only 1 bit.
 
-Noise will be applied to whether a source event will be reported truthfully.
+Noise will be applied to whether a source will be reported truthfully.
 When an attribution source is registered, the browser will perform one of the
 following steps given a probability `p`:
 * With probability `1 - p`, the browser logs the source as normal
@@ -374,7 +375,7 @@ reflect a final set of parameters.
 
 ### Trigger attribution algorithm
 
-When the browser receives an attribution trigger redirect on a URL matching a
+When the browser receives an attribution trigger registration on a URL matching a
 `destination` eTLD+1, it looks up all sources in storage that match
 <reporting origin, `destination` eTLD+1> and picks the one with the greatest
 `priority`. If multiple sources have the greatest `priority`, the
@@ -402,8 +403,8 @@ report.
 ### Multiple sources for the same trigger (Multi-touch)
 
 If multiple sources were registered and associated with a single attribution
-trigger, send reports for the one with the highest priority. If no priority is
-specified, the browser performs last-touch.
+trigger, the browser schedules reports for the one with the highest priority. If no priority is
+specified, the browser effectively performs last-touch.
 
 There are many possible alternatives to this, like providing a choice of
 rules-based attribution models. However, it isn’t clear the benefits outweigh
