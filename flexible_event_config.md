@@ -327,7 +327,16 @@ This example configuration supports a developer who wants to learn whether at le
 
 ### Varying `trigger_specs` from source to source
 
-Note that the `trigger_specs` registration can differ from source to source. This example has two configurations, one that specifies that only triggers with `trigger_data` 0-3 are eligible for attribution and another that specifies that only triggers with `trigger_data` 4-7 are eligible. The user can configure half their sources with the former and half their sources with the later. Doing so will result in the noise added to the report being approximately 15% of the noise of the default configuration for navigation sources.
+Note that the `trigger_specs` registration can differ from source to source.
+This example has two configurations, one that specifies that only triggers with
+`trigger_data` 0-3 are eligible for attribution and another that specifies that
+only triggers with `trigger_data` 4-7 are eligible. The user can configure half
+their sources with the former and half their sources with the later. Doing so
+will result in the noise added to the report being approximately 15% of the
+noise of the default configuration for navigation sources. However, assuming no
+other changes, it may result in a greater number of unattributed triggers: If a
+trigger is attributed to a source with no matching `trigger_data`, the trigger
+is dropped.
 
 ```jsonc
 {
