@@ -1932,6 +1932,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |maxAttributionsPerSource| be [=default event-level attributions per source=][|sourceType|].
 1. Set |maxAttributionsPerSource| to |value|["`max_event_level_reports`"] if it [=map/exists=].
 1. If |maxAttributionsPerSource| is not a non-negative integer, or is greater than [=max settable event-level attributions per source=], return null.
+1. If both |value|["`event_report_window`"] and |value|["`event_report_windows`"] [=map/exist=], return null.
 1. Let |eventReportWindow| be the result of running [=parse a duration=] with
     |value|, "`event_report_window`", and ([=min report window=], |expiry|).
 1. If |eventReportWindow| is an error, return null.
@@ -1941,9 +1942,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to |value|["`debug_reporting`"].
-
 1. Let |eventReportWindows| be the result of [=obtaining default effective windows=] given |sourceType|, |sourceTime|, and |eventReportWindow|.
-1. If both |value|["`event_report_window`"] and |value|["`event_report_windows`"] [=map/exist=], return null.
 1. Set |eventReportWindows| to the result of [=parsing report windows=] with |value|, |sourceTime|, and |eventReportWindows|.
 1. If |eventReportWindows| is an error, return null.
 1. Let |aggregatableReportWindow| be a new [=report window=] with the following items:
