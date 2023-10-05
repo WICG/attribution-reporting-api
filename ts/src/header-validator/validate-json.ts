@@ -1158,7 +1158,7 @@ function trigger(ctx: Context, j: Json): Maybe<Trigger> {
     aggregatableSourceRegistrationTime: field(
       'aggregatable_source_registration_time',
       aggregatableSourceRegistrationTime,
-      AggregatableSourceRegistrationTime.include
+      AggregatableSourceRegistrationTime.exclude
     ),
     aggregationCoordinatorOrigin: field(
       'aggregation_coordinator_origin',
