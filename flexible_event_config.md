@@ -9,6 +9,7 @@ _Note: This document describes possible new functionality in the Attribution Rep
 - [Goals](#goals)
 - [Phase 2: Full Flexible Event-Level](#phase-2-full-flexible-event-level)
   - [API changes](#api-changes)
+  - [Trigger-data modulus matching example](#trigger-data-modulus-matching-example)
 - [Configurations that are equivalent to the current version](#configurations-that-are-equivalent-to-the-current-version)
   - [Equivalent event sources](#equivalent-event-sources)
   - [Equivalent navigation sources](#equivalent-navigation-sources)
@@ -101,6 +102,22 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Next trigger_spec
   }, ...],
 
+  // Specifies how the 64-bit unsigned trigger_data from the trigger is matched
+  // against the source's trigger_specs trigger_data, which is 32-bit. Defaults
+  // to "modulus".
+  //
+  // If "exact", the trigger_data must exactly match a value contained in the
+  // source's trigger_specs; if there is no such match, no event-level
+  // attribution takes place.
+  //
+  // If "modulus", the set of all trigger_data values across all trigger_specs
+  // for the source must be a contiguous sequence of integers starting at 0.
+  // The trigger's trigger_data is taken modulus the cardinality of this
+  // sequence and then matched against the trigger specs. See below for an
+  // example. It is an error to use "modulus" if the trigger specs do not
+  // contain such a sequence.
+  "trigger_data_matching": <one of "exact" or "modulus">,
+
   // See description in phase 1.
   "max_event_level_reports": <int>,
 
@@ -114,7 +131,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
 
 This configuration fully specifies the output space of the event-level reports, per source registration. For every trigger spec, we fully specify:
 * A set of matching criteria:
-  * Which specific trigger data this spec applies to. This source is eligible to be matched only with triggers that have one of the specified `trigger_data` values in the `trigger_specs`. In other words, if the trigger would have matched this source but its `trigger_data` is not one of the values in the source's configuration, the trigger is ignored.
+  * Which specific trigger data this spec applies to. This source is eligible to be matched only with triggers that have one of the specified `trigger_data` values in the `trigger_specs` according to the `trigger_data_matching` field. In other words, if the trigger would have matched this source but its `trigger_data` is not one of the values in the source's configuration, the trigger is ignored.
   * When a specific trigger matches this spec (via `event_report_windows`).
 Note that the trigger could still be matched with a source for aggregatable reports despite failing the above two match criteria.
 * A specific algorithm for summarizing and bucketizing all the triggers within an attribution window. This allows triggers to specify a `value` parameter that gets summed up for a particular spec, but reported as a bucketized value
@@ -153,6 +170,50 @@ When the `event_report_window` for a spec completes, we will map its summary val
 }
 ```
 
+### Trigger-data modulus matching example
+
+Given a source with the following registration:
+
+```jsonc
+{
+  "trigger_data_matching": "modulus",
+  "trigger_specs": [
+    // Spec A
+    {
+      "trigger_data": [0, 3, 5],
+      ...
+    },
+    // Spec B
+    {
+      "trigger_data": [1, 2],
+      ...
+    },
+    // Spec C
+    {
+      "trigger_data": [4],
+      ...
+    },
+  ]
+}
+```
+
+The trigger-data cardinality is 6, so all triggers' `trigger_data` will be taken
+modulus 6 before determining the matching `trigger_spec`:
+
+- `{"trigger_data": "0"}` will match Spec A because `0 % 6 = 0`
+- `{"trigger_data": "1"}` will match Spec B because `1 % 6 = 1`
+- `{"trigger_data": "2"}` will match Spec B because `2 % 6 = 2`
+- `{"trigger_data": "3"}` will match Spec A because `3 % 6 = 3`
+- `{"trigger_data": "4"}` will match Spec C because `4 % 6 = 4`
+- `{"trigger_data": "5"}` will match Spec A because `5 % 6 = 5`
+- `{"trigger_data": "6"}` will match Spec A because `6 % 6 = 0`
+- `{"trigger_data": "7"}` will match Spec B because `7 % 6 = 1`
+- `{"trigger_data": "8"}` will match Spec B because `8 % 6 = 2`
+- `{"trigger_data": "9"}` will match Spec A because `9 % 6 = 3`
+- `{"trigger_data": "10"}` will match Spec C because `10 % 6 = 4`
+- `{"trigger_data": "11"}` will match Spec A because `11 % 6 = 5`
+- ...
+
 ## Configurations that are equivalent to the current version
 
 The following are equivalent configurations for the API's current event and navigation sources, respectively. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
@@ -165,6 +226,7 @@ It is possible that there are multiple configurations that are equivalent, given
 // Note: most of the fields here are not required to be explicitly listed.
 // Here we list them explicitly just for clarity.
 {
+  "trigger_data_matching": "modulus",
   "trigger_specs": [{
     "trigger_data": [0, 1],
     "event_report_windows": {
@@ -185,6 +247,7 @@ It is possible that there are multiple configurations that are equivalent, given
 // Note: most of the fields here are not required to be explicitly listed.
 // Here we list them explicitly just for clarity.
 {
+  "trigger_data_matching": "modulus",
   "trigger_specs": [{
     "trigger_data": [0, 1, 2, 3, 4, 5, 6, 7],
     "event_report_windows": {
@@ -211,6 +274,7 @@ This example configuration supports a developer who wants to optimize for value 
 
 ```jsonc
 {
+  "trigger_data_matching": "exact",
   "trigger_specs": [{
     "trigger_data": [0],
     "event_report_windows": {
@@ -269,6 +333,7 @@ This example shows how a developer can configure a source to get a count of trig
 
 ```jsonc
 {
+  "trigger_data_matching": "exact",
   "trigger_specs": [{
     "trigger_data": [0],
     "event_report_windows": {
@@ -312,6 +377,7 @@ This example configuration supports a developer who wants to learn whether at le
 
 ```jsonc
 {
+  "trigger_data_matching": "exact",
   "trigger_specs": [{
     "trigger_data": [0],
     "event_report_windows": {
@@ -340,6 +406,7 @@ is dropped.
 
 ```jsonc
 {
+  "trigger_data_matching": "exact",
   "trigger_specs": [{
     "trigger_data": [0, 1, 2, 3],
     "event_report_windows": {
@@ -352,6 +419,7 @@ is dropped.
 
 ```jsonc
 {
+  "trigger_data_matching": "exact",
   "trigger_specs": [{
     "trigger_data": [4, 5, 6, 7],
     "event_report_windows": {
