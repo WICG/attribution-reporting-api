@@ -33,3 +33,5 @@ export const defaultEventLevelAttributionsPerSource: Readonly<
 }
 
 export const maxTriggerDataPerSource: number = 32
+
+export const allowedAggregatableBudgetPerSource: number = 65536

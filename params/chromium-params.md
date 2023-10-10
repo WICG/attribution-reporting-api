@@ -25,7 +25,6 @@ Chromium's implementation assigns the following values:
 | [Origin rate-limit window][] | [1 day][origin rate-limit window value]
 | [Max attribution reporting origins per rate-limit window][] | [10][max attribution reporting origins per rate-limit window value] |
 | [Max attributions per rate-limit window][] | [100][max attributions per rate-limit window value] |
-| [Allowed aggregatable budget per source][] | [65536][allowed aggregatable budget per source value] |
 | [Randomized aggregatable report delay][] | [10 minutes][randomized aggregatable report delay value] |
 | [Max information gain for navigation sources][] | [11.46 bits][max information gain for navigations value] |
 | [Max information gain for event sources][] | [6.5 bits][max information gain for events value] |
@@ -67,8 +66,6 @@ Chromium's implementation assigns the following values:
 [max attribution reporting origins per rate-limit window value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=32;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Max attributions per rate-limit window]: https://wicg.github.io/attribution-reporting-api/#max-attributions-per-rate-limit-window
 [max attributions per rate-limit window value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=36;drc=3733a639d724a4353463a872605119d11a1e4d37
-[Allowed aggregatable budget per source]: https://wicg.github.io/attribution-reporting-api/#allowed-aggregatable-budget-per-source
-[allowed aggregatable budget per source value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=97;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Randomized aggregatable report delay]: https://wicg.github.io/attribution-reporting-api/#randomized-aggregatable-report-delay
 [randomized aggregatable report delay value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=106;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Max information gain for navigation sources]: https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source

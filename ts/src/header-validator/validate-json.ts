@@ -1105,7 +1105,9 @@ function aggregatableKeyValue(
 ): Maybe<number> {
   return number(ctx, j)
     .filter((n) => isInteger(ctx, n))
-    .filter((n) => isInRange(ctx, n, 1, 65536))
+    .filter((n) =>
+      isInRange(ctx, n, 1, constants.allowedAggregatableBudgetPerSource)
+    )
 }
 
 function aggregatableValues(ctx: Context, j: Json): Maybe<Map<string, number>> {
