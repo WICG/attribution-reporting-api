@@ -849,6 +849,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: An [=aggregation coordinator=].
 : <dfn>aggregatable source registration time configuration</dfn>
 :: An [=aggregatable source registration time configuration=].
+: <dfn>trigger context ID</dfn>
+:: Null or a [=string=].
 
 </dl>
 
@@ -925,6 +927,8 @@ An aggregatable report is an [=attribution report=] with the following additiona
 :: An [=aggregatable source registration time configuration=].
 : <dfn>is null report</dfn> (default false)
 :: A [=boolean=].
+: <dfn>trigger context ID</dfn>
+:: Null or a [=string=].
 
 </dl>
 
@@ -1171,6 +1175,10 @@ Its value is «[=source type/navigation=] → 8, [=source type/event=] → 2».
 <dfn>Max distinct trigger data per source</dfn> is a positive integer that
 controls the maximum [=map/size=] of a [=trigger spec map=] for an
 [=attribution source=]. Its value is 32.
+
+<dfn>Max length per trigger context ID</dfn> is a positive integer that controls
+the maximum [=string/length=] of an [=attribution trigger=]'s [=attribution trigger/trigger context ID=],
+and an [=aggregatable report=]'s [=aggregatable report/trigger context ID=]. Its value is 64.
 
 # Vendor-Specific Values # {#vendor-specific-values}
 
@@ -2134,6 +2142,8 @@ a [=trigger state=] |triggerState|:
     :: «»
     : [=attribution trigger/aggregatable source registration time configuration=]
     :: "<code>[=aggregatable source registration time configuration/exclude=]</code>"
+    : [=attribution trigger/trigger context ID=]
+    :: null
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
 1. [=Assert=]: |fakeReport| is not null.
@@ -2425,6 +2435,13 @@ and a [=moment=] |triggerTime|:
     1. If |value|["`aggregatable_source_registration_time`"] is not an [=aggregatable source registration time configuration=],
         return null.
     1. Set |aggregatableSourceRegTimeConfig| to |value|["`aggregatable_source_registration_time`"].
+1. Let |triggerContextID| be null.
+1. If |value|["`trigger_context_id`"] [=map/exists=]:
+    1. If |value|["`trigger_context_id`"] is not a [=string=], return null.
+    1. If |value|["`trigger_context_id`"] is empty or its [=string/length=] is greater than the [=max length per trigger context ID=],
+        return null.
+    1. If |aggregatableSourceRegTimeConfig| is not "<code>[=aggregatable source registration time configuration/exclude=]</code>", return null.
+    1. Set |triggerContextID| to |value|["`trigger_context_id`"].
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -2454,6 +2471,8 @@ and a [=moment=] |triggerTime|:
     :: |aggregationCoordinator|
     : [=attribution trigger/aggregatable source registration time configuration=]
     :: |aggregatableSourceRegTimeConfig|
+    : [=attribution trigger/trigger context ID=]
+    :: |triggerContextID|
 1. Return |trigger|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -3036,9 +3055,11 @@ To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution 
         |window|'s [=report window/end=].
 1. [=Assert=]: not reached.
 
-To <dfn>obtain an aggregatable report delivery time</dfn> given a [=moment=]
-|triggerTime|, perform the following steps. They return a [=moment=].
+To <dfn>obtain an aggregatable report delivery time</dfn> given an [attribution trigger=]
+|trigger|, perform the following steps. They return a [=moment=].
 
+1. Let |triggerTime| be |trigger|'s [=attribution trigger/trigger time=].
+1. If |trigger|'s [=attribution trigger/trigger context ID=] is not null, return |triggerTime|.
 1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive) with uniform probability.
 1. Return |triggerTime| + |r| * [=randomized aggregatable report delay=].
 
@@ -3097,7 +3118,7 @@ required aggregatable budget</dfn> is the total [=aggregatable contribution/valu
 To <dfn>obtain an aggregatable report</dfn> given an [=attribution source=] |source| and
 an [=attribution trigger=] |trigger|:
 
-1. Let |reportTime| be the result of running [=obtain an aggregatable report delivery time=] with |trigger|'s [=attribution trigger/trigger time=].
+1. Let |reportTime| be the result of running [=obtain an aggregatable report delivery time=] with |trigger|.
 1. Let |report| be a new [=aggregatable report=] struct whose items are:
 
     : [=aggregatable report/reporting origin=]
@@ -3122,6 +3143,8 @@ an [=attribution trigger=] |trigger|:
     :: |trigger|'s [=attribution trigger/aggregation coordinator=].
     : [=aggregatable report/source registration time configuration=]
     :: |trigger|'s [=attribution trigger/aggregatable source registration time configuration=].
+    : [=aggregatable report/trigger context ID=]
+    :: |trigger|'s [=attribution trigger/trigger context ID=]
 1. Return |report|.
 
 <h3 id="generating-randomized-null-reports">Generating randomized null reports</h3>
@@ -3156,6 +3179,8 @@ To <dfn>obtain a null report</dfn> given an [=attribution trigger=] |trigger| an
     :: |trigger|'s [=attribution trigger/aggregatable source registration time configuration=]
     : [=aggregatable report/is null report=]
     :: true
+    : [=aggregatable report/trigger context ID=]
+    :: |trigger|'s [=attribution trigger/trigger context ID=]
 1. Return |report|.
 
 To <dfn>obtain rounded source time</dfn> given a [=moment=] |sourceTime|, return |sourceTime| in seconds
@@ -3172,13 +3197,17 @@ To <dfn>generate null reports</dfn> given an [=attribution trigger=] |trigger| a
 
 1. Let |nullReports| be a new [=list/is empty|empty=] [=list=].
 1. If |trigger|'s [=attribution trigger/aggregatable source registration time configuration=] is "<code>[=aggregatable source registration time configuration/exclude=]</code>":
+    1. Let |randomizedNullReportRate| be [=randomized null report rate excluding source registration time=].
+    1. If |trigger|'s [=attribution trigger|trigger context ID=] is not null, set
+        |randomizedNullReportRate| to 1.
     1. If |report| is null and the result of [=determining if a randomized null report is generated=] with
-        [=randomized null report rate excluding source registration time=] is true:
+        |randomizedNullReportRate| is true:
         1. Let |nullReport| be the result of [=obtaining a null report=] with |trigger| and |trigger|'s
             [=attribution trigger/trigger time=].
         1. [=set/Append=] |nullReport| to the [=aggregatable report cache=].
         1. [=list/Append=] |nullReport| to |nullReports|.
 1. Otherwise:
+    1. [=Assert=]: |trigger|'s [=attribution trigger/trigger context ID=] is null.
     1. Let |maxSourceExpiry| be [=valid source expiry range=][1].
     1. Round |maxSourceExpiry| away from zero to the nearest day (86400 seconds).
     1. Let |roundedAttributedSourceTime| be null.
@@ -3448,6 +3477,8 @@ To <dfn>serialize an [=aggregatable report=] </dfn> |report|, run the following 
 1. If |report|'s [=aggregatable report/trigger debug key=] is not null, [=map/set=]
     |data|["`trigger_debug_key`"] to |report|'s [=aggregatable report/trigger debug key=],
     [=serialize an integer|serialized=].
+1. If |report|'s [=aggregatable report/trigger context ID=] is not null, [=map/set=]
+    |data|["`context_id`"] to |report|'s [=aggregatable report/trigger context ID=].
 1. Return the [=byte sequence=] resulting from executing [=serialize an infra value to JSON bytes=] on |data|.
 
 To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following steps:
