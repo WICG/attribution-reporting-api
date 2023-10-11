@@ -560,10 +560,28 @@ function filterDataKeyValue(
     ctx.error('is prohibited as keys starting with "_" are reserved')
     return None
   }
+  if (key.length > constants.maxBytesPerFilterString) {
+    ctx.error(
+      `exceeds max bytes per filter string (${key.length} > ${constants.maxBytesPerFilterString})`
+    )
+    return None
+  }
 
-  return set(ctx, j, string, {
-    maxLength: constants.maxValuesPerFilterDataEntry,
-  })
+  return set(
+    ctx,
+    j,
+    (ctx, j) =>
+      string(ctx, j).peek((s) => {
+        if (s.length > constants.maxBytesPerFilterString) {
+          ctx.error(
+            `exceeds max bytes per filter string (${s.length} > ${constants.maxBytesPerFilterString})`
+          )
+        }
+      }),
+    {
+      maxLength: constants.maxValuesPerFilterDataEntry,
+    }
+  )
 }
 
 export type FilterData = Map<string, Set<string>>
@@ -662,11 +680,13 @@ const priorityField: StructFields<Priority> = {
   priority: field('priority', int64, 0n),
 }
 
-// TODO: check length of key
-function aggregationKey(
-  ctx: Context,
-  [_key, j]: [string, Json]
-): Maybe<bigint> {
+function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
+  if (key.length > constants.maxBytesPerAggregationKeyIdentifier) {
+    ctx.error(
+      `exceeds max bytes per aggregation key identifier (${key.length} > ${constants.maxBytesPerAggregationKeyIdentifier})`
+    )
+    return None
+  }
   return hex128(ctx, j)
 }
 
@@ -1077,7 +1097,15 @@ function source(ctx: Context, j: Json): Maybe<Source> {
 }
 
 function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
-  return set(ctx, j, string)
+  return set(ctx, j, (ctx, j) =>
+    string(ctx, j).peek((s) => {
+      if (s.length > constants.maxBytesPerAggregationKeyIdentifier) {
+        ctx.error(
+          `exceeds max bytes per aggregation key identifier (${s.length} > ${constants.maxBytesPerAggregationKeyIdentifier})`
+        )
+      }
+    })
+  )
 }
 
 export type AggregatableTriggerDatum = FilterPair & {
@@ -1101,8 +1129,14 @@ function aggregatableTriggerData(
 // TODO: check length of key
 function aggregatableKeyValue(
   ctx: Context,
-  [_key, j]: [string, Json]
+  [key, j]: [string, Json]
 ): Maybe<number> {
+  if (key.length > constants.maxBytesPerAggregationKeyIdentifier) {
+    ctx.error(
+      `exceeds max bytes per aggregation key identifier (${key.length} > ${constants.maxBytesPerAggregationKeyIdentifier})`
+    )
+    return None
+  }
   return number(ctx, j)
     .filter((n) => isInteger(ctx, n))
     .filter((n) =>
