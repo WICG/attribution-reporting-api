@@ -59,5 +59,6 @@ Companies who may be interested in participating in tests and early adoption opp
 | Company / Party | Role (publisher/sellside, advertiser/buyside, etc.) | Additional details about your interest (Optional) | How to contact you |
 | --------------- | --------------------------------------------------- | ------------------------------------------------- | ------------------ |
 | Vocento | Publisher | | privacysandbox@vocento.com |
+| CNN Brasil | Publisher | | alexandre.magno@cnnbrasil.com.br |
 | Clarin | Publisher | | mfranco@clarin.com |
 
