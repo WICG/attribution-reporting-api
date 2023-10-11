@@ -11,9 +11,9 @@ export const maxEntriesPerFilterData: number = 50
 
 export const maxValuesPerFilterDataEntry: number = 50
 
-export const maxBytesPerFilterString: number = 25
+export const maxLengthPerFilterString: number = 25
 
-export const maxBytesPerAggregationKeyIdentifier: number = 25
+export const maxLengthPerAggregationKeyIdentifier: number = 25
 
 export const minReportWindow: number = 1 * SECONDS_PER_HOUR
 

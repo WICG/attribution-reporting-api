@@ -292,7 +292,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['filter_data', 'aaaaaaaaaaaaaaaaaaaaaaaaaa'],
-        msg: 'exceeds max bytes per filter string (26 > 25)',
+        msg: 'exceeds max length per filter string (26 > 25)',
       },
     ],
   },
@@ -305,7 +305,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['filter_data', 'a', 0],
-        msg: 'exceeds max bytes per filter string (26 > 25)',
+        msg: 'exceeds max length per filter string (26 > 25)',
       },
     ],
   },
@@ -378,7 +378,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['aggregation_keys', 'aaaaaaaaaaaaaaaaaaaaaaaaaa'],
-        msg: 'exceeds max bytes per aggregation key identifier (26 > 25)',
+        msg: 'exceeds max length per aggregation key identifier (26 > 25)',
       },
     ],
   },
