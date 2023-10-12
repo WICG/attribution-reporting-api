@@ -239,7 +239,7 @@ The report will be JSON encoded with the following scheme:
   ],
 
   // The deployment option for the aggregation service.
-  "aggregation_coordinator_origin": "https://publickeyservice.aws.privacysandboxservices.com",
+  "aggregation_coordinator_origin": "https://publickeyservice.msmt.aws.privacysandboxservices.com",
 
   // Optional debugging information (also present in event-level reports),
   // if the cookie `ar_debug` is present.
@@ -468,12 +468,12 @@ AWS, GCP, and other platforms in the future.
 ```jsonc
 {
   ..., // existing fields
-  "aggregation_coordinator_origin": "https://publickeyservice.aws.privacysandboxservices.com",
+  "aggregation_coordinator_origin": "https://publickeyservice.msmt.aws.privacysandboxservices.com",
 }
 ```
 
-TODO: Consider exposing the allowlist of aggregation service coordinator
-origins.
+See [allowlist](https://github.com/WICG/attribution-reporting-api/blob/main/aggregation_coordinator_origin_allowlist.md)
+of the aggregation service coordinator origins.
 
 ## Privacy considerations
 
