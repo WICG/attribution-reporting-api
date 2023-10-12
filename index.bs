@@ -61,8 +61,9 @@ spec: structured header; type: dfn; urlPrefix: https://tools.ietf.org/html/rfc89
         text: parse a string; url: #name-parse-a-string
 spec: infra; type: dfn; urlPrefix: https://infra.spec.whatwg.org/
     text: starts with; url: #string-starts-with
-urlPrefix: https://wicg.github.io/fenced-frame/; type: interface
-    text: Fence
+spec: fenced-frame; type: dfn; urlPrefix: https://wicg.github.io/fenced-frame/;
+    for: navigable
+        text: top-level traversable; url: #navigable-top-level-traversable
 </pre>
 <pre class=biblio>
 {
@@ -529,108 +530,6 @@ Add the step:
 1. Set |req|'s [=request/Attribution Reporting eligibility=] to <a>this</a>'s <a href=#xmlhttprequest-eligibility>Attribution Reporting
     eligibility</a>.
 1. [=Set Attribution Reporting headers=] with |req| and |document|'s [=node/context origin=].
-
-# Fenced Frame monkeypatches # {#fenced-frame-monkeypatches}
-
-Add the following items to [=fencedframetype/destination enum event=]:
-
-<dl dfn-for="destination enum event">
-: <dfn>attributionReportingEnabled</dfn>
-:: A [=boolean=]
-: <dfn>contextOrigin</dfn>
-:: An [=origin=]
-
-</dl>
-
-Modify {{Fence/reportEvent()}} as follows:
-
-<div algorithm="report-event-monkeypatch">
-
-In the step:
-
-> If <var ignore>event</var> is a {{FenceEvent}}:
-
-In the nested step:
-
-> 1. Otherwise:
-
-Before the step
-
-> [=list/For each=] |destination| of <var ignore>event</var>'s {{FenceEvent/destination}}:
-
-add the steps
-
-1. Let |document| be [=this=]'s [=relevant global object=]'s [=associated Document=].
-1. Let |attributionReportingEnabled| be the result of determining whether |document| is
-    [=allowed to use=] the "<code>{{PermissionPolicy/attribution-reporting}}</code>" feature.
-1. Let |contextOrigin| be |document|'s [=node/context origin=].
-
-In the step
-
-> Run <a spec=fenced-frame>report an event</a> using <var ignore>instance</var>'s
-> [=fenced frame config instance/fenced frame reporter=] with |destination| and
-> a [=fencedframetype/destination enum event=] with the following [=struct/items=]:
-
-add the properties
-
-: [=destination enum event/attributionReportingEnabled=]
-:: |attributionReportingEnabled|
-: [=destination enum event/contextOrigin=]
-:: |contextOrigin|
-
-</div>
-
-Modify <a spec=fenced-frame>send a beacon</a> as follows:
-
-<div algorithm="send-a-beacon-monkeypatch">
-
-After the step
-
-> Let <var ignore>destination url</var> be an empty [=string=].
-
-add the steps
-
-1. Let |attributionReportingEligibility| be "<code>[=eligibility/unset=]</code>".
-1. Let |processResponse| be null.
-1. Let |useParallelQueue| be false.
-
-In the step
-
-> If |event| is a [=fencedframetype/destination enum event=], then
-
-add the steps
-
-1. If |event|'s [=destination enum event/attributionReportingEnabled=] is true and the result of [=getting supported registrars=]
-     is not [=list/is empty|empty=] and |event|'s [=destination enum event/contextOrigin=] [=check if an origin is suitable|is suitable=]:
-         1. Set |attributionReportingEligibility| to "<code>[=eligibility/event-source=]</code>".
-         1. Set |processResponse| to these steps given a [=response=] |response|:
-             1. Run [=process an attribution eligible response=] with |event}|'s [=destination enum event/contextOrigin=],
-                 |attributionReportingEligibility|, and |response|.
-         1. Set |useParallelQueue| to true.
-
-         Issue: Allow "<code>[=eligibility/navigation-source=]</code>" when automatic beacon is specified.
-
-In the step
-
-> Let |request| be a new [=request=] with the following properties...
-
-add the property:
-
-: [=request/Attribution Reporting eligibility=]
-:: |attributionReportingEligibility|
-
-Replace the step
-
-> [=Fetch=] |request|.
-
-with
-
-[=Fetch=] |request| with [=fetch/processResponse=] being |processResponse| if it is not null
-and [=fetch/useParallelQueue=] being |useParallelQueue|.
-
-</div>
-
-Issue: Move this section to <a href="https://wicg.github.io/fenced-frame/">Fenced Frame spec</a>.
 
 # Permissions Policy integration # {#permission-policy-integration}
 
@@ -1497,7 +1396,7 @@ would have to be further processed to check for the "`ar_debug`" cookie.
 <h3 algorithm id="obtaining-context-origin">Obtaining context origin</h3>
 
 To obtain the <dfn export for=node>context origin</dfn> of a [=node=] |node|, return |node|'s [=node navigable=]'s
-<a spec=fenced-frame for=navigable>top-level traversable</a>'s [=navigable/active document=]'s [=origin=].
+[=navigable/top-level traversable=]'s [=navigable/active document=]'s [=origin=].
 
 <h3 id="obtaining-randomized-response">Obtaining a randomized response</h3>
 
