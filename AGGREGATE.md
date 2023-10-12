@@ -458,7 +458,8 @@ respond back with a summary report (aggregate histogram), i.e. a list of keys wi
 _aggregate_ values. It is expected that as a privacy protection mechanism, a
 certain amount of noise will be added to each output key's aggregate value.
 
-Currently the aggregation service can be deployed on Amazon Web Services (AWS). We expect to support Google Cloud Platform (GCP) and other cloud providers in the future.
+Currently the aggregation service can be deployed on Amazon Web Services (AWS) and
+Googld Cloud Platform (GCP). We expect to support other cloud providers in the future.
 
 Trigger registration will accept an optional string field `aggregation_coordinator_origin`
 to allow developers to specify the deployment option for the aggregation service
