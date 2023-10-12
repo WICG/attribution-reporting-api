@@ -561,17 +561,17 @@ function filterDataKeyValue(
     return None
   }
 
-  const filterStringLength = (s: string) => {
+  const filterStringLength = (s: string, errorPrefix: string = '') => {
     if (s.length > constants.maxLengthPerFilterString) {
       ctx.error(
-        `exceeds max length per filter string (${s.length} > ${constants.maxLengthPerFilterString})`
+        `${errorPrefix}exceeds max length per filter string (${s.length} > ${constants.maxLengthPerFilterString})`
       )
       return false
     }
     return true
   }
 
-  if (!filterStringLength(key)) {
+  if (!filterStringLength(key, 'key ')) {
     return None
   }
 
@@ -676,10 +676,14 @@ const priorityField: StructFields<Priority> = {
   priority: field('priority', int64, 0n),
 }
 
-function aggregationKeyIdentifierLength(ctx: Context, s: string): boolean {
+function aggregationKeyIdentifierLength(
+  ctx: Context,
+  s: string,
+  errPrefix: string = ''
+): boolean {
   if (s.length > constants.maxLengthPerAggregationKeyIdentifier) {
     ctx.error(
-      `exceeds max length per aggregation key identifier (${s.length} > ${constants.maxLengthPerAggregationKeyIdentifier})`
+      `${errPrefix}exceeds max length per aggregation key identifier (${s.length} > ${constants.maxLengthPerAggregationKeyIdentifier})`
     )
     return false
   }
@@ -687,7 +691,7 @@ function aggregationKeyIdentifierLength(ctx: Context, s: string): boolean {
 }
 
 function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
-  if (!aggregationKeyIdentifierLength(ctx, key)) {
+  if (!aggregationKeyIdentifierLength(ctx, key, 'key ')) {
     return None
   }
   return hex128(ctx, j)
@@ -1130,7 +1134,7 @@ function aggregatableKeyValue(
   ctx: Context,
   [key, j]: [string, Json]
 ): Maybe<number> {
-  if (!aggregationKeyIdentifierLength(ctx, key)) {
+  if (!aggregationKeyIdentifierLength(ctx, key, 'key ')) {
     return None
   }
   return number(ctx, j)

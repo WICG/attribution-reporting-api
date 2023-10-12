@@ -360,7 +360,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['aggregatable_values', 'aaaaaaaaaaaaaaaaaaaaaaaaaa'],
-        msg: 'exceeds max length per aggregation key identifier (26 > 25)',
+        msg: 'key exceeds max length per aggregation key identifier (26 > 25)',
       },
     ],
   },
