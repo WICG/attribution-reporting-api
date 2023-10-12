@@ -560,28 +560,24 @@ function filterDataKeyValue(
     ctx.error('is prohibited as keys starting with "_" are reserved')
     return None
   }
-  if (key.length > constants.maxLengthPerFilterString) {
-    ctx.error(
-      `exceeds max length per filter string (${key.length} > ${constants.maxLengthPerFilterString})`
-    )
+
+  const filterStringLength = (s: string) => {
+    if (s.length > constants.maxLengthPerFilterString) {
+      ctx.error(
+        `exceeds max length per filter string (${s.length} > ${constants.maxLengthPerFilterString})`
+      )
+      return false
+    }
+    return true
+  }
+
+  if (!filterStringLength(key)) {
     return None
   }
 
-  return set(
-    ctx,
-    j,
-    (ctx, j) =>
-      string(ctx, j).peek((s) => {
-        if (s.length > constants.maxLengthPerFilterString) {
-          ctx.error(
-            `exceeds max length per filter string (${s.length} > ${constants.maxLengthPerFilterString})`
-          )
-        }
-      }),
-    {
-      maxLength: constants.maxValuesPerFilterDataEntry,
-    }
-  )
+  return set(ctx, j, (ctx, j) => string(ctx, j).filter(filterStringLength), {
+    maxLength: constants.maxValuesPerFilterDataEntry,
+  })
 }
 
 export type FilterData = Map<string, Set<string>>
@@ -680,11 +676,18 @@ const priorityField: StructFields<Priority> = {
   priority: field('priority', int64, 0n),
 }
 
-function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
-  if (key.length > constants.maxLengthPerAggregationKeyIdentifier) {
+function aggregationKeyIdentifierLength(ctx: Context, s: string): boolean {
+  if (s.length > constants.maxLengthPerAggregationKeyIdentifier) {
     ctx.error(
-      `exceeds max length per aggregation key identifier (${key.length} > ${constants.maxLengthPerAggregationKeyIdentifier})`
+      `exceeds max length per aggregation key identifier (${s.length} > ${constants.maxLengthPerAggregationKeyIdentifier})`
     )
+    return false
+  }
+  return true
+}
+
+function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
+  if (!aggregationKeyIdentifierLength(ctx, key)) {
     return None
   }
   return hex128(ctx, j)
@@ -1098,12 +1101,8 @@ function source(ctx: Context, j: Json): Maybe<Source> {
 
 function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
   return set(ctx, j, (ctx, j) =>
-    string(ctx, j).peek((s) => {
-      if (s.length > constants.maxLengthPerAggregationKeyIdentifier) {
-        ctx.error(
-          `exceeds max length per aggregation key identifier (${s.length} > ${constants.maxLengthPerAggregationKeyIdentifier})`
-        )
-      }
+    string(ctx, j).filter((s) => {
+      return aggregationKeyIdentifierLength(ctx, s)
     })
   )
 }
@@ -1131,10 +1130,7 @@ function aggregatableKeyValue(
   ctx: Context,
   [key, j]: [string, Json]
 ): Maybe<number> {
-  if (key.length > constants.maxLengthPerAggregationKeyIdentifier) {
-    ctx.error(
-      `exceeds max length per aggregation key identifier (${key.length} > ${constants.maxLengthPerAggregationKeyIdentifier})`
-    )
+  if (!aggregationKeyIdentifierLength(ctx, key)) {
     return None
   }
   return number(ctx, j)

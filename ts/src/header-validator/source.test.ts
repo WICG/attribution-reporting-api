@@ -382,6 +382,21 @@ const testCases: TestCase[] = [
       },
     ],
   },
+  {
+    name: 'aggregation-keys-key-too-long-non-ascii',
+    json: `{
+      "destination": "https://a.test",
+      "aggregation_keys": {
+        "aaaaaaaaaaaaaaaaaaaaaaaaa\u03A9": "0x1"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregation_keys', 'aaaaaaaaaaaaaaaaaaaaaaaaa\u03A9'],
+        msg: 'exceeds max length per aggregation key identifier (26 > 25)',
+      },
+    ],
+  },
 
   {
     name: 'source-event-id-wrong-type',
