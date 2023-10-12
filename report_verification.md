@@ -218,9 +218,7 @@ Additionally the designs to [protect the number of encrypted
 reports](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#hide-the-true-number-of-attribution-reports)
 attempt to neutralize the privacy harm that is possible by counting encrypted
 reports. At the most extreme end we can make the count of encrypted records
-totally public knowledge, which makes even 
-
-[arbitrary partitioning privacy
+totally public knowledge, which makes even [arbitrary partitioning privacy
 neutral](#could-we-just-tag-reports-with-a-trigger_id-instead-of-using-anonymous-tokens).
 However, with less extreme techniques there are privacy benefits to reducing the
 partitioning available.
