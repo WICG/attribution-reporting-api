@@ -1105,9 +1105,9 @@ function source(ctx: Context, j: Json): Maybe<Source> {
 
 function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
   return set(ctx, j, (ctx, j) =>
-    string(ctx, j).filter((s) => {
-      return aggregationKeyIdentifierLength(ctx, s)
-    })
+    string(ctx, j).filter((s) =>
+      aggregationKeyIdentifierLength(ctx, s)
+    )
   )
 }
 
