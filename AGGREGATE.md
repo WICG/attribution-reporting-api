@@ -308,7 +308,7 @@ shared.
 The encryption will use public keys specified by the aggregation service. The
 browser will encrypt payloads just before the report is sent by fetching the
 public key endpoint (the aggregation service coordinator origin at the path
- `/.well-known/aggregation-service/public-keys`) with an un-credentialed request. The processing origin will
+ `/.well-known/aggregation-service/v1/public-keys`) with an un-credentialed request. The processing origin will
 respond with a set of keys which will be stored according to standard HTTP
 caching rules, i.e. using Cache-Control headers to dictate how long to store the
 keys for (e.g. following the [freshness
@@ -328,6 +328,10 @@ encoded public keys is as follows:
   ]
 }
 ```
+
+Note: The version in the `.well-known` path may be updated in the future
+versions of the spec if the public key serving details change, especially in a
+backwards incompatible way.
 
 To limit the impact of a single compromised key, multiple keys (up to a small
 limit) can be provided. The browser should independently pick a key uniformly at
