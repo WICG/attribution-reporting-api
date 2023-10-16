@@ -579,9 +579,8 @@ A randomized response output configuration is a [=struct=] with the following it
 <dl dfn-for="randomized response output configuration">
 : <dfn>max attributions per source</dfn>
 :: A positive integer.
-: <dfn>trigger data map</dfn>
-:: A [=map=] whose keys are trigger data (non-negative integers) and whose
-    values are [=report window list=].
+: <dfn>trigger specs</dfn>
+:: A [=trigger spec map=].
 
 </dl>
 
@@ -656,6 +655,19 @@ A <dfn>trigger-data matching mode</dfn> is one of the following:
     [=default trigger data cardinality=].
 
 </dl>
+
+<h3 id="trigger-specs-header">Trigger specs</h3>
+
+A <dfn>trigger spec</dfn> is a [=struct=] with the following items:
+
+<dl dfn-for="trigger spec">
+: <dfn>event-level report windows</dfn>
+:: A [=report window list=].
+
+</dl>
+
+A <dfn>trigger spec map</dfn> is a [=map=] whose keys are unsigned 32-bit
+integers and values are [=trigger specs=].
 
 <h3 dfn-type=dfn>Attribution source</h3>
 
@@ -1150,6 +1162,10 @@ Its value is 25.
 <dfn>Default trigger data cardinality</dfn> is a [=map=] that
 controls the valid range of [=event-level trigger configuration/trigger data=].
 Its value is «[=source type/navigation=] → 8, [=source type/event=] → 2».
+
+<dfn>Max distinct trigger data per source</dfn> is a positive integer that
+controls the maximum [=map/size=] of a [=trigger spec map=] for an
+[=attribution source=]. Its value is 32.
 
 # Vendor-Specific Values # {#vendor-specific-values}
 
@@ -1671,8 +1687,8 @@ To <dfn export>process an attribution eligible response</dfn> given a [=suitable
 
 To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized response output configuration=] |config|:
 1. Let |possibleTriggerStates| be a new [=list/is empty|empty=] [=set=].
-1. [=map/iterate|For each=] |triggerData| → |reportWindows| of |config|'s [=randomized response output configuration/trigger data map=]:
-    1. [=list/For each=] |reportWindow| of |reportWindows|:
+1. [=map/iterate|For each=] |triggerData| → |spec| of |config|'s [=randomized response output configuration/trigger specs=]:
+    1. [=list/For each=] |reportWindow| of |spec|'s [=trigger spec/event-level report windows=]:
         1. Let |state| be a new [=trigger state=] with the items:
             : [=trigger state/trigger data=]
             :: |triggerData|
@@ -1789,7 +1805,7 @@ a [=moment=] |sourceTime|, and a [=duration=] |eventReportWindow|:
     1. Set |lastEnd| to |lastEnd| + |deadline|.
 1. Return |windows|.
 
-To <dfn>parse report windows</dfn> given a [=map=] |map|, a [=moment=] |sourceTime|,
+To <dfn>parse top-level report windows</dfn> given a [=map=] |map|, a [=moment=] |sourceTime|,
 a [=source type=] |sourceType|, and a [=duration=] |expiry|:
 
 1. If |map|["`event_report_window`"] [=map/exists=] and
@@ -1802,16 +1818,21 @@ a [=source type=] |sourceType|, and a [=duration=] |expiry|:
 1. If |map|["`event_report_windows`"] does not [=map/exist=], return the result
     of [=obtaining default effective windows=] given |sourceType|, |sourceTime|,
     and |expiry|.
-1. Let |values| be |map|["`event_report_windows`"].
-1. If |values| is not a [=map=], return an error.
+1. Return the result of [=parsing report windows=] with
+    |map|["`event_report_windows`"], |sourceTime|, and |expiry|.
+
+To <dfn>parse report windows</dfn> given a |value|, a
+[=moment=] |sourceTime|, and a [=duration=] |expiry|:
+
+1. If |value| is not a [=map=], return an error.
 1. Let |startDuration| be 0 seconds.
-1. If |values|["`start_time`"] [=map/exists=]:
-    1. Let |start| be |values|["`start_time`"].
+1. If |value|["`start_time`"] [=map/exists=]:
+    1. Let |start| be |value|["`start_time`"].
     1. If |start| is not a non-negative integer, return an error.
     1. Set |startDuration| to |start| seconds.
     1. If |startDuration| is greater than |expiry|, return an error.
-1. If |values|["`end_times`"] does not [=map/exist=] or is not a [=list=], return an error.
-1. Let |endDurations| be |values|["`end_times`"].
+1. If |value|["`end_times`"] does not [=map/exist=] or is not a [=list=], return an error.
+1. Let |endDurations| be |value|["`end_times`"].
 1. If the [=list/size=] of |endDurations| is greater than [=max settable event-level report windows=], return an error.
 1. If |endDurations| [=list/is empty=], return an error.
 1. Let |windows| be an [=list/is empty|empty=] [=list=].
@@ -1831,6 +1852,48 @@ a [=source type=] |sourceType|, and a [=duration=] |expiry|:
     1. [=list/Append=] |window| to |windows|.
     1. Set |startDuration| to |endDuration|.
 1. Return |windows|.
+
+To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
+|sourceTime|, a [=duration=] |expiry|, a [=report window list=]
+|defaultReportWindows|, and an unsigned 32-bit integer |defaultTriggerDataCardinality|:
+
+1. [=Assert=]: |defaultTriggerDataCardinality| is greater than 0 and less than
+    or equal to [=max distinct trigger data per source=].
+1. Let |specs| be a new [=map=].
+1. If |map|["`trigger_specs`"] does not [=map/exist=]:
+    1. Let |spec| be a new [=trigger spec=] with the following items:
+        : [=trigger spec/event-level report windows=]
+        :: |defaultReportWindows|
+    1. For each integer |triggerData| between 0 (inclusive) and
+        |defaultTriggerDataCardinality| (exclusive):
+        1. [=map/Set=] |specs|[|triggerData|] to |spec|.
+    1. Return |specs|.
+1. If |map|["`trigger_specs`"] is not a [=list=] or its
+    [=list/size=] is greater than [=max distinct trigger data per source=],
+    return an error.
+1. [=list/iterate|For each=] |item| of |map|["`trigger_specs`"]:
+    1. If |item| is not a [=map=], return an error.
+    1. Let |spec| be a new [=trigger spec=] with the following items:
+        : [=trigger spec/event-level report windows=]
+        :: |defaultReportWindows|
+    1. If |item|["`event_report_windows`"] [=map/exists=]:
+        1. Let |reportWindows| be the result of
+            [=parsing report windows=] with |item|["`event_report_windows`"],
+            |sourceTime|, and |expiry|.
+        1. If |reportWindows| is an error, return it.
+        1. Set |spec|'s [=trigger spec/event-level report windows=] to
+            |reportWindows|.
+    1. If |item|["`trigger_data`"] does not [=map/exist=], is not a [=list=], or
+        [=list/is empty=], or its [=list/size=] is greater than
+        [=max distinct trigger data per source=], return an error.
+    1. [=list/iterate|For each=] |triggerData| of |map|["`trigger_data`"]:
+        1. If |triggerData| is not an integer or cannot be represented by an
+            unsigned 32-bit integer, or |specs|[|triggerData|] [=map/exists=],
+            return an error.
+        1. [=map/Set=] |specs|[|triggerData|] to |spec|.
+        1. If |specs|'s [=map/size=] is greater than
+            [=max distinct trigger data per source=], return an error.
+1. Return |specs|.
 
 To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 |json|, a [=suitable origin=] |sourceOrigin|, a [=suitable origin=] |reportingOrigin|, a
@@ -1880,7 +1943,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to |value|["`debug_reporting`"].
-1. Let |eventReportWindows| be the result of [=parsing report windows=] with |value|, |sourceTime|, |sourceType|, and |expiry|.
+1. Let |eventReportWindows| be the result of [=parsing top-level report windows=] with |value|, |sourceTime|, |sourceType|, and |expiry|.
 1. If |eventReportWindows| is an error, return null.
 1. Let |aggregatableReportWindow| be a new [=report window=] with the following items:
 
@@ -1889,15 +1952,18 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     : [=report window/end=]
     :: |sourceTime| + |aggregatableReportWindowEnd|
 
-1. Let |triggerDataMap| be a new [=map=].
+1. Let |triggerSpecs| be a new [=trigger spec map=].
 1. For each integer |triggerData| between 0 (inclusive) and |triggerDataCardinality| (exclusive):
-    1. [=map/Set=] |triggerDataMap|[|triggerData|] to |eventReportWindows|.
+    1. Let |spec| be a new [=trigger spec=] struct whose items are:
+        : [=trigger spec/event-level report windows=]
+        :: |eventReportWindows|
+    1. [=map/Set=] |triggerSpecs|[|triggerData|] to |spec|.
 1. Let |randomizedResponseConfig| be a new [=randomized response output configuration=] whose items are:
 
     : [=randomized response output configuration/max attributions per source=]
     :: |maxAttributionsPerSource|
-    : [=randomized response output configuration/trigger data map=]
-    :: |triggerDataMap|
+    : [=randomized response output configuration/trigger specs=]
+    :: |triggerSpecs|
 
 1. Let |epsilon| be the user agent's [=randomized response epsilon=].
 1. If the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon| is greater than
