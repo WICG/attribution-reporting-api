@@ -329,7 +329,9 @@ encoded public keys is as follows:
 }
 ```
 
-Note: The version in the `.well-known` path may change.
+Note: The version in the `.well-known` path may be updated in the future
+versions of the spec if the public key serving details change, especially in a
+backwards incompatible way.
 
 To limit the impact of a single compromised key, multiple keys (up to a small
 limit) can be provided. The browser should independently pick a key uniformly at
