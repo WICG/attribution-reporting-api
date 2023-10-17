@@ -1134,19 +1134,19 @@ controls the valid range of [=event-level trigger configuration/trigger data=].
 The keys are «[=source type/navigation=], [=source type/event=]». The values are positive integers.
 
 <dfn>Randomized response epsilon</dfn> is a non-negative double that controls
-the randomized response probability of an [=attribution source=]. If [=automation local testing mode=] is true,
+the randomized response probability of an [=attribution source=]. If [=automation local testing noise enabled=] is false,
 this is `∞`.
 
 <dfn>Randomized null report rate excluding source registration time</dfn> is a
 double between 0 and 1 (both inclusive) that controls the randomized number of null reports
 generated for an [=attribution trigger=] whose [attribution trigger/aggregatable source registration time configuration]
-is "<code>[=aggregatable source registration time configuration/exclude=]</code>". If [=automation local testing mode=] is true,
+is "<code>[=aggregatable source registration time configuration/exclude=]</code>". If [=automation local testing noise enabled=] is false,
 this is 0.
 
 <dfn>Randomized null report rate including source registration time</dfn> is a
 double between 0 and 1 (both inclusive) that controls the randomized number of null reports
 generated for an [=attribution trigger=] whose [attribution trigger/aggregatable source registration time configuration]
-is "<code>[=aggregatable source registration time configuration/include=]</code>". If [=automation local testing mode=] is true,
+is "<code>[=aggregatable source registration time configuration/include=]</code>". If [=automation local testing noise enabled=] is false,
 this is 0.
 
 <dfn>Max event-level reports per attribution destination</dfn> is a positive integer that
@@ -1212,7 +1212,7 @@ controls the maximum number of attributions for a
 [=attribution rate-limit window=].
 
 <dfn>Randomized aggregatable report delay</dfn> is a positive [=duration=] that controls the
-random delay to deliver an [=aggregatable report=]. If [=automation local testing mode=] is true,
+random delay to deliver an [=aggregatable report=]. If [=automation local testing report delays enabled=] is false,
 this is 0.
 
 <dfn>Default aggregation coordinator</dfn> is the [=aggregation coordinator=] that controls how to
@@ -2901,7 +2901,7 @@ To <dfn>obtain the report time at a window</dfn> given an
 To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution source=]
 |source| and a [=moment=] |triggerTime|:
 
-1. If [=automation local testing mode=] is true, return |triggerTime|.
+1. If [=automation local testing report delays enabled=] is false, return |triggerTime|.
 1. Let |windows| be |source|'s [=attribution source/event-level report windows=].
 1. [=list/iterate|For each=] |window| of |windows|:
     1. If the result of [=check whether a moment falls within a window=] with
@@ -3652,9 +3652,11 @@ and an [=origin=] |contextOrigin|:
     1. Run [=obtain and deliver a debug report=] with « |data| » and |origin|.
 
 # User-Agent Automation # {#automation}
-    
-The user-agent has an associated boolean <dfn>automation local testing mode</dfn> (default false).
-    
+
+The user-agent has an associated boolean <dfn>automation local testing noise enabled</dfn> (default true).
+
+The user-agent has an associated boolean <dfn>automation local testing report delays enabled</dfn> (default true).
+
 For the purposes of user-agent automation and website testing, this document
 defines the below [[WebDriver]] [=extension commands=] to control the API
 configuration.
@@ -3683,13 +3685,21 @@ The [=remote end steps=] are:
 1. If |parameters| is not a JSON-formatted [[ECMASCRIPT#sec-objects|Object]],
     return a [=error|WebDriver error=] with [=error code=] [=invalid argument=].
 
-1. Let |enabled| be the result of [=getting a property=] named `"enabled"` from
+1. Let |noiseEnabled| be the result of [=getting a property=] named `"noiseEnabled"` from
     |parameters|.
 
-1. If |enabled| is {{undefined}} or is not a boolean, return a [=error|WebDriver error=]
+1. If |noiseEnabled| is {{undefined}} or is not a boolean, return a [=error|WebDriver error=]
     with [=error code=] [=invalid argument=].
 
-1. Set [=automation local testing mode=] to |enabled|.
+1. Let |reportDelaysEnabled| be the result of [=getting a property=] named `"reportDelaysEnabled"` from
+    |parameters|.
+
+1. If |reportDelaysEnabled| is {{undefined}} or is not a boolean, return a [=error|WebDriver error=]
+    with [=error code=] [=invalid argument=].
+
+1. Set [=automation local testing noise enabled=] to |noiseEnabled|.
+
+1. Set [=automation local testing report delays enabled=] to |reportDelaysEnabled|.
 
 1. Return [=success=] with data `null`.
 
