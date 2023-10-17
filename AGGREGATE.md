@@ -239,7 +239,7 @@ The report will be JSON encoded with the following scheme:
   ],
 
   // The deployment option for the aggregation service.
-  "aggregation_coordinator_origin": "https://publickeyservice.aws.privacysandboxservices.com",
+  "aggregation_coordinator_origin": "https://publickeyservice.msmt.aws.privacysandboxservices.com",
 
   // Optional debugging information (also present in event-level reports),
   // if the cookie `ar_debug` is present.
@@ -462,7 +462,8 @@ respond back with a summary report (aggregate histogram), i.e. a list of keys wi
 _aggregate_ values. It is expected that as a privacy protection mechanism, a
 certain amount of noise will be added to each output key's aggregate value.
 
-Currently the aggregation service can be deployed on Amazon Web Services (AWS). We expect to support Google Cloud Platform (GCP) and other cloud providers in the future.
+Currently the aggregation service can be deployed on Amazon Web Services (AWS) and
+Google Cloud Platform (GCP). We expect to support other cloud providers in the future.
 
 Trigger registration will accept an optional string field `aggregation_coordinator_origin`
 to allow developers to specify the deployment option for the aggregation service
@@ -472,12 +473,12 @@ AWS, GCP, and other platforms in the future.
 ```jsonc
 {
   ..., // existing fields
-  "aggregation_coordinator_origin": "https://publickeyservice.aws.privacysandboxservices.com",
+  "aggregation_coordinator_origin": "https://publickeyservice.msmt.aws.privacysandboxservices.com",
 }
 ```
 
-TODO: Consider exposing the allowlist of aggregation service coordinator
-origins.
+See [allowlist](https://github.com/WICG/attribution-reporting-api/blob/main/aggregation_coordinator_origin_allowlist.md)
+of the aggregation service coordinator origins.
 
 ## Privacy considerations
 
