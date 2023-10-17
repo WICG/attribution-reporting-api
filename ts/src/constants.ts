@@ -39,3 +39,10 @@ export const defaultEventLevelAttributionsPerSource: Readonly<
 export const maxTriggerDataPerSource: number = 32
 
 export const allowedAggregatableBudgetPerSource: number = 65536
+
+export const defaultTriggerDataCardinality: Readonly<
+  Record<SourceType, bigint>
+> = {
+  [SourceType.event]: 2n,
+  [SourceType.navigation]: 8n,
+}

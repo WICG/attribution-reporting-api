@@ -1148,6 +1148,10 @@ the maximum [=string/length=] of an [=attribution source=]'s [=attribution sourc
 and an [=aggregatable trigger data=]'s [=aggregatable trigger data/source keys=]'s [=set/items=].
 Its value is 25.
 
+<dfn>Default trigger data cardinality</dfn> is a [=map=] that
+controls the valid range of [=event-level trigger configuration/trigger data=].
+Its value is «[=source type/navigation=] → 8, [=source type/event=] → 2».
+
 # Vendor-Specific Values # {#vendor-specific-values}
 
 <dfn>Max aggregation keys per source registration</dfn> is a positive integer that
@@ -1157,10 +1161,6 @@ controls the maximum [=map/size=] of an [=attribution source=]'s
 <dfn>Max pending sources per source origin</dfn> is a positive integer that
 controls how many [=attribution sources=] can be in the
 [=attribution source cache=] per [=attribution source/source origin=].
-
-<dfn>Default trigger data cardinality</dfn> is a [=map=] that
-controls the valid range of [=event-level trigger configuration/trigger data=].
-The keys are «[=source type/navigation=], [=source type/event=]». The values are positive integers.
 
 <dfn>Randomized response epsilon</dfn> is a non-negative double that controls
 the randomized response probability of an [=attribution source=]. If [=automation local testing mode=] is true,
@@ -1871,7 +1871,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
 1. If |aggregationKeys| is null, return null.
-1. Let |triggerDataCardinality| be the user agent's [=default trigger data cardinality=][|sourceType|].
+1. Let |triggerDataCardinality| be [=default trigger data cardinality=][|sourceType|].
 1. Let |maxAttributionsPerSource| be [=default event-level attributions per source=][|sourceType|].
 1. Set |maxAttributionsPerSource| to |value|["`max_event_level_reports`"] if it [=map/exists=].
 1. If |maxAttributionsPerSource| is not a non-negative integer, or is greater than [=max settable event-level attributions per source=], return null.
@@ -2955,7 +2955,7 @@ To <dfn>obtain an event-level report</dfn> given an [=attribution source=] |sour
 |trigger|, and an [=event-level trigger configuration=] |config|:
 
 1. Let |triggerData| be |config|'s [=event-level trigger configuration/trigger data=].
-1. Let |triggerDataCardinality| be the user agent's [=default trigger data cardinality=][|source|'s [=attribution source/source type=]].
+1. Let |triggerDataCardinality| be [=default trigger data cardinality=][|source|'s [=attribution source/source type=]].
 1. If |source|'s [=attribution source/trigger-data matching mode=] is:
     <dl class="switch">
     : "<code>[=trigger-data matching mode/exact=]</code>":

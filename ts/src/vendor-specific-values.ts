@@ -4,7 +4,6 @@ export type VendorSpecificValues = {
   maxAggregationKeysPerSource: number
   maxEventLevelChannelCapacityPerSource: Record<SourceType, number>
   randomizedResponseEpsilon: number
-  triggerDataCardinality: Record<SourceType, bigint>
 }
 
 export const Chromium: Readonly<VendorSpecificValues> = {
@@ -14,8 +13,4 @@ export const Chromium: Readonly<VendorSpecificValues> = {
     [SourceType.navigation]: 11.46173,
   },
   randomizedResponseEpsilon: 14,
-  triggerDataCardinality: {
-    [SourceType.event]: 2n,
-    [SourceType.navigation]: 8n,
-  },
 }

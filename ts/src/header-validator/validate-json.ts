@@ -241,15 +241,17 @@ function uint64(ctx: Context, j: Json): Maybe<bigint> {
 
 function triggerData(ctx: Context, j: Json): Maybe<bigint> {
   return uint64(ctx, j).peek((n) => {
-    Object.entries(ctx.vsv.triggerDataCardinality).forEach(([t, c]) => {
-      if (n >= c) {
-        ctx.warning(
-          `will be sanitized to ${
-            n % c
-          } if trigger is attributed to ${t} source`
-        )
+    Object.entries(constants.defaultTriggerDataCardinality).forEach(
+      ([t, c]) => {
+        if (n >= c) {
+          ctx.warning(
+            `will be sanitized to ${
+              n % c
+            } if trigger is attributed to ${t} source`
+          )
+        }
       }
-    })
+    )
   })
 }
 
@@ -971,7 +973,11 @@ function defaultTriggerSpecs(
         summaryWindowOperator: SummaryWindowOperator.count,
         triggerData: new Set(
           Array.from(
-            { length: Number(ctx.vsv.triggerDataCardinality[ctx.sourceType]) },
+            {
+              length: Number(
+                constants.defaultTriggerDataCardinality[ctx.sourceType]
+              ),
+            },
             (_, i) => i
           )
         ),

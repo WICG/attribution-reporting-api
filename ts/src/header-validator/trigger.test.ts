@@ -1,4 +1,3 @@
-import { SourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
 import {
@@ -603,12 +602,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'trigger-data-sanitized',
     json: `{"event_trigger_data": [{"trigger_data": "10"}]}`,
-    vsv: {
-      triggerDataCardinality: {
-        [SourceType.event]: 2n,
-        [SourceType.navigation]: 8n,
-      },
-    },
     expectedWarnings: [
       {
         path: ['event_trigger_data', 0, 'trigger_data'],
