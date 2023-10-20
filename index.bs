@@ -2046,9 +2046,8 @@ a [=trigger state=] |triggerState|:
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
 1. [=Assert=]: |fakeReport| is not null.
-1. Set |fakeReport|'s [=event-level report/report time=] to the result of
-    running [=obtain the report time at a window=] with |source| and
-    |triggerState|'s [=trigger state/report window=].
+1. Set |fakeReport|'s [=event-level report/report time=] to
+    |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
 1. Return |fakeReport|.
 
 To <dfn>check if debug reporting is allowed</dfn> given a [=source debug data type=] |dataType|
@@ -2933,19 +2932,6 @@ a [=report window=] |window|:
     return <strong>falls after</strong>.
 1. Return <strong>falls within</strong>.
 
-To <dfn>obtain a report time from a window</dfn> given a [=moment=] |sourceTime| and
-a [=report window=] |window|:
-
-1. Return |sourceTime| + |window|'s [=report window/end=].
-
-To <dfn>obtain the report time at a window</dfn> given an
-[=attribution source=] |source| and a non-negative integer |window|:
-
-1. [=Assert=]: |source|'s [=attribution source/event-level report windows=][|window|] [=list/exists=].
-1. Let |win| be |source|'s [=attribution source/event-level report windows=][|window|].
-1. Return the result of running [=obtain a report time from a window=] with
-    |source|'s [=attribution source/source time=] and |win|.
-
 To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution source=]
 |source| and a [=moment=] |triggerTime|:
 
@@ -2953,9 +2939,8 @@ To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution 
 1. Let |windows| be |source|'s [=attribution source/event-level report windows=].
 1. [=list/iterate|For each=] |window| of |windows|:
     1. If the result of [=check whether a moment falls within a window=] with
-        |triggerTime| and |window| is <strong>falls within</strong>, return the result
-        of running [=obtain a report time from a window=] with |source|'s
-        [=attribution source/source time=] and |window|.
+        |triggerTime| and |window| is <strong>falls within</strong>, return
+        |window|'s [=report window/end=].
 1. [=Assert=]: not reached.
 
 To <dfn>obtain an aggregatable report delivery time</dfn> given a [=moment=]
