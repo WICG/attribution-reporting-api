@@ -568,7 +568,7 @@ A trigger state is a [=struct=] with the following items:
 : <dfn>trigger data</dfn>
 :: A non-negative 64-bit integer.
 : <dfn>report window</dfn>
-:: A non-negative integer.
+:: A [=report window=].
 
 </dl>
 
@@ -579,10 +579,9 @@ A randomized response output configuration is a [=struct=] with the following it
 <dl dfn-for="randomized response output configuration">
 : <dfn>max attributions per source</dfn>
 :: A positive integer.
-: <dfn>trigger data cardinality</dfn>
-:: A positive integer.
-: <dfn>num report windows</dfn>
-:: A positive integer.
+: <dfn>trigger data map</dfn>
+:: A [=map=] whose keys are trigger data (non-negative integers) and whose
+    values are [=report window list=].
 
 </dl>
 
@@ -1672,8 +1671,8 @@ To <dfn export>process an attribution eligible response</dfn> given a [=suitable
 
 To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized response output configuration=] |config|:
 1. Let |possibleTriggerStates| be a new [=list/is empty|empty=] [=set=].
-1. For each integer |triggerData| between 0 (inclusive) and |config|'s [=randomized response output configuration/trigger data cardinality=] (exclusive):
-    1. For each integer |reportWindow| between 0 (inclusive) and |config|'s [=randomized response output configuration/num report windows=] (exclusive):
+1. [=map/iterate|For each=] |triggerData| → |reportWindows| of |config|:
+    1. [=list/For each=] |reportWindow| of |reportWindows|:
         1. Let |state| be a new [=trigger state=] with the items:
             : [=trigger state/trigger data=]
             :: |triggerData|
@@ -1890,14 +1889,15 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     : [=report window/end=]
     :: |sourceTime| + |aggregatableReportWindowEnd|
 
+1. Let |triggerDataMap| be a new [=map=].
+1. For each integer |triggerData| between 0 (inclusive) and |triggerDataCardinality| (exclusive):
+    1. [=map/Set=] |triggerDataMap|[|triggerData|] to |eventReportWindows|.
 1. Let |randomizedResponseConfig| be a new [=randomized response output configuration=] whose items are:
 
     : [=randomized response output configuration/max attributions per source=]
     :: |maxAttributionsPerSource|
-    : [=randomized response output configuration/num report windows=]
-    :: The [=list/size=] of |eventReportWindows|.
-    : [=randomized response output configuration/trigger data cardinality=]
-    :: |triggerDataCardinality|
+    : [=randomized response output configuration/trigger data map=]
+    :: |triggerDataMap|
 
 1. Let |epsilon| be the user agent's [=randomized response epsilon=].
 1. If the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon| is greater than
