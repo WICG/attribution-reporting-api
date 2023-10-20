@@ -1168,10 +1168,6 @@ const testCases: TestCase[] = [
         [SourceType.navigation]: Infinity,
       },
       randomizedResponseEpsilon: 14,
-      triggerDataCardinality: {
-        [SourceType.event]: 2n,
-        [SourceType.navigation]: 8n,
-      },
     },
     expectedErrors: [
       {
@@ -1190,10 +1186,6 @@ const testCases: TestCase[] = [
         [SourceType.navigation]: 0,
       },
       randomizedResponseEpsilon: 14,
-      triggerDataCardinality: {
-        [SourceType.event]: 2n,
-        [SourceType.navigation]: 8n,
-      },
     },
     expectedErrors: [
       {

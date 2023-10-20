@@ -107,15 +107,12 @@ test('binaryEntropy', async (t) => {
   )
 })
 
-function defaultConfig(
-  sourceType: SourceType,
-  vsv: vsv.VendorSpecificValues
-): Config {
+function defaultConfig(sourceType: SourceType): Config {
   const defaultMaxReports =
     constants.defaultEventLevelAttributionsPerSource[sourceType]
   return new Config(
     /*maxEventLevelReports=*/ defaultMaxReports,
-    new Array(Number(vsv.triggerDataCardinality[sourceType])).fill(
+    new Array(Number(constants.defaultTriggerDataCardinality[sourceType])).fill(
       new PerTriggerDataConfig(
         /*numWindows=*/
         constants.defaultEarlyEventLevelReportWindows[sourceType].length + 1,
@@ -128,7 +125,7 @@ function defaultConfig(
 test('computeConfigData', async (t) => {
   await t.test('navigation', () => {
     assert.deepStrictEqual(
-      defaultConfig(SourceType.navigation, vsv.Chromium).computeConfigData(
+      defaultConfig(SourceType.navigation).computeConfigData(
         14,
         vsv.Chromium.maxEventLevelChannelCapacityPerSource[
           SourceType.navigation
@@ -144,7 +141,7 @@ test('computeConfigData', async (t) => {
 
   await t.test('event', () => {
     assert.deepStrictEqual(
-      defaultConfig(SourceType.event, vsv.Chromium).computeConfigData(
+      defaultConfig(SourceType.event).computeConfigData(
         14,
         vsv.Chromium.maxEventLevelChannelCapacityPerSource[SourceType.event]
       ),

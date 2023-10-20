@@ -9,8 +9,6 @@ Chromium's implementation assigns the following values:
 | ---- | ----- |
 | [Max aggregation keys per source registration][] | [20][max aggregation keys per source registration value] |
 | [Max pending sources per source origin][] | [1024][max pending sources per source origin value] |
-| [Navigation-source trigger data cardinality][] | [8][navigation-source trigger data cardinality value] |
-| [Event-source trigger data cardinality][] | [2][event-source trigger data cardinality value] |
 | [Randomized response epsilon][] | [14][randomized response epsilon value] |
 | [Randomized null report rate excluding source registration time][] | [0.05][randomized null report rate excluding source registration time value] |
 | [Randomized null report rate including source registration time][] | [0.008][randomized null report rate including source registration time value] |
@@ -33,10 +31,6 @@ Chromium's implementation assigns the following values:
 [max aggregation keys per source registration value]: https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:components/attribution_reporting/constants.h;l=19;drc=b646f894a92491033bde5d1e75aba6f44c524f0e
 [Max pending sources per source origin]: https://wicg.github.io/attribution-reporting-api/#max-pending-sources-per-source-origin
 [max pending sources per source origin value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=122;drc=3733a639d724a4353463a872605119d11a1e4d37
-[Navigation-source trigger data cardinality]: https://wicg.github.io/attribution-reporting-api/#navigation-source-trigger-data-cardinality
-[navigation-source trigger data cardinality value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=48;drc=3733a639d724a4353463a872605119d11a1e4d37
-[Event-source trigger data cardinality]: https://wicg.github.io/attribution-reporting-api/#event-source-trigger-data-cardinality
-[event-source trigger data cardinality value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=49;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Randomized response epsilon]: https://wicg.github.io/attribution-reporting-api/#randomized-response-epsilon
 [randomized response epsilon value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=57;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Randomized null report rate excluding source registration time]: https://wicg.github.io/attribution-reporting-api/#randomized-null-report-rate-excluding-source-registration-time
