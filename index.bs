@@ -1114,6 +1114,11 @@ Its value is 50.
 controls the maximum [=set/size=] of each [=map/value=] of an
 [=attribution source=]'s [=attribution source/filter data=]. Its value is 50.
 
+<dfn>Max length per filter string</dfn> is a positive integer that controls the
+maximum [=string/length=] of an [=attribution source=]'s [=attribution source/filter data=]'s
+[=map/keys=] and its [=map/values=]'s [=set/items=].
+Its value is 25.
+
 <dfn>Attribution rate-limit window</dfn> is a positive [=duration=] that
 controls the rate-limiting window for attribution. Its value is 30 days.
 
@@ -1136,6 +1141,12 @@ Its value is «[ [=source type/navigation=] → 3, [=source type/event=] → 1 ]
 <dfn>Allowed aggregatable budget per source</dfn> is a positive integer that controls the total
 [=aggregatable report/required aggregatable budget=] of all [=aggregatable reports=] created for
 an [=attribution source=]. Its value is 65536.
+
+<dfn>Max length per aggregation key identifier</dfn> is a positive integer that controls
+the maximum [=string/length=] of an [=attribution source=]'s [=attribution source/aggregation keys=]'s
+[=map/keys=], an [=attribution trigger=]'s [=attribution trigger/aggregatable values=]'s [=map/keys=],
+and an [=aggregatable trigger data=]'s [=aggregatable trigger data/source keys=]'s [=set/items=].
+Its value is 25.
 
 # Vendor-Specific Values # {#vendor-specific-values}
 
@@ -1327,12 +1338,14 @@ To <dfn>parse filter data</dfn> given a |value|:
 1. If |map|'s [=map/size=] is greater than the [=max entries per filter data=],
     return null.
 1. [=map/iterate|For each=] |filter| → |set| of |map|:
+    1. If |filter|'s [=string/length=] is greater than the [=max length per filter string=],
+        return null.
     1. If |set|'s [=set/size=] is greater than the
         [=max values per filter data entry=], return null.
+    1. [=set/iterate|For each=] |s| of |set|:
+        1. If |s|'s [=string/length=] is greater than the [=max length per filter string=],
+            return null.
 1. Return |map|.
-
-Issue: Determine whether to limit [=string/length=] or
-[=string/code point length=] for |filter| and |d| above.
 
 To <dfn>parse filter config</dfn> given a |value|:
 
@@ -1749,13 +1762,13 @@ To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
 1. If |values|'s [=map/size=] is greater than the user agent's
     [=max aggregation keys per source registration=], return null.
 1. [=map/iterate|For each=] |key| → |value| of |values|:
+    1. If |key|'s [=string/length=] is greater than the [=max length per aggregation key identifier=],
+        return null.
     1. If |value| is not a [=string=], return null.
     1. Let |keyPiece| be the result of running [=parse an aggregation key piece=] with |value|.
     1. If |keyPiece| is an error, return null.
     1. [=map/Set=] |aggregationKeys|[|key|] to |keyPiece|.
 1. Return |aggregationKeys|.
-
-Issue: Determine whether to limit [=string/length=] or [=string/code point length=] for |key| above.
 
 To <dfn>obtain default effective windows</dfn> given a [=source type=] |sourceType|,
 a [=moment=] |sourceTime|, and a [=duration=] |eventReportWindow|:
@@ -2223,6 +2236,8 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
         1. If |value|["`source_keys`"] is not a [=list=], return null.
         1. [=list/iterate|For each=] |sourceKey| of |value|["`source_keys`"]:
             1. If |sourceKey| is not a [=string=], return null.
+            1. If |sourceKey|'s [=string/length=] is greater than the
+                [=max length per aggregation key identifier=], return null.
             1. [=set/Append=] |sourceKey| to |sourceKeys|.
     1. Let |filterPair| be the result of running [=parse a filter pair=] with
         |value|.
@@ -2239,20 +2254,18 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
     1. [=list/Append=] |aggregatableTrigger| to |aggregatableTriggerData|.
 1. Return |aggregatableTriggerData|.
 
-Issue: Determine whether to limit [=string/length=] or [=string/code point length=] for |sourceKey| above.
-
 To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
 
 1. If |map|["`aggregatable_values`"] does not [=map/exist=], return «[]».
 1. Let |values| be |map|["`aggregatable_values`"].
 1. If |values| is not an [=ordered map=], return null.
 1. [=map/iterate|For each=] |key| → |value| of |values|:
+     1. If |key|'s [=string/length=] is greater than the [=max length per aggregation key identifier=],
+         return null.
      1. If |value| is not an integer, return null.
      1. If |value| is less than or equal to 0, return null.
      1. If |value| is greater than [=allowed aggregatable budget per source=], return null.
 1. Return |values|.
-
-Issue: Determine whether to limit [=string/length=] or [=string/code point length=] for |key| above.
 
 To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
 

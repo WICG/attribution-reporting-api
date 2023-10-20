@@ -11,6 +11,10 @@ export const maxEntriesPerFilterData: number = 50
 
 export const maxValuesPerFilterDataEntry: number = 50
 
+export const maxLengthPerFilterString: number = 25
+
+export const maxLengthPerAggregationKeyIdentifier: number = 25
+
 export const minReportWindow: number = 1 * SECONDS_PER_HOUR
 
 export const validSourceExpiryRange: Readonly<[min: number, max: number]> = [

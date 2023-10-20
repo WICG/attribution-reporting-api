@@ -561,7 +561,21 @@ function filterDataKeyValue(
     return None
   }
 
-  return set(ctx, j, string, {
+  const filterStringLength = (s: string, errorPrefix: string = '') => {
+    if (s.length > constants.maxLengthPerFilterString) {
+      ctx.error(
+        `${errorPrefix}exceeds max length per filter string (${s.length} > ${constants.maxLengthPerFilterString})`
+      )
+      return false
+    }
+    return true
+  }
+
+  if (!filterStringLength(key, 'key ')) {
+    return None
+  }
+
+  return set(ctx, j, (ctx, j) => string(ctx, j).filter(filterStringLength), {
     maxLength: constants.maxValuesPerFilterDataEntry,
   })
 }
@@ -662,11 +676,24 @@ const priorityField: StructFields<Priority> = {
   priority: field('priority', int64, 0n),
 }
 
-// TODO: check length of key
-function aggregationKey(
+function aggregationKeyIdentifierLength(
   ctx: Context,
-  [_key, j]: [string, Json]
-): Maybe<bigint> {
+  s: string,
+  errPrefix: string = ''
+): boolean {
+  if (s.length > constants.maxLengthPerAggregationKeyIdentifier) {
+    ctx.error(
+      `${errPrefix}exceeds max length per aggregation key identifier (${s.length} > ${constants.maxLengthPerAggregationKeyIdentifier})`
+    )
+    return false
+  }
+  return true
+}
+
+function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
+  if (!aggregationKeyIdentifierLength(ctx, key, 'key ')) {
+    return None
+  }
   return hex128(ctx, j)
 }
 
@@ -1077,7 +1104,9 @@ function source(ctx: Context, j: Json): Maybe<Source> {
 }
 
 function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
-  return set(ctx, j, string)
+  return set(ctx, j, (ctx, j) =>
+    string(ctx, j).filter((s) => aggregationKeyIdentifierLength(ctx, s))
+  )
 }
 
 export type AggregatableTriggerDatum = FilterPair & {
@@ -1101,8 +1130,11 @@ function aggregatableTriggerData(
 // TODO: check length of key
 function aggregatableKeyValue(
   ctx: Context,
-  [_key, j]: [string, Json]
+  [key, j]: [string, Json]
 ): Maybe<number> {
+  if (!aggregationKeyIdentifierLength(ctx, key, 'key ')) {
+    return None
+  }
   return number(ctx, j)
     .filter((n) => isInteger(ctx, n))
     .filter((n) =>

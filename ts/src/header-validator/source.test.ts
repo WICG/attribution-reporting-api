@@ -283,6 +283,32 @@ const testCases: TestCase[] = [
       },
     ],
   },
+  {
+    name: 'filter-data-key-too-long',
+    json: `{
+      "destination": "https://a.test",
+      "filter_data": {"aaaaaaaaaaaaaaaaaaaaaaaaaa": ["x"]}
+    }`,
+    expectedErrors: [
+      {
+        path: ['filter_data', 'aaaaaaaaaaaaaaaaaaaaaaaaaa'],
+        msg: 'key exceeds max length per filter string (26 > 25)',
+      },
+    ],
+  },
+  {
+    name: 'filter-data-value-too-long',
+    json: `{
+      "destination": "https://a.test",
+      "filter_data": {"a": ["xxxxxxxxxxxxxxxxxxxxxxxxxx"]}
+    }`,
+    expectedErrors: [
+      {
+        path: ['filter_data', 'a', 0],
+        msg: 'exceeds max length per filter string (26 > 25)',
+      },
+    ],
+  },
   // TODO: add tests for exceeding size limits
 
   {
@@ -338,6 +364,36 @@ const testCases: TestCase[] = [
       {
         path: ['aggregation_keys'],
         msg: 'exceeds the maximum number of keys (1)',
+      },
+    ],
+  },
+  {
+    name: 'aggregation-keys-key-too-long',
+    json: `{
+      "destination": "https://a.test",
+      "aggregation_keys": {
+        "aaaaaaaaaaaaaaaaaaaaaaaaaa": "0x1"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregation_keys', 'aaaaaaaaaaaaaaaaaaaaaaaaaa'],
+        msg: 'key exceeds max length per aggregation key identifier (26 > 25)',
+      },
+    ],
+  },
+  {
+    name: 'aggregation-keys-key-too-long-non-ascii',
+    json: `{
+      "destination": "https://a.test",
+      "aggregation_keys": {
+        "aaaaaaaaaaaaaaaaaaaaaaaaa\u03A9": "0x1"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregation_keys', 'aaaaaaaaaaaaaaaaaaaaaaaaa\u03A9'],
+        msg: 'key exceeds max length per aggregation key identifier (26 > 25)',
       },
     ],
   },
