@@ -129,7 +129,7 @@ header](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#tri
       // which will take up 7 bits of space in the resulting key.
       "key_piece": "0xA80",
       // Apply this key piece to:
-      "source_keys": ["geoValue", "nonMatchingKeyIdsAreIgnored"]
+      "source_keys": ["geoValue", "nonMatchingKeyIdsIgnored"]
     }
   ],
   "aggregatable_values": {
