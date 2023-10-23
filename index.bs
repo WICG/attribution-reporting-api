@@ -634,13 +634,24 @@ A <dfn>report window</dfn> is a [=struct=] with the following items:
 
 </dl>
 
-
 A <dfn>report window list</dfn> is a [=list=] of [=report windows=].
 It has the following constraints:
 
 * Elements are in ascending order based on their [=report window/start=].
 * Every element's [=report window/start=] is equal to the previous element's [=report window/end=], if it exists.
 * There is at least one element in the list.
+
+A [=report window list=] |list|'s <dfn for="report window list">total window</dfn> is
+a [=report window=] [=struct=] with the following fields:
+
+: [=report window/start=]
+:: The [=report window/start=] of |list|[0].
+: [=report window/end=]
+:: The [=report window/end=] of |list|[|list|'s [=list/size=] - 1].
+
+Note: The [=report window list/total window=] is conceptually a union of
+[=report windows=], because there are no gaps in time between any of the
+[=report windows|windows=].
 
 <h3 id="trigger-data-matching-mode-header">Trigger-data matching mode</h3>
 
@@ -717,17 +728,6 @@ An attribution source is a [=struct=] with the following items:
 </dl>
 
 An [=attribution source=] |source|'s <dfn for="attribution source">expiry time</dfn> is |source|'s [=attribution source/source time=] + |source|'s [=attribution source/expiry=].
-
-An [=attribution source=] |source|'s <dfn for="attribution source">total event-level report window</dfn> is
-a [=report window=] [=struct=] with the following fields:
-
-: [=report window/start=]
-:: The [=report window/start=] of |source|'s first [=attribution source/event-level report window=].
-: [=report window/end=]
-:: The [=report window/end=] of |source|'s last [=attribution source/event-level report window=].
-
-Note: The [=attribution source/total event-level report window=] is conceptually a union of [=report windows=], because there
-are no gaps in time between any of the [=report windows|windows=] in [=attribution source/event-level report windows=].
 
 An [=attribution source=] |source|'s <dfn for="attribution source">source site</dfn> is the result
 of [=obtain a site|obtaining a site=] from |source|'s [=attribution source/source origin=].
@@ -2658,7 +2658,8 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. Let |windowResult| be the result of [=check whether a moment falls within a window=]
     with |trigger|'s [=attribution trigger/trigger time=] and
-    |sourceToAttribute|'s [=attribution source/total event-level report window=].
+    |sourceToAttribute|'s [=attribution source/event-level report windows=]'s
+    [=report window list/total window=].
 1. If |windowResult| is <strong>falls before</strong>:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-event-report-window-not-started=]</code>",
