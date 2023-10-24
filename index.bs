@@ -1696,7 +1696,7 @@ To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized respo
             :: |reportWindow|
         1. [=set/Append=] |state| to |possibleTriggerStates|.
 1. Let |possibleValues| be a new [=list/is empty|empty=] [=set=].
-1. For each integer |attributions| between 0 (inclusive) and |config's| [=randomized response output configuration/max attributions per source=] (inclusive):
+1. [=set/iterate|For each=] integer |attributions| of [=the range=] 0 to |config's| [=randomized response output configuration/max attributions per source=], inclusive:
     1. [=set/Append=] to |possibleValues| all distinct |attributions|-length combinations of
         |possibleTriggerStates|.
 
@@ -1864,8 +1864,8 @@ To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
     1. Let |spec| be a new [=trigger spec=] with the following items:
         : [=trigger spec/event-level report windows=]
         :: |defaultReportWindows|
-    1. For each integer |triggerData| between 0 (inclusive) and
-        |defaultTriggerDataCardinality| (exclusive):
+    1. [=set/iterate|For each=] integer |triggerData| of [=the exclusive range|the range=] 0 to
+        |defaultTriggerDataCardinality|, exclusive:
         1. [=map/Set=] |specs|[|triggerData|] to |spec|.
     1. Return |specs|.
 1. If |map|["`trigger_specs`"] is not a [=list=] or its
@@ -1955,7 +1955,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |sourceTime| + |aggregatableReportWindowEnd|
 
 1. Let |triggerSpecs| be a new [=trigger spec map=].
-1. For each integer |triggerData| between 0 (inclusive) and |triggerDataCardinality| (exclusive):
+1. [=set/iterate|For each=] integer |triggerData| of [=the exclusive range|the range=] 0 to |triggerDataCardinality|, exclusive:
     1. Let |spec| be a new [=trigger spec=] struct whose items are:
         : [=trigger spec/event-level report windows=]
         :: |eventReportWindows|
@@ -3166,7 +3166,7 @@ To <dfn>generate null reports</dfn> given an [=attribution trigger=] |trigger| a
     1. Let |roundedAttributedSourceTime| be null.
     1. If |report| is not null, set |roundedAttributedSourceTime| to the result of [=obtaining rounded source time=] with |report|'s
         [=aggregatable report/source time=].
-    1. For each integer |day| between 0 (inclusive) and the number of days in |maxSourceExpiry| (inclusive):
+    1. [=set/iterate|For each=] integer |day| of [=the range=] 0 to the number of days in |maxSourceExpiry|, inclusive:
         1. Let |fakeSourceTime| be |trigger|'s [=attribution trigger/trigger time=] - |day| days.
         1. If |roundedAttributedSourceTime| is not null and equals the result of [=obtaining rounded source time=] with |fakeSourceTime|:
             1. [=iteration/Continue=].
@@ -3188,7 +3188,7 @@ an [=attribution trigger=] |trigger|:
 1. [=shuffle a list|Shuffle=] |reports|.
 1. [=shuffle a list|Shuffle=] |verifications|.
 1. Let |n| be the minimum of |reports|'s [=list/size=] and |verifications|'s [=list/size=].
-1. For each integer |i| between 0 (inclusive) and |n| (exclusive):
+1. [=set/iterate|For each=] integer |i| of [=the exclusive range|the range=] 0 to |n|, exclusive:
     1. Set |reports|[i]'s [=aggregatable report/report ID=] to |verifications|[i]'s [=trigger verification/id=].
     1. Set |reports|[i]'s [=aggregatable report/serialized private state token=] to |verifications|[i]'s [=trigger verification/token=].
 
@@ -3727,7 +3727,7 @@ To <dfn noexport>receive trigger verification tokens</dfn> given an
     1. Let |base64EncodedPrivateStateToken| be the [=forgiving-base64 encoding=] of |privateStateToken|.
     1. [=list/Append=] |base64EncodedPrivateStateToken| to |base64EncodedPrivateStateTokens|.
 1. Let |triggerVerifications| be a new [=list=].
-1. For each integer |i| between 0 (inclusive) and |base64EncodedPrivateStateTokens|'s [=list/size=] (exclusive):
+1. [=set/iterate|For each=] integer |i| of |base64EncodedPrivateStateTokens|'s [=list/get the indices|indices=]:
     1. Let |triggerVerification| be a [=trigger verification=] with the items:
         : [=trigger verification/token=]
         :: |base64EncodedPrivateStateTokens|[i]
