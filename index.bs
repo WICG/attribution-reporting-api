@@ -1855,7 +1855,9 @@ To <dfn>parse report windows</dfn> given a |value|, a
 
 To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
 |sourceTime|, a [=duration=] |expiry|, a [=report window list=]
-|defaultReportWindows|, and an unsigned 32-bit integer |defaultTriggerDataCardinality|:
+|defaultReportWindows|, an unsigned 32-bit integer
+|defaultTriggerDataCardinality|, and a [=trigger-data matching mode=]
+|matchingMode|:
 
 1. [=Assert=]: |defaultTriggerDataCardinality| is greater than 0 and less than
     or equal to [=max distinct trigger data per source=].
@@ -1893,6 +1895,11 @@ To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
         1. [=map/Set=] |specs|[|triggerData|] to |spec|.
         1. If |specs|'s [=map/size=] is greater than
             [=max distinct trigger data per source=], return an error.
+1. If |matchingMode| is "<code>[=trigger-data matching mode/modulus=]</code>":
+    1. Let |i| be 0.
+    1. [=map/iterate|For each=] |triggerData| of |specs|'s [=map/get the keys|keys=]:
+        1. If |triggerData| does not equal |i|, return an error.
+        1. Set |i| to |i| + 1.
 1. Return |specs|.
 
 Issue: Parse "`summary_window_operator`" and "`summary_buckets`" fields.
