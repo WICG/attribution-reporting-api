@@ -756,6 +756,9 @@ The debugging reports will be sent to a new endpoint:
 https://<reporting origin>/.well-known/attribution-reporting/debug/verbose
 ```
 
+In order to receive verbose debug reports on trigger registrations, the special
+`ar_debug` cookie needs to be present for both source and trigger registrations.
+
 TODO: Consider adding support for the top-level site to opt in to receiving
 debug reports without cross-site leak.
 

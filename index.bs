@@ -64,6 +64,9 @@ spec: infra; type: dfn; urlPrefix: https://infra.spec.whatwg.org/
 spec: fenced-frame; type: dfn; urlPrefix: https://wicg.github.io/fenced-frame/;
     for: navigable
         text: top-level traversable; url: #navigable-top-level-traversable
+spec: multipage; type: dfn; urlPrefix: https://html.spec.whatwg.org/multipage/;
+    for: scheme and host
+        text: host; url: #concept-scheme-and-host-host
 </pre>
 <pre class=biblio>
 {
@@ -736,6 +739,8 @@ An attribution source is a [=struct=] with the following items:
 :: Number of [=aggregatable reports=] created for this [=attribution source=].
 : <dfn>trigger-data matching mode</dfn>
 :: A [=trigger-data matching mode=].
+: <dfn>debug cookie set</dfn> (default false)
+:: A [=boolean=].
 
 </dl>
 
@@ -1411,11 +1416,19 @@ To <dfn>parse a filter pair</dfn> given a [=map=] |map|:
 <h3 id="debug-keys">Cookie-based debugging</h3>
 
 To <dfn>check if cookie-based debugging is allowed</dfn> given a
-[=suitable origin=] |reportingOrigin|:
+[=suitable origin=] |reportingOrigin| and a [=site=] |contextSite|:
 
+1. [=Assert=]: |contextSite| is not the [=opaque origin=].
 1. Let |domain| be the
     <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-canonicalized-host-names">canonicalized domain name</a>
     of |reportingOrigin|'s [=origin/host=].
+1. Let |contextDomain| be the
+    <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-canonicalized-host-names">canonicalized domain name</a>
+    of |contextSite|'s [=scheme and host/host=].
+1. If the User Agent's <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-cookie-policy">cookie policy</a>
+    or <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-user controls">user controls</a>
+    do not allow cookie access for |domain| on |contextDomain| within a <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-third-party-cookies">third-party context</a>,
+    return <strong>blocked</strong>.
 1. For each |cookie| of the user agent's <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-storage-model">cookie store</a>:
     1. If |cookie|'s name is not "`ar_debug`", [=iteration/continue=].
     1. If |cookie|'s http-only-flag is false, [=iteration/continue=].
@@ -1938,8 +1951,11 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     [=parse an optional 64-bit unsigned integer=] with |value|, "`debug_key`",
     and null.
 1. If |debugKey| is an error, set |debugKey| to null.
-1. If the result of running [=check if cookie-based debugging is allowed=] with
-    |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
+1. Let |debugCookieSet| be false.
+1. Let |sourceSite| be the result of [=obtaining a site=] from |sourceOrigin|.
+1. If the result of running [=check if cookie-based debugging is allowed=]
+    with |reportingOrigin| and |sourceSite| is <strong>allowed</strong>, set |debugCookieSet| to true.
+1. If |debugCookieSet| is false, set |debugKey| to null.
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
 1. If |aggregationKeys| is null, return null.
 1. Let |triggerDataCardinality| be [=default trigger data cardinality=][|sourceType|].
@@ -2024,6 +2040,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |debugReportingEnabled|
     : [=attribution source/trigger-data matching mode=]
     :: |triggerDataMatchingMode|
+    : [=attribution source/debug cookie set=]
+    :: |debugCookieSet|
 1. Return |source|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -2126,7 +2144,7 @@ a [=trigger state=] |triggerState|:
 1. Return |fakeReport|.
 
 To <dfn>check if debug reporting is allowed</dfn> given a [=source debug data type=] |dataType|
-and a [=suitable origin=] |reportingOrigin|:
+and a [=boolean=] |debugCookieSet|:
 1. If |dataType| is:
     <dl class="switch">
     : "<code>[=source debug data type/source-destination-limit=]</code>"
@@ -2136,7 +2154,8 @@ and a [=suitable origin=] |reportingOrigin|:
     : "<code>[=source debug data type/source-storage-limit=]</code>"
     : "<code>[=source debug data type/source-success=]</code>"
     : "<code>[=source debug data type/source-unknown-error=]</code>"
-    :: Return the result of running [=check if cookie-based debugging is allowed=] with |reportingOrigin|.
+    ::  1. If |debugCookieSet| is true, return <strong>allowed</strong>.
+        1. Otherwise, return <strong>blocked</strong>.
 
     </dl>
 
@@ -2145,7 +2164,7 @@ To <dfn>obtain and deliver a debug report on source registration</dfn> given a
 
 1. If |source|'s [=attribution source/debug reporting enabled=] is false, return.
 1. If the result of running [=check if debug reporting is allowed=] with |dataType| and |source|'s
-    [=attribution source/reporting origin=] is <strong>blocked</strong>, return.
+    [=attribution source/debug cookie set=] is <strong>blocked</strong>, return.
 1. Let |body| be a new [=map=] with the following key/value pairs:
     : "`attribution_destination`"
     :: |source|'s [=attribution source/attribution destinations=], [=serialize attribution destinations|serialized=].
@@ -2389,7 +2408,7 @@ and a [=moment=] |triggerTime|:
     and null.
 1. If |debugKey| is an error, set |debugKey| to null.
 1. If the result of running [=check if cookie-based debugging is allowed=] with
-    |reportingOrigin| is <strong>blocked</strong>, set |debugKey| to null.
+    |reportingOrigin| and |destination| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |filterPair| be the result of running [=parse a filter pair=] with |value|.
 1. If |filterPair| is null, return null.
 1. Let |debugReportingEnabled| be false.
@@ -2662,7 +2681,9 @@ and an optional [=attribution report=] <dfn for="obtain debug data on trigger re
 
 1. If |trigger|'s [=attribution trigger/debug reporting enabled=] is false, return null.
 1. If the result of running [=check if cookie-based debugging is allowed=] with |trigger|'s
-    [=attribution trigger/reporting origin=] is <strong>blocked</strong>, return null.
+    [=attribution trigger/reporting origin=] and |trigger|'s [=attribution trigger/attribution destination=] is <strong>blocked</strong>, return null.
+1. If |sourceToAttribute| is not null and |sourceToAttribute|'s [=attribution source/debug cookie set=] is false,
+     return null.
 1. Let |data| be a new [=attribution debug data=] with the items:
     : [=attribution debug data/data type=]
     :: |dataType|.
