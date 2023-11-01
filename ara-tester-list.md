@@ -52,6 +52,7 @@ The usefulness of this page depends on testers sharing information and updates; 
 | Seedtag | SSP & DSP| 2023-2024 | coming soon | privacysandbox@seedtag.com |
 | Adform | DSP | Beginning January 1, 2024 | | privacysandbox@adform.com |
 | Yahoo Inc | DSP | beginning 15 Jan 2024 | | googleprivacysandbox@yahooinc.com |
+| Globo | Adtech  | | | adtech-delivery@g.globo |
 
 ## Table - Publishers and Advertisers Interested in Testing or Early Adoption
 Companies who may be interested in participating in tests and early adoption opportunities provided by ad tech companies.
@@ -61,4 +62,4 @@ Companies who may be interested in participating in tests and early adoption opp
 | Vocento | Publisher | | privacysandbox@vocento.com |
 | CNN Brasil | Publisher | | alexandre.magno@cnnbrasil.com.br |
 | Clarin | Publisher | | mfranco@clarin.com |
-
+| Globo | Publisher  | | adtech-delivery@g.globo |
