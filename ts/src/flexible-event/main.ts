@@ -70,7 +70,7 @@ if ('json_file' in options) {
     json,
     vsv.Chromium,
     options.source_type,
-    /*parseFullFlex=*/ true
+    { parseFullFlex: true }
   )
   warnings.forEach((i) => logIssue('W', i))
   if (errors.length > 0) {

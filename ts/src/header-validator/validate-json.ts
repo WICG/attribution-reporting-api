@@ -17,13 +17,24 @@ const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const UINT32_MAX: number = 2 ** 32 - 1
 
+export type ParseOpts = {
+  parseEventLevelEpsilon: boolean
+  parseFullFlex: boolean
+}
+
 class Context extends context.Context {
+  readonly opts: ParseOpts
+
   constructor(
     readonly vsv: Readonly<VendorSpecificValues>,
     readonly sourceType: SourceType,
-    readonly parseFullFlex: boolean
+    opts: Partial<ParseOpts>
   ) {
     super()
+    this.opts = {
+      parseEventLevelEpsilon: opts.parseEventLevelEpsilon ?? false,
+      parseFullFlex: opts.parseFullFlex ?? false,
+    }
   }
 }
 
@@ -792,6 +803,12 @@ function eventReportWindow(
   )
 }
 
+function eventLevelEpsilon(ctx: Context, j: Json): Maybe<number> {
+  return number(ctx, j).filter((n) =>
+    isInRange(ctx, n, 0, ctx.vsv.maxSettableEventLevelEpsilon)
+  )
+}
+
 function channelCapacity(ctx: Context, s: Source): void {
   const perTriggerDataConfigs = s.triggerSpecs.flatMap((spec) =>
     Array(spec.triggerData.size).fill(
@@ -808,7 +825,7 @@ function channelCapacity(ctx: Context, s: Source): void {
   )
 
   const { infoGain } = config.computeConfigData(
-    ctx.vsv.randomizedResponseEpsilon,
+    s.eventLevelEpsilon,
     ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
   )
 
@@ -1039,6 +1056,8 @@ export type Source = CommonDebug &
 
     triggerSpecs: TriggerSpec[]
     triggerDataMatching: TriggerDataMatching
+
+    eventLevelEpsilon: number
   }
 
 function source(ctx: Context, j: Json): Maybe<Source> {
@@ -1071,7 +1090,7 @@ function source(ctx: Context, j: Json): Maybe<Source> {
         maxEventLevelReportsVal
       )
 
-      const triggerSpecsVal = ctx.parseFullFlex
+      const triggerSpecsVal = ctx.opts.parseFullFlex
         ? field(
             'trigger_specs',
             (ctx, j) =>
@@ -1092,6 +1111,11 @@ function source(ctx: Context, j: Json): Maybe<Source> {
         ),
         aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
         destination: field('destination', destination),
+        eventLevelEpsilon: field(
+          'event_level_epsilon',
+          eventLevelEpsilon,
+          ctx.vsv.maxSettableEventLevelEpsilon
+        ),
         eventReportWindows: () => eventReportWindowsVal,
         expiry: () => expiryVal,
         filterData: field('filter_data', filterData, new Map()),
@@ -1099,7 +1123,7 @@ function source(ctx: Context, j: Json): Maybe<Source> {
         sourceEventId: field('source_event_id', uint64, 0n),
         triggerSpecs: () => triggerSpecsVal,
 
-        triggerDataMatching: ctx.parseFullFlex
+        triggerDataMatching: ctx.opts.parseFullFlex
           ? field(
               'trigger_data_matching',
               (ctx, j) => triggerDataMatching(ctx, j, triggerSpecsVal),
@@ -1169,7 +1193,7 @@ function eventTriggerData(ctx: Context, j: Json): Maybe<EventTriggerDatum[]> {
     struct(ctx, j, {
       triggerData: field('trigger_data', triggerData, 0n),
 
-      value: ctx.parseFullFlex
+      value: ctx.opts.parseFullFlex
         ? field('value', positiveInteger, 1)
         : () => some(1),
 
@@ -1300,9 +1324,9 @@ function validateJSON<T>(
   f: CtxFunc<Json, Maybe<T>>,
   vsv: Readonly<VendorSpecificValues>,
   sourceType: SourceType, // irrelevant for triggers
-  parseFullFlex: boolean
+  opts: Partial<ParseOpts>
 ): [context.ValidationResult, Maybe<T>] {
-  const ctx = new Context(vsv, sourceType, parseFullFlex)
+  const ctx = new Context(vsv, sourceType, opts)
 
   let value
   try {
@@ -1320,15 +1344,15 @@ export function validateSource(
   json: string,
   vsv: Readonly<VendorSpecificValues>,
   sourceType: SourceType,
-  parseFullFlex: boolean = false
+  opts: Partial<ParseOpts> = {}
 ): [context.ValidationResult, Maybe<Source>] {
-  return validateJSON(json, source, vsv, sourceType, parseFullFlex)
+  return validateJSON(json, source, vsv, sourceType, opts)
 }
 
 export function validateTrigger(
   json: string,
   vsv: Readonly<VendorSpecificValues>,
-  parseFullFlex: boolean = false
+  opts: Partial<ParseOpts> = {}
 ): [context.ValidationResult, Maybe<Trigger>] {
-  return validateJSON(json, trigger, vsv, SourceType.navigation, parseFullFlex)
+  return validateJSON(json, trigger, vsv, SourceType.navigation, opts)
 }

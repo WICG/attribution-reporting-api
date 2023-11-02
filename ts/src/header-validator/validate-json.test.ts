@@ -2,13 +2,14 @@ import { strict as assert } from 'assert'
 import * as context from './context'
 import { Maybe } from './maybe'
 import * as testutil from './util.test'
+import { ParseOpts } from './validate-json'
 import * as vsv from '../vendor-specific-values'
 
 export type TestCase<T> = testutil.TestCase & {
   name: string
   json: string
   vsv?: Readonly<Partial<vsv.VendorSpecificValues>>
-  parseFullFlex?: boolean
+  opts?: Partial<ParseOpts>
   expected?: Maybe<T>
 }
 

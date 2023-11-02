@@ -971,7 +971,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'value-wrong-type',
     json: `{"event_trigger_data": [{"value":"1"}]}`,
-    parseFullFlex: true,
+    opts: { parseFullFlex: true },
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'value'],
@@ -982,7 +982,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'value-zero',
     json: `{"event_trigger_data": [{"value":0}]}`,
-    parseFullFlex: true,
+    opts: { parseFullFlex: true },
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'value'],
@@ -993,7 +993,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'value-negative',
     json: `{"event_trigger_data": [{"value":-1}]}`,
-    parseFullFlex: true,
+    opts: { parseFullFlex: true },
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'value'],
@@ -1004,7 +1004,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'value-not-integer',
     json: `{"event_trigger_data": [{"value":1.5}]}`,
-    parseFullFlex: true,
+    opts: { parseFullFlex: true },
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'value'],
@@ -1016,10 +1016,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
 testCases.forEach((tc) =>
   jsontest.run(tc, () =>
-    validateTrigger(
-      tc.json,
-      { ...vsv.Chromium, ...tc.vsv },
-      tc.parseFullFlex ?? false
-    )
+    validateTrigger(tc.json, { ...vsv.Chromium, ...tc.vsv }, tc.opts)
   )
 )
