@@ -1213,6 +1213,36 @@ function aggregatableSourceRegistrationTime(
   return enumerated(ctx, j, AggregatableSourceRegistrationTime)
 }
 
+function warnInconsistentAggregatableKeys(ctx: Context, t: Trigger): void {
+  const triggerDataKeys = new Set<string>()
+
+  ctx.scope('aggregatable_trigger_data', () => {
+    for (const [index, datum] of t.aggregatableTriggerData.entries()) {
+      ctx.scope(index, () => {
+        for (const key of datum.sourceKeys) {
+          triggerDataKeys.add(key)
+
+          if (!t.aggregatableValues.has(key)) {
+            ctx.scope('source_keys', () =>
+              ctx.warning(`key "${key}" not present in aggregatable_values`)
+            )
+          }
+        }
+      })
+    }
+  })
+
+  ctx.scope('aggregatable_values', () => {
+    for (const key of t.aggregatableValues.keys()) {
+      if (!triggerDataKeys.has(key)) {
+        ctx.scope(key, () =>
+          ctx.warning('not present in aggregatable_trigger_data')
+        )
+      }
+    }
+  })
+}
+
 export type Trigger = CommonDebug &
   FilterPair & {
     aggregatableDedupKeys: AggregatableDedupKey[]
@@ -1253,7 +1283,7 @@ function trigger(ctx: Context, j: Json): Maybe<Trigger> {
     eventTriggerData: field('event_trigger_data', eventTriggerData, []),
     ...commonDebugFields,
     ...filterFields,
-  })
+  }).peek((t) => warnInconsistentAggregatableKeys(ctx, t))
 }
 
 function validateJSON<T>(
