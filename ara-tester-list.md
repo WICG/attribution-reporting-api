@@ -15,7 +15,7 @@ The usefulness of this page depends on testers sharing information and updates; 
 
 ## Guidelines
 
-- Enter information on behalf of your own organization.
+- Enter information on behalf of your own organization. To verify this, the GitHub user must have a profile affiliation with the business that they are adding to the list.
 
 - Do not share test results or other detailed information inline; instead link to GitHub issues or other public pages for elaboration and discussion.
 
