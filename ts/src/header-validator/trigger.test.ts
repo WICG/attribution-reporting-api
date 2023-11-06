@@ -385,15 +385,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedWarnings: [
       {
         path: ['aggregatable_trigger_data', 0, 'source_keys'],
-        msg: 'key "a" not present in aggregatable_values',
+        msg: 'key "a" will never result in a contribution due to absence from aggregatable_values',
       },
       {
         path: ['aggregatable_trigger_data', 1, 'source_keys'],
-        msg: 'key "a" not present in aggregatable_values',
+        msg: 'key "a" will never result in a contribution due to absence from aggregatable_values',
       },
       {
         path: ['aggregatable_values', 'c'],
-        msg: 'not present in aggregatable_trigger_data',
+        msg: 'absence from aggregatable_trigger_data source_keys equivalent to presence with key_piece 0x0',
       },
     ],
   },

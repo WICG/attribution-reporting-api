@@ -1224,7 +1224,9 @@ function warnInconsistentAggregatableKeys(ctx: Context, t: Trigger): void {
 
           if (!t.aggregatableValues.has(key)) {
             ctx.scope('source_keys', () =>
-              ctx.warning(`key "${key}" not present in aggregatable_values`)
+              ctx.warning(
+                `key "${key}" will never result in a contribution due to absence from aggregatable_values`
+              )
             )
           }
         }
@@ -1236,7 +1238,9 @@ function warnInconsistentAggregatableKeys(ctx: Context, t: Trigger): void {
     for (const key of t.aggregatableValues.keys()) {
       if (!triggerDataKeys.has(key)) {
         ctx.scope(key, () =>
-          ctx.warning('not present in aggregatable_trigger_data')
+          ctx.warning(
+            'absence from aggregatable_trigger_data source_keys equivalent to presence with key_piece 0x0'
+          )
         )
       }
     }
