@@ -28,12 +28,12 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "not_filters": {"c": ["d"]},
         "source_keys": ["x"]
       }],
-      "aggregatable_values": {"e": 5},
+      "aggregatable_values": {"x": 5},
       "debug_key": "5",
       "debug_reporting": true,
       "event_trigger_data": [{
         "deduplication_key": "123",
-        "filters": {"x": []},
+        "filters": {"e": []},
         "not_filters": {"y": []},
         "priority": "-7",
         "trigger_data": "1"
@@ -80,7 +80,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           sourceKeys: new Set(['x']),
         },
       ],
-      aggregatableValues: new Map([['e', 5]]),
+      aggregatableValues: new Map([['x', 5]]),
       debugKey: 5n,
       debugReporting: true,
       eventTriggerData: [
@@ -91,7 +91,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           positive: [
             {
               lookbackWindow: null,
-              map: new Map([['x', new Set()]]),
+              map: new Map([['e', new Set()]]),
             },
           ],
           negative: [
@@ -360,6 +360,40 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['aggregatable_values', 'aaaaaaaaaaaaaaaaaaaaaaaaaa'],
         msg: 'key exceeds max length per aggregation key identifier (26 > 25)',
+      },
+    ],
+  },
+
+  {
+    name: 'inconsistent-aggregatable-keys',
+    json: `{
+      "aggregatable_trigger_data": [
+        {
+          "key_piece": "0x1",
+          "source_keys": ["a"]
+        },
+        {
+          "key_piece": "0x2",
+          "source_keys": ["b", "a"]
+        }
+      ],
+      "aggregatable_values": {
+        "b": 1,
+        "c": 2
+      }
+    }`,
+    expectedWarnings: [
+      {
+        path: ['aggregatable_trigger_data', 0, 'source_keys'],
+        msg: 'key "a" will never result in a contribution due to absence from aggregatable_values',
+      },
+      {
+        path: ['aggregatable_trigger_data', 1, 'source_keys'],
+        msg: 'key "a" will never result in a contribution due to absence from aggregatable_values',
+      },
+      {
+        path: ['aggregatable_values', 'c'],
+        msg: 'absence from aggregatable_trigger_data source_keys equivalent to presence with key_piece 0x0',
       },
     ],
   },
@@ -692,16 +726,22 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'source-keys-duplicate-value',
-    json: `{"aggregatable_trigger_data": [
-      {
-        "key_piece": "0x1",
-        "source_keys": ["a", "x", "a"]
-      },
-      {
-        "key_piece": "0x2",
-        "source_keys": ["x"]
+    json: `{
+      "aggregatable_trigger_data": [
+        {
+          "key_piece": "0x1",
+          "source_keys": ["a", "x", "a"]
+        },
+        {
+          "key_piece": "0x2",
+          "source_keys": ["x"]
+        }
+      ],
+      "aggregatable_values": {
+        "a": 1,
+        "x": 1
       }
-    ]}`,
+    }`,
     expectedWarnings: [
       {
         path: ['aggregatable_trigger_data', 0, 'source_keys', 2],
