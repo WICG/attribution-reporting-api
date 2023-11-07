@@ -351,6 +351,41 @@ const testCases: TestCase[] = [
     ],
   },
   {
+    name: 'aggregation-keys-too-many',
+    json: `{
+      "destination": "https://a.test",
+      "aggregation_keys": {
+        "1": "0x1",
+        "2": "0x1",
+        "3": "0x1",
+        "4": "0x1",
+        "5": "0x1",
+        "6": "0x1",
+        "7": "0x1",
+        "8": "0x1",
+        "9": "0x1",
+        "10": "0x1",
+        "11": "0x1",
+        "12": "0x1",
+        "13": "0x1",
+        "14": "0x1",
+        "15": "0x1",
+        "16": "0x1",
+        "17": "0x1",
+        "18": "0x1",
+        "19": "0x1",
+        "20": "0x1",
+        "21": "0x1"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregation_keys'],
+        msg: 'exceeds the maximum number of keys (20)',
+      },
+    ],
+  },
+  {
     name: 'aggregation-keys-key-too-long',
     json: `{
       "destination": "https://a.test",
