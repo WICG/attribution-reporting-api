@@ -700,7 +700,12 @@ function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
 }
 
 function aggregationKeys(ctx: Context, j: Json): Maybe<Map<string, bigint>> {
-  return keyValues(ctx, j, aggregationKey, ctx.vsv.maxAggregationKeysPerSource)
+  return keyValues(
+    ctx,
+    j,
+    aggregationKey,
+    constants.maxAggregationKeysPerSource
+  )
 }
 
 function clamp<N extends bigint | number>(
