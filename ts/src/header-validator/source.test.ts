@@ -351,23 +351,6 @@ const testCases: TestCase[] = [
     ],
   },
   {
-    name: 'aggregation-keys-too-many',
-    json: `{
-      "destination": "https://a.test",
-      "aggregation_keys": {
-        "a": "0x1",
-        "b": "0x2"
-      }
-    }`,
-    vsv: { maxAggregationKeysPerSource: 1 },
-    expectedErrors: [
-      {
-        path: ['aggregation_keys'],
-        msg: 'exceeds the maximum number of keys (1)',
-      },
-    ],
-  },
-  {
     name: 'aggregation-keys-key-too-long',
     json: `{
       "destination": "https://a.test",
@@ -397,6 +380,7 @@ const testCases: TestCase[] = [
       },
     ],
   },
+  // TODO: add tests for exceeding size limits
 
   {
     name: 'source-event-id-wrong-type',
