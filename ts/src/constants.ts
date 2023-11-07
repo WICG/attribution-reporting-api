@@ -13,7 +13,7 @@ export const maxValuesPerFilterDataEntry: number = 50
 
 export const maxLengthPerFilterString: number = 25
 
-export const maxAggregationKeysPerSource: number = 25
+export const maxAggregationKeysPerSource: number = 20
 
 export const maxLengthPerAggregationKeyIdentifier: number = 25
 
