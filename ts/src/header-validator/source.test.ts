@@ -1221,7 +1221,6 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "event_level_epsilon": 13.5
     }`,
-    opts: { parseEventLevelEpsilon: true },
   },
   {
     name: 'event-level-epsilon-wrong-type',
@@ -1229,7 +1228,6 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "event_level_epsilon": "1"
     }`,
-    opts: { parseEventLevelEpsilon: true },
     expectedErrors: [
       {
         path: ['event_level_epsilon'],
@@ -1243,7 +1241,6 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "event_level_epsilon": -1
     }`,
-    opts: { parseEventLevelEpsilon: true },
     expectedErrors: [
       {
         path: ['event_level_epsilon'],
@@ -1274,7 +1271,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_specs": {}
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs'],
@@ -1290,7 +1287,7 @@ const testCases: TestCase[] = [
         .fill(null)
         .map((_, i) => ({ trigger_data: [i] })),
     }),
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs'],
@@ -1304,7 +1301,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_specs": [false]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0],
@@ -1318,7 +1315,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_specs": [{}]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'trigger_data'],
@@ -1332,7 +1329,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_specs": [{"trigger_data": 1}]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'trigger_data'],
@@ -1346,7 +1343,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_specs": [{"trigger_data": ["1"]}]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'trigger_data', 0],
@@ -1360,7 +1357,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_specs": [{"trigger_data": [1.5]}]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'trigger_data', 0],
@@ -1374,7 +1371,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_specs": [{"trigger_data": [-1]}]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'trigger_data', 0],
@@ -1388,7 +1385,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_specs": [{"trigger_data": [4294967296]}]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'trigger_data', 0],
@@ -1404,7 +1401,7 @@ const testCases: TestCase[] = [
         { "trigger_data": [1, 2, 1] }
       ]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'trigger_data', 2],
@@ -1421,7 +1418,7 @@ const testCases: TestCase[] = [
         { "trigger_data": [3, 2] }
       ]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs'],
@@ -1441,7 +1438,7 @@ const testCases: TestCase[] = [
         },
       ],
     }),
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'trigger_data'],
@@ -1462,7 +1459,7 @@ const testCases: TestCase[] = [
         },
       ],
     }),
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs'],
@@ -1479,7 +1476,7 @@ const testCases: TestCase[] = [
         "summary_buckets": 1
       }]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'summary_buckets'],
@@ -1496,7 +1493,7 @@ const testCases: TestCase[] = [
         "summary_buckets": []
       }]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'summary_buckets'],
@@ -1513,7 +1510,7 @@ const testCases: TestCase[] = [
         "summary_buckets": ["1"]
       }]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'summary_buckets', 0],
@@ -1530,7 +1527,7 @@ const testCases: TestCase[] = [
         "summary_buckets": [1.5]
       }]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'summary_buckets', 0],
@@ -1547,7 +1544,7 @@ const testCases: TestCase[] = [
         "summary_buckets": [0]
       }]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'summary_buckets', 0],
@@ -1564,7 +1561,7 @@ const testCases: TestCase[] = [
         "summary_buckets": [5, 6, 4]
       }]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'summary_buckets', 2],
@@ -1581,7 +1578,7 @@ const testCases: TestCase[] = [
         "summary_buckets": [4294967296]
       }]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'summary_buckets', 0],
@@ -1598,7 +1595,7 @@ const testCases: TestCase[] = [
         "summary_window_operator": 4
       }]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'summary_window_operator'],
@@ -1615,7 +1612,7 @@ const testCases: TestCase[] = [
         "summary_window_operator": "VALUE_SUM"
       }]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'summary_window_operator'],
@@ -1634,7 +1631,7 @@ const testCases: TestCase[] = [
         "event_report_windows": {}
       }]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'event_report_windows', 'end_times'],
@@ -1648,7 +1645,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_data_matching": 3
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_data_matching'],
@@ -1662,7 +1659,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_data_matching": "EXACT"
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_data_matching'],
@@ -1677,7 +1674,7 @@ const testCases: TestCase[] = [
       "trigger_data_matching": "modulus",
       "trigger_specs": [{"trigger_data": [1]}]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_data_matching'],
@@ -1695,7 +1692,7 @@ const testCases: TestCase[] = [
         {"trigger_data": [3]}
       ]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_data_matching'],
@@ -1714,7 +1711,7 @@ const testCases: TestCase[] = [
         {"trigger_data": [2]}
       ]
     }`,
-    opts: { parseFullFlex: true },
+    parseFullFlex: true,
   },
 ]
 
@@ -1724,7 +1721,7 @@ testCases.forEach((tc) =>
       tc.json,
       { ...vsv.Chromium, ...tc.vsv },
       tc.sourceType ?? SourceType.navigation,
-      tc.opts
+      tc.parseFullFlex ?? false
     )
   )
 )

@@ -17,24 +17,13 @@ const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const UINT32_MAX: number = 2 ** 32 - 1
 
-export type ParseOpts = {
-  parseEventLevelEpsilon: boolean
-  parseFullFlex: boolean
-}
-
 class Context extends context.Context {
-  readonly opts: ParseOpts
-
   constructor(
     readonly vsv: Readonly<VendorSpecificValues>,
     readonly sourceType: SourceType,
-    opts: Partial<ParseOpts>
+    readonly parseFullFlex: boolean
   ) {
     super()
-    this.opts = {
-      parseEventLevelEpsilon: opts.parseEventLevelEpsilon ?? false,
-      parseFullFlex: opts.parseFullFlex ?? false,
-    }
   }
 }
 
@@ -1090,7 +1079,7 @@ function source(ctx: Context, j: Json): Maybe<Source> {
         maxEventLevelReportsVal
       )
 
-      const triggerSpecsVal = ctx.opts.parseFullFlex
+      const triggerSpecsVal = ctx.parseFullFlex
         ? field(
             'trigger_specs',
             (ctx, j) =>
@@ -1123,7 +1112,7 @@ function source(ctx: Context, j: Json): Maybe<Source> {
         sourceEventId: field('source_event_id', uint64, 0n),
         triggerSpecs: () => triggerSpecsVal,
 
-        triggerDataMatching: ctx.opts.parseFullFlex
+        triggerDataMatching: ctx.parseFullFlex
           ? field(
               'trigger_data_matching',
               (ctx, j) => triggerDataMatching(ctx, j, triggerSpecsVal),
@@ -1193,7 +1182,7 @@ function eventTriggerData(ctx: Context, j: Json): Maybe<EventTriggerDatum[]> {
     struct(ctx, j, {
       triggerData: field('trigger_data', triggerData, 0n),
 
-      value: ctx.opts.parseFullFlex
+      value: ctx.parseFullFlex
         ? field('value', positiveInteger, 1)
         : () => some(1),
 
@@ -1324,9 +1313,9 @@ function validateJSON<T>(
   f: CtxFunc<Json, Maybe<T>>,
   vsv: Readonly<VendorSpecificValues>,
   sourceType: SourceType, // irrelevant for triggers
-  opts: Partial<ParseOpts>
+  parseFullFlex: boolean
 ): [context.ValidationResult, Maybe<T>] {
-  const ctx = new Context(vsv, sourceType, opts)
+  const ctx = new Context(vsv, sourceType, parseFullFlex)
 
   let value
   try {
@@ -1344,15 +1333,15 @@ export function validateSource(
   json: string,
   vsv: Readonly<VendorSpecificValues>,
   sourceType: SourceType,
-  opts: Partial<ParseOpts> = {}
+  parseFullFlex: boolean = false
 ): [context.ValidationResult, Maybe<Source>] {
-  return validateJSON(json, source, vsv, sourceType, opts)
+  return validateJSON(json, source, vsv, sourceType, parseFullFlex)
 }
 
 export function validateTrigger(
   json: string,
   vsv: Readonly<VendorSpecificValues>,
-  opts: Partial<ParseOpts> = {}
+  parseFullFlex: boolean = false
 ): [context.ValidationResult, Maybe<Trigger>] {
-  return validateJSON(json, trigger, vsv, SourceType.navigation, opts)
+  return validateJSON(json, trigger, vsv, SourceType.navigation, parseFullFlex)
 }
