@@ -2136,7 +2136,6 @@ a [=trigger state=] |triggerState|:
     :: "<code>[=aggregatable source registration time configuration/exclude=]</code>"
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
-1. [=Assert=]: |fakeReport| is not null.
 1. [=Assert=]: |fakeReport|'s [=event-level report/report time=] is equal to
     |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
 1. Return |fakeReport|.
@@ -2769,6 +2768,21 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
          with "<code>[=trigger debug data type/trigger-event-deduplicated=]</code>", |trigger|, |sourceToAttribute| and
          [=obtain debug data on trigger registration/report=] set to null.
      1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+1. Let |triggerData| be |matchedConfig|'s [=event-level trigger configuration/trigger data=].
+1. Let |triggerDataCardinality| be [=default trigger data cardinality=][|attributedSource|'s [=attribution source/source type=]].
+1. If |attributedSource|'s [=attribution source/trigger-data matching mode=] is:
+    <dl class="switch">
+    : "<code>[=trigger-data matching mode/exact=]</code>":
+    :: Do nothing.
+    : "<code>[=trigger-data matching mode/modulus=]</code>":
+    :: Set |triggerData| to the remainder when dividing |triggerData| by |triggerDataCardinality|.
+
+    </dl>
+1. If |triggerData| is greater than or equal to |triggerDataCardinality|:
+    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+        with "<code>[=trigger debug data type/trigger-event-no-matching-trigger-data=]</code>", |trigger|, |sourceToAttribute| and
+        [=obtain debug data on trigger registration/report=] set to null.
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. Let |windowResult| be the result of [=check whether a moment falls within a window=]
     with |trigger|'s [=attribution trigger/trigger time=] and
     |sourceToAttribute|'s [=attribution source/event-level report windows=]'s
@@ -2795,12 +2809,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
     return it.
 1. Let |report| be the result of running [=obtain an event-level report=] with |sourceToAttribute|, |trigger|,
-    and |matchedConfig|.
-1. If |report| is null:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-event-no-matching-trigger-data=]</code>", |trigger|, |sourceToAttribute| and
-        [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    |matchedConfig|, and |triggerData|.
 1. If |sourceToAttribute|'s [=attribution source/event-level attributable=] value
     is false:
      1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
@@ -3045,18 +3054,9 @@ To <dfn>obtain an aggregatable report delivery time</dfn> given a [=moment=]
 <h3 algorithm id="obtaining-an-event-level-report">Obtaining an event-level report</h3>
 
 To <dfn>obtain an event-level report</dfn> given an [=attribution source=] |source|, an [=attribution trigger=]
-|trigger|, and an [=event-level trigger configuration=] |config|:
+|trigger|, an [=event-level trigger configuration=] |config|, and a non-negative
+64-bit integer |triggerData|:
 
-1. Let |triggerData| be |config|'s [=event-level trigger configuration/trigger data=].
-1. Let |triggerDataCardinality| be [=default trigger data cardinality=][|source|'s [=attribution source/source type=]].
-1. If |source|'s [=attribution source/trigger-data matching mode=] is:
-    <dl class="switch">
-    : "<code>[=trigger-data matching mode/exact=]</code>":
-    :: If |triggerData| is greater than or equal to |triggerDataCardinality|, return null.
-    : "<code>[=trigger-data matching mode/modulus=]</code>":
-    :: Set |triggerData| to the remainder when dividing |triggerData| by |triggerDataCardinality|.
-
-    </dl>
 1. Let |reportTime| be the result of running [=obtain an event-level report delivery time=] with |source| and |trigger|'s [=attribution trigger/trigger time=].
 1. Let |report| be a new [=event-level report=] struct whose items are:
 
