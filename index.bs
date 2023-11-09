@@ -2109,11 +2109,13 @@ a [=trigger state=] |triggerState|:
     :: 0
     : [=event-level trigger configuration/filters=]
     :: «[ "`source_type`" → « |source|'s [=attribution source/source type=] » ]»
+1. Let |triggerTime| be the greatest [=moment=] that is strictly less than
+    |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
 1. Let |fakeTrigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destinations=]
     :: |source|'s [=attribution source/attribution destinations=]
     : [=attribution trigger/trigger time=]
-    :: |source|'s [=attribution source/source time=]
+    :: |triggerTime|
     : [=attribution trigger/reporting origin=]
     :: |source|'s [=attribution source/reporting origin=]
     : [=attribution trigger/filters=]
@@ -2139,11 +2141,10 @@ a [=trigger state=] |triggerState|:
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
 1. [=Assert=]: |fakeReport| is not null.
-1. Set |fakeReport|'s [=event-level report/report time=] to
+1. [=Assert=]: |fakeReport|'s [=event-level report/original report time=] and
+    |fakeReport|'s [=event-level report/report time=] are both equal to
     |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
 1. Return |fakeReport|.
-
-Issue: Set |fakeReport|'s [=event-level report/original report time=] properly.
 
 To <dfn>check if debug reporting is allowed</dfn> given a [=source debug data type=] |dataType|
 and a [=boolean=] |debugCookieSet|:
