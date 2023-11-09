@@ -863,8 +863,6 @@ An attribution report is a [=struct=] with the following items:
 :: A [=moment=].
 : <dfn>original report time</dfn>
 :: A [=moment=].
-: <dfn>delivered</dfn> (default false)
-:: A [=boolean=].
 : <dfn>report ID</dfn>
 :: A [=string=].
 : <dfn>source debug key</dfn>
@@ -3246,22 +3244,26 @@ Issue: Specify this in terms of <a href="https://html.spec.whatwg.org/multipage/
 
 # Report delivery # {#report-delivery}
 
-The user agent MUST periodically [=set/iterate=] over its [=event-level report cache=] and
-[=aggregatable report cache=] and run [=queue a report for delivery=] on each item.
+The user agent MUST periodically run [=queue reports for delivery=] on the
+[=event-level report cache=] and [=aggregatable report cache=].
 
-To <dfn>queue a report for delivery</dfn> given an [=attribution report=] |report|, run the following steps [=in parallel=]:
+To <dfn>queue reports for delivery</dfn> given a [=set=] of
+[=attribution reports=] |cache|, run the following steps [=in parallel=]:
 
-1. If |report|'s [=attribution report/delivered=] value is true, return.
-1. Set |report|'s [=attribution report/delivered=] value to true.
-1. If |report|'s [=attribution report/report time=] is less than [=current wall time=], add an [=implementation-defined=] random non-negative [=duration=] to |report|'s [=attribution report/report time=].
+1. [=set/iterate|For each=] |report| of |cache|:
+  1. If |report|'s [=attribution report/report time=] is greater than the
+      [=current wall time=], [=iteration/continue=].
+  1. [=set/Remove=] |report| from |cache|.
+  1. Run the following steps [=in parallel=]:
+      1. Add an [=implementation-defined=] random non-negative [=duration=] to |report|'s [=attribution report/report time=].
 
-    Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
-     closed. Adding random delay prevents temporal joining of reports from different [=attribution source/source origin=]s.
-1. Wait until [=current wall time=] is equal to |report|'s [=attribution report/report time=].
-1. Optionally, wait a further [=implementation-defined=] [=duration=].
+          Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
+           closed. Adding random delay prevents temporal joining of reports from different [=attribution source/source origin=]s.
+      1. Wait until [=current wall time=] is equal to |report|'s [=attribution report/report time=].
+      1. Optionally, wait a further [=implementation-defined=] [=duration=].
 
-    Note: This is intended to allow user agents to optimize device resource usage.
-1. Run [=attempt to deliver a report=] with |report|.
+          Note: This is intended to allow user agents to optimize device resource usage.
+      1. Run [=attempt to deliver a report=] with |report|.
 
 <h3 id="encode-integer">Encode an unsigned k-bit integer</h3>
 
@@ -3573,26 +3575,17 @@ To <dfn>generate attribution report headers</dfn> given an [=attribution report=
 
 This algorithm constructs a [=request=] and attempts to deliver it to a [=suitable origin=].
 
-To <dfn>remove a report from the cache</dfn> given an [=attribution report=] |report|:
-
-1. If |report| is an:
-    <dl class="switch">
-    <dt>[=event-level report=]</dt>
-    <dd>[=Queue a task=] to [=list/remove=] |report| from the [=event-level report cache=].</dd>
-
-    <dt>[=aggregatable report=]</dt>
-    <dd>[=Queue a task=] to [=list/remove=] |report| from the [=aggregatable report cache=].</dd>
-    </dl>
-
 To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report|, run the following steps:
 
+1. [=Assert=]: Neither the [=event-level report cache=] nor the
+    [=aggregatable report cache=] [=set/contains=] |report|.
 1. The user-agent MAY ignore the report; if so, return.
 1. Let |url| be the result of executing [=generate an attribution report URL=] on |report|.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
-1. If |data| is an error, run [=remove a report from the cache=] with |report| and return.
+1. If |data| is an error, return.
 1. Let |headers| be the result of executing [=generate attribution report headers=].
 1. Let |request| be the result of executing [=create a report request=] on |url|, |data|, and |headers|.
-1. [=Queue a task=] to [=fetch=] |request| with [=fetch/processResponse=] being [=remove a report from the cache=] with |report|.
+1. [=Queue a task=] to [=fetch=] |request|.
 
 Issue(220): This fetch should use a network partition key for an opaque origin.
 
