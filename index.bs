@@ -861,8 +861,6 @@ An attribution report is a [=struct=] with the following items:
 :: A [=suitable origin=].
 : <dfn>report time</dfn>
 :: A [=moment=].
-: <dfn>original report time</dfn>
-:: A [=moment=].
 : <dfn>report ID</dfn>
 :: A [=string=].
 : <dfn>source debug key</dfn>
@@ -2139,8 +2137,7 @@ a [=trigger state=] |triggerState|:
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |fakeTrigger|, and |fakeConfig|.
 1. [=Assert=]: |fakeReport| is not null.
-1. [=Assert=]: |fakeReport|'s [=event-level report/original report time=] and
-    |fakeReport|'s [=event-level report/report time=] are both equal to
+1. [=Assert=]: |fakeReport|'s [=event-level report/report time=] is equal to
     |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
 1. Return |fakeReport|.
 
@@ -2725,7 +2722,7 @@ To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
     |sourceToAttribute|'s [=attribution source/max number of event-level reports=].
 1. If |sourceToAttribute|'s [=attribution source/number of event-level reports=] is less than
     |sourceToAttribute|'s [=attribution source/max number of event-level reports=], return "<code>[=event-level-report-replacement result/add-new-report=]</code>".
-1. Let |matchingReports| be a new [=list=] whose elements are all the elements in the [=event-level report cache=] whose [=event-level report/original report time=] and [=event-level report/source identifier=] are equal to |report|'s, [=list/sorted in ascending order=] using [=event-level report/is lower-priority than=].
+1. Let |matchingReports| be a new [=list=] whose elements are all the elements in the [=event-level report cache=] whose [=event-level report/report time=] and [=event-level report/source identifier=] are equal to |report|'s, [=list/sorted in ascending order=] using [=event-level report/is lower-priority than=].
 1. If |matchingReports| [=list/is empty=]:
     1. Set |sourceToAttribute|'s [=attribution source/event-level attributable=] value to false.
     1. Return "<code>[=event-level-report-replacement result/drop-new-report-none-to-replace=]</code>".
@@ -3075,8 +3072,6 @@ To <dfn>obtain an event-level report</dfn> given an [=attribution source=] |sour
     :: |source|'s [=attribution source/attribution destinations=].
     : [=event-level report/report time=]
     :: |reportTime|
-    : [=event-level report/original report time=]
-    :: |reportTime|
     : [=event-level report/trigger priority=]
     :: |config|'s [=event-level trigger configuration/priority=].
     : [=event-level report/trigger time=]
@@ -3111,8 +3106,6 @@ an [=attribution trigger=] |trigger|:
     :: |trigger|'s [=attribution trigger/attribution destination=].
     : [=aggregatable report/source time=]
     :: |source|'s [=attribution source/source time=].
-    : [=aggregatable report/original report time=]
-    :: |reportTime|.
     : [=aggregatable report/report time=]
     :: |reportTime|.
     : [=aggregatable report/report id=]
@@ -3145,8 +3138,6 @@ To <dfn>obtain a null report</dfn> given an [=attribution trigger=] |trigger| an
     :: |trigger|'s [=attribution trigger/attribution destination=]
     : [=aggregatable report/source time=]
     :: |sourceTime|
-    : [=aggregatable report/original report time=]
-    :: |reportTime|
     : [=aggregatable report/report time=]
     :: |reportTime|
     : [=aggregatable report/report id=]
@@ -3260,11 +3251,11 @@ To <dfn>queue reports for delivery</dfn> given a [=set=] of
        persist reports that are in the process of being sent in some other
        storage.
   1. Run the following steps [=in parallel=]:
-      1. Add an [=implementation-defined=] random non-negative [=duration=] to |report|'s [=attribution report/report time=].
+      1. Wait until [=current wall time=] is equal to |report|'s [=attribution report/report time=].
+      1. Wait a further [=implementation-defined=] random non-negative [=duration=].
 
           Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
            closed. Adding random delay prevents temporal joining of reports from different [=attribution source/source origin=]s.
-      1. Wait until [=current wall time=] is equal to |report|'s [=attribution report/report time=].
       1. Optionally, wait a further [=implementation-defined=] [=duration=].
 
           Note: This is intended to allow user agents to optimize device resource usage.
@@ -3301,7 +3292,7 @@ of running the following steps:
     : "`reporting_origin`"
     :: |reportingOrigin|, [=serialization of an origin|serialized=]
     : "`scheduled_report_time`"
-    :: |report|'s [=aggregatable report/original report time=] in seconds since the UNIX epoch, [=serialize an integer|serialized=]
+    :: |report|'s [=aggregatable report/report time=] in seconds since the UNIX epoch, [=serialize an integer|serialized=]
     : "`version`"
     :: A [=string=], API version.
 
@@ -3423,7 +3414,7 @@ To <dfn>obtain an event-level report body</dfn> given an [=attribution report=] 
     : "`report_id`"
     :: |report|'s [=event-level report/report ID=]
     : "`scheduled_report_time`"
-    :: |report|'s [=event-level report/original report time=] in seconds since the UNIX epoch, [=serialize an integer|serialized=]
+    :: |report|'s [=event-level report/report time=] in seconds since the UNIX epoch, [=serialize an integer|serialized=]
 
 1. If |report|'s [=event-level report/source debug key=] is not null, [=map/set=]
     |data|["`source_debug_key`"] to |report|'s [=event-level report/source debug key=],
