@@ -361,7 +361,9 @@ The initial implementation strategy for the aggregation service is as follows:
   on cloud service(s) which support needed security features.  We
   envision the aggregation service being capable of being deployed with
   multiple cloud providers.
-  * Currently the aggregation service can be deployed on Amazon Web Services (AWS). We expect to support Google Cloud Platform (GCP) and other cloud providers in the future.
+  * Currently the aggregation service can be deployed on Amazon Web Services
+    (AWS) and Google Cloud Platform (GCP). We expect to support more cloud
+    providers in the future.
 * In our current implementation, batches can be assembled on any
   reliable storage service. However, batches will need to be uploaded
   to the cloud provider to be processed by the aggregation service.
