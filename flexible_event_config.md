@@ -9,6 +9,7 @@ _Note: This document describes possible new functionality in the Attribution Rep
 - [Goals](#goals)
 - [Phase 2: Full Flexible Event-Level](#phase-2-full-flexible-event-level)
   - [API changes](#api-changes)
+  - [Trigger prioritization](#trigger-prioritization)
   - [Trigger-data modulus matching example](#trigger-data-modulus-matching-example)
 - [Configurations that are equivalent to the current version](#configurations-that-are-equivalent-to-the-current-version)
   - [Equivalent event sources](#equivalent-event-sources)
@@ -175,9 +176,9 @@ Given that triggering attribution can affect a source's state without producing 
 
 1. Always maintain a sorted list of triggers, sorted in order of priority (descending) and trigger time (ascending)
 2. Whenver a spec's window's end time is hit (breaking ties arbitrarily)
-  1. Iterate through triggers in order, "applying" them to generate a list of "speculative" reports. Stop when privacy limits are hit.
-  2. Flush all of the speculative reports that are scheduled to  be emitted in the current window, and update the source's state based on all of the triggers that were successfully applied.
-  3. Erase all of the triggers associated with the current spec and window.
+    1. Iterate through triggers in order, "applying" them to generate a list of "speculative" reports. Stop when privacy limits are hit.
+    2. Flush all of the speculative reports that are scheduled to  be emitted in the current window, and update the source's state based on all of the triggers that were successfully applied.
+    3. Erase all of the triggers associated with the current spec and window.
 
 TODO: this algorithm is simple, but we should consider whether we want to add a carve-out to greedily apply any trigger that updates internal state but does not generate a report (i.e. just increments value within a summary bucket). This may improve utility at a complexity cost.
 
