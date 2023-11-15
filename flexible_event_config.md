@@ -177,7 +177,7 @@ Given that triggering attribution can affect a source's state without producing 
 1. Always maintain a sorted list of triggers, sorted in order of priority (descending) and trigger time (ascending)
 2. Whenver a spec's window's end time is hit (breaking ties arbitrarily)
     1. Iterate through triggers in order, "applying" them to generate a list of "speculative" reports. Stop when privacy limits are hit.
-    2. Flush all of the speculative reports that are scheduled to  be emitted in the current window, and update the source's state based on all of the triggers that were successfully applied.
+    2. Flush all of the speculative reports that are scheduled to be emitted in the current window, and update the source's state based on all of the triggers that were successfully applied.
     3. Erase all of the triggers associated with the current spec and window.
 
 ### Trigger-data modulus matching example
