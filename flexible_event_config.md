@@ -180,8 +180,6 @@ Given that triggering attribution can affect a source's state without producing 
     2. Flush all of the speculative reports that are scheduled to  be emitted in the current window, and update the source's state based on all of the triggers that were successfully applied.
     3. Erase all of the triggers associated with the current spec and window.
 
-TODO: this algorithm is simple, but we should consider whether we want to add a carve-out to greedily apply any trigger that updates internal state but does not generate a report (i.e. just increments value within a summary bucket). This may improve utility at a complexity cost.
-
 ### Trigger-data modulus matching example
 
 Given a source with the following registration:
