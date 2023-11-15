@@ -655,6 +655,21 @@ Note: The [=report window list/total window=] is conceptually a union of
 [=report windows=], because there are no gaps in time between any of the
 [=report windows|windows=].
 
+<h3 id="summary-windows-operator-header">Summary windows operator</h3>
+
+A <dfn>summary windows operator</dfn> summarizes the triggers within a
+[=report window=]. Its value is one of the following:
+
+<dl dfn-for="summary windows operator">
+: "<dfn><code>count</code></dfn>"
+:: Number of triggers attributed.
+: "<dfn><code>value_sum</code></dfn>"
+:: Sum of the value of triggers.
+
+<h3 dfn-type=dfn>Summary buckets</h3>
+
+A list of strictly increasing unsigned 32-bit integers.
+
 <h3 id="trigger-data-matching-mode-header">Trigger-data matching mode</h3>
 
 A <dfn>trigger-data matching mode</dfn> is one of the following:
@@ -677,6 +692,8 @@ A <dfn>trigger spec</dfn> is a [=struct=] with the following items:
 <dl dfn-for="trigger spec">
 : <dfn>event-level report windows</dfn>
 :: A [=report window list=].
+: <dfn>summary window operator</dfn>
+: <dfn>summary buckets</dfn>
 
 </dl>
 
@@ -1866,6 +1883,20 @@ To <dfn>parse report windows</dfn> given a |value|, a
     1. Set |startDuration| to |endDuration|.
 1. Return |windows|.
 
+To <dfn>parse summary buckets</dfn> given a [=map=] |map|:
+1. If |map|["`summary_buckets`"] does not [=map/exist=], return
+    the trivial mapping «[ 1, 2, ..., MAX_UINT32 ]».
+1. Let |values| be |map|["`summary_buckets`"].
+1. If |values| is not a [=list=] or [=list/is empty=], return an error.
+1. Let |prev| be 0.
+1. Let |summaryBuckets| be an [=list/is empty|empty=] [=list-]. 
+1. [=list/iterate|For each=] |item| of |values|:
+    1. If |item| is not an integer or cannot be represented by an unsigned
+        32-bit integer, or is less than or equal to |prev|, return an error.
+    1. [=list/Append] |item| to |summaryBuckets|.
+    1. Set |prev| to |item|.
+1. return |summaryBuckets|.
+
 To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
 |sourceTime|, a [=duration=] |expiry|, a [=report window list=]
 |defaultReportWindows|, an unsigned 32-bit integer
@@ -1898,6 +1929,20 @@ To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
         1. If |reportWindows| is an error, return it.
         1. Set |spec|'s [=trigger spec/event-level report windows=] to
             |reportWindows|.
+    1. Let |summaryWindowOperator| be "<code>[=summary windows operator/count=]</code>".
+    1. If |map|["`summary_window_operator`"] [=map/exists=]:
+        1. If |map|["`summary_window_operator`"] is not a [=string=], return an
+            error.
+        1. If |value|["`summary_window_operator`"] is not a 
+            [=summary window operator=], return an error.
+        1. Set |summaryWindowOperator| to |map|["`summary_window_operator`"].
+    1. Let |summaryBuckets| be the result of
+        [=parsing summary buckets=] with |item|["`summary_buckets`"],
+        |sourceTime|, and |expiry|.
+    1. Set |spec|'s [=trigger spec/summary window operator=] to
+        |summaryWindowOperator|.
+    1. If |summaryBuckets| is an error, return it.
+    1. Set |spec|'s [=trigger spec/summary buckets=] to |summaryBuckets|.
     1. If |item|["`trigger_data`"] does not [=map/exist=], is not a [=list=], or
         [=list/is empty=], or its [=list/size=] is greater than
         [=max distinct trigger data per source=], return an error.
