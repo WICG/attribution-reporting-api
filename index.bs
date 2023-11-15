@@ -702,8 +702,8 @@ An attribution source is a [=struct=] with the following items:
 :: A [=source type=].
 : <dfn>expiry</dfn>
 :: A [=duration=].
-: <dfn>event-level report windows</dfn>
-:: A [=report window list=].
+: <dfn>trigger specs</dfn>
+:: A [=trigger spec map=].
 : <dfn>aggregatable report window</dfn>
 :: A [=report window=].
 : <dfn>priority</dfn>
@@ -1115,7 +1115,7 @@ Its value is (1 day, 30 days).
 <dfn>Min report window</dfn> is a positive [=duration=] that controls the
 minimum [=duration from=] an [=attribution source's=] [=attribution source/source time=]
 and any [=report window/end=] in [=attribution source/aggregatable report window=] or
-[=attribution source/event-level report windows=].
+[=trigger spec/event-level report windows=].
 Its value is 1 hour.
 
 <dfn>Max entries per filter data</dfn> is a positive integer that controls the
@@ -1143,7 +1143,7 @@ controls the maximum value of [=attribution source/max number of event-level rep
 Its value is 20.
 
 <dfn>Max settable event-level report windows</dfn> is a positive integer that
-controls the maximum [=list/size=] of [=attribution source/event-level report windows=].
+controls the maximum [=list/size=] of [=trigger spec/event-level report windows=].
 Its value is 5.
 
 <dfn>Default event-level attributions per source</dfn> is a [=map=] that
@@ -1964,8 +1964,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |debugReportingEnabled| be false.
 1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to |value|["`debug_reporting`"].
-1. Let |eventReportWindows| be the result of [=parsing top-level report windows=] with |value|, |sourceTime|, |sourceType|, and |expiry|.
-1. If |eventReportWindows| is an error, return null.
+1. Let |defaultEventReportWindows| be the result of [=parsing top-level report windows=] with |value|, |sourceTime|, |sourceType|, and |expiry|.
+1. If |defaultEventReportWindows| is an error, return null.
 1. Let |aggregatableReportWindow| be a new [=report window=] with the following items:
 
     : [=report window/start=]
@@ -1973,12 +1973,14 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     : [=report window/end=]
     :: |sourceTime| + |aggregatableReportWindowEnd|
 
-1. Let |triggerSpecs| be a new [=trigger spec map=].
-1. [=set/iterate|For each=] integer |triggerData| of [=the exclusive range|the range=] 0 to |triggerDataCardinality|, exclusive:
-    1. Let |spec| be a new [=trigger spec=] struct whose items are:
-        : [=trigger spec/event-level report windows=]
-        :: |eventReportWindows|
-    1. [=map/Set=] |triggerSpecs|[|triggerData|] to |spec|.
+1. Let |triggerDataMatchingMode| be "<code>[=trigger-data matching mode/modulus=]</code>".
+1. If |value|["`trigger_data_matching`"] [=map/exists=]:
+    1. If |value|["`trigger_data_matching`"] is not a [=string=], return null.
+    1. If |value|["`trigger_data_matching`"] is not a [=trigger-data matching mode=], return null.
+    1. Set |triggerDataMatchingMode| to |value|["`trigger_data_matching`"].
+1. Let |triggerSpecs| be the result of [=parse trigger specs=] with |value|,
+    |sourceTime|, |expiry|, |defaultEventReportWindows|,
+    |triggerDataCardinality|, and |triggerDataMatchingMode|.
 1. Let |randomizedResponseConfig| be a new [=randomized response output configuration=] whose items are:
 
     : [=randomized response output configuration/max attributions per source=]
@@ -1989,11 +1991,6 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |epsilon| be the user agent's [=randomized response epsilon=].
 1. If the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon| is greater than
     [=max event-level channel capacity per source=][|sourceType|], return null.
-1. Let |triggerDataMatchingMode| be "<code>[=trigger-data matching mode/modulus=]</code>".
-1. If |value|["`trigger_data_matching`"] [=map/exists=]:
-    1. If |value|["`trigger_data_matching`"] is not a [=string=], return null.
-    1. If |value|["`trigger_data_matching`"] is not a [=trigger-data matching mode=], return null.
-    1. Set |triggerDataMatchingMode| to |value|["`trigger_data_matching`"].
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -2008,8 +2005,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |reportingOrigin|
     : [=attribution source/expiry=]
     :: |expiry|
-    : [=attribution source/event-level report windows=]
-    :: |eventReportWindows|
+    : [=attribution source/trigger specs=]
+    :: |triggerSpecs|
     : [=attribution source/aggregatable report window=]
     :: |aggregatableReportWindow|
     : [=attribution source/priority=]
@@ -2773,24 +2770,31 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
          with "<code>[=trigger debug data type/trigger-event-deduplicated=]</code>", |trigger|, |sourceToAttribute| and
          [=obtain debug data on trigger registration/report=] set to null.
      1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. Let |triggerData| be |matchedConfig|'s [=event-level trigger configuration/trigger data=].
-1. Let |triggerDataCardinality| be [=default trigger data cardinality=][|attributedSource|'s [=attribution source/source type=]].
-1. If |attributedSource|'s [=attribution source/trigger-data matching mode=] is:
+1. Let |spec| be null.
+1. If |sourceToAttribute|'s [=attribution source/trigger-data matching mode=] is:
     <dl class="switch">
     : "<code>[=trigger-data matching mode/exact=]</code>":
-    :: Do nothing.
+    :: Run the following steps:
+        1. If |sourceToAttribute|'s
+            [=attribution source/trigger specs=][|config|'s [=event-level trigger configuration/trigger data=]] [=map/exists=],
+            set |spec| to its value.
     : "<code>[=trigger-data matching mode/modulus=]</code>":
-    :: Set |triggerData| to the remainder when dividing |triggerData| by |triggerDataCardinality|.
+    :: Run the following steps:
+        1. Set |config|'s [=event-level trigger configuration/trigger data=] to the
+            remainder when dividing |config|'s [=event-level trigger configuration/trigger data=] by |sourceToAttribute|'s
+            [=attribution source/trigger specs=]'s [=map/size=].
+        1. Set |spec| to |sourceToAttribute|'s
+            [=attribution source/trigger specs=][|config|'s [=event-level trigger configuration/trigger data=]].
 
     </dl>
-1. If |triggerData| is greater than or equal to |triggerDataCardinality|:
+1. If |spec| is null:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-event-no-matching-trigger-data=]</code>", |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. Let |windowResult| be the result of [=check whether a moment falls within a window=]
     with |trigger|'s [=attribution trigger/trigger time=] and
-    |sourceToAttribute|'s [=attribution source/event-level report windows=]'s
+    |spec|'s [=trigger spec/event-level report windows=]'s
     [=report window list/total window=].
 1. If |windowResult| is <strong>falls before</strong>:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
@@ -2814,7 +2818,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
     return it.
 1. Let |report| be the result of running [=obtain an event-level report=] with |sourceToAttribute|, |trigger|,
-    |matchedConfig|, and |triggerData|.
+    and |matchedConfig|.
 1. If |sourceToAttribute|'s [=attribution source/event-level attributable=] value
     is false:
      1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
@@ -3039,11 +3043,10 @@ a [=report window=] |window|:
     return <strong>falls after</strong>.
 1. Return <strong>falls within</strong>.
 
-To <dfn>obtain an event-level report delivery time</dfn> given an [=attribution source=]
-|source| and a [=moment=] |triggerTime|:
+To <dfn>obtain an event-level report delivery time</dfn> given a
+[=report window list=] |windows| and a [=moment=] |triggerTime|:
 
 1. If [=automation local testing mode=] is true, return |triggerTime|.
-1. Let |windows| be |source|'s [=attribution source/event-level report windows=].
 1. [=list/iterate|For each=] |window| of |windows|:
     1. If the result of [=check whether a moment falls within a window=] with
         |triggerTime| and |window| is <strong>falls within</strong>, return
@@ -3059,16 +3062,22 @@ To <dfn>obtain an aggregatable report delivery time</dfn> given a [=moment=]
 <h3 algorithm id="obtaining-an-event-level-report">Obtaining an event-level report</h3>
 
 To <dfn>obtain an event-level report</dfn> given an [=attribution source=] |source|, an [=attribution trigger=]
-|trigger|, an [=event-level trigger configuration=] |config|, and a non-negative
-64-bit integer |triggerData|:
+|trigger|, and an [=event-level trigger configuration=] |config|:
 
-1. Let |reportTime| be the result of running [=obtain an event-level report delivery time=] with |source| and |trigger|'s [=attribution trigger/trigger time=].
+1. [=Assert=]: |source|'s [=attribution source/trigger specs=][|config|'s
+    [=event-level trigger configuration/trigger data=]] [=map/exists=].
+1. Let |spec| be |source|'s [=attribution source/trigger specs=][|config|'s
+    [=event-level trigger configuration/trigger data=]].
+1. Let |reportTime| be the result of running
+    [=obtain an event-level report delivery time=] with |spec|'s
+    [=trigger spec/event-level report windows=] and |trigger|'s
+    [=attribution trigger/trigger time=].
 1. Let |report| be a new [=event-level report=] struct whose items are:
 
     : [=event-level report/event ID=]
     :: |source|'s [=attribution source/event ID=].
     : [=event-level report/trigger data=]
-    :: |triggerData|
+    :: |config|'s [=event-level trigger configuration/trigger data=].
     : [=event-level report/randomized trigger rate=]
     :: |source|'s [=attribution source/randomized trigger rate=].
     : [=event-level report/reporting origin=]
