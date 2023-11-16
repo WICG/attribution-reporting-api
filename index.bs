@@ -709,10 +709,6 @@ A <dfn>trigger spec</dfn> is a [=struct=] with the following items:
 <dl dfn-for="trigger spec">
 : <dfn>event-level report windows</dfn>
 :: A [=report window list=].
-: <dfn>summary window operator</dfn>
-:: A [=summary window operator=].
-: <dfn>summary buckets</dfn>
-:: A [=summary bucket list=].
 
 </dl>
 
@@ -1903,6 +1899,7 @@ To <dfn>parse report windows</dfn> given a |value|, a
 1. Return |windows|.
 
 To <dfn>parse summary buckets</dfn> given a [=map=] |map|:
+
 1. Let |values| be [=the inclusive range|the range=] 1 to
     <code>MAX_UINT32</code>, inclusive.
 1. If |map|["`summary_buckets`"] [=map/exists=]:
@@ -1957,20 +1954,6 @@ To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
         1. If |reportWindows| is an error, return it.
         1. Set |spec|'s [=trigger spec/event-level report windows=] to
             |reportWindows|.
-    1. Set |spec|'s [=trigger spec/summary window operator=] to
-        "<code>[=summary window operator/count=]</code>".
-    1. If |item|["`summary_window_operator`"] [=map/exists=]:
-        1. If |item|["`summary_window_operator`"] is not a [=string=], return an
-            error.
-        1. If |item|["`summary_window_operator`"] is not a 
-            [=summary window operator=], return an error.
-        1. Set |spec|'s [=trigger spec/summary window operator=] to
-            |item|["`summary_window_operator`"].
-    1. Let |summaryBuckets| be the result of
-        [=parsing summary buckets=] with |item|["`summary_buckets`"],
-        |sourceTime|, and |expiry|.
-    1. If |summaryBuckets| is an error, return it.
-    1. Set |spec|'s [=trigger spec/summary buckets=] to |summaryBuckets|.
     1. If |item|["`trigger_data`"] does not [=map/exist=], is not a [=list=], or
         [=list/is empty=], or its [=list/size=] is greater than
         [=max distinct trigger data per source=], return an error.
