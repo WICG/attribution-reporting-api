@@ -174,11 +174,11 @@ When the `event_report_window` for a spec completes, we will map its summary val
 
 Given that triggering attribution can affect a source's state without producing a report, we will need a new algorithm for doing trigger prioritization. Here is a sketch of how it could work:
 
-1. Always maintain a sorted list of triggers, sorted in order of priority (descending) and trigger time (ascending)
-2. Whenever a spec's window's end time is hit (breaking ties arbitrarily):
-    1. Iterate through triggers in order, "applying" them to generate a list of "speculative" reports. Stop when privacy limits are hit.
+1. For every source, maintain a list of triggers, sorted in order of priority (descending), then trigger time (ascending)
+2. At the end of any report window (across all of a source's specs, breaking ties arbitrarily):
+    1. Iterate through the source's triggers in order, "applying" them to generate a list of "speculative" reports. Stop when privacy limits are hit.
     2. Flush all of the speculative reports that are scheduled to be emitted in the current window, and update the source's state based on all of the triggers that were successfully applied.
-    3. Erase all of the triggers associated with the current spec and window.
+    3. Erase all of the triggers associated with the current spec and window from the source's trigger list
 
 ### Trigger-data modulus matching example
 
