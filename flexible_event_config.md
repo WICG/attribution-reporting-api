@@ -176,9 +176,11 @@ Given that triggering attribution can affect a source's state without producing 
 
 1. For every source, maintain a list of triggers, sorted in order of priority (descending), then trigger time (ascending)
 2. At the end of any report window (across all of a source's specs, breaking ties arbitrarily):
-    1. Iterate through the source's triggers in order, "applying" them to generate a list of "speculative" reports. Stop when privacy limits are hit.
-    2. Send all of the speculative reports that are scheduled to be emitted in the current window, and update the source's state based on all of the triggers that were successfully applied. Delete all of the speculative reports that are not scheduled to be emitted in this window.
-    3. Erase all of the triggers associated with the current spec and window from the source's trigger list
+    1. Iterate through the source's triggers in order, "applying" them to generate a list of "speculative" reports. Stop whenever privacy limits are hit.
+    2. Send all of the speculative reports that are scheduled to be emitted in the current window
+    3. Update the source's total value per trigger data, and total # of event-level reports based on all of the triggers that were successfully applied in the current window.
+    4. Delete all of the speculative reports that are not scheduled to be emitted in this window.
+    5. Delete all of the triggers associated with the current spec and window from the source's trigger list
 
 ### Trigger-data modulus matching example
 
