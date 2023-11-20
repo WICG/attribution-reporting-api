@@ -1295,7 +1295,7 @@ export type Trigger = CommonDebug &
     aggregatableValues: Map<string, number>
     aggregationCoordinatorOrigin: string | null
     eventTriggerData: EventTriggerDatum[]
-    contextId: string | null
+    triggerContextID: string | null
   }
 
 function trigger(ctx: Context, j: Json): Maybe<Trigger> {
@@ -1330,8 +1330,8 @@ function trigger(ctx: Context, j: Json): Maybe<Trigger> {
           null
         ),
         eventTriggerData: field('event_trigger_data', eventTriggerData, []),
-        contextId: field(
-          'context_id',
+        triggerContextID: field(
+          'trigger_context_id',
           (ctx, j) => triggerContextID(ctx, j, aggregatableSourceRegTimeVal),
           null
         ),

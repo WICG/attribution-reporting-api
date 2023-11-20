@@ -62,7 +62,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       aggregatableSourceRegistrationTime:
         AggregatableSourceRegistrationTime.include,
       aggregationCoordinatorOrigin: null,
-      contextId: null,
+      triggerContextID: null,
       aggregatableTriggerData: [
         {
           positive: [
@@ -968,55 +968,55 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
 
   {
-    name: 'context-id-wrong-type',
-    json: `{"context_id": 1}`,
+    name: 'trigger-context-id-wrong-type',
+    json: `{"trigger_context_id": 1}`,
     expectedErrors: [
       {
-        path: ['context_id'],
+        path: ['trigger_context_id'],
         msg: 'must be a string',
       },
     ],
   },
   {
-    name: 'context-id-empty',
-    json: `{"context_id": ""}`,
+    name: 'trigger-context-id-empty',
+    json: `{"trigger_context_id": ""}`,
     expectedErrors: [
       {
-        path: ['context_id'],
+        path: ['trigger_context_id'],
         msg: 'cannot be empty',
       },
     ],
   },
   {
-    name: 'context-id-too-long',
-    json: `{"context_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+    name: 'trigger-context-id-too-long',
+    json: `{"trigger_context_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
     expectedErrors: [
       {
-        path: ['context_id'],
+        path: ['trigger_context_id'],
         msg: 'exceeds max length per trigger context ID (65 > 64)',
       },
     ],
   },
   {
-    name: 'context-id-invalid-aggregatable-source-registration-time',
-    json: `{"context_id": "a", "aggregatable_source_registration_time": 1}`,
+    name: 'trigger-context-id-invalid-aggregatable-source-registration-time',
+    json: `{"trigger_context_id": "a", "aggregatable_source_registration_time": 1}`,
     expectedErrors: [
       {
         path: ['aggregatable_source_registration_time'],
         msg: 'must be a string',
       },
       {
-        path: ['context_id'],
+        path: ['trigger_context_id'],
         msg: 'cannot be fully validated without a valid aggregatable_source_registration_time',
       },
     ],
   },
   {
-    name: 'context-id-prohibited-aggregatable-source-registration-time-include',
-    json: `{"aggregatable_source_registration_time": "include", "context_id": "123"}`,
+    name: 'trigger-context-id-prohibited-aggregatable-source-registration-time-include',
+    json: `{"aggregatable_source_registration_time": "include", "trigger_context_id": "123"}`,
     expectedErrors: [
       {
-        path: ['context_id'],
+        path: ['trigger_context_id'],
         msg: 'is prohibited for aggregatable_source_registration_time include',
       },
     ],
