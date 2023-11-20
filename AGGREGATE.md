@@ -450,7 +450,7 @@ those that include this field.
 
 In order to limit abuse of the protections above, there will be a maximum limit of 20 aggregatable reports per source.
 
-### Optional: avoid report delay with the trigger context ID
+### Optional: avoid report delay with trigger context ID
 
 Trigger registration will accept an optional string field `trigger_context_id`, a
 high-entropy ID which represents the data associated with the trigger.
