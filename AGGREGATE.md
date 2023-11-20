@@ -248,7 +248,7 @@ The report will be JSON encoded with the following scheme:
   "trigger_debug_key": "[64 bit unsigned integer]",
 
   // Optional trigger context ID.
-  "trigger_context_id": "example string"
+  "trigger_context_id": "example string" //max length 64
 }
 ```
 
