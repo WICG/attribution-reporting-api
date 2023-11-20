@@ -18,7 +18,7 @@
   - [Contribution bounding and budgeting](#contribution-bounding-and-budgeting)
   - [Storage limits](#storage-limits)
   - [Hide the true number of attribution reports](#hide-the-true-number-of-attribution-reports)
-  - [Optional: avoid report delay with trigger context ID](#optional-avoid-report-delay-with-trigger-context-id)
+  - [Optional: reduce report delay with trigger context ID](#optional-reduce-report-delay-with-trigger-context-id)
 - [Data processing through a Secure Aggregation Service](#data-processing-through-a-secure-aggregation-service)
 - [Privacy considerations](#privacy-considerations)
   - [Differential Privacy](#differential-privacy)
@@ -450,7 +450,7 @@ those that include this field.
 
 In order to limit abuse of the protections above, there will be a maximum limit of 20 aggregatable reports per source.
 
-### Optional: avoid report delay with trigger context ID
+### Optional: reduce report delay with trigger context ID
 
 Trigger registration will accept an optional string field `trigger_context_id`, a
 high-entropy ID which represents the data associated with the trigger.
@@ -466,12 +466,12 @@ This ID would then be embedded unencrypted in the aggregatable report.
 
 To avoid leaking cross-site information through the count of reports with the
 given ID, the browser will unconditionally send an aggregatable report on every
-trigger registration with a context ID. A null report would be sent in the
+trigger registration with a trigger context ID. A null report would be sent in the
 case that the trigger registration did not generate an attribution report. The
 source registration time will always be excluded from the aggregatable report
-with a context ID.
+with a trigger context ID.
 
-As the context ID in the aggregatable report explicitly reveals the
+As the trigger context ID in the aggregatable report explicitly reveals the
 association between the report and the trigger, these reports can be sent
 immediately without delay.
 
