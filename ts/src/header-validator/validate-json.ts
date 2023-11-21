@@ -1026,6 +1026,24 @@ function triggerDataMatching(
   })
 }
 
+function warnInconsistentMaxEventLevelReportsAndTriggerSpecs(
+  ctx: Context,
+  s: Source
+): void {
+  const allowsReports = s.maxEventLevelReports > 0
+  const hasSpecs = s.triggerSpecs.length > 0
+
+  if (allowsReports && !hasSpecs) {
+    ctx.warning(
+      'max_event_level_reports > 0 but event-level attribution will always fail because trigger_specs is empty'
+    )
+  } else if (hasSpecs && !allowsReports) {
+    ctx.warning(
+      'trigger_specs non-empty but event-level attribution will always fail because max_event_level_reports = 0'
+    )
+  }
+}
+
 export type Source = CommonDebug &
   Priority & {
     aggregatableReportWindow: number
@@ -1112,6 +1130,7 @@ function source(ctx: Context, j: Json): Maybe<Source> {
       })
     })
     .peek((s) => channelCapacity(ctx, s))
+    .peek((s) => warnInconsistentMaxEventLevelReportsAndTriggerSpecs(ctx, s))
 }
 
 function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {

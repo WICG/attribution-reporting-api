@@ -1665,6 +1665,37 @@ const testCases: TestCase[] = [
     }`,
     parseFullFlex: true,
   },
+
+  {
+    name: 'no-reports-but-specs',
+    json: `{
+      "destination": "https://a.test",
+      "max_event_level_reports": 0,
+      "trigger_specs": [{"trigger_data": [1]}]
+    }`,
+    parseFullFlex: true,
+    expectedWarnings: [
+      {
+        path: [],
+        msg: 'trigger_specs non-empty but event-level attribution will always fail because max_event_level_reports = 0',
+      },
+    ],
+  },
+  {
+    name: 'reports-but-no-specs',
+    json: `{
+      "destination": "https://a.test",
+      "max_event_level_reports": 1,
+      "trigger_specs": []
+    }`,
+    parseFullFlex: true,
+    expectedWarnings: [
+      {
+        path: [],
+        msg: 'max_event_level_reports > 0 but event-level attribution will always fail because trigger_specs is empty',
+      },
+    ],
+  },
 ]
 
 testCases.forEach((tc) =>
