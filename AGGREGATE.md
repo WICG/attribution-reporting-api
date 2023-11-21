@@ -453,20 +453,20 @@ In order to limit abuse of the protections above, there will be a maximum limit 
 ### Optional: reduce report delay with trigger context ID
 
 Trigger registration will accept an optional string field `trigger_context_id`, a
-high-entropy ID which represents the data associated with the trigger.
+high-entropy ID that represents the data associated with the trigger.
 
 ```jsonc
 {
-  ..., // exisiting fields
+  ..., // existing fields
   "trigger_context_id": "example string" // max length 64
 }
 ```
 
-This ID would then be embedded unencrypted in the aggregatable report.
+This ID will be embedded unencrypted in the aggregatable report.
 
 To avoid leaking cross-site information through the count of reports with the
 given ID, the browser will unconditionally send an aggregatable report on every
-trigger registration with a trigger context ID. A null report would be sent in the
+trigger registration with a trigger context ID. A null report will be sent in the
 case that the trigger registration did not generate an attribution report. The
 source registration time will always be excluded from the aggregatable report
 with a trigger context ID.
