@@ -76,6 +76,11 @@ const infoGainTests = [
     epsilon: 14,
     expected: 1.584926511508231,
   },
+  {
+    numStates: 1,
+    epsilon: 14,
+    expected: 0,
+  },
 ]
 
 test('maxInformationGain', async (t) => {

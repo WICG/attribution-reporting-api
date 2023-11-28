@@ -20,8 +20,8 @@ export class PerTriggerDataConfig {
     if (this.numWindows <= 0) {
       throw 'numWindows must be > 0'
     }
-    if (this.numSummaryBuckets <= 0) {
-      throw 'numSummaryBuckets must be > 0'
+    if (this.numSummaryBuckets < 0) {
+      throw 'numSummaryBuckets must be >= 0'
     }
   }
 }
@@ -32,17 +32,21 @@ export class Config {
     readonly perTriggerDataConfigs: ReadonlyArray<PerTriggerDataConfig>
   ) {
     if (
-      this.maxEventLevelReports <= 0 ||
+      this.maxEventLevelReports < 0 ||
       !Number.isInteger(this.maxEventLevelReports)
     ) {
-      throw 'maxEventLevelReports must be an integer > 0'
-    }
-    if (this.perTriggerDataConfigs.length === 0) {
-      throw 'perTriggerDataConfigs must be non-empty'
+      throw 'maxEventLevelReports must be an integer >= 0'
     }
   }
 
   private numFlexibleStates(): number {
+    if (
+      this.maxEventLevelReports === 0 ||
+      this.perTriggerDataConfigs.length === 0
+    ) {
+      return 1
+    }
+
     // Let B be the trigger data cardinality.
     // For every trigger data i, there are w_i windows and c_i maximum reports / summary buckets.
     // The following helper function memoizes the recurrence relation:
@@ -146,6 +150,9 @@ function capacityQarySymmetricChannel(
 
 export function maxInformationGain(numStates: number, epsilon: number): number {
   const flipProb = flipProbabilityDp(numStates, epsilon)
+  if (numStates === 1 || flipProb === 1) {
+    return 0
+  }
   return capacityQarySymmetricChannel(
     Math.log2(numStates),
     (flipProb * (numStates - 1)) / numStates
