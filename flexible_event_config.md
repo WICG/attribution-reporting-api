@@ -341,12 +341,12 @@ This example shows how a developer can configure a source to get a count of trig
     },
     // This field could be omitted to save bandwidth since the default is "count"
     "summary_window_operator": "count",
-    "summary_buckets": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    "summary_buckets": [1, 2, 3, 4]
   }],
 }
 ```
 
-Attributed triggers with `trigger_data` set to 0 are counted and capped at 10. The trigger value is ignored since `summary_window_operator` is set to `count`. Supposing 4 triggers are registered and attributed to the source, the reports would look like this:
+Attributed triggers with `trigger_data` set to 0 are counted and capped at 4. The trigger value is ignored since `summary_window_operator` is set to `count`. Supposing 4 triggers are registered and attributed to the source, the reports would look like this:
 
 ```jsonc
 // Report 1
@@ -367,7 +367,7 @@ Attributed triggers with `trigger_data` set to 0 are counted and capped at 10. T
 // Report 4
 {
   ...
-  "trigger_summary_bucket": [4, 4]
+  "trigger_summary_bucket": [4, MAX_UINT32]
 }
 ```
 
