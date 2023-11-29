@@ -1284,6 +1284,41 @@ function warnInconsistentAggregatableKeys(ctx: Context, t: Trigger): void {
   })
 }
 
+function triggerContextID(
+  ctx: Context,
+  j: Json,
+  aggregatableSourceRegTime: Maybe<AggregatableSourceRegistrationTime>
+): Maybe<string> {
+  return string(ctx, j).filter((s) => {
+    if (s.length == 0) {
+      ctx.error(`cannot be empty`)
+      return false
+    }
+    if (s.length > constants.maxLengthPerTriggerContextID) {
+      ctx.error(
+        `exceeds max length per trigger context ID (${s.length} > ${constants.maxLengthPerTriggerContextID})`
+      )
+      return false
+    }
+    if (aggregatableSourceRegTime.value === undefined) {
+      ctx.error(
+        `cannot be fully validated without a valid aggregatable_source_registration_time`
+      )
+      return false
+    }
+    if (
+      aggregatableSourceRegTime.value !==
+      AggregatableSourceRegistrationTime.exclude
+    ) {
+      ctx.error(
+        `is prohibited for aggregatable_source_registration_time ${aggregatableSourceRegTime.value}`
+      )
+      return false
+    }
+    return true
+  })
+}
+
 export type Trigger = CommonDebug &
   FilterPair & {
     aggregatableDedupKeys: AggregatableDedupKey[]
@@ -1292,39 +1327,51 @@ export type Trigger = CommonDebug &
     aggregatableValues: Map<string, number>
     aggregationCoordinatorOrigin: string | null
     eventTriggerData: EventTriggerDatum[]
+    triggerContextID: string | null
   }
 
 function trigger(ctx: Context, j: Json): Maybe<Trigger> {
-  return struct(ctx, j, {
-    aggregatableTriggerData: field(
-      'aggregatable_trigger_data',
-      aggregatableTriggerData,
-      []
-    ),
-    aggregatableValues: field(
-      'aggregatable_values',
-      aggregatableValues,
-      new Map()
-    ),
-    aggregatableDedupKeys: field(
-      'aggregatable_deduplication_keys',
-      aggregatableDedupKeys,
-      []
-    ),
-    aggregatableSourceRegistrationTime: field(
-      'aggregatable_source_registration_time',
-      aggregatableSourceRegistrationTime,
-      AggregatableSourceRegistrationTime.exclude
-    ),
-    aggregationCoordinatorOrigin: field(
-      'aggregation_coordinator_origin',
-      suitableOrigin,
-      null
-    ),
-    eventTriggerData: field('event_trigger_data', eventTriggerData, []),
-    ...commonDebugFields,
-    ...filterFields,
-  }).peek((t) => warnInconsistentAggregatableKeys(ctx, t))
+  return object(ctx, j)
+    .map((j) => {
+      const aggregatableSourceRegTimeVal = field(
+        'aggregatable_source_registration_time',
+        aggregatableSourceRegistrationTime,
+        AggregatableSourceRegistrationTime.exclude
+      )(ctx, j)
+
+      return struct(ctx, j, {
+        aggregatableTriggerData: field(
+          'aggregatable_trigger_data',
+          aggregatableTriggerData,
+          []
+        ),
+        aggregatableValues: field(
+          'aggregatable_values',
+          aggregatableValues,
+          new Map()
+        ),
+        aggregatableDedupKeys: field(
+          'aggregatable_deduplication_keys',
+          aggregatableDedupKeys,
+          []
+        ),
+        aggregatableSourceRegistrationTime: () => aggregatableSourceRegTimeVal,
+        aggregationCoordinatorOrigin: field(
+          'aggregation_coordinator_origin',
+          suitableOrigin,
+          null
+        ),
+        eventTriggerData: field('event_trigger_data', eventTriggerData, []),
+        triggerContextID: field(
+          'trigger_context_id',
+          (ctx, j) => triggerContextID(ctx, j, aggregatableSourceRegTimeVal),
+          null
+        ),
+        ...commonDebugFields,
+        ...filterFields,
+      })
+    })
+    .peek((t) => warnInconsistentAggregatableKeys(ctx, t))
 }
 
 function validateJSON<T>(

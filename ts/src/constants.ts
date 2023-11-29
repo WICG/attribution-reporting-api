@@ -17,6 +17,8 @@ export const maxAggregationKeysPerSource: number = 20
 
 export const maxLengthPerAggregationKeyIdentifier: number = 25
 
+export const maxLengthPerTriggerContextID: number = 64
+
 export const minReportWindow: number = 1 * SECONDS_PER_HOUR
 
 export const validSourceExpiryRange: Readonly<[min: number, max: number]> = [
