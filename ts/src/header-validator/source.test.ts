@@ -45,6 +45,7 @@ const testCases: TestCase[] = [
       debugKey: 1n,
       debugReporting: true,
       destination: new Set(['https://a.test']),
+      eventLevelEpsilon: 14,
       eventReportWindows: {
         startTime: 0,
         endTimes: [3601],
@@ -1186,7 +1187,7 @@ const testCases: TestCase[] = [
         [SourceType.event]: 0,
         [SourceType.navigation]: Infinity,
       },
-      randomizedResponseEpsilon: 14,
+      maxSettableEventLevelEpsilon: 14,
     },
     expectedErrors: [
       {
@@ -1204,12 +1205,59 @@ const testCases: TestCase[] = [
         [SourceType.event]: Infinity,
         [SourceType.navigation]: 0,
       },
-      randomizedResponseEpsilon: 14,
+      maxSettableEventLevelEpsilon: 14,
     },
     expectedErrors: [
       {
         path: [],
         msg: 'exceeds max event-level channel capacity per navigation source (11.46 > 0.00)',
+      },
+    ],
+  },
+
+  {
+    name: 'event-level-epsilon-valid',
+    json: `{
+      "destination": "https://a.test",
+      "event_level_epsilon": 13.5
+    }`,
+  },
+  {
+    name: 'event-level-epsilon-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "event_level_epsilon": "1"
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_level_epsilon'],
+        msg: 'must be a number',
+      },
+    ],
+  },
+  {
+    name: 'event-level-epsilon-negative',
+    json: `{
+      "destination": "https://a.test",
+      "event_level_epsilon": -1
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_level_epsilon'],
+        msg: 'must be in the range [0, 14]',
+      },
+    ],
+  },
+  {
+    name: 'event-level-epsilon-above-max',
+    json: `{
+      "destination": "https://a.test",
+      "event_level_epsilon": 14.1
+    }`,
+    expectedErrors: [
+      {
+        path: ['event_level_epsilon'],
+        msg: 'must be in the range [0, 14]',
       },
     ],
   },

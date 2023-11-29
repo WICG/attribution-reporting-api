@@ -8,7 +8,7 @@ Chromium's implementation assigns the following values:
 | Name | Value |
 | ---- | ----- |
 | [Max pending sources per source origin][] | [4096][max pending sources per source origin value] |
-| [Randomized response epsilon][] | [14][randomized response epsilon value] |
+| [Max settable event-level epsilon][] | [14][max settable event-level epsilon value] |
 | [Randomized null report rate excluding source registration time][] | [0.05][randomized null report rate excluding source registration time value] |
 | [Randomized null report rate including source registration time][] | [0.008][randomized null report rate including source registration time value] |
 | [Max event-level reports per attribution destination][] | [1024][max event-level reports per attribution destination value] |
@@ -28,8 +28,8 @@ Chromium's implementation assigns the following values:
 
 [Max pending sources per source origin]: https://wicg.github.io/attribution-reporting-api/#max-pending-sources-per-source-origin
 [max pending sources per source origin value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=151;drc=3be0e68c5ed56aba7c321cbaea22558eee61fc50
-[Randomized response epsilon]: https://wicg.github.io/attribution-reporting-api/#randomized-response-epsilon
-[randomized response epsilon value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=57;drc=3733a639d724a4353463a872605119d11a1e4d37
+[Max settable event-level epsilon]: https://wicg.github.io/attribution-reporting-api/#max-settable-event-level-epsilon
+[max settable event-level epsilon value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=57;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Randomized null report rate excluding source registration time]: https://wicg.github.io/attribution-reporting-api/#randomized-null-report-rate-excluding-source-registration-time
 [randomized null report rate excluding source registration time value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=109;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Randomized null report rate including source registration time]: https://wicg.github.io/attribution-reporting-api/#randomized-null-report-rate-including-source-registration-time

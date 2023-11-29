@@ -2,7 +2,7 @@ import { SourceType } from './source-type'
 
 export type VendorSpecificValues = {
   maxEventLevelChannelCapacityPerSource: Record<SourceType, number>
-  randomizedResponseEpsilon: number
+  maxSettableEventLevelEpsilon: number
 }
 
 export const Chromium: Readonly<VendorSpecificValues> = {
@@ -10,5 +10,5 @@ export const Chromium: Readonly<VendorSpecificValues> = {
     [SourceType.event]: 6.5,
     [SourceType.navigation]: 11.46173,
   },
-  randomizedResponseEpsilon: 14,
+  maxSettableEventLevelEpsilon: 14,
 }

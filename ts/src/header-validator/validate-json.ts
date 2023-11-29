@@ -792,6 +792,12 @@ function eventReportWindow(
   )
 }
 
+function eventLevelEpsilon(ctx: Context, j: Json): Maybe<number> {
+  return number(ctx, j).filter((n) =>
+    isInRange(ctx, n, 0, ctx.vsv.maxSettableEventLevelEpsilon)
+  )
+}
+
 function channelCapacity(ctx: Context, s: Source): void {
   const perTriggerDataConfigs = s.triggerSpecs.flatMap((spec) =>
     Array(spec.triggerData.size).fill(
@@ -808,7 +814,7 @@ function channelCapacity(ctx: Context, s: Source): void {
   )
 
   const { infoGain } = config.computeConfigData(
-    ctx.vsv.randomizedResponseEpsilon,
+    s.eventLevelEpsilon,
     ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
   )
 
@@ -1057,6 +1063,8 @@ export type Source = CommonDebug &
 
     triggerSpecs: TriggerSpec[]
     triggerDataMatching: TriggerDataMatching
+
+    eventLevelEpsilon: number
   }
 
 function source(ctx: Context, j: Json): Maybe<Source> {
@@ -1110,6 +1118,11 @@ function source(ctx: Context, j: Json): Maybe<Source> {
         ),
         aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
         destination: field('destination', destination),
+        eventLevelEpsilon: field(
+          'event_level_epsilon',
+          eventLevelEpsilon,
+          ctx.vsv.maxSettableEventLevelEpsilon
+        ),
         eventReportWindows: () => eventReportWindowsVal,
         expiry: () => expiryVal,
         filterData: field('filter_data', filterData, new Map()),
