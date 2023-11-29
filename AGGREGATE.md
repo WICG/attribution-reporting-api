@@ -18,6 +18,7 @@
   - [Contribution bounding and budgeting](#contribution-bounding-and-budgeting)
   - [Storage limits](#storage-limits)
   - [Hide the true number of attribution reports](#hide-the-true-number-of-attribution-reports)
+  - [Optional: reduce report delay with trigger context ID](#optional-reduce-report-delay-with-trigger-context-id)
 - [Data processing through a Secure Aggregation Service](#data-processing-through-a-secure-aggregation-service)
 - [Privacy considerations](#privacy-considerations)
   - [Differential Privacy](#differential-privacy)
@@ -244,7 +245,10 @@ The report will be JSON encoded with the following scheme:
   // Optional debugging information (also present in event-level reports),
   // if the cookie `ar_debug` is present.
   "source_debug_key": "[64 bit unsigned integer]",
-  "trigger_debug_key": "[64 bit unsigned integer]"
+  "trigger_debug_key": "[64 bit unsigned integer]",
+
+  // Optional trigger context ID.
+  "trigger_context_id": "example string"
 }
 ```
 
@@ -445,6 +449,38 @@ registrations that exclude the `source_registration_time` field, and ~0.25 repor
 those that include this field.
 
 In order to limit abuse of the protections above, there will be a maximum limit of 20 aggregatable reports per source.
+
+### Optional: reduce report delay with trigger context ID
+
+Trigger registration will accept an optional string field `trigger_context_id`, a
+high-entropy ID that represents the data associated with the trigger.
+
+```jsonc
+{
+  ..., // existing fields
+  "trigger_context_id": "example string" // max length 64
+}
+```
+
+This ID will be embedded unencrypted in the aggregatable report.
+
+To avoid leaking cross-site information through the count of reports with the
+given ID, the browser will unconditionally send an aggregatable report on every
+trigger registration with a trigger context ID. A null report will be sent in the
+case that the trigger registration did not generate an attribution report. The
+source registration time will always be excluded from the aggregatable report
+with a trigger context ID.
+
+As the trigger context ID in the aggregatable report explicitly reveals the
+association between the report and the trigger, these reports can be sent
+immediately without delay.
+
+Note: This is an [alternative](https://github.com/WICG/attribution-reporting-api/blob/main/report_verification.md#could-we-just-tag-reports-with-a-trigger_id-instead-of-using-anonymous-tokens)
+considered for [report verification](https://github.com/WICG/attribution-reporting-api/blob/main/report_verification.md),
+and achieves all of the higher priority [security goals](https://github.com/WICG/attribution-reporting-api/blob/main/report_verification.md#security-goals).
+A similar design was proposed for the
+[Private Aggregation API](https://github.com/patcg-individual-drafts/private-aggregation-api/blob/main/report_verification.md#shared-storage)
+for the purpose of report verification.
 
 ## Data processing through a Secure Aggregation Service
 
