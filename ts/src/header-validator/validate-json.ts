@@ -549,7 +549,6 @@ function array<T>(
     .map(() => arr)
 }
 
-// TODO: Check length of strings.
 function filterDataKeyValue(
   ctx: Context,
   [key, j]: [string, Json]
@@ -1170,7 +1169,6 @@ function aggregatableTriggerData(
   )
 }
 
-// TODO: check length of key
 function aggregatableKeyValue(
   ctx: Context,
   [key, j]: [string, Json]
