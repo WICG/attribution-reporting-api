@@ -195,16 +195,23 @@ function keyValues<V>(
 type ListOpts = {
   minLength?: number
   maxLength?: number
+  maxLengthErrSuffix?: string
 }
 
 function list(
   ctx: Context,
   j: Json,
-  { minLength = 0, maxLength = Infinity }: ListOpts = {}
+  {
+    minLength = 0,
+    maxLength = Infinity,
+    maxLengthErrSuffix = '',
+  }: ListOpts = {}
 ): Maybe<Json[]> {
   return typeSwitch(ctx, j, { list: (_ctx, j) => some(j) }).filter((j) => {
     if (j.length > maxLength || j.length < minLength) {
-      ctx.error(`length must be in the range [${minLength}, ${maxLength}]`)
+      ctx.error(
+        `length must be in the range [${minLength}, ${maxLength}${maxLengthErrSuffix}]`
+      )
       return false
     }
     return true
@@ -844,6 +851,16 @@ function summaryBuckets(
   j: Json,
   maxEventLevelReports: Maybe<number>
 ): Maybe<number[]> {
+  let maxLength
+  if (maxEventLevelReports.value === undefined) {
+    ctx.error(
+      'cannot be fully validated without a valid max_event_level_reports'
+    )
+    maxLength = constants.maxSettableEventLevelAttributionsPerSource
+  } else {
+    maxLength = maxEventLevelReports.value
+  }
+
   let prev = 0
   let prevDesc = 'implicit minimum'
 
@@ -866,16 +883,10 @@ function summaryBuckets(
 
   return array(ctx, j, bucket, {
     minLength: 1,
+    maxLength,
+    maxLengthErrSuffix: ' (max_event_level_reports)',
     keepGoing: false, // suppress unhelpful cascaded errors
-  }).peek((buckets) =>
-    maxEventLevelReports.peek((n) => {
-      if (buckets.length > n) {
-        ctx.warning(
-          `will be truncated to first ${n} buckets (max event-level reports)`
-        )
-      }
-    })
-  )
+  })
 }
 
 function fullFlexTriggerDatum(ctx: Context, j: Json): Maybe<number> {

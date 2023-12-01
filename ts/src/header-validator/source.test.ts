@@ -1497,7 +1497,47 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['trigger_specs', 0, 'summary_buckets'],
-        msg: 'length must be in the range [1, Infinity]',
+        msg: 'length must be in the range [1, 3 (max_event_level_reports)]',
+      },
+    ],
+  },
+  {
+    name: 'summary-buckets-too-long',
+    json: `{
+      "destination": "https://a.test",
+      "max_event_level_reports": 4,
+      "trigger_specs": [{
+        "trigger_data": [3],
+        "summary_buckets": [1, 2, 3, 4, 5]
+      }]
+    }`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: ['trigger_specs', 0, 'summary_buckets'],
+        msg: 'length must be in the range [1, 4 (max_event_level_reports)]',
+      },
+    ],
+  },
+  {
+    name: 'summary-buckets-cannot-validate-length',
+    json: `{
+      "destination": "https://a.test",
+      "max_event_level_reports": null,
+      "trigger_specs": [{
+        "trigger_data": [3],
+        "summary_buckets": [1, 2, 3, 4, 5]
+      }]
+    }`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: ['max_event_level_reports'],
+        msg: 'must be a number',
+      },
+      {
+        path: ['trigger_specs', 0, 'summary_buckets'],
+        msg: 'cannot be fully validated without a valid max_event_level_reports',
       },
     ],
   },
