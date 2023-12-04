@@ -63,3 +63,4 @@ Companies who may be interested in participating in tests and early adoption opp
 | CNN Brasil | Publisher | | alexandre.magno@cnnbrasil.com.br |
 | Clarin | Publisher | | mfranco@clarin.com |
 | Globo | Publisher  | | adtech-delivery@g.globo |
+| A Gazeta | Publisher | | cdutra@redegazeta.com.br |
