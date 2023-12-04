@@ -655,6 +655,38 @@ Note: The [=report window list/total window=] is conceptually a union of
 [=report windows=], because there are no gaps in time between any of the
 [=report windows|windows=].
 
+<h3 id="summary-windows-operator-header">Summary window operator</h3>
+
+A <dfn>summary window operator</dfn> summarizes the triggers within a
+[=report window=]. Its value is one of the following:
+
+<dl dfn-for="summary window operator">
+: "<dfn><code>count</code></dfn>"
+:: Number of triggers attributed.
+: "<dfn><code>value_sum</code></dfn>"
+:: Sum of the value of triggers.
+
+</dl>
+
+<h3 id="summary-bucket-header">Summary bucket</h3>
+
+A <dfn>summary bucket</dfn> is a [=struct=] with the following items:
+
+<dl dfn-for="summary bucket">
+: <dfn>start</dfn>
+:: An unsigned 32-bit integer.
+: <dfn>end</dfn>
+:: An unsigned 32-bit integer.
+
+</dl>
+
+A <dfn>summary bucket list</dfn> is a [=list=] of [=summary buckets=].
+It has the following constraints:
+
+* Elements are strictly in ascending order based on their [=summary bucket/start=].
+* Every element's [=summary bucket/end=] is equal to the next element's [=summary bucket/start=] - 1, if it exists.
+* There is at least one element in the list.
+
 <h3 id="trigger-data-matching-mode-header">Trigger-data matching mode</h3>
 
 A <dfn>trigger-data matching mode</dfn> is one of the following:
@@ -1871,6 +1903,42 @@ To <dfn>parse report windows</dfn> given a |value|, a
     1. Set |startDuration| to |endDuration|.
 1. Return |windows|.
 
+To <dfn>parse summary window operator</dfn> given a [=map=] |map|:
+
+1. Let |value| be "<code>[=summary window operator/count=]</code>".
+1. If |map|["`summary_window_operator`"] [=map/exists=]:
+    1. If |map|["`summary_window_operator`"] is not a [=string=], return an
+        error.
+    1. If |map|["`summary_window_operator`"] is not a 
+        [=summary window operator=], return an error.
+    1. Set |value| to |map|["`summary_window_operator`"].
+1. Return |value|.
+
+To <dfn>parse summary buckets</dfn> given a [=map=] |map| and an integer |maxEventLevelReports|:
+
+1. Let |values| be [=the inclusive range|the range=] 1 to
+    |maxEventLevelReports|, inclusive.
+1. If |map|["`summary_buckets`"] [=map/exists=]:
+    1. If |map|["`summary_buckets`"] is not a [=list=], [=list/is empty=], or 
+        its [=list/size=] is greater than |maxEventLevelReports|, return an
+        error.
+    1. Set |values| to |map|["`summary_buckets`"].
+1. Let |prev| be 0.
+1. Let |summaryBuckets| be an [=list/is empty|empty=] [=list=]. 
+1. [=list/iterate|For each=] |item| of |values|:
+    1. If |item| is not an integer or cannot be represented by an unsigned
+        32-bit integer, or is less than or equal to |prev|, return an error.
+    1. Let |summaryBucket| be a new [=summary bucket=] whose items are
+
+        : [=summary bucket/start=]
+        :: |prev|
+        : [=summary bucket/end=]
+        :: |item| - 1
+
+    1. [=list/Append=] |summaryBucket| to |summaryBuckets|.
+    1. Set |prev| to |item|.
+1. Return |summaryBuckets|.
+
 To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
 |sourceTime|, a [=duration=] |expiry|, a [=report window list=]
 |defaultReportWindows|, an unsigned 32-bit integer
@@ -1920,7 +1988,8 @@ To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
         1. Set |i| to |i| + 1.
 1. Return |specs|.
 
-Issue: Parse "`summary_window_operator`" and "`summary_buckets`" fields.
+Issue: Invoke [=parse summary buckets=] and [=parse summary window operator=]
+from this algorithm.
 
 To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 |json|, a [=suitable origin=] |sourceOrigin|, a [=suitable origin=] |reportingOrigin|, a
