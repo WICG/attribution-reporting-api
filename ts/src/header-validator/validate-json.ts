@@ -2,7 +2,7 @@ import * as psl from 'psl'
 import * as constants from '../constants'
 import { SourceType } from '../source-type'
 import { VendorSpecificValues } from '../vendor-specific-values'
-import * as context from './context'
+import { Context, PathComponent, ValidationResult } from './context'
 import { Maybe, Maybeable } from './maybe'
 import * as privacy from '../flexible-event/privacy'
 
@@ -17,24 +17,33 @@ const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const UINT32_MAX: number = 2 ** 32 - 1
 
-class Context extends context.Context {
+class RegistrationContext extends Context {
   constructor(
     readonly vsv: Readonly<VendorSpecificValues>,
-    readonly sourceType: SourceType,
     readonly parseFullFlex: boolean
   ) {
     super()
   }
 }
 
-type StructFields<T extends object> = {
-  [K in keyof T]-?: CtxFunc<JsonDict, Maybe<T[K]>>
+class SourceContext extends RegistrationContext {
+  constructor(
+    vsv: Readonly<VendorSpecificValues>,
+    parseFullFlex: boolean,
+    readonly sourceType: SourceType
+  ) {
+    super(vsv, parseFullFlex)
+  }
 }
 
-function struct<T extends object>(
-  ctx: Context,
+type StructFields<T extends object, C extends Context = Context> = {
+  [K in keyof T]-?: CtxFunc<C, JsonDict, Maybe<T[K]>>
+}
+
+function struct<T extends object, C extends Context = Context>(
+  ctx: C,
   d: Json,
-  fields: StructFields<T>,
+  fields: StructFields<T, C>,
   warnUnknown: boolean = true
 ): Maybe<T> {
   return object(ctx, d).map((d) => {
@@ -60,14 +69,14 @@ function struct<T extends object>(
   })
 }
 
-type CtxFunc<I, O> = (ctx: Context, i: I) => O
+type CtxFunc<C extends Context, I, O> = (ctx: C, i: I) => O
 
-function field<T>(
+function field<T, C extends Context = Context>(
   name: string,
-  f: CtxFunc<Json, Maybe<T>>,
+  f: CtxFunc<C, Json, Maybe<T>>,
   valueIfAbsent?: Maybeable<T>
-): CtxFunc<JsonDict, Maybe<T>> {
-  return (ctx: Context, d: JsonDict): Maybe<T> =>
+): CtxFunc<C, JsonDict, Maybe<T>> {
+  return (ctx: C, d: JsonDict): Maybe<T> =>
     ctx.scope(name, () => {
       const v = d[name]
       if (v === undefined) {
@@ -82,15 +91,15 @@ function field<T>(
     })
 }
 
-type Exclusive<T> = {
-  [key: string]: CtxFunc<Json, Maybe<T>>
+type Exclusive<T, C extends Context = Context> = {
+  [key: string]: CtxFunc<C, Json, Maybe<T>>
 }
 
-function exclusive<T>(
-  x: Exclusive<T>,
+function exclusive<T, C extends Context = Context>(
+  x: Exclusive<T, C>,
   valueIfAbsent: Maybeable<T>
-): CtxFunc<JsonDict, Maybe<T>> {
-  return (ctx: Context, d: JsonDict): Maybe<T> => {
+): CtxFunc<C, JsonDict, Maybe<T>> {
+  return (ctx: C, d: JsonDict): Maybe<T> => {
     const found: string[] = []
     let v: Maybe<T> = None
 
@@ -116,16 +125,20 @@ function exclusive<T>(
   }
 }
 
-type TypeSwitch<T> = {
-  null?: CtxFunc<null, Maybe<T>>
-  boolean?: CtxFunc<boolean, Maybe<T>>
-  number?: CtxFunc<number, Maybe<T>>
-  string?: CtxFunc<string, Maybe<T>>
-  list?: CtxFunc<Json[], Maybe<T>>
-  object?: CtxFunc<JsonDict, Maybe<T>>
+type TypeSwitch<T, C extends Context = Context> = {
+  null?: CtxFunc<C, null, Maybe<T>>
+  boolean?: CtxFunc<C, boolean, Maybe<T>>
+  number?: CtxFunc<C, number, Maybe<T>>
+  string?: CtxFunc<C, string, Maybe<T>>
+  list?: CtxFunc<C, Json[], Maybe<T>>
+  object?: CtxFunc<C, JsonDict, Maybe<T>>
 }
 
-function typeSwitch<T>(ctx: Context, j: Json, ts: TypeSwitch<T>): Maybe<T> {
+function typeSwitch<T, C extends Context = Context>(
+  ctx: C,
+  j: Json,
+  ts: TypeSwitch<T, C>
+): Maybe<T> {
   if (j === null && ts.null !== undefined) {
     return ts.null(ctx, j)
   }
@@ -168,10 +181,10 @@ function object(ctx: Context, j: Json): Maybe<JsonDict> {
   return typeSwitch(ctx, j, { object: (_ctx, j) => some(j) })
 }
 
-function keyValues<V>(
-  ctx: Context,
+function keyValues<V, C extends Context = Context>(
+  ctx: C,
   j: Json,
-  f: CtxFunc<[key: string, val: Json], Maybe<V>>,
+  f: CtxFunc<C, [key: string, val: Json], Maybe<V>>,
   maxKeys: number = Infinity
 ): Maybe<Map<string, V>> {
   const map = new Map<string, V>()
@@ -454,7 +467,7 @@ export type EventReportWindows = {
 }
 
 function eventReportWindows(
-  ctx: Context,
+  ctx: SourceContext,
   j: Json,
   expiry: Maybe<number>
 ): Maybe<EventReportWindows> {
@@ -481,10 +494,10 @@ function legacyDuration(ctx: Context, j: Json): Maybe<number | bigint> {
   })
 }
 
-function isCollection<C extends context.PathComponent>(
-  ctx: Context,
-  js: Iterable<[C, Json]>,
-  f: CtxFunc<[C, Json], Maybe<unknown>>,
+function isCollection<P extends PathComponent, C extends Context = Context>(
+  ctx: C,
+  js: Iterable<[P, Json]>,
+  f: CtxFunc<C, [P, Json], Maybe<unknown>>,
   keepGoing: boolean = true
 ): boolean {
   let ok = true
@@ -503,10 +516,10 @@ type SetOpts = ListOpts & {
   requireDistinct?: boolean
 }
 
-function set<T extends number | string>(
-  ctx: Context,
+function set<T extends number | string, C extends Context = Context>(
+  ctx: C,
   j: Json,
-  f: CtxFunc<Json, Maybe<T>>,
+  f: CtxFunc<C, Json, Maybe<T>>,
   opts?: SetOpts
 ): Maybe<Set<T>> {
   const set = new Set<T>()
@@ -536,10 +549,10 @@ type ArrayOpts = ListOpts & {
   keepGoing?: boolean
 }
 
-function array<T>(
-  ctx: Context,
+function array<T, C extends Context = Context>(
+  ctx: C,
   j: Json,
-  f: CtxFunc<Json, Maybe<T>>,
+  f: CtxFunc<C, Json, Maybe<T>>,
   opts?: ArrayOpts
 ): Maybe<T[]> {
   const arr: T[] = []
@@ -741,7 +754,7 @@ function roundAwayFromZeroToNearestDay(n: number): number {
   return r - (r % constants.SECONDS_PER_DAY)
 }
 
-function expiry(ctx: Context, j: Json): Maybe<number> {
+function expiry(ctx: SourceContext, j: Json): Maybe<number> {
   return legacyDuration(ctx, j)
     .map((n) => clamp(ctx, n, ...constants.validSourceExpiryRange))
     .map(Number) // guaranteed to fit based on the clamping
@@ -778,7 +791,7 @@ function singleReportWindow(
 }
 
 function defaultEventReportWindows(
-  ctx: Context,
+  ctx: SourceContext,
   end: number
 ): EventReportWindows {
   const endTimes = constants.defaultEarlyEventLevelReportWindows[
@@ -789,7 +802,7 @@ function defaultEventReportWindows(
 }
 
 function eventReportWindow(
-  ctx: Context,
+  ctx: SourceContext,
   j: Json,
   expiry: Maybe<number>
 ): Maybe<EventReportWindows> {
@@ -798,13 +811,13 @@ function eventReportWindow(
   )
 }
 
-function eventLevelEpsilon(ctx: Context, j: Json): Maybe<number> {
+function eventLevelEpsilon(ctx: RegistrationContext, j: Json): Maybe<number> {
   return number(ctx, j).filter((n) =>
     isInRange(ctx, n, 0, ctx.vsv.maxSettableEventLevelEpsilon)
   )
 }
 
-function channelCapacity(ctx: Context, s: Source): void {
+function channelCapacity(ctx: SourceContext, s: Source): void {
   const perTriggerDataConfigs = s.triggerSpecs.flatMap((spec) =>
     Array(spec.triggerData.size).fill(
       new privacy.PerTriggerDataConfig(
@@ -910,7 +923,7 @@ type TriggerSpecDeps = {
 }
 
 function triggerSpec(
-  ctx: Context,
+  ctx: SourceContext,
   j: Json,
   deps: TriggerSpecDeps
 ): Maybe<TriggerSpec> {
@@ -942,7 +955,7 @@ function triggerSpec(
 }
 
 function triggerSpecs(
-  ctx: Context,
+  ctx: SourceContext,
   j: Json,
   deps: TriggerSpecDeps
 ): Maybe<TriggerSpec[]> {
@@ -979,7 +992,7 @@ function triggerSpecs(
 }
 
 function defaultTriggerSpecs(
-  ctx: Context,
+  ctx: SourceContext,
   eventReportWindows: Maybe<EventReportWindows>,
   maxEventLevelReports: Maybe<number>
 ): Maybe<TriggerSpec[]> {
@@ -1077,7 +1090,7 @@ export type Source = CommonDebug &
     eventLevelEpsilon: number
   }
 
-function source(ctx: Context, j: Json): Maybe<Source> {
+function source(ctx: SourceContext, j: Json): Maybe<Source> {
   return object(ctx, j)
     .map((j) => {
       const expiryVal = field(
@@ -1088,7 +1101,8 @@ function source(ctx: Context, j: Json): Maybe<Source> {
 
       const eventReportWindowsVal = exclusive(
         {
-          event_report_window: (ctx, j) => eventReportWindow(ctx, j, expiryVal),
+          event_report_window: (ctx: SourceContext, j) =>
+            eventReportWindow(ctx, j, expiryVal),
           event_report_windows: (ctx, j) =>
             eventReportWindows(ctx, j, expiryVal),
         },
@@ -1110,7 +1124,7 @@ function source(ctx: Context, j: Json): Maybe<Source> {
       const triggerSpecsVal = ctx.parseFullFlex
         ? field(
             'trigger_specs',
-            (ctx, j) =>
+            (ctx: SourceContext, j) =>
               triggerSpecs(ctx, j, {
                 expiry: expiryVal,
                 eventReportWindows: eventReportWindowsVal,
@@ -1168,7 +1182,7 @@ export type AggregatableTriggerDatum = FilterPair & {
 }
 
 function aggregatableTriggerData(
-  ctx: Context,
+  ctx: RegistrationContext,
   j: Json
 ): Maybe<AggregatableTriggerDatum[]> {
   return array(ctx, j, (ctx, j) =>
@@ -1205,7 +1219,10 @@ export type EventTriggerDatum = FilterPair &
     value: number
   }
 
-function eventTriggerData(ctx: Context, j: Json): Maybe<EventTriggerDatum[]> {
+function eventTriggerData(
+  ctx: RegistrationContext,
+  j: Json
+): Maybe<EventTriggerDatum[]> {
   return array(ctx, j, (ctx, j) =>
     struct(ctx, j, {
       triggerData: field('trigger_data', triggerData, 0n),
@@ -1224,7 +1241,7 @@ function eventTriggerData(ctx: Context, j: Json): Maybe<EventTriggerDatum[]> {
 export type AggregatableDedupKey = FilterPair & DedupKey
 
 function aggregatableDedupKeys(
-  ctx: Context,
+  ctx: RegistrationContext,
   j: Json
 ): Maybe<AggregatableDedupKey[]> {
   return array(ctx, j, (ctx, j) =>
@@ -1339,7 +1356,7 @@ export type Trigger = CommonDebug &
     triggerContextID: string | null
   }
 
-function trigger(ctx: Context, j: Json): Maybe<Trigger> {
+function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
   return object(ctx, j)
     .map((j) => {
       const aggregatableSourceRegTimeVal = field(
@@ -1383,15 +1400,11 @@ function trigger(ctx: Context, j: Json): Maybe<Trigger> {
     .peek((t) => warnInconsistentAggregatableKeys(ctx, t))
 }
 
-function validateJSON<T>(
+function validateJSON<T, C extends Context = Context>(
+  ctx: C,
   json: string,
-  f: CtxFunc<Json, Maybe<T>>,
-  vsv: Readonly<VendorSpecificValues>,
-  sourceType: SourceType, // irrelevant for triggers
-  parseFullFlex: boolean
-): [context.ValidationResult, Maybe<T>] {
-  const ctx = new Context(vsv, sourceType, parseFullFlex)
-
+  f: CtxFunc<C, Json, Maybe<T>>
+): [ValidationResult, Maybe<T>] {
   let value
   try {
     value = JSON.parse(json)
@@ -1409,14 +1422,22 @@ export function validateSource(
   vsv: Readonly<VendorSpecificValues>,
   sourceType: SourceType,
   parseFullFlex: boolean = false
-): [context.ValidationResult, Maybe<Source>] {
-  return validateJSON(json, source, vsv, sourceType, parseFullFlex)
+): [ValidationResult, Maybe<Source>] {
+  return validateJSON(
+    new SourceContext(vsv, parseFullFlex, sourceType),
+    json,
+    source
+  )
 }
 
 export function validateTrigger(
   json: string,
   vsv: Readonly<VendorSpecificValues>,
   parseFullFlex: boolean = false
-): [context.ValidationResult, Maybe<Trigger>] {
-  return validateJSON(json, trigger, vsv, SourceType.navigation, parseFullFlex)
+): [ValidationResult, Maybe<Trigger>] {
+  return validateJSON(
+    new RegistrationContext(vsv, parseFullFlex),
+    json,
+    trigger
+  )
 }
