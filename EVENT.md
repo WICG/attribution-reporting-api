@@ -668,7 +668,10 @@ set by the reporting origin:
 ```http
 Set-Cookie: ar_debug=1; SameSite=None; Secure; HttpOnly
 ```
-If a cookie of this form is not present, debugging information will be ignored.
+If a cookie of this form is not present, debugging information will be ignored. Additionally,
+browsers may choose to enable debugging for specific use-cases (for example, reporting origins
+can enable debugging without the cookie check for
+[Mode B groups during Chrome-facilitated testing](https://developers.google.com/privacy-sandbox/setup/web/chrome-facilitated-testing#mode-b)). 
 
 Note that in the context of proposals such as
 [CHIPS](https://github.com/privacycg/CHIPS), the cookie must be unpartitioned in
