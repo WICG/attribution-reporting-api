@@ -22,6 +22,8 @@ const pathfulTmpl = document.querySelector(
   '#pathful-issue'
 ) as HTMLTemplateElement
 
+const flexCheckbox = form.elements.namedItem('flex') as HTMLInputElement
+
 function pathPart(p: PathComponent): string {
   return typeof p === 'string' ? `["${p}"]` : `[${p}]`
 }
@@ -56,15 +58,27 @@ function sourceType(): SourceType {
 
 function validate(): void {
   sourceTypeFieldset.disabled = true
+  flexCheckbox.disabled = true
 
   let result
   switch (headerRadios.value) {
     case 'source':
       sourceTypeFieldset.disabled = false
-      result = validateSource(input.value, vsv.Chromium, sourceType())[0]
+      flexCheckbox.disabled = false
+      result = validateSource(
+        input.value,
+        vsv.Chromium,
+        sourceType(),
+        flexCheckbox.checked
+      )[0]
       break
     case 'trigger':
-      result = validateTrigger(input.value, vsv.Chromium)[0]
+      flexCheckbox.disabled = false
+      result = validateTrigger(
+        input.value,
+        vsv.Chromium,
+        flexCheckbox.checked
+      )[0]
       break
     case 'os-source':
       result = validateOsRegistration(input.value)
@@ -103,6 +117,8 @@ document.querySelector('#linkify')!.addEventListener('click', async () => {
     url.searchParams.set('source-type', sourceType())
   }
 
+  url.searchParams.set('flex', flexCheckbox.checked.toString())
+
   await navigator.clipboard.writeText(url.toString())
 })
 
@@ -137,5 +153,7 @@ if (st !== null && st in SourceType) {
   st = SourceType.event
 }
 sourceTypeRadios.value = st
+
+flexCheckbox.checked = params.get('flex') === 'true'
 
 validate()
