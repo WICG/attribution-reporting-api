@@ -276,6 +276,7 @@ This example configuration supports a developer who wants to optimize for value 
 
 ```jsonc
 {
+  "max_event_level_reports": 3,
   "trigger_data_matching": "exact",
   "trigger_specs": [{
     "trigger_data": [0],
@@ -335,6 +336,7 @@ This example shows how a developer can configure a source to get a count of trig
 
 ```jsonc
 {
+  "max_event_level_reports": 4,
   "trigger_data_matching": "exact",
   "trigger_specs": [{
     "trigger_data": [0],
@@ -375,10 +377,11 @@ Attributed triggers with `trigger_data` set to 0 are counted and capped at 4. Th
 
 #### Binary with more frequent reporting
 
-This example configuration supports a developer who wants to learn whether at least one conversion occurred in the first 10 days (regardless of value), but wants to receive reports at more frequent intervals than the default. Again, in this example any trigger that sets `trigger_data` to a value other than 0 is ineligible for attribution. This is why we refer to this use case as _binary_
+This example configuration supports a developer who wants to learn whether at least one conversion occurred in the first 10 days (regardless of value), but wants to receive reports at more frequent intervals than the default. Again, in this example any trigger that sets `trigger_data` to a value other than 0 is ineligible for attribution. This is why we refer to this use case as _binary_.
 
 ```jsonc
 {
+  "max_event_level_reports": 1,
   "trigger_data_matching": "exact",
   "trigger_specs": [{
     "trigger_data": [0],
