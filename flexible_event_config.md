@@ -332,7 +332,7 @@ The values are summed to 8 + 50 + 45 = 103. This yields the following reports at
 
 ### Reporting trigger counts
 
-This example shows how a developer can configure a source to get a count of triggers up to 10.
+This example shows how a developer can configure a source to get a count of triggers up to 4.
 
 ```jsonc
 {
