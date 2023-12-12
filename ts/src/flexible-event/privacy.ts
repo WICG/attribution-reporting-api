@@ -1,4 +1,5 @@
 import memoize from 'memoizee'
+var memProfile = require('memoizee/profile');
 
 export type ExcessiveInfoGainData = {
   newEps: number
@@ -55,37 +56,42 @@ export class Config {
     // 3. A[C, w_1, ..., w_B, c_1, ... , c_B] = sum(A[C - j, w_1, ..., w_B - 1, c_1, ... , c_B - j], j from 0 to min(c_B, C)) otherwise
     const helper = memoize(
       (totalCap: number, index: number, w: number, c: number): number => {
+        let numStates = 0;
         if (index === 0 && w === 0) {
-          return 1
+          numStates = 1; 
         }
 
-        if (w === 0) {
+        else if (w === 0) {
           const triggerConfig = this.perTriggerDataConfigs.at(index - 1)!
-          return helper(
+          numStates = helper(
             totalCap,
             index - 1,
             triggerConfig.numWindows,
             triggerConfig.numSummaryBuckets
           )
-        }
-
-        let sum = 0
-        const end = Math.min(c, totalCap)
-        for (let i = 0; i <= end; i++) {
-          sum += helper(totalCap - i, index, w - 1, c - i)
-        }
-        return sum
+        } else {
+          let sum = 0
+          const end = Math.min(c, totalCap)
+          for (let i = 0; i <= end; i++) {
+            sum += helper(totalCap - i, index, w - 1, c - i)
+          }
+          numStates = sum
+          }
+          console.log(totalCap, index, w, c, "->", numStates);
+          return numStates;
       }
     )
 
     const lastConfig = this.perTriggerDataConfigs.at(-1)!
     const dataCardinality = this.perTriggerDataConfigs.length
-    return helper(
+    let r = helper(
       this.maxEventLevelReports,
       dataCardinality - 1,
       lastConfig.numWindows,
       lastConfig.numSummaryBuckets
     )
+    console.log(memProfile.log());
+    return r;
   }
 
   computeConfigData(epsilon: number, infoGainMax: number): ConfigData {
