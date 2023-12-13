@@ -373,10 +373,7 @@ The initial implementation strategy for the aggregation service is as follows:
 * During the initial experiment, we expect that adtechs will be able
   to access decrypted payloads via a debugging mode tied to the
   availability of third party cookies.
-* Our initial experiment will support a range of epsilon values for
-  testing, up to `epsilon=64`. This allows adtechs to experiment with
-  different aggregation strategies and provide feedback on the utility
-  of the system, with different privacy parameters.
+* During the third-party cookie deprecation, the aggregation service will support a range of epsilon values up to 64. This allows adtechs to experiment with different aggregation strategies and provide feedback on the utility of the system with different privacy parameters. We will provide advanced notice to the ecosystem before the epsilon range values are updated.
 
 ## How this proposal addresses our design goals
 
