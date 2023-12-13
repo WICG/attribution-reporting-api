@@ -868,7 +868,7 @@ In the above example, the browser could have chosen to generate three reports:
 The browser may apply storage limits in order to prevent excessive resource
 usage.
 
-Strawman: There should be a limit of 1024 pending sources per source origin.
+Strawman: There should be a limit of 4096 pending sources per source origin.
 
 Strawman: There should be a limit of 1024 pending event-level reports per
 destination site.
