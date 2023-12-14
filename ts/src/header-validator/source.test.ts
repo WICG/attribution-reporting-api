@@ -76,11 +76,11 @@ const testCases: TestCase[] = [
     name: 'unknown-field',
     json: `{
       "destination": "https://a.test",
-      "trigger_specs": []
+      "x": []
     }`,
     expectedWarnings: [
       {
-        path: ['trigger_specs'],
+        path: ['x'],
         msg: 'unknown field',
       },
     ],
@@ -1326,7 +1326,7 @@ const testCases: TestCase[] = [
     ],
   },
 
-  // Full Flex
+  // Flex
   // TODO: compare returned trigger specs against expected values
 
   {
@@ -1374,6 +1374,36 @@ const testCases: TestCase[] = [
     ],
   },
   {
+    name: 'top-level-trigger-data-and-trigger-specs',
+    json: `{
+      "destination": "https://a.test",
+      "trigger_data": [],
+      "trigger_specs": []
+    }`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'mutually exclusive fields: trigger_data, trigger_specs',
+      },
+    ],
+  },
+  {
+    name: 'top-level-trigger-data-and-trigger-specs-ignored',
+    json: `{
+      "destination": "https://a.test",
+      "max_event_level_reports": 0,
+      "trigger_data": [],
+      "trigger_specs": []
+    }`,
+    expectedWarnings: [
+      {
+        path: ['trigger_specs'],
+        msg: 'unknown field',
+      },
+    ],
+  },
+  {
     name: 'trigger-data-missing',
     json: `{
       "destination": "https://a.test",
@@ -1391,12 +1421,11 @@ const testCases: TestCase[] = [
     name: 'trigger-data-wrong-type',
     json: `{
       "destination": "https://a.test",
-      "trigger_specs": [{"trigger_data": 1}]
+      "trigger_data": 1
     }`,
-    parseFullFlex: true,
     expectedErrors: [
       {
-        path: ['trigger_specs', 0, 'trigger_data'],
+        path: ['trigger_data'],
         msg: 'must be a list',
       },
     ],
@@ -1405,12 +1434,11 @@ const testCases: TestCase[] = [
     name: 'trigger-data-value-wrong-type',
     json: `{
       "destination": "https://a.test",
-      "trigger_specs": [{"trigger_data": ["1"]}]
+      "trigger_data": ["1"]
     }`,
-    parseFullFlex: true,
     expectedErrors: [
       {
-        path: ['trigger_specs', 0, 'trigger_data', 0],
+        path: ['trigger_data', 0],
         msg: 'must be a number',
       },
     ],
@@ -1419,12 +1447,11 @@ const testCases: TestCase[] = [
     name: 'trigger-data-value-not-integer',
     json: `{
       "destination": "https://a.test",
-      "trigger_specs": [{"trigger_data": [1.5]}]
+      "trigger_data": [1.5]
     }`,
-    parseFullFlex: true,
     expectedErrors: [
       {
-        path: ['trigger_specs', 0, 'trigger_data', 0],
+        path: ['trigger_data', 0],
         msg: 'must be an integer',
       },
     ],
@@ -1433,12 +1460,11 @@ const testCases: TestCase[] = [
     name: 'trigger-data-value-negative',
     json: `{
       "destination": "https://a.test",
-      "trigger_specs": [{"trigger_data": [-1]}]
+      "trigger_data": [-1]
     }`,
-    parseFullFlex: true,
     expectedErrors: [
       {
-        path: ['trigger_specs', 0, 'trigger_data', 0],
+        path: ['trigger_data', 0],
         msg: 'must be in the range [0, 4294967295]',
       },
     ],
@@ -1447,12 +1473,11 @@ const testCases: TestCase[] = [
     name: 'trigger-data-value-exceeds-max',
     json: `{
       "destination": "https://a.test",
-      "trigger_specs": [{"trigger_data": [4294967296]}]
+      "trigger_data": [4294967296]
     }`,
-    parseFullFlex: true,
     expectedErrors: [
       {
-        path: ['trigger_specs', 0, 'trigger_data', 0],
+        path: ['trigger_data', 0],
         msg: 'must be in the range [0, 4294967295]',
       },
     ],
@@ -1461,14 +1486,11 @@ const testCases: TestCase[] = [
     name: 'trigger-data-duplicated-within',
     json: `{
       "destination": "https://a.test",
-      "trigger_specs": [
-        { "trigger_data": [1, 2, 1] }
-      ]
+      "trigger_data": [1, 2, 1]
     }`,
-    parseFullFlex: true,
     expectedErrors: [
       {
-        path: ['trigger_specs', 0, 'trigger_data', 2],
+        path: ['trigger_data', 2],
         msg: 'duplicate value 1',
       },
     ],
@@ -1491,17 +1513,11 @@ const testCases: TestCase[] = [
     ],
   },
   {
-    name: 'trigger-data-too-many-within',
-    json: JSON.stringify({
-      destination: 'https://a.test',
-      trigger_specs: [
-        {
-          trigger_data: Array(33)
-            .fill(0)
-            .map((_, i) => i),
-        },
-      ],
-    }),
+    name: 'trigger-spec-trigger-data-empty',
+    json: `{
+      "destination": "https://a.test",
+      "trigger_specs": [{"trigger_data": []}]
+    }`,
     parseFullFlex: true,
     expectedErrors: [
       {
@@ -1749,7 +1765,6 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_data_matching": 3
     }`,
-    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_data_matching'],
@@ -1763,7 +1778,6 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "trigger_data_matching": "EXACT"
     }`,
-    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_data_matching'],
@@ -1776,9 +1790,8 @@ const testCases: TestCase[] = [
     json: `{
       "destination": "https://a.test",
       "trigger_data_matching": "modulus",
-      "trigger_specs": [{"trigger_data": [1]}]
+      "trigger_data": [1]
     }`,
-    parseFullFlex: true,
     expectedErrors: [
       {
         path: ['trigger_data_matching'],
@@ -1787,7 +1800,7 @@ const testCases: TestCase[] = [
     ],
   },
   {
-    name: 'trigger-data-matching-modulus-trigger-data-not-contiguous',
+    name: 'trigger-data-matching-modulus-trigger-data-not-contiguous-across',
     json: `{
       "destination": "https://a.test",
       "trigger_data_matching": "modulus",
@@ -1805,7 +1818,21 @@ const testCases: TestCase[] = [
     ],
   },
   {
-    name: 'trigger-data-matching-modulus-valid',
+    name: 'trigger-data-matching-modulus-trigger-data-not-contiguous-within',
+    json: `{
+      "destination": "https://a.test",
+      "trigger_data_matching": "modulus",
+      "trigger_data": [0, 1, 3]
+    }`,
+    expectedErrors: [
+      {
+        path: ['trigger_data_matching'],
+        msg: 'trigger_data must form a contiguous sequence of integers starting at 0 for modulus',
+      },
+    ],
+  },
+  {
+    name: 'trigger-data-matching-modulus-valid-across',
     json: `{
       "destination": "https://a.test",
       "trigger_data_matching": "modulus",
@@ -1817,15 +1844,22 @@ const testCases: TestCase[] = [
     }`,
     parseFullFlex: true,
   },
+  {
+    name: 'trigger-data-matching-modulus-valid-within',
+    json: `{
+      "destination": "https://a.test",
+      "trigger_data_matching": "modulus",
+      "trigger_data": [1, 0, 2, 3]
+    }`,
+  },
 
   {
     name: 'no-reports-but-specs',
     json: `{
       "destination": "https://a.test",
       "max_event_level_reports": 0,
-      "trigger_specs": [{"trigger_data": [1]}]
+      "trigger_data": [1]
     }`,
-    parseFullFlex: true,
     expectedWarnings: [
       {
         path: [],
@@ -1838,9 +1872,8 @@ const testCases: TestCase[] = [
     json: `{
       "destination": "https://a.test",
       "max_event_level_reports": 1,
-      "trigger_specs": []
+      "trigger_data": []
     }`,
-    parseFullFlex: true,
     expectedWarnings: [
       {
         path: [],

@@ -918,9 +918,13 @@ function fullFlexTriggerDatum(ctx: Context, j: Json): Maybe<number> {
     .filter((n) => isInRange(ctx, n, 0, UINT32_MAX))
 }
 
-function triggerDataSet(ctx: Context, j: Json): Maybe<Set<number>> {
+function triggerDataSet(
+  ctx: Context,
+  j: Json,
+  allowEmpty: boolean = false
+): Maybe<Set<number>> {
   return set(ctx, j, fullFlexTriggerDatum, {
-    minLength: 1,
+    minLength: allowEmpty ? 0 : 1,
     maxLength: constants.maxTriggerDataPerSource,
     requireDistinct: true,
   })
@@ -932,13 +936,17 @@ type TriggerSpecDeps = {
   maxEventLevelReports: Maybe<number>
 }
 
+function makeDefaultSummaryBuckets(maxEventLevelReports: number): number[] {
+  return Array.from({ length: maxEventLevelReports }, (_, i) => i + 1)
+}
+
 function triggerSpec(
   ctx: SourceContext,
   j: Json,
   deps: TriggerSpecDeps
 ): Maybe<TriggerSpec> {
-  const defaultSummaryBuckets = deps.maxEventLevelReports.map((n) =>
-    Array.from({ length: n }, (_, i) => i + 1)
+  const defaultSummaryBuckets = deps.maxEventLevelReports.map(
+    makeDefaultSummaryBuckets
   )
 
   return struct(ctx, j, {
@@ -998,6 +1006,33 @@ function triggerSpecs(
     }
 
     return ok
+  })
+}
+
+function triggerSpecsFromTriggerData(
+  ctx: Context,
+  j: Json,
+  deps: TriggerSpecDeps
+): Maybe<TriggerSpec[]> {
+  return triggerDataSet(ctx, j, /*allowEmpty=*/ true).map((triggerData) => {
+    if (
+      triggerData.size === 0 ||
+      deps.eventReportWindows.value === undefined ||
+      deps.maxEventLevelReports.value === undefined
+    ) {
+      return []
+    }
+
+    return [
+      {
+        eventReportWindows: deps.eventReportWindows.value,
+        summaryBuckets: makeDefaultSummaryBuckets(
+          deps.maxEventLevelReports.value
+        ),
+        summaryWindowOperator: SummaryWindowOperator.count,
+        triggerData: triggerData,
+      },
+    ]
   })
 }
 
@@ -1131,18 +1166,25 @@ function source(ctx: SourceContext, j: Json): Maybe<Source> {
         maxEventLevelReportsVal
       )
 
-      const triggerSpecsVal = ctx.parseFullFlex
-        ? field(
-            'trigger_specs',
-            (ctx: SourceContext, j) =>
-              triggerSpecs(ctx, j, {
-                expiry: expiryVal,
-                eventReportWindows: eventReportWindowsVal,
-                maxEventLevelReports: maxEventLevelReportsVal,
-              }),
-            defaultTriggerSpecsVal
-          )(ctx, j)
-        : defaultTriggerSpecsVal
+      const triggerSpecsDeps = {
+        expiry: expiryVal,
+        eventReportWindows: eventReportWindowsVal,
+        maxEventLevelReports: maxEventLevelReportsVal,
+      }
+
+      const triggerSpecsVal = exclusive(
+        {
+          trigger_data: (ctx, j) =>
+            triggerSpecsFromTriggerData(ctx, j, triggerSpecsDeps),
+          ...(ctx.parseFullFlex
+            ? {
+                trigger_specs: (ctx: SourceContext, j) =>
+                  triggerSpecs(ctx, j, triggerSpecsDeps),
+              }
+            : {}),
+        },
+        defaultTriggerSpecsVal
+      )(ctx, j)
 
       return struct(ctx, j, {
         aggregatableReportWindow: field(
@@ -1164,13 +1206,11 @@ function source(ctx: SourceContext, j: Json): Maybe<Source> {
         sourceEventId: field('source_event_id', uint64, 0n),
         triggerSpecs: () => triggerSpecsVal,
 
-        triggerDataMatching: ctx.parseFullFlex
-          ? field(
-              'trigger_data_matching',
-              (ctx, j) => triggerDataMatching(ctx, j, triggerSpecsVal),
-              TriggerDataMatching.modulus
-            )
-          : () => some(TriggerDataMatching.modulus),
+        triggerDataMatching: field(
+          'trigger_data_matching',
+          (ctx, j) => triggerDataMatching(ctx, j, triggerSpecsVal),
+          TriggerDataMatching.modulus
+        ),
 
         ...commonDebugFields,
         ...priorityField,

@@ -104,26 +104,16 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Next trigger_spec
   }, ...],
 
-  // Specifies how the 64-bit unsigned trigger_data from the trigger is matched
-  // against the source's trigger_specs trigger_data, which is 32-bit. Defaults
-  // to "modulus".
-  //
-  // If "exact", the trigger_data must exactly match a value contained in the
-  // source's trigger_specs; if there is no such match, no event-level
-  // attribution takes place.
-  //
-  // If "modulus", the set of all trigger_data values across all trigger_specs
-  // for the source must be a contiguous sequence of integers starting at 0.
-  // The trigger's trigger_data is taken modulus the cardinality of this
-  // sequence and then matched against the trigger specs. See below for an
-  // example. It is an error to use "modulus" if the trigger specs do not
-  // contain such a sequence.
+  // See description in
+  // https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#data-limits-and-noise
   "trigger_data_matching": <one of "exact" or "modulus">,
 
-  // See description in phase 1.
+  // See description in
+  // https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-varying-frequency-and-number-of-reports
   "max_event_level_reports": <int>,
 
-  // See description in phase 1.
+  // See description in
+  // https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-varying-frequency-and-number-of-reports
   "event_report_windows": {
     "start_time": <int>,
     "end_times": [<int>, ...]
