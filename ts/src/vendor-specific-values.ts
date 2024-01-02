@@ -8,7 +8,7 @@ export type VendorSpecificValues = {
 export const Chromium: Readonly<VendorSpecificValues> = {
   maxEventLevelChannelCapacityPerSource: {
     [SourceType.event]: 6.5,
-    [SourceType.navigation]: 11.46173,
+    [SourceType.navigation]: 11.5,
   },
   maxSettableEventLevelEpsilon: 14,
 }
