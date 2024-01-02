@@ -69,7 +69,7 @@ const infoGainTests = [
   {
     numStates: 2925,
     epsilon: 14,
-    expected: 11.5,
+    expected: 11.461727965384876,
   },
   {
     numStates: 3,
@@ -138,7 +138,7 @@ test('computeConfigData', async (t) => {
       ),
       {
         numStates: 2925,
-        infoGain: 11.5,
+        infoGain: 11.461727965384876,
         flipProb: 0.0024263221679834087,
       }
     )
