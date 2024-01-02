@@ -1210,7 +1210,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: [],
-        msg: 'exceeds max event-level channel capacity per navigation source (11.5 > 0.00)',
+        msg: 'exceeds max event-level channel capacity per navigation source (11.46 > 0.00)',
       },
     ],
   },
