@@ -23,7 +23,7 @@ Chromium's implementation assigns the following values:
 | [Max attribution reporting origins per rate-limit window][] | [10][max attribution reporting origins per rate-limit window value] |
 | [Max attributions per rate-limit window][] | [100][max attributions per rate-limit window value] |
 | [Randomized aggregatable report delay][] | [10 minutes][randomized aggregatable report delay value] |
-| [Max information gain for navigation sources][] | [11.46 bits][max information gain for navigations value] |
+| [Max information gain for navigation sources][] | [11.5 bits][max information gain for navigations value] |
 | [Max information gain for event sources][] | [6.5 bits][max information gain for events value] |
 
 [Max pending sources per source origin]: https://wicg.github.io/attribution-reporting-api/#max-pending-sources-per-source-origin
