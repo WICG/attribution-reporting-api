@@ -460,7 +460,7 @@ following keys:
 
 ### Data Encoding
 
-The source event id and trigger data should be specified in a way that is
+The trigger data should be specified in a way that is
 amenable to the privacy assurances a browser wants to provide (i.e. the number
 of distinct data states supported).
 
