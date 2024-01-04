@@ -936,7 +936,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     ],
   },
   {
-    name: 'aggregation-coordinator-origin-untrustworthy',
+    name: 'aggregation-coordinator-origin-path-ignored',
     json: `{"aggregation_coordinator_origin": "https://b.a.test/x"}`,
     expectedWarnings: [
       {
