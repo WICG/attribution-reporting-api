@@ -40,7 +40,7 @@ The usefulness of this page depends on testers sharing information and updates; 
 | Company / Party | Industry or vertical | Est. Testing Timeframe | Link to testing plan and/or learnings (optional) | How to contact you (optional) |
 | --------------- | -------------------- | ---------------------- | ------------------------------------- | ------------------ |
 | Criteo | Demand-side platform (DSP) | Started in 2022, long term commitment | [Criteo’s First Look at the Attribution Reporting API](https://medium.com/criteo-engineering/an-update-on-fledge-chrome-testing-d0046430a3ec) | privacy-sandbox-testing@criteo.com | 
-| Teads | DSP & SSP | January 2024 | | privacysandbox@teads.com |
+| Teads | DSP & SSP | March 15th 2024 - May 15th 2024 | | privacysandbox@teads.com |
 | SMN | Ad tech services | no later than January 31, 2024 |  | privacy-sandbox-testing@so-netmedia.jp |
 | Yahoo! JAPAN | Ad tech services | 2022-2023 | [Report](https://github.com/WICG/attribution-reporting-api/issues/201) |  | 
 | NextRoll | Demand-side platform (DSP) | 2024-01-30 | coming soon | privacysandbox@nextroll.com |
