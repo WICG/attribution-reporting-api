@@ -310,7 +310,34 @@ const testCases: TestCase[] = [
       },
     ],
   },
-  // TODO: add tests for exceeding size limits
+  {
+    name: 'filter-data-too-many-keys',
+    json: JSON.stringify({
+      destination: 'https://a.test',
+      filter_data: Object.fromEntries(
+        Array.from({ length: 51 }, (_, i) => [`k${i}`, []])
+      ),
+    }),
+    expectedErrors: [
+      {
+        path: ['filter_data'],
+        msg: 'exceeds the maximum number of keys (50)',
+      },
+    ],
+  },
+  {
+    name: 'filter-data-too-many-values',
+    json: JSON.stringify({
+      destination: 'https://a.test',
+      filter_data: { a: Array.from({ length: 51 }, (_, i) => [`${i}`, []]) },
+    }),
+    expectedErrors: [
+      {
+        path: ['filter_data', 'a'],
+        msg: 'length must be in the range [0, 50]',
+      },
+    ],
+  },
 
   {
     name: 'aggregation-keys-wrong-type',
@@ -416,7 +443,21 @@ const testCases: TestCase[] = [
       },
     ],
   },
-  // TODO: add tests for exceeding size limits
+  {
+    name: 'aggregation-keys-too-many-keys',
+    json: JSON.stringify({
+      destination: 'https://a.test',
+      aggregation_keys: Object.fromEntries(
+        Array.from({ length: 21 }, (_, i) => [`k${i}`, '0x1'])
+      ),
+    }),
+    expectedErrors: [
+      {
+        path: ['aggregation_keys'],
+        msg: 'exceeds the maximum number of keys (20)',
+      },
+    ],
+  },
 
   {
     name: 'source-event-id-wrong-type',
