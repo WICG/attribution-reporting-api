@@ -1209,6 +1209,9 @@ function aggregatableKeyValue(
 }
 
 function aggregatableValues(ctx: Context, j: Json): Maybe<Map<string, number>> {
+  return typeSwitch(ctx, j, {
+    object: (ctx, j) => keyValues(ctx, j, aggregatableKeyValue)
+    list: (ctx, j) => set(ctx, j, suitableSite, { minLength: 1, maxLength: 3 }),
   return keyValues(ctx, j, aggregatableKeyValue)
 }
 
@@ -1350,7 +1353,7 @@ export type Trigger = CommonDebug &
     aggregatableDedupKeys: AggregatableDedupKey[]
     aggregatableTriggerData: AggregatableTriggerDatum[]
     aggregatableSourceRegistrationTime: AggregatableSourceRegistrationTime
-    aggregatableValues: Map<string, number>
+    aggregatableValues: Map<string, number> | Map<string, number>[]
     aggregationCoordinatorOrigin: string | null
     eventTriggerData: EventTriggerDatum[]
     triggerContextID: string | null

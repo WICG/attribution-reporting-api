@@ -797,6 +797,18 @@ An aggregatable trigger data is a [=struct=] with the following items:
 
 </dl>
 
+<h3 dfn-type=dfn>Aggregatable value</h3>
+
+An aggregatable value is a [=struct=] with the following items:
+
+<dl dfn-for="aggregatable value">
+: <dfn>values</dfn>
+:: An [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose [=map/value|values=] are non-negative 32-bit integers.
+: <dfn>filters</dfn>
+:: A [=list=] of [=filter configs=].
+: <dfn>negated filters</dfn>
+:: A [=list=] of [=filter configs=].
+
 <h3 dfn-type=dfn>Aggregatable dedup key</h3>
 
 An aggregatable dedup key is a [=struct=] with the following items:
@@ -869,8 +881,7 @@ An attribution trigger is a [=struct=] with the following items:
 : <dfn>aggregatable trigger data</dfn>
 :: A [=list=] of [=aggregatable trigger data=].
 : <dfn>aggregatable values</dfn>
-:: An [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
-    [=map/value|values=] are non-negative 32-bit integers.
+:: A [=list=] of [=aggregatable value=].
 : <dfn>aggregatable dedup keys</dfn>
 :: A [=list=] of [=aggregatable dedup key=].
 : <dfn>verifications</dfn>
@@ -2399,18 +2410,50 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
     1. [=list/Append=] |aggregatableTrigger| to |aggregatableTriggerData|.
 1. Return |aggregatableTriggerData|.
 
+To <dfn>parse aggregatable key-values</dfn> given an [=ordered map=] |map|:
+
+1. [=map/iterate|For each=] |key| → |value| of |values|:
+    1. If |key|'s [=string/length=] is greater than the [=max length per aggregation key identifier=],
+        return null.
+    1. If |value| is not an integer, return null.
+    1. If |value| is less than or equal to 0, return null.
+    1. If |value| is greater than [=allowed aggregatable budget per source=], return null.
+1. Return |values|.
+
 To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
 
 1. If |map|["`aggregatable_values`"] does not [=map/exist=], return «[]».
 1. Let |values| be |map|["`aggregatable_values`"].
-1. If |values| is not an [=ordered map=], return null.
-1. [=map/iterate|For each=] |key| → |value| of |values|:
-     1. If |key|'s [=string/length=] is greater than the [=max length per aggregation key identifier=],
-         return null.
-     1. If |value| is not an integer, return null.
-     1. If |value| is less than or equal to 0, return null.
-     1. If |value| is greater than [=allowed aggregatable budget per source=], return null.
-1. Return |values|.
+1. If |values| is not a [=ordered map=] or a [=list=], return null.
+1. Let |aggregatableValues| be a [=list=] of [=aggregatable value=], initially empty.
+1. If |values| is an [=ordered map=]:
+    1. Let |aggregatableKeyValues| be the result of running [=parse aggregatable key-values=] with |values|.
+    1. Let |aggregatableValue| be a new [=aggregatable value=] with the items:
+        : [=aggregatable value/values=]
+        :: |aggregatableKeyValues|
+        : [=aggregatable value/filters=]
+        :: «[]»
+        : [=aggregatable value/negated filters=]
+        :: «[]»
+    1. [=list/Append=] |aggregatableValue| to |aggregatableValues|.
+    1. Return |aggregatableValues|
+1. [=list/iterate|For each=] |value| of |values|:
+    1. If |value| is not an [=ordered map=], return null.
+    1. If |value|["`values`"] does not [=map/exist=], return null.
+    1. Let |aggregatableKeyValues| be the result of running [=parse aggregatable key-values=] with |value|["`values`"].
+    1. If |aggregatableKeyValues| is null, return null.
+    1. Let |filterPair| be the result of running [=parse a filter pair=] with
+        |aggregatableKeyValues|.
+    1. If |filterPair| is null, return null.
+    1. Let |aggregatableValue| be a new [=aggregatable value=] with the items:
+        : [=aggregatable value/values=]
+        :: |aggregatableKeyValues|
+        : [=aggregatable value/filters=]
+        :: |filterPair|[0]
+        : [=aggregatable value/negated filters=]
+        :: |filterPair|[1]
+    1. [=list/Append=] |aggregatableValue| to |aggregatableValues|.
+1. Return |aggregatableValues|.
 
 To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
 
@@ -2665,14 +2708,21 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
             [=aggregatable trigger data/key piece=].
 1. Let |aggregatableValues| be |trigger|'s [=attribution trigger/aggregatable values=].
 1. Let |contributions| be a new empty [=list=].
-1. [=map/iterate|For each=] |id| → |key| of |aggregationKeys|:
-    1. If |aggregatableValues|[|id|] does not [=map/exist=], [=iteration/continue=].
-    1. Let |contribution| be a new [=aggregatable contribution=] with the items:
-        : [=aggregatable contribution/key=]
-        :: |key|
-        : [=aggregatable contribution/value=]
-        :: |aggregatableValues|[|id|]
-    1. [=list/Append=] |contribution| to |contributions|.
+1. [=list/iterate|For each=] |aggregatableValue| of |aggregatableValues|:
+    1. [=map/iterate|For each=] |id| → |key| of |aggregationKeys|:
+        1. If |aggregatableValue|'s [=aggregatable value/values=][|id|] does not [=map/exist=] or if
+            the result of running [=match an attribution source's filter data against filters and negated filters=] with
+            |source|, |aggregatableValue|'s [=aggregatable value/filters=],
+            |triggerData|'s [=aggregatable value/negated filters=], and
+            |trigger|'s [=attribution trigger/trigger time=]
+            is false, [=iteration/continue=]:.
+        1. Let |contribution| be a new [=aggregatable contribution=] with the items:
+            : [=aggregatable contribution/key=]
+            :: |key|
+            : [=aggregatable contribution/value=]
+            :: |aggregatableValues|[|id|]
+        1. [=list/Append=] |contribution| to |contributions|.
+    1. If |contributions| is not [=list/is empty|empty=], [=iteration/Break=].
 1. Return |contributions|.
 
 <h3 id="can-source-create-aggregatable-contributions">Can source create aggregatable contributions</h3>
