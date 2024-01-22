@@ -35,3 +35,8 @@ npm run flexible-event -- -w 1,2,3 -b 4,5,6
 ```sh
 npm run flexible-event -- -f /path/to/source_registration.json
 ```
+
+Here is an example which matches the default config for navigation sources:
+```sh
+npm run flexible-event -- -w 3,3,3,3,3,3,3,3 -b 3,3,3,3,3,3,3,3 -m 3 -t navigation
+```
