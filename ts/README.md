@@ -36,7 +36,7 @@ essentially an unzipped list of two-tuples, one per trigger data.
 npm run flexible-event -- -w 1,2,3 -b 4,5,6
 ```
 
-The utility also will parse (in a rudimentary way) the source registration
+The utility also will parse the source registration
 JSON to compute the number of windows / summary buckets.
 
 ```sh
