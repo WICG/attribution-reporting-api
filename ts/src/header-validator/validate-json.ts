@@ -1316,7 +1316,7 @@ function triggerContextID(
   aggregatableSourceRegTime: Maybe<AggregatableSourceRegistrationTime>
 ): Maybe<string> {
   return string(ctx, j).filter((s) => {
-    if (s.length == 0) {
+    if (s.length === 0) {
       ctx.error(`cannot be empty`)
       return false
     }
