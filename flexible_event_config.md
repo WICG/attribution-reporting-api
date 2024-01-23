@@ -439,7 +439,7 @@ We encourage developers to suggest different use cases they may have for this AP
 
 ## Privacy considerations
 
-We will publish an [algorithm](https://github.com/WICG/attribution-reporting-api/tree/main/flexible-event) which computes the number of output states for a given source registration. From this we will be able to:
+We will publish an [algorithm](https://github.com/WICG/attribution-reporting-api/tree/main/ts#flexible-event) which computes the number of output states for a given source registration. From this we will be able to:
 
 * Compute a randomized response algorithm across the entire output space
 * Set the noise level to satisfy a certain epsilon level via a randomized response mechanism
@@ -453,4 +453,4 @@ Beyond setting noise levels, we will have some parameter limits to avoid large c
 * Maximum of 5 possible reporting windows per `trigger_data`
 * Maximum of 32 trigger data cardinality (not applicable for Phase 1: Lite Flexible Event-Level)
 
-Be mindful that using extreme values here may result in a large amount of noise, or failure to register if privacy levels ([information gain](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md)) are exceeded. The [flexible-event script](https://github.com/WICG/attribution-reporting-api/tree/main/flexible-event) can be used to analyze different configurations that fall within the privacy levels.
+Be mindful that using extreme values here may result in a large amount of noise, or failure to register if privacy levels ([information gain](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md)) are exceeded. The [flexible-event script](https://github.com/WICG/attribution-reporting-api/tree/main/ts#flexible-event) can be used to analyze different configurations that fall within the privacy levels.
