@@ -61,8 +61,6 @@ function struct<T extends object, C extends Context = Context>(
 
     if (warnUnknown) {
       for (const key in d) {
-        console.log("timestamp: " + Date.now() +" - unknown")
-        console.log(d)
         ctx.scope(key, () => ctx.warning('unknown field'))
       }
     }
@@ -82,7 +80,6 @@ function field<T, C extends Context = Context>(
     ctx.scope(name, () => {
       const v = d[name]
       if (v === undefined) {
-        console.log(name + " not found");
         if (valueIfAbsent === undefined) {
           ctx.error('required')
           return None
@@ -1217,14 +1214,13 @@ function aggregatableKeyValue(
 
 function aggregatableValues(ctx: Context, j: Json): Maybe<AggregatableValue[]> {
   return typeSwitch(ctx, j, {
-    object: (ctx, j) => {console.log(j); return struct(ctx, j, {
+    object: (ctx, j) => struct(ctx, j, {
       aggregatableValue: (ctx, j) => keyValues(ctx, j, aggregatableKeyValue),
-      ...filterFields}).map((v) => [v])},
-      list: (ctx, j) => array(ctx, j, (ctx, j) => struct(ctx, j, {
-        aggregatableValue: field('values', (ctx, j) =>  keyValues(ctx, j, aggregatableKeyValue)),
-        ...filterFields}))
-      }
-    )
+      ...filterFields}, /*warnUnknown=*/false).map((v) => [v]),
+    list: (ctx, j) => array(ctx, j, (ctx, j) => struct(ctx, j, {
+      aggregatableValue: field('values', (ctx, j) =>  keyValues(ctx, j, aggregatableKeyValue)),
+      ...filterFields}, /*warnUnknown=*/false))
+    })
 }
 
 export type EventTriggerDatum = FilterPair &
@@ -1291,6 +1287,7 @@ function aggregatableSourceRegistrationTime(
   return enumerated(ctx, j, AggregatableSourceRegistrationTime)
 }
 
+// TODO(apasel422): Update with new AggregatableValue structure.
 // function warnInconsistentAggregatableKeys(ctx: Context, t: Trigger): void {
 //   const triggerDataKeys = new Set<string>()
 
