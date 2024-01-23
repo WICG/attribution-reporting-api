@@ -81,7 +81,13 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           sourceKeys: new Set(['x']),
         },
       ],
-      aggregatableValues: new Map([['x', 5]]),
+      aggregatableValues: [
+        {
+          aggregatableValue: new Map([['x', 5]]),
+          positive: [],
+          negative: [],
+        }
+      ],
       debugKey: 5n,
       debugReporting: true,
       eventTriggerData: [
@@ -117,6 +123,27 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         },
       ],
     }),
+  },
+  {
+    name: 'aggregatable-values-list-with-filters',
+    json: `{
+      "aggregatable_values": [
+        {
+          "values": {
+            "a": 1
+          },
+          "filters": [{"g": []}, {"h": []}],
+          "not_filters": [{"g": []}, {"h": []}]
+        },
+        {
+          "values": {
+            "b": 2
+          },
+          "filters": [{"i": []}, {"j": []}],
+          "not_filters": [{"i": []}, {"j": []}]
+        }
+      ]
+    }`,
   },
   {
     name: 'or-filters',
@@ -320,7 +347,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['aggregatable_values'],
-        msg: 'must be an object',
+        msg: 'must be a list or object',
       },
     ],
   },
@@ -361,6 +388,38 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['aggregatable_values', 'aaaaaaaaaaaaaaaaaaaaaaaaaa'],
         msg: 'key exceeds max length per aggregation key identifier (26 > 25)',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-values-list-values-field-missing',
+    json: `{
+      "aggregatable_values": [
+        {
+          "a": 1
+        }
+      ]
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_values',0,'values'],
+        msg: 'aggregatable values in a list must be defined in "values" field.',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-values-list-wrong-type',
+    json: `{
+      "aggregatable_values": [
+        {
+          "values": []
+        }
+      ]
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_values',0,'values'],
+        msg: 'must be an object',
       },
     ],
   },
