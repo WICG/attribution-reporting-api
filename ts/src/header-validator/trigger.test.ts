@@ -86,7 +86,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           aggregatableValue: new Map([['x', 5]]),
           positive: [],
           negative: [],
-        }
+        },
       ],
       debugKey: 5n,
       debugReporting: true,
@@ -402,7 +402,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregatable_values',0,'values'],
+        path: ['aggregatable_values', 0, 'values'],
         msg: 'required',
       },
     ],
@@ -418,7 +418,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregatable_values',0,'values'],
+        path: ['aggregatable_values', 0, 'values'],
         msg: 'must be an object',
       },
     ],
