@@ -81,9 +81,9 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           sourceKeys: new Set(['x']),
         },
       ],
-      aggregatableValues: [
+      aggregatableValuesConfigurations: [
         {
-          aggregatableValue: new Map([['x', 5]]),
+          values: new Map([['x', 5]]),
           positive: [],
           negative: [],
         },
@@ -404,6 +404,12 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['aggregatable_values', 0, 'values'],
         msg: 'required',
+      },
+    ],
+    expectedWarnings: [
+      {
+        msg: 'unknown field',
+        path: ['aggregatable_values', 0, 'a'],
       },
     ],
   },

@@ -1194,8 +1194,8 @@ function aggregatableTriggerData(
   )
 }
 
-export type AggregatableValue = FilterPair & {
-  aggregatableValue: Map<string, number>
+export type AggregatableValuesConfiguration = FilterPair & {
+  values: Map<string, number>
 }
 
 function aggregatableKeyValue(
@@ -1212,32 +1212,28 @@ function aggregatableKeyValue(
     )
 }
 
-function aggregatableValues(ctx: Context, j: Json): Maybe<AggregatableValue[]> {
+function aggregatableKeyValues(
+  ctx: Context,
+  j: Json
+): Maybe<Map<string, number>> {
+  return keyValues(ctx, j, aggregatableKeyValue)
+}
+
+function aggregatableValuesConfigurations(
+  ctx: Context,
+  j: Json
+): Maybe<AggregatableValuesConfiguration[]> {
   return typeSwitch(ctx, j, {
     object: (ctx, j) =>
-      struct(
-        ctx,
-        j,
-        {
-          aggregatableValue: (ctx, j) =>
-            keyValues(ctx, j, aggregatableKeyValue),
-          ...filterFields,
-        },
-        /*warnUnknown=*/ false
-      ).map((v) => [v]),
+      aggregatableKeyValues(ctx, j).map((values) => [
+        { values, positive: [], negative: [] },
+      ]),
     list: (ctx, j) =>
       array(ctx, j, (ctx, j) =>
-        struct(
-          ctx,
-          j,
-          {
-            aggregatableValue: field('values', (ctx, j) =>
-              keyValues(ctx, j, aggregatableKeyValue)
-            ),
-            ...filterFields,
-          },
-          /*warnUnknown=*/ false
-        )
+        struct(ctx, j, {
+          values: field('values', (ctx, j) => aggregatableKeyValues(ctx, j)),
+          ...filterFields,
+        })
       ),
   })
 }
@@ -1306,40 +1302,42 @@ function aggregatableSourceRegistrationTime(
   return enumerated(ctx, j, AggregatableSourceRegistrationTime)
 }
 
-// TODO(apasel422): Update with new AggregatableValue structure.
-// function warnInconsistentAggregatableKeys(ctx: Context, t: Trigger): void {
-//   const triggerDataKeys = new Set<string>()
+// TODO(apasel422): Update with new AggregatableValuesConfiguration structure.
+function warnInconsistentAggregatableKeys(_ctx: Context, _t: Trigger): void {
+  /*  
+const triggerDataKeys = new Set<string>()
 
-//   ctx.scope('aggregatable_trigger_data', () => {
-//     for (const [index, datum] of t.aggregatableTriggerData.entries()) {
-//       ctx.scope(index, () => {
-//         for (const key of datum.sourceKeys) {
-//           triggerDataKeys.add(key)
+  ctx.scope('aggregatable_trigger_data', () => {
+    for (const [index, datum] of t.aggregatableTriggerData.entries()) {
+      ctx.scope(index, () => {
+        for (const key of datum.sourceKeys) {
+          triggerDataKeys.add(key)
 
-//           if (!t.aggregatableValues.has(key)) {
-//             ctx.scope('source_keys', () =>
-//               ctx.warning(
-//                 `key "${key}" will never result in a contribution due to absence from aggregatable_values`
-//               )
-//             )
-//           }
-//         }
-//       })
-//     }
-//   })
+          if (!t.aggregatableValues.has(key)) {
+            ctx.scope('source_keys', () =>
+              ctx.warning(
+                `key "${key}" will never result in a contribution due to absence from aggregatable_values`
+              )
+            )
+          }
+        }
+      })
+    }
+  })
 
-//   ctx.scope('aggregatable_values', () => {
-//     for (const key of t.aggregatableValues.keys()) {
-//       if (!triggerDataKeys.has(key)) {
-//         ctx.scope(key, () =>
-//           ctx.warning(
-//             'absence from aggregatable_trigger_data source_keys equivalent to presence with key_piece 0x0'
-//           )
-//         )
-//       }
-//     }
-//   })
-// }
+  ctx.scope('aggregatable_values', () => {
+    for (const key of t.aggregatableValues.keys()) {
+      if (!triggerDataKeys.has(key)) {
+        ctx.scope(key, () =>
+          ctx.warning(
+            'absence from aggregatable_trigger_data source_keys equivalent to presence with key_piece 0x0'
+          )
+        )
+      }
+    }
+  })
+*/
+}
 
 function triggerContextID(
   ctx: Context,
@@ -1381,49 +1379,54 @@ export type Trigger = CommonDebug &
     aggregatableDedupKeys: AggregatableDedupKey[]
     aggregatableTriggerData: AggregatableTriggerDatum[]
     aggregatableSourceRegistrationTime: AggregatableSourceRegistrationTime
-    aggregatableValues: AggregatableValue[]
+    aggregatableValuesConfigurations: AggregatableValuesConfiguration[]
     aggregationCoordinatorOrigin: string | null
     eventTriggerData: EventTriggerDatum[]
     triggerContextID: string | null
   }
 
 function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
-  return object(ctx, j).map((j) => {
-    const aggregatableSourceRegTimeVal = field(
-      'aggregatable_source_registration_time',
-      aggregatableSourceRegistrationTime,
-      AggregatableSourceRegistrationTime.exclude
-    )(ctx, j)
+  return object(ctx, j)
+    .map((j) => {
+      const aggregatableSourceRegTimeVal = field(
+        'aggregatable_source_registration_time',
+        aggregatableSourceRegistrationTime,
+        AggregatableSourceRegistrationTime.exclude
+      )(ctx, j)
 
-    return struct(ctx, j, {
-      aggregatableTriggerData: field(
-        'aggregatable_trigger_data',
-        aggregatableTriggerData,
-        []
-      ),
-      aggregatableValues: field('aggregatable_values', aggregatableValues, []),
-      aggregatableDedupKeys: field(
-        'aggregatable_deduplication_keys',
-        aggregatableDedupKeys,
-        []
-      ),
-      aggregatableSourceRegistrationTime: () => aggregatableSourceRegTimeVal,
-      aggregationCoordinatorOrigin: field(
-        'aggregation_coordinator_origin',
-        suitableOrigin,
-        null
-      ),
-      eventTriggerData: field('event_trigger_data', eventTriggerData, []),
-      triggerContextID: field(
-        'trigger_context_id',
-        (ctx, j) => triggerContextID(ctx, j, aggregatableSourceRegTimeVal),
-        null
-      ),
-      ...commonDebugFields,
-      ...filterFields,
+      return struct(ctx, j, {
+        aggregatableTriggerData: field(
+          'aggregatable_trigger_data',
+          aggregatableTriggerData,
+          []
+        ),
+        aggregatableValuesConfigurations: field(
+          'aggregatable_values',
+          aggregatableValuesConfigurations,
+          []
+        ),
+        aggregatableDedupKeys: field(
+          'aggregatable_deduplication_keys',
+          aggregatableDedupKeys,
+          []
+        ),
+        aggregatableSourceRegistrationTime: () => aggregatableSourceRegTimeVal,
+        aggregationCoordinatorOrigin: field(
+          'aggregation_coordinator_origin',
+          suitableOrigin,
+          null
+        ),
+        eventTriggerData: field('event_trigger_data', eventTriggerData, []),
+        triggerContextID: field(
+          'trigger_context_id',
+          (ctx, j) => triggerContextID(ctx, j, aggregatableSourceRegTimeVal),
+          null
+        ),
+        ...commonDebugFields,
+        ...filterFields,
+      })
     })
-  })
-  // .peek((t) => warnInconsistentAggregatableKeys(ctx, t))
+    .peek((t) => warnInconsistentAggregatableKeys(ctx, t))
 }
 
 function validateJSON<T, C extends Context = Context>(
