@@ -431,39 +431,41 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
 
   // TODO(apasel422): Uncomment once respective function is updated.
-  // {
-  //   name: 'inconsistent-aggregatable-keys',
-  //   json: `{
-  //     "aggregatable_trigger_data": [
-  //       {
-  //         "key_piece": "0x1",
-  //         "source_keys": ["a"]
-  //       },
-  //       {
-  //         "key_piece": "0x2",
-  //         "source_keys": ["b", "a"]
-  //       }
-  //     ],
-  //     "aggregatable_values": {
-  //       "b": 1,
-  //       "c": 2
-  //     }
-  //   }`,
-  //   expectedWarnings: [
-  //     {
-  //       path: ['aggregatable_trigger_data', 0, 'source_keys'],
-  //       msg: 'key "a" will never result in a contribution due to absence from aggregatable_values',
-  //     },
-  //     {
-  //       path: ['aggregatable_trigger_data', 1, 'source_keys'],
-  //       msg: 'key "a" will never result in a contribution due to absence from aggregatable_values',
-  //     },
-  //     {
-  //       path: ['aggregatable_values', 'c'],
-  //       msg: 'absence from aggregatable_trigger_data source_keys equivalent to presence with key_piece 0x0',
-  //     },
-  //   ],
-  // },
+  /*
+  {
+    name: 'inconsistent-aggregatable-keys',
+    json: `{
+      "aggregatable_trigger_data": [
+        {
+          "key_piece": "0x1",
+          "source_keys": ["a"]
+        },
+        {
+          "key_piece": "0x2",
+          "source_keys": ["b", "a"]
+        }
+      ],
+      "aggregatable_values": {
+        "b": 1,
+        "c": 2
+      }
+    }`,
+    expectedWarnings: [
+      {
+        path: ['aggregatable_trigger_data', 0, 'source_keys'],
+        msg: 'key "a" will never result in a contribution due to absence from aggregatable_values',
+      },
+      {
+        path: ['aggregatable_trigger_data', 1, 'source_keys'],
+        msg: 'key "a" will never result in a contribution due to absence from aggregatable_values',
+      },
+      {
+        path: ['aggregatable_values', 'c'],
+        msg: 'absence from aggregatable_trigger_data source_keys equivalent to presence with key_piece 0x0',
+      },
+    ],
+  },
+  */
 
   {
     name: 'debug-reporting-wrong-type',
