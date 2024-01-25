@@ -2695,6 +2695,21 @@ Given an [=attribution trigger=] |trigger|, an [=attribution source=]
 
 <h3 algorithm id="creating-aggregatable-contributions">Creating aggregatable contributions</h3>
 
+To <dfn>match [=aggregatable contributions=] to [=attribution source/aggregation keys=]</dfn> given
+ an [=ordered map=] |aggregationKeys| and an [=ordered map=] |aggregatableValues|,
+ run the following steps:
+
+1. Let |contributions| be an empty list.
+1. [=map/iterate|For each=] |id| → |key| of |aggregationKeys|:
+    1. If |aggregatableValues|[|id|] does not [=map/exist=], [=iteration/continue=].
+    1. Let |contribution| be a new [=aggregatable contribution=] with the items:
+        : [=aggregatable contribution/key=]
+        :: |key|
+        : [=aggregatable contribution/value=]
+        :: |aggregatableValues|[|id|]
+    1. [=list/Append=] |contribution| to |contributions|.
+1. Return |contributions|.
+
 To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution source=] |source| and an
  [=attribution trigger=] |trigger|, run the following steps:
 
@@ -2710,23 +2725,14 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
         1. [=map/Set=] |aggregationKeys|[|sourceKey|] to |aggregationKeys|[|sourceKey|] bitwise-OR |triggerData|'s
             [=aggregatable trigger data/key piece=].
 1. Let |aggregatableValuesConfigurations| be |trigger|'s [=attribution trigger/aggregatable values configurations=].
-1. Let |contributions| be a new empty [=list=].
 1. [=list/iterate|For each=] |aggregatableValuesConfiguration| of |aggregatableValuesConfigurations|:
     1. If the result of running [=match an attribution source's filter data against filters and negated filters=] with
         |source|, |aggregatableValuesConfiguration|'s [=aggregatable values configuration/filters=],
         |aggregatableValuesConfiguration|'s [=aggregatable values configuration/negated filters=], and
         |trigger|'s [=attribution trigger/trigger time=] is true:
-        1. Let |aggregatableValues| be |aggregatableValuesConfiguration|'s [=aggregatable values configuration/values=].
-        1. [=map/iterate|For each=] |id| → |key| of |aggregationKeys|:
-            1. If |aggregatableValues|[|id|] does not [=map/exist=], [=iteration/continue=].
-            1. Let |contribution| be a new [=aggregatable contribution=] with the items:
-                : [=aggregatable contribution/key=]
-                :: |key|
-                : [=aggregatable contribution/value=]
-                :: |aggregatableValues|[|id|]
-            1. [=list/Append=] |contribution| to |contributions|.
-        1. [=iteration/Break=].
-1. Return |contributions|.
+        1. Return the result of running [=match aggregatable contributions to aggregation keys=] with
+            |aggregationKeys| and |aggregatableValuesConfiguration|'s [=aggregatable values configuration/values=].
+1. Return «[]».
 
 <h3 id="can-source-create-aggregatable-contributions">Can source create aggregatable contributions</h3>
 
