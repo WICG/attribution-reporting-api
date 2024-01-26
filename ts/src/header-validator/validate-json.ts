@@ -1231,7 +1231,7 @@ function aggregatableValuesConfigurations(
     list: (ctx, j) =>
       array(ctx, j, (ctx, j) =>
         struct(ctx, j, {
-          values: field('values', (ctx, j) => aggregatableKeyValues(ctx, j)),
+          values: field('values', aggregatableKeyValues),
           ...filterFields,
         })
       ),
