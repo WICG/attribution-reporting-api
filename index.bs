@@ -2313,7 +2313,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         1. [=set/Append=] |fakeReport| to the [=event-level report cache=].
     1. If |source|'s [=attribution source/randomized response=] is not [=set/is empty|empty=],
         then set |source|'s [=attribution source/event-level attributable=] value to false.
-    1. [=map/iterate|For each=] |destination| in [=source=]'s [=attribution source/attribution destinations=]:
+    1. [=map/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
         1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
             : [=attribution rate-limit record/scope=]
             :: "<code>[=rate-limit scope/attribution=]</code>"
@@ -2585,9 +2585,9 @@ To <dfn>match [=filter values=] with negation</dfn> given a [=filter value=] |a|
 1. If |i| is not [=set/is empty|empty=], then return false.
 1. Return true.
 
-To <dfn>match an attribution source's filter data against a filter config</dfn> given an
+To <dfn>match an attribution source against a filter config</dfn> given an
 [=attribution source=] |source|, a [=filter config=] |filter|, a [=moment=] |moment|, and a [=boolean=]
-<dfn for="match an attribution source's filter data against a filter config"><var>isNegated</var></dfn>:
+<dfn for="match an attribution source against a filter config"><var>isNegated</var></dfn>:
 
 1. Let |lookbackWindow| be |filter|'s [=filter config/lookback window=].
 1. If |lookbackWindow| is not null:
@@ -2615,22 +2615,22 @@ To <dfn>match an attribution source's filter data against a filter config</dfn> 
         </dl>
 1. Return true.
 
-To <dfn>match an attribution source's filter data against filters</dfn> given an
+To <dfn>match an attribution source against filters</dfn> given an
 [=attribution source=] |source|, a [=list=] of [=filter configs=] |filters|, a [=moment=] |moment|, and a [=boolean=]
-<dfn for="match an attribution source's filter data against filters"><var>isNegated</var></dfn>:
+<dfn for="match an attribution source against filters"><var>isNegated</var></dfn>:
 
 1. If |filters| [=list/is empty=], return true.
 1. [=list/iterate|For each=] |filter| of |filters|:
-    1. If the result of running [=match an attribution source's filter data against a filter config=] with |source|, |filter|, |moment|, and |isNegated| is true, return true.
+    1. If the result of running [=match an attribution source against a filter config=] with |source|, |filter|, |moment|, and |isNegated| is true, return true.
 1. Return false.
 
-To <dfn>match an attribution source's filter data against filters and negated filters</dfn> given an
+To <dfn>match an attribution source against filters and negated filters</dfn> given an
 [=attribution source=] |source|, a [=list=] of [=filter configs=] |filters|, a [=list=] of [=filter configs=] |notFilters|, and a [=moment=] |moment|:
 
-1. If the result of running [=match an attribution source's filter data against filters=] with
-    |source|, |filters|, |moment|, and [=match an attribution source's filter data against filters/isNegated=] set to false is false, return false.
-1. If the result of running [=match an attribution source's filter data against filters=] with
-    |source|, |notFilters|, |moment|, and [=match an attribution source's filter data against filters/isNegated=] set to true is false, return false.
+1. If the result of running [=match an attribution source against filters=] with
+    |source|, |filters|, |moment|, and [=match an attribution source against filters/isNegated=] set to false is false, return false.
+1. If the result of running [=match an attribution source against filters=] with
+    |source|, |notFilters|, |moment|, and [=match an attribution source against filters/isNegated=] set to true is false, return false.
 1. Return true.
 
 <h3 dfn id="should-block-attribution-for-attribution-limit">Should attribution be blocked by attribution rate limit</h3>
@@ -2715,7 +2715,7 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
 
 1. Let |aggregationKeys| be the result of [=map/clone|cloning=] |source|'s [=attribution source/aggregation keys=].
 1. [=list/iterate|For each=] |triggerData| of |trigger|'s [=attribution trigger/aggregatable trigger data=]:
-    1. If the result of running [=match an attribution source's filter data against filters and negated filters=] with
+    1. If the result of running [=match an attribution source against filters and negated filters=] with
         |source|, |triggerData|'s [=aggregatable trigger data/filters=],
         |triggerData|'s [=aggregatable trigger data/negated filters=], and
         |trigger|'s [=attribution trigger/trigger time=]
@@ -2874,7 +2874,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 1. [=set/iterate|For each=] [=event-level trigger configuration=] |config| of |trigger|'s
     [=attribution trigger/event-level trigger configurations=]:
     1. If the result of running
-        [=match an attribution source's filter data against filters and negated filters=] with |sourceToAttribute|,
+        [=match an attribution source against filters and negated filters=] with |sourceToAttribute|,
         |config|'s [=event-level trigger configuration/filters=],
         |config|'s [=event-level trigger configuration/negated filters=], and
         |trigger|'s [=attribution trigger/trigger time=] is true:
@@ -2996,7 +2996,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. [=Assert=]: |windowResult| is <strong>falls within</strong>.
 1. Let |matchedDedupKey| be null.
 1. [=list/iterate|For each=] [=aggregatable dedup key=] |aggregatableDedupKey| of |trigger|'s [=attribution trigger/aggregatable dedup keys=]:
-    1. If the result of running [=match an attribution source's filter data against filters and negated filters=]
+    1. If the result of running [=match an attribution source against filters and negated filters=]
         with |sourceToAttribute|, |aggregatableDedupKey|'s [=aggregatable dedup key/filters=],
         |aggregatableDedupKey|'s [=aggregatable dedup key/negated filters=], and 
         |trigger|'s [=attribution trigger/trigger time=] is true:
@@ -3096,7 +3096,7 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     1. Return.
 1. Let |sourceToAttribute| be |matchingSources|[0].
 1. If the result of running
-    [=match an attribution source's filter data against filters and negated filters=] with
+    [=match an attribution source against filters and negated filters=] with
     |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=],
     |trigger|'s [=attribution trigger/negated filters=], and 
     |trigger|'s [=attribution trigger/trigger time=] is false:
