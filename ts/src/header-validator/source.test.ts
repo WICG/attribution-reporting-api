@@ -1245,7 +1245,7 @@ const testCases: TestCase[] = [
       },
       {
         path: [],
-        msg: 'randomized response rate: 0.0000025',
+        msg: 'randomized trigger rate: 0.0000025',
       },
     ],
   },
@@ -1274,7 +1274,7 @@ const testCases: TestCase[] = [
       },
       {
         path: [],
-        msg: 'randomized response rate: 0.0024263',
+        msg: 'randomized trigger rate: 0.0024263',
       },
     ],
   },

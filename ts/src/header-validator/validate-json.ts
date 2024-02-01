@@ -853,7 +853,7 @@ function channelCapacity(ctx: SourceContext, s: Source): void {
 
   if (ctx.noteInfoGain) {
     ctx.note(`number of possible output states: ${out.numStates}`)
-    ctx.note(`randomized response rate: ${out.flipProb.toFixed(7)}`)
+    ctx.note(`randomized trigger rate: ${out.flipProb.toFixed(7)}`)
   }
 }
 
