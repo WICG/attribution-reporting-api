@@ -5,6 +5,7 @@ import * as context from './context'
 export type TestCase = {
   expectedWarnings?: context.Issue[]
   expectedErrors?: context.Issue[]
+  expectedNotes?: context.Issue[]
 }
 
 export function run(
@@ -17,6 +18,7 @@ export function run(
     assert.deepEqual(result, {
       errors: tc.expectedErrors ?? [],
       warnings: tc.expectedWarnings ?? [],
+      notes: tc.expectedNotes ?? [],
     })
   })
 }
