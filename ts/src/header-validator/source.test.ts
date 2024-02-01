@@ -1221,9 +1221,10 @@ const testCases: TestCase[] = [
   },
 
   {
-    name: 'channel-capacity-default-event-custom-max',
+    name: 'channel-capacity-default-event',
     json: `{"destination": "https://a.test"}`,
     sourceType: SourceType.event,
+    noteInfoGain: true,
     vsv: {
       maxEventLevelChannelCapacityPerSource: {
         [SourceType.event]: 0,
@@ -1234,14 +1235,25 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: [],
-        msg: 'exceeds max event-level channel capacity per event source (1.585 > 0.000)',
+        msg: 'information gain: 1.585 exceeds max event-level channel capacity per event source (0.000)',
+      },
+    ],
+    expectedNotes: [
+      {
+        path: [],
+        msg: 'number of possible output states: 3',
+      },
+      {
+        path: [],
+        msg: 'randomized response rate: 0.00025%',
       },
     ],
   },
   {
-    name: 'channel-capacity-default-navigation-custom-max',
+    name: 'channel-capacity-default-navigation',
     json: `{"destination": "https://a.test"}`,
     sourceType: SourceType.navigation,
+    noteInfoGain: true,
     vsv: {
       maxEventLevelChannelCapacityPerSource: {
         [SourceType.event]: Infinity,
@@ -1252,49 +1264,13 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: [],
-        msg: 'exceeds max event-level channel capacity per navigation source (11.462 > 0.000)',
+        msg: 'information gain: 11.462 exceeds max event-level channel capacity per navigation source (0.000)',
       },
     ],
-  },
-  {
-    name: 'channel-capacity-default-event-notes',
-    json: `{"destination": "https://a.test"}`,
-    sourceType: SourceType.event,
-    noteInfoGain: true,
-    vsv: {
-      maxSettableEventLevelEpsilon: 14,
-    },
-    expectedNotes: [
-      {
-        path: [],
-        msg: 'number of possible output states: 3',
-      },
-      {
-        path: [],
-        msg: 'information gain: 1.585',
-      },
-      {
-        path: [],
-        msg: 'randomized response rate: 0.00025%',
-      },
-    ],
-  },
-  {
-    name: 'channel-capacity-default-navigation-notes',
-    json: `{"destination": "https://a.test"}`,
-    sourceType: SourceType.navigation,
-    noteInfoGain: true,
-    vsv: {
-      maxSettableEventLevelEpsilon: 14,
-    },
     expectedNotes: [
       {
         path: [],
         msg: 'number of possible output states: 2925',
-      },
-      {
-        path: [],
-        msg: 'information gain: 11.462',
       },
       {
         path: [],
