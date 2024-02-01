@@ -117,16 +117,18 @@ config.peek((config) => {
 
   console.log(`Number of possible different output states: ${out.numStates}`)
   console.log(`Information gain: ${out.infoGain.toFixed(2)} bits`)
-  console.log(`Flip percent: ${(100 * out.flipProb).toFixed(5)}%`)
+  console.log(`Randomized trigger rate: ${out.flipProb.toFixed(7)}`)
 
   if (out.excessive) {
     const e = out.excessive
     console.log(
       `WARNING: info gain > ${infoGainMax.toFixed(2)} for ${
         options.source_type
-      } sources. Would require a ${(100 * e.newFlipProb).toFixed(
-        5
-      )}% flip chance (effective epsilon = ${e.newEps.toFixed(3)}) to resolve.`
+      } sources. Would require a ${e.newFlipProb.toFixed(
+        7
+      )} randomized trigger rate (effective epsilon = ${e.newEps.toFixed(
+        3
+      )}) to resolve.`
     )
   }
 })

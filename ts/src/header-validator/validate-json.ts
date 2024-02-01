@@ -839,13 +839,13 @@ function channelCapacity(ctx: SourceContext, s: Source): void {
   )
 
   const max = ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
-  const infoGainMsg = `information gain: ${out.infoGain.toFixed(3)}`
+  const infoGainMsg = `information gain: ${out.infoGain.toFixed(2)}`
 
   if (out.infoGain > max) {
     ctx.error(
       `${infoGainMsg} exceeds max event-level channel capacity per ${
         ctx.sourceType
-      } source (${max.toFixed(3)})`
+      } source (${max.toFixed(2)})`
     )
   } else if (ctx.noteInfoGain) {
     ctx.note(infoGainMsg)
@@ -853,7 +853,7 @@ function channelCapacity(ctx: SourceContext, s: Source): void {
 
   if (ctx.noteInfoGain) {
     ctx.note(`number of possible output states: ${out.numStates}`)
-    ctx.note(`randomized response rate: ${(100 * out.flipProb).toFixed(5)}%`)
+    ctx.note(`randomized response rate: ${out.flipProb.toFixed(7)}`)
   }
 }
 

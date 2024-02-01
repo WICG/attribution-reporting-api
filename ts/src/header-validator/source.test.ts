@@ -1235,7 +1235,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: [],
-        msg: 'information gain: 1.585 exceeds max event-level channel capacity per event source (0.000)',
+        msg: 'information gain: 1.58 exceeds max event-level channel capacity per event source (0.00)',
       },
     ],
     expectedNotes: [
@@ -1245,7 +1245,7 @@ const testCases: TestCase[] = [
       },
       {
         path: [],
-        msg: 'randomized response rate: 0.00025%',
+        msg: 'randomized response rate: 0.0000025',
       },
     ],
   },
@@ -1264,7 +1264,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: [],
-        msg: 'information gain: 11.462 exceeds max event-level channel capacity per navigation source (0.000)',
+        msg: 'information gain: 11.46 exceeds max event-level channel capacity per navigation source (0.00)',
       },
     ],
     expectedNotes: [
@@ -1274,7 +1274,7 @@ const testCases: TestCase[] = [
       },
       {
         path: [],
-        msg: 'randomized response rate: 0.24263%',
+        msg: 'randomized response rate: 0.0024263',
       },
     ],
   },
