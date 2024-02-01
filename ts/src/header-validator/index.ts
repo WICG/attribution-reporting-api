@@ -13,7 +13,7 @@ const sourceTypeRadios = form.elements.namedItem(
 )! as RadioNodeList
 const errorList = document.querySelector('#errors')!
 const warningList = document.querySelector('#warnings')!
-const noteList = document.querySelector('#note')!
+const noteList = document.querySelector('#notes')!
 const successDiv = document.querySelector('#success')!
 const sourceTypeFieldset = document.querySelector(
   '#source-type'
