@@ -71,7 +71,7 @@ function validate(): void {
         vsv.Chromium,
         sourceType(),
         flexCheckbox.checked,
-        /*noteInfoGain=*/true,
+        /*noteInfoGain=*/ true
       )[0]
       break
     case 'trigger':
