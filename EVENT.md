@@ -284,8 +284,8 @@ about how to treat the trigger:
 ```
 
 - `trigger_data`: Optional. Coarse-grained data to identify the trigger.
-  The value will be limited [depending on the
-  attributed source type](#data-limits-and-noise). Defaults to 0.
+  The value will be used [according to the attributed source's allowed trigger
+  data and matching mode](#data-limits-and-noise). Defaults to 0.
 - `priority`: Optional. A signed 64-bit integer representing the priority
 of this trigger compared to other triggers for the same source. Defaults to 0.
 - `deduplication_key`: Optional. An unsigned 64-bit integer that will be used to
@@ -335,9 +335,64 @@ The `source_event_id` is limited to 64 bits of information to enable
 uniquely identifying an ad click.
 
 The trigger-side data must therefore be limited quite strictly, by limiting
-the amount of data and by applying noise to the data. `navigation` sources will
-be limited to only 3 bits of `trigger_data`, while `event` sources will be
-limited to only 1 bit.
+the amount of data and by applying noise to the data. By default, `navigation`
+sources will be limited to only 3 bits of `trigger_data` (the values 0 through
+7), while `event` sources will be limited to only 1 bit (the values 0 through
+1).
+
+Sources can be configured to allow non-default `trigger_data` (values and/or
+cardinality):
+
+```jsonc
+{
+  // Specifies how the 64-bit unsigned trigger_data from the trigger is matched
+  // against the source's trigger_data, which is 32-bit. Defaults to "modulus".
+  //
+  // If "exact", the trigger_data must exactly match a value contained in the
+  // source's trigger_data; if there is no such match, no event-level
+  // attribution takes place.
+  //
+  // If "modulus", the source's trigger_data must form a contiguous sequence of
+  // integers starting at 0. The trigger's trigger_data is taken modulus the
+  // cardinality of this sequence and then matched against the trigger data.
+  // See below for an example. It is an error to use "modulus" if the trigger
+  // data does not form such a sequence.
+  "trigger_data_matching": <one of "exact" or "modulus">,
+
+  // Size must be in the range [0, 32], inclusive.
+  // If omitted, defaults to [0, 1, 2, 3, 4, 5, 6, 7] for navigation sources and
+  // [0, 1] for event sources.
+  "trigger_data": [<32-bit unsigned integer>, ...]
+}
+```
+
+For example, the following configuration can be used to *reduce* noise for a
+navigation source (by limiting the number of distinct trigger data values) or
+*increase* noise for an event source (by increasing the number):
+
+```jsonc
+{
+  ...,
+  // The effective cardinality is 5, so the trigger's trigger_data will be taken
+  // modulus 5. Likewise, noise will be applied using the effective cardinality
+  // of 5, instead of the default for the source type.
+  "trigger_data": [0, 1, 2, 3, 4]
+}
+```
+
+If `"trigger_data_matching": "exact"` is used, then the values themselves need
+not form a contiguous sequence beginning at zero, and any generated report will
+contain the exact value, e.g.
+
+```jsonc
+{
+  "trigger_data_matching": "exact",
+  // If this list does not contain the trigger's trigger_data value, attribution
+  // will fail and no report will be generated. Noise will be applied using an
+  // effective cardinality of 2.
+  "trigger_data": [123, 456]
+}
+```
 
 Noise will be applied to whether a source will be reported truthfully.
 When an attribution source is registered, the browser will perform one of the
@@ -350,16 +405,17 @@ all, or potentially reporting multiple fake reports for the event.
 Note that this scheme is an instantiation of k-randomized response, see
 [Differential privacy](#differential-privacy).
 
-Strawman: we can set `p` such that each source is protected with randomized
-response that satisfies an epsilon value of 14. This would entail:
+`p` is set such that each source is protected with randomized response that
+satisfies an epsilon value of 14. This would entail (for default configured
+sources):
 * `p = .24%` for `navigation` sources
 * `p = .00025%` for `event` sources
 
 Note that correcting for this noise addition is straightforward in most cases,
 please see <TODO link to de-biasing advice/code snippet here>. Reports will be
-updated to include `p` so that noise correction can work correctly in the event
-that `p` changes over time, or if different browsers apply different
-probabilities:
+updated to include `p` so that noise correction can work correctly for
+configurations that have different values of `p`, or if different browsers apply
+different probabilities:
 
 ```jsonc
 {
