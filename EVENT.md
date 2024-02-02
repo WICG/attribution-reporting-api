@@ -405,16 +405,17 @@ all, or potentially reporting multiple fake reports for the event.
 Note that this scheme is an instantiation of k-randomized response, see
 [Differential privacy](#differential-privacy).
 
-Strawman: we can set `p` such that each source is protected with randomized
-response that satisfies an epsilon value of 14. This would entail:
+`p` is set such that each source is protected with randomized response that
+satisfies an epsilon value of 14. This would entail (for default configured
+sources):
 * `p = .24%` for `navigation` sources
 * `p = .00025%` for `event` sources
 
 Note that correcting for this noise addition is straightforward in most cases,
 please see <TODO link to de-biasing advice/code snippet here>. Reports will be
-updated to include `p` so that noise correction can work correctly in the event
-that `p` changes over time, or if different browsers apply different
-probabilities:
+updated to include `p` so that noise correction can work correctly for
+configurations that have different values of `p`, or if different browsers apply
+different probabilities:
 
 ```jsonc
 {
