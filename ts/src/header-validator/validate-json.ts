@@ -30,7 +30,8 @@ class SourceContext extends RegistrationContext {
   constructor(
     vsv: Readonly<VendorSpecificValues>,
     parseFullFlex: boolean,
-    readonly sourceType: SourceType
+    readonly sourceType: SourceType,
+    readonly noteInfoGain: boolean
   ) {
     super(vsv, parseFullFlex)
   }
@@ -832,18 +833,27 @@ function channelCapacity(ctx: SourceContext, s: Source): void {
     perTriggerDataConfigs
   )
 
-  const { infoGain } = config.computeConfigData(
+  const out = config.computeConfigData(
     s.eventLevelEpsilon,
     ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
   )
 
   const max = ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
-  if (infoGain > max) {
+  const infoGainMsg = `information gain: ${out.infoGain.toFixed(2)}`
+
+  if (out.infoGain > max) {
     ctx.error(
-      `exceeds max event-level channel capacity per ${
+      `${infoGainMsg} exceeds max event-level channel capacity per ${
         ctx.sourceType
-      } source (${infoGain.toFixed(2)} > ${max.toFixed(2)})`
+      } source (${max.toFixed(2)})`
     )
+  } else if (ctx.noteInfoGain) {
+    ctx.note(infoGainMsg)
+  }
+
+  if (ctx.noteInfoGain) {
+    ctx.note(`number of possible output states: ${out.numStates}`)
+    ctx.note(`randomized trigger rate: ${out.flipProb.toFixed(7)}`)
   }
 }
 
@@ -1421,10 +1431,11 @@ export function validateSource(
   json: string,
   vsv: Readonly<VendorSpecificValues>,
   sourceType: SourceType,
-  parseFullFlex: boolean = false
+  parseFullFlex: boolean = false,
+  noteInfoGain: boolean = false
 ): [ValidationResult, Maybe<Source>] {
   return validateJSON(
-    new SourceContext(vsv, parseFullFlex, sourceType),
+    new SourceContext(vsv, parseFullFlex, sourceType, noteInfoGain),
     json,
     source
   )

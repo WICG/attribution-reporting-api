@@ -8,11 +8,16 @@ export type Issue = {
 export type ValidationResult = {
   errors: Issue[]
   warnings: Issue[]
+  notes: Issue[]
 }
 
 export class Context {
   private readonly path: PathComponent[] = []
-  private readonly result: ValidationResult = { errors: [], warnings: [] }
+  private readonly result: ValidationResult = {
+    errors: [],
+    warnings: [],
+    notes: [],
+  }
 
   scope<T>(c: PathComponent, f: () => T): T {
     this.path.push(c)
@@ -31,6 +36,10 @@ export class Context {
 
   warning(msg: string): void {
     this.result.warnings.push(this.issue(msg))
+  }
+
+  note(msg: string): void {
+    this.result.notes.push(this.issue(msg))
   }
 
   finish(topLevelError?: string): ValidationResult {

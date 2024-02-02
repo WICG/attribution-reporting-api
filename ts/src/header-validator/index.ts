@@ -13,6 +13,7 @@ const sourceTypeRadios = form.elements.namedItem(
 )! as RadioNodeList
 const errorList = document.querySelector('#errors')!
 const warningList = document.querySelector('#warnings')!
+const noteList = document.querySelector('#notes')!
 const successDiv = document.querySelector('#success')!
 const sourceTypeFieldset = document.querySelector(
   '#source-type'
@@ -69,7 +70,8 @@ function validate(): void {
         input.value,
         vsv.Chromium,
         sourceType(),
-        flexCheckbox.checked
+        flexCheckbox.checked,
+        /*noteInfoGain=*/ true
       )[0]
       break
     case 'trigger':
@@ -103,6 +105,7 @@ function validate(): void {
 
   errorList.replaceChildren(...result.errors.map(makeLi))
   warningList.replaceChildren(...result.warnings.map(makeLi))
+  noteList.replaceChildren(...result.notes.map(makeLi))
 }
 
 form.addEventListener('input', validate)

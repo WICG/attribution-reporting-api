@@ -11,6 +11,7 @@ import * as jsontest from './validate-json.test'
 
 type TestCase = jsontest.TestCase<Source> & {
   sourceType?: SourceType
+  noteInfoGain?: boolean
 }
 
 const testCases: TestCase[] = [
@@ -1223,6 +1224,7 @@ const testCases: TestCase[] = [
     name: 'channel-capacity-default-event',
     json: `{"destination": "https://a.test"}`,
     sourceType: SourceType.event,
+    noteInfoGain: true,
     vsv: {
       maxEventLevelChannelCapacityPerSource: {
         [SourceType.event]: 0,
@@ -1233,7 +1235,17 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: [],
-        msg: 'exceeds max event-level channel capacity per event source (1.58 > 0.00)',
+        msg: 'information gain: 1.58 exceeds max event-level channel capacity per event source (0.00)',
+      },
+    ],
+    expectedNotes: [
+      {
+        path: [],
+        msg: 'number of possible output states: 3',
+      },
+      {
+        path: [],
+        msg: 'randomized trigger rate: 0.0000025',
       },
     ],
   },
@@ -1241,6 +1253,7 @@ const testCases: TestCase[] = [
     name: 'channel-capacity-default-navigation',
     json: `{"destination": "https://a.test"}`,
     sourceType: SourceType.navigation,
+    noteInfoGain: true,
     vsv: {
       maxEventLevelChannelCapacityPerSource: {
         [SourceType.event]: Infinity,
@@ -1251,7 +1264,17 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: [],
-        msg: 'exceeds max event-level channel capacity per navigation source (11.46 > 0.00)',
+        msg: 'information gain: 11.46 exceeds max event-level channel capacity per navigation source (0.00)',
+      },
+    ],
+    expectedNotes: [
+      {
+        path: [],
+        msg: 'number of possible output states: 2925',
+      },
+      {
+        path: [],
+        msg: 'randomized trigger rate: 0.0024263',
       },
     ],
   },
@@ -1833,7 +1856,8 @@ testCases.forEach((tc) =>
       tc.json,
       { ...vsv.Chromium, ...tc.vsv },
       tc.sourceType ?? SourceType.navigation,
-      tc.parseFullFlex ?? false
+      tc.parseFullFlex ?? false,
+      tc.noteInfoGain ?? false
     )
   )
 )
