@@ -172,9 +172,6 @@ The scheme above will generate the following abstract histogram contributions:
   value: 1664
 }]
 ```
-Note: The `filters` field will still apply to aggregatable reports, and each
-dict in `aggregatable_trigger_data` can still optionally have filters applied
-to it just like for event-level reports.
 
 Note: the above scheme was used to maximize the [contribution
 budget](#contribution-bounding-and-budgeting) and optimize utility in the face
@@ -183,6 +180,30 @@ of constant noise. To rescale, simply inverse the scaling factors used above:
 L1 = 1 << 16
 true_agg_campaign_counts = raw_agg_campaign_counts / (L1 / 2)
 true_agg_geo_value = 1024 * raw_agg_geo_value / (L1 / 2)
+```
+
+Note: The `filters` field will still apply to aggregatable reports, and each
+dict in `aggregatable_trigger_data` can still optionally have filters applied
+to it just like for event-level reports.
+
+Note: The `aggregatable_values` field may also be specified as a list of dict,
+where each dict contains a dict of key-value pair as outlined above as well as
+an optional `filters` (and its corresponding `not_filters`) field, allowing
+trigger registrations to customize how values are contributed to keys depending
+on the context of the source.
+```jsonc
+{
+  ...
+  "aggregatable_values": [
+    {
+      "values": {
+        "campaignCounts": 32768,
+        "geoValue": 1664
+      },
+      "filters": {"source_type": ["navigation"]}
+    }
+  ]
+}
 ```
 
 Trigger registration will accept an optional field
