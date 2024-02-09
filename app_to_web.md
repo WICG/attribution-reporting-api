@@ -67,7 +67,7 @@ Attribution-Reporting-Register-OS-Trigger: "https://adtech.example/register", "h
 ```
 
 The reporting origin can also optionally respond with a [dictionary structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.2)
-`Attribution-Reporting-Info` to specifiy the preferred platform. The key is
+`Attribution-Reporting-Info` to specify the preferred platform. The key is
 `preferred-platform` and the value is a [structured header token](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.4)
 with allowed values `os` and `web`.
 ```http
