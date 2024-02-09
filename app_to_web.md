@@ -88,8 +88,8 @@ For a site to enable App<->Web attribution after integrating with the Web API, t
 
 A reporting origin responding with the `Attribution-Reporting-Register-OS-Source` or `Attribution-Reporting-Register-OS-Trigger` headers while there is no OS-level support will cause the OS registration to fail.
 If both OS registration and web registration are provided in the response while
-there is no OS-level rupport, the browser will fallback to the web registration
-only if a preferred platform is specified. If a preferred plagform is not
+there is no OS-level support, the browser will fallback to the web registration
+only if a preferred platform is specified. If a preferred platform is not
 specified, then the web registration will fail as well.
 
 ## Optional: debugging reports
