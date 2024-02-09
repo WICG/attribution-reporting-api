@@ -66,6 +66,17 @@ Trigger registrations will accept a new response header as well:
 Attribution-Reporting-Register-OS-Trigger: "https://adtech.example/register", "https://other-adtech.example/register"
 ```
 
+The reporting origin can also optionally respond with a [dictionary structured header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.2)
+`Attribution-Reporting-Info` to specifiy the preferred platform. The key is
+`preferred-platform` and the value is a [structured header token](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.3.4)
+with allowed values `os` and `web`.
+```http
+Attribution-Reporting-Info: preferred-platform=os
+```
+
+The browser will make the platform decision based on the availability of the
+platform support on the user's device.
+
 After receiving these headers, the browser will pass these URLs into the underlying OS API with any additional information including:
 the context on which the event occurs (source / destination site)
 the InputEvent in the event of a click/navigation source, for platform verification
@@ -74,7 +85,9 @@ Normal attribution logic in the browser will be halted.
 
 For a site to enable App<->Web attribution after integrating with the Web API, they will only need to make server side changes.
 
-A reporting origin responding with the `Attribution-Reporting-Register-OS-Source` or `Attribution-Reporting-Register-OS-Trigger` headers while `Attribution-Reporting-Support` does not contain `os` will cause the entire registration to fail (including web registration).
+A reporting origin responding with the `Attribution-Reporting-Register-OS-Source` or `Attribution-Reporting-Register-OS-Trigger` headers while there is no OS-level support will cause the OS registration to fail.
+The web registration will fail as well if the preferred platform is not
+specified.
 
 ## Optional: debugging reports
 
