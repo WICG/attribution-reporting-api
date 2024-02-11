@@ -59,7 +59,7 @@ spec: structured header; type: dfn; urlPrefix: https://tools.ietf.org/html/rfc89
         text: string; url: #name-strings
         text: serialize a string; url: #name-serializing-a-string
         text: parse a string; url: #name-parse-a-string
-        text: parse a token; url: #name-parse-a-token
+        text: token; url: #name-tokens
 spec: infra; type: dfn; urlPrefix: https://infra.spec.whatwg.org/
     text: starts with; url: #string-starts-with
 spec: fenced-frame; type: dfn; urlPrefix: https://wicg.github.io/fenced-frame/;
@@ -1483,11 +1483,10 @@ To <dfn>get preferred platform from a header list</dfn> given a
 1. If |map| is not an [=map=], return an error.
 1. If |map|["`preferred-platform`"] does not [=map/exist=], return null.
 1. Let |value| be |map|["`preferred-platform`"][0].
-1. If |value| is not a [=string=], return an error.
 1. If |value| is not a [=registrar=], return an error.
 1. Return |value|.
 
-Issue: |value| must be a result from [=structured header/parse a token|parsing a token=].
+Issue: Require |value| to be a [=structured header/token=].
 
 <h3 id="debug-keys">Cookie-based debugging</h3>
 
@@ -1677,8 +1676,9 @@ and a [=response=] |response|:
 1. Run [=process an attribution eligible response=] with |contextOrigin|,
     |eligibility|, and |response|.
 
-To <dfn>get the registration platform</dfn> given |webHeader|,
-|osRegistrations|, and |preferredPlatform|:
+To <dfn>get the registration platform</dfn> given a [=header value=] or null |webHeader|,
+a [=list=] of [=OS registrations=] or null |osRegistrations|, and
+a [=registrar=] or null |preferredPlatform|:
 
 1. If |webHeader| and |osRegistrations| are both null, return null.
 1. If |preferredPlatform| is null:
@@ -1707,6 +1707,65 @@ To <dfn>get the registration platform</dfn> given |webHeader|,
          1. Return null.
 
     </dl>
+
+To <dfn>process an attribution source response</dfn> given a [=suitable origin=]
+|contextOrigin|, a [=suitable origin=] |reportingOrigin|, a [=source type=]
+|sourceType|, a [=header value=] or null |webSourceHeader|, a [=list=] of
+[=OS registrations=] or null |osSourceRegistrations|, and a [=registrar=]
+or null |preferredPlatform|:
+
+1. Let |platform| be the result of [=get the registration platform=] with
+    |webSourceHeader|, |osSourceRegistrations|, and |preferredPlatform|.
+1. If |platform| is null, return.
+1. If |platform| is:
+    <dl class="switch">
+    : "<code>[=registrar/web=]</code>"
+    ::
+        1. Let |source| be the result of running
+            [=parse source-registration JSON=] with |webSourceHeader|,
+            |contextOrigin|, |reportingOrigin|, |sourceType|, and [=current wall time=].
+        1. If |source| is not null, [=process an attribution source|process=]
+            |source|.
+    : "<code>[=registrar/os=]</code>"
+    ::
+        1. Process |osSourceRegistrations| according to an [=implementation-defined=] algorithm.
+        1. Run [=obtain and deliver debug reports on OS registrations=] with
+            "<code>[=OS debug data type/os-source-delegated=]</code>", |osSourceRegistrations|,
+            and |contextOrigin|.
+
+    </dl>
+
+To <dfn>process an attribution trigger response</dfn> given a [=suitable origin=]
+|contextOrigin|, a [=suitable origin=] |reportingOrigin|, a [=response=] |response|,
+a [=request/trigger verification metadata=] |triggerVerificationMetadata|,
+a [=header value=] or null |webTriggerHeader|, a [=list=] of [=OS registrations=]
+or null |osTriggerRegistrations|, and a [=registrar=] or null |preferredPlatform|:
+
+1. Let |platform| be the result of [=get the registration platform=]
+    with |webTriggerHeader|, |osTriggerRegistrations|, and |preferredPlatform|.
+1. If |platform| is null, return.
+1. If |platform| is:
+    <dl class="switch">
+    : "<code>[=registrar/web=]</code>"
+    ::
+        1. Let |destinationSite| be the result of [=obtaining a site=] from
+            |contextOrigin|.
+        1. Let |triggerVerifications| be the result of [=receiving trigger verification tokens=]
+            with |response|'s [=response/URL=]'s [=url/origin=], |response|'s [=response/header list=],
+            and |triggerVerificationMetadata|.
+        1. Let |trigger| be the result of running
+            [=create an attribution trigger=] with |webTriggerHeader|
+            |destinationSite|, |reportingOrigin|, |triggerVerifications|, and [=current wall time=].
+        1. If |trigger| is not null:
+            1. [=Maybe defer and then complete trigger attribution=] with |trigger|.
+    : "<code>[=registrar/os=]</code>"
+    ::
+        1. Process |osTriggerRegistrations| according to an [=implementation-defined=] algorithm.
+        1. Run [=obtain and deliver debug reports on OS registrations=] with
+            "<code>[=OS debug data type/os-trigger-delegated=]</code>", |osTriggerRegistrations|,
+            and |contextOrigin|.
+
+     </dl>
 
 To <dfn export>process an attribution eligible response</dfn> given a [=suitable origin=]
 |contextOrigin|, an [=eligibility=] |eligibility|, and a [=response=] |response|:
@@ -1751,27 +1810,12 @@ To <dfn export>process an attribution eligible response</dfn> given a [=suitable
     : "<code>[=eligibility/navigation-source=]</code>"
     : "<code>[=eligibility/event-source=]</code>"
     :: Run the following steps:
-        1. Let |platform| be the result of [=get the registration platform=] with
-            |sourceHeader|, |osSourceRegistrations|, and |preferredPlatform|.
-        1. If |platform| is null, return.
-        1. If |platform| is:
-            <dl class="switch">
-            : "<code>[=registrar/web=]</code>"
-            ::
-                1. Let |sourceType| be "<code>[=source type/navigation=]</code>".
-                1. If |eligibility| is "<code>[=eligibility/event-source=]</code>",
-                    set |sourceType| to "<code>[=source type/event=]</code>".
-                1. Let |source| be the result of running
-                    [=parse source-registration JSON=] with |sourceHeader|,
-                    |contextOrigin|, |reportingOrigin|, |sourceType|, and [=current wall time=].
-                1. If |source| is not null, [=process an attribution source|process=]
-                    |source|.
-            : "<code>[=registrar/os=]</code>"
-            ::
-                1. Process |osSourceRegistrations| according to an [=implementation-defined=] algorithm.
-                1. Run [=obtain and deliver debug reports on OS registrations=] with
-                    "<code>[=OS debug data type/os-source-delegated=]</code>", |osSourceRegistrations|,
-                    and |contextOrigin|.
+        1. Let |sourceType| be "<code>[=source type/navigation=]</code>".
+        1. If |eligibility| is "<code>[=eligibility/event-source=]</code>",
+            set |sourceType| to "<code>[=source type/event=]</code>".
+        1. Run [=process an attribution source response=] with |contextOrigin|,
+            |reportingOrigin|, |sourceType|, |sourceHeader|,
+            |osSourceRegistrations|, and |preferredPlatform|.
 
             </dl>
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
@@ -1785,53 +1829,13 @@ To <dfn export>process an attribution eligible response</dfn> given a [=suitable
         1. If both |hasSourceRegistration| and |hasTriggerRegistration| are true,
             return.
         1. If |hasSourceRegistration| is true:
-            1. Let |platform| be the result of [=get the registration platform=]
-                with |sourceHeader|, |osSourceRegistrations|, and |preferredPlatform|.
-            1. If |platform| is null, return.
-            1. If |platform| is:
-                <dl class="switch">
-                : "<code>[=registrar/web=]</code>"
-                ::
-                    1. Let |source| be the result of running
-                        [=parse source-registration JSON=] with |sourceHeader|,
-                        |contextOrigin|, |reportingOrigin|,
-                        "<code>[=source type/event=]</code>", and [=current wall time=].
-                    1. If |source| is not null,
-                        [=process an attribution source|process=] |source|.
-                : "<code>[=registrar/os=]</code>"
-                ::
-                    1. Process |osSourceRegistrations| according to an [=implementation-defined=] algorithm.
-                    1. Run [=obtain and deliver debug reports on OS registrations=] with
-                        "<code>[=OS debug data type/os-source-delegated=]</code>", |osSourceRegistrations|,
-                        and |contextOrigin|.
-
-                </dl>
+            1. Run [=process an attribution source response=]
+                with |contextOrigin|, |reportingOrigin|, "<code>[=source type/event=]</code>",
+                |sourceHeader|, |osSourceRegistrations|, and |preferredPlatform|.
         1. If |hasTriggerRegistration| is true:
-            1. Let |platform| be the result of [=get the registration platform=]
-                with |triggerHeader|, |osTriggerRegistrations|, and |preferredPlatform|.
-            1. If |platform| is null, return.
-            1. If |platform| is:
-                <dl class="switch">
-                : "<code>[=registrar/web=]</code>"
-                ::
-                    1. Let |destinationSite| be the result of [=obtaining a site=] from
-                        |contextOrigin|.
-                    1. Let |triggerVerifications| be the result of [=receiving trigger verification tokens=] 
-                        with |response|'s [=response/URL=]'s [=url/origin=], |response|'s [=response/header list=],
-                        and |triggerVerificationMetadata|.
-                    1. Let |trigger| be the result of running
-                        [=create an attribution trigger=] with |triggerHeader|
-                        |destinationSite|, |reportingOrigin|, |triggerVerifications|, and [=current wall time=].
-                    1. If |trigger| is not null:
-                        1. [=Maybe defer and then complete trigger attribution=] with |trigger|.
-                : "<code>[=registrar/os=]</code>"
-                ::
-                    1. Process |osTriggerRegistrations| according to an [=implementation-defined=] algorithm.
-                    1. Run [=obtain and deliver debug reports on OS registrations=] with
-                        "<code>[=OS debug data type/os-trigger-delegated=]</code>", |osTriggerRegistrations|,
-                        and |contextOrigin|.
-
-                </dl>
+            1. Run [=process an attribution trigger response=]
+                with |contextOrigin|, |reportingOrigin|, |response|, |triggerVerificationMetadata|, |triggerHeader|,
+                |osTriggerRegistrations|, and |preferredPlatform|.
 
     </dl>
 

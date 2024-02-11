@@ -5,6 +5,9 @@ const tests = [
   {
     input: 'preferred-platform=os',
   },
+  {
+    input: 'preferred-platform=web',
+  },
 
   // Warning
   {
