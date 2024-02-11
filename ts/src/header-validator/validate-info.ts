@@ -1,6 +1,5 @@
 import { Context, ValidationResult } from './context'
-import { parseDictionary } from 'structured-headers'
-import { Token } from 'structured-headers'
+import { Token, parseDictionary } from 'structured-headers'
 
 export function validateInfo(str: string): ValidationResult {
   const ctx = new Context()
