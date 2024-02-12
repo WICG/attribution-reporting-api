@@ -803,7 +803,7 @@ An aggregatable values configuration is a [=struct=] with the following items:
 
 <dl dfn-for="aggregatable values configuration">
 : <dfn>values</dfn>
-:: An [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose [=map/value|values=] are non-negative 32-bit integers.
+:: A [=map=] whose [=map/key|keys=] are [=strings=] and whose [=map/value|values=] are non-negative 32-bit integers.
 : <dfn>filters</dfn>
 :: A [=list=] of [=filter configs=].
 : <dfn>negated filters</dfn>
@@ -2412,7 +2412,7 @@ To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
     1. [=list/Append=] |aggregatableTrigger| to |aggregatableTriggerData|.
 1. Return |aggregatableTriggerData|.
 
-To <dfn>parse aggregatable key-values</dfn> given an [=ordered map=] |map|:
+To <dfn>parse aggregatable key-values</dfn> given a [=map=] |map|:
 
 1. [=map/iterate|For each=] |key| → |value| of |map|:
     1. If |key|'s [=string/length=] is greater than the [=max length per aggregation key identifier=],
@@ -2428,7 +2428,7 @@ To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
 1. Let |values| be |map|["`aggregatable_values`"].
 1. If |values| is not an [=ordered map=] or a [=list=], return null.
 1. Let |aggregatableValuesConfigurations| be a [=list=] of [=aggregatable values configurations=], initially empty.
-1. If |values| is an [=ordered map=]:
+1. If |values| is a [=map=]:
     1. Let |aggregatableKeyValues| be the result of running [=parse aggregatable key-values=] with |values|.
     1. If |aggregatableKeyValues| is null, return null.
     1. Let |aggregatableValuesConfiguration| be a new [=aggregatable values configuration=] with the items:
@@ -2441,7 +2441,7 @@ To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
     1. [=list/Append=] |aggregatableValuesConfiguration| to |aggregatableValuesConfigurations|.
     1. Return |aggregatableValuesConfigurations|.
 1. [=list/iterate|For each=] |value| of |values|:
-    1. If |value| is not an [=ordered map=], return null.
+    1. If |value| is not a [=map=], return null.
     1. If |value|["`values`"] does not [=map/exist=], return null.
     1. Let |aggregatableKeyValues| be the result of running [=parse aggregatable key-values=] with |value|["`values`"].
     1. If |aggregatableKeyValues| is null, return null.
@@ -2696,7 +2696,7 @@ Given an [=attribution trigger=] |trigger|, an [=attribution source=]
 <h3 algorithm id="creating-aggregatable-contributions">Creating aggregatable contributions</h3>
 
 To <dfn>create [=aggregatable contributions=] from [=attribution source/aggregation keys=] and aggregatable values</dfn>
- given an [=ordered map=] |aggregationKeys| and an [=ordered map=] |aggregatableValues|,
+ given an [=ordered map=] |aggregationKeys| and a [=map=] |aggregatableValues|,
  run the following steps:
 
 1. Let |contributions| be an empty [=list=].

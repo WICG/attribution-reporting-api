@@ -186,12 +186,15 @@ Note: The `filters` field will still apply to aggregatable reports, and each
 dict in `aggregatable_trigger_data` can still optionally have filters applied
 to it just like for event-level reports.
 
-Note: The `aggregatable_values` field may also be specified as a list of dict,
-where each dict contains a dict of key-value pair as outlined above as well as
-optional `filters` and `not_filters` fields, allowing trigger registrations to
-customize how values are contributed to keys depending on source event data. If
-multiple list entries have filters that match the source's filters, only the
-first entry and its corresponding values will be used.
+Note: The `aggregatable_values` field may also be specified as a list of
+dictionaries, where each dictionary contains a dictionary `values` of key-value
+pairs as outlined above as well as optional `filters` and `not_filters` fields,
+allowing trigger registrations to customize how values are contributed to keys
+depending on source filter data. If multiple list entries have filters that
+match the source's filters, only the first entry and its corresponding values
+will be used.
+
+For example:
 ```jsonc
 {
   ...,
