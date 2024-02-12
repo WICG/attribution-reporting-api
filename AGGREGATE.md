@@ -188,12 +188,13 @@ to it just like for event-level reports.
 
 Note: The `aggregatable_values` field may also be specified as a list of dict,
 where each dict contains a dict of key-value pair as outlined above as well as
-an optional `filters` (and its corresponding `not_filters`) field, allowing
-trigger registrations to customize how values are contributed to keys depending
-on the context of the source.
+optional `filters` and `not_filters` fields, allowing trigger registrations to
+customize how values are contributed to keys depending on source event data. If
+multiple list entries have filters that match the source's filters, only the
+first entry and its corresponding values will be used.
 ```jsonc
 {
-  ...
+  ...,
   "aggregatable_values": [
     {
       "values": {
