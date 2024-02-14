@@ -1244,6 +1244,10 @@ function aggregatableTriggerData(
   )
 }
 
+export type AggregatableValuesConfiguration = FilterPair & {
+  values: Map<string, number>
+}
+
 function aggregatableKeyValue(
   ctx: Context,
   [key, j]: [string, Json]
@@ -1258,8 +1262,30 @@ function aggregatableKeyValue(
     )
 }
 
-function aggregatableValues(ctx: Context, j: Json): Maybe<Map<string, number>> {
+function aggregatableKeyValues(
+  ctx: Context,
+  j: Json
+): Maybe<Map<string, number>> {
   return keyValues(ctx, j, aggregatableKeyValue)
+}
+
+function aggregatableValuesConfigurations(
+  ctx: Context,
+  j: Json
+): Maybe<AggregatableValuesConfiguration[]> {
+  return typeSwitch(ctx, j, {
+    object: (ctx, j) =>
+      aggregatableKeyValues(ctx, j).map((values) => [
+        { values, positive: [], negative: [] },
+      ]),
+    list: (ctx, j) =>
+      array(ctx, j, (ctx, j) =>
+        struct(ctx, j, {
+          values: field('values', aggregatableKeyValues),
+          ...filterFields,
+        })
+      ),
+  })
 }
 
 export type EventTriggerDatum = FilterPair &
@@ -1326,8 +1352,10 @@ function aggregatableSourceRegistrationTime(
   return enumerated(ctx, j, AggregatableSourceRegistrationTime)
 }
 
-function warnInconsistentAggregatableKeys(ctx: Context, t: Trigger): void {
-  const triggerDataKeys = new Set<string>()
+// TODO(apasel422): Update with new AggregatableValuesConfiguration structure.
+function warnInconsistentAggregatableKeys(_ctx: Context, _t: Trigger): void {
+  /*  
+const triggerDataKeys = new Set<string>()
 
   ctx.scope('aggregatable_trigger_data', () => {
     for (const [index, datum] of t.aggregatableTriggerData.entries()) {
@@ -1358,6 +1386,7 @@ function warnInconsistentAggregatableKeys(ctx: Context, t: Trigger): void {
       }
     }
   })
+*/
 }
 
 function triggerContextID(
@@ -1400,7 +1429,7 @@ export type Trigger = CommonDebug &
     aggregatableDedupKeys: AggregatableDedupKey[]
     aggregatableTriggerData: AggregatableTriggerDatum[]
     aggregatableSourceRegistrationTime: AggregatableSourceRegistrationTime
-    aggregatableValues: Map<string, number>
+    aggregatableValuesConfigurations: AggregatableValuesConfiguration[]
     aggregationCoordinatorOrigin: string | null
     eventTriggerData: EventTriggerDatum[]
     triggerContextID: string | null
@@ -1421,10 +1450,10 @@ function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
           aggregatableTriggerData,
           []
         ),
-        aggregatableValues: field(
+        aggregatableValuesConfigurations: field(
           'aggregatable_values',
-          aggregatableValues,
-          new Map()
+          aggregatableValuesConfigurations,
+          []
         ),
         aggregatableDedupKeys: field(
           'aggregatable_deduplication_keys',

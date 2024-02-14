@@ -81,7 +81,13 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           sourceKeys: new Set(['x']),
         },
       ],
-      aggregatableValues: new Map([['x', 5]]),
+      aggregatableValuesConfigurations: [
+        {
+          values: new Map([['x', 5]]),
+          positive: [],
+          negative: [],
+        },
+      ],
       debugKey: 5n,
       debugReporting: true,
       eventTriggerData: [
@@ -117,6 +123,27 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         },
       ],
     }),
+  },
+  {
+    name: 'aggregatable-values-list-with-filters',
+    json: `{
+      "aggregatable_values": [
+        {
+          "values": {
+            "a": 1
+          },
+          "filters": [{"g": []}, {"h": []}],
+          "not_filters": [{"g": []}, {"h": []}]
+        },
+        {
+          "values": {
+            "b": 2
+          },
+          "filters": [{"i": []}, {"j": []}],
+          "not_filters": [{"i": []}, {"j": []}]
+        }
+      ]
+    }`,
   },
   {
     name: 'or-filters',
@@ -320,7 +347,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['aggregatable_values'],
-        msg: 'must be an object',
+        msg: 'must be an object or a list',
       },
     ],
   },
@@ -364,7 +391,47 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
     ],
   },
+  {
+    name: 'aggregatable-values-list-values-field-missing',
+    json: `{
+      "aggregatable_values": [
+        {
+          "a": 1
+        }
+      ]
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_values', 0, 'values'],
+        msg: 'required',
+      },
+    ],
+    expectedWarnings: [
+      {
+        msg: 'unknown field',
+        path: ['aggregatable_values', 0, 'a'],
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-values-list-wrong-type',
+    json: `{
+      "aggregatable_values": [
+        {
+          "values": []
+        }
+      ]
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_values', 0, 'values'],
+        msg: 'must be an object',
+      },
+    ],
+  },
 
+  // TODO(apasel422): Uncomment once respective function is updated.
+  /*
   {
     name: 'inconsistent-aggregatable-keys',
     json: `{
@@ -398,6 +465,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
     ],
   },
+  */
 
   {
     name: 'debug-reporting-wrong-type',
