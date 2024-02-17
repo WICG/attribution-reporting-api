@@ -422,13 +422,13 @@ it should be straightforward to ensure that trigger registration requests come
 bearing Private State Tokens:
 
 ```javascript
-window.fetch('https://adtech.example/trigger-attribution?convid=123', { 
-  headers: { 'Attribution-Reporting-Eligible': 'trigger' },
+window.fetch('https://adtech.example/trigger-attribution?convid=123', {
+  attributionReporting: { triggerEligible: true },
   keepalive: true,
-  private-state-token: {
+  privateStateToken: {
     type: 'send-redemption-record',
-    issuers: ['https://invalid-detection.example/']
-  }
+    issuers: ['https://invalid-detection.example/'],
+  },
 });
 ```
 
@@ -441,10 +441,10 @@ comes bearing a cookie, the cookie can also be used as input into the issuance
 protocol.
 
 ```javascript
-let trustSignal = generateTrustSignal();
-window.fetch('https://adtech.example/trigger-attribution?convid=123?trustSignal=' + trustSignal, { 
-  headers: { 'Attribution-Reporting-Eligible': 'trigger' },
-  keepalive: true
+const trustSignal = generateTrustSignal();
+window.fetch(`https://adtech.example/trigger-attribution?convid=123?trustSignal=${trustSignal}`, {
+  attributionReporting: { triggerEligible: true },
+  keepalive: true,
 });
 ```
 
