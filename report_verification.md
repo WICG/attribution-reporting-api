@@ -425,7 +425,7 @@ bearing Private State Tokens:
 window.fetch('https://adtech.example/trigger-attribution?convid=123', {
   attributionReporting: { triggerEligible: true },
   keepalive: true,
-  privateStateToken: {
+  privateToken: {
     type: 'send-redemption-record',
     issuers: ['https://invalid-detection.example/'],
   },
