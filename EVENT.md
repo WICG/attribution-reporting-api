@@ -895,7 +895,7 @@ event is completely fabricated by the browser, giving the user plausible
 deniability whether subsequent trigger events actually occurred the way they
 were reported.
 
-In order to achieve the privacy goals listed above the API has various rate limits, which can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md)
+In order to achieve the privacy goals listed above the API has various rate limits, which can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md) for Chromium.
 
 ### Trigger Data
 
