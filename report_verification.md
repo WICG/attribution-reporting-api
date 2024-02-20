@@ -426,7 +426,7 @@ window.fetch('https://adtech.example/trigger-attribution?convid=123', {
   attributionReporting: { triggerEligible: true },
   keepalive: true,
   privateToken: {
-    type: 'send-redemption-record',
+    operation: 'send-redemption-record',
     issuers: ['https://invalid-detection.example/'],
   },
 });
