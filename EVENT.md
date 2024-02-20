@@ -1046,8 +1046,7 @@ event source, a `reportingorigin` would need to register many more sources in
 order to link cross-site identity relative to the Click Through API.
 
 This is further restricted by rate-limiting the usage of the API between two
-sites, using [reporting
-cooldowns](event_attribution_reporting_clicks.md#reporting-cooldown--rate-limits).
+sites, using [reporting cooldowns](#reporting-cooldown--rate-limits).
 Due to the different characteristics between classes of sources, these cooldowns
 should have independent limits on the number of reports of each type.
 
