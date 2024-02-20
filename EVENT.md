@@ -949,7 +949,7 @@ origins per <source site, destination site> pair, counted per source
 registration.
 
 Additionally, there should be a limit on the number of reporting origins per <source site,
-destination site, 30 days>, counted for every attribution that is generated, and a limit on the number of reporting origins per <source site, reporting site, 1 day> counted per source registration. Additional details can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
+destination site, 30 days>, counted for every attribution that is generated, and a limit on the number of reporting origins per <source site, reporting site, 1 day> counted per source registration.
 
 ### Clearing Site Data
 
