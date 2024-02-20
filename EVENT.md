@@ -922,12 +922,8 @@ In the above example, the browser could have chosen to generate three reports:
 ## Storage limits
 
 The browser may apply storage limits in order to prevent excessive resource
-usage.
+usage. The API currently has storage limits on the pending sources per origin and pending event-level reports per destination site.
 
-Strawman: There should be a limit of 1024 pending sources per source origin.
-
-Strawman: There should be a limit of 1024 pending event-level reports per
-destination site.
 
 ## Privacy Considerations
 
@@ -954,6 +950,8 @@ Additionally, there is a small chance that all the output for a given source
 event is completely fabricated by the browser, giving the user plausible
 deniability whether subsequent trigger events actually occurred the way they
 were reported.
+
+In order to achieve the privacy goals listed above the API has various rate limits, which can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md) for Chromium.
 
 ### Trigger Data
 
@@ -1004,10 +1002,10 @@ extra information.
 
 To prevent this kind of abuse, the browser should limit the number of reporting
 origins per <source site, destination site> pair, counted per source
-registration. This should be limited to 100 origins per 30 days.
+registration.
 
-Additionally, there should be a limit of 10 reporting origins per <source site,
-destination site, 30 days>, counted for every attribution that is generated and a limit of 1 reporting origin per <source site, reporting site, 1 day> counted per source registration.
+Additionally, there should be a limit on the number of reporting origins per <source site,
+destination site, 30 days>, counted for every attribution that is generated, and a limit on the number of reporting origins per <source site, reporting site, 1 day> counted per source registration.
 
 ### Clearing Site Data
 
@@ -1033,9 +1031,6 @@ Note that splitting these limits by the reporting site introduces a possible
 leak when multiple sites collude with each other. However, the alternative
 makes it very difficult to adopt the API if all reporting sites had to share a
 budget.
-
-Strawman rate limit: 100 attributions per {source site, destination site, reporting
-site, 30 days}
 
 ### Less trigger-side data
 
@@ -1089,21 +1084,15 @@ Because this limit is per source site, it is possible for different reporting
 origin on a site to push the other attribution sources out of the browser. See
 the [denial of service](#denial-of-service) for more details. To prevent this
 attack, the browser should maintain these limits per reporting site. This
-effectively limits the number of unique sites covered by unexpired sources from
-any one reporting site.
-
-Strawman: 100 distinct destination sites per-{source site, reporting site},
-applied to all unexpired sources regardless of type at source time.
+effectively limits the number of unique sites covered per {source site, reporting site} applied to all unexpired sources regardless of type at source time.
 
 #### Limiting the number of unique destinations per source site
 
-To further reduce the possibility of a history reconstruction attack, the browser can also limit the number of `destination` eTLD+1s registered by source-sites.
+To further reduce the possibility of a history reconstruction attack, the browser can also limit the number of `destination` eTLD+1s registered per {source-site, 1 minute}.
 
-Strawman: 200 distinct destination sites per-{source site, 1 minute}
 
-Additionally, to prevent one origin from using up the budget in the limit above, the browser can also limit the number of `destination` eTLD+1s per reporting origin.
+Additionally, to prevent one origin from using up the budget in the limit above, the browser can also limit the number of `destination` eTLD+1s per {source site, reporting site, 1 minute}.
 
-Strawman: 50 distinct destination sites per-{source site, reporting site, 1 minute}
 
 ### Differential privacy
 
