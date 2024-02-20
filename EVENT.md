@@ -866,7 +866,7 @@ In the above example, the browser could have chosen to generate three reports:
 ## Storage limits
 
 The browser may apply storage limits in order to prevent excessive resource
-usage. The API currently has storage limits on the on the pending sources per origin and pending event-level reports per destination site.
+usage. The API currently has storage limits on the pending sources per origin and pending event-level reports per destination site.
 
 
 ## Privacy Considerations
