@@ -866,7 +866,7 @@ In the above example, the browser could have chosen to generate three reports:
 ## Storage limits
 
 The browser may apply storage limits in order to prevent excessive resource
-usage. Details on the pending sources per origin limit and pending event-level reports per destination site limit can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
+usage. The API currently has storage limits on the on the pending sources per origin and pending event-level reports per destination site.
 
 
 ## Privacy Considerations
@@ -894,6 +894,8 @@ Additionally, there is a small chance that all the output for a given source
 event is completely fabricated by the browser, giving the user plausible
 deniability whether subsequent trigger events actually occurred the way they
 were reported.
+
+In order to achieve the privacy goals listed above the API has various rate limits, which can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md)
 
 ### Trigger Data
 
@@ -944,7 +946,7 @@ extra information.
 
 To prevent this kind of abuse, the browser should limit the number of reporting
 origins per <source site, destination site> pair, counted per source
-registration. Additional details can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
+registration.
 
 Additionally, there should be a limit on the number of reporting origins per <source site,
 destination site, 30 days>, counted for every attribution that is generated, and a limit on the number of reporting origins per <source site, reporting site, 1 day> counted per source registration. Additional details can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
@@ -963,7 +965,7 @@ sent through this API in a given time period for a user. The browser should set
 a maximum number of attributions per
 <source site, destination site, reporting site, user> tuple per time period. If this
 threshold is hit, the browser will stop scheduling reports the API for the
-rest of the time period for attributions matching that tuple. Additional details can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
+rest of the time period for attributions matching that tuple.
 
 The longer the cooldown windows are, the harder it is to abuse the API and join
 identity. Ideally attribution thresholds should be low enough to avoid leaking too
@@ -1027,14 +1029,14 @@ Because this limit is per source site, it is possible for different reporting
 origin on a site to push the other attribution sources out of the browser. See
 the [denial of service](#denial-of-service) for more details. To prevent this
 attack, the browser should maintain these limits per reporting site. This
-effectively limits the number of unique sites covered per {source site, reporting site} applied to all unexpired sources regardless of type at source time. Additional details can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
+effectively limits the number of unique sites covered per {source site, reporting site} applied to all unexpired sources regardless of type at source time.
 
 #### Limiting the number of unique destinations per source site
 
-To further reduce the possibility of a history reconstruction attack, the browser can also limit the number of `destination` eTLD+1s registered per {source-site, 1 minute}. Additional details can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
+To further reduce the possibility of a history reconstruction attack, the browser can also limit the number of `destination` eTLD+1s registered per {source-site, 1 minute}.
 
 
-Additionally, to prevent one origin from using up the budget in the limit above, the browser can also limit the number of `destination` eTLD+1s per {source site, reporting site, 1 minute}. Additional details can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
+Additionally, to prevent one origin from using up the budget in the limit above, the browser can also limit the number of `destination` eTLD+1s per {source site, reporting site, 1 minute}.
 
 
 ### Differential privacy
