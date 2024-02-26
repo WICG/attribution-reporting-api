@@ -8,6 +8,15 @@ const tests = [
   {
     input: 'preferred-platform=web',
   },
+  {
+    input: 'report-header-errors',
+  },
+  {
+    input: 'report-header-errors=?0',
+  },
+  {
+    input: 'preferred-platform=os,report-header-errors=?0',
+  },
 
   // Warning
   {
@@ -24,6 +33,15 @@ const tests = [
     expectedWarnings: [
       {
         path: ['preferred-platform'],
+        msg: 'ignoring parameters',
+      },
+    ],
+  },
+  {
+    input: 'report-header-errors;x=1',
+    expectedWarnings: [
+      {
+        path: ['report-header-errors'],
         msg: 'ignoring parameters',
       },
     ],
@@ -53,6 +71,15 @@ const tests = [
       {
         path: ['preferred-platform'],
         msg: 'must be one of the following (case-sensitive): os, web',
+      },
+    ],
+  },
+  {
+    input: 'report-header-errors=abc',
+    expectedErrors: [
+      {
+        path: ['report-header-errors'],
+        msg: 'must be a boolean',
       },
     ],
   },

@@ -29,6 +29,15 @@ export function validateInfo(str: string): ValidationResult {
             ctx.warning('ignoring parameters')
           }
           break
+        case 'report-header-errors':
+          if (typeof value[0] !== 'boolean') {
+            ctx.error('must be a boolean')
+            return
+          }
+          if (value[1].size !== 0) {
+            ctx.warning('ignoring parameters')
+          }
+          break
         default:
           ctx.warning('unknown dictionary key')
           break
