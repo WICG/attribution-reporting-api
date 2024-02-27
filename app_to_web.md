@@ -44,7 +44,7 @@ sequenceDiagram
 ```
 See Android's [Attribution reporting: cross app and web measurement proposal](https://developer.android.com/design-for-safety/privacy-sandbox/attribution-app-to-web) for one example of an OS API that a browser can integrate with to do cross app and web measurement.
 
-The existing API involves sending requests to the reporting origin to register events. These requests will have a new request header `Attribution-Reporting-Eligible`. On requests with this header, the browser will additionally broadcast possible web or OS-level support for attribution to the reporting origin's server via a new [dictionary structured request header](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-structure-15#section-3.2):
+The existing API involves sending requests to the reporting origin to register events. These requests will have a new request header `Attribution-Reporting-Eligible`. On requests with this header, the browser will additionally broadcast possible web or OS-level support for attribution to the reporting origin's server via a new [dictionary structured request header](https://httpwg.org/specs/rfc8941.html#dictionary):
 ```
 Attribution-Reporting-Support: os, web
 ```
@@ -66,6 +66,18 @@ Trigger registrations will accept a new response header as well:
 Attribution-Reporting-Register-OS-Trigger: "https://adtech.example/register", "https://other-adtech.example/register"
 ```
 
+The reporting origin can also optionally respond with a [dictionary structured header](https://httpwg.org/specs/rfc8941.html#dictionary)
+`Attribution-Reporting-Info` to specify the preferred platform. The key is
+`preferred-platform` and the value is a [structured header
+token](https://httpwg.org/specs/rfc8941.html#token)
+with allowed values `os` and `web`.
+```http
+Attribution-Reporting-Info: preferred-platform=os
+```
+
+The browser will make the platform decision based on the availability of the
+platform support on the user's device.
+
 After receiving these headers, the browser will pass these URLs into the underlying OS API with any additional information including:
 the context on which the event occurs (source / destination site)
 the InputEvent in the event of a click/navigation source, for platform verification
@@ -74,7 +86,11 @@ Normal attribution logic in the browser will be halted.
 
 For a site to enable App<->Web attribution after integrating with the Web API, they will only need to make server side changes.
 
-A reporting origin responding with the `Attribution-Reporting-Register-OS-Source` or `Attribution-Reporting-Register-OS-Trigger` headers while `Attribution-Reporting-Support` does not contain `os` will cause the entire registration to fail (including web registration).
+A reporting origin responding with the `Attribution-Reporting-Register-OS-Source` or `Attribution-Reporting-Register-OS-Trigger` headers while there is no OS-level support will cause the OS registration to fail.
+If both OS registration and web registration are provided in the response while
+there is no OS-level support, the browser will fallback to the web registration
+only if a preferred platform is specified. If a preferred platform is not
+specified, then the web registration will fail as well.
 
 ## Optional: debugging reports
 
