@@ -50,16 +50,20 @@ spec: private-state-token-api; type: dfn; urlPrefix: https://wicg.github.io/trus
     text: generate masked tokens; url: #generate-masked-tokens
     text: unmask tokens; url: #unmask-tokens
     text: sec-private-state-token-crypto-version; url: #sec-private-state-token-crypto-version
-spec: structured header; type: dfn; urlPrefix: https://tools.ietf.org/html/rfc8941; 
-    text: structured header; url: #name-introduction
+spec: structured header; type: dfn; urlPrefix: https://httpwg.org/specs/rfc8941;
+    text: structured header; url: #introduction
     for: structured header
-        text: list; url: #name-lists
-        text: serialize a list; url: #name-serializing-a-list
-        text: parse a list; url: #name-parsing-a-list
-        text: string; url: #name-strings
-        text: serialize a string; url: #name-serializing-a-string
-        text: parse a string; url: #name-parse-a-string
-        text: token; url: #name-tokens
+        text: define new structured fields; url: #specify
+        text: dictionary; url: #dictionary
+        text: item; url: #item
+        text: list; url: #list
+        text: parameter; url: #param
+        text: parse a list; url: #parse-list
+        text: parse a string; url: #parse-string
+        text: serialize a list; url: #ser-list
+        text: serialize a string; url: #ser-string
+        text: string; url: #string
+        text: token; url: #token
 spec: infra; type: dfn; urlPrefix: https://infra.spec.whatwg.org/
     text: starts with; url: #string-starts-with
 spec: fenced-frame; type: dfn; urlPrefix: https://wicg.github.io/fenced-frame/;
@@ -378,8 +382,8 @@ given an optional {{AttributionReportingRequestOptions}} |options|:
 Issue: Check permissions policy.
 
 "<code><dfn>Attribution-Reporting-Eligible</dfn></code>" is a
-<a href="https://httpwg.org/specs/rfc8941.html#dictionary">Dictionary Structured
-Header</a> set on a [=request=] that indicates which registrations, if
+[=structured header/dictionary|Dictionary Structured Header=]
+set on a [=request=] that indicates which registrations, if
 any, are allowed on the corresponding [=response=]. Its values are not specified
 and its <dfn lt="eligible key">allowed keys</dfn> are:
 
@@ -402,21 +406,16 @@ a [=set=] of [=strings=] |allowedKeys|:
 1. Let |entries| be a new [=list=].
 1. [=list/iterate|For each=] |key| of |keys|:
     1. Let |value| be true.
-    1. Optionally, set |value| to a
-        <a href="https://httpwg.org/specs/rfc8941.html#token">token</a>
+    1. Optionally, set |value| to a [=structured header/token=]
         corresponding to one of [=strings=] in |allowedKeys|.
     1. Let |params| be an [=map/is empty|empty=] [=map=].
     1. [=set/iterate|For each=] |key| of |allowedKeys|, optionally [=map/set=] |params|[|key|] to an
-        arbitrary
-        <a href="https://httpwg.org/specs/rfc8941.html#item">bare item</a>.
+        arbitrary [=structured header/item|bare item=].
     1. [=list/Append=] a structured dictionary member with the key |key|, the
         value |value|, and the parameters |params| to |entries|.
-1. Return a
-    <a href="https://httpwg.org/specs/rfc8941.html#dictionary">dictionary</a>
-    containing |entries|.
+1. Return a [=structured header/dictionary=] containing |entries|.
 
-Note: The user agent MAY
-<a href="https://httpwg.org/specs/rfc8941.html#specify">"grease"</a> the
+Note: The user agent MAY "[=structured header/define new structured fields|grease=]" the
 dictionary structured headers according to the preceding algorithm to help ensure that recipients
 use a proper structured header parser, rather than naive string equality or
 `contains` operations, which makes it easier to introduce backwards-compatible
@@ -1355,8 +1354,8 @@ Issue: This would ideally be replaced by a more descriptive algorithm in Infra. 
 
 Note: The "`Attribution-Reporting-Register-Source`" and
 "`Attribution-Reporting-Register-Trigger`" response headers contain JSON-encoded
-data, rather than <a href="https://httpwg.org/specs/rfc8941.html">structured
-values</a>, because of limitations on nesting in the latter. The recursive
+data, rather than [=structured header|structured values=],
+because of limitations on nesting in the latter. The recursive
 nature of JSON makes it more amenable to future extensions.
 
 To <dfn>parse an optional 64-bit signed integer</dfn> given a [=map=] |map|, a
@@ -3899,8 +3898,7 @@ To <dfn noexport>get [=OS registrations=] from a header list</dfn> given a
      1. Let |url| be the result of running the [=URL parser=] on |value|.
      1. If |url| is failure or null, [=iteration/continue=].
      1. Let |debugReporting| be false.
-     1. Let |params| be the <a href="https://httpwg.org/specs/rfc8941.html#param">parameters</a>
-         associated with |value|.
+     1. Let |params| be the [=structured header/parameters=] associated with |value|.
      1. If |params|["`debug-reporting`"] [=map/exists=] and |params|["`debug-reporting`"] is a [=boolean=],
          set |debugReporting| to |params|["`debug-reporting`"].
      1. Let |registration| be a new [=OS registration=] struct whose items are:
@@ -3921,8 +3919,8 @@ To <dfn export>get supported registrars</dfn>:
 1. Return |supportedRegistrars|.
 
 "<code><dfn>Attribution-Reporting-Support</dfn></code>" is a
-<a href="https://httpwg.org/specs/rfc8941.html#dictionary">Dictionary Structured
-Header</a> set on a [=request=] that indicates which registrars, if
+[=structured header/dictionary|Dictionary Structured Header=]
+set on a [=request=] that indicates which registrars, if
 any, the corresponding [=response=] can use. Its values are not specified and
 its allowed keys are the [=registrars=].
 
