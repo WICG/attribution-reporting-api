@@ -4,6 +4,7 @@ import * as vsv from '../vendor-specific-values'
 import { validateSource, validateTrigger } from './validate-json'
 import { validateEligible } from './validate-eligible'
 import { validateOsRegistration } from './validate-os'
+import { validateInfo } from './validate-info'
 
 const form = document.querySelector('form')! as HTMLFormElement
 const input = form.querySelector('textarea')! as HTMLTextAreaElement
@@ -90,6 +91,9 @@ function validate(): void {
       break
     case 'eligible':
       result = validateEligible(input.value)
+      break
+    case 'info':
+      result = validateInfo(input.value)
       break
     default:
       return
