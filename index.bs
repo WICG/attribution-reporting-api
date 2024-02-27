@@ -2387,13 +2387,6 @@ To <dfn>obtain and deliver a debug report on source registration</dfn> given a
 
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
 
-1. Let |destinationRateLimitResult| be the result of running [=check if an attribution source exceeds the time-based destination limit=] with |source|.
-1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit reporting limit=]</code>":
-    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-destination-rate-limit=]</code>" and |source|.
-    1. Return.
-1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit global limit=]</code>":
-    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-success=]</code>" and |source|.
-    1. Return.
 1. Let |cache| be the user agent's [=attribution source cache=].
 1. [=list/Remove=] all [=attribution sources=] |entry| in |cache| where |entry|'s [=attribution source/expiry time=] is less than |source|'s [=attribution source/source time=].
 1. Let |pendingSourcesForSourceOrigin| be the [=set=] of all
@@ -2407,6 +2400,13 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. If the result of running [=check if an attribution source exceeds the unexpired destination limit=]
     with |source| is true:
     1. Run [=obtain and deliver a debug report on source registration=] with "[=source debug data type/source-destination-limit=]</code>" and |source|.
+    1. Return.
+1. Let |destinationRateLimitResult| be the result of running [=check if an attribution source exceeds the time-based destination limit=] with |source|.
+1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit reporting limit=]</code>":
+    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-destination-rate-limit=]</code>" and |source|.
+    1. Return.
+1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit global limit=]</code>":
+    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-success=]</code>" and |source|.
     1. Return.
 1. [=set/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
     1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
