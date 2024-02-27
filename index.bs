@@ -60,6 +60,7 @@ spec: structured header; type: dfn; urlPrefix: https://httpwg.org/specs/rfc8941;
         text: parameter; url: #param
         text: parse a list; url: #parse-list
         text: parse a string; url: #parse-string
+        text: parse structured fields; url: #text-parse
         text: serialize a list; url: #ser-list
         text: serialize a string; url: #ser-string
         text: string; url: #string
@@ -1689,15 +1690,14 @@ and a [=response=] |response|:
     |eligibility|, and |response|.
 
 To <dfn>get the registration platform</dfn> given a [=header value=] or null |webHeader|,
-a [=list=] of [=OS registrations=] or null |osRegistrations|, and
-a [=registrar=] or null |preferredPlatform|:
+a [=header value=] or null |osHeader|, and a [=registrar=] or null |preferredPlatform|:
 
-1. If |webHeader| and |osRegistrations| are both null, return null.
+1. If |webHeader| and |osHeader| are both null, return null.
 1. If |preferredPlatform| is null:
-    1. If |webHeader| and |osRegistrations| are both not null, return null.
+    1. If |webHeader| and |osHeader| are both not null, return null.
     1. If |webHeader| is not null and the user agent supports web registrations,
         return "<code>[=registrar/web=]</code>".
-    1. If |osRegistrations| is not null and the user agent supports OS registrations,
+    1. If |osHeader| is not null and the user agent supports OS registrations,
         return "<code>[=registrar/os=]</code>".
     1. Return null.
 1. If |preferredPlatform| is:
@@ -1706,13 +1706,13 @@ a [=registrar=] or null |preferredPlatform|:
       ::
          1. If |webHeader| is null, return null.
          1. If the user agent supports web registrations, return "<code>[=registrar/web=]</code>".
-         1. If |osRegistrations| is not null and the user agent supports OS registrations,
+         1. If |osHeader| is not null and the user agent supports OS registrations,
              return "<code>[=registrar/os=]</code>".
          1. Return null.
 
       : "<code>[=registrar/os=]</code>"
       ::
-         1. If |osRegistrations| is null, return null.
+         1. If |osHeader| is null, return null.
          1. If the user agent supports OS registrations, return "<code>[=registrar/os=]</code>".
          1. If |webHeader| is not null and the user agent supports web registrations,
              return "<code>[=registrar/web=]</code>".
@@ -1722,12 +1722,11 @@ a [=registrar=] or null |preferredPlatform|:
 
 To <dfn>process an attribution source response</dfn> given a [=suitable origin=]
 |contextOrigin|, a [=suitable origin=] |reportingOrigin|, a [=source type=]
-|sourceType|, a [=header value=] or null |webSourceHeader|, a [=list=] of
-[=OS registrations=] or null |osSourceRegistrations|, and a [=registrar=]
-or null |preferredPlatform|:
+|sourceType|, a [=header value=] or null |webSourceHeader|, a [=header value=]
+or null |osSourceHeader|, and a [=registrar=] or null |preferredPlatform|:
 
 1. Let |platform| be the result of [=get the registration platform=] with
-    |webSourceHeader|, |osSourceRegistrations|, and |preferredPlatform|.
+    |webSourceHeader|, |osSourceHeader|, and |preferredPlatform|.
 1. If |platform| is null, return.
 1. If |platform| is:
     <dl class="switch">
@@ -1740,6 +1739,9 @@ or null |preferredPlatform|:
             |source|.
     : "<code>[=registrar/os=]</code>"
     ::
+        1. Let |osSourceRegistrations| be the result of running
+            [=get OS registrations from a header value=] with |osSourceHeader|.
+        1. If |osSourceRegistrations| is null, return.
         1. Process |osSourceRegistrations| according to an [=implementation-defined=] algorithm.
         1. Run [=obtain and deliver debug reports on OS registrations=] with
             "<code>[=OS debug data type/os-source-delegated=]</code>", |osSourceRegistrations|,
@@ -1750,11 +1752,11 @@ or null |preferredPlatform|:
 To <dfn>process an attribution trigger response</dfn> given a [=suitable origin=]
 |contextOrigin|, a [=suitable origin=] |reportingOrigin|, a [=response=] |response|,
 a [=request/trigger verification metadata=] |triggerVerificationMetadata|,
-a [=header value=] or null |webTriggerHeader|, a [=list=] of [=OS registrations=]
-or null |osTriggerRegistrations|, and a [=registrar=] or null |preferredPlatform|:
+a [=header value=] or null |webTriggerHeader|, a [=header value=] or null
+|osTriggerHeader|, and a [=registrar=] or null |preferredPlatform|:
 
 1. Let |platform| be the result of [=get the registration platform=]
-    with |webTriggerHeader|, |osTriggerRegistrations|, and |preferredPlatform|.
+    with |webTriggerHeader|, |osTriggerHeader|, and |preferredPlatform|.
 1. If |platform| is null, return.
 1. If |platform| is:
     <dl class="switch">
@@ -1772,6 +1774,9 @@ or null |osTriggerRegistrations|, and a [=registrar=] or null |preferredPlatform
             1. [=Maybe defer and then complete trigger attribution=] with |trigger|.
     : "<code>[=registrar/os=]</code>"
     ::
+        1. Let |osTriggerRegistrations| be the result of running
+            [=get OS registrations from a header value=] with |osTriggerHeader|.
+        1. If |osTriggerRegistrations| is null, return.
         1. Process |osTriggerRegistrations| according to an [=implementation-defined=] algorithm.
         1. Run [=obtain and deliver debug reports on OS registrations=] with
             "<code>[=OS debug data type/os-trigger-delegated=]</code>", |osTriggerRegistrations|,
@@ -1805,14 +1810,12 @@ To <dfn export>process an attribution eligible response</dfn> given a [=suitable
 1. Let |triggerHeader| be the result of [=header list/get|getting=]
     "`Attribution-Reporting-Register-Trigger`" from |response|'s
     [=response/header list=].
-1. Let |osSourceRegistrations| be the result of
-    [=get OS registrations from a header list|getting OS registrations=]
-    from |response|'s [=response/header list=] with
-    "`Attribution-Reporting-Register-OS-Source`".
-1. Let |osTriggerRegistrations| be the result of
-    [=get OS registrations from a header list|getting OS registrations=]
-    from |response|'s [=response/header list=] with
-    "`Attribution-Reporting-Register-OS-Trigger`".
+1. Let |osSourceHeader| be the result of [=header list/get|getting=]
+    "`Attribution-Reporting-Register-OS-Source`" from |response|'s
+    [=response/header list=].
+1. Let |osTriggerHeader| be the result of [=header list/get|getting=]
+    "`Attribution-Reporting-Register-OS-Trigger`" from |response|'s
+    [=response/header list=].
 1. Let |preferredPlatform| be the result of
     [=get preferred platform from a header list|getting preferred platform=]
     from |response|'s [=response/header list=].
@@ -1833,21 +1836,21 @@ To <dfn export>process an attribution eligible response</dfn> given a [=suitable
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: Run the following steps:
         1. Let |hasSourceRegistration| be false.
-        1. If |sourceHeader| or |osSourceRegistrations| is not null, set
+        1. If |sourceHeader| or |osSourceHeader| is not null, set
             |hasSourceRegistration| to true.
         1. Let |hasTriggerRegistration| be false.
-        1. If |triggerHeader| or |osTriggerRegistrations| is not null, set
+        1. If |triggerHeader| or |osTriggerHeader| is not null, set
             |hasTriggerRegistration| to true.
         1. If both |hasSourceRegistration| and |hasTriggerRegistration| are true,
             return.
         1. If |hasSourceRegistration| is true:
             1. Run [=process an attribution source response=]
                 with |contextOrigin|, |reportingOrigin|, "<code>[=source type/event=]</code>",
-                |sourceHeader|, |osSourceRegistrations|, and |preferredPlatform|.
+                |sourceHeader|, |osSourceHeader|, and |preferredPlatform|.
         1. If |hasTriggerRegistration| is true:
             1. Run [=process an attribution trigger response=]
                 with |contextOrigin|, |reportingOrigin|, |response|, |triggerVerificationMetadata|, |triggerHeader|,
-                |osTriggerRegistrations|, and |preferredPlatform|.
+                |osTriggerHeader|, and |preferredPlatform|.
 
     </dl>
 
@@ -3885,13 +3888,13 @@ An <dfn>OS registration</dfn> is a [=struct=] with the following items:
 
 </dl>
 
-To <dfn noexport>get [=OS registrations=] from a header list</dfn> given a
-[=header list=] |headers| and a [=header name=] |name|:
+To <dfn noexport>get [=OS registrations=] from a header value</dfn> given a
+[=header value=] |header|:
 
-1. Let |values| be the result of
-    [=header list/get a structured field value|getting=] |name| from |headers|
-    with a type of "`list`".
-1. If |values| is not a [=list=], return null.
+1. Let |values| be the result of [=structured header/parsing structured fields=]
+    with <var ignore>input_string</var> set to |header| and
+    <var ignore>header_type</var> set to "`list`".
+1. If parsing failed, return null.
 1. Let |registrations| be a new [=list=].
 1. [=list/iterate|For each=] |value| of |values|:
      1. If |value| is not a [=string=], [=iteration/continue=].
@@ -3907,6 +3910,7 @@ To <dfn noexport>get [=OS registrations=] from a header list</dfn> given a
          : [=OS registration/debug reporting enabled=]
          :: |debugReporting|
      1. [=list/Append=] |registration| to |registrations|.
+1. If |registrations| [=list/is empty=], return null.
 1. Return |registrations|.
 
 To <dfn export>get supported registrars</dfn>:
