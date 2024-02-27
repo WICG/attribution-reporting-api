@@ -3788,6 +3788,8 @@ A user agent MAY retry this algorithm in the event that there was an error.
 
 # Cross App and Web Algorithms # {#cross-app-and-web}
 
+<h3 id="get-os-registrations">Get OS registrations</h3>
+
 An <dfn>OS registration</dfn> is a [=struct=] with the following items:
 
 <dl dfn-for="OS registration">
@@ -3823,6 +3825,8 @@ To <dfn noexport>get [=OS registrations=] from a header list</dfn> given a
      1. [=list/Append=] |registration| to |registrations|.
 1. Return |registrations|.
 
+<h3 id="set-os-support-headers">Set OS-support header</h3>
+
 To <dfn export>get supported registrars</dfn>:
 
 1. Let |supportedRegistrars| be an [=list/is empty|empty=] [=list=].
@@ -3846,6 +3850,31 @@ To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
     with |supportedRegistrars| and the [=set=] containing all the [=registrars=].
 1. [=header list/Set a structured field value=] given
     ("<code>[=Attribution-Reporting-Support=]</code>", |dict|) in |headers|.
+
+<h3 id="deliver-os-registrations-debug-reports">Deliver OS registrations debug reports</h3>
+
+To <dfn>obtain and deliver debug reports on OS registrations</dfn> given an
+[=OS debug data type=] |dataType|, a [=list=] of [=OS registrations=] |registrations|,
+and an [=origin=] |contextOrigin|:
+
+1. If |registrations| [=list/is empty=], return.
+1. Let |contextSite| be the result of [=obtaining a site=] from |contextOrigin|.
+1. [=list/iterate|For each=] |registration| of |registrations|:
+    1. If |registration|'s [=OS registration/debug reporting enabled=] is false, [=iteration/continue=].
+    1. Let |origin| be |registration|'s [=OS registration/URL=]'s [=url/origin=].
+    1. If |origin| is not [=check if an origin is suitable|suitable=], [=iteration/continue=].
+    1. Let |body| be a new [=map=] with the following key/value pairs:
+        : "`context_site`"
+        :: |contextSite|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
+        : "`registration_url`"
+        :: |registration|'s [=OS registration/URL=], [=url serializer|serialized=].
+
+    1. Let |data| be a new [=attribution debug data=] with the items:
+        : [=attribution debug data/data type=]
+        :: |dataType|
+        : [=attribution debug data/body=]
+        :: |body|
+    1. Run [=obtain and deliver a debug report=] with « |data| » and |origin|.
 
 
 # Report Verification Algorithms # {#report-verification}
@@ -3927,29 +3956,6 @@ To <dfn noexport>receive trigger verification tokens</dfn> given an
 1. Return |triggerVerifications|.
 
 Issue: Specify the cryptographic redemption procedure.
-
-To <dfn>obtain and deliver debug reports on OS registrations</dfn> given an
-[=OS debug data type=] |dataType|, a [=list=] of [=OS registrations=] |registrations|,
-and an [=origin=] |contextOrigin|:
-
-1. If |registrations| [=list/is empty=], return.
-1. Let |contextSite| be the result of [=obtaining a site=] from |contextOrigin|.
-1. [=list/iterate|For each=] |registration| of |registrations|:
-    1. If |registration|'s [=OS registration/debug reporting enabled=] is false, [=iteration/continue=].
-    1. Let |origin| be |registration|'s [=OS registration/URL=]'s [=url/origin=].
-    1. If |origin| is not [=check if an origin is suitable|suitable=], [=iteration/continue=].
-    1. Let |body| be a new [=map=] with the following key/value pairs:
-        : "`context_site`"
-        :: |contextSite|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
-        : "`registration_url`"
-        :: |registration|'s [=OS registration/URL=], [=url serializer|serialized=].
-
-    1. Let |data| be a new [=attribution debug data=] with the items:
-        : [=attribution debug data/data type=]
-        :: |dataType|
-        : [=attribution debug data/body=]
-        :: |body|
-    1. Run [=obtain and deliver a debug report=] with « |data| » and |origin|.
 
 # User-Agent Automation # {#automation}
     
