@@ -830,7 +830,7 @@ fenced frame tree.
 The headers related to the Attribution Reporting API can be validated by the [header
 validator](https://github.com/WICG/attribution-reporting-api/tree/main/ts#header-validator).
 In order to better facilitate API debugging, we also allow developers to
-monitor failures in the header validation.
+monitor validation errors originating from the browser.
 
 The reporting origins may opt in to receiving debugging reports by responding
 with a [dictionary structured header](https://httpwg.org/specs/rfc8941.html#dictionary)
