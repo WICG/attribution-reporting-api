@@ -40,7 +40,7 @@ extension on top of this.
     - [Attribution-success debugging reports](#attribution-success-debugging-reports)
     - [Verbose debugging reports](#verbose-debugging-reports)
       - [Reporting endpoints](#reporting-endpoints)
-  - [Optional: header errors debugging reports](#optional-header-errors-debugging-reports)
+  - [Optional: header-error debugging reports](#optional-header-error-debugging-reports)
 - [Sample Usage](#sample-usage)
   - [Noisy fake conversion example](#noisy-fake-conversion-example)
 - [Storage limits](#storage-limits)
@@ -825,7 +825,7 @@ debug reports without cross-site leak.
 TODO: Consider supporting debug reports for attribution registrations inside a
 fenced frame tree.
 
-### Optional: header errors debugging reports
+### Optional: header-error debugging reports
 
 The headers related to the Attribution Reporting API can be validated by the [header
 validator](https://github.com/WICG/attribution-reporting-api/tree/main/ts#header-validator).
@@ -852,13 +852,13 @@ The report data is included in the request body as a JSON list of objects, e.g.
   "body": {
     "context_site": "https://source.example",
     "header": "Attribution-Reporting-Register-Source",
-    "value": "!!!", // header received in the response
-    "error": "invalid json" // optional, description of the error
+    "value": "!!!", // header value received in the response
+    "error": "invalid JSON" // optional error details
   }
 }]
 ```
 
-Note: The report body is a JSON list to align with the [verbose debugging reports](#verbose-debugging-reports).
+Note: The report body is a JSON list to align with the other [verbose debugging reports](#verbose-debugging-reports).
 
 ## Sample Usage
 

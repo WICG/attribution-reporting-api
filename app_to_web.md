@@ -139,9 +139,8 @@ The report data is included in the request body as a JSON list of objects, e.g.:
 Note: The report body is a JSON list to align with the [verbose debugging reports](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#verbose-debugging-reports)
 for the web-based Attribution Reporting API.
 
-The reporting origins may also opt in to receiving header errors debugging
-reports, see
-[details](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-header-errors-debugging-reports).
+The reporting origins may also opt in to receiving header-error debugging
+reports ([details](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-header-error-debugging-reports)).
 
 ## Privacy considerations
 
