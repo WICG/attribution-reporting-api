@@ -40,6 +40,7 @@ extension on top of this.
     - [Attribution-success debugging reports](#attribution-success-debugging-reports)
     - [Verbose debugging reports](#verbose-debugging-reports)
       - [Reporting endpoints](#reporting-endpoints)
+  - [Optional: header-error debugging reports](#optional-header-error-debugging-reports)
 - [Sample Usage](#sample-usage)
   - [Noisy fake conversion example](#noisy-fake-conversion-example)
 - [Storage limits](#storage-limits)
@@ -823,6 +824,41 @@ debug reports without cross-site leak.
 
 TODO: Consider supporting debug reports for attribution registrations inside a
 fenced frame tree.
+
+### Optional: header-error debugging reports
+
+The headers related to the Attribution Reporting API can be validated by the [header
+validator](https://github.com/WICG/attribution-reporting-api/tree/main/ts#header-validator).
+In order to better facilitate API debugging, we also allow developers to
+monitor validation errors originating from the browser.
+
+The reporting origins may opt in to receiving debugging reports by responding
+with a [dictionary structured header](https://httpwg.org/specs/rfc8941.html#dictionary)
+`Attribution-Reporting-Info`. The key is `report-header-errors` and the value
+is a [structured header boolean](https://httpwg.org/specs/rfc8941.html#boolean).
+```
+Attribution-Reporting-Info: report-header-errors
+```
+
+The debugging reports will be sent immediately to the reporting endpoint:
+```
+https://<reporting origin>/.well-known/attribution-reporting/debug/verbose
+```
+
+The report data is included in the request body as a JSON list of objects, e.g.
+```jsonc
+[{
+  "type": "header-parsing-error",
+  "body": {
+    "context_site": "https://source.example",
+    "header": "Attribution-Reporting-Register-Source",
+    "value": "!!!", // header value received in the response
+    "error": "invalid JSON" // optional error details
+  }
+}]
+```
+
+Note: The report body is a JSON list to align with the other [verbose debugging reports](#verbose-debugging-reports).
 
 ## Sample Usage
 

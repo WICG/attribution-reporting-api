@@ -139,6 +139,9 @@ The report data is included in the request body as a JSON list of objects, e.g.:
 Note: The report body is a JSON list to align with the [verbose debugging reports](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#verbose-debugging-reports)
 for the web-based Attribution Reporting API.
 
+The reporting origins may also opt in to receiving header-error debugging
+reports ([details](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-header-error-debugging-reports)).
+
 ## Privacy considerations
 
 This proposal explicitly links data from the web with data from apps. It enables apps to learn coarse user behavior patterns in the browser in the same way that the existing Attribution Reporting API allows websites to learn coarse user behavior patterns in the browser. In other words, we can safely think of an app as a particular "kind of website", and we can share data to apps that we’d be comfortable sharing to a (cross-site) website.
