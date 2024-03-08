@@ -3,7 +3,7 @@ import { InnerList, Item, parseList } from 'structured-headers'
 
 function validateURL(ctx: Context, member: InnerList | Item): void {
   if (typeof member[0] !== 'string') {
-    ctx.error('must be a string')
+    ctx.warning('ignored, must be a string')
     return
   }
 
@@ -11,7 +11,7 @@ function validateURL(ctx: Context, member: InnerList | Item): void {
   try {
     url = new URL(member[0])
   } catch {
-    ctx.error('must contain a valid URL')
+    ctx.warning('ignored, must contain a valid URL')
     return
   }
 
@@ -22,7 +22,7 @@ function validateURL(ctx: Context, member: InnerList | Item): void {
       (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
     )
   ) {
-    ctx.error('must contain a potentially trustworthy URL')
+    ctx.warning('ignored, must contain a potentially trustworthy URL')
     return
   }
 
@@ -30,7 +30,7 @@ function validateURL(ctx: Context, member: InnerList | Item): void {
     ctx.scope(key, () => {
       if (key === 'debug-reporting') {
         if (typeof value !== 'boolean') {
-          ctx.error('must be a boolean')
+          ctx.warning('ignored, must be a boolean')
         }
       } else {
         ctx.warning('unknown parameter')
