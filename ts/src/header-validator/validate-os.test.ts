@@ -36,19 +36,19 @@ const tests: TestCase[] = [
   // Not a string
   {
     input: '"https://a.test", x',
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [1],
-        msg: 'must be a string',
+        msg: 'ignored, must be a string',
       },
     ],
   },
   {
     input: '("https://a.test/")',
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [0],
-        msg: 'must be a string',
+        msg: 'ignored, must be a string',
       },
     ],
   },
@@ -56,10 +56,10 @@ const tests: TestCase[] = [
   // Invalid URL
   {
     input: '"a.test"',
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [0],
-        msg: 'must contain a valid URL',
+        msg: 'ignored, must contain a valid URL',
       },
     ],
   },
@@ -67,10 +67,10 @@ const tests: TestCase[] = [
   // Untrustworthy URL
   {
     input: '"http://a.test"',
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [0],
-        msg: 'must contain a potentially trustworthy URL',
+        msg: 'ignored, must contain a potentially trustworthy URL',
       },
     ],
   },
@@ -78,10 +78,10 @@ const tests: TestCase[] = [
   // debug-reporting not a boolean
   {
     input: '"https://b.test/", "https://a.test/"; debug-reporting=1',
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [1, 'debug-reporting'],
-        msg: 'must be a boolean',
+        msg: 'ignored, must be a boolean',
       },
     ],
   },
