@@ -853,7 +853,7 @@ The report data is included in the request body as a JSON list of objects, e.g.
     "context_site": "https://source.example",
     "header": "Attribution-Reporting-Register-Source",
     "value": "!!!", // header value received in the response
-    "error": "invalid JSON" // optional error details
+    "error": "invalid JSON" // optional error details that is not guaranteed to be identical in different versions of the browser
   }
 }]
 ```
