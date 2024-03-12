@@ -200,8 +200,10 @@ header called `Attribution-Reporting-Register-Source` of the form:
 }
 ```
 
-- `destination`: Required. An origin whose site is where attribution will be triggered
-for this source. The field may also be specified as a list (JSON array) of no more than three elements.
+- `destination`: Required. An origin whose
+<a href="https://html.spec.whatwg.org/multipage/browsers.html#site">site</a> is
+where attribution will be triggered for this source. The field may also be
+specified as a list (JSON array) of no more than three elements.
 
 - `source_event_id`: Optional. A string encoding a 64-bit unsigned integer which
 represents the event-level data associated with this source. This will be
