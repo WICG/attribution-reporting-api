@@ -192,7 +192,7 @@ header called `Attribution-Reporting-Register-Source` of the form:
 
 ```jsonc
 {
-  "destination": "[eTLD+1]",
+  "destination": "[site]",
   "source_event_id": "[64-bit unsigned integer]",
   "expiry": "[64-bit signed integer]",
   "priority": "[64-bit signed integer]",
@@ -200,8 +200,10 @@ header called `Attribution-Reporting-Register-Source` of the form:
 }
 ```
 
-- `destination`: Required. An origin whose eTLD+1 is where attribution will be triggered
-for this source. The field may also be specified as a list (JSON array) of no more than three elements.
+- `destination`: Required. An origin whose
+[site](https://html.spec.whatwg.org/multipage/browsers.html#site) is
+where attribution will be triggered for this source. The field may also be
+specified as a list (JSON array) of no more than three elements.
 
 - `source_event_id`: Optional. A string encoding a 64-bit unsigned integer which
 represents the event-level data associated with this source. This will be
@@ -236,7 +238,7 @@ A `navigation` attribution source stored only if the navigation occurs with [tra
 user activation](https://html.spec.whatwg.org/multipage/interaction.html#transient-activation). `event` sources don’t require activation.
 
 An attribution source is eligible for reporting if any page on any of the
-associated `destination` eTLD+1s (advertiser sites) triggers attribution for the associated
+associated `destination` sites (advertiser sites) triggers attribution for the associated
 reporting origin.
 
 ### Publisher-side Controls for Attribution Source Declaration
@@ -248,8 +250,8 @@ third parties, but by default anyone on the page can use the API. See
 
 ### Triggering Attribution
 
-Attribution can only be triggered for a source on a page whose eTLD+1 matches
-the eTLD+1 of one of the sites provided in `destination`. To trigger attribution, a
+Attribution can only be triggered for a source on a page whose site matches
+the site of one of the sites provided in `destination`. To trigger attribution, a
 similar mechanism is used as source event registration, via HTML:
 ```html
 <img src="https://ad-tech.example/conversionpixel"
@@ -433,13 +435,13 @@ reflect a final set of parameters.
 ### Trigger attribution algorithm
 
 When the browser receives an attribution trigger registration on a URL matching a
-`destination` eTLD+1, it looks up all sources in storage that match
-<reporting origin, `destination` eTLD+1> and picks the one with the greatest
+`destination` site, it looks up all sources in storage that match
+<reporting origin, `destination` site> and picks the one with the greatest
 `priority`. If multiple sources have the greatest `priority`, the
 browser picks the one that was stored most recently.
 
 The browser then schedules a report for the source that was picked by storing
-{reporting origin, `destination` eTLD+1, `source_event_id`,
+{reporting origin, `destination` site, `source_event_id`,
 [decoded](#data-encoding) `trigger_data`, `priority`, `deduplication_key`} for
 the source. Scheduled reports will be sent as detailed in [Sending scheduled
 reports](#sending-scheduled-reports).
@@ -1104,10 +1106,10 @@ absolute certainty whether a particular ad view led to a site visit. See
 
 To limit the breadth of `destination` sites that a reporting origin may be
 trying to measure user visits on, the browser can limit the number `destination`
-eTLD+1s represented by unexpired sources for a source-site.
+sites represented by unexpired sources for a source-site.
 
 The browser can place a limit on the number of a source site's unexpired source's
-unique `destination` sites. When an attribution source is registered for an eTLD+1
+unique `destination` sites. When an attribution source is registered for a site
 that is not already in the unexpired sources and a source site is at its limit,
 the browser will drop the new source.
 
@@ -1124,10 +1126,10 @@ effectively limits the number of unique sites covered per {source site, reportin
 
 #### Limiting the number of unique destinations per source site
 
-To further reduce the possibility of a history reconstruction attack, the browser can also limit the number of `destination` eTLD+1s registered per {source-site, 1 minute}.
+To further reduce the possibility of a history reconstruction attack, the browser can also limit the number of `destination` sites registered per {source-site, 1 minute}.
 
 
-Additionally, to prevent one origin from using up the budget in the limit above, the browser can also limit the number of `destination` eTLD+1s per {source site, reporting site, 1 minute}.
+Additionally, to prevent one origin from using up the budget in the limit above, the browser can also limit the number of `destination` sites per {source site, reporting site, 1 minute}.
 
 
 ### Differential privacy
