@@ -201,7 +201,7 @@ header called `Attribution-Reporting-Register-Source` of the form:
 ```
 
 - `destination`: Required. An origin whose
-<a href="https://html.spec.whatwg.org/multipage/browsers.html#site">site</a> is
+[site](https://html.spec.whatwg.org/multipage/browsers.html#site) is
 where attribution will be triggered for this source. The field may also be
 specified as a list (JSON array) of no more than three elements.
 
