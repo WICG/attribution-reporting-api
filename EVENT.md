@@ -1127,7 +1127,8 @@ effectively limits the number of unique sites covered per {source site, reportin
 To further reduce the possibility of a history reconstruction attack, the browser can also limit the number of `destination` eTLD+1s registered per {source-site, 1 minute}.
 
 
-Additionally, to prevent one origin from using up the budget in the limit above, the browser can also limit the number of `destination` eTLD+1s per {source site, reporting site, 1 minute}.
+Additionally, to prevent one origin from using up the budget in the limit above, the browser can also limit the number of `destination` eTLD+1s per {source site, reporting site, 1 minute},
+and the number of destination eTLD+1s per {source site, reporting site, 1 day}.
 
 
 ### Differential privacy

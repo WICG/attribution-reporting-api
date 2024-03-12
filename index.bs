@@ -1048,6 +1048,7 @@ Possible values are:
 <ul dfn-for="source debug data type">
 <li>"<dfn><code>source-destination-limit</code></dfn>"
 <li>"<dfn><code>source-destination-rate-limit</code></dfn>"
+<li>"<dfn><code>source-destination-wide-rate-limit</code></dfn>"
 <li>"<dfn><code>source-noised</code></dfn>"
 <li>"<dfn><code>source-storage-limit</code></dfn>"
 <li>"<dfn><code>source-success</code></dfn>"
@@ -1311,12 +1312,20 @@ for unexpired [=attribution sources=] with a given ([=attribution source/source 
 <dfn>Destination rate-limit window</dfn> is a positive [=duration=] that
 controls the rate-limiting window for destinations.
 
+<dfn>Destination wide rate-limit window</dfn> is a positive [=duration=] that
+controls the wide rate-limiting window for destinations.
+
 <dfn>Max destinations per rate-limit window</dfn> is a [=tuple=] consisting of two integers. The first
 controls the maximum number of distinct [=sites=] across all [=attribution source/attribution destinations=]
 for [=attribution sources=] with a given [=attribution source/source site=] per [=destination rate-limit window=].
 The second controls the maximum number of distinct [=sites=] across all [=attribution source/attribution destinations=]
 for [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting origin=] [=site=])
 per [=destination rate-limit window=].
+
+<dfn>Max destinations per wide rate-limit window</dfn> is an integer that
+controls the maximum number of distinct [=sites=] across all [=attribution source/attribution destinations=]
+for [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting origin=] [=site=])
+per [=destination wide rate-limit window=].
 
 <dfn>Max source reporting origins per rate-limit window</dfn> is a positive
 integer that controls the maximum number of distinct
@@ -2379,6 +2388,19 @@ Note: We do not emit an explicit [=source debug data type=] for "<code>[=destina
 we only emit a [=source debug data type/source-success=] type. For this reason, when both limits are hit, just interpret
 it as "<code>[=destination rate-limit result/hit reporting limit=]</code>" to ensure that the most useful report is sent.
 
+To <dfn>check if an [=attribution source=] exceeds the wide time-based destination limits</dfn> given an
+[=attribution source=] |source|, run the following steps:
+
+1. Let |matchingSources| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
+     * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/source=]</code>"
+     * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
+     * |record|'s [=attribution rate-limit record/expiry time=] is greater than |source|'s [=attribution source/source time=]
+     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and |source|'s [=attribution source/source time=]
+        is less than [=destination wide rate-limit window=]
+1. Let |destinations| be the [=set=] of every [=attribution rate-limit record/attribution destination=] in |matchingSources|,
+    [=set/union|unioned=] with |source|'s [=attribution source/attribution destinations=].
+1. Return whether |destinations|'s [=set/size=] is greater than [=max destinations per wide rate-limit window=].
+
 To <dfn>check if an [=attribution source=] exceeds the unexpired destination limit</dfn> given an
 [=attribution source=] |source|, run the following steps:
 
@@ -2414,6 +2436,7 @@ and a [=boolean=] |debugCookieSet|:
     <dl class="switch">
     : "<code>[=source debug data type/source-destination-limit=]</code>"
     : "<code>[=source debug data type/source-destination-rate-limit=]</code>"
+    : "<code>[=source debug data type/source-destination-wide-rate-limit=]</code>"
     :: Return <strong>allowed</strong>.
     : "<code>[=source debug data type/source-noised=]</code>"
     : "<code>[=source debug data type/source-storage-limit=]</code>"
@@ -2448,6 +2471,9 @@ To <dfn>obtain and deliver a debug report on source registration</dfn> given a
     : "<code>[=source debug data type/source-destination-rate-limit=]</code>"
     :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations per rate-limit window=][1],
          [=serialize an integer|serialized=].
+    : "<code>[=source debug data type/source-destination-wide-rate-limit=]</code>"
+    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations per wide rate-limit window=],
+         [=serialize an integer|serialized=].
     : "<code>[=source debug data type/source-storage-limit=]</code>"
     :: [=map/Set=] |body|["`limit`"] to the user agent's [=max pending sources per source origin=],
          [=serialize an integer|serialized=].
@@ -2471,6 +2497,9 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. If |pendingSourcesForSourceOrigin|'s [=list/size=] is greater than or equal
     to the user agent's [=max pending sources per source origin=]:
     1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-storage-limit=]</code>" and |source|.
+    1. Return.
+1. If the result of running [=check if an attribution source exceeds the wide time-based destination limit=] with |source| is true:
+    1. Run [=obtain and deliver a debug report on source registration=] with "[=source debug data type/source-destination-wide-rate-limit=]</code>" and |source|.
     1. Return.
 1. If the result of running [=check if an attribution source exceeds the unexpired destination limit=]
     with |source| is true:
