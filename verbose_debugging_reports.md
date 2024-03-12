@@ -38,7 +38,7 @@ Here are the debugging reports supported for [attribution trigger
 registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#triggering-attribution).
 
 #### `trigger-no-matching-source`
-A trigger is rejected due to no matching sources in storage that match <reporting origin, destination eTLD+1> (see [algorithm](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#trigger-attribution-algorithm)).
+A trigger is rejected due to no matching sources in storage that match <reporting origin, destination site> (see [algorithm](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#trigger-attribution-algorithm)).
 
 #### `trigger-no-matching-filter-data`
 A trigger is rejected due to no [matching filter data](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters).
