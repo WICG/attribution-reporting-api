@@ -873,6 +873,8 @@ An event-level trigger configuration is a [=struct=] with the following items:
 :: A [=list=] of [=filter configs=].
 : <dfn>negated filters</dfn>
 :: A [=list=] of [=filter configs=].
+: <dfn>value</dfn>
+:: A positive unsigned 32-bit integer.
 
 </dl>
 
@@ -2539,6 +2541,15 @@ privacy budget of all possible destinations.
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
+To <dfn>parse an event-trigger value</dfn> given a [=map=] |map|:
+
+1. If [=experimental Flexible Event support=] is false or |map|["`value`"] does
+    not [=map/exists|exist=], return 1.
+1. Let |value| be |map|["`value`"].
+1. If |value| is not an integer, cannot be represented by an unsigned 32-bit
+    integer, or is less than or equal to zero, return an error.
+1. Return |value|.
+
 To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
 
 1. Let |eventTriggers| be a new [=set=].
@@ -2563,6 +2574,9 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
     1. Let |filterPair| be the result of running [=parse a filter pair=] with
         |value|.
     1. If |filterPair| is null, return null.
+    1. Let |triggerValue| be the result of running
+        [=parse an event-trigger value=] with |value|.
+    1. If |triggerValue| is an error, return null.
     1. Let |eventTrigger| be a new [=event-level trigger configuration=] with
         the items:
         : [=event-level trigger configuration/trigger data=]
@@ -2575,6 +2589,8 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
         :: |filterPair|[0]
         : [=event-level trigger configuration/negated filters=]
         :: |filterPair|[1]
+        : [=event-level trigger configuration/value=]
+        :: |triggerValue|
     1. [=set/Append=] |eventTrigger| to |eventTriggers|.
 1. Return |eventTriggers|.
 
