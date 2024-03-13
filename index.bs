@@ -611,9 +611,9 @@ A randomized source response is null or a [=set=] of [=trigger states=].
 
 <h3 id="attribution-filtering">Attribution filtering</h3>
 
-A <dfn>filter value</dfn> is an [=ordered set=] of [=strings=].
+A <dfn>filter value</dfn> is a [=set=] of [=strings=].
 
-A <dfn>filter map</dfn> is an [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose
+A <dfn>filter map</dfn> is a [=map=] whose [=map/key|keys=] are [=strings=] and whose
 [=map/value|values=] are [=filter values=].
 
 A <dfn>filter config</dfn> is a [=struct=] with the following items:
@@ -765,7 +765,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>event ID</dfn>
 :: A non-negative 64-bit integer.
 : <dfn>attribution destinations</dfn>
-:: An [=ordered set=] of [=sites=].
+:: A [=set=] of [=sites=].
 : <dfn>reporting origin</dfn>
 :: A [=suitable origin=].
 : <dfn>source type</dfn>
@@ -787,7 +787,7 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>event-level attributable</dfn> (default true)
 :: A [=boolean=].
 : <dfn>dedup keys</dfn>
-:: [=ordered set=] of [=event-level trigger configuration/dedup keys=] associated with this [=attribution source=].
+:: A [=set=] of [=event-level trigger configuration/dedup keys=] associated with this [=attribution source=].
 : <dfn>randomized response</dfn> (default null)
 :: A [=randomized source response=].
 : <dfn>randomized trigger rate</dfn> (default 0)
@@ -799,12 +799,12 @@ An attribution source is a [=struct=] with the following items:
 : <dfn>debug key</dfn>
 :: Null or a non-negative 64-bit integer.
 : <dfn>aggregation keys</dfn>
-:: An [=ordered map=] whose [=map/key|keys=] are [=strings=] and whose [=map/value|values=] are
+:: A [=map=] whose [=map/key|keys=] are [=strings=] and whose [=map/value|values=] are
     non-negative 128-bit integers.
 : <dfn>aggregatable budget consumed</dfn>
 :: A non-negative integer, total [=aggregatable contribution/value=] of all [=aggregatable contributions=] created with this [=attribution source=].
 : <dfn>aggregatable dedup keys</dfn>
-:: [=ordered set=] of [=aggregatable dedup key/dedup key|aggregatable dedup key values=] associated with this [=attribution source=].
+:: A [=set=] of [=aggregatable dedup key/dedup key|aggregatable dedup key values=] associated with this [=attribution source=].
 : <dfn>debug reporting enabled</dfn>
 :: A [=boolean=].
 : <dfn>number of aggregatable reports</dfn>
@@ -831,7 +831,7 @@ An aggregatable trigger data is a [=struct=] with the following items:
 : <dfn>key piece</dfn>
 :: A non-negative 128-bit integer.
 : <dfn>source keys</dfn>
-:: An [=ordered set=] of [=strings=].
+:: A [=set=] of [=strings=].
 : <dfn>filters</dfn>
 :: A [=list=] of [=filter configs=].
 : <dfn>negated filters</dfn>
@@ -983,7 +983,7 @@ An event-level report is an [=attribution report=] with the following additional
 : <dfn>source identifier</dfn>
 :: A string.
 : <dfn>attribution destinations</dfn>
-:: An [=ordered set=] of [=sites=].
+:: A [=set=] of [=sites=].
 
 </dl>
 
@@ -1201,13 +1201,13 @@ A destination rate-limit result is one of the following:
 
 # Storage # {#storage}
 
-A user agent holds an <dfn>attribution source cache</dfn>, which is an [=ordered set=] of [=attribution sources=].
+A user agent holds an <dfn>attribution source cache</dfn>, which is a [=set=] of [=attribution sources=].
 
-A user agent holds an <dfn>event-level report cache</dfn>, which is an [=ordered set=] of [=event-level reports=].
+A user agent holds an <dfn>event-level report cache</dfn>, which is a [=set=] of [=event-level reports=].
 
-A user agent holds an <dfn>aggregatable report cache</dfn>, which is an [=ordered set=] of [=aggregatable reports=].
+A user agent holds an <dfn>aggregatable report cache</dfn>, which is a [=set=] of [=aggregatable reports=].
 
-A user agent holds an <dfn>attribution rate-limit cache</dfn>, which is an [=ordered set=] of [=attribution rate-limit records=].
+A user agent holds an <dfn>attribution rate-limit cache</dfn>, which is a [=set=] of [=attribution rate-limit records=].
 
 The above caches are collectively known as the <dfn>attribution caches</dfn>. The [=attribution caches=] are
 shared among all [=environment settings objects=].
@@ -1456,7 +1456,7 @@ To <dfn>parse filter values</dfn> given a |value|:
 1. [=map/iterate|For each=] |filter| → |data| of |value|:
     1. If |filter| [=starts with=] "`_`", return null.
     1. If |data| is not a [=list=], return null.
-    1. Let |set| be a new [=ordered set=].
+    1. Let |set| be a new [=set=].
     1. [=list/iterate|For each=] |d| of |data|:
         1. If |d| is not a [=string=], return null.
         1. [=set/Append=] |d| to |set|.
@@ -2073,7 +2073,7 @@ To <dfn>parse attribution destinations</dfn> from a [=map=] |map|:
 1. Let |val| be |map|["<code>[=source-registration JSON key/destination=]</code>"].
 1. If |val| is a [=string=], set |val| to « |val| ».
 1. If |val| is not a [=list=], return null.
-1. Let |result| be an [=ordered set=].
+1. Let |result| be a [=set=].
 1. [=list/iterate|For each=] |value| of |val|:
     1. If |value| is not a [=string=], return null.
     1. Let |destination| be the result of [=parse an attribution destination=] with |value|.
@@ -2100,12 +2100,12 @@ tuple of [=durations=] (|clampStart|, |clampEnd|):
 
 Issue: Consider rejecting out-of-bounds values instead of silently clamping.
 
-To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
+To <dfn>parse aggregation keys</dfn> given a [=map=] |map|:
 
-1. Let |aggregationKeys| be a new [=ordered map=].
+1. Let |aggregationKeys| be a new [=map=].
 1. If |map|["<code>[=source-registration JSON key/aggregation_keys=]</code>"] does not [=map/exist=], return |aggregationKeys|.
 1. Let |values| be |map|["<code>[=source-registration JSON key/aggregation_keys=]</code>"].
-1. If |values| is not an [=ordered map=], return null.
+1. If |values| is not an [=map=], return null.
 1. If |values|'s [=map/size=] is greater than the
     [=max aggregation keys per source registration=], return null.
 1. [=map/iterate|For each=] |key| → |value| of |values|:
@@ -2308,7 +2308,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 
 1. Let |value| be the result of running
     [=parse JSON bytes to an Infra value=] with |json|.
-1. If |value| is not an [=ordered map=], return null.
+1. If |value| is not a [=map=], return null.
 1. Let |attributionDestinations| be the result of running
     [=parse attribution destinations=] with |value|.
 1. If |attributionDestinations| is null, return null.
@@ -2690,7 +2690,7 @@ To <dfn>parse an event-trigger value</dfn> given a [=map=] |map|:
     integer, or is less than or equal to zero, return an error.
 1. Return |value|.
 
-To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
+To <dfn>parse event triggers</dfn> given a [=map=] |map|:
 
 1. Let |eventTriggers| be a new [=set=].
 1. If |map|["<code>[=trigger-registration JSON key/event_trigger_data=]</code>"] does not [=map/exists|exist=], return
@@ -2698,7 +2698,7 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
 1. Let |values| be |map|["<code>[=trigger-registration JSON key/event_trigger_data=]</code>"].
 1. If |values| is not a [=list=], return null.
 1. [=list/iterate|For each=] |value| of |values|:
-    1. If |value| is not an [=ordered map=], return null.
+    1. If |value| is not a [=map=], return null.
     1. Let |triggerData| be the result of running
         [=parse an optional 64-bit unsigned integer=] with |value|,
         "<code>[=trigger-registration JSON key/trigger_data=]</code>", and 0.
@@ -2734,18 +2734,18 @@ To <dfn>parse event triggers</dfn> given an [=ordered map=] |map|:
     1. [=set/Append=] |eventTrigger| to |eventTriggers|.
 1. Return |eventTriggers|.
 
-To <dfn>parse aggregatable trigger data</dfn> given an [=ordered map=] |map|:
+To <dfn>parse aggregatable trigger data</dfn> given a [=map=] |map|:
 
 1. Let |aggregatableTriggerData| be a new [=list=].
 1. If |map|["<code>[=trigger-registration JSON key/aggregatable_trigger_data=]</code>"] does not [=map/exist=], return |aggregatableTriggerData|.
 1. Let |values| be |map|["<code>[=trigger-registration JSON key/aggregatable_trigger_data=]</code>"].
 1. If |values| is not a [=list=], return null.
 1. [=list/iterate|For each=] |value| of |values|:
-    1. If |value| is not an [=ordered map=], return null.
+    1. If |value| is not a [=map=], return null.
     1. If |value|["<code>[=trigger-registration JSON key/key_piece=]</code>"] does not [=map/exist=] or is not a [=string=], return null.
     1. Let |keyPiece| be the result of running [=parse an aggregation key piece=] with |value|["<code>[=trigger-registration JSON key/key_piece=]</code>"].
     1. If |keyPiece| is an error, return null.
-    1. Let |sourceKeys| be a new [=ordered set=].
+    1. Let |sourceKeys| be a new [=set=].
     1. If |value|["<code>[=trigger-registration JSON key/source_keys=]</code>"] [=map/exists=]:
         1. If |value|["<code>[=trigger-registration JSON key/source_keys=]</code>"] is not a [=list=], return null.
         1. [=list/iterate|For each=] |sourceKey| of |value|["<code>[=trigger-registration JSON key/source_keys=]</code>"]:
@@ -2778,11 +2778,11 @@ To <dfn>parse aggregatable key-values</dfn> given a [=map=] |map|:
     1. If |value| is greater than [=allowed aggregatable budget per source=], return null.
 1. Return |map|.
 
-To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
+To <dfn>parse aggregatable values</dfn> given a [=map=] |map|:
 
 1. If |map|["<code>[=trigger-registration JSON key/aggregatable_values=]</code>"] does not [=map/exist=], return a new [=list=].
 1. Let |values| be |map|["<code>[=trigger-registration JSON key/aggregatable_values=]</code>"].
-1. If |values| is not an [=ordered map=] or a [=list=], return null.
+1. If |values| is not a [=map=] or a [=list=], return null.
 1. Let |aggregatableValuesConfigurations| be a [=list=] of [=aggregatable values configurations=], initially empty.
 1. If |values| is a [=map=]:
     1. Let |aggregatableKeyValues| be the result of running [=parse aggregatable key-values=] with |values|.
@@ -2814,14 +2814,14 @@ To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
     1. [=list/Append=] |aggregatableValuesConfiguration| to |aggregatableValuesConfigurations|.
 1. Return |aggregatableValuesConfigurations|.
 
-To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
+To <dfn>parse aggregatable dedup keys</dfn> given a [=map=] |map|:
 
 1. Let |aggregatableDedupKeys| be a new [=list=].
 1. If |map|["<code>[=trigger-registration JSON key/aggregatable_deduplication_keys=]</code>"] does not [=map/exist=], return |aggregatableDedupKeys|.
 1. Let |values| be |map|["<code>[=trigger-registration JSON key/aggregatable_deduplication_keys=]</code>"].
 1. If |values| is not a [=list=], return null.
 1. [=list/iterate|For each=] |value| of |values|:
-    1. If |value| is not an [=ordered map=], return null.
+    1. If |value| is not a [=map=], return null.
     1. Let |dedupKey| be the result of running
         [=parse an optional 64-bit unsigned integer=] with |value|,
         "<code>[=trigger-registration JSON key/deduplication_key=]</code>", and null.
@@ -2845,7 +2845,7 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
 
 1. Let |value| be the result of running
     [=parse JSON bytes to an Infra value=] with |json|.
-1. If |value| is not an [=ordered map=], return null.
+1. If |value| is not a [=map=], return null.
 1. Let |eventTriggers| be the result of running [=parse event triggers=]
     with |value|.
 1. If |eventTriggers| is null, return null.
@@ -3770,7 +3770,7 @@ An [=aggregatable report=] |report|'s <dfn for="aggregatable report">shared info
 of running the following steps:
 
 1. Let |reportingOrigin| be |report|'s [=aggregatable report/reporting origin=].
-1. Let |sharedInfo| be an [=ordered map=] of the following key/value pairs:
+1. Let |sharedInfo| be a [=map=] of the following key/value pairs:
 
     : "`api`"
     :: "`attribution-reporting`"
