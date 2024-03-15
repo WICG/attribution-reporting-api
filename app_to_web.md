@@ -26,6 +26,11 @@ The proposal here takes advantage of OS-level support for attribution. In partic
 *   Proposal is generic enough to be implemented by any browser
 *   While focusing initially on Android support, the proposal should be generic enough to be supported on other platforms
 
+Use cases such as the following would be supported:
+* Ad view/tap within a native Android app or embedded webview, conversion within a native browser app (e.g. a browser's mobile app). 
+* Ad view/tap within a native Android app or embedded webview, conversion within a custom tab provider (e.g. Chrome Custom Tabs or other mechanisms). 
+
+
 ## API changes
 ```mermaid
 sequenceDiagram
