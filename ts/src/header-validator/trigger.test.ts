@@ -1110,7 +1110,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'value'],
-        msg: 'must be positive',
+        msg: 'must be >= 1 and <= uint32 max (4294967295)',
       },
     ],
   },
@@ -1121,7 +1121,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'value'],
-        msg: 'must be positive',
+        msg: 'must be >= 1 and <= uint32 max (4294967295)',
       },
     ],
   },
@@ -1133,6 +1133,22 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['event_trigger_data', 0, 'value'],
         msg: 'must be an integer',
+      },
+    ],
+  },
+  {
+    name: 'value-max',
+    json: `{"event_trigger_data": [{"value":4294967295}]}`,
+    parseFullFlex: true,
+  },
+  {
+    name: 'value-gt-max',
+    json: `{"event_trigger_data": [{"value":4294967296}]}`,
+    parseFullFlex: true,
+    expectedErrors: [
+      {
+        path: ['event_trigger_data', 0, 'value'],
+        msg: 'must be >= 1 and <= uint32 max (4294967295)',
       },
     ],
   },

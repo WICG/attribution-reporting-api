@@ -1295,6 +1295,20 @@ export type EventTriggerDatum = FilterPair &
     value: number
   }
 
+function eventTriggerValue(ctx: RegistrationContext, j: Json): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) =>
+      isInRange(
+        ctx,
+        n,
+        1,
+        UINT32_MAX,
+        `must be >= 1 and <= uint32 max (${UINT32_MAX})`
+      )
+    )
+}
+
 function eventTriggerData(
   ctx: RegistrationContext,
   j: Json
@@ -1304,7 +1318,7 @@ function eventTriggerData(
       triggerData: field('trigger_data', triggerData, 0n),
 
       value: ctx.parseFullFlex
-        ? field('value', positiveInteger, 1)
+        ? field('value', eventTriggerValue, 1)
         : () => some(1),
 
       ...filterFields,
