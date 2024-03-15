@@ -714,7 +714,7 @@ var[data-var-color="6"] { background-color: #FFBCF2; box-shadow: 0 0 0 2px #FFBC
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Attribution Reporting</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2024-03-11">11 March 2024</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2024-03-15">15 March 2024</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -1712,6 +1712,9 @@ of <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/browsers
     <dt data-md><dfn class="dfn-paneled" data-dfn-for="event-level trigger configuration" data-dfn-type="dfn" data-noexport id="event-level-trigger-configuration-negated-filters">negated filters</dfn>
     <dd data-md>
      <p>A <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list①⑤">list</a> of <a data-link-type="dfn" href="#filter-config" id="ref-for-filter-config⑦">filter configs</a>.</p>
+    <dt data-md><dfn class="dfn-paneled" data-dfn-for="event-level trigger configuration" data-dfn-type="dfn" data-noexport id="event-level-trigger-configuration-value">value</dfn>
+    <dd data-md>
+     <p>A positive unsigned 32-bit integer.</p>
    </dl>
    <h3 class="heading settled" data-level="6.18" id="aggregation-coordinator-header"><span class="secno">6.18. </span><span class="content">Aggregation coordinator</span><a class="self-link" href="#aggregation-coordinator-header"></a></h3>
    <p>An <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="aggregation-coordinator">aggregation coordinator</dfn> is one of a user-agent-determined <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set⑧">set</a> of <a data-link-type="dfn" href="#suitable-origin" id="ref-for-suitable-origin②">suitable origins</a> that specifies which aggregation service deployment to use.</p>
@@ -3793,12 +3796,25 @@ then set <var>source</var>’s <a data-link-type="dfn" href="#attribution-source
 privacy budget of all possible destinations.</p>
    <h2 class="heading settled" data-level="12" id="trigger-algorithms"><span class="secno">12. </span><span class="content">Triggering Algorithms</span><a class="self-link" href="#trigger-algorithms"></a></h2>
    <h3 class="heading settled algorithm" data-algorithm="Creating an attribution trigger" data-level="12.1" id="attribution-trigger-creation"><span class="secno">12.1. </span><span class="content">Creating an attribution trigger</span><a class="self-link" href="#attribution-trigger-creation"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-event-triggers">parse event triggers</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⓪">ordered map</a> <var>map</var>:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-an-event-trigger-value">parse an event-trigger value</dfn> given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⓪">map</a> <var>map</var>:</p>
+   <ol>
+    <li data-md>
+     <p>If <a data-link-type="dfn" href="#experimental-flexible-event-support" id="ref-for-experimental-flexible-event-support①">experimental Flexible Event support</a> is false or <var>map</var>["<code>value</code>"] does
+not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⑤">exist</a>, return 1.</p>
+    <li data-md>
+     <p>Let <var>value</var> be <var>map</var>["<code>value</code>"].</p>
+    <li data-md>
+     <p>If <var>value</var> is not an integer, cannot be represented by an unsigned 32-bit
+integer, or is less than or equal to zero, return an error.</p>
+    <li data-md>
+     <p>Return <var>value</var>.</p>
+   </ol>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-event-triggers">parse event triggers</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③①">ordered map</a> <var>map</var>:</p>
    <ol>
     <li data-md>
      <p>Let <var>eventTriggers</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set②⑤">set</a>.</p>
     <li data-md>
-     <p>If <var>map</var>["<code>event_trigger_data</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⑤">exist</a>, return <var>eventTriggers</var>.</p>
+     <p>If <var>map</var>["<code>event_trigger_data</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⑥">exist</a>, return <var>eventTriggers</var>.</p>
     <li data-md>
      <p>Let <var>values</var> be <var>map</var>["<code>event_trigger_data</code>"].</p>
     <li data-md>
@@ -3807,7 +3823,7 @@ privacy budget of all possible destinations.</p>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②③">For each</a> <var>value</var> of <var>values</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③①">ordered map</a>, return null.</p>
+       <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③②">ordered map</a>, return null.</p>
       <li data-md>
        <p>Let <var>triggerData</var> be the result of running <a data-link-type="dfn" href="#parse-an-optional-64-bit-unsigned-integer" id="ref-for-parse-an-optional-64-bit-unsigned-integer③">parse an optional 64-bit unsigned integer</a> with <var>value</var>,
 "<code>trigger_data</code>", and 0.</p>
@@ -3828,6 +3844,10 @@ and 0.</p>
       <li data-md>
        <p>If <var>filterPair</var> is null, return null.</p>
       <li data-md>
+       <p>Let <var>triggerValue</var> be the result of running <a data-link-type="dfn" href="#parse-an-event-trigger-value" id="ref-for-parse-an-event-trigger-value">parse an event-trigger value</a> with <var>value</var>.</p>
+      <li data-md>
+       <p>If <var>triggerValue</var> is an error, return null.</p>
+      <li data-md>
        <p>Let <var>eventTrigger</var> be a new <a data-link-type="dfn" href="#event-level-trigger-configuration" id="ref-for-event-level-trigger-configuration①">event-level trigger configuration</a> with
 the items:</p>
        <dl>
@@ -3846,6 +3866,9 @@ the items:</p>
         <dt data-md><a data-link-type="dfn" href="#event-level-trigger-configuration-negated-filters" id="ref-for-event-level-trigger-configuration-negated-filters">negated filters</a>
         <dd data-md>
          <p><var>filterPair</var>[1]</p>
+        <dt data-md><a data-link-type="dfn" href="#event-level-trigger-configuration-value" id="ref-for-event-level-trigger-configuration-value">value</a>
+        <dd data-md>
+         <p><var>triggerValue</var></p>
        </dl>
       <li data-md>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#set-append" id="ref-for-set-append⑨">Append</a> <var>eventTrigger</var> to <var>eventTriggers</var>.</p>
@@ -3853,12 +3876,12 @@ the items:</p>
     <li data-md>
      <p>Return <var>eventTriggers</var>.</p>
    </ol>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-aggregatable-trigger-data">parse aggregatable trigger data</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③②">ordered map</a> <var>map</var>:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-aggregatable-trigger-data">parse aggregatable trigger data</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③③">ordered map</a> <var>map</var>:</p>
    <ol>
     <li data-md>
      <p>Let <var>aggregatableTriggerData</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list④⓪">list</a>.</p>
     <li data-md>
-     <p>If <var>map</var>["<code>aggregatable_trigger_data</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⑥">exist</a>, return <var>aggregatableTriggerData</var>.</p>
+     <p>If <var>map</var>["<code>aggregatable_trigger_data</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⑦">exist</a>, return <var>aggregatableTriggerData</var>.</p>
     <li data-md>
      <p>Let <var>values</var> be <var>map</var>["<code>aggregatable_trigger_data</code>"].</p>
     <li data-md>
@@ -3867,9 +3890,9 @@ the items:</p>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②④">For each</a> <var>value</var> of <var>values</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③③">ordered map</a>, return null.</p>
+       <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③④">ordered map</a>, return null.</p>
       <li data-md>
-       <p>If <var>value</var>["<code>key_piece</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⑦">exist</a> or is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string③①">string</a>, return null.</p>
+       <p>If <var>value</var>["<code>key_piece</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⑧">exist</a> or is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string③①">string</a>, return null.</p>
       <li data-md>
        <p>Let <var>keyPiece</var> be the result of running <a data-link-type="dfn" href="#parse-an-aggregation-key-piece" id="ref-for-parse-an-aggregation-key-piece①">parse an aggregation key piece</a> with <var>value</var>["<code>key_piece</code>"].</p>
       <li data-md>
@@ -3877,7 +3900,7 @@ the items:</p>
       <li data-md>
        <p>Let <var>sourceKeys</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set②⑥">ordered set</a>.</p>
       <li data-md>
-       <p>If <var>value</var>["<code>source_keys</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⑧">exists</a>:</p>
+       <p>If <var>value</var>["<code>source_keys</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⑨">exists</a>:</p>
        <ol>
         <li data-md>
          <p>If <var>value</var>["<code>source_keys</code>"] is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list④②">list</a>, return null.</p>
@@ -3918,7 +3941,7 @@ the items:</p>
     <li data-md>
      <p>Return <var>aggregatableTriggerData</var>.</p>
    </ol>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-aggregatable-key-values">parse aggregatable key-values</dfn> given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③④">map</a> <var>map</var>:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-aggregatable-key-values">parse aggregatable key-values</dfn> given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⑤">map</a> <var>map</var>:</p>
    <ol>
     <li data-md>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate⑥">For each</a> <var>key</var> → <var>value</var> of <var>map</var>:</p>
@@ -3936,18 +3959,18 @@ return null.</p>
     <li data-md>
      <p>Return <var>map</var>.</p>
    </ol>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-aggregatable-values">parse aggregatable values</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⑤">ordered map</a> <var>map</var>:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-aggregatable-values">parse aggregatable values</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⑥">ordered map</a> <var>map</var>:</p>
    <ol>
     <li data-md>
-     <p>If <var>map</var>["<code>aggregatable_values</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists③⑨">exist</a>, return a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty①③">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list④③">list</a>.</p>
+     <p>If <var>map</var>["<code>aggregatable_values</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⓪">exist</a>, return a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty①③">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list④③">list</a>.</p>
     <li data-md>
      <p>Let <var>values</var> be <var>map</var>["<code>aggregatable_values</code>"].</p>
     <li data-md>
-     <p>If <var>values</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⑥">ordered map</a> or a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list④④">list</a>, return null.</p>
+     <p>If <var>values</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⑦">ordered map</a> or a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list④④">list</a>, return null.</p>
     <li data-md>
      <p>Let <var>aggregatableValuesConfigurations</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list④⑤">list</a> of <a data-link-type="dfn" href="#aggregatable-values-configuration" id="ref-for-aggregatable-values-configuration①">aggregatable values configurations</a>, initially empty.</p>
     <li data-md>
-     <p>If <var>values</var> is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⑦">map</a>:</p>
+     <p>If <var>values</var> is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⑧">map</a>:</p>
      <ol>
       <li data-md>
        <p>Let <var>aggregatableKeyValues</var> be the result of running <a data-link-type="dfn" href="#parse-aggregatable-key-values" id="ref-for-parse-aggregatable-key-values">parse aggregatable key-values</a> with <var>values</var>.</p>
@@ -3975,9 +3998,9 @@ return null.</p>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②⑥">For each</a> <var>value</var> of <var>values</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>value</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⑧">map</a>, return null.</p>
+       <p>If <var>value</var> is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⑨">map</a>, return null.</p>
       <li data-md>
-       <p>If <var>value</var>["<code>values</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⓪">exist</a>, return null.</p>
+       <p>If <var>value</var>["<code>values</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④①">exist</a>, return null.</p>
       <li data-md>
        <p>Let <var>aggregatableKeyValues</var> be the result of running <a data-link-type="dfn" href="#parse-aggregatable-key-values" id="ref-for-parse-aggregatable-key-values①">parse aggregatable key-values</a> with <var>value</var>["<code>values</code>"].</p>
       <li data-md>
@@ -4005,12 +4028,12 @@ return null.</p>
     <li data-md>
      <p>Return <var>aggregatableValuesConfigurations</var>.</p>
    </ol>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-aggregatable-dedup-keys">parse aggregatable dedup keys</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map③⑨">ordered map</a> <var>map</var>:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="parse-aggregatable-dedup-keys">parse aggregatable dedup keys</dfn> given an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⓪">ordered map</a> <var>map</var>:</p>
    <ol>
     <li data-md>
      <p>Let <var>aggregatableDedupKeys</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list④⑥">list</a>.</p>
     <li data-md>
-     <p>If <var>map</var>["<code>aggregatable_deduplication_keys</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④①">exist</a>, return <var>aggregatableDedupKeys</var>.</p>
+     <p>If <var>map</var>["<code>aggregatable_deduplication_keys</code>"] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④②">exist</a>, return <var>aggregatableDedupKeys</var>.</p>
     <li data-md>
      <p>Let <var>values</var> be <var>map</var>["<code>aggregatable_deduplication_keys</code>"].</p>
     <li data-md>
@@ -4019,7 +4042,7 @@ return null.</p>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate②⑦">For each</a> <var>value</var> of <var>values</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⓪">ordered map</a>, return null.</p>
+       <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④①">ordered map</a>, return null.</p>
       <li data-md>
        <p>Let <var>dedupKey</var> be the result of running <a data-link-type="dfn" href="#parse-an-optional-64-bit-unsigned-integer" id="ref-for-parse-an-optional-64-bit-unsigned-integer⑤">parse an optional 64-bit unsigned integer</a> with <var>value</var>,
 "<code>deduplication_key</code>", and null.</p>
@@ -4054,7 +4077,7 @@ and a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" i
     <li data-md>
      <p>Let <var>value</var> be the result of running <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#parse-json-bytes-to-an-infra-value" id="ref-for-parse-json-bytes-to-an-infra-value①">parse JSON bytes to an Infra value</a> with <var>json</var>.</p>
     <li data-md>
-     <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④①">ordered map</a>, return null.</p>
+     <p>If <var>value</var> is not an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④②">ordered map</a>, return null.</p>
     <li data-md>
      <p>Let <var>eventTriggers</var> be the result of running <a data-link-type="dfn" href="#parse-event-triggers" id="ref-for-parse-event-triggers">parse event triggers</a> with <var>value</var>.</p>
     <li data-md>
@@ -4085,11 +4108,11 @@ and null.</p>
     <li data-md>
      <p>Let <var>debugReportingEnabled</var> be false.</p>
     <li data-md>
-     <p>If <var>value</var>["<code>debug_reporting</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④②">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#boolean" id="ref-for-boolean①⓪">boolean</a>, set <var>debugReportingEnabled</var> to value["<code>debug_reporting</code>"].</p>
+     <p>If <var>value</var>["<code>debug_reporting</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④③">exists</a> and is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#boolean" id="ref-for-boolean①⓪">boolean</a>, set <var>debugReportingEnabled</var> to value["<code>debug_reporting</code>"].</p>
     <li data-md>
      <p>Let <var>aggregationCoordinator</var> be <a data-link-type="dfn" href="#default-aggregation-coordinator" id="ref-for-default-aggregation-coordinator">default aggregation coordinator</a>.</p>
     <li data-md>
-     <p>If <var>value</var>["<code>aggregation_coordinator_origin</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④③">exists</a>:</p>
+     <p>If <var>value</var>["<code>aggregation_coordinator_origin</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④④">exists</a>:</p>
      <ol>
       <li data-md>
        <p>If <var>value</var>["<code>aggregation_coordinator_origin</code>"] is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string③③">string</a>, return null.</p>
@@ -4105,7 +4128,7 @@ and null.</p>
     <li data-md>
      <p>Let <var>aggregatableSourceRegTimeConfig</var> be "<code><a data-link-type="dfn" href="#aggregatable-source-registration-time-configuration-exclude" id="ref-for-aggregatable-source-registration-time-configuration-exclude①">exclude</a></code>".</p>
     <li data-md>
-     <p>If <var>value</var>["<code>aggregatable_source_registration_time</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④④">exists</a>:</p>
+     <p>If <var>value</var>["<code>aggregatable_source_registration_time</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⑤">exists</a>:</p>
      <ol>
       <li data-md>
        <p>If <var>value</var>["<code>aggregatable_source_registration_time</code>"] is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string③④">string</a>, return null.</p>
@@ -4118,7 +4141,7 @@ return null.</p>
     <li data-md>
      <p>Let <var>triggerContextID</var> be null.</p>
     <li data-md>
-     <p>If <var>value</var>["<code>trigger_context_id</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⑤">exists</a>:</p>
+     <p>If <var>value</var>["<code>trigger_context_id</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⑥">exists</a>:</p>
      <ol>
       <li data-md>
        <p>If <var>value</var>["<code>trigger_context_id</code>"] is not a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#string" id="ref-for-string③⑤">string</a>, return null.</p>
@@ -4244,7 +4267,7 @@ lookback window. If negated, it must be outside of the lookback window.</p>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate⑦">For each</a> <var>key</var> → <var>filterValues</var> of <var>filterMap</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>sourceData</var>[<var>key</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⑥">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⓪">continue</a>.</p>
+       <p>If <var>sourceData</var>[<var>key</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⑦">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⓪">continue</a>.</p>
       <li data-md>
        <p>Let <var>sourceValues</var> be <var>sourceData</var>[<var>key</var>].</p>
       <li data-md>
@@ -4369,7 +4392,7 @@ lookback window. If negated, it must be outside of the lookback window.</p>
      <p>Return null.</p>
    </ol>
    <h3 class="heading settled algorithm" data-algorithm="Creating aggregatable contributions" data-level="12.6" id="creating-aggregatable-contributions"><span class="secno">12.6. </span><span class="content">Creating aggregatable contributions</span><a class="self-link" href="#creating-aggregatable-contributions"></a></h3>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="create-aggregatable-contributions-from-aggregation-keys-and-aggregatable-values">create <a data-link-type="dfn" href="#aggregatable-contribution" id="ref-for-aggregatable-contribution②">aggregatable contributions</a> from <a data-link-type="dfn" href="#attribution-source-aggregation-keys" id="ref-for-attribution-source-aggregation-keys③">aggregation keys</a> and aggregatable <a data-link-type="dfn" href="#aggregatable-values-configuration-values" id="ref-for-aggregatable-values-configuration-values③">values</a></dfn> given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④②">map</a> <var>aggregationKeys</var> and a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④③">map</a> <var>aggregatableValues</var>,
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="create-aggregatable-contributions-from-aggregation-keys-and-aggregatable-values">create <a data-link-type="dfn" href="#aggregatable-contribution" id="ref-for-aggregatable-contribution②">aggregatable contributions</a> from <a data-link-type="dfn" href="#attribution-source-aggregation-keys" id="ref-for-attribution-source-aggregation-keys③">aggregation keys</a> and aggregatable <a data-link-type="dfn" href="#aggregatable-values-configuration-values" id="ref-for-aggregatable-values-configuration-values③">values</a></dfn> given a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④③">map</a> <var>aggregationKeys</var> and a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④④">map</a> <var>aggregatableValues</var>,
  run the following steps:</p>
    <ol>
     <li data-md>
@@ -4378,7 +4401,7 @@ lookback window. If negated, it must be outside of the lookback window.</p>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-iterate" id="ref-for-map-iterate⑧">For each</a> <var>id</var> → <var>key</var> of <var>aggregationKeys</var>:</p>
      <ol>
       <li data-md>
-       <p>If <var>aggregatableValues</var>[<var>id</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⑦">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①①">continue</a>.</p>
+       <p>If <var>aggregatableValues</var>[<var>id</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⑧">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①①">continue</a>.</p>
       <li data-md>
        <p>Let <var>contribution</var> be a new <a data-link-type="dfn" href="#aggregatable-contribution" id="ref-for-aggregatable-contribution③">aggregatable contribution</a> with the items:</p>
        <dl>
@@ -4408,7 +4431,7 @@ lookback window. If negated, it must be outside of the lookback window.</p>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate③⓪">For each</a> <var>sourceKey</var> of <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-source-keys" id="ref-for-aggregatable-trigger-data-source-keys②">source keys</a>:</p>
        <ol>
         <li data-md>
-         <p>If <var>aggregationKeys</var>[<var>sourceKey</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⑧">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①③">continue</a>.</p>
+         <p>If <var>aggregationKeys</var>[<var>sourceKey</var>] does not <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⑨">exist</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①③">continue</a>.</p>
         <li data-md>
          <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-set" id="ref-for-map-set①②">Set</a> <var>aggregationKeys</var>[<var>sourceKey</var>] to <var>aggregationKeys</var>[<var>sourceKey</var>] bitwise-OR <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-key-piece" id="ref-for-aggregatable-trigger-data-key-piece①">key piece</a>.</p>
        </ol>
@@ -4445,7 +4468,7 @@ lookback window. If negated, it must be outside of the lookback window.</p>
 an optional <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑤⑥">attribution source</a> <dfn class="dfn-paneled" data-dfn-for="obtain debug data body on trigger registration" data-dfn-type="dfn" data-lt="sourceToAttribute" data-noexport id="obtain-debug-data-body-on-trigger-registration-sourcetoattribute"> <var>sourceToAttribute</var></dfn>, and an optional <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report④">attribution report</a> <dfn class="dfn-paneled" data-dfn-for="obtain debug data body on trigger registration" data-dfn-type="dfn" data-noexport id="obtain-debug-data-body-on-trigger-registration-report"><var>report</var></dfn>:</p>
    <ol>
     <li data-md>
-     <p>Let <var>body</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-is-empty" id="ref-for-map-is-empty②">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④④">map</a>.</p>
+     <p>Let <var>body</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-is-empty" id="ref-for-map-is-empty②">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⑤">map</a>.</p>
     <li data-md>
      <p>If <var>dataType</var> is:</p>
      <dl class="switch">
@@ -4572,7 +4595,7 @@ return "<code><a data-link-type="dfn" href="#event-level-report-replacement-resu
     <li data-md>
      <p>Return "<code><a data-link-type="dfn" href="#event-level-report-replacement-result-add-new-report" id="ref-for-event-level-report-replacement-result-add-new-report①">add-new-report</a></code>".</p>
    </ol>
-   <p class="issue" id="issue-f9215d3f"><a class="self-link" href="#issue-f9215d3f"></a> This algorithm is not compatible with the behavior proposed for <a data-link-type="dfn" href="#experimental-flexible-event-support" id="ref-for-experimental-flexible-event-support①">experimental Flexible Event support</a> with differing <a data-link-type="dfn" href="#trigger-spec-event-level-report-windows" id="ref-for-trigger-spec-event-level-report-windows⑥">event-level report windows</a> for a given source.</p>
+   <p class="issue" id="issue-f9215d3f"><a class="self-link" href="#issue-f9215d3f"></a> This algorithm is not compatible with the behavior proposed for <a data-link-type="dfn" href="#experimental-flexible-event-support" id="ref-for-experimental-flexible-event-support②">experimental Flexible Event support</a> with differing <a data-link-type="dfn" href="#trigger-spec-event-level-report-windows" id="ref-for-trigger-spec-event-level-report-windows⑥">event-level report windows</a> for a given source.</p>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="trigger-event-level-attribution">trigger event-level attribution</dfn> given an <a data-link-type="dfn" href="#attribution-trigger" id="ref-for-attribution-trigger①⑨">attribution trigger</a> <var>trigger</var>, an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑤⑨">attribution source</a> <var>sourceToAttribute</var>, and an <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record①⑤">attribution rate-limit record</a> <var>rateLimitRecord</var>, run the following steps:</p>
    <ol>
     <li data-md>
@@ -5326,7 +5349,7 @@ of running the following steps:</p>
     <li data-md>
      <p>Let <var>reportingOrigin</var> be <var>report</var>’s <a data-link-type="dfn" href="#attribution-report-reporting-origin" id="ref-for-attribution-report-reporting-origin⑤">reporting origin</a>.</p>
     <li data-md>
-     <p>Let <var>sharedInfo</var> be an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⑤">ordered map</a> of the following key/value pairs:</p>
+     <p>Let <var>sharedInfo</var> be an <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⑥">ordered map</a> of the following key/value pairs:</p>
      <dl>
       <dt data-md>"<code>api</code>"
       <dd data-md>
@@ -5412,7 +5435,7 @@ items:</p>
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate④⓪">For each</a> <var>contribution</var> of <var>contributions</var>:</p>
      <ol>
       <li data-md>
-       <p>Let <var>contributionData</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⑥">map</a> of the following key/value pairs:</p>
+       <p>Let <var>contributionData</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⑦">map</a> of the following key/value pairs:</p>
        <dl>
         <dt data-md>"<code>bucket</code>"
         <dd data-md>
@@ -5425,7 +5448,7 @@ items:</p>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-append" id="ref-for-list-append②⑧">Append</a> <var>contributionData</var> to <var>payloadData</var>.</p>
      </ol>
     <li data-md>
-     <p>Let <var>payload</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⑦">map</a> of the following key/value pairs:</p>
+     <p>Let <var>payload</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⑧">map</a> of the following key/value pairs:</p>
      <dl>
       <dt data-md>"<code>data</code>"
       <dd data-md>
@@ -5465,7 +5488,7 @@ run the following steps:</p>
     <li data-md>
      <p>Let <var>aggregationServicePayloads</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-is-empty" id="ref-for-list-is-empty③⑧">empty</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list" id="ref-for-list⑥①">list</a>.</p>
     <li data-md>
-     <p>Let <var>aggregationServicePayload</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⑧">map</a> of the following key/value pairs:</p>
+     <p>Let <var>aggregationServicePayload</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⑨">map</a> of the following key/value pairs:</p>
      <dl>
       <dt data-md>"<code>payload</code>"
       <dd data-md>
@@ -5485,7 +5508,7 @@ run the following steps:</p>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="obtain-an-event-level-report-body">obtain an event-level report body</dfn> given an <a data-link-type="dfn" href="#attribution-report" id="ref-for-attribution-report⑦">attribution report</a> <var>report</var>, run the following steps:</p>
    <ol>
     <li data-md>
-     <p>Let <var>data</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map④⑨">map</a> of the following key/value pairs:</p>
+     <p>Let <var>data</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑤⓪">map</a> of the following key/value pairs:</p>
      <dl>
       <dt data-md>"<code>attribution_destination</code>"
       <dd data-md>
@@ -5532,7 +5555,7 @@ run the following steps:</p>
     <li data-md>
      <p>If <var>aggregationServicePayloads</var> is an error, return <var>aggregationServicePayloads</var>.</p>
     <li data-md>
-     <p>Let <var>data</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑤⓪">map</a> of the following key/value pairs:</p>
+     <p>Let <var>data</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑤①">map</a> of the following key/value pairs:</p>
      <dl>
       <dt data-md>"<code>shared_info</code>"
       <dd data-md>
@@ -5577,7 +5600,7 @@ whether a user is online, retries might be limited in number and subject to rand
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate④①">For each</a> <var>debugData</var> of <var>report</var>’s <a data-link-type="dfn" href="#attribution-debug-report-data" id="ref-for-attribution-debug-report-data①">data</a>:</p>
      <ol>
       <li data-md>
-       <p>Let <var>data</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑤①">map</a> of the following key/value pairs:</p>
+       <p>Let <var>data</var> be a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑤②">map</a> of the following key/value pairs:</p>
        <dl>
         <dt data-md>"<code>type</code>"
         <dd data-md>
@@ -5802,7 +5825,7 @@ and a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-heade
       <li data-md>
        <p>Let <var>params</var> be the <a data-link-type="dfn" href="https://httpwg.org/specs/rfc8941#param" id="ref-for-param">parameters</a> associated with <var>value</var>.</p>
       <li data-md>
-       <p>If <var>params</var>["<code>debug-reporting</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists④⑨">exists</a> and <var>params</var>["<code>debug-reporting</code>"] is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#boolean" id="ref-for-boolean①⑤">boolean</a>,
+       <p>If <var>params</var>["<code>debug-reporting</code>"] <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-exists" id="ref-for-map-exists⑤⓪">exists</a> and <var>params</var>["<code>debug-reporting</code>"] is a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#boolean" id="ref-for-boolean①⑤">boolean</a>,
  set <var>debugReporting</var> to <var>params</var>["<code>debug-reporting</code>"].</p>
       <li data-md>
        <p>Let <var>registration</var> be a new <a data-link-type="dfn" href="#os-registration" id="ref-for-os-registration①">OS registration</a> struct whose items are:</p>
@@ -5867,7 +5890,7 @@ and an <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/brow
       <li data-md>
        <p>If <var>origin</var> is not <a data-link-type="dfn" href="#check-if-an-origin-is-suitable" id="ref-for-check-if-an-origin-is-suitable⑤">suitable</a>, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue②②">continue</a>.</p>
       <li data-md>
-       <p>Let <var>body</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑤②">map</a> with the following key/value pairs:</p>
+       <p>Let <var>body</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-map" id="ref-for-ordered-map⑤③">map</a> with the following key/value pairs:</p>
        <dl>
         <dt data-md>"<code>context_site</code>"
         <dd data-md>
@@ -6601,6 +6624,7 @@ proxy server could itself handle the <a data-link-type="dfn" href="#event-level-
    <li><a href="#parse-aggregation-keys">parse aggregation keys</a><span>, in § 11.3</span>
    <li><a href="#parse-an-aggregation-key-piece">parse an aggregation key piece</a><span>, in § 10.10</span>
    <li><a href="#parse-an-attribution-destination">parse an attribution destination</a><span>, in § 11.3</span>
+   <li><a href="#parse-an-event-trigger-value">parse an event-trigger value</a><span>, in § 12.1</span>
    <li><a href="#parse-an-optional-64-bit-signed-integer">parse an optional 64-bit signed integer</a><span>, in § 10.2</span>
    <li><a href="#parse-an-optional-64-bit-unsigned-integer">parse an optional 64-bit unsigned integer</a><span>, in § 10.2</span>
    <li><a href="#parse-attribution-destinations">parse attribution destinations</a><span>, in § 11.3</span>
@@ -6828,7 +6852,12 @@ proxy server could itself handle the <a data-link-type="dfn" href="#event-level-
    <li><a href="#os-registration-url">URL</a><span>, in § 14.1</span>
    <li><a href="#validate-a-background-attributionsrc-eligibility">validate a background attributionsrc eligibility</a><span>, in § 10.13</span>
    <li><a href="#valid-source-expiry-range">Valid source expiry range</a><span>, in § 8</span>
-   <li><a href="#aggregatable-contribution-value">value</a><span>, in § 6.23</span>
+   <li>
+    value
+    <ul>
+     <li><a href="#aggregatable-contribution-value">dfn for aggregatable contribution</a><span>, in § 6.23</span>
+     <li><a href="#event-level-trigger-configuration-value">dfn for event-level trigger configuration</a><span>, in § 6.17</span>
+    </ul>
    <li><a href="#aggregatable-values-configuration-values">values</a><span>, in § 6.15</span>
    <li><a href="#summary-window-operator-value_sum">value_sum</a><span>, in § 6.9</span>
    <li><a href="#attribution-trigger-verifications">verifications</a><span>, in § 6.20</span>
@@ -7455,7 +7484,7 @@ let dfnPanelData = {
 "0e6b2056": {"dfnID":"0e6b2056","dfnText":"set (for map)","external":true,"refSections":[{"refs":[{"id":"ref-for-map-set"},{"id":"ref-for-map-set\u2460"}],"title":"2.2. Window open steps"},{"refs":[{"id":"ref-for-map-set\u2461"}],"title":"3. Network monkeypatches"},{"refs":[{"id":"ref-for-map-set\u2462"}],"title":"10.4. Parsing filter data"},{"refs":[{"id":"ref-for-map-set\u2463"},{"id":"ref-for-map-set\u2464"},{"id":"ref-for-map-set\u2465"},{"id":"ref-for-map-set\u2466"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-map-set\u2467"},{"id":"ref-for-map-set\u2468"},{"id":"ref-for-map-set\u2460\u24ea"},{"id":"ref-for-map-set\u2460\u2460"}],"title":"11.4. Processing an attribution source"},{"refs":[{"id":"ref-for-map-set\u2460\u2461"}],"title":"12.6. Creating aggregatable contributions"},{"refs":[{"id":"ref-for-map-set\u2460\u2462"},{"id":"ref-for-map-set\u2460\u2463"},{"id":"ref-for-map-set\u2460\u2464"},{"id":"ref-for-map-set\u2460\u2465"},{"id":"ref-for-map-set\u2460\u2466"},{"id":"ref-for-map-set\u2460\u2467"},{"id":"ref-for-map-set\u2460\u2468"},{"id":"ref-for-map-set\u2461\u24ea"},{"id":"ref-for-map-set\u2461\u2460"},{"id":"ref-for-map-set\u2461\u2461"},{"id":"ref-for-map-set\u2461\u2462"}],"title":"12.8. Obtaining debug data on trigger registration"},{"refs":[{"id":"ref-for-map-set\u2461\u2463"},{"id":"ref-for-map-set\u2461\u2464"},{"id":"ref-for-map-set\u2461\u2465"}],"title":"13.3. Obtaining an aggregatable report\u2019s shared info"},{"refs":[{"id":"ref-for-map-set\u2461\u2466"}],"title":"13.4. Obtaining an aggregatable report\u2019s aggregation service payloads"},{"refs":[{"id":"ref-for-map-set\u2461\u2467"},{"id":"ref-for-map-set\u2461\u2468"},{"id":"ref-for-map-set\u2462\u24ea"},{"id":"ref-for-map-set\u2462\u2460"},{"id":"ref-for-map-set\u2462\u2461"}],"title":"13.5. Serialize attribution report body"}],"url":"https://infra.spec.whatwg.org/#map-set"},
 "0e8de730": {"dfnID":"0e8de730","dfnText":"tuple","external":true,"refSections":[{"refs":[{"id":"ref-for-tuple"}],"title":"6.31. Triggering result"},{"refs":[{"id":"ref-for-tuple\u2460"}],"title":"9. Vendor-Specific Values"},{"refs":[{"id":"ref-for-tuple\u2461"}],"title":"10.5. Parsing filters"}],"url":"https://infra.spec.whatwg.org/#tuple"},
 "0fa357c3": {"dfnID":"0fa357c3","dfnText":"length","external":true,"refSections":[{"refs":[{"id":"ref-for-string-length"},{"id":"ref-for-string-length\u2460"},{"id":"ref-for-string-length\u2461"}],"title":"8. Constants"},{"refs":[{"id":"ref-for-string-length\u2462"},{"id":"ref-for-string-length\u2463"}],"title":"10.4. Parsing filter data"},{"refs":[{"id":"ref-for-string-length\u2464"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-string-length\u2465"},{"id":"ref-for-string-length\u2466"},{"id":"ref-for-string-length\u2467"}],"title":"12.1. Creating an attribution trigger"}],"url":"https://infra.spec.whatwg.org/#string-length"},
-"1243a891": {"dfnID":"1243a891","dfnText":"exist","external":true,"refSections":[{"refs":[{"id":"ref-for-map-exists"},{"id":"ref-for-map-exists\u2460"}],"title":"2.2. Window open steps"},{"refs":[{"id":"ref-for-map-exists\u2461"},{"id":"ref-for-map-exists\u2462"}],"title":"3.1. Fetch monkeypatches"},{"refs":[{"id":"ref-for-map-exists\u2463"}],"title":"6.12. Trigger specs"},{"refs":[{"id":"ref-for-map-exists\u2464"},{"id":"ref-for-map-exists\u2465"}],"title":"10.2. Parsing JSON fields"},{"refs":[{"id":"ref-for-map-exists\u2466"}],"title":"10.4. Parsing filter data"},{"refs":[{"id":"ref-for-map-exists\u2467"},{"id":"ref-for-map-exists\u2468"}],"title":"10.5. Parsing filters"},{"refs":[{"id":"ref-for-map-exists\u2460\u24ea"},{"id":"ref-for-map-exists\u2460\u2460"}],"title":"10.6. Getting registration info"},{"refs":[{"id":"ref-for-map-exists\u2460\u2461"},{"id":"ref-for-map-exists\u2460\u2462"},{"id":"ref-for-map-exists\u2460\u2463"},{"id":"ref-for-map-exists\u2460\u2464"},{"id":"ref-for-map-exists\u2460\u2465"},{"id":"ref-for-map-exists\u2460\u2466"},{"id":"ref-for-map-exists\u2460\u2467"},{"id":"ref-for-map-exists\u2460\u2468"},{"id":"ref-for-map-exists\u2461\u24ea"},{"id":"ref-for-map-exists\u2461\u2460"},{"id":"ref-for-map-exists\u2461\u2461"},{"id":"ref-for-map-exists\u2461\u2462"},{"id":"ref-for-map-exists\u2461\u2463"},{"id":"ref-for-map-exists\u2461\u2464"},{"id":"ref-for-map-exists\u2461\u2465"},{"id":"ref-for-map-exists\u2461\u2466"},{"id":"ref-for-map-exists\u2461\u2467"},{"id":"ref-for-map-exists\u2461\u2468"},{"id":"ref-for-map-exists\u2462\u24ea"},{"id":"ref-for-map-exists\u2462\u2460"},{"id":"ref-for-map-exists\u2462\u2461"},{"id":"ref-for-map-exists\u2462\u2462"},{"id":"ref-for-map-exists\u2462\u2463"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-map-exists\u2462\u2464"},{"id":"ref-for-map-exists\u2462\u2465"},{"id":"ref-for-map-exists\u2462\u2466"},{"id":"ref-for-map-exists\u2462\u2467"},{"id":"ref-for-map-exists\u2462\u2468"},{"id":"ref-for-map-exists\u2463\u24ea"},{"id":"ref-for-map-exists\u2463\u2460"},{"id":"ref-for-map-exists\u2463\u2461"},{"id":"ref-for-map-exists\u2463\u2462"},{"id":"ref-for-map-exists\u2463\u2463"},{"id":"ref-for-map-exists\u2463\u2464"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-map-exists\u2463\u2465"}],"title":"12.2. Does filter data match"},{"refs":[{"id":"ref-for-map-exists\u2463\u2466"},{"id":"ref-for-map-exists\u2463\u2467"}],"title":"12.6. Creating aggregatable contributions"},{"refs":[{"id":"ref-for-map-exists\u2463\u2468"}],"title":"14.1. Get OS registrations"}],"url":"https://infra.spec.whatwg.org/#map-exists"},
+"1243a891": {"dfnID":"1243a891","dfnText":"exist","external":true,"refSections":[{"refs":[{"id":"ref-for-map-exists"},{"id":"ref-for-map-exists\u2460"}],"title":"2.2. Window open steps"},{"refs":[{"id":"ref-for-map-exists\u2461"},{"id":"ref-for-map-exists\u2462"}],"title":"3.1. Fetch monkeypatches"},{"refs":[{"id":"ref-for-map-exists\u2463"}],"title":"6.12. Trigger specs"},{"refs":[{"id":"ref-for-map-exists\u2464"},{"id":"ref-for-map-exists\u2465"}],"title":"10.2. Parsing JSON fields"},{"refs":[{"id":"ref-for-map-exists\u2466"}],"title":"10.4. Parsing filter data"},{"refs":[{"id":"ref-for-map-exists\u2467"},{"id":"ref-for-map-exists\u2468"}],"title":"10.5. Parsing filters"},{"refs":[{"id":"ref-for-map-exists\u2460\u24ea"},{"id":"ref-for-map-exists\u2460\u2460"}],"title":"10.6. Getting registration info"},{"refs":[{"id":"ref-for-map-exists\u2460\u2461"},{"id":"ref-for-map-exists\u2460\u2462"},{"id":"ref-for-map-exists\u2460\u2463"},{"id":"ref-for-map-exists\u2460\u2464"},{"id":"ref-for-map-exists\u2460\u2465"},{"id":"ref-for-map-exists\u2460\u2466"},{"id":"ref-for-map-exists\u2460\u2467"},{"id":"ref-for-map-exists\u2460\u2468"},{"id":"ref-for-map-exists\u2461\u24ea"},{"id":"ref-for-map-exists\u2461\u2460"},{"id":"ref-for-map-exists\u2461\u2461"},{"id":"ref-for-map-exists\u2461\u2462"},{"id":"ref-for-map-exists\u2461\u2463"},{"id":"ref-for-map-exists\u2461\u2464"},{"id":"ref-for-map-exists\u2461\u2465"},{"id":"ref-for-map-exists\u2461\u2466"},{"id":"ref-for-map-exists\u2461\u2467"},{"id":"ref-for-map-exists\u2461\u2468"},{"id":"ref-for-map-exists\u2462\u24ea"},{"id":"ref-for-map-exists\u2462\u2460"},{"id":"ref-for-map-exists\u2462\u2461"},{"id":"ref-for-map-exists\u2462\u2462"},{"id":"ref-for-map-exists\u2462\u2463"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-map-exists\u2462\u2464"},{"id":"ref-for-map-exists\u2462\u2465"},{"id":"ref-for-map-exists\u2462\u2466"},{"id":"ref-for-map-exists\u2462\u2467"},{"id":"ref-for-map-exists\u2462\u2468"},{"id":"ref-for-map-exists\u2463\u24ea"},{"id":"ref-for-map-exists\u2463\u2460"},{"id":"ref-for-map-exists\u2463\u2461"},{"id":"ref-for-map-exists\u2463\u2462"},{"id":"ref-for-map-exists\u2463\u2463"},{"id":"ref-for-map-exists\u2463\u2464"},{"id":"ref-for-map-exists\u2463\u2465"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-map-exists\u2463\u2466"}],"title":"12.2. Does filter data match"},{"refs":[{"id":"ref-for-map-exists\u2463\u2467"},{"id":"ref-for-map-exists\u2463\u2468"}],"title":"12.6. Creating aggregatable contributions"},{"refs":[{"id":"ref-for-map-exists\u2464\u24ea"}],"title":"14.1. Get OS registrations"}],"url":"https://infra.spec.whatwg.org/#map-exists"},
 "12d6b9a8": {"dfnID":"12d6b9a8","dfnText":"values","external":true,"refSections":[{"refs":[{"id":"ref-for-map-getting-the-values"}],"title":"8. Constants"}],"url":"https://infra.spec.whatwg.org/#map-getting-the-values"},
 "13dd6cae": {"dfnID":"13dd6cae","dfnText":"node navigable","external":true,"refSections":[{"refs":[{"id":"ref-for-node-navigable"}],"title":"10.8. Obtaining context origin"}],"url":"https://html.spec.whatwg.org/multipage/document-sequences.html#node-navigable"},
 "1534f1eb": {"dfnID":"1534f1eb","dfnText":"header name","external":true,"refSections":[{"refs":[{"id":"ref-for-header-name"}],"title":"10.13. Making a background attributionsrc request"}],"url":"https://fetch.spec.whatwg.org/#header-name"},
@@ -7485,7 +7514,7 @@ let dfnPanelData = {
 "3bda058c": {"dfnID":"3bda058c","dfnText":"generate masked tokens","external":true,"refSections":[{"refs":[{"id":"ref-for-generate-masked-tokens"}],"title":"15.1. Initiate trigger verification"}],"url":"https://wicg.github.io/trust-token-api/#generate-masked-tokens"},
 "3de9e659": {"dfnID":"3de9e659","dfnText":"byte sequence","external":true,"refSections":[{"refs":[{"id":"ref-for-byte-sequence"}],"title":"6.28. Serialized private state token"},{"refs":[{"id":"ref-for-byte-sequence\u2460"}],"title":"6.30. Trigger verification metadata"},{"refs":[{"id":"ref-for-byte-sequence\u2461"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-byte-sequence\u2462"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-byte-sequence\u2463"}],"title":"13.1. Encode an unsigned k-bit integer"},{"refs":[{"id":"ref-for-byte-sequence\u2464"},{"id":"ref-for-byte-sequence\u2465"}],"title":"13.4. Obtaining an aggregatable report\u2019s aggregation service payloads"},{"refs":[{"id":"ref-for-byte-sequence\u2466"},{"id":"ref-for-byte-sequence\u2467"}],"title":"13.5. Serialize attribution report body"},{"refs":[{"id":"ref-for-byte-sequence\u2468"}],"title":"13.6. Serialize attribution debug report body"},{"refs":[{"id":"ref-for-byte-sequence\u2460\u24ea"}],"title":"13.8. Creating a report request"}],"url":"https://infra.spec.whatwg.org/#byte-sequence"},
 "3e12e042": {"dfnID":"3e12e042","dfnText":"environment settings object","external":true,"refSections":[{"refs":[{"id":"ref-for-environment-settings-object"}],"title":"7. Storage"}],"url":"https://html.spec.whatwg.org/multipage/webappapis.html#environment-settings-object"},
-"3fca5a9e": {"dfnID":"3fca5a9e","dfnText":"map","external":true,"refSections":[{"refs":[{"id":"ref-for-ordered-map"}],"title":"3. Network monkeypatches"},{"refs":[{"id":"ref-for-ordered-map\u2460"}],"title":"6.5. Attribution filtering"},{"refs":[{"id":"ref-for-ordered-map\u2461"}],"title":"6.12. Trigger specs"},{"refs":[{"id":"ref-for-ordered-map\u2462"}],"title":"6.13. Attribution source"},{"refs":[{"id":"ref-for-ordered-map\u2463"}],"title":"6.15. Aggregatable values configuration"},{"refs":[{"id":"ref-for-ordered-map\u2464"}],"title":"6.26. Attribution debug data"},{"refs":[{"id":"ref-for-ordered-map\u2465"},{"id":"ref-for-ordered-map\u2466"}],"title":"8. Constants"},{"refs":[{"id":"ref-for-ordered-map\u2467"}],"title":"9. Vendor-Specific Values"},{"refs":[{"id":"ref-for-ordered-map\u2468"},{"id":"ref-for-ordered-map\u2460\u24ea"}],"title":"10.2. Parsing JSON fields"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2460"},{"id":"ref-for-ordered-map\u2460\u2461"}],"title":"10.4. Parsing filter data"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2462"},{"id":"ref-for-ordered-map\u2460\u2463"}],"title":"10.5. Parsing filters"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2464"}],"title":"10.6. Getting registration info"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2465"}],"title":"10.13. Making a background attributionsrc request"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2466"},{"id":"ref-for-ordered-map\u2460\u2467"},{"id":"ref-for-ordered-map\u2460\u2468"},{"id":"ref-for-ordered-map\u2461\u24ea"},{"id":"ref-for-ordered-map\u2461\u2460"},{"id":"ref-for-ordered-map\u2461\u2461"},{"id":"ref-for-ordered-map\u2461\u2462"},{"id":"ref-for-ordered-map\u2461\u2463"},{"id":"ref-for-ordered-map\u2461\u2464"},{"id":"ref-for-ordered-map\u2461\u2465"},{"id":"ref-for-ordered-map\u2461\u2466"},{"id":"ref-for-ordered-map\u2461\u2467"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-ordered-map\u2461\u2468"}],"title":"11.4. Processing an attribution source"},{"refs":[{"id":"ref-for-ordered-map\u2462\u24ea"},{"id":"ref-for-ordered-map\u2462\u2460"},{"id":"ref-for-ordered-map\u2462\u2461"},{"id":"ref-for-ordered-map\u2462\u2462"},{"id":"ref-for-ordered-map\u2462\u2463"},{"id":"ref-for-ordered-map\u2462\u2464"},{"id":"ref-for-ordered-map\u2462\u2465"},{"id":"ref-for-ordered-map\u2462\u2466"},{"id":"ref-for-ordered-map\u2462\u2467"},{"id":"ref-for-ordered-map\u2462\u2468"},{"id":"ref-for-ordered-map\u2463\u24ea"},{"id":"ref-for-ordered-map\u2463\u2460"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2461"},{"id":"ref-for-ordered-map\u2463\u2462"}],"title":"12.6. Creating aggregatable contributions"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2463"}],"title":"12.8. Obtaining debug data on trigger registration"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2464"}],"title":"13.3. Obtaining an aggregatable report\u2019s shared info"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2465"},{"id":"ref-for-ordered-map\u2463\u2466"},{"id":"ref-for-ordered-map\u2463\u2467"}],"title":"13.4. Obtaining an aggregatable report\u2019s aggregation service payloads"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2468"},{"id":"ref-for-ordered-map\u2464\u24ea"}],"title":"13.5. Serialize attribution report body"},{"refs":[{"id":"ref-for-ordered-map\u2464\u2460"}],"title":"13.6. Serialize attribution debug report body"},{"refs":[{"id":"ref-for-ordered-map\u2464\u2461"}],"title":"14.3. Deliver OS registration debug reports"}],"url":"https://infra.spec.whatwg.org/#ordered-map"},
+"3fca5a9e": {"dfnID":"3fca5a9e","dfnText":"map","external":true,"refSections":[{"refs":[{"id":"ref-for-ordered-map"}],"title":"3. Network monkeypatches"},{"refs":[{"id":"ref-for-ordered-map\u2460"}],"title":"6.5. Attribution filtering"},{"refs":[{"id":"ref-for-ordered-map\u2461"}],"title":"6.12. Trigger specs"},{"refs":[{"id":"ref-for-ordered-map\u2462"}],"title":"6.13. Attribution source"},{"refs":[{"id":"ref-for-ordered-map\u2463"}],"title":"6.15. Aggregatable values configuration"},{"refs":[{"id":"ref-for-ordered-map\u2464"}],"title":"6.26. Attribution debug data"},{"refs":[{"id":"ref-for-ordered-map\u2465"},{"id":"ref-for-ordered-map\u2466"}],"title":"8. Constants"},{"refs":[{"id":"ref-for-ordered-map\u2467"}],"title":"9. Vendor-Specific Values"},{"refs":[{"id":"ref-for-ordered-map\u2468"},{"id":"ref-for-ordered-map\u2460\u24ea"}],"title":"10.2. Parsing JSON fields"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2460"},{"id":"ref-for-ordered-map\u2460\u2461"}],"title":"10.4. Parsing filter data"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2462"},{"id":"ref-for-ordered-map\u2460\u2463"}],"title":"10.5. Parsing filters"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2464"}],"title":"10.6. Getting registration info"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2465"}],"title":"10.13. Making a background attributionsrc request"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2466"},{"id":"ref-for-ordered-map\u2460\u2467"},{"id":"ref-for-ordered-map\u2460\u2468"},{"id":"ref-for-ordered-map\u2461\u24ea"},{"id":"ref-for-ordered-map\u2461\u2460"},{"id":"ref-for-ordered-map\u2461\u2461"},{"id":"ref-for-ordered-map\u2461\u2462"},{"id":"ref-for-ordered-map\u2461\u2463"},{"id":"ref-for-ordered-map\u2461\u2464"},{"id":"ref-for-ordered-map\u2461\u2465"},{"id":"ref-for-ordered-map\u2461\u2466"},{"id":"ref-for-ordered-map\u2461\u2467"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-ordered-map\u2461\u2468"}],"title":"11.4. Processing an attribution source"},{"refs":[{"id":"ref-for-ordered-map\u2462\u24ea"},{"id":"ref-for-ordered-map\u2462\u2460"},{"id":"ref-for-ordered-map\u2462\u2461"},{"id":"ref-for-ordered-map\u2462\u2462"},{"id":"ref-for-ordered-map\u2462\u2463"},{"id":"ref-for-ordered-map\u2462\u2464"},{"id":"ref-for-ordered-map\u2462\u2465"},{"id":"ref-for-ordered-map\u2462\u2466"},{"id":"ref-for-ordered-map\u2462\u2467"},{"id":"ref-for-ordered-map\u2462\u2468"},{"id":"ref-for-ordered-map\u2463\u24ea"},{"id":"ref-for-ordered-map\u2463\u2460"},{"id":"ref-for-ordered-map\u2463\u2461"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2462"},{"id":"ref-for-ordered-map\u2463\u2463"}],"title":"12.6. Creating aggregatable contributions"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2464"}],"title":"12.8. Obtaining debug data on trigger registration"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2465"}],"title":"13.3. Obtaining an aggregatable report\u2019s shared info"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2466"},{"id":"ref-for-ordered-map\u2463\u2467"},{"id":"ref-for-ordered-map\u2463\u2468"}],"title":"13.4. Obtaining an aggregatable report\u2019s aggregation service payloads"},{"refs":[{"id":"ref-for-ordered-map\u2464\u24ea"},{"id":"ref-for-ordered-map\u2464\u2460"}],"title":"13.5. Serialize attribution report body"},{"refs":[{"id":"ref-for-ordered-map\u2464\u2461"}],"title":"13.6. Serialize attribution debug report body"},{"refs":[{"id":"ref-for-ordered-map\u2464\u2462"}],"title":"14.3. Deliver OS registration debug reports"}],"url":"https://infra.spec.whatwg.org/#ordered-map"},
 "4013a022": {"dfnID":"4013a022","dfnText":"this","external":true,"refSections":[{"refs":[{"id":"ref-for-this"},{"id":"ref-for-this\u2460"},{"id":"ref-for-this\u2461"},{"id":"ref-for-this\u2462"}],"title":"3.2. XMLHttpRequest monkeypatches"}],"url":"https://webidl.spec.whatwg.org/#this"},
 "402ed79d": {"dfnID":"402ed79d","dfnText":"CEReactions","external":true,"refSections":[{"refs":[{"id":"ref-for-cereactions"}],"title":"2.1. API for elements"}],"url":"https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions"},
 "4316437c": {"dfnID":"4316437c","dfnText":"send(body)","external":true,"refSections":[{"refs":[{"id":"ref-for-dom-xmlhttprequest-send"}],"title":"3.2. XMLHttpRequest monkeypatches"}],"url":"https://xhr.spec.whatwg.org/#dom-xmlhttprequest-send"},
@@ -7546,7 +7575,7 @@ let dfnPanelData = {
 "81cb0e1a": {"dfnID":"81cb0e1a","dfnText":"rules for parsing non-negative integers","external":true,"refSections":[{"refs":[{"id":"ref-for-rules-for-parsing-non-negative-integers"}],"title":"10.2. Parsing JSON fields"}],"url":"https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-non-negative-integers"},
 "82c23298": {"dfnID":"82c23298","dfnText":"remote end steps","external":true,"refSections":[{"refs":[{"id":"ref-for-dfn-remote-end-steps"}],"title":"16.1. Set local testing mode"}],"url":"https://w3c.github.io/webdriver/#dfn-remote-end-steps"},
 "8394d1b7": {"dfnID":"8394d1b7","dfnText":"keepalive","external":true,"refSections":[{"refs":[{"id":"ref-for-request-keepalive-flag"}],"title":"10.13. Making a background attributionsrc request"}],"url":"https://fetch.spec.whatwg.org/#request-keepalive-flag"},
-"84b454ff": {"dfnID":"84b454ff","dfnText":"ordered map","external":true,"refSections":[{"refs":[{"id":"ref-for-ordered-map"}],"title":"3. Network monkeypatches"},{"refs":[{"id":"ref-for-ordered-map\u2460"}],"title":"6.5. Attribution filtering"},{"refs":[{"id":"ref-for-ordered-map\u2461"}],"title":"6.12. Trigger specs"},{"refs":[{"id":"ref-for-ordered-map\u2462"}],"title":"6.13. Attribution source"},{"refs":[{"id":"ref-for-ordered-map\u2463"}],"title":"6.15. Aggregatable values configuration"},{"refs":[{"id":"ref-for-ordered-map\u2464"}],"title":"6.26. Attribution debug data"},{"refs":[{"id":"ref-for-ordered-map\u2465"},{"id":"ref-for-ordered-map\u2466"}],"title":"8. Constants"},{"refs":[{"id":"ref-for-ordered-map\u2467"}],"title":"9. Vendor-Specific Values"},{"refs":[{"id":"ref-for-ordered-map\u2468"},{"id":"ref-for-ordered-map\u2460\u24ea"}],"title":"10.2. Parsing JSON fields"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2460"},{"id":"ref-for-ordered-map\u2460\u2461"}],"title":"10.4. Parsing filter data"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2462"},{"id":"ref-for-ordered-map\u2460\u2463"}],"title":"10.5. Parsing filters"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2464"}],"title":"10.6. Getting registration info"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2465"}],"title":"10.13. Making a background attributionsrc request"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2466"},{"id":"ref-for-ordered-map\u2460\u2467"},{"id":"ref-for-ordered-map\u2460\u2468"},{"id":"ref-for-ordered-map\u2461\u24ea"},{"id":"ref-for-ordered-map\u2461\u2460"},{"id":"ref-for-ordered-map\u2461\u2461"},{"id":"ref-for-ordered-map\u2461\u2462"},{"id":"ref-for-ordered-map\u2461\u2463"},{"id":"ref-for-ordered-map\u2461\u2464"},{"id":"ref-for-ordered-map\u2461\u2465"},{"id":"ref-for-ordered-map\u2461\u2466"},{"id":"ref-for-ordered-map\u2461\u2467"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-ordered-map\u2461\u2468"}],"title":"11.4. Processing an attribution source"},{"refs":[{"id":"ref-for-ordered-map\u2462\u24ea"},{"id":"ref-for-ordered-map\u2462\u2460"},{"id":"ref-for-ordered-map\u2462\u2461"},{"id":"ref-for-ordered-map\u2462\u2462"},{"id":"ref-for-ordered-map\u2462\u2463"},{"id":"ref-for-ordered-map\u2462\u2464"},{"id":"ref-for-ordered-map\u2462\u2465"},{"id":"ref-for-ordered-map\u2462\u2466"},{"id":"ref-for-ordered-map\u2462\u2467"},{"id":"ref-for-ordered-map\u2462\u2468"},{"id":"ref-for-ordered-map\u2463\u24ea"},{"id":"ref-for-ordered-map\u2463\u2460"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2461"},{"id":"ref-for-ordered-map\u2463\u2462"}],"title":"12.6. Creating aggregatable contributions"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2463"}],"title":"12.8. Obtaining debug data on trigger registration"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2464"}],"title":"13.3. Obtaining an aggregatable report\u2019s shared info"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2465"},{"id":"ref-for-ordered-map\u2463\u2466"},{"id":"ref-for-ordered-map\u2463\u2467"}],"title":"13.4. Obtaining an aggregatable report\u2019s aggregation service payloads"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2468"},{"id":"ref-for-ordered-map\u2464\u24ea"}],"title":"13.5. Serialize attribution report body"},{"refs":[{"id":"ref-for-ordered-map\u2464\u2460"}],"title":"13.6. Serialize attribution debug report body"},{"refs":[{"id":"ref-for-ordered-map\u2464\u2461"}],"title":"14.3. Deliver OS registration debug reports"}],"url":"https://infra.spec.whatwg.org/#ordered-map"},
+"84b454ff": {"dfnID":"84b454ff","dfnText":"ordered map","external":true,"refSections":[{"refs":[{"id":"ref-for-ordered-map"}],"title":"3. Network monkeypatches"},{"refs":[{"id":"ref-for-ordered-map\u2460"}],"title":"6.5. Attribution filtering"},{"refs":[{"id":"ref-for-ordered-map\u2461"}],"title":"6.12. Trigger specs"},{"refs":[{"id":"ref-for-ordered-map\u2462"}],"title":"6.13. Attribution source"},{"refs":[{"id":"ref-for-ordered-map\u2463"}],"title":"6.15. Aggregatable values configuration"},{"refs":[{"id":"ref-for-ordered-map\u2464"}],"title":"6.26. Attribution debug data"},{"refs":[{"id":"ref-for-ordered-map\u2465"},{"id":"ref-for-ordered-map\u2466"}],"title":"8. Constants"},{"refs":[{"id":"ref-for-ordered-map\u2467"}],"title":"9. Vendor-Specific Values"},{"refs":[{"id":"ref-for-ordered-map\u2468"},{"id":"ref-for-ordered-map\u2460\u24ea"}],"title":"10.2. Parsing JSON fields"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2460"},{"id":"ref-for-ordered-map\u2460\u2461"}],"title":"10.4. Parsing filter data"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2462"},{"id":"ref-for-ordered-map\u2460\u2463"}],"title":"10.5. Parsing filters"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2464"}],"title":"10.6. Getting registration info"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2465"}],"title":"10.13. Making a background attributionsrc request"},{"refs":[{"id":"ref-for-ordered-map\u2460\u2466"},{"id":"ref-for-ordered-map\u2460\u2467"},{"id":"ref-for-ordered-map\u2460\u2468"},{"id":"ref-for-ordered-map\u2461\u24ea"},{"id":"ref-for-ordered-map\u2461\u2460"},{"id":"ref-for-ordered-map\u2461\u2461"},{"id":"ref-for-ordered-map\u2461\u2462"},{"id":"ref-for-ordered-map\u2461\u2463"},{"id":"ref-for-ordered-map\u2461\u2464"},{"id":"ref-for-ordered-map\u2461\u2465"},{"id":"ref-for-ordered-map\u2461\u2466"},{"id":"ref-for-ordered-map\u2461\u2467"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-ordered-map\u2461\u2468"}],"title":"11.4. Processing an attribution source"},{"refs":[{"id":"ref-for-ordered-map\u2462\u24ea"},{"id":"ref-for-ordered-map\u2462\u2460"},{"id":"ref-for-ordered-map\u2462\u2461"},{"id":"ref-for-ordered-map\u2462\u2462"},{"id":"ref-for-ordered-map\u2462\u2463"},{"id":"ref-for-ordered-map\u2462\u2464"},{"id":"ref-for-ordered-map\u2462\u2465"},{"id":"ref-for-ordered-map\u2462\u2466"},{"id":"ref-for-ordered-map\u2462\u2467"},{"id":"ref-for-ordered-map\u2462\u2468"},{"id":"ref-for-ordered-map\u2463\u24ea"},{"id":"ref-for-ordered-map\u2463\u2460"},{"id":"ref-for-ordered-map\u2463\u2461"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2462"},{"id":"ref-for-ordered-map\u2463\u2463"}],"title":"12.6. Creating aggregatable contributions"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2464"}],"title":"12.8. Obtaining debug data on trigger registration"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2465"}],"title":"13.3. Obtaining an aggregatable report\u2019s shared info"},{"refs":[{"id":"ref-for-ordered-map\u2463\u2466"},{"id":"ref-for-ordered-map\u2463\u2467"},{"id":"ref-for-ordered-map\u2463\u2468"}],"title":"13.4. Obtaining an aggregatable report\u2019s aggregation service payloads"},{"refs":[{"id":"ref-for-ordered-map\u2464\u24ea"},{"id":"ref-for-ordered-map\u2464\u2460"}],"title":"13.5. Serialize attribution report body"},{"refs":[{"id":"ref-for-ordered-map\u2464\u2461"}],"title":"13.6. Serialize attribution debug report body"},{"refs":[{"id":"ref-for-ordered-map\u2464\u2462"}],"title":"14.3. Deliver OS registration debug reports"}],"url":"https://infra.spec.whatwg.org/#ordered-map"},
 "852ada56": {"dfnID":"852ada56","dfnText":"port","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-url-port"}],"title":"13.4. Obtaining an aggregatable report\u2019s aggregation service payloads"},{"refs":[{"id":"ref-for-concept-url-port\u2460"}],"title":"13.7. Get report request URL"}],"url":"https://url.spec.whatwg.org/#concept-url-port"},
 "85394472": {"dfnID":"85394472","dfnText":"Document","external":true,"refSections":[{"refs":[{"id":"ref-for-document"}],"title":"10.13. Making a background attributionsrc request"}],"url":"https://dom.spec.whatwg.org/#document"},
 "857d5516": {"dfnID":"857d5516","dfnText":"client","external":true,"refSections":[{"refs":[{"id":"ref-for-concept-request-client"}],"title":"13.8. Creating a report request"}],"url":"https://fetch.spec.whatwg.org/#concept-request-client"},
@@ -7814,7 +7843,8 @@ let dfnPanelData = {
 "event-level-trigger-configuration-negated-filters": {"dfnID":"event-level-trigger-configuration-negated-filters","dfnText":"negated filters","external":false,"refSections":[{"refs":[{"id":"ref-for-event-level-trigger-configuration-negated-filters"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-event-level-trigger-configuration-negated-filters\u2460"}],"title":"12.9. Triggering event-level attribution"}],"url":"#event-level-trigger-configuration-negated-filters"},
 "event-level-trigger-configuration-priority": {"dfnID":"event-level-trigger-configuration-priority","dfnText":"priority","external":false,"refSections":[{"refs":[{"id":"ref-for-event-level-trigger-configuration-priority"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-event-level-trigger-configuration-priority\u2460"}],"title":"12.9. Triggering event-level attribution"}],"url":"#event-level-trigger-configuration-priority"},
 "event-level-trigger-configuration-trigger-data": {"dfnID":"event-level-trigger-configuration-trigger-data","dfnText":"trigger data","external":false,"refSections":[{"refs":[{"id":"ref-for-event-level-trigger-configuration-trigger-data"},{"id":"ref-for-event-level-trigger-configuration-trigger-data\u2460"}],"title":"6.11. Trigger-data matching mode"},{"refs":[{"id":"ref-for-event-level-trigger-configuration-trigger-data\u2461"}],"title":"8. Constants"},{"refs":[{"id":"ref-for-event-level-trigger-configuration-trigger-data\u2462"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-event-level-trigger-configuration-trigger-data\u2463"}],"title":"12.9. Triggering event-level attribution"}],"url":"#event-level-trigger-configuration-trigger-data"},
-"experimental-flexible-event-support": {"dfnID":"experimental-flexible-event-support","dfnText":"experimental Flexible Event support","external":false,"refSections":[{"refs":[{"id":"ref-for-experimental-flexible-event-support"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-experimental-flexible-event-support\u2460"}],"title":"12.9. Triggering event-level attribution"}],"url":"#experimental-flexible-event-support"},
+"event-level-trigger-configuration-value": {"dfnID":"event-level-trigger-configuration-value","dfnText":"value","external":false,"refSections":[{"refs":[{"id":"ref-for-event-level-trigger-configuration-value"}],"title":"12.1. Creating an attribution trigger"}],"url":"#event-level-trigger-configuration-value"},
+"experimental-flexible-event-support": {"dfnID":"experimental-flexible-event-support","dfnText":"experimental Flexible Event support","external":false,"refSections":[{"refs":[{"id":"ref-for-experimental-flexible-event-support"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-experimental-flexible-event-support\u2460"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-experimental-flexible-event-support\u2461"}],"title":"12.9. Triggering event-level attribution"}],"url":"#experimental-flexible-event-support"},
 "f0246dc8": {"dfnID":"f0246dc8","dfnText":"follow the hyperlink","external":true,"refSections":[{"refs":[{"id":"ref-for-following-hyperlinks-2"}],"title":"2.1. API for elements"}],"url":"https://html.spec.whatwg.org/multipage/links.html#following-hyperlinks-2"},
 "f02cd417": {"dfnID":"f02cd417","dfnText":"iterate (for list)","external":true,"refSections":[{"refs":[{"id":"ref-for-list-iterate"}],"title":"2.2. Window open steps"},{"refs":[{"id":"ref-for-list-iterate\u2460"},{"id":"ref-for-list-iterate\u2461"},{"id":"ref-for-list-iterate\u2462"}],"title":"3. Network monkeypatches"},{"refs":[{"id":"ref-for-list-iterate\u2463"},{"id":"ref-for-list-iterate\u2464"},{"id":"ref-for-list-iterate\u2465"}],"title":"5. Clear Site Data integration"},{"refs":[{"id":"ref-for-list-iterate\u2466"}],"title":"10.3. Serialize attribution destinations"},{"refs":[{"id":"ref-for-list-iterate\u2467"},{"id":"ref-for-list-iterate\u2468"}],"title":"10.4. Parsing filter data"},{"refs":[{"id":"ref-for-list-iterate\u2460\u24ea"}],"title":"10.5. Parsing filters"},{"refs":[{"id":"ref-for-list-iterate\u2460\u2460"}],"title":"10.13. Making a background attributionsrc request"},{"refs":[{"id":"ref-for-list-iterate\u2460\u2461"},{"id":"ref-for-list-iterate\u2460\u2462"}],"title":"11.1. Obtaining a randomized source response"},{"refs":[{"id":"ref-for-list-iterate\u2460\u2463"},{"id":"ref-for-list-iterate\u2460\u2464"},{"id":"ref-for-list-iterate\u2460\u2465"},{"id":"ref-for-list-iterate\u2460\u2466"},{"id":"ref-for-list-iterate\u2460\u2467"},{"id":"ref-for-list-iterate\u2460\u2468"},{"id":"ref-for-list-iterate\u2461\u24ea"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-list-iterate\u2461\u2460"},{"id":"ref-for-list-iterate\u2461\u2461"}],"title":"11.4. Processing an attribution source"},{"refs":[{"id":"ref-for-list-iterate\u2461\u2462"},{"id":"ref-for-list-iterate\u2461\u2463"},{"id":"ref-for-list-iterate\u2461\u2464"},{"id":"ref-for-list-iterate\u2461\u2465"},{"id":"ref-for-list-iterate\u2461\u2466"}],"title":"12.1. Creating an attribution trigger"},{"refs":[{"id":"ref-for-list-iterate\u2461\u2467"}],"title":"12.2. Does filter data match"},{"refs":[{"id":"ref-for-list-iterate\u2461\u2468"},{"id":"ref-for-list-iterate\u2462\u24ea"},{"id":"ref-for-list-iterate\u2462\u2460"}],"title":"12.6. Creating aggregatable contributions"},{"refs":[{"id":"ref-for-list-iterate\u2462\u2461"}],"title":"12.9. Triggering event-level attribution"},{"refs":[{"id":"ref-for-list-iterate\u2462\u2462"}],"title":"12.10. Triggering aggregatable attribution"},{"refs":[{"id":"ref-for-list-iterate\u2462\u2463"},{"id":"ref-for-list-iterate\u2462\u2464"}],"title":"12.11. Triggering attribution"},{"refs":[{"id":"ref-for-list-iterate\u2462\u2465"}],"title":"12.12. Establishing report delivery time"},{"refs":[{"id":"ref-for-list-iterate\u2462\u2466"},{"id":"ref-for-list-iterate\u2462\u2467"}],"title":"12.16. Generating randomized null reports"},{"refs":[{"id":"ref-for-list-iterate\u2462\u2468"}],"title":"13. Report delivery"},{"refs":[{"id":"ref-for-list-iterate\u2463\u24ea"}],"title":"13.4. Obtaining an aggregatable report\u2019s aggregation service payloads"},{"refs":[{"id":"ref-for-list-iterate\u2463\u2460"}],"title":"13.6. Serialize attribution debug report body"},{"refs":[{"id":"ref-for-list-iterate\u2463\u2461"}],"title":"13.8. Creating a report request"},{"refs":[{"id":"ref-for-list-iterate\u2463\u2462"}],"title":"14.1. Get OS registrations"},{"refs":[{"id":"ref-for-list-iterate\u2463\u2463"}],"title":"14.3. Deliver OS registration debug reports"},{"refs":[{"id":"ref-for-list-iterate\u2463\u2464"},{"id":"ref-for-list-iterate\u2463\u2465"}],"title":"15.2. Handle trigger verification"}],"url":"https://infra.spec.whatwg.org/#list-iterate"},
 "f0811ff8": {"dfnID":"f0811ff8","dfnText":"img","external":true,"refSections":[{"refs":[{"id":"ref-for-the-img-element"},{"id":"ref-for-the-img-element\u2460"}],"title":"2.1. API for elements"}],"url":"https://html.spec.whatwg.org/multipage/embedded-content.html#the-img-element"},
@@ -7933,6 +7963,7 @@ let dfnPanelData = {
 "parse-aggregation-keys": {"dfnID":"parse-aggregation-keys","dfnText":"parse aggregation keys","external":false,"refSections":[{"refs":[{"id":"ref-for-parse-aggregation-keys"}],"title":"11.3. Parsing source-registration JSON"}],"url":"#parse-aggregation-keys"},
 "parse-an-aggregation-key-piece": {"dfnID":"parse-an-aggregation-key-piece","dfnText":"parse an aggregation key piece","external":false,"refSections":[{"refs":[{"id":"ref-for-parse-an-aggregation-key-piece"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-parse-an-aggregation-key-piece\u2460"}],"title":"12.1. Creating an attribution trigger"}],"url":"#parse-an-aggregation-key-piece"},
 "parse-an-attribution-destination": {"dfnID":"parse-an-attribution-destination","dfnText":"parse an attribution destination","external":false,"refSections":[{"refs":[{"id":"ref-for-parse-an-attribution-destination"}],"title":"11.3. Parsing source-registration JSON"}],"url":"#parse-an-attribution-destination"},
+"parse-an-event-trigger-value": {"dfnID":"parse-an-event-trigger-value","dfnText":"parse an event-trigger value","external":false,"refSections":[{"refs":[{"id":"ref-for-parse-an-event-trigger-value"}],"title":"12.1. Creating an attribution trigger"}],"url":"#parse-an-event-trigger-value"},
 "parse-an-optional-64-bit-signed-integer": {"dfnID":"parse-an-optional-64-bit-signed-integer","dfnText":"parse an optional 64-bit signed integer","external":false,"refSections":[{"refs":[{"id":"ref-for-parse-an-optional-64-bit-signed-integer"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-parse-an-optional-64-bit-signed-integer\u2460"}],"title":"12.1. Creating an attribution trigger"}],"url":"#parse-an-optional-64-bit-signed-integer"},
 "parse-an-optional-64-bit-unsigned-integer": {"dfnID":"parse-an-optional-64-bit-unsigned-integer","dfnText":"parse an optional 64-bit unsigned integer","external":false,"refSections":[{"refs":[{"id":"ref-for-parse-an-optional-64-bit-unsigned-integer"},{"id":"ref-for-parse-an-optional-64-bit-unsigned-integer\u2460"},{"id":"ref-for-parse-an-optional-64-bit-unsigned-integer\u2461"}],"title":"11.3. Parsing source-registration JSON"},{"refs":[{"id":"ref-for-parse-an-optional-64-bit-unsigned-integer\u2462"},{"id":"ref-for-parse-an-optional-64-bit-unsigned-integer\u2463"},{"id":"ref-for-parse-an-optional-64-bit-unsigned-integer\u2464"},{"id":"ref-for-parse-an-optional-64-bit-unsigned-integer\u2465"}],"title":"12.1. Creating an attribution trigger"}],"url":"#parse-an-optional-64-bit-unsigned-integer"},
 "parse-attribution-destinations": {"dfnID":"parse-attribution-destinations","dfnText":"parse attribution destinations","external":false,"refSections":[{"refs":[{"id":"ref-for-parse-attribution-destinations"}],"title":"11.3. Parsing source-registration JSON"}],"url":"#parse-attribution-destinations"},
@@ -8626,6 +8657,7 @@ let refsData = {
 "#event-level-trigger-configuration-negated-filters": {"export":true,"for_":["event-level trigger configuration"],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"negated filters","type":"dfn","url":"#event-level-trigger-configuration-negated-filters"},
 "#event-level-trigger-configuration-priority": {"export":true,"for_":["event-level trigger configuration"],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"priority","type":"dfn","url":"#event-level-trigger-configuration-priority"},
 "#event-level-trigger-configuration-trigger-data": {"export":true,"for_":["event-level trigger configuration"],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"trigger data","type":"dfn","url":"#event-level-trigger-configuration-trigger-data"},
+"#event-level-trigger-configuration-value": {"export":true,"for_":["event-level trigger configuration"],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"value","type":"dfn","url":"#event-level-trigger-configuration-value"},
 "#experimental-flexible-event-support": {"export":true,"for_":[],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"experimental flexible event support","type":"dfn","url":"#experimental-flexible-event-support"},
 "#filter-config": {"export":true,"for_":[],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"filter config","type":"dfn","url":"#filter-config"},
 "#filter-config-lookback-window": {"export":true,"for_":["filter config"],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"lookback window","type":"dfn","url":"#filter-config-lookback-window"},
@@ -8728,6 +8760,7 @@ let refsData = {
 "#parse-aggregation-keys": {"export":true,"for_":[],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"parse aggregation keys","type":"dfn","url":"#parse-aggregation-keys"},
 "#parse-an-aggregation-key-piece": {"export":true,"for_":[],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"parse an aggregation key piece","type":"dfn","url":"#parse-an-aggregation-key-piece"},
 "#parse-an-attribution-destination": {"export":true,"for_":[],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"parse an attribution destination","type":"dfn","url":"#parse-an-attribution-destination"},
+"#parse-an-event-trigger-value": {"export":true,"for_":[],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"parse an event-trigger value","type":"dfn","url":"#parse-an-event-trigger-value"},
 "#parse-an-optional-64-bit-signed-integer": {"export":true,"for_":[],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"parse an optional 64-bit signed integer","type":"dfn","url":"#parse-an-optional-64-bit-signed-integer"},
 "#parse-an-optional-64-bit-unsigned-integer": {"export":true,"for_":[],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"parse an optional 64-bit unsigned integer","type":"dfn","url":"#parse-an-optional-64-bit-unsigned-integer"},
 "#parse-attribution-destinations": {"export":true,"for_":[],"level":"1","normative":true,"shortname":"attribution-reporting","spec":"attribution-reporting-1","status":"local","text":"parse attribution destinations","type":"dfn","url":"#parse-attribution-destinations"},
