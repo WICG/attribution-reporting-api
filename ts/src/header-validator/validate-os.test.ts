@@ -13,6 +13,7 @@ const tests: TestCase[] = [
   { input: '"https://a.test/", "https://b.test/"' },
   { input: '"https://a.test/"; debug-reporting' },
   { input: '"https://a.test/"; debug-reporting=?0' },
+  { input: '"http://a.test"' },
 
   // Warnings
   {
@@ -60,17 +61,6 @@ const tests: TestCase[] = [
       {
         path: [0],
         msg: 'ignored, must contain a valid URL',
-      },
-    ],
-  },
-
-  // Untrustworthy URL
-  {
-    input: '"http://a.test"',
-    expectedWarnings: [
-      {
-        path: [0],
-        msg: 'ignored, must contain a potentially trustworthy URL',
       },
     ],
   },

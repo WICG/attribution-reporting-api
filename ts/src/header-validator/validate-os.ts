@@ -7,22 +7,10 @@ function validateURL(ctx: Context, member: InnerList | Item): void {
     return
   }
 
-  let url
   try {
-    url = new URL(member[0])
+    new URL(member[0])
   } catch {
     ctx.warning('ignored, must contain a valid URL')
-    return
-  }
-
-  if (
-    url.protocol !== 'https:' &&
-    !(
-      url.protocol === 'http:' &&
-      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
-    )
-  ) {
-    ctx.warning('ignored, must contain a potentially trustworthy URL')
     return
   }
 
