@@ -844,7 +844,7 @@ function channelCapacity(ctx: SourceContext, s: Source): void {
 
   if (out.numStates > maxReportStates) {
     ctx.error(
-      `${numStatesWords}: ${out.numStates} exceeds max trigger-state cardinality (${maxReportStates})`
+      `${numStatesWords} (${out.numStates}) exceeds max cardinality (${maxReportStates})`
     )
   }
 

@@ -1323,7 +1323,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: [],
-        msg: 'number of possible output states: 3 exceeds max trigger-state cardinality (2)',
+        msg: 'number of possible output states (3) exceeds max cardinality (2)',
       },
     ],
     expectedNotes: [
