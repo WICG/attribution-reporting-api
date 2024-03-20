@@ -1280,6 +1280,69 @@ const testCases: TestCase[] = [
   },
 
   {
+    name: 'trigger-state-cardinality-valid',
+    json: `{"destination": "https://a.test"}`,
+    sourceType: SourceType.event,
+    noteInfoGain: true,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: 0,
+      },
+      maxSettableEventLevelEpsilon: 14,
+      maxCardinalityOfPossibleTriggerStates: 3,
+    },
+    expectedNotes: [
+      {
+        path: [],
+        msg: 'information gain: 1.58',
+      },
+      {
+        path: [],
+        msg: 'number of possible output states: 3',
+      },
+      {
+        path: [],
+        msg: 'randomized trigger rate: 0.0000025',
+      },
+    ],
+  },
+  {
+    name: 'trigger-state-cardinality-invalid',
+    json: `{"destination": "https://a.test"}`,
+    sourceType: SourceType.event,
+    noteInfoGain: true,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: 0,
+      },
+      maxSettableEventLevelEpsilon: 14,
+      maxCardinalityOfPossibleTriggerStates: 2,
+    },
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'number of possible output states: 3 exceeds max trigger-state cardinality (2)',
+      }
+    ],
+    expectedNotes: [
+      {
+        path: [],
+        msg: 'information gain: 1.58',
+      },
+      {
+        path: [],
+        msg: 'number of possible output states: 3',
+      },
+      {
+        path: [],
+        msg: 'randomized trigger rate: 0.0000025',
+      },
+    ],
+  },
+
+  {
     name: 'event-level-epsilon-valid',
     json: `{
       "destination": "https://a.test",
