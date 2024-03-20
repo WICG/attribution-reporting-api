@@ -819,7 +819,7 @@ function eventLevelEpsilon(ctx: RegistrationContext, j: Json): Maybe<number> {
 }
 
 function channelCapacity(ctx: SourceContext, s: Source): void {
-  const numStatesWords = "number of possible output states"
+  const numStatesWords = 'number of possible output states'
 
   const perTriggerDataConfigs = s.triggerSpecs.flatMap((spec) =>
     Array(spec.triggerData.size).fill(
@@ -848,7 +848,8 @@ function channelCapacity(ctx: SourceContext, s: Source): void {
     )
   }
 
-  const maxInfoGain = ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
+  const maxInfoGain =
+    ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
   const infoGainMsg = `information gain: ${out.infoGain.toFixed(2)}`
 
   if (out.infoGain > maxInfoGain) {
