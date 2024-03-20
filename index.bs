@@ -2486,6 +2486,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit global limit=]</code>":
     1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-success=]</code>" and |source|.
     1. Return.
+1. Let |newRateLimitRecords| be a new [=set/is empty|empty=] [=set=].
 1. [=set/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
     1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
         : [=attribution rate-limit record/scope=]
@@ -2504,7 +2505,8 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         |rateLimitRecord| is <strong>blocked</strong>:
         1. Run [=obtain and deliver a debug report on source registration=] with "[=source debug data type/source-success=]</code>" and |source|.
         1. Return.
-    1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
+    1. [=set/Append=] |rateLimitRecord| to |newRateLimitRecords|.
+1. [=set/Append=] |newRateLimitRecords| to the [=attribution rate-limit cache=].
 1. [=list/Remove=] all [=attribution rate-limit records=] |entry| from the [=attribution rate-limit cache=] if the result of running
     [=can attribution rate-limit record be removed=] with |entry| and |source|'s [=attribution source/source time=] is true.
 1. Let |debugDataType| be "<code>[=source debug data type/source-success=]</code>".
