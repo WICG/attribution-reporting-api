@@ -1028,6 +1028,35 @@ function warnInconsistentMaxEventLevelReportsAndTriggerSpecs(
 
 export type AggregationKeys = Map<string, bigint>
 
+export enum DestinationLimitAlgorithm {
+  priority_fifo = 'priority_fifo',
+  lifo = 'lifo',
+}
+
+export type DestinationLimit = Priority & {
+  algorithm: DestinationLimitAlgorithm
+}
+
+function destinationLimit(ctx: Context, j: Json): Maybe<DestinationLimit> {
+  return struct(ctx, j, {
+    algorithm: field(
+      'algorithm',
+      (ctx, j) => enumerated(ctx, j, DestinationLimitAlgorithm),
+      DestinationLimitAlgorithm.lifo
+    ),
+
+    ...priorityField,
+  }).peek((s) => {
+    ctx.scope('priority', () => {
+      if (s.algorithm === DestinationLimitAlgorithm.lifo && s.priority !== 0n) {
+        ctx.note(
+          `non-default priority (${s.priority}) for algorithm ${s.algorithm} (may still be used by future ${DestinationLimitAlgorithm.priority_fifo} source)`
+        )
+      }
+    })
+  })
+}
+
 export type Source = CommonDebug &
   Priority & {
     aggregatableReportWindow: number
@@ -1122,6 +1151,10 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
           triggerDataMatching,
           TriggerDataMatching.modulus
         ),
+        destinationLimit: field('destination_limit', destinationLimit, {
+          algorithm: DestinationLimitAlgorithm.lifo,
+          priority: 0n,
+        }),
 
         ...commonDebugFields,
         ...priorityField,
