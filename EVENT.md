@@ -1110,7 +1110,10 @@ sites represented by unexpired sources for a source-site.
 The browser can place a limit on the number of a source site's unexpired source's
 unique `destination` sites. When an attribution source is registered for a site
 that is not already in the unexpired sources and a source site is at its limit,
-the browser will drop the new source.
+the browser will only count the most recent `destination` sites within this
+limit, including those registered with the new source. The browser will delete
+pending sources and reports associated with the `destination` sites that are no
+longer counted.
 
 The lower this value, the harder it is for a reporting origin to use the API to
 try and measure user browsing activity not associated with ads being shown.
