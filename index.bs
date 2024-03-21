@@ -2411,28 +2411,11 @@ a [=trigger state=] |triggerState|:
     |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
 1. Return |fakeReport|.
 
-To <dfn>check if debug reporting is allowed</dfn> given a [=source debug data type=] |dataType|
-and a [=boolean=] |debugCookieSet|:
-1. If |dataType| is:
-    <dl class="switch">
-    : "<code>[=source debug data type/source-destination-limit=]</code>"
-    : "<code>[=source debug data type/source-destination-rate-limit=]</code>"
-    :: Return <strong>allowed</strong>.
-    : "<code>[=source debug data type/source-noised=]</code>"
-    : "<code>[=source debug data type/source-storage-limit=]</code>"
-    : "<code>[=source debug data type/source-success=]</code>"
-    : "<code>[=source debug data type/source-unknown-error=]</code>"
-    ::  1. If |debugCookieSet| is true, return <strong>allowed</strong>.
-        1. Otherwise, return <strong>blocked</strong>.
-
-    </dl>
-
 To <dfn>obtain and deliver a debug report on source registration</dfn> given a
 [=source debug data type=] |dataType| and an [=attribution source=] |source|:
 
 1. If |source|'s [=attribution source/debug reporting enabled=] is false, return.
-1. If the result of running [=check if debug reporting is allowed=] with |dataType| and |source|'s
-    [=attribution source/debug cookie set=] is <strong>blocked</strong>, return.
+1. If |source|'s [=attribution source/debug cookie set=] is false, return.
 1. Let |body| be a new [=map=] with the following key/value pairs:
     : "`attribution_destination`"
     :: |source|'s [=attribution source/attribution destinations=], [=serialize attribution destinations|serialized=].
