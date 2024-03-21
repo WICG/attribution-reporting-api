@@ -4142,9 +4142,9 @@ To <dfn noexport>receive trigger verification tokens</dfn> given an
 Issue: Specify the cryptographic redemption procedure.
 
 # User-Agent Automation # {#automation}
-    
+
 The user-agent has an associated boolean <dfn>automation local testing mode</dfn> (default false).
-    
+
 For the purposes of user-agent automation and website testing, this document
 defines the below [[WebDriver]] [=extension commands=] to control the API
 configuration.
@@ -4184,6 +4184,33 @@ The [=remote end steps=] are:
 1. Return [=success=] with data `null`.
 
 Note: Without this, reports would be subject to noise and delays, making testing difficult.
+
+## Send pending reports ## {#webdriver-sendpendingreports}
+
+<figure id="table-webdriver-sendpendingreports" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>POST</td>
+                <td>`/session/{session id}/ara/`<dfn>`sendpendingreports`</dfn></td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. [=list/iterate|For each=] |cache| of « [=event-level report cache=], [=aggregatable report cache=] »:
+    1. [=set/iterate|For each=] |report| of |cache|:
+        1. [=set/Remove=] |report| from |cache|.
+        1. [=Attempt to deliver a report|Attempt to deliver=] |report|.
+1. Return [=success=] with data `null`.
 
 # Security considerations # {#security-considerations}
 
