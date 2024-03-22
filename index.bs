@@ -1018,7 +1018,8 @@ A <dfn>rate-limit scope</dfn> is one of the following:
 
 <ul dfn-for="rate-limit scope">
 <li>"<dfn><code>source</code></dfn>"
-<li>"<dfn><code>attribution</code></dfn>"
+<li>"<dfn><code>event-attribution</code></dfn>"
+<li>"<dfn><code>aggregatable-attribution</code></dfn>"
 </ul>
 
 An <dfn>attribution rate-limit record</dfn> is a [=struct=] with the following items:
@@ -1036,6 +1037,8 @@ An <dfn>attribution rate-limit record</dfn> is a [=struct=] with the following i
 :: A [=moment=].
 : <dfn>expiry time</dfn>
 :: Null or a [=moment=].
+: <dfn>entity id</dfn>
+:: A [=event-level report=]'s [=event-level report/report id=] or [=aggregatable report=]'s [=aggregatable report/report id=] or [=attribution source/source identifier=].
 
 </dl>
 
@@ -1066,7 +1069,8 @@ Possible values are:
 <li>"<dfn><code>trigger-aggregate-insufficient-budget</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-storage-limit</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-report-window-passed</code></dfn>"
-<li>"<dfn><code>trigger-attributions-per-source-destination-limit</code></dfn>"
+<li>"<dfn><code>trigger-event-attributions-per-source-destination-limit</code></dfn>"
+<li>"<dfn><code>trigger-aggregatable-attributions-per-source-destination-limit</code></dfn>"
 <li>"<dfn><code>trigger-event-deduplicated</code></dfn>"
 <li>"<dfn><code>trigger-event-excessive-reports</code></dfn>"
 <li>"<dfn><code>trigger-event-low-priority</code></dfn>"
@@ -1345,8 +1349,15 @@ positive integer that controls the maximum number of distinct
 [=attribution rate-limit record/attribution destination=]) that can create
 [=event-level reports=] per [=attribution rate-limit window=].
 
-<dfn>Max attributions per rate-limit window</dfn> is a positive integer that
-controls the maximum number of attributions for a
+<dfn>Max event attributions per rate-limit window</dfn> is a positive integer that
+controls the maximum number of event attributions for a
+([=attribution rate-limit record/source site=],
+[=attribution rate-limit record/attribution destination=],
+[=attribution rate-limit record/reporting origin=] [=site=]) per
+[=attribution rate-limit window=].
+
+<dfn>Max aggregatable attributions per rate-limit window</dfn> is a positive integer that
+controls the maximum number of aggregatable attributions for a
 ([=attribution rate-limit record/source site=],
 [=attribution rate-limit record/attribution destination=],
 [=attribution rate-limit record/reporting origin=] [=site=]) per
@@ -1607,7 +1618,8 @@ This algorithm will return either a non-negative 128-bit integer or an error.
 
 Given an [=attribution rate-limit record=] |record| and a [=moment=] |now|:
 1. If the [=duration from=] |record|'s [=attribution rate-limit record|time=] and |now| is <= [=attribution rate-limit window=] , return false.
-1. If |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>", return true.
+1. If |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/event-attribution=]</code>", return true.
+1. If |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/aggregatable-attribution=]</code>", return true.
 1. If |record|'s [=attribution rate-limit record/expiry time=] is after |now|, return false.
 1. Return true.
 
@@ -2519,7 +2531,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     1. [=map/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
         1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
             : [=attribution rate-limit record/scope=]
-            :: "<code>[=rate-limit scope/attribution=]</code>"
+            :: "<code>[=rate-limit scope/event-attribution=]</code>"
             : [=attribution rate-limit record/source site=]
             :: |source|'s [=attribution source/source site=]
             : [=attribution rate-limit record/attribution destination=]
@@ -2529,6 +2541,8 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
             : [=attribution rate-limit record/time=]
             :: |source|'s [=attribution source/source time=]
             : [=attribution rate-limit record/expiry time=]
+            :: null
+            : [=attribution rate-limit record/entity id=]
             :: null
         1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
     1. Set |debugDataType| to "<code>[=source debug data type/source-noised=]</code>".
@@ -2852,15 +2866,17 @@ To <dfn>match an attribution source against filters and negated filters</dfn> gi
 
 <h3 dfn id="should-block-attribution-for-attribution-limit">Should attribution be blocked by attribution rate limit</h3>
 
-Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToAttribute|:
+Given an [=attribution trigger=] |trigger|, [=attribution source=] |sourceToAttribute| and [=attribution rate-limit record/scope=] |rateLimitScope| :
 
 1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| of [=attribution rate-limit cache=] where all of the following are true:
-     * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>"
+     * |record|'s [=attribution rate-limit record/scope=] is |rateLimitScope|
      * |record|'s [=attribution rate-limit record/source site=] and |sourceToAttribute|'s [=attribution source/source site=] are equal
      * |record|'s [=attribution rate-limit record/attribution destination=] and |trigger|'s [=attribution trigger/attribution destination=] are equal
      * |record|'s [=attribution rate-limit record/reporting origin=] and |trigger|'s [=attribution trigger/reporting origin=] are [=same site=]
      * |record|'s [=attribution rate-limit record/time=] is greater than [=attribution rate-limit window=] before |trigger|'s [=attribution trigger/trigger time=]
-1. If |matchingRateLimitRecords|'s [=list/size=] is greater than or equal to [=max attributions per rate-limit window=], return <strong>blocked</strong>.
+1. Let |limit| be [=max aggregatable attributions per rate-limit window=]
+1. If |rateLimitScope| is [=rate-limit scope/event-attribution=], set |limit| = [=max event attributions per rate-limit window=]
+1. If |matchingRateLimitRecords|'s [=list/size=] is greater than or equal to |limit|, return <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
 
 <h3 dfn id="should-block-processing-for-reporting-origin-limit">Should processing be blocked by reporting-origin limit</h3>
@@ -2868,8 +2884,10 @@ Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToA
 Given an [=attribution rate-limit record=] |newRecord|:
 
 1. Let |max| be [=max source reporting origins per rate-limit window=].
-1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>", set |max| to
-     [=max attribution reporting origins per rate-limit window=].
+1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/event-attribution=]</code>", set |max| to
+     [=max event attribution reporting origins per rate-limit window=].
+1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/aggregatable-attribution=]</code>", set |max| to
+     [=max aggregatable attribution reporting origins per rate-limit window=].
 1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
      * |record|'s [=attribution rate-limit record/scope=] and |newRecord|'s [=attribution rate-limit record/scope=] are equal
      * |record|'s [=attribution rate-limit record/source site=] and |newRecord|'s [=attribution rate-limit record/source site=] are equal
@@ -2881,7 +2899,7 @@ Given an [=attribution rate-limit record=] |newRecord|:
 
     NOTE: [=rate-limit scope/source=] scopes have an auxiliary [=max source reporting origins per source reporting site=] rate limit that also must be enforced.
 
-1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>", return <strong>allowed</strong>
+1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/event-attribution=]</code>" or "<code>[=rate-limit scope/aggregatable-attribution=]</code>", return <strong>allowed</strong>
 1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
      * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/source=]</code>"
      * |record|'s [=attribution rate-limit record/source site=] and |newRecord|'s [=attribution rate-limit record/source site=] are equal
@@ -2894,14 +2912,17 @@ Given an [=attribution rate-limit record=] |newRecord|:
 <h3 dfn id="should-block-attribution-for-rate-limits">Should attribution be blocked by rate limits</h3>
 
 Given an [=attribution trigger=] |trigger|, an [=attribution source=]
-|sourceToAttribute|, and an [=attribution rate-limit record=] |newRecord|:
+|sourceToAttribute|, and an [=attribution rate-limit record/scope=] |scope|:
 
-1. If the result of running [=should attribution be blocked by attribution rate limit=] with |trigger| and
-    |sourceToAttribute| is <strong>blocked</strong>:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-attributions-per-source-destination-limit=]</code>", |trigger|, |sourceToAttribute| and
+1. If the result of running [=should attribution be blocked by attribution rate limit=] with |trigger|, |sourceToAttribute|
+    and |scope| is <strong>blocked</strong>:
+    1. Let |debugDataType| be "<code>[=trigger debug data type/trigger-event-attributions-per-source-destination-limit=]</code>"
+    2. If |scope| is "<code>[=rate-limit scope/aggregatable-attribution=]</code>", set |debugDataType| to 
+        "<code>[=trigger debug data type/trigger-aggregatable-attributions-per-source-destination-limit=]</code>"
+    3. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+        with |debugDataType|, |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    4. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. If the result of running [=should processing be blocked by reporting-origin limit=] with
     |newRecord| is <strong>blocked</strong>:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
@@ -2974,8 +2995,11 @@ an optional [=attribution source=] <dfn for="obtain debug data body on trigger r
 1. Let |body| be a new [=map/is empty|empty=] [=map=].
 1. If |dataType| is:
     <dl class="switch">
-    : "<code>[=trigger debug data type/trigger-attributions-per-source-destination-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max attributions per rate-limit window=],
+    : "<code>[=trigger debug data type/trigger-event-attributions-per-source-destination-limit=]</code>"
+    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max event attributions per rate-limit window=],
+         [=serialize an integer|serialized=].
+    : "<code>[=trigger debug data type/trigger-aggregatable-attributions-per-source-destination-limit=]</code>"
+    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max aggregatable attributions per rate-limit window=],
          [=serialize an integer|serialized=].
     : "<code>[=trigger debug data type/trigger-reporting-origin-limit=]</code>"
     :: [=map/Set=] |body|["`limit`"] to the user agent's [=max attribution reporting origins per rate-limit window=],
@@ -3072,15 +3096,18 @@ To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
     return "<code>[=event-level-report-replacement result/drop-new-report-low-priority=]</code>".
 1. [=set/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
 1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
+1. Let |rateLimitRecord| be the element from [=attribution rate-limit cache=] whose 
+    [=attribution rate-limit record/entity id=] is equal to |report|'s [=event-level report/report id=]
+    and [=attribution rate-limit record/=] is equal to [=rate-limit scope/event-attribution=].
+1. [=set/Remove=] |rateLimitRecord| from the [=attribution rate-limit cache=].
 1. Return "<code>[=event-level-report-replacement result/add-new-report=]</code>".
 
 Issue: This algorithm is not compatible with the behavior proposed for
 [=experimental Flexible Event support=] with differing
 [=trigger spec/event-level report windows=] for a given source.
 
-To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |trigger|, an
-[=attribution source=] |sourceToAttribute|, and an
-[=attribution rate-limit record=] |rateLimitRecord|, run the following steps:
+To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |trigger|, and an
+[=attribution source=] |sourceToAttribute|, run the following steps:
 
 1. If |trigger|'s [=attribution trigger/event-level trigger configurations=]
     [=list/is empty=], return the [=triggering result=]
@@ -3142,12 +3169,27 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
         with "<code>[=trigger debug data type/trigger-event-storage-limit=]</code>", |trigger|, |sourceToAttribute| and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
-1. If the result of running [=should attribution be blocked by rate limits=]
-    with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
-    return it.
 1. Let |report| be the result of running [=obtain an event-level report=] with |sourceToAttribute|,
     |trigger|'s [=attribution trigger/trigger time=], |trigger|'s [=attribution trigger/debug key=],
     |matchedConfig|'s [=event-level trigger configuration/priority=], and |specEntry|.
+1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
+    : [=attribution rate-limit record/scope=]
+    :: "<code>[=rate-limit scope/event-attribution=]</code>"
+    : [=attribution rate-limit record/source site=]
+    :: |sourceToAttribute|'s [=attribution source/source site=]
+    : [=attribution rate-limit record/attribution destination=]
+    :: |trigger|'s [=attribution trigger/attribution destination=]
+    : [=attribution rate-limit record/reporting origin=]
+    :: |sourceToAttribute|'s [=attribution source/reporting origin=]
+    : [=attribution rate-limit record/time=]
+    :: |sourceToAttribute|'s [=attribution source/source time=]
+    : [=attribution rate-limit record/expiry time=]
+    :: null
+    : [=attribution rate-limit record/entity id=]
+    :: |report|'s [=event-level report/report id=]
+1. If the result of running [=should attribution be blocked by rate limits=]
+    with |trigger|, |sourceToAttribute|, and |rateLimitRecord|'s [=attribution rate-limit record/scope=] is not null,
+    return it.
 1. If |sourceToAttribute|'s [=attribution source/event-level attributable=] value
     is false:
      1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
@@ -3190,13 +3232,13 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     |report|'s [=event-level report/source debug key=] is not null and |report|'s
     [=event-level report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
+1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. Return the [=triggering result=] (|triggeringStatus|, |debugData|).
 
 <h3 algorithm id="triggering-aggregatable-attribution">Triggering aggregatable attribution</h3>
 
-To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] |trigger|, an
-[=attribution source=] |sourceToAttribute|, and an
-[=attribution rate-limit record=] |rateLimitRecord|, run the following steps:
+To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] |trigger|, and an
+[=attribution source=] |sourceToAttribute|, run the following steps:
 
 1. If the result of running [=check if an attribution trigger contains aggregatable data=] is false,
     return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
@@ -3237,8 +3279,23 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
          with "<code>[=trigger debug data type/trigger-aggregate-storage-limit=]</code>", |trigger|, |sourceToAttribute| and
          [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
+    : [=attribution rate-limit record/scope=]
+    :: "<code>[=rate-limit scope/aggregatable-attribution=]</code>"
+    : [=attribution rate-limit record/source site=]
+    :: |sourceToAttribute|'s [=attribution source/source site=]
+    : [=attribution rate-limit record/attribution destination=]
+    :: |trigger|'s [=attribution trigger/attribution destination=]
+    : [=attribution rate-limit record/reporting origin=]
+    :: |sourceToAttribute|'s [=attribution source/reporting origin=]
+    : [=attribution rate-limit record/time=]
+    :: |sourceToAttribute|'s [=attribution source/source time=]
+    : [=attribution rate-limit record/expiry time=]
+    :: null
+    : [=attribution rate-limit record/entity id=]
+    :: |report|'s [=aggregatable report/report id=]
 1. If the result of running [=should attribution be blocked by rate limits=]
-    with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
+    with |trigger|, |sourceToAttribute|, and |rateLimitRecord|'s [=attribution rate-limit record/scope=] is not null,
     return it.
 1. If |sourceToAttribute|'s [=attribution source/number of aggregatable reports=] value is equal to [=max aggregatable reports per source=], then:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=] with
@@ -3259,6 +3316,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. If |report|'s [=aggregatable report/source debug key=] is not null and |report|'s
     [=aggregatable report/trigger debug key=] is not null, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
+1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. Return the [=triggering result=] ("<code>[=triggering status/attributed=]</code>", null).
 
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
@@ -3323,21 +3381,8 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
 1. [=list/iterate|For each=] |item| of |matchingSources|:
     1. [=set/Remove=] |item| from the [=attribution source cache=].
-1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
-    : [=attribution rate-limit record/scope=]
-    :: "<code>[=rate-limit scope/attribution=]</code>"
-    : [=attribution rate-limit record/source site=]
-    :: |sourceToAttribute|'s [=attribution source/source site=]
-    : [=attribution rate-limit record/attribution destination=]
-    :: |trigger|'s [=attribution trigger/attribution destination=]
-    : [=attribution rate-limit record/reporting origin=]
-    :: |sourceToAttribute|'s [=attribution source/reporting origin=]
-    : [=attribution rate-limit record/time=]
-    :: |sourceToAttribute|'s [=attribution source/source time=]
-    : [=attribution rate-limit record/expiry time=]
-    :: null
 1. Let |eventLevelResult| be the result of running [=trigger event-level attribution=]
-    with |trigger|, |sourceToAttribute|, and |rateLimitRecord|.
+    with |trigger|, |sourceToAttribute|.
 1. Let |aggregatableResult| be the result of running [=trigger aggregatable attribution=]
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord|.
 1. Let |eventLevelDebugData| be |eventLevelResult|'s [=triggering result/debug data=].
@@ -3353,11 +3398,6 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
 1. If |hasAggregatableData| and |aggregatableResult|'s [=triggering result/status=] is "<code>[=triggering status/dropped=]</code>",
     run [=generate null reports and assign private state tokens=] with |trigger| and
     [=generate null reports and assign private state tokens/report=] set to null.
-1. If both |eventLevelResult|'s [=triggering result/status=] and |aggregatableResult|'s
-    [=triggering result/status=] are "<code>[=triggering status/dropped=]</code>", return.
-1. If neither |eventLevelResult|'s [=triggering result/status=] nor |aggregatableResult|'s
-    [=triggering result/status=] is "<code>[=triggering status/attributed=]</code>", return.
-1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. [=list/Remove=] all [=attribution rate-limit records=] |entry| from the [=attribution rate-limit cache=] if the result of running
     [=can attribution rate-limit record be removed=] with |entry| and |trigger|'s [=attribution trigger/trigger time=] is true.
 
