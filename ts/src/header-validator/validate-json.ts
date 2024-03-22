@@ -840,11 +840,11 @@ function channelCapacity(ctx: SourceContext, s: Source): void {
     ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
   )
 
-  const maxReportStates = ctx.vsv.maxCardinalityOfPossibleTriggerStates
+  const maxTriggerStates = ctx.vsv.maxTriggerStateCardinality
 
-  if (out.numStates > maxReportStates) {
+  if (out.numStates > maxTriggerStates) {
     ctx.error(
-      `${numStatesWords} (${out.numStates}) exceeds max cardinality (${maxReportStates})`
+      `${numStatesWords} (${out.numStates}) exceeds max cardinality (${maxTriggerStates})`
     )
   }
 
