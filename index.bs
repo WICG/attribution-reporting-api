@@ -1278,6 +1278,8 @@ controls the default and maximum values that a source registration can specify
 for the epsilon parameter used by [=compute the channel capacity of a source=]
 and [=obtain a randomized source response=].
 
+<dfn>Max trigger-state cardinality</dfn> is a positive integer that controls the maximum [=set/size=] of [=obtain a set of possible trigger states|the set of possible trigger states=] for any one [=attribution source=].
+
 <dfn>Randomized null report rate excluding source registration time</dfn> is a
 double between 0 and 1 (both inclusive) that controls the randomized number of null reports
 generated for an [=attribution trigger=] whose [=attribution trigger/aggregatable source registration time configuration=]
@@ -1969,6 +1971,7 @@ To <dfn>compute the channel capacity of a source</dfn> given a [=randomized resp
 1. Let |pickRate| be the [=obtain a randomized source response pick rate|randomized response pick rate=] with |config| and |epsilon|.
 1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] with |config|.
 1. If |states| is 1, return 0.
+1. If |states| is greater than the user agent's [=max trigger-state cardinality=], return an error.
 1. Let |p| be |pickRate| * (|states| - 1) / |states|.
 1. Return log2(|states|) - h(|p|) - |p| * log2(|states| - 1) where h is the binary entropy function [[BIN-ENT]].
 
@@ -2295,8 +2298,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Set |epsilon| to |value|["`event_level_epsilon`"] if it [=map/exists=]:
 1. If |epsilon| is not a double, is less than 0, or is greater than the user agent's [=max settable event-level epsilon=], return null.
 1. If [=automation local testing mode=] is true, set |epsilon| to `∞`.
-1. If the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon| is greater than
-    [=max event-level channel capacity per source=][|sourceType|], return null.
+1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
+1. If |channelCapacity| is an error or is greater than [=max event-level channel capacity per source=][|sourceType|], return null.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]

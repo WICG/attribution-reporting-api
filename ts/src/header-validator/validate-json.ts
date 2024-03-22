@@ -819,6 +819,8 @@ function eventLevelEpsilon(ctx: RegistrationContext, j: Json): Maybe<number> {
 }
 
 function channelCapacity(ctx: SourceContext, s: Source): void {
+  const numStatesWords = 'number of possible output states'
+
   const perTriggerDataConfigs = s.triggerSpecs.flatMap((spec) =>
     Array(spec.triggerData.size).fill(
       new privacy.PerTriggerDataConfig(
@@ -838,21 +840,30 @@ function channelCapacity(ctx: SourceContext, s: Source): void {
     ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
   )
 
-  const max = ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
+  const maxTriggerStates = ctx.vsv.maxTriggerStateCardinality
+
+  if (out.numStates > maxTriggerStates) {
+    ctx.error(
+      `${numStatesWords} (${out.numStates}) exceeds max cardinality (${maxTriggerStates})`
+    )
+  }
+
+  const maxInfoGain =
+    ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
   const infoGainMsg = `information gain: ${out.infoGain.toFixed(2)}`
 
-  if (out.infoGain > max) {
+  if (out.infoGain > maxInfoGain) {
     ctx.error(
       `${infoGainMsg} exceeds max event-level channel capacity per ${
         ctx.sourceType
-      } source (${max.toFixed(2)})`
+      } source (${maxInfoGain.toFixed(2)})`
     )
   } else if (ctx.noteInfoGain) {
     ctx.note(infoGainMsg)
   }
 
   if (ctx.noteInfoGain) {
-    ctx.note(`number of possible output states: ${out.numStates}`)
+    ctx.note(`${numStatesWords}: ${out.numStates}`)
     ctx.note(`randomized trigger rate: ${out.flipProb.toFixed(7)}`)
   }
 }
