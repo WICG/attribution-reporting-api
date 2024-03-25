@@ -296,7 +296,6 @@ The values are summed (to 8) and reported in the following reports after 7 days:
   "trigger_summary_bucket": [5, 9]
 }
 ```
-Instead of these triggers being counted as 3 attributions from rate-limit perspective, they will be only counted as 1 attribution because 1 
 In the subsequent 7 days, the following triggers are registered:
 
 ```jsonc
