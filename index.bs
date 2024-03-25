@@ -1977,10 +1977,10 @@ To <dfn>obtain a randomized source response pick rate</dfn> given a [=randomized
 1. Let |numPossibleValues| be the [=set/size=] of |possibleValues|.
 1. Return |numPossibleValues| / (|numPossibleValues| - 1 + e<sup>|epsilon|</sup>).
 
-To <dfn>obtain fake probability for a source with attribution scope</dfn> given a positive 32-bit integer |numSourceStates|, a positive 32-bit integer |numEventStates|, a positive 32-bit integer |numEvents|, and a double |epsilon|:
-1. Let |fakeProbability1| be (|numSourceStates| - 1) / (|numSourceStates| - 1 + e<sup>|epsilon|</sup>).
-1. Let |fakeProbability2| be (|numEventStates| - 1) / (|numEventStates| - 1 + e<sup>|epsilon|</sup>).
-1. Return 1 - (1 - |fakeProbability1|) * (1 - |fakeProbability2|)<sup>|numEvents|</sup>.
+To <dfn>obtain pick rate for a source with attribution scope</dfn> given a positve 32-bit integer |numSourceStates|, a positve 32-bit integer |numEventStates|, a positve 32-bit integer |numUsedScopes|, a positive and a double |epsilon|:
+1. Let |pickRateForSource| be (|numSourceStates| - 1) / (|numSourceStates| - 1 + e<sup>|epsilon|</sup>).
+1. Let |pickRateForEvent| be (|numEventStates| - 1) / (|numEventStates| - 1 + e<sup>|epsilon|</sup>).
+1. Return 1 - (1 - |pickRateForSource|) * (1 - |pickRateForEvent|)<sup>|numUsedScopes|</sup>.
 
 To <dfn>obtain a randomized source response</dfn> given a [=randomized response output configuration=] |config| and a double |epsilon|:
 
@@ -1992,24 +1992,23 @@ To <dfn>obtain a randomized source response</dfn> given a [=randomized response 
 
 <h3 algorithm id="computing-channel-capacity">Computing channel capacity</h3>
 
+<<<<<<< HEAD
 To <dfn>compute the channel capacity of a source</dfn> given a [=randomized response output configuration=] |config|, a double |epsilon|, a possibly null positive 32-bit integer |attributionScopeLimit|, and a possibly null positive 32-bit integer |maxNumEventStates|:
 1. If |attributionScopeLimit| is null, set |attributionScopeLimit| to 1.
 1. If |maxNumEventStates| is null, set |maxNumEventStates| to 1.
 1. Let |maxInformationGain| be 0.
-1. [=list/iterate|For each=] integer |numEvents| of [=the range=] 0 to |attributionScopeLimit|, exclusive:
+1. [=list/iterate|For each=] integer |numUsedScopes| of [=the range=] 0 to |attributionScopeLimit|, exclusive:
     1. [=list/iterate|For each=] integer |numEventStates| of [=the range=] 1 to |maxNumEventStates|, inclusive:
-        1. Let |informationGain| be [=compute information gain=] given |config|, |epsilon|, |numEvents| and |numEventStates|
+        1. Let |informationGain| be [=compute information gain=] given |config|, |epsilon|, |numUsedScopes| and |numEventStates|
         1. If |informationGain| > |maxInformationGain|:
             1. Let |maxInformationGain| be |informationGain|.
 1. Return |maxInformationGain|.
 
-Note: The algorithm to compute |maxInformationGain| can be optimized by applying binary search on |numEvents| and |numEventStates|.
-
-To <dfn>compute information gain</dfn> given a [=randomized response output configuration=] |config|, a double |epsilon|, a postive 32-bit integer |numEvents| and a positive 32-bit integer |numEventStates|:
+To <dfn>compute information gain</dfn> given a [=randomized response output configuration=] |config|, a double |epsilon|, a positive 32-bit integer |numUsedScopes| and a positive 32-bit integer |numEventStates|:
 1. Let |numSourceStates| be the [=obtain a set of possible trigger states|number of possible trigger states=] with |config|.
-1. Let |totalStates| be |numSourceStates| + |numEvents| * |numEventStates|.
+1. Let |totalStates| be |numSourceStates| + |numUsedScopes| * |numEventStates|.
 1. If |totalStates| is 1, return 0.
-1. Let |p| be the [=obtain fake probability for a source with attribution scope=] with |numSourceStates|, |numEventStates|, |numEvents| and |epsilon|.
+1. Let |p| be the [=obtain pick rate for a source with attribution scope=] with |numSourceStates|, |numEventStates|, |numUsedScopes| and |epsilon|.
 1. Return log2(|totalStates|) - h(|p|) - |p| * log2(|totalStates| - 1) where h is the binary entropy function [[BIN-ENT]].
 
 Note: This algorithm computes the channel capacity [[CHAN]] of a q-ary symmetric channel [[Q-SC]].
