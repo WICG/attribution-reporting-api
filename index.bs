@@ -1278,6 +1278,8 @@ controls the default and maximum values that a source registration can specify
 for the epsilon parameter used by [=compute the channel capacity of a source=]
 and [=obtain a randomized source response=].
 
+<dfn>Max trigger-state cardinality</dfn> is a positive integer that controls the maximum [=set/size=] of [=obtain a set of possible trigger states|the set of possible trigger states=] for any one [=attribution source=].
+
 <dfn>Randomized null report rate excluding source registration time</dfn> is a
 double between 0 and 1 (both inclusive) that controls the randomized number of null reports
 generated for an [=attribution trigger=] whose [=attribution trigger/aggregatable source registration time configuration=]
@@ -1980,6 +1982,7 @@ To <dfn>compute the channel capacity of a source</dfn> given a [=randomized resp
 1. Let |pickRate| be the [=obtain a randomized source response pick rate|randomized response pick rate=] with |config| and |epsilon|.
 1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] with |config|.
 1. If |states| is 1, return 0.
+1. If |states| is greater than the user agent's [=max trigger-state cardinality=], return an error.
 1. Let |p| be |pickRate| * (|states| - 1) / |states|.
 1. Return log2(|states|) - h(|p|) - |p| * log2(|states| - 1) where h is the binary entropy function [[BIN-ENT]].
 
@@ -2306,8 +2309,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Set |epsilon| to |value|["`event_level_epsilon`"] if it [=map/exists=]:
 1. If |epsilon| is not a double, is less than 0, or is greater than the user agent's [=max settable event-level epsilon=], return null.
 1. If [=automation local testing mode=] is true, set |epsilon| to `∞`.
-1. If the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon| is greater than
-    [=max event-level channel capacity per source=][|sourceType|], return null.
+1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
+1. If |channelCapacity| is an error or is greater than [=max event-level channel capacity per source=][|sourceType|], return null.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -2422,28 +2425,11 @@ a [=trigger state=] |triggerState|:
     |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
 1. Return |fakeReport|.
 
-To <dfn>check if debug reporting is allowed</dfn> given a [=source debug data type=] |dataType|
-and a [=boolean=] |debugCookieSet|:
-1. If |dataType| is:
-    <dl class="switch">
-    : "<code>[=source debug data type/source-destination-limit=]</code>"
-    : "<code>[=source debug data type/source-destination-rate-limit=]</code>"
-    :: Return <strong>allowed</strong>.
-    : "<code>[=source debug data type/source-noised=]</code>"
-    : "<code>[=source debug data type/source-storage-limit=]</code>"
-    : "<code>[=source debug data type/source-success=]</code>"
-    : "<code>[=source debug data type/source-unknown-error=]</code>"
-    ::  1. If |debugCookieSet| is true, return <strong>allowed</strong>.
-        1. Otherwise, return <strong>blocked</strong>.
-
-    </dl>
-
 To <dfn>obtain and deliver a debug report on source registration</dfn> given a
 [=source debug data type=] |dataType| and an [=attribution source=] |source|:
 
 1. If |source|'s [=attribution source/debug reporting enabled=] is false, return.
-1. If the result of running [=check if debug reporting is allowed=] with |dataType| and |source|'s
-    [=attribution source/debug cookie set=] is <strong>blocked</strong>, return.
+1. If |source|'s [=attribution source/debug cookie set=] is false, return.
 1. Let |body| be a new [=map=] with the following key/value pairs:
     : "`attribution_destination`"
     :: |source|'s [=attribution source/attribution destinations=], [=serialize attribution destinations|serialized=].
@@ -2497,6 +2483,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit global limit=]</code>":
     1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-success=]</code>" and |source|.
     1. Return.
+1. Let |newRateLimitRecords| be a new [=set/is empty|empty=] [=set=].
 1. [=set/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
     1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
         : [=attribution rate-limit record/scope=]
@@ -2515,7 +2502,9 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         |rateLimitRecord| is <strong>blocked</strong>:
         1. Run [=obtain and deliver a debug report on source registration=] with "[=source debug data type/source-success=]</code>" and |source|.
         1. Return.
-    1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
+    1. [=set/Append=] |rateLimitRecord| to |newRateLimitRecords|.
+1. [=set/iterate|For each=] |record| of |newRateLimitRecords|, [=set/append=] |record| to
+    the [=attribution rate-limit cache=].
 1. [=list/Remove=] all [=attribution rate-limit records=] |entry| from the [=attribution rate-limit cache=] if the result of running
     [=can attribution rate-limit record be removed=] with |entry| and |source|'s [=attribution source/source time=] is true.
 1. Let |debugDataType| be "<code>[=source debug data type/source-success=]</code>".

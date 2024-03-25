@@ -1280,6 +1280,39 @@ const testCases: TestCase[] = [
   },
 
   {
+    name: 'trigger-state-cardinality-valid',
+    json: `{"destination": "https://a.test"}`,
+    sourceType: SourceType.event,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: 0,
+      },
+      maxSettableEventLevelEpsilon: 14,
+      maxTriggerStateCardinality: 3,
+    },
+  },
+  {
+    name: 'trigger-state-cardinality-invalid',
+    json: `{"destination": "https://a.test"}`,
+    sourceType: SourceType.event,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: 0,
+      },
+      maxSettableEventLevelEpsilon: 14,
+      maxTriggerStateCardinality: 2,
+    },
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'number of possible output states (3) exceeds max cardinality (2)',
+      },
+    ],
+  },
+
+  {
     name: 'event-level-epsilon-valid',
     json: `{
       "destination": "https://a.test",
