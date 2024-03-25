@@ -150,6 +150,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           map: new Map([['g', new Set()]]),
         },
       ],
+      attributionScopes: new Set(),
     }),
   },
   {
@@ -1622,6 +1623,40 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['aggregatable_debug_reporting', 'debug_data'],
         msg: 'duplicate type: unspecified',
+      },
+    ],
+  },
+
+  // Attribution Scope
+  {
+    name: 'attribution-scope-not-string',
+    json: `{"attribution_scopes": [1, 2]}`,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 0],
+        msg: 'must be a string',
+      },
+      {
+        path: ['attribution_scopes', 1],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-empty-list',
+    json: `{
+      "attribution_scopes": []
+    }`,
+  },
+  {
+    name: 'attribution-scopes-not-list',
+    json: `{
+      "attribution_scopes": 1
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes'],
+        msg: 'must be a list',
       },
     ],
   },

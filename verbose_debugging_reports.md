@@ -13,6 +13,9 @@ registrations](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT
 #### `source-destination-limit`
 A source is rejected due to the [destination limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources).
 
+#### `source-max-event-states-limit`
+A source is rejected due to [max event states](https://wicg.github.io/attribution-reporting-api/#max-event-states).
+
 #### `source-noised`
 [Noise](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#data-limits-and-noise) is applied to a source event.
 
@@ -149,6 +152,7 @@ This table defines the fields in the `body` dictionary.
 | [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |
 | [`source-destination-per-day-rate-limit`](#source-destination-per-day-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |
 | [`source-destination-rate-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |
+| [`source-max-event-states-limit`](#source-max-event-states-limit) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ | ✓ |
 | [`source-reporting-origin-per-site-limit`](#source-reporting-origin-per-site-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |
 | [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |

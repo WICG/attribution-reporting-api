@@ -90,6 +90,9 @@ const testCases: TestCase[] = [
         aggregationCoordinatorOrigin:
           'https://publickeyservice.msmt.aws.privacysandboxservices.com',
       },
+      attributionScopeLimit: null,
+      attributionScopes: new Set<string>(),
+      maxEventStates: 3,
     }),
   },
 
@@ -1367,7 +1370,10 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-state-cardinality-invalid',
-    json: `{"destination": "https://a.test"}`,
+    json: `{
+      "destination": "https://a.test",
+      "max_event_states": 2
+    }`,
     sourceType: SourceType.event,
     vsv: {
       maxEventLevelChannelCapacityPerSource: {
@@ -2541,6 +2547,263 @@ const testCases: TestCase[] = [
       {
         path: [],
         msg: 'max_event_level_reports > 0 but event-level attribution will always fail because trigger_specs is empty',
+      },
+    ],
+  },
+
+  // Attribution Scope
+  {
+    name: 'attribution-scope-limit-negative',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": -1
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scope_limit'],
+        msg: 'must be in the range [1, 4294967295]',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scope-limit-zero',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 0
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scope_limit'],
+        msg: 'must be in the range [1, 4294967295]',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scope-limit-not-integer',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 1.5
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scope_limit'],
+        msg: 'must be an integer',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scope-limit-exceeds-max',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 4294967296
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scope_limit'],
+        msg: 'must be in the range [1, 4294967295]',
+      },
+    ],
+  },
+  {
+    name: 'missing-attribution-scope-limit-attribution-scopes',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scopes": ["1", "2"]
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scope_limit'],
+        msg: 'must be set if attribution_scopes is set',
+      },
+    ],
+  },
+  {
+    name: 'max-event-states-negative',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 1,
+      "max_event_states": -1
+    }`,
+    expectedErrors: [
+      {
+        path: ['max_event_states'],
+        msg: 'must be in the range [1, Infinity]',
+      },
+    ],
+  },
+  {
+    name: 'max-event-states-zero',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 1,
+      "max_event_states": 0
+    }`,
+    expectedErrors: [
+      {
+        path: ['max_event_states'],
+        msg: 'must be in the range [1, Infinity]',
+      },
+    ],
+  },
+  {
+    name: 'max-event-states-not-integer',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 1,
+      "max_event_states": 1.5
+    }`,
+    expectedErrors: [
+      {
+        path: ['max_event_states'],
+        msg: 'must be an integer',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-size-exceeds-attribution-scope-limit',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 1,
+      "attribution_scopes": ["1", "2"]
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scope_limit'],
+        msg: 'must be in the range [1, 1]',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scope-not-string',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scopes": [1, 2]
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 0],
+        msg: 'must be a string',
+      },
+      {
+        path: ['attribution_scopes', 1],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-empty-list',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scopes": []
+    }`,
+  },
+  {
+    name: 'attribution-scopes-not-list',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 1,
+      "attribution_scopes": 1
+    }`,
+    expectedErrors: [
+      {
+        msg: 'must be a list',
+        path: ['attribution_scopes'],
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-too-many',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 1,
+      "attribution_scopes": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21"]
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes'],
+        msg: 'length must be in the range [0, 20]',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-too-long',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 1,
+      "attribution_scopes": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 0],
+        msg: 'exceeds max length per attribution scope (51 > 50)',
+      },
+    ],
+  },
+  {
+    name: 'channel-capacity-attribution-scope-event',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 10,
+      "attribution_scopes": ["1"],
+      "max_event_states": 15
+    }`,
+    sourceType: SourceType.event,
+    noteInfoGain: true,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: 6.5,
+        [SourceType.navigation]: 11.5,
+      },
+      maxSettableEventLevelEpsilon: 14,
+    },
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'information gain for attribution scope: 7.11 exceeds max event-level channel capacity per event source (6.50)',
+      },
+    ],
+    expectedNotes: [
+      {
+        path: [],
+        msg: 'number of possible output states: 3',
+      },
+      {
+        path: [],
+        msg: 'randomized trigger rate: 0.0000025',
+      },
+    ],
+  },
+  {
+    name: 'channel-capacity-attribution-scope-navigation',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 20,
+      "attribution_scopes": ["1"],
+      "max_event_states": 20
+    }`,
+    sourceType: SourceType.navigation,
+    noteInfoGain: true,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: 6.5,
+        [SourceType.navigation]: 11.5,
+      },
+      maxSettableEventLevelEpsilon: 14,
+    },
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'information gain for attribution scope: 11.63 exceeds max event-level channel capacity per navigation source (11.50)',
+      },
+    ],
+    expectedNotes: [
+      {
+        path: [],
+        msg: 'number of possible output states: 2925',
+      },
+      {
+        path: [],
+        msg: 'randomized trigger rate: 0.0024263',
       },
     ],
   },

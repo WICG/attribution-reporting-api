@@ -74,12 +74,30 @@ const infoGainTests = [
   {
     numStates: 3,
     epsilon: 14,
-    expected: 1.584926511508231,
+    expected: 1.5849265115082316,
   },
   {
     numStates: 1,
     epsilon: 14,
     expected: 0,
+  },
+  {
+    numStates: 2925,
+    epsilon: 14,
+    attributionScopeLimit: 3,
+    expected: 11.464610112285094,
+  },
+  {
+    numStates: 2925,
+    epsilon: 14,
+    attributionScopeLimit: 5,
+    expected: 11.467486215356272,
+  },
+  {
+    numStates: 2925,
+    epsilon: 14,
+    attributionScopeLimit: 100,
+    expected: 11.597577197906126,
   },
 ]
 
@@ -87,7 +105,12 @@ void test('maxInformationGain', async (t) => {
   await Promise.all(
     infoGainTests.map((tc, i) =>
       t.test(`${i}`, () => {
-        const actual = maxInformationGain(tc.numStates, tc.epsilon)
+        const actual = maxInformationGain(
+          tc.numStates,
+          tc.epsilon,
+          tc.attributionScopeLimit ?? 1,
+          constants.defaultMaxEventStates
+        )
         assert.deepStrictEqual(actual, tc.expected)
       })
     )
@@ -117,6 +140,8 @@ function defaultConfig(sourceType: SourceType): Config {
     constants.defaultEventLevelAttributionsPerSource[sourceType]
   return new Config(
     /*maxEventLevelReports=*/ defaultMaxReports,
+    /*attributionScopeLimit=*/ 1,
+    constants.defaultMaxEventStates,
     new Array(Number(constants.defaultTriggerDataCardinality[sourceType])).fill(
       new PerTriggerDataConfig(
         /*numWindows=*/
@@ -152,7 +177,7 @@ void test('computeConfigData', async (t) => {
       ),
       {
         numStates: 3,
-        infoGain: 1.584926511508231,
+        infoGain: 1.5849265115082316,
         flipProb: 0.000002494582008677539,
       }
     )
