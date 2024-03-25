@@ -1351,15 +1351,8 @@ positive integer that controls the maximum number of distinct
 [=attribution rate-limit record/attribution destination=]) that can create
 [=event-level reports=] per [=attribution rate-limit window=].
 
-<dfn>Max event attributions per rate-limit window</dfn> is a positive integer that
-controls the maximum number of event attributions for a
-([=attribution rate-limit record/source site=],
-[=attribution rate-limit record/attribution destination=],
-[=attribution rate-limit record/reporting origin=] [=site=]) per
-[=attribution rate-limit window=].
-
-<dfn>Max aggregatable attributions per rate-limit window</dfn> is a positive integer that
-controls the maximum number of aggregatable attributions for a
+<dfn>Max attributions per rate-limit window</dfn> is a positive integer that
+controls the maximum number of attributions for a
 ([=attribution rate-limit record/source site=],
 [=attribution rate-limit record/attribution destination=],
 [=attribution rate-limit record/reporting origin=] [=site=]) per
@@ -2876,9 +2869,7 @@ Given an [=attribution trigger=] |trigger|, an [=attribution source=] |sourceToA
      * |record|'s [=attribution rate-limit record/attribution destination=] and |trigger|'s [=attribution trigger/attribution destination=] are equal
      * |record|'s [=attribution rate-limit record/reporting origin=] and |trigger|'s [=attribution trigger/reporting origin=] are [=same site=]
      * |record|'s [=attribution rate-limit record/time=] is greater than [=attribution rate-limit window=] before |trigger|'s [=attribution trigger/trigger time=]
-1. Let |limit| be [=max aggregatable attributions per rate-limit window=].
-1. If |rateLimitScope| is "<code>[=rate-limit scope/event-attribution=]</code>", set |limit| to [=max event attributions per rate-limit window=].
-1. If |matchingRateLimitRecords|'s [=list/size=] is greater than or equal to |limit|, return <strong>blocked</strong>.
+1. If |matchingRateLimitRecords|'s [=list/size=] is greater than or equal to [=max attributions per rate-limit window=], return <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
 
 <h3 dfn id="should-block-processing-for-reporting-origin-limit">Should processing be blocked by reporting-origin limit</h3>
@@ -2915,13 +2906,13 @@ Given an [=attribution rate-limit record=] |newRecord|:
 Given an [=attribution trigger=] |trigger|, an [=attribution source=]
 |sourceToAttribute|, and an [=attribution rate-limit record=] |newRecord|:
 
-1. If the result of running [=should attribution be blocked by attribution rate limit=] with |trigger|, |sourceToAttribute|
+1. If the result of running [=should attribution be blocked by attribution rate limit=] with |trigger|, |sourceToAttribute|,
     and |newRecord|'s [=attribution rate-limit record/scope=] is <strong>blocked</strong>:
     1. Let |debugDataType| be "<code>[=trigger debug data type/trigger-event-attributions-per-source-destination-limit=]</code>"
     1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/aggregatable-attribution=]</code>",
         set |debugDataType| to "<code>[=trigger debug data type/trigger-aggregate-attributions-per-source-destination-limit=]</code>"
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with |debugDataType|, |trigger|, |sourceToAttribute| and
+        with |debugDataType|, |trigger|, |sourceToAttribute|, and
         [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. If the result of running [=should processing be blocked by reporting-origin limit=] with
@@ -2997,10 +2988,10 @@ an optional [=attribution source=] <dfn for="obtain debug data body on trigger r
 1. If |dataType| is:
     <dl class="switch">
     : "<code>[=trigger debug data type/trigger-event-attributions-per-source-destination-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max event attributions per rate-limit window=],
+    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max attributions per rate-limit window=],
          [=serialize an integer|serialized=].
     : "<code>[=trigger debug data type/trigger-aggregate-attributions-per-source-destination-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max aggregatable attributions per rate-limit window=],
+    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max attributions per rate-limit window=],
          [=serialize an integer|serialized=].
     : "<code>[=trigger debug data type/trigger-reporting-origin-limit=]</code>"
     :: [=map/Set=] |body|["`limit`"] to the user agent's [=max attribution reporting origins per rate-limit window=],
@@ -3099,7 +3090,7 @@ To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
 1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
 1. Let |rateLimitRecord| be the element from [=attribution rate-limit cache=] whose 
     [=attribution rate-limit record/entity ID=] is equal to |report|'s [=event-level report/report ID=]
-    and [=attribution rate-limit record/scope=] is equal to [=rate-limit scope/event-attribution=].
+    and [=attribution rate-limit record/scope=] is equal to "<code>[=rate-limit scope/event-attribution=]</code>".
 1. [=set/Remove=] |rateLimitRecord| from the [=attribution rate-limit cache=].
 1. Return "<code>[=event-level-report-replacement result/add-new-report=]</code>".
 

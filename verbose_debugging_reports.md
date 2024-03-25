@@ -43,8 +43,11 @@ A trigger is rejected due to no matching sources in storage that match <reportin
 #### `trigger-no-matching-filter-data`
 A trigger is rejected due to no [matching filter data](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters).
 
-#### `trigger-attributions-per-source-destination-limit`
-A trigger is rejected due to the [max attributions rate limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits).
+#### `trigger-event-attributions-per-source-destination-limit`
+An event-level report is rejected due to the [max attributions rate limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits).
+
+#### `trigger-aggregate-attributions-per-source-destination-limit`
+An aggregatable report is rejected due to the [max attributions rate limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits).
 
 #### `trigger-reporting-origin-limit`
 A trigger is rejected due to the [attributed reporting origin limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits).
