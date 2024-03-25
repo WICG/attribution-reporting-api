@@ -296,6 +296,7 @@ The values are summed (to 8) and reported in the following reports after 7 days:
   "trigger_summary_bucket": [5, 9]
 }
 ```
+
 In the subsequent 7 days, the following triggers are registered:
 
 ```jsonc
@@ -428,7 +429,7 @@ We encourage developers to suggest different use cases they may have for this AP
 
 ## Attribution Rate Limit
 
-Attribution rate-limit behavior will be based on the numbers of reports generated rather than number of triggers that lead to report generation. For example: The 1st report in the [Reporting trigger value buckets](#reporting-trigger-value-buckets) example will be counted as 1 contribution towards the [max attribution per rate-limit window](https://wicg.github.io/attribution-reporting-api/#max-attributions-per-rate-limit-window) limit despite it being a result of contributions from 3 triggers.
+Attribution rate-limit behavior will be based on the number of reports generated rather than the number of triggers that lead to report generation. For example: The first report in the ["Reporting trigger value buckets"](#reporting-trigger-value-buckets) example will be counted as 1 contribution towards the [max attribution per rate-limit window](https://wicg.github.io/attribution-reporting-api/#max-attributions-per-rate-limit-window) limit despite it being the result of contributions from 3 triggers.
 
 ## Privacy considerations
 
