@@ -1275,6 +1275,9 @@ controls the maximum [=map/size=] of a [=trigger spec map=] for an
 the maximum [=string/length=] of an [=attribution trigger=]'s [=attribution trigger/trigger context ID=].
 Its value is 64.
 
+<dfn>Default max number of event states</dfn> is a positive integer that controls the
+default [=attribution source/max number of event states=]. Its value is 3.
+
 # Vendor-Specific Values # {#vendor-specific-values}
 
 <dfn>Max pending sources per source origin</dfn> is a positive integer that
@@ -1977,7 +1980,7 @@ To <dfn>obtain a randomized source response pick rate</dfn> given a [=randomized
 1. Let |numPossibleValues| be the [=set/size=] of |possibleValues|.
 1. Return |numPossibleValues| / (|numPossibleValues| - 1 + e<sup>|epsilon|</sup>).
 
-To <dfn>obtain pick rate for a source with attribution scope</dfn> given a positve 32-bit integer |numSourceStates|, a positve 32-bit integer |numEventStates|, a positve 32-bit integer |numUsedScopes|, a positive and a double |epsilon|:
+To <dfn>obtain pick rate for a source with attribution scope</dfn> given a positive 32-bit integer |numSourceStates|, a positive 32-bit integer |numEventStates|, a positive 32-bit integer |numUsedScopes|, a positive and a double |epsilon|:
 1. Let |pickRateForSource| be (|numSourceStates| - 1) / (|numSourceStates| - 1 + e<sup>|epsilon|</sup>).
 1. Let |pickRateForEvent| be (|numEventStates| - 1) / (|numEventStates| - 1 + e<sup>|epsilon|</sup>).
 1. Return 1 - (1 - |pickRateForSource|) * (1 - |pickRateForEvent|)<sup>|numUsedScopes|</sup>.
@@ -1992,7 +1995,6 @@ To <dfn>obtain a randomized source response</dfn> given a [=randomized response 
 
 <h3 algorithm id="computing-channel-capacity">Computing channel capacity</h3>
 
-<<<<<<< HEAD
 To <dfn>compute the channel capacity of a source</dfn> given a [=randomized response output configuration=] |config|, a double |epsilon|, a possibly null positive 32-bit integer |attributionScopeLimit|, and a possibly null positive 32-bit integer |maxNumEventStates|:
 1. If |attributionScopeLimit| is null, set |attributionScopeLimit| to 1.
 1. If |maxNumEventStates| is null, set |maxNumEventStates| to 1.
@@ -2267,8 +2269,8 @@ and a [=randomized response output configuration=] |config|:
     and |map|["`max_num_event_states`"] does not [=map/exist=], return an error.
 1. Let |maxNumEventStates| be the result of running
     [=parse an optional 32-bit unsigned integer=] with |value|,
-    "`max_num_event_states`", and 3.
-1. If |maxNumEventStates| is an error or |maxNumEventStates| is 0, return an error.
+    "`max_num_event_states`", and [=Default max number of event states=].
+1. If |maxNumEventStates| is an error or |maxNumEventStates| is 0 or |maxNumEventStates| is greater than [=Max trigger-state cardinality=], return an error.
 1. If |sourceType| is "<code>[=source type/event=]</code>" and |states| is greater than |maxNumEventStates|, return an error.
 1. Return |maxNumEventStates|.
 
@@ -2656,7 +2658,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     1. Set |debugDataType| to "<code>[=source debug data type/source-noised=]</code>".
 1. Run [=obtain and deliver a debug report on source registration=] with |debugDataType| and |source|.
 1. [=Remove sources with different max num view states if necessary=].
-1. [=Remove sources with smaller attribution scope limit from cache if necessary=].
+1. [=Remove sources with lower attribution scope limit from cache if necessary=].
 1. [=Remove attribution scopes for sources with attribution scopes not selected if necessary=].
 1. [=set/Append=] |source| to |cache|.
 
@@ -2875,6 +2877,7 @@ and a [=moment=] |triggerTime|:
     1. If |aggregatableSourceRegTimeConfig| is not "<code>[=aggregatable source registration time configuration/exclude=]</code>", return null.
     1. Set |triggerContextID| to |value|["`trigger_context_id`"].
 1. Let |attributionScope| be the result of running [=parse an optional 64-bit signed integer=] with value, "attribution_scope", and null.
+1. If |attributionScope| is an error, return null.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
