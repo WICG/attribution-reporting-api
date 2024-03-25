@@ -806,6 +806,12 @@ An attribution source is a [=struct=] with the following items:
 :: A [=trigger-data matching mode=].
 : <dfn>debug cookie set</dfn> (default false)
 :: A [=boolean=].
+: <dfn>attribution scope limit</dfn>
+:: Null or a positive 32-bit integer, number of distinct [=attribution source/attribution scopes=] allowed per [=attribution source/source origin=].
+: <dfn>attribution scopes</dfn>
+:: an [=ordered set=] of 64-bit integers.
+: <dfn>max number of event states</dfn>
+:: Null or a positive 32-bit integer, maximum number event states that an API caller plans to use.
 
 </dl>
 
@@ -931,6 +937,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: An [=aggregatable source registration time configuration=].
 : <dfn>trigger context ID</dfn>
 :: Null or a [=string=].
+: <dfn>attribution scope</dfn>
+:: Null or a 64-bit integer.
 
 </dl>
 
@@ -1402,6 +1410,18 @@ a [=string=] |key|, and a possibly null 64-bit unsigned integer |default|:
     <a spec="html">rules for parsing non-negative integers</a> to |map|[|key|].
 1. If |value| is an error, return an error.
 1. If |value| cannot be represented by a 64-bit unsigned integer, return an
+    error.
+1. Return |value|.
+
+To <dfn>parse an optional 32-bit unsigned integer</dfn> given a [=map=] |map|,
+a [=string=] |key|, and a possibly null 32-bit unsigned integer |default|:
+
+1. If |map|[|key|] does not [=map/exists|exist=], return |default|.
+1. If |map|[|key|] is not a [=string=], return an error.
+1. Return the result of applying the
+    <a spec="html">rules for parsing non-negative integers</a> to |map|[|key|].
+1. If |value| is an error, return an error.
+1. If |value| cannot be represented by a 32-bit unsigned integer, return an
     error.
 1. Return |value|.
 
@@ -1957,6 +1977,11 @@ To <dfn>obtain a randomized source response pick rate</dfn> given a [=randomized
 1. Let |numPossibleValues| be the [=set/size=] of |possibleValues|.
 1. Return |numPossibleValues| / (|numPossibleValues| - 1 + e<sup>|epsilon|</sup>).
 
+To <dfn>obtain fake probability for a source with attribution scope</dfn> given a positve 32-bit integer |numSourceStates|, a positve 32-bit integer |numEventStates|, a positve 32-bit integer |numEvents|, a positive and a double |epsilon|:
+1. Let |fakeProbability1| be (|numSourceStates| - 1) / (|numSourceStates| - 1 + e<sup>|epsilon|</sup>).
+1. Let |fakeProbability2| be (|numEventStates| - 1) / (|numEventStates| - 1 + e<sup>|epsilon|</sup>).
+1. Return 1 - (1 - |fakeProbability1|) * (1 - |fakeProbability2|)<sup>|numEvents|</sup>
+
 To <dfn>obtain a randomized source response</dfn> given a [=randomized response output configuration=] |config| and a double |epsilon|:
 
 1. Let |possibleValues| be the result of [=obtaining a set of possible trigger states=] with |config|.
@@ -1967,13 +1992,25 @@ To <dfn>obtain a randomized source response</dfn> given a [=randomized response 
 
 <h3 algorithm id="computing-channel-capacity">Computing channel capacity</h3>
 
-To <dfn>compute the channel capacity of a source</dfn> given a [=randomized response output configuration=] |config| and a double |epsilon|:
-1. Let |pickRate| be the [=obtain a randomized source response pick rate|randomized response pick rate=] with |config| and |epsilon|.
-1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] with |config|.
-1. If |states| is 1, return 0.
-1. If |states| is greater than the user agent's [=max trigger-state cardinality=], return an error.
-1. Let |p| be |pickRate| * (|states| - 1) / |states|.
-1. Return log2(|states|) - h(|p|) - |p| * log2(|states| - 1) where h is the binary entropy function [[BIN-ENT]].
+To <dfn>compute the channel capacity of a source</dfn> given a [=randomized response output configuration=] |config|, a double |epsilon|, a possibly null postive 32-bit integer |attributionScopeLimit| and a possibly null positive 32-bit integer |maxNumEventStates|:
+1. If |attributionScopeLimit| is null, set |attributionScopeLimit| to 1.
+1. If |maxNumEventStates| is null, set |maxNumEventStates| to 1.
+1. Let |maxInformationGain| be 0.
+1. [=list/iterate|For each=] integer |numEvents| of [=the range=] 0 to |attributionScopeLimit|, exclusive:
+    1. [=list/iterate|For each=] integer |numEventStates| of [=the range=] 1 to |maxNumEventStates|, inclusive:
+        1. Let |informationGain| be [=compute information gain=] given |config|, |epsilon|, |numEvents| and |numEventStates|
+        1. If |informationGain| > |maxInformationGain|:
+            1. Let |maxInformationGain| be |informationGain|.
+1. Return |maxInformationGain|.
+
+Note: The algorithm to compute |maxInformationGain| can be optimized by applying binary search on |numEvents| and |numEventStates|.
+
+To <dfn>compute information gain</dfn> given a [=randomized response output configuration=] |config|, a double |epsilon|, a postive 32-bit integer |numEvents| and a positive 32-bit integer |numEventStates|:
+1. Let |numSourceStates| be the [=obtain a set of possible trigger states|number of possible trigger states=] with |config|.
+1. Let |totalStates| be |numSourceStates| + |numEvents| * |numEventStates|.
+1. If |totalStates| is 1, return 0.
+1. Let |p| be the [=obtain fake probability for a source with attribution scope=] with |numSourceStates|, |numEventStates|, |numEvents| and |epsilon|.
+1. Return log2(|totalStates|) - h(|p|) - |p| * log2(|totalStates| - 1) where h is the binary entropy function [[BIN-ENT]].
 
 Note: This algorithm computes the channel capacity [[CHAN]] of a q-ary symmetric channel [[Q-SC]].
 
@@ -2219,6 +2256,89 @@ To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
         1. Set |i| to |i| + 1.
 1. Return |specs|.
 
+To <dfn>parse max number of event states</dfn> from a [=map=] map,
+a source type |sourceType|,
+a possibly null 32-bit unsigned integer |attributionScopeLimit|,
+and a [=randomized response output configuration=] |config|:
+1. If |attributionScopeLimit| is null:
+    1. If |map|["`max_num_event_states`"] [=map/exists|exist=], return an error.
+    1. Return null.
+1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] with |config|.
+1. If |sourceType| is "<code>[=source type/event=]</code>" and |states| > 3 
+    and |map|["`max_num_event_states`"] does not [=map/exist=], return an error.
+1. Let |maxNumEventStates| be the result of running
+    [=parse an optional 32-bit unsigned integer=] with |value|,
+    "`max_num_event_states`", and 3.
+1. If |maxNumEventStates| is an error or |maxNumEventStates| is 0, return an error.
+1. If |sourceType| is "<code>[=source type/event=]</code>" and |states| > |maxNumEventStates|, return an error.
+1. Return |maxNumEventStates|
+
+To <dfn>parse attribution scopes</dfn> from a [=map=] |map|, a possibly null 32-bit unsigned integer |attributionScopeLimit|:
+1. Let |result| be an [=ordered set=].
+1. If |map|["`attribution_scopes`"] [=map/exists|exist=]:
+    1. Let |values| be |map|["`attribution_scopes`"].
+    1. If |values| is not a [=list=], return an error.
+    1. [=list/iterate|For each=] |value| of |values|:
+        1. If |value| is not a string, return an error.
+        1. Let |attributionScope| be the result of applying the
+            <a spec="html">rules for parsing integers</a> to |value|.
+        1. If |attributionScope| cannot be represented by a 64-bit signed integer, return an error.
+        1. [=set/Append=] |attributionScope| to |result|.
+1. If |result| is not empty:
+    1. If |attributionScopeLimit| is null, return an error
+1. If |result|'s size > |attributionScopeLimit|, return an error.
+1. Return |result|.
+
+To <dfn>remove sources with different max num view states if necessary</dfn> given an [=attribution source=] |pendingSource|:
+1. If |pendingSource|'s [=attribution source/max num view states] is null, return.
+1. Let |sourcesToRemove| be a new [=list/is empty|empty=] [=list=].
+1. Let |cache| be the user agent's [=attribution source cache=].
+1. [=set/iterate|For each=] |source| of |cache|:
+    1. Let |commonDestinations| be [=set/intersection=] of |source|'s [=attribution source/attribution destinations=] and |pendingSource|'s [=attribution source/attribution destinations=].
+    1. if |commonDestinations| is empty, [=iteration/continue=].
+    1. If |source|'s [=attribution source/source origin=] and |pendingSource|'s [=attribution source/source origin=] are not [=same origin=], [=iteration/continue=].
+    1. If |source|'s =[attribution source/max num view states] is null, [=iteration/continue=].
+    1. if |source|'s =[attribution source/max num view states] equals |pendingSource|'s [=attribution source/max num view states], [=iteration/continue=].
+    1. [=list/Append=] |source| to |sourcesToRemove|.
+1. Remove |sourcesToRemove| from [=attribution source cache=].
+
+To <dfn>remove sources with smaller attribution scope limit from cache if necessary</dfn> given an [=attribution source=] |pendingSource|
+1. If |pendingSource|'s [=attribution source/attribution scope limit=] is null, return.
+1. Let |sourcesToRemove| be a new [=list/is empty|empty=] [=list=].
+1. Let |cache| be the user agent's [=attribution source cache=].
+1. [=set/iterate|For each=] |source| of |cache|:
+    1. Let |commonDestinations| be [=set/intersection=] of |source|'s [=attribution source/attribution destinations=] and |pendingSource|'s [=attribution source/attribution destinations=].
+    1. if |commonDestinations| is empty, [=iteration/continue=].
+    1. If |source|'s [=attribution source/source origin=] and |pendingSource|'s [=attribution source/source origin=] are not [=same origin=], [=iteration/continue=].
+    1. If |source|'s [=attribution source/attribution scope limit=] is null, [=iteration/continue=].
+    1. if |source|'s [=attribution source/attribution scope limit=] >= |pendingSource|'s [=attribution source/attribution scope limit=], [=iteration/continue=].
+    1. [=list/Append=] |source| to |sourcesToRemove|.
+1. Remove |sourcesToRemove| from [=attribution source cache=].
+
+To <dfn>remove attribution scopes for sources with attribution scopes not selected if necessary</dfn> given an [=attribution source=] |pendingSource|
+1. Let |attributionScopeLimit| be |pendingSource|'s [=attribution source/attribution scope limit=].
+1. If |attributionScopeLimit| is null, return.
+1. Let |cache| be the user agent's [=attribution source cache=].
+1. [=list/iterate|For each=] |destination| in |pendingSource|'s [=attribution source/attribution destinations=]:
+    1. Let |matchingSources| be a new [=list/is empty|empty=] [=list=].
+    1. [=set/iterate|For each=] |source| of |cache|:
+        1. If |source|'s [=attribution source/source origin=] and |pendingSource|'s [=attribution source/source origin=] are not [=same origin=], [=iteration/continue=].
+        1. If |source|'s [=attribution source/attribution destinations=] does not [=set/contains|contain=] |destination|, [=iteration/continue=].
+        1. [=list/Append=] |source| to |matchingSources|.
+    1. Set |matchingSources| to the result of [=list/sort in descending order|sorting=] |matchingSources|
+        in descending order, with |a| being less than |b| if
+        |a|'s [=attribution source/source time=] is less than |b|'s [=attribution source/source time=].
+
+    1. Let |selectedAttributionScopes| be an [=ordered set=].
+    1. If |pendingSource|'s [=attribution source/attribution scopes=] is not null:
+        1. Set |selectedAttributionScopes| to |pendingSource|'s [=attribution source/attribution scopes=].
+    1. [=set/iterate|For each=] |source| of |matchingSources|:
+        1. If |source|'s [=attribution source/attribution scopes=] is null, [=iteration/continue=].
+        1. Let |newSelectedAttibutionScopes| be the [=set/union=] of |selectedAttributionScopes| and |source|'s [=attribution source/attribution scopes=].
+        1. If |newSelectedAttibutionScopes|'s [=set/size=] > |attributionScopeLimit|:
+            1. Remove |source| from [=attribution source cache=]
+        1. Else Set |selectedAttributionScopes| to |newSelectedAttibutionScopes|.
+
 Issue: Invoke [=parse summary buckets=] and [=parse summary window operator=]
 from this algorithm.
 
@@ -2294,10 +2414,22 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     : [=randomized response output configuration/trigger specs=]
     :: |triggerSpecs|
 
+1. Let |attributionScopeLimit| be the result of running
+    [=parse an optional 32-bit unsigned integer=] with |value|,
+    "`attribution_scope_limit`", and null.
+1. If |attributionScopeLimit| is an error or |attributionScopeLimit| is 0, return null.
+1. Let |maxNumEventStates| be the result of running
+    [=parse max number of event states=] with |value|, |sourceType|, |attributionScopeLimit| and |randomizedResponseConfig|.
+1. If |maxNumEventStates| is an error, return null.
+
+1. Let |attributionScopes| be the result of running [=parse attribution scopes=] with |value|, |attributionScopeLimit|
+1. If |attributionScopes| is an error, return null.
+
 1. Let |epsilon| be the user agent's [=max settable event-level epsilon=].
 1. Set |epsilon| to |value|["`event_level_epsilon`"] if it [=map/exists=]:
 1. If |epsilon| is not a double, is less than 0, or is greater than the user agent's [=max settable event-level epsilon=], return null.
 1. If [=automation local testing mode=] is true, set |epsilon| to `∞`.
+
 1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
 1. If |channelCapacity| is an error or is greater than [=max event-level channel capacity per source=][|sourceType|], return null.
 1. Let |source| be a new [=attribution source=] struct whose items are:
@@ -2344,6 +2476,12 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |triggerDataMatchingMode|
     : [=attribution source/debug cookie set=]
     :: |debugCookieSet|
+    : [=attribution source/attribution scopes=]
+    :: |attributionScopes|
+    : [=attribution source/attribution scope limit=]
+    :: |attributionScopeLimit|
+    : [=attribution source/max number of event states=]
+    :: |maxNumEventStates|
 1. Return |source|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -2496,6 +2634,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     the [=attribution rate-limit cache=].
 1. [=list/Remove=] all [=attribution rate-limit records=] |entry| from the [=attribution rate-limit cache=] if the result of running
     [=can attribution rate-limit record be removed=] with |entry| and |source|'s [=attribution source/source time=] is true.
+
 1. Let |debugDataType| be "<code>[=source debug data type/source-success=]</code>".
 1. If |source|'s [=attribution source/randomized response=] is not null and is a [=set=]:
     1. [=set/iterate|For each=] [=trigger state=] |triggerState| of |source|'s
@@ -2522,6 +2661,11 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
     1. Set |debugDataType| to "<code>[=source debug data type/source-noised=]</code>".
 1. Run [=obtain and deliver a debug report on source registration=] with |debugDataType| and |source|.
+
+1. Run [=Remove sources with different max num view states if necessary=].
+1. Run [=Remove sources with smaller attribution scope limit from cache if necessary=].
+1. Run [=Remove attribution scopes for sources with attribution scopes not selected if necessary=].
+
 1. [=set/Append=] |source| to |cache|.
 
 Note: Because a fake report does not have a "real" effective destination, we need to subtract from the
@@ -2738,6 +2882,7 @@ and a [=moment=] |triggerTime|:
         return null.
     1. If |aggregatableSourceRegTimeConfig| is not "<code>[=aggregatable source registration time configuration/exclude=]</code>", return null.
     1. Set |triggerContextID| to |value|["`trigger_context_id`"].
+1. Let |attributionScope| be the result of running [=parse an optional 64-bit signed integer=] with value, "attribution_scope", and null.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -2769,6 +2914,8 @@ and a [=moment=] |triggerTime|:
     :: |aggregatableSourceRegTimeConfig|
     : [=attribution trigger/trigger context ID=]
     :: |triggerContextID|
+    : [=attribution trigger/attribution scope=]
+    :: |attributionScope|
 1. Return |trigger|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -3267,6 +3414,8 @@ To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
 1. Let |matchingSources| be a new [=list/is empty|empty=] [=list=].
 1. [=set/iterate|For each=] |source| of the [=attribution source cache=]:
     1. If |source|'s [=attribution source/attribution destinations=] does not [=set/contains|contain=] |trigger|'s [=attribution trigger/attribution destination=], [=iteration/continue=].
+    1. Let |triggerAttributionScope| be |trigger|'s [=attribution trigger/attribution scope=].
+    1. If |triggerAttributionScope| is not null and |source|'s [=attribution source/attribution scopes=] does not [=set/contains|contain=] |triggerAttributionScope|, [=iteration/continue=].
     1. If |source|'s [=attribution source/reporting origin=] and |trigger|'s [=attribution trigger/reporting origin=] are not [=same origin=], [=iteration/continue=].
     1. If |source|'s [=attribution source/expiry time=] is less than or equal to |trigger|'s [=attribution trigger/trigger time=], [=iteration/continue=].
     1. [=list/Append=] |source| to |matchingSources|.
