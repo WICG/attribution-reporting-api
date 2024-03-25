@@ -739,9 +739,17 @@ function channelCapacity(s: Source, ctx: SourceContext): void {
     )
   }
 
+  if (ctx.sourceType === SourceType.event && out.numStates > s.maxEventStates) {
+    ctx.error(
+      `${numStatesWords} (${out.numStates}) exceeds max event states (${s.maxEventStates})`
+    )
+  }
+
   const maxInfoGain =
     ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
-  const infoGainMsg = `information gain: ${out.infoGain.toFixed(2)}`
+  const infoGainMsg = `information gain${
+    s.attributionScopeLimit !== null ? ' for attribution scope' : ''
+  }: ${out.infoGain.toFixed(2)}`
 
   if (out.infoGain > maxInfoGain) {
     ctx.error(
@@ -757,6 +765,32 @@ function channelCapacity(s: Source, ctx: SourceContext): void {
     ctx.note(`${numStatesWords}: ${out.numStates}`)
     ctx.note(`randomized trigger rate: ${out.flipProb.toFixed(7)}`)
   }
+}
+
+function validateAttributionScopeFields(
+  s: Source,
+  ctx: SourceContext
+): boolean {
+  return ctx.scope('attribution_scope_limit', () => {
+    if (s.attributionScopeLimit === null) {
+      if (s.attributionScopes.size !== 0) {
+        ctx.error('must be set if attribution_scopes is set')
+        return false
+      }
+      if (s.maxEventStates !== constants.defaultMaxEventStates) {
+        ctx.error('must be set if max_event_states is set')
+        return false
+      }
+      return true
+    }
+    return isInRange(
+      s.attributionScopes.size,
+      ctx,
+      1,
+      s.attributionScopeLimit,
+      `attribution scopes size must be in the range [1, ${s.attributionScopeLimit}]`
+    )
+  })
 }
 
 export enum SummaryWindowOperator {
@@ -1052,6 +1086,9 @@ export type Source = CommonDebug &
     eventLevelEpsilon: number
     aggregatableDebugReporting: SourceAggregatableDebugReportingConfig | null
     destinationLimitPriority: bigint
+    attributionScopes: Set<string>
+    attributionScopeLimit: number | null
+    maxEventStates: number
   }
 
 function source(j: Json, ctx: SourceContext): Maybe<Source> {
@@ -1132,12 +1169,34 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
           'destination_limit_priority',
           withDefault(int64, 0n)
         ),
+        attributionScopeLimit: field(
+          'attribution_scope_limit',
+          withDefault(positiveUint32, null)
+        ),
+        attributionScopes: field(
+          'attribution_scopes',
+          withDefault(
+            (j) =>
+              attributionScopes(
+                ctx,
+                j,
+                constants.maxAttributionScopesPerSource,
+                constants.maxLengthPerAttributionScope
+              ),
+            new Set<string>()
+          )
+        ),
+        maxEventStates: field(
+          'max_event_states',
+          withDefault(maxEventStates, constants.defaultMaxEventStates)
+        ),
 
         ...commonDebugFields,
         ...priorityField,
       })
     })
     .filter(isTriggerDataMatchingValidForSpecs, ctx)
+    .filter(validateAttributionScopeFields, ctx)
     .peek(channelCapacity, ctx)
     .peek(warnInconsistentMaxEventLevelReportsAndTriggerSpecs, ctx)
 }
@@ -1335,6 +1394,44 @@ function eventTriggerData(
   )
 }
 
+function positiveUint32(j: Json, ctx: Context): Maybe<number> {
+  return number(j, ctx)
+    .filter(isInteger, ctx)
+    .filter(isInRange, ctx, 1, UINT32_MAX)
+}
+
+function maxEventStates(j: Json, ctx: SourceContext): Maybe<number> {
+  return number(j, ctx)
+    .filter(isInteger, ctx)
+    .filter(isInRange, ctx, 1, ctx.vsv.maxTriggerStateCardinality)
+}
+
+function attributionScopes(
+  ctx: RegistrationContext,
+  j: Json,
+  maxAttributionScopes: number,
+  maxLengthPerAttributionScope: number
+): Maybe<Set<string>> {
+  const attributionScopeStringLength = (s: string) => {
+    if (s.length > maxLengthPerAttributionScope) {
+      ctx.error(
+        `exceeds max length per attribution scope (${s.length} > ${constants.maxLengthPerAttributionScope})`
+      )
+      return false
+    }
+    return true
+  }
+
+  return set(
+    j,
+    ctx,
+    (j) => string(j, ctx).filter(attributionScopeStringLength),
+    {
+      maxLength: maxAttributionScopes,
+    }
+  )
+}
+
 export type AggregatableDedupKey = FilterPair & DedupKey
 
 function aggregatableDedupKeys(
@@ -1457,6 +1554,7 @@ export type Trigger = CommonDebug &
     eventTriggerData: EventTriggerDatum[]
     triggerContextID: string | null
     aggregatableDebugReporting: AggregatableDebugReportingConfig | null
+    attributionScopes: Set<string>
   }
 
 function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
@@ -1507,6 +1605,13 @@ function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
           'aggregatable_debug_reporting',
           withDefault(struct, null),
           aggregatableDebugReportingConfig
+        ),
+        attributionScopes: field(
+          'attribution_scopes',
+          withDefault(
+            (j) => attributionScopes(ctx, j, Infinity, Infinity),
+            new Set<string>()
+          )
         ),
         ...aggregationCoordinatorOriginField,
         ...commonDebugFields,

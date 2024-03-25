@@ -845,6 +845,12 @@ An attribution source is a [=struct=] with the following items:
 :: An [=aggregatable debug reporting config=].
 : <dfn>destination limit priority</dfn>
 :: A 64-bit integer.
+: <dfn>attribution scope limit</dfn>
+:: Null or a positive 32-bit integer representing the number of distinct [=attribution source/attribution scopes=] allowed per [=attribution source/attribution destinations|attribution destination=] for the source's [=attribution source/reporting origin=].
+: <dfn>attribution scopes</dfn>
+:: A [=set=] of [=strings=].
+: <dfn>max event states</dfn>
+:: A positive integer representing the maximum number of [=trigger states=] for [=source type/event=] sources per [=attribution source/attribution destinations|attribution destination=] for the source's [=attribution source/reporting origin=].
 
 </dl>
 
@@ -985,6 +991,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: A positive integer.
 : <dfn>aggregatable debug reporting config</dfn>
 :: An [=aggregatable debug reporting config=].
+: <dfn>attribution scopes</dfn>
+:: A [=set=] of [=strings=].
 
 </dl>
 
@@ -1155,6 +1163,7 @@ Possible values are:
 <li>"<dfn><code>source-destination-limit-replaced</code></dfn>"
 <li>"<dfn><code>source-destination-per-day-rate-limit</code></dfn>"
 <li>"<dfn><code>source-destination-rate-limit</code></dfn>"
+<li>"<dfn><code>source-max-event-states-limit</code></dfn>"
 <li>"<dfn><code>source-noised</code></dfn>"
 <li>"<dfn><code>source-reporting-origin-limit</code></dfn>"
 <li>"<dfn><code>source-reporting-origin-per-site-limit</code></dfn>"
@@ -1413,6 +1422,17 @@ per [=aggregatable debug rate-limit window=]. The second controls the total
 [=aggregatable debug report/required aggregatable budget=] of all [=aggregatable debug reports=]
 with a given ([=aggregatable debug rate-limit record/context site=], [=aggregatable debug rate-limit record/reporting site=])
 per [=aggregatable debug rate-limit window=]. Its value is (2<sup>20</sup>, 65536).
+
+<dfn>Default max event states</dfn> is a positive integer that controls the
+default [=attribution source/max event states=]. Its value is 3.
+
+<dfn>Max length of attribution scope for source</dfn> is a positive integer that controls the
+maximum [=string/length=] of an attribution scope from an [=attribution source=]'s [=attribution source/attribution scopes=].
+Its value is 50.
+
+<dfn>Max attribution scopes per source</dfn> is a positive integer that controls the
+maximum [=set/size=] of an [=attribution source=]'s [=attribution source/attribution scopes=].
+Its value is 20.
 
 # Vendor-Specific Values # {#vendor-specific-values}
 
@@ -2401,6 +2421,8 @@ A <dfn>source-registration JSON key</dfn> is one of the following:
 <li>"<dfn><code>aggregatable_report_window</code></dfn>"
 <li>"<dfn><code>aggregation_keys</code></dfn>"
 <li>"<dfn><code>budget</code></dfn>"
+<li>"<dfn><code>attribution_scope_limit</code></dfn>"
+<li>"<dfn><code>attribution_scopes</code></dfn>"
 <li>"<dfn><code>debug_key</code></dfn>"
 <li>"<dfn><code>debug_reporting</code></dfn>"
 <li>"<dfn><code>destination</code></dfn>"
@@ -2412,6 +2434,7 @@ A <dfn>source-registration JSON key</dfn> is one of the following:
 <li>"<dfn><code>expiry</code></dfn>"
 <li>"<dfn><code>filter_data</code></dfn>"
 <li>"<dfn><code>max_event_level_reports</code></dfn>"
+<li>"<dfn><code>max_event_states</code></dfn>"
 <li>"<dfn><code>priority</code></dfn>"
 <li>"<dfn><code>source_event_id</code></dfn>"
 <li>"<dfn><code>start_time</code></dfn>"
@@ -2687,6 +2710,32 @@ non-negative integer |defaultBudget|, and an [=aggregatable debug reporting conf
     with |value|, |budget|, |supportedTypes|, and |defaultConfig|.
 1. Return the [=tuple=] (|budget|, |config|).
 
+To <dfn>parse max event states</dfn> from a [=map=] |map| and
+a possibly null 32-bit positive integer |attributionScopeLimit|:
+1. Let |maxEventStates| be [=default max event states=].
+1. If |map|["<code>[=source-registration JSON key/max_event_states=]</code>"] [=map/exists=], set |maxEventStates| to |map|["<code>[=source-registration JSON key/max_event_states=]</code>"].
+1. If |maxEventStates| is not an integer or is less than or equal to 0, return an error.
+1. If |maxEventStates| is greater than the user agent's [=max trigger-state cardinality=], return an error.
+1. If |maxEventStates| is not equal to [=default max event states=] and |attributionScopeLimit| is null, return an error.
+1. Return |maxEventStates|.
+
+To <dfn>parse attribution scopes for source</dfn> from a [=map=] |map| and a possibly null 32-bit positive integer |attributionScopeLimit|:
+1. Let |result| be a new [=set=].
+1. If |map|["<code>[=source-registration JSON key/attribution_scopes=]</code>"] does not [=map/exist=], return |result|.
+1. Let |values| be |map|["<code>[=source-registration JSON key/attribution_scopes=]</code>"].
+1. If |values| is not a [=list=], return an error.
+1. [=list/iterate|For each=] |value| of |values|:
+    1. If |value| is not a [=string=], return an error.
+    1. If |value|'s [=string/length=] is greater than [=max length of attribution scope for source=], return an error.
+    1. [=set/Append=] |value| to |result|.
+1. If |attributionScopeLimit| is null:
+    1. If |result| is not [=set/is empty|empty=], return an error.
+    1. Return |result|.
+1. If |result| [=set/is empty=], return an error.
+1. If |result|'s [=set/size=] is greater than |attributionScopeLimit|, return an error.
+1. If |result|'s [=set/size=] is greater than [=max attribution scopes per source=], return an error.
+1. Return |result|.
+
 To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 |json|, a [=suitable origin=] |sourceOrigin|, a [=suitable origin=] |reportingOrigin|, a
 [=source type=] |sourceType|, a [=moment=] |sourceTime|, and a [=boolean=] |fenced|:
@@ -2756,6 +2805,15 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |triggerSpecs| be the result of [=parsing trigger specs=] with |value|,
     |sourceTime|, |sourceType|, |expiry|, and |triggerDataMatchingMode|.
 1. If |triggerSpecs| is an error, return null.
+1. Let |attributionScopeLimit| be null.
+1. If |value|["<code>[=source-registration JSON key/attribution_scope_limit=]</code>"] [=map/exists=]:
+    1. Set |attributionScopeLimit| to |value|["<code>[=source-registration JSON key/attribution_scope_limit=]</code>"].
+    1. If |attributionScopeLimit| is not an integer, cannot be represented by an unsigned 32-bit integer, or is less than or equal to zero, return null.
+1. Let |maxEventStates| be the result of running
+    [=parse max event states=] with |value| and |attributionScopeLimit|.
+1. If |maxEventStates| is an error, return null.
+1. Let |attributionScopes| be the result of running [=parse attribution scopes for source=] with |value| and |attributionScopeLimit|.
+1. If |attributionScopes| is an error, return null.
 1. Let |epsilon| be the user agent's [=max settable event-level epsilon=].
 1. Set |epsilon| to |value|["<code>[=source-registration JSON key/event_level_epsilon=]</code>"] if it [=map/exists=]:
 1. If |epsilon| is not a double, is less than 0, or is greater than the user agent's [=max settable event-level epsilon=], return null.
@@ -2822,6 +2880,12 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |aggregatableDebugReportingConfig|
     : [=attribution source/destination limit priority=]
     :: |destinationLimitPriority|
+    : [=attribution source/attribution scopes=]
+    :: |attributionScopes|
+    : [=attribution source/attribution scope limit=]
+    :: |attributionScopeLimit|
+    : [=attribution source/max event states=]
+    :: |maxEventStates|
 1. Return |source|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -3165,6 +3229,10 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. Set |source|'s [=attribution source/number of event-level reports=] to 0 if
     |source|'s [=attribution source/randomized response=] is null,
     [=attribution source/randomized response=]'s [=list/size=] otherwise.
+1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] obtained with |randomizedResponseConfig|.
+1. If |sourceType| is "<code>[=source type/event=]</code>" and |states| is greater than |source|'s [=attribution source/max event states=]:
+    1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-max-event-states-limit=]</code>" and |source|.
+    1. Return.
 1. Let |pendingSourcesForSourceOrigin| be the [=set=] of all
     [=attribution sources=] |pendingSource| of the [=attribution source cache=] where |pendingSource|'s
     [=attribution source/source origin=] and |source|'s
@@ -3288,6 +3356,7 @@ A <dfn>trigger-registration JSON key</dfn> is one of the following:
 <li>"<dfn><code>aggregatable_trigger_data</code></dfn>"
 <li>"<dfn><code>aggregatable_values</code></dfn>"
 <li>"<dfn><code>aggregation_coordinator_origin</code></dfn>"
+<li>"<dfn><code>attribution_scopes</code></dfn>"
 <li>"<dfn><code>debug_key</code></dfn>"
 <li>"<dfn><code>debug_reporting</code></dfn>"
 <li>"<dfn><code>deduplication_key</code></dfn>"
@@ -3503,6 +3572,16 @@ To <dfn>parse aggregatable dedup keys</dfn> given a [=map=] |map|:
     1. [=set/Append=] |aggregatableDedupKey| to |aggregatableDedupKeys|.
 1. Return |aggregatableDedupKeys|.
 
+To <dfn>parse attribution scopes for trigger</dfn> from a [=map=] |map|:
+1. Let |result| be a new [=set=].
+1. If |map|["<code>[=trigger-registration JSON key/attribution_scopes=]</code>"] does not [=map/exist=], return |result|.
+1. Let |values| be |map|["<code>[=trigger-registration JSON key/attribution_scopes=]</code>"].
+1. If |values| is not a [=list=], return an error.
+1. [=list/iterate|For each=] |value| of |values|:
+    1. If |value| is not a [=string=], return an error.
+    1. [=set/Append=] |value| to |result|.
+1. Return |result|.
+
 To <dfn noexport>create an attribution trigger</dfn> given a [=byte sequence=]
 |json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, a [=list=] of [=trigger verification=] |triggerVerifications|,
 a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
@@ -3558,6 +3637,8 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
     1. Set |aggregatableDebugReportingConfig| to the result of running [=parse an aggregatable debug reporting config=]
         with |value|["<code>[=trigger-registration JSON key/aggregatable_debug_reporting=]</code>"],
         [=allowed aggregatable budget per source=], |supportedTypes|, and |aggregatableDebugReportingConfig|.
+1. Let |attributionScopes| be the result of running [=parse attribution scopes for trigger=] with |value|.
+1. If |attributionScopes| is an error, return null.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -3595,6 +3676,8 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
     :: |filteringIdsMaxBytes|
     : [=attribution trigger/aggregatable debug reporting config=]
     :: |aggregatableDebugReportingConfig|
+    : [=attribution trigger/attribution scopes=]
+    :: |attributionScopes|
 1. If |aggregatableSourceRegTimeConfig| is not "<code>[=aggregatable source registration time configuration/exclude=]</code>"
     and the result of running [=check if an aggregatable attribution report should be unconditionally sent=] with |trigger| is true, return null.
 1. Return |trigger|.
