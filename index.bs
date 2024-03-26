@@ -2336,9 +2336,14 @@ To <dfn>remove attribution scopes for sources with attribution scopes not select
     1. Let |selectedAttributionScopes| be a [=set=].
     1. If |pendingSource|'s [=attribution source/attribution scopes=] is not null:
         1. Set |selectedAttributionScopes| to |pendingSource|'s [=attribution source/attribution scopes=].
+    1. Let |attributionScopeLimitExceeded| be false.
     1. [=set/iterate|For each=] |source| of |matchingSources|:
+        1. If |attributionScopeLimitExceeded|:
+            1. [=set/Remove=] |source| from |cache|.
+            1. [=iteration/continue=].
         1. Let |newSelectedAttibutionScopes| be the [=set/union=] of |selectedAttributionScopes| and |source|'s [=attribution source/attribution scopes=].
         1. If |newSelectedAttibutionScopes|'s [=set/size=] is greater than  |attributionScopeLimit|:
+            1. Set |attributionScopeLimitExceeded| to true.
             1. [=set/Remove=] |source| from |cache|.
         1. Otherwise, set |selectedAttributionScopes| to |newSelectedAttibutionScopes|.
 
