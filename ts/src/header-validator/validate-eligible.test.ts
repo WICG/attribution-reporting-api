@@ -8,16 +8,6 @@ const tests = [
   { input: 'trigger' },
   { input: 'event-source, trigger' },
 
-  // Warnings
-  {
-    input: 'navigation-source',
-    expectedWarnings: [
-      {
-        path: ['navigation-source'],
-        msg: 'may only be specified in browser-initiated requests',
-      },
-    ],
-  },
   {
     input: 'x',
     expectedWarnings: [
@@ -52,6 +42,25 @@ const tests = [
     expectedErrors: [
       {
         msg: 'Error: Parse error: A key must begin with an asterisk or letter (a-z) at offset 0',
+      },
+    ],
+  },
+
+  {
+    input: 'navigation-source, trigger',
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'navigation-source is mutually exclusive with event-source and trigger',
+      },
+    ],
+  },
+  {
+    input: 'navigation-source, event-source',
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'navigation-source is mutually exclusive with event-source and trigger',
       },
     ],
   },
