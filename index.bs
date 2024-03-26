@@ -1278,6 +1278,10 @@ Its value is 64.
 <dfn>Default max number of event states</dfn> is a positive integer that controls the
 default [=attribution source/max number of event states=]. Its value is 3.
 
+<dfn>Max number of attribution scopes per source</dfn> is a positive integer that controls the
+maximum [=set/size=] of an [=attribution source=]'s [=attribution source/attribution scopes=].
+Its value is 20.
+
 # Vendor-Specific Values # {#vendor-specific-values}
 
 <dfn>Max pending sources per source origin</dfn> is a positive integer that
@@ -2189,7 +2193,7 @@ To <dfn>parse trigger data into a trigger spec map</dfn> given a
 |specs|, and a [=boolean=] |allowEmpty|:
 
 1. If |triggerDataList| is not a [=list=] or its [=list/size=] is greater than
-    [=max distinct trigger data per source=], return false.
+    [= trigger data per source=], return false.
 1. If |allowEmpty| is false and |triggerDataList| [=list/is empty=], return
     false.
 1. [=list/iterate|For each=] |triggerData| of |triggerDataList|:
@@ -2198,7 +2202,7 @@ To <dfn>parse trigger data into a trigger spec map</dfn> given a
         return false.
     1. [=map/Set=] |specs|[|triggerData|] to |spec|.
     1. If |specs|'s [=map/size=] is greater than
-        [=max distinct trigger data per source=], return false.
+        [= trigger data per source=], return false.
 1. Return true.
 
 To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
@@ -2214,7 +2218,7 @@ To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
     |map|["`trigger_specs`"] [=map/exists=]:
     1. If |map|["`trigger_data`"] [=map/exists=], return an error.
     1. If |map|["`trigger_specs`"] is not a [=list=] or its
-        [=list/size=] is greater than [=max distinct trigger data per source=],
+        [=list/size=] is greater than [= trigger data per source=],
         return an error.
     1. [=list/iterate|For each=] |item| of |map|["`trigger_specs`"]:
         1. If |item| is not a [=map=], return an error.
@@ -2264,14 +2268,14 @@ a [=source type=] |sourceType|,
 a possibly null 32-bit unsigned integer |attributionScopeLimit|,
 and a [=randomized response output configuration=] |config|:
 1. If |attributionScopeLimit| is null:
-    1. If |map|["`max_num_event_states`"] [=map/exists=], return an error.
+    1. If |map|["`max_event_states`"] [=map/exists=], return an error.
     1. Return null.
 1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] with |config|.
 1. If |sourceType| is "<code>[=source type/event=]</code>" and |states| is greater than [=default max number of event states=]
-    and |map|["`max_num_event_states`"] does not [=map/exist=], return an error.
+    and |map|["`max_event_states`"] does not [=map/exist=], return an error.
 1. Let |maxNumEventStates| be the result of running
     [=parse an optional 32-bit unsigned integer=] with |value|,
-    "`max_num_event_states`", and [=default max number of event states=].
+    "`max_event_states`", and [=default max number of event states=].
 1. If |maxNumEventStates| is an error or |maxNumEventStates| is equal to 0 or |maxNumEventStates| is greater than [=max trigger-state cardinality=], return an error.
 1. If |sourceType| is "<code>[=source type/event=]</code>" and |states| is greater than |maxNumEventStates|, return an error.
 1. Return |maxNumEventStates|.
@@ -2290,28 +2294,29 @@ To <dfn>parse attribution scopes</dfn> from a [=map=] |map| and a possibly null 
 1. If |result| is not [=set/is empty|empty=]:
     1. If |attributionScopeLimit| is null, return an error.
 1. If |result|'s [=set/size=] is greater than |attributionScopeLimit|, return an error.
+1. If |result|'s [=set/size=] is greater than [=max number of attribution scopes per source=], return an error.
 1. Return |result|.
 
-To <dfn>remove sources with different max num event states if necessary</dfn> given an [=attribution source=] |pendingSource|:
-1. If |pendingSource|'s [=attribution source/max num event states=] is null, return.
+To <dfn>find sources with common destinations and reporting origin</dfn> given an [=attribution source=] |pendingSource|:
 1. Let |cache| be the user agent's [=attribution source cache=].
+1. Let |matchingSources| be an [=list/is empty|empty=] [=list=].
 1. [=set/iterate|For each=] |source| of |cache|:
     1. Let |commonDestinations| be the [=set/intersection=] of |source|'s [=attribution source/attribution destinations=] and |pendingSource|'s [=attribution source/attribution destinations=].
     1. If |commonDestinations| [=set/is empty=], [=iteration/continue=].
-    1. If |source|'s [=attribution source/source origin=] and |pendingSource|'s [=attribution source/source origin=] are not [=same origin=], [=iteration/continue=].
-    1. If |source|'s [=attribution source/max num event states=] is null, [=iteration/continue=].
-    1. If |source|'s [=attribution source/max num event states=] is equal to |pendingSource|'s [=attribution source/max num event states=], [=iteration/continue=].
+    1. If |source|'s [=attribution source/reporting origin=] and |pendingSource|'s [=attribution source/reporting origin=] are not [=same origin=], [=iteration/continue=].
+    1. [=list/Append=] |source| to |matchingSources|.
+1. Return |matchingSources|.
+
+To <dfn>remove sources with different max number of event states if necessary</dfn> given an [=attribution source=] |pendingSource|:
+1. If |pendingSource|'s [=attribution source/max number of event states=] is null, return.
+1. [=set/iterate|For each=] |source| of [=find sources with common destinations and reporting origin=] with |pendingSource|:
+    1. If |source|'s [=attribution source/max number of event states=] is null or equals |pendingSource|'s [=attribution source/max number of event states=], [=iteration/continue=].
     1. [=set/Remove=] |source| from |cache|.
 
 To <dfn>remove sources with lower attribution scope limit from cache if necessary</dfn> given an [=attribution source=] |pendingSource|:
 1. If |pendingSource|'s [=attribution source/attribution scope limit=] is null, return.
-1. Let |cache| be the user agent's [=attribution source cache=].
-1. [=set/iterate|For each=] |source| of |cache|:
-    1. Let |commonDestinations| be the [=set/intersection=] of |source|'s [=attribution source/attribution destinations=] and |pendingSource|'s [=attribution source/attribution destinations=].
-    1. If |commonDestinations| [=set/is empty=], [=iteration/continue=].
-    1. If |source|'s [=attribution source/source origin=] and |pendingSource|'s [=attribution source/source origin=] are not [=same origin=], [=iteration/continue=].
-    1. If |source|'s [=attribution source/attribution scope limit=] is null, [=iteration/continue=].
-    1. If |source|'s [=attribution source/attribution scope limit=] is greater than or equal to |pendingSource|'s [=attribution source/attribution scope limit=], [=iteration/continue=].
+1. [=set/iterate|For each=] |source| of [=find sources with common destinations and reporting origin=] with |pendingSource|:
+    1. If |source|'s [=attribution source/attribution scope limit=] is null or greater than or equal to |pendingSource|'s [=attribution source/attribution scope limit=], [=iteration/continue=].
     1. [=set/Remove=] |source| from |cache|.
 
 To <dfn>remove attribution scopes for sources with attribution scopes not selected if necessary</dfn> given an [=attribution source=] |pendingSource|:
@@ -2652,9 +2657,9 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
     1. Set |debugDataType| to "<code>[=source debug data type/source-noised=]</code>".
 1. Run [=obtain and deliver a debug report on source registration=] with |debugDataType| and |source|.
-1. [=Remove sources with different max num event states if necessary=].
-1. [=Remove sources with lower attribution scope limit from cache if necessary=].
-1. [=Remove attribution scopes for sources with attribution scopes not selected if necessary=].
+1. [=Remove sources with different max number of event states if necessary=] with |source|.
+1. [=Remove sources with lower attribution scope limit from cache if necessary=] with |source|.
+1. [=Remove attribution scopes for sources with attribution scopes not selected if necessary=] with |source|.
 1. [=set/Append=] |source| to |cache|.
 
 Note: Because a fake report does not have a "real" effective destination, we need to subtract from the
