@@ -1038,7 +1038,7 @@ An <dfn>attribution rate-limit record</dfn> is a [=struct=] with the following i
 : <dfn>expiry time</dfn>
 :: Null or a [=moment=].
 : <dfn>entity ID</dfn>
-:: An [=event-level report=]'s [=event-level report/report ID=] or an
+:: Null or an [=event-level report=]'s [=event-level report/report ID=] or an
     [=aggregatable report=]'s [=aggregatable report/report ID=] or an
     [=attribution source=]'s [=attribution source/source identifier=].
 
@@ -2893,7 +2893,7 @@ Given an [=attribution rate-limit record=] |newRecord|:
 
     NOTE: [=rate-limit scope/source=] scopes have an auxiliary [=max source reporting origins per source reporting site=] rate limit that also must be enforced.
 
-1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/event-attribution=]</code>" or "<code>[=rate-limit scope/aggregatable-attribution=]</code>", return <strong>allowed</strong>
+1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/event-attribution=]</code>" or "<code>[=rate-limit scope/aggregatable-attribution=]</code>", return <strong>allowed</strong>.
 1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
      * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/source=]</code>"
      * |record|'s [=attribution rate-limit record/source site=] and |newRecord|'s [=attribution rate-limit record/source site=] are equal
@@ -2910,9 +2910,9 @@ Given an [=attribution trigger=] |trigger|, an [=attribution source=]
 
 1. If the result of running [=should attribution be blocked by attribution rate limit=] with |trigger|, |sourceToAttribute|,
     and |newRecord|'s [=attribution rate-limit record/scope=] is <strong>blocked</strong>:
-    1. Let |debugDataType| be "<code>[=trigger debug data type/trigger-event-attributions-per-source-destination-limit=]</code>"
+    1. Let |debugDataType| be "<code>[=trigger debug data type/trigger-event-attributions-per-source-destination-limit=]</code>".
     1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/aggregatable-attribution=]</code>",
-        set |debugDataType| to "<code>[=trigger debug data type/trigger-aggregate-attributions-per-source-destination-limit=]</code>"
+        set |debugDataType| to "<code>[=trigger debug data type/trigger-aggregate-attributions-per-source-destination-limit=]</code>".
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with |debugDataType|, |trigger|, |sourceToAttribute|, and
         [=obtain debug data on trigger registration/report=] set to null.
@@ -2990,8 +2990,6 @@ an optional [=attribution source=] <dfn for="obtain debug data body on trigger r
 1. If |dataType| is:
     <dl class="switch">
     : "<code>[=trigger debug data type/trigger-event-attributions-per-source-destination-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max attributions per rate-limit window=],
-         [=serialize an integer|serialized=].
     : "<code>[=trigger debug data type/trigger-aggregate-attributions-per-source-destination-limit=]</code>"
     :: [=map/Set=] |body|["`limit`"] to the user agent's [=max attributions per rate-limit window=],
          [=serialize an integer|serialized=].
@@ -3288,7 +3286,8 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
     : [=attribution rate-limit record/entity ID=]
     :: |report|'s [=aggregatable report/report ID=]
 1. If the result of running [=should attribution be blocked by rate limits=]
-    with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null, return it.
+    with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
+    return it.
 1. If |sourceToAttribute|'s [=attribution source/number of aggregatable reports=] value is equal to [=max aggregatable reports per source=], then:
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=] with
         "<code>[=trigger debug data type/trigger-aggregate-excessive-reports=]</code>", |trigger|, |sourceToAttribute|, and |report|.

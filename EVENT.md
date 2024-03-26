@@ -1059,7 +1059,7 @@ sent through this API in a given time period for a user. The browser should set
 a maximum number of attributions per
 <source site, destination site, reporting site, user> tuple per time period. If this
 threshold is hit, the browser will stop scheduling reports the API for the
-rest of the time period for attributions matching that tuple. This attribution limit is separate for event-level & aggregate reporting.
+rest of the time period for attributions matching that tuple. This attribution limit is separate for event-level and aggregate reporting.
 
 The longer the cooldown windows are, the harder it is to abuse the API and join
 identity. Ideally attribution thresholds should be low enough to avoid leaking too
