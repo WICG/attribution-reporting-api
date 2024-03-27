@@ -2402,19 +2402,19 @@ an [=attribution rate-limit record=] |b| if any of the following are true:
 
 To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of [=attribution source/source identifiers=] |sourcesToDelete|:
 
+1. [=list/iterate|For each=] [=attribution source=] |source| of the [=attribution source cache=]:
+    1. [=list/Remove=] |source| from the [=attribution source cache=] if |sourcesToDelete|
+        [=set/contains=] |source|'s [=attribution source/source identifier=].
 1. Let |deletedEventLevelReports| be a new [=set/is empty|empty=] [=set=].
-1. Let |deletedAggregatableReports| be a new [=set/is empty|empty=] [=set=].
 1. [=list/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
     1. If |sourcesToDelete| [=set/contains=] |report|'s [=event-level report/source identifier=]:
         1. [=set/Append=] |report|'s [=attribution report/report ID=] to |deletedEventLevelReports|.
         1. [=list/Remove=] |report| from the [=event-level report cache=].
+1. Let |deletedAggregatableReports| be a new [=set/is empty|empty=] [=set=].
 1. [=list/iterate|For each=] [=aggregatable report=] |report| of the [=aggregatable report cache=]:
     1. If |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable report/source identifier=]:
         1. [=set/Append=] |report|'s [=attribution report/report ID=] to |deletedAggregatableReports|.
         1. [=list/Remove=] |report| from the [=aggregatable report cache=].
-1. [=list/iterate|For each=] [=attribution source=] |source| of the [=attribution source cache=]:
-    1. [=list/Remove=] |source| from the [=attribution source cache=] if |sourcesToDelete|
-        [=set/contains=] |source|'s [=attribution source/source identifier=].
 1. [=list/iterate|For each=] [=attribution rate-limit record=] |record| of the [=attribution rate-limit cache=]:
     1. If |record|'s [=attribution rate-limit record/scope=] is:
         <dl class="switch">
