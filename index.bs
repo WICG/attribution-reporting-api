@@ -949,8 +949,8 @@ An attribution report is a [=struct=] with the following items:
 :: Null or a non-negative 64-bit integer.
 : <dfn>trigger debug key</dfn>
 :: Null or a non-negative 64-bit integer.
-: <dfn>attribution destinations</dfn>
-:: An [=ordered set=] of [=sites=].
+: <dfn>source identifier</dfn>
+:: A string.
 
 </dl>
 
@@ -971,8 +971,8 @@ An event-level report is an [=attribution report=] with the following additional
 :: A 64-bit integer.
 : <dfn>trigger time</dfn>
 :: A [=moment=].
-: <dfn>source identifier</dfn>
-:: A string.
+: <dfn>attribution destinations</dfn>
+:: An [=ordered set=] of [=sites=].
 
 </dl>
 
@@ -2400,18 +2400,17 @@ an [=attribution rate-limit record=] |b| if any of the following are true:
     and |a|'s <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a> [=attribution rate-limit record/attribution destination=]
     is less than |b|'s <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a> [=attribution rate-limit record/attribution destination=].
 
-To <dfn>delete earliest destinations</dfn> given a [=set=] of [=sites=] |deletedDestinations|
-and a [=set=] of [=attribution source/source identifiers=] |deletedSources|:
+To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of [=attribution source/source identifiers=] |deletedSources|:
 
 1. Let |deletedEventLevelReports| be a new [=set/is empty|empty=] [=set=].
 1. Let |deletedAggregatableReports| be a new [=set/is empty|empty=] [=set=].
 1. [=set/iterate|For each=] |destination| of |deletedDestinations|:
     1. [=list/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
-        1. If |report|'s [=event-level report/attribution destinations=] [=set/contains=] |destination|:
+        1. If |deletedSources| [=set/contains=] |report|'s [=event-level report/source identifier=]:
             1. [=set/Append=] |report|'s [=attribution report/report ID=] to |deletedEventLevelReports|.
             1. [=list/Remove=] |report| from the [=event-level report cache=].
     1. [=list/iterate|For each=] [=aggregatable report=] |report| of the [=aggregatable report cache=]:
-        1. If |report|'s [=aggregatable report/attribution destination=]s [=set/contains=] |destination|:
+        1. If |deletedSources| [=set/contains=] |report|'s [=aggregatable report/source identifier=]:
             1. [=set/Append=] |report|'s [=attribution report/report ID=] to |deletedAggregatableReports|.
             1. [=list/Remove=] |report| from the [=aggregatable report cache=].
 1. [=list/iterate|For each=] [=attribution source=] |source| of the [=attribution source cache=]:
@@ -2430,7 +2429,7 @@ and a [=set=] of [=attribution source/source identifiers=] |deletedSources|:
 
         </dl>
 
-To <dfn>check if an [=attribution source=] exceeds the unexpired destination limit and maybe delete earliest destinations</dfn>
+To <dfn>check if an [=attribution source=] exceeds the unexpired destination limit and maybe delete sources</dfn>
 given an [=attribution source=] |source|, run the following steps:
 
 1. Let |unexpiredSources| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=]
@@ -2441,17 +2440,15 @@ given an [=attribution source=] |source|, run the following steps:
      * |record|'s [=attribution rate-limit record/reporting origin=] and |source|'s [=attribution source/reporting origin=] are [=same site=]
      * |record|'s [=attribution rate-limit record/expiry time=] is greater than |source|'s [=attribution source/source time=]
 1. Let |newDestinations| be the result of [=set/cloning=] |source|'s [=attribution source/attribution destinations=].
-1. Let |destinationsToDelete| be an [=set/is empty|empty=] [=set=].
 1. Let |sourcesToDelete| be an [=set/is empty|empty=] [=set=].
 1. [=list/iterate|For each=] [=attribution rate-limit record=] |unexpiredRecord| of |unexpiredSources|:
     1. Let |destination| be |unexpiredRecord|'s [=attribution rate-limit record/attribution destination=].
     1. If |newDestinations|'s [=set/size=] is less than the user agent's [=max destinations covered by unexpired sources=],
         [=set/append=] |destination| to |newDestinations|.
     1. Else if |newDestinations| does not [=set/contain=] |destination|:
-        1. [=set/Append=] |destination| to |destinationsToDelete|.
         1. [=set/Append=] |unexpiredRecord|'s [=attribution rate-limit record/entity ID=] to |sourcesToDelete|.
-1. Run [=delete earliest destinations=] with |destinationsToDelete| and |sourcesToDelete|.
-1. If |destinationsToDelete| [=set/is empty=] return false, else return true.
+1. Run [=delete sources for unexpired destination limit=] with |destinationsToDelete| and |sourcesToDelete|.
+1. If |sourcesToDelete| [=set/is empty=] return false, else return true.
 
 To <dfn>obtain a fake report</dfn> given an [=attribution source=] |source| and
 a [=trigger state=] |triggerState|:
@@ -2542,7 +2539,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         1. Run [=obtain and deliver a debug report on source registration=] with "[=source debug data type/source-success=]</code>" and |source|.
         1. Return.
     1. [=set/Append=] |rateLimitRecord| to |newRateLimitRecords|.
-1. If the result of running [=check if an attribution source exceeds the unexpired destination limit and maybe delete earliest destinations=]
+1. If the result of running [=check if an attribution source exceeds the unexpired destination limit and maybe delete sources=]
     with |source| is true:
     1. Run [=obtain and deliver a debug report on source registration=] with "[=source debug data type/source-destination-limit=]</code>" and |source|.
 1. [=set/iterate|For each=] |record| of |newRateLimitRecords|, [=set/append=] |record| to
@@ -3510,8 +3507,8 @@ an [=attribution trigger=] |trigger|:
     :: |trigger|'s [=attribution trigger/aggregatable source registration time configuration=].
     : [=aggregatable report/trigger context ID=]
     :: |trigger|'s [=attribution trigger/trigger context ID=]
-    : [=aggregatable report/attribution destinations=]
-    :: |source|'s [=attribution source/attribution destinations=].
+    : [=aggregatable report/source identifier=]
+    :: |source|'s [=attribution source/source identifier=].
 1. Return |report|.
 
 <h3 id="generating-randomized-null-reports">Generating randomized null reports</h3>
