@@ -2390,15 +2390,20 @@ we only emit a [=source debug data type/source-success=] type. For this reason, 
 it as "<code>[=destination rate-limit result/hit reporting limit=]</code>" to ensure that the most useful report is sent.
 
 An [=attribution rate-limit record=] |a| <dfn for="attribution rate-limit record">is less than</dfn>
-an [=attribution rate-limit record=] |b| if any of the following are true:
+an [=attribution rate-limit record=] |b| if the following steps return true:
 
-* |a|'s [=attribution rate-limit record/scope=] is less than |b|'s [=attribution rate-limit record/scope=].
-* |a|'s [=attribution rate-limit record/scope=] is equal to |b|'s [=attribution rate-limit record/scope=]
-    and |a|'s [=attribution rate-limit record/time=] is less than |b|'s [=attribution rate-limit record/time=].
-* |a|'s [=attribution rate-limit record/scope=] is equal to |b|'s [=attribution rate-limit record/scope=],
-    |a|'s [=attribution rate-limit record/time=] is equal to |b|'s [=attribution rate-limit record/time=],
-    and |a|'s <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a> [=attribution rate-limit record/attribution destination=]
-    is less than |b|'s <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a> [=attribution rate-limit record/attribution destination=].
+1. If |a|'s [=attribution rate-limit record/scope=] is less than |b|'s [=attribution rate-limit record/scope=],
+    return true.
+1. If |a|'s [=attribution rate-limit record/scope=] is greater than |b|'s [=attribution rate-limit record/scope=],
+    return false.
+1. If |a|'s [=attribution rate-limit record/time=] is less than |b|'s [=attribution rate-limit record/time=],
+    return true.
+1. If |a|'s [=attribution rate-limit record/time=] is greater than |b|'s [=attribution rate-limit record/time=],
+    return false.
+1. If |a|'s <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a> [=attribution rate-limit record/attribution destination=]
+    is less than |b|'s <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a> [=attribution rate-limit record/attribution destination=],
+    return true.
+1. Return false.
 
 To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of [=attribution source/source identifiers=] |sourcesToDelete|:
 
