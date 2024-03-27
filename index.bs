@@ -1038,7 +1038,7 @@ An <dfn>attribution rate-limit record</dfn> is a [=struct=] with the following i
 :: Null or a [=moment=].
 : <dfn>entity ID</dfn>
 :: Null or an ID.
-: <dfn>deactivated</dfn> (default false)
+: <dfn>deactivated for unexpired destination limit</dfn> (default false)
 :: A [=boolean=].
 
 </dl>
@@ -2421,7 +2421,7 @@ and a [=set=] of [=attribution source/source identifiers=] |deletedSources|:
     1. If |record|'s [=attribution rate-limit record/scope=] is:
         <dl class="switch">
         : "<code>[=rate-limit scope/source=]</code>"
-        :: Set |record|'s [=attribution rate-limit record/deactivated=] to
+        :: Set |record|'s [=attribution rate-limit record/deactivated for unexpired destination limit=] to
             true if |deletedSources| [=set/contains=] |record|'s [=attribution rate-limit record/entity ID=].
         : "<code>[=rate-limit scope/attribution=]</code>"
         :: [=set/Remove=] |record| from the [=attribution rate-limit cache=] if
@@ -2447,7 +2447,6 @@ given an [=attribution source=] |source|, run the following steps:
     1. If |newDestinations|'s [=set/size=] is less than the user agent's [=max destinations covered by unexpired sources=],
         [=set/append=] |destination| to |newDestinations|.
     1. Else if |newDestinations| does not [=set/contain=] |destination|:
-        1. Set |unexpiredRecord|'s [=attribution rate-limit record/deactivated=] to true.
         1. [=set/Append=] |destination| to |destinationsToDelete|.
         1. [=set/Append=] |unexpiredRecord|'s [=attribution rate-limit record/entity ID=] to |sourcesToDelete|.
 1. Run [=delete earliest destinations=] with |destinationsToDelete| and |sourcesToDelete|.
