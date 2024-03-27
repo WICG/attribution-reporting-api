@@ -409,7 +409,7 @@ a [=set=] of [=strings=] |allowedKeys|:
     1. Let |value| be true.
     1. Optionally, set |value| to a [=structured header/token=]
         corresponding to one of [=strings=] in |allowedKeys|.
-    1. Let |params| be an [=map/is empty|empty=] [=map=].
+    1. Let |params| be a new [=map=].
     1. [=set/iterate|For each=] |key| of |allowedKeys|, optionally [=map/set=] |params|[|key|] to an
         arbitrary [=structured header/item|bare item=].
     1. [=list/Append=] a structured dictionary member with the key |key|, the
@@ -442,7 +442,7 @@ and an [=origin=] |contextOrigin|:
 1. [=header list/Delete=] "<code>[=Attribution-Reporting-Support=]</code>" from
     |headers|.
 1. If |eligibility| is "<code>[=eligibility/unset=]</code>", return.
-1. Let |keys| be an [=list/is empty|empty=] [=list=].
+1. Let |keys| be a new [=list=].
 1. If |eligibility| is:
     <dl class="switch">
     : "<code>[=eligibility/empty=]</code>"
@@ -1936,7 +1936,7 @@ Note: The user agent may optionally include error details of any type in |body|[
 <h3 algorithm id="obtaining-randomized-source-response">Obtaining a randomized source response</h3>
 
 To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized response output configuration=] |config|:
-1. Let |possibleTriggerStates| be a new [=list/is empty|empty=] [=set=].
+1. Let |possibleTriggerStates| be a new [=set=].
 1. [=map/iterate|For each=] |triggerData| → |spec| of |config|'s [=randomized response output configuration/trigger specs=]:
     1. [=list/For each=] |reportWindow| of |spec|'s [=trigger spec/event-level report windows=]:
         1. Let |state| be a new [=trigger state=] with the items:
@@ -1945,7 +1945,7 @@ To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized respo
             : [=trigger state/report window=]
             :: |reportWindow|
         1. [=set/Append=] |state| to |possibleTriggerStates|.
-1. Let |possibleValues| be a new [=list/is empty|empty=] [=set=].
+1. Let |possibleValues| be a new [=set=].
 1. [=set/iterate|For each=] integer |attributions| of [=the range=] 0 to |config|'s [=randomized response output configuration/max attributions per source=], inclusive:
     1. [=set/Append=] to |possibleValues| all distinct |attributions|-length combinations of
         |possibleTriggerStates|.
@@ -2087,7 +2087,7 @@ To <dfn>parse report windows</dfn> given a |value|, a
 1. Let |endDurations| be |value|["`end_times`"].
 1. If the [=list/size=] of |endDurations| is greater than [=max settable event-level report windows=], return an error.
 1. If |endDurations| [=list/is empty=], return an error.
-1. Let |windows| be an [=list/is empty|empty=] [=list=].
+1. Let |windows| be a new [=list=].
 1. [=list/iterate|For each=] |end| of |endDurations|:
     1. If |end| is not a positive integer, return an error.
     1. Let |endDuration| be |end| seconds.
@@ -2132,7 +2132,7 @@ To <dfn>parse summary buckets</dfn> given a [=map=] |map| and an integer |maxEve
         error.
     1. Set |values| to |map|["`summary_buckets`"].
 1. Let |prev| be 0.
-1. Let |summaryBuckets| be an [=list/is empty|empty=] [=list=]. 
+1. Let |summaryBuckets| be a new [=list=]. 
 1. [=list/iterate|For each=] |item| of |values|:
     1. If |item| is not an integer or cannot be represented by an unsigned
         32-bit integer, or is less than or equal to |prev|, return an error.
@@ -2393,7 +2393,7 @@ To <dfn>check if an [=attribution source=] exceeds the unexpired destination lim
      * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
      * |record|'s [=attribution rate-limit record/reporting origin=] and |source|'s [=attribution source/reporting origin=] are [=same site=]
      * |record|'s [=attribution rate-limit record/expiry time=] is greater than |source|'s [=attribution source/source time=]
-1. Let |unexpiredDestinations| be an [=set/is empty|empty=] [=set=].
+1. Let |unexpiredDestinations| be a new [=set=].
 1. For each [=attribution rate-limit record=] |unexpiredRecord| of |unexpiredSources|:
     1. [=set/Append=] |unexpiredRecord|'s [=attribution rate-limit record/attribution destination=] to |unexpiredDestinations|.
 1. Let |newDestinations| be the result of taking the [=set/union=] of |unexpiredDestinations| and |source|'s [=attribution source/attribution destinations=].
@@ -2472,7 +2472,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit global limit=]</code>":
     1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-success=]</code>" and |source|.
     1. Return.
-1. Let |newRateLimitRecords| be a new [=set/is empty|empty=] [=set=].
+1. Let |newRateLimitRecords| be a new [=set=].
 1. [=set/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
     1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
         : [=attribution rate-limit record/scope=]
@@ -2630,7 +2630,7 @@ To <dfn>parse aggregatable key-values</dfn> given a [=map=] |map|:
 
 To <dfn>parse aggregatable values</dfn> given an [=ordered map=] |map|:
 
-1. If |map|["`aggregatable_values`"] does not [=map/exist=], return a new [=list/is empty|empty=] [=list=].
+1. If |map|["`aggregatable_values`"] does not [=map/exist=], return a new [=list=].
 1. Let |values| be |map|["`aggregatable_values`"].
 1. If |values| is not an [=ordered map=] or a [=list=], return null.
 1. Let |aggregatableValuesConfigurations| be a [=list=] of [=aggregatable values configurations=], initially empty.
@@ -2938,7 +2938,7 @@ To <dfn>create [=aggregatable contributions=]</dfn> given an [=attribution sourc
         |trigger|'s [=attribution trigger/trigger time=] is true:
         1. Return the result of running [=create aggregatable contributions from aggregation keys and aggregatable values=] with
             |aggregationKeys| and |aggregatableValuesConfiguration|'s [=aggregatable values configuration/values=].
-1. Return a new [=list/is empty|empty=] [=list=].
+1. Return a new [=list=].
 
 <h3 id="can-source-create-aggregatable-contributions">Can source create aggregatable contributions</h3>
 
@@ -2960,7 +2960,7 @@ an optional [=attribution source=] <dfn for="obtain debug data body on trigger r
 <var>sourceToAttribute</var></dfn>, and an optional [=attribution report=]
 <dfn for="obtain debug data body on trigger registration"><var>report</var></dfn>:
 
-1. Let |body| be a new [=map/is empty|empty=] [=map=].
+1. Let |body| be a new [=map=].
 1. If |dataType| is:
     <dl class="switch">
     : "<code>[=trigger debug data type/trigger-attributions-per-source-destination-limit=]</code>"
@@ -3264,7 +3264,7 @@ an [=attribution trigger=] |trigger| and an optional [=attribution source=]
 
 To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
 
-1. Let |matchingSources| be a new [=list/is empty|empty=] [=list=].
+1. Let |matchingSources| be a new [=list=].
 1. [=set/iterate|For each=] |source| of the [=attribution source cache=]:
     1. If |source|'s [=attribution source/attribution destinations=] does not [=set/contains|contain=] |trigger|'s [=attribution trigger/attribution destination=], [=iteration/continue=].
     1. If |source|'s [=attribution source/reporting origin=] and |trigger|'s [=attribution trigger/reporting origin=] are not [=same origin=], [=iteration/continue=].
@@ -3506,7 +3506,7 @@ To <dfn>determine if a randomized null report is generated</dfn> given a double 
 
 To <dfn>generate null reports</dfn> given an [=attribution trigger=] |trigger| and an optional [=aggregatable report=] |report| defaulting to null:
 
-1. Let |nullReports| be a new [=list/is empty|empty=] [=list=].
+1. Let |nullReports| be a new [=list=].
 1. If |trigger|'s [=attribution trigger/aggregatable source registration time configuration=] is "<code>[=aggregatable source registration time configuration/exclude=]</code>":
     1. Let |randomizedNullReportRate| be [=randomized null report rate excluding source registration time=].
     1. If |trigger|'s [=attribution trigger/trigger context ID=] is not null, set
@@ -3671,7 +3671,7 @@ The key should be uniquely identifiable.
 An [=aggregatable report=] |report|'s <dfn for="aggregatable report">plaintext payload</dfn>
 is the result of running the following steps:
 
-1. Let |payloadData| be a new [=list/is empty|empty=] [=list=].
+1. Let |payloadData| be a new [=list=].
 1. Let |contributions| be |report|'s [=aggregatable report/contributions=].
 1. [=iteration/While=] |contributions|' [=list/size=] is less than [=max
     aggregation keys per source registration=]:
@@ -3721,7 +3721,7 @@ run the following steps:
 1. If |pkR| is an error, return |pkR|.
 1. Let |encryptedPayload| be the result of running [=obtain the encrypted payload=] with |report| and |pkR|.
 1. If |encryptedPayload| is an error, return |encryptedPayload|.
-1. Let |aggregationServicePayloads| be a new [=list/is empty|empty=] [=list=].
+1. Let |aggregationServicePayloads| be a new [=list=].
 1. Let |aggregationServicePayload| be a [=map=] of the following key/value pairs:
 
     : "`payload`"
@@ -3813,7 +3813,7 @@ whether a user is online, retries might be limited in number and subject to rand
 
 To <dfn>serialize an [=attribution debug report=]</dfn> |report|, run the following steps:
 
-1. Let |collection| be an [=list/is empty|empty=] [=list=].
+1. Let |collection| be a new [=list=].
 1. [=list/iterate|For each=] |debugData| of |report|'s [=attribution debug report/data=]:
     1. Let |data| be a [=map=] of the following key/value pairs:
         : "`type`"
@@ -3839,7 +3839,7 @@ To <dfn>generate a report URL</dfn> given a [=suitable origin=] |reportingOrigin
 To <dfn>generate an attribution report URL</dfn> given an [=attribution report=] |report| and an optional
 [=boolean=] <dfn for="generate an attribution report URL"><var>isDebugReport</var></dfn> (default false):
 
-1. Let |path| be an [=list/is empty|empty=] [=list=].
+1. Let |path| be a new [=list=].
 1. If |isDebugReport| is true, [=list/append=] "`debug`" to |path|.
 1. If |report| is an:
     <dl class="switch">
@@ -3999,7 +3999,7 @@ To <dfn noexport>get [=OS registrations=] from a header value</dfn> given a
 
 To <dfn export>get supported registrars</dfn>:
 
-1. Let |supportedRegistrars| be an [=list/is empty|empty=] [=list=].
+1. Let |supportedRegistrars| be a new [=list=].
 1. If the user agent supports web registrations, [=list/append=] "<code>[=registrar/web=]</code>"
     to |supportedRegistrars|.
 1. If the user agent supports OS registrations, [=list/append=] "<code>[=registrar/os=]</code>"
