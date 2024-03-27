@@ -2402,7 +2402,7 @@ an [=attribution rate-limit record=] |b| if any of the following are true:
 
 To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of [=attribution source/source identifiers=] |sourcesToDelete|:
 
-1. [=list/iterate|For each=] [=attribution source=] |source| of the [=attribution source cache=]:
+1. [=set/iterate|For each=] [=attribution source=] |source| of the [=attribution source cache=]:
     1. [=list/Remove=] |source| from the [=attribution source cache=] if |sourcesToDelete|
         [=set/contains=] |source|'s [=attribution source/source identifier=].
 1. Let |deletedEventLevelReports| be a new [=set/is empty|empty=] [=set=].
@@ -2415,7 +2415,7 @@ To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of 
     1. If |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable report/source identifier=]:
         1. [=set/Append=] |report|'s [=attribution report/report ID=] to |deletedAggregatableReports|.
         1. [=list/Remove=] |report| from the [=aggregatable report cache=].
-1. [=list/iterate|For each=] [=attribution rate-limit record=] |record| of the [=attribution rate-limit cache=]:
+1. [=set/iterate|For each=] [=attribution rate-limit record=] |record| of the [=attribution rate-limit cache=]:
     1. If |record|'s [=attribution rate-limit record/scope=] is:
         <dl class="switch">
         : "<code>[=rate-limit scope/source=]</code>"
@@ -2444,10 +2444,10 @@ given an [=attribution source=] |source|, run the following steps:
     1. Let |destination| be |unexpiredRecord|'s [=attribution rate-limit record/attribution destination=].
     1. If |newDestinations|'s [=set/size=] is less than the user agent's [=max destinations covered by unexpired sources=],
         [=set/append=] |destination| to |newDestinations|.
-    1. Else if |newDestinations| does not [=set/contain=] |destination|:
+    1. Otherwise, if |newDestinations| does not [=set/contain=] |destination|:
         1. [=set/Append=] |unexpiredRecord|'s [=attribution rate-limit record/entity ID=] to |sourcesToDelete|.
 1. Run [=delete sources for unexpired destination limit=] with |sourcesToDelete|.
-1. If |sourcesToDelete| [=set/is empty=] return false, else return true.
+1. If |sourcesToDelete| [=set/is empty=] return false, otherwise return true.
 
 To <dfn>obtain a fake report</dfn> given an [=attribution source=] |source| and
 a [=trigger state=] |triggerState|:
