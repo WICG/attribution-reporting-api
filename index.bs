@@ -2403,18 +2403,18 @@ an [=attribution rate-limit record=] |b| if any of the following are true:
 To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of [=attribution source/source identifiers=] |sourcesToDelete|:
 
 1. [=set/iterate|For each=] [=attribution source=] |source| of the [=attribution source cache=]:
-    1. [=list/Remove=] |source| from the [=attribution source cache=] if |sourcesToDelete|
+    1. [=set/Remove=] |source| from the [=attribution source cache=] if |sourcesToDelete|
         [=set/contains=] |source|'s [=attribution source/source identifier=].
 1. Let |deletedEventLevelReports| be a new [=set/is empty|empty=] [=set=].
-1. [=list/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
+1. [=set/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
     1. If |sourcesToDelete| [=set/contains=] |report|'s [=event-level report/source identifier=]:
         1. [=set/Append=] |report|'s [=attribution report/report ID=] to |deletedEventLevelReports|.
-        1. [=list/Remove=] |report| from the [=event-level report cache=].
+        1. [=set/Remove=] |report| from the [=event-level report cache=].
 1. Let |deletedAggregatableReports| be a new [=set/is empty|empty=] [=set=].
-1. [=list/iterate|For each=] [=aggregatable report=] |report| of the [=aggregatable report cache=]:
+1. [=set/iterate|For each=] [=aggregatable report=] |report| of the [=aggregatable report cache=]:
     1. If |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable report/source identifier=]:
         1. [=set/Append=] |report|'s [=attribution report/report ID=] to |deletedAggregatableReports|.
-        1. [=list/Remove=] |report| from the [=aggregatable report cache=].
+        1. [=set/Remove=] |report| from the [=aggregatable report cache=].
 1. [=set/iterate|For each=] [=attribution rate-limit record=] |record| of the [=attribution rate-limit cache=]:
     1. If |record|'s [=attribution rate-limit record/scope=] is:
         <dl class="switch">
@@ -2440,7 +2440,7 @@ given an [=attribution source=] |source|, run the following steps:
      * |record|'s [=attribution rate-limit record/expiry time=] is greater than |source|'s [=attribution source/source time=]
 1. Let |newDestinations| be the result of [=set/cloning=] |source|'s [=attribution source/attribution destinations=].
 1. Let |sourcesToDelete| be an [=set/is empty|empty=] [=set=].
-1. [=list/iterate|For each=] [=attribution rate-limit record=] |unexpiredRecord| of |unexpiredSources|:
+1. [=set/iterate|For each=] [=attribution rate-limit record=] |unexpiredRecord| of |unexpiredSources|:
     1. Let |destination| be |unexpiredRecord|'s [=attribution rate-limit record/attribution destination=].
     1. If |newDestinations|'s [=set/size=] is less than the user agent's [=max destinations covered by unexpired sources=],
         [=set/append=] |destination| to |newDestinations|.
