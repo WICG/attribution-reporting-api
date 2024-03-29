@@ -783,10 +783,12 @@ An attribution source is a [=struct=] with the following items:
 :: A [=boolean=].
 : <dfn>dedup keys</dfn>
 :: [=ordered set=] of [=event-level trigger configuration/dedup keys=] associated with this [=attribution source=].
-: <dfn>randomized response</dfn>
+: <dfn>randomized response</dfn> (default null)
 :: A [=randomized source response=].
-: <dfn>randomized trigger rate</dfn>
+: <dfn>randomized trigger rate</dfn> (default 0)
 :: A number between 0 and 1 (both inclusive).
+: <dfn>epsilon</dfn>
+:: A double.
 : <dfn>filter data</dfn>
 :: A [=filter map=].
 : <dfn>debug key</dfn>
@@ -1050,6 +1052,7 @@ Possible values are:
 <ul dfn-for="source debug data type">
 <li>"<dfn><code>source-destination-limit</code></dfn>"
 <li>"<dfn><code>source-destination-rate-limit</code></dfn>"
+<li>"<dfn><code>source-invalid-randomized-response-config</code></dfn>"
 <li>"<dfn><code>source-noised</code></dfn>"
 <li>"<dfn><code>source-storage-limit</code></dfn>"
 <li>"<dfn><code>source-success</code></dfn>"
@@ -2296,19 +2299,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |triggerSpecs| be the result of [=parsing trigger specs=] with |value|,
     |sourceTime|, |sourceType|, |expiry|, and |triggerDataMatchingMode|.
 1. If |triggerSpecs| is an error, return null.
-1. Let |randomizedResponseConfig| be a new [=randomized response output configuration=] whose items are:
-
-    : [=randomized response output configuration/max attributions per source=]
-    :: |maxAttributionsPerSource|
-    : [=randomized response output configuration/trigger specs=]
-    :: |triggerSpecs|
-
 1. Let |epsilon| be the user agent's [=max settable event-level epsilon=].
 1. Set |epsilon| to |value|["`event_level_epsilon`"] if it [=map/exists=]:
 1. If |epsilon| is not a double, is less than 0, or is greater than the user agent's [=max settable event-level epsilon=], return null.
 1. If [=automation local testing mode=] is true, set |epsilon| to `∞`.
-1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
-1. If |channelCapacity| is an error or is greater than [=max event-level channel capacity per source=][|sourceType|], return null.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/source identifier=]
@@ -2335,10 +2329,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |sourceType|
     : [=attribution source/max number of event-level reports=]
     :: |maxAttributionsPerSource|
-    : [=attribution source/randomized response=]
-    :: The result of [=obtaining a randomized source response=] with |randomizedResponseConfig| and |epsilon|.
-    : [=attribution source/randomized trigger rate=]
-    :: The result of [=obtaining a randomized source response pick rate=] with |randomizedResponseConfig| and |epsilon|.
+    : [=attribution source/epsilon=]
+    :: |epsilon|
     : [=attribution source/filter data=]
     :: |filterData|
     : [=attribution source/debug key=]
@@ -2462,6 +2454,22 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 
 1. Let |cache| be the user agent's [=attribution source cache=].
 1. [=list/Remove=] all [=attribution sources=] |entry| in |cache| where |entry|'s [=attribution source/expiry time=] is less than |source|'s [=attribution source/source time=].
+1. Let |randomizedResponseConfig| be a new [=randomized response output configuration=] whose items are:
+
+    : [=randomized response output configuration/max attributions per source=]
+    :: |source|'s [=attribution source/max number of event-level reports=]
+    : [=randomized response output configuration/trigger specs=]
+    :: |source|'s [=trigger specs=]
+
+1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
+1. Let |sourceType| be |source|'s [=attribution source/source type=].
+1. If |channelCapacity| is an error or is greater than [=max event-level channel capacity per source=][|sourceType|]:
+    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-invalid-randomized-response-config=]</code>" and |source|.
+    1. Return.
+1. Set |source|'s [=attribution source/randomized response=] to the result of
+    [=obtaining a randomized source response=] with |randomizedResponseConfig| and |epsilon|.
+1. Set |source|'s [=attribution source/randomized trigger rate=] to the result of
+    [=obtaining a randomized source response pick rate=] with |randomizedResponseConfig| and |epsilon|.
 1. Let |pendingSourcesForSourceOrigin| be the [=set=] of all
     [=attribution sources=] |pendingSource| of |cache| where |pendingSource|'s
     [=attribution source/source origin=] and |source|'s

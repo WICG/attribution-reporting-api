@@ -32,6 +32,9 @@ A source is rejected due to the [destinations per source and reporting site rate
 #### `source-unknown-error`
 System error.
 
+#### `source-invalid-randomized-response-config`
+A source is rejected due to invalid randomized response configuration.
+
 ### Trigger debugging reports
 
 Here are the debugging reports supported for [attribution trigger
@@ -128,6 +131,7 @@ This table defines the fields in the `body` dictionary.
 | --- | --- | --- | --- | --- | --- | --- |
 | [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-destination-rate-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`source-invalid-randomized-response-config`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-success`](#source-success) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
