@@ -787,7 +787,7 @@ An attribution source is a [=struct=] with the following items:
 :: A [=randomized source response=].
 : <dfn>randomized trigger rate</dfn> (default 0)
 :: A number between 0 and 1 (both inclusive).
-: <dfn>epsilon</dfn>
+: <dfn>event-level epsilon</dfn>
 :: A double.
 : <dfn>filter data</dfn>
 :: A [=filter map=].
@@ -1052,7 +1052,7 @@ Possible values are:
 <ul dfn-for="source debug data type">
 <li>"<dfn><code>source-destination-limit</code></dfn>"
 <li>"<dfn><code>source-destination-rate-limit</code></dfn>"
-<li>"<dfn><code>source-invalid-randomized-response-config</code></dfn>"
+<li>"<dfn><code>source-output-space-limit</code></dfn>"
 <li>"<dfn><code>source-noised</code></dfn>"
 <li>"<dfn><code>source-storage-limit</code></dfn>"
 <li>"<dfn><code>source-success</code></dfn>"
@@ -2329,7 +2329,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |sourceType|
     : [=attribution source/max number of event-level reports=]
     :: |maxAttributionsPerSource|
-    : [=attribution source/epsilon=]
+    : [=attribution source/event-level epsilon=]
     :: |epsilon|
     : [=attribution source/filter data=]
     :: |filterData|
@@ -2461,10 +2461,11 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     : [=randomized response output configuration/trigger specs=]
     :: |source|'s [=trigger specs=]
 
+1. Let |epsilon| be |source|'s [=attribution source/event-level epsilon=].
 1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
 1. Let |sourceType| be |source|'s [=attribution source/source type=].
 1. If |channelCapacity| is an error or is greater than [=max event-level channel capacity per source=][|sourceType|]:
-    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-invalid-randomized-response-config=]</code>" and |source|.
+    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-output-space-limit=]</code>" and |source|.
     1. Return.
 1. Set |source|'s [=attribution source/randomized response=] to the result of
     [=obtaining a randomized source response=] with |randomizedResponseConfig| and |epsilon|.
