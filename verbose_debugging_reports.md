@@ -33,7 +33,7 @@ A source is rejected due to the [destinations per source and reporting site rate
 System error.
 
 #### `source-output-space-limit`
-A source is rejected due to invalid randomized response configuration.
+A source is rejected due to exceeding output space limit.
 
 ### Trigger debugging reports
 
