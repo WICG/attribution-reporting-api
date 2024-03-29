@@ -2478,8 +2478,11 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit reporting limit=]</code>":
     1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-destination-rate-limit=]</code>" and |source|.
     1. Return.
+1. Let |debugDataType| be "<code>[=source debug data type/source-success=]</code>".
+1. Set |debugDataType| to "<code>[=source debug data type/source-noised=]</code>"
+    if |source|'s [=attribution source/randomized response=] is not null.
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit global limit=]</code>":
-    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-success=]</code>" and |source|.
+    1. Run [=obtain and deliver a debug report on source registration=] with |debugDataType| and |source|.
     1. Return.
 1. Let |newRateLimitRecords| be a new [=set=].
 1. [=set/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
@@ -2498,14 +2501,13 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         :: |source|'s [=attribution source/expiry time=]
     1. If the result of running [=should processing be blocked by reporting-origin limit=] with
         |rateLimitRecord| is <strong>blocked</strong>:
-        1. Run [=obtain and deliver a debug report on source registration=] with "[=source debug data type/source-success=]</code>" and |source|.
+        1. Run [=obtain and deliver a debug report on source registration=] with |debugDataType| and |source|.
         1. Return.
     1. [=set/Append=] |rateLimitRecord| to |newRateLimitRecords|.
 1. [=set/iterate|For each=] |record| of |newRateLimitRecords|, [=set/append=] |record| to
     the [=attribution rate-limit cache=].
 1. [=list/Remove=] all [=attribution rate-limit records=] |entry| from the [=attribution rate-limit cache=] if the result of running
     [=can attribution rate-limit record be removed=] with |entry| and |source|'s [=attribution source/source time=] is true.
-1. Let |debugDataType| be "<code>[=source debug data type/source-success=]</code>".
 1. If |source|'s [=attribution source/randomized response=] is not null and is a [=set=]:
     1. [=set/iterate|For each=] [=trigger state=] |triggerState| of |source|'s
         [=attribution source/randomized response=]:
@@ -2529,7 +2531,6 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
             : [=attribution rate-limit record/expiry time=]
             :: null
         1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
-    1. Set |debugDataType| to "<code>[=source debug data type/source-noised=]</code>".
 1. Run [=obtain and deliver a debug report on source registration=] with |debugDataType| and |source|.
 1. [=set/Append=] |source| to |cache|.
 
@@ -2537,8 +2538,9 @@ Note: Because a fake report does not have a "real" effective destination, we nee
 privacy budget of all possible destinations.
 
 Note: The limits that are not reported as <code>[=source debug data type/source-success=]</code> should be
-checked before any limits that are reported as <code>[=source debug data type/source-success=]</code>
-to prevent side-channel leakage of cross-origin data.
+checked before any limits that are reported implicitly as <code>[=source debug data type/source-success=]</code>
+to prevent side-channel leakage of cross-origin data. Furthermore, the [=attribution debug data=]
+should be fully determined regardless of the result of checks on implicitly reported limits.
 
 # Triggering Algorithms # {#trigger-algorithms}
 
