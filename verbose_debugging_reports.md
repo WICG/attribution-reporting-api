@@ -131,7 +131,7 @@ This table defines the fields in the `body` dictionary.
 | --- | --- | --- | --- | --- | --- | --- |
 | [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-destination-rate-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
-| [`source-output-space-limit`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
+| [`source-output-space-limit`](#source-output-space-limit) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-success`](#source-success) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
