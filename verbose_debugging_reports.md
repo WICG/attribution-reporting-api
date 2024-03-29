@@ -32,9 +32,11 @@ A source is rejected due to the [destinations per source and reporting site rate
 #### `source-unknown-error`
 System error.
 
-#### `source-output-space-limit`
-A source is rejected due to exceeding the [channel capacity limit](https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source)
-or [max trigger-state cardinality](https://wicg.github.io/attribution-reporting-api/#max-trigger-state-cardinality).
+#### `source-channel-capacity-limit`
+A source is rejected due to exceeding the [channel capacity limit](https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source).
+
+#### `source-trigger-state-cardinality-limit`
+A source is rejected due to exceeding the [max trigger-state cardinality](https://wicg.github.io/attribution-reporting-api/#max-trigger-state-cardinality).
 
 ### Trigger debugging reports
 
@@ -130,12 +132,13 @@ This table defines the fields in the `body` dictionary.
 
 | `type` | `attribution_destination`| `limit` | `source_debug_key` | `source_event_id` | `source_site` | `trigger_debug_key` |
 | --- | --- | --- | --- | --- | --- | --- |
+| [`source-channel-capacity-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-destination-rate-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
-| [`source-output-space-limit`](#source-output-space-limit) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-success`](#source-success) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
+| [`source-trigger-state-cardinality-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-unknown-error`](#source-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`trigger-no-matching-source`](#trigger-no-matching-source) | ✓ | ❌ | ❌ | ❌ | ❌ | ✓ |
 | [`trigger-no-matching-filter-data`](#trigger-no-matching-filter-data) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
