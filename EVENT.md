@@ -725,7 +725,7 @@ are already capable of user tracking, the browser will check (at both source
 and trigger registration) for the presence of a special cookie
 set by the reporting origin:
 ```http
-Set-Cookie: ar_debug=1; SameSite=None; Secure; HttpOnly
+Set-Cookie: ar_debug=1; SameSite=None; Secure; Path=/; HttpOnly
 ```
 If a cookie of this form is not present, debugging information will be ignored. Additionally,
 browsers may choose to enable debugging for specific use-cases (for example, reporting origins
