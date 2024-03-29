@@ -1051,6 +1051,7 @@ Possible values are:
 <li>"<dfn><code>source-destination-limit</code></dfn>"
 <li>"<dfn><code>source-destination-rate-limit</code></dfn>"
 <li>"<dfn><code>source-noised</code></dfn>"
+<li>"<dfn><code>source-reporting-origin-per-site-limit</code></dfn>"
 <li>"<dfn><code>source-storage-limit</code></dfn>"
 <li>"<dfn><code>source-success</code></dfn>"
 <li>"<dfn><code>source-unknown-error</code></dfn>"
@@ -2446,6 +2447,9 @@ To <dfn>obtain and deliver a debug report on source registration</dfn> given a
     : "<code>[=source debug data type/source-destination-rate-limit=]</code>"
     :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations per rate-limit window=][1],
          [=serialize an integer|serialized=].
+    : "<code>[=source debug data type/source-reporting-origin-per-site-limit=]</code>"
+    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max source reporting origins per source reporting site=],
+         [=serialize an integer|serialized=].
     : "<code>[=source debug data type/source-storage-limit=]</code>"
     :: [=map/Set=] |body|["`limit`"] to the user agent's [=max pending sources per source origin=],
          [=serialize an integer|serialized=].
@@ -2473,6 +2477,10 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. If the result of running [=check if an attribution source exceeds the unexpired destination limit=]
     with |source| is true:
     1. Run [=obtain and deliver a debug report on source registration=] with "[=source debug data type/source-destination-limit=]</code>" and |source|.
+    1. Return.
+1. If the result of running [=check if an attribution source should be blocked by reporting-origin per site limit=]
+    with |source| is <strong>blocked</strong>:
+    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-reporting-origin-per-site-limit=]</code>" and |source|.
     1. Return.
 1. Let |destinationRateLimitResult| be the result of running [=check if an attribution source exceeds the time-based destination limit=] with |source|.
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit reporting limit=]</code>":
@@ -2881,15 +2889,14 @@ Given an [=attribution rate-limit record=] |newRecord|:
     [=set/union|unioned=] with «|newRecord|'s [=attribution rate-limit record/reporting origin=]»
 1. If |distinctReportingOrigins|'s [=list/size=] is greater than |max|, return <strong>blocked</strong>.
 
-    NOTE: [=rate-limit scope/source=] scopes have an auxiliary [=max source reporting origins per source reporting site=] rate limit that also must be enforced.
+To <dfn>check if an [=attribution source=] should be blocked by reporting-origin per site limit</dfn> given an [=attribution source=] |source|:
 
-1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>", return <strong>allowed</strong>
 1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
      * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/source=]</code>"
-     * |record|'s [=attribution rate-limit record/source site=] and |newRecord|'s [=attribution rate-limit record/source site=] are equal
-     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and  |newRecord|'s [=attribution rate-limit record/time=] is <= [=origin rate-limit window=]
+     * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
+     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and  |source|'s [=attribution source/source time=] is <= [=origin rate-limit window=]
 1. Let |distinctReportingOrigins| be the [=set=] of all [=attribution rate-limit record/reporting origin=] in |matchingRateLimitRecords|,
-    [=set/union|unioned=] with «|newRecord|'s [=attribution rate-limit record/reporting origin=]»
+    [=set/union|unioned=] with «|source|'s [=attribution source/reporting origin=]».
 1. If |distinctReportingOrigins|'s [=list/size=] is greater than [=max source reporting origins per source reporting site=], return <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
 
