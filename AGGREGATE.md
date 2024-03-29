@@ -153,7 +153,7 @@ The `aggregatable_trigger_data` field is a list of dict which generates
 aggregation keys.
 
 The `aggregatable_values` field lists an amount of an abstract "value" to
-contribute to each key, which can be integers in [1, 2^16). These are attached
+contribute to each key, which can be integers in [1, 2<sup>16</sup>]. These are attached
 to aggregation keys in the order they are generated. See the [contribution
 budgeting](#contribution-bounding-and-budgeting) section for more details on how
 to allocate these contribution values.
