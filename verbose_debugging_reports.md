@@ -33,7 +33,7 @@ A source is rejected due to the [destinations per source and reporting site rate
 System error.
 
 #### `source-channel-capacity-limit`
-A source is rejected due to exceeding the [channel capacity limit](https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source).
+A source is rejected due to exceeding the [channel-capacity limit](https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source).
 
 #### `source-trigger-state-cardinality-limit`
 A source is rejected due to exceeding the [max trigger-state cardinality](https://wicg.github.io/attribution-reporting-api/#max-trigger-state-cardinality).
