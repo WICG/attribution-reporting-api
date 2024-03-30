@@ -132,13 +132,13 @@ This table defines the fields in the `body` dictionary.
 
 | `type` | `attribution_destination`| `limit` | `source_debug_key` | `source_event_id` | `source_site` | `trigger_debug_key` |
 | --- | --- | --- | --- | --- | --- | --- |
-| [`source-channel-capacity-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`source-channel-capacity-limit`](#source-channel-capacity-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-destination-rate-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-success`](#source-success) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
-| [`source-trigger-state-cardinality-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`source-trigger-state-cardinality-limit`](#source-trigger-state-cardinality-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-unknown-error`](#source-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`trigger-no-matching-source`](#trigger-no-matching-source) | ✓ | ❌ | ❌ | ❌ | ❌ | ✓ |
 | [`trigger-no-matching-filter-data`](#trigger-no-matching-filter-data) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
