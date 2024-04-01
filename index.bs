@@ -1623,17 +1623,6 @@ Given an [=attribution rate-limit record=] |newRecord|:
 1. If |distinctReportingOrigins|'s [=list/size=] is greater than |max|, return <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
 
-To <dfn>check if an [=attribution source=] should be blocked by reporting-origin per site limit</dfn> given an [=attribution source=] |source|:
-
-1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
-     * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/source=]</code>"
-     * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
-     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and  |source|'s [=attribution source/source time=] is <= [=origin rate-limit window=]
-1. Let |distinctReportingOrigins| be the [=set=] of all [=attribution rate-limit record/reporting origin=] in |matchingRateLimitRecords|,
-    [=set/union|unioned=] with «|source|'s [=attribution source/reporting origin=]».
-1. If |distinctReportingOrigins|'s [=list/size=] is greater than [=max source reporting origins per source reporting site=], return <strong>blocked</strong>.
-1. Return <strong>allowed</strong>.
-
 <h3 dfn id="can-attribution-rate-limit-record-be-removed">Can attribution rate-limit record be removed</h3>
 
 Given an [=attribution rate-limit record=] |record| and a [=moment=] |now|:
@@ -2436,6 +2425,17 @@ To <dfn>check if an [=attribution source=] exceeds the unexpired destination lim
     1. [=set/Append=] |unexpiredRecord|'s [=attribution rate-limit record/attribution destination=] to |unexpiredDestinations|.
 1. Let |newDestinations| be the result of taking the [=set/union=] of |unexpiredDestinations| and |source|'s [=attribution source/attribution destinations=].
 1. Return whether |newDestinations|'s [=set/size=] is greater than the user agent's [=max destinations covered by unexpired sources=].
+
+To <dfn>check if an [=attribution source=] should be blocked by reporting-origin per site limit</dfn> given an [=attribution source=] |source|:
+
+1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
+     * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/source=]</code>"
+     * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
+     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and  |source|'s [=attribution source/source time=] is <= [=origin rate-limit window=]
+1. Let |distinctReportingOrigins| be the [=set=] of all [=attribution rate-limit record/reporting origin=] in |matchingRateLimitRecords|,
+    [=set/union|unioned=] with «|source|'s [=attribution source/reporting origin=]».
+1. If |distinctReportingOrigins|'s [=list/size=] is greater than [=max source reporting origins per source reporting site=], return <strong>blocked</strong>.
+1. Return <strong>allowed</strong>.
 
 To <dfn>obtain a fake report</dfn> given an [=attribution source=] |source| and
 a [=trigger state=] |triggerState|:
