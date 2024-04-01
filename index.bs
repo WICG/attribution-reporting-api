@@ -1606,6 +1606,34 @@ This algorithm will return either a non-negative 128-bit integer or an error.
 1. If the characters within |value| are not all [=ASCII hex digits=], return an error.
 1. Interpret |value| as a hexadecimal number and return as a non-negative 128-bit integer.
 
+<h3 dfn id="should-block-processing-for-reporting-origin-limit">Should processing be blocked by reporting-origin limit</h3>
+
+Given an [=attribution rate-limit record=] |newRecord|:
+
+1. Let |max| be [=max source reporting origins per rate-limit window=].
+1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>", set |max| to
+     [=max attribution reporting origins per rate-limit window=].
+1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
+     * |record|'s [=attribution rate-limit record/scope=] and |newRecord|'s [=attribution rate-limit record/scope=] are equal
+     * |record|'s [=attribution rate-limit record/source site=] and |newRecord|'s [=attribution rate-limit record/source site=] are equal
+     * |record|'s [=attribution rate-limit record/attribution destination=] and |newRecord|'s [=attribution rate-limit record/attribution destination=] are equal
+     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and  |newRecord|'s [=attribution rate-limit record/time=] is <= [=attribution rate-limit window=]
+1. Let |distinctReportingOrigins| be the [=set=] of all [=attribution rate-limit record/reporting origin=] in |matchingRateLimitRecords|,
+    [=set/union|unioned=] with «|newRecord|'s [=attribution rate-limit record/reporting origin=]»
+1. If |distinctReportingOrigins|'s [=list/size=] is greater than |max|, return <strong>blocked</strong>.
+1. Return <strong>allowed</strong>.
+
+To <dfn>check if an [=attribution source=] should be blocked by reporting-origin per site limit</dfn> given an [=attribution source=] |source|:
+
+1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
+     * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/source=]</code>"
+     * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
+     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and  |source|'s [=attribution source/source time=] is <= [=origin rate-limit window=]
+1. Let |distinctReportingOrigins| be the [=set=] of all [=attribution rate-limit record/reporting origin=] in |matchingRateLimitRecords|,
+    [=set/union|unioned=] with «|source|'s [=attribution source/reporting origin=]».
+1. If |distinctReportingOrigins|'s [=list/size=] is greater than [=max source reporting origins per source reporting site=], return <strong>blocked</strong>.
+1. Return <strong>allowed</strong>.
+
 <h3 dfn id="can-attribution-rate-limit-record-be-removed">Can attribution rate-limit record be removed</h3>
 
 Given an [=attribution rate-limit record=] |record| and a [=moment=] |now|:
@@ -2871,34 +2899,6 @@ Given an [=attribution trigger=] |trigger| and [=attribution source=] |sourceToA
      * |record|'s [=attribution rate-limit record/reporting origin=] and |trigger|'s [=attribution trigger/reporting origin=] are [=same site=]
      * |record|'s [=attribution rate-limit record/time=] is greater than [=attribution rate-limit window=] before |trigger|'s [=attribution trigger/trigger time=]
 1. If |matchingRateLimitRecords|'s [=list/size=] is greater than or equal to [=max attributions per rate-limit window=], return <strong>blocked</strong>.
-1. Return <strong>allowed</strong>.
-
-<h3 dfn id="should-block-processing-for-reporting-origin-limit">Should processing be blocked by reporting-origin limit</h3>
-
-Given an [=attribution rate-limit record=] |newRecord|:
-
-1. Let |max| be [=max source reporting origins per rate-limit window=].
-1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/attribution=]</code>", set |max| to
-     [=max attribution reporting origins per rate-limit window=].
-1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
-     * |record|'s [=attribution rate-limit record/scope=] and |newRecord|'s [=attribution rate-limit record/scope=] are equal
-     * |record|'s [=attribution rate-limit record/source site=] and |newRecord|'s [=attribution rate-limit record/source site=] are equal
-     * |record|'s [=attribution rate-limit record/attribution destination=] and |newRecord|'s [=attribution rate-limit record/attribution destination=] are equal
-     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and  |newRecord|'s [=attribution rate-limit record/time=] is <= [=attribution rate-limit window=]
-1. Let |distinctReportingOrigins| be the [=set=] of all [=attribution rate-limit record/reporting origin=] in |matchingRateLimitRecords|,
-    [=set/union|unioned=] with «|newRecord|'s [=attribution rate-limit record/reporting origin=]»
-1. If |distinctReportingOrigins|'s [=list/size=] is greater than |max|, return <strong>blocked</strong>.
-1. Return <strong>allowed</strong>.
-
-To <dfn>check if an [=attribution source=] should be blocked by reporting-origin per site limit</dfn> given an [=attribution source=] |source|:
-
-1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
-     * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/source=]</code>"
-     * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
-     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and  |source|'s [=attribution source/source time=] is <= [=origin rate-limit window=]
-1. Let |distinctReportingOrigins| be the [=set=] of all [=attribution rate-limit record/reporting origin=] in |matchingRateLimitRecords|,
-    [=set/union|unioned=] with «|source|'s [=attribution source/reporting origin=]».
-1. If |distinctReportingOrigins|'s [=list/size=] is greater than [=max source reporting origins per source reporting site=], return <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
 
 <h3 dfn id="should-block-attribution-for-rate-limits">Should attribution be blocked by rate limits</h3>
