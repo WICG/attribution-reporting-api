@@ -35,8 +35,6 @@ System error.
 #### `source-reporting-origin-per-site-limit`
 A source is rejected due to the [reporting origins per source and reporting site limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits).
 
-#### `source-unknown-error`
-
 ### Trigger debugging reports
 
 Here are the debugging reports supported for [attribution trigger
