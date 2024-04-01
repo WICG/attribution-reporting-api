@@ -16,7 +16,7 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
       "trigger_data": "2"
     }`,
     expected: Maybe.some({
-      attributionDestination: new Set(['https://d.test']),
+      attributionDestination: 'https://d.test',
       randomizedTriggerRate: 0.4,
       reportId: 'ac908546-2609-49d9-95b0-b796f9774da6',
       scheduledReportTime: 789n,
@@ -46,7 +46,7 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
       "x": null
     }`,
     expected: Maybe.some({
-      attributionDestination: new Set(['https://d1.test', 'https://d2.test']),
+      attributionDestination: ['https://d1.test', 'https://d2.test'],
       randomizedTriggerRate: 0.4,
       reportId: 'ac908546-2609-49d9-95b0-b796f9774da6',
       scheduledReportTime: 789n,
@@ -78,7 +78,7 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
     }`,
     parseFullFlex: true,
     expected: Maybe.some({
-      attributionDestination: new Set(['https://d.test']),
+      attributionDestination: 'https://d.test',
       randomizedTriggerRate: 0.4,
       reportId: 'ac908546-2609-49d9-95b0-b796f9774da6',
       scheduledReportTime: 789n,

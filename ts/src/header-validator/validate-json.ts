@@ -346,7 +346,8 @@ function suitableScope(
   ctx: Context,
   s: string,
   label: string,
-  scope: (url: URL) => string
+  scope: (url: URL) => string,
+  rejectExtraComponents: boolean
 ): Maybe<string> {
   let url
   try {
@@ -369,6 +370,12 @@ function suitableScope(
 
   const scoped = scope(url)
   if (s !== scoped) {
+    if (rejectExtraComponents) {
+      ctx.error(
+        `must not contain URL components other than ${label} (${scoped})`
+      )
+      return None
+    }
     ctx.warning(
       `URL components other than ${label} (${scoped}) will be ignored`
     )
@@ -376,19 +383,28 @@ function suitableScope(
   return some(scoped)
 }
 
-function suitableOrigin(ctx: Context, j: Json): Maybe<string> {
+function suitableOrigin(
+  ctx: Context,
+  j: Json,
+  rejectExtraComponents: boolean = false
+): Maybe<string> {
   return string(ctx, j).map((s) =>
-    suitableScope(ctx, s, 'origin', (u) => u.origin)
+    suitableScope(ctx, s, 'origin', (u) => u.origin, rejectExtraComponents)
   )
 }
 
-function suitableSite(ctx: Context, j: Json): Maybe<string> {
+function suitableSite(
+  ctx: Context,
+  j: Json,
+  rejectExtraComponents: boolean = false
+): Maybe<string> {
   return string(ctx, j).map((s) =>
     suitableScope(
       ctx,
       s,
       'site',
-      (u) => `${u.protocol}//${psl.get(u.hostname)}`
+      (u) => `${u.protocol}//${psl.get(u.hostname)}`,
+      rejectExtraComponents
     )
   )
 }
@@ -1551,7 +1567,7 @@ export function validateTrigger(
 }
 
 export type EventLevelReport = {
-  attributionDestination: Set<string>
+  attributionDestination: string | string[]
   randomizedTriggerRate: number
   reportId: string
   scheduledReportTime: bigint
@@ -1561,6 +1577,17 @@ export type EventLevelReport = {
   triggerData: bigint
   triggerDebugKey: bigint | null
   triggerSummaryBucket: [number, number] | null
+}
+
+function reportDestination(ctx: Context, j: Json): Maybe<string | string[]> {
+  const suitableSiteNoExtraneous = (ctx: Context, j: Json) =>
+    suitableSite(ctx, j, /*rejectExtraComponents=*/ true)
+
+  return typeSwitch<string | string[]>(ctx, j, {
+    string: (ctx, j) => suitableSiteNoExtraneous(ctx, j),
+    list: (ctx, j) =>
+      array(ctx, j, suitableSiteNoExtraneous, { minLength: 1, maxLength: 3 }),
+  })
 }
 
 function randomizedTriggerRate(ctx: Context, j: Json): Maybe<number> {
@@ -1615,8 +1642,10 @@ function eventLevelReport(
 ): Maybe<EventLevelReport> {
   return object(ctx, j).map((j) => {
     return struct(ctx, j, {
-      // TODO: Reject destinations that are arbitrary URLs instead of sites.
-      attributionDestination: field('attribution_destination', destination),
+      attributionDestination: field(
+        'attribution_destination',
+        reportDestination
+      ),
       randomizedTriggerRate: field(
         'randomized_trigger_rate',
         randomizedTriggerRate
