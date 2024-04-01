@@ -43,7 +43,7 @@ The usefulness of this page depends on testers sharing information and updates; 
 | Teads | DSP & SSP | March 15th 2024 - May 15th 2024 | | privacysandbox@teads.com |
 | SMN | Ad tech services | February 1st 2024 - April 30th 2024 |  | privacy-sandbox-testing@so-netmedia.jp |
 | Yahoo! JAPAN | Ad tech services | 2022-2023 | [Report](https://github.com/WICG/attribution-reporting-api/issues/201) |  | 
-| NextRoll | Demand-side platform (DSP) | 2024-01-30 | coming soon | privacysandbox@nextroll.com |
+| NextRoll | Demand-side platform (DSP) | 2024-03-25 - 2024-05-20 | coming soon | privacysandbox@nextroll.com |
 | RTB House | Demand-side platform (DSP) | | | privacysandbox@rtbhouse.com |
 | CyberAgent(Dynalyst) | Demand-side platform (DSP) | no later than January 31, 2024 | | privacysandbox@cyberagent.co.jp |
 | Google (Ads Products & Platforms) | Ad tech services | Testing ongoing | | Clients can reach out to their account manager directly |
