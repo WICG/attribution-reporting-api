@@ -32,6 +32,9 @@ A source is rejected due to the [destinations per source and reporting site rate
 #### `source-unknown-error`
 System error.
 
+#### `source-reporting-origin-per-site-limit`
+A source is rejected due to the [reporting origins per source and reporting site limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits).
+
 ### Trigger debugging reports
 
 Here are the debugging reports supported for [attribution trigger
@@ -132,6 +135,7 @@ This table defines the fields in the `body` dictionary.
 | [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-destination-rate-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
+| [`source-reporting-origin-per-site-limit`](#source-reporting-origin-per-site-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-success`](#source-success) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-unknown-error`](#source-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
