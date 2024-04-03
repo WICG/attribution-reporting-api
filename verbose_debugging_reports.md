@@ -138,7 +138,7 @@ This table defines the fields in the `body` dictionary.
 | [`trigger-no-matching-source`](#trigger-no-matching-source) | ✓ | ❌ | ❌ | ❌ | ❌ | ✓ |
 | [`trigger-no-matching-filter-data`](#trigger-no-matching-filter-data) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-attributions-per-source-destination-limit`](#trigger-event-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-aggregate-attributions-per-source-destination-limit`](#trigger-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [`trigger-aggregate-attributions-per-source-destination-limit`](#trigger-aggregate-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-reporting-origin-limit`](#trigger-reporting-origin-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-deduplicated`](#trigger-event-deduplicated) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-no-matching-configurations`](#trigger-event-no-matching-configurations) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
