@@ -2004,6 +2004,31 @@ Note: This algorithm computes the channel capacity [[CHAN]] of a q-ary symmetric
 
 <h3 algorithm id="parsing-source-registration">Parsing source-registration JSON</h3>
 
+A <dfn>source-registration JSON key</dfn> is one of the following:
+
+<ul dfn-for="source-registration JSON key">
+<li>"<dfn><code>aggregatable_report_window</code></dfn>"
+<li>"<dfn><code>aggregation_keys</code></dfn>"
+<li>"<dfn><code>debug_key</code></dfn>"
+<li>"<dfn><code>debug_reporting</code></dfn>"
+<li>"<dfn><code>destination</code></dfn>"
+<li>"<dfn><code>end_times</code></dfn>"
+<li>"<dfn><code>event_level_epsilon</code></dfn>"
+<li>"<dfn><code>event_report_window</code></dfn>"
+<li>"<dfn><code>event_report_windows</code></dfn>"
+<li>"<dfn><code>expiry</code></dfn>"
+<li>"<dfn><code>filter_data</code></dfn>"
+<li>"<dfn><code>max_event_level_reports</code></dfn>"
+<li>"<dfn><code>priority</code></dfn>"
+<li>"<dfn><code>source_event_id</code></dfn>"
+<li>"<dfn><code>summary_buckets</code></dfn>"
+<li>"<dfn><code>summary_window_operator</code></dfn>"
+<li>"<dfn><code>start_time</code></dfn>"
+<li>"<dfn><code>trigger_data</code></dfn>"
+<li>"<dfn><code>trigger_data_matching</code></dfn>"
+<li>"<dfn><code>trigger_specs</code></dfn>"
+</ul>
+
 To <dfn>parse an attribution destination</dfn> from a [=string=] |str|:
 1. Let |url| be the result of running the [=URL parser=] on the value of
     the |str|.
@@ -2014,8 +2039,8 @@ To <dfn>parse an attribution destination</dfn> from a [=string=] |str|:
     [=url/origin=].
 
 To <dfn>parse attribution destinations</dfn> from a [=map=] |map|:
-1. If |map|["`destination`"] does not [=map/exists|exist=], return null.
-1. Let |val| be |map|["`destination`"].
+1. If |map|["<code>[=source-registration JSON key/destination=]</code>"] does not [=map/exists|exist=], return null.
+1. Let |val| be |map|["<code>[=source-registration JSON key/destination=]</code>"].
 1. If |val| is a [=string=], set |val| to « |val| ».
 1. If |val| is not a [=list=], return null.
 1. Let |result| be an [=ordered set=].
@@ -2048,8 +2073,8 @@ Issue: Consider rejecting out-of-bounds values instead of silently clamping.
 To <dfn>parse aggregation keys</dfn> given an [=ordered map=] |map|:
 
 1. Let |aggregationKeys| be a new [=ordered map=].
-1. If |map|["`aggregation_keys`"] does not [=map/exist=], return |aggregationKeys|.
-1. Let |values| be |map|["`aggregation_keys`"].
+1. If |map|["<code>[=source-registration JSON key/aggregation_keys=]</code>"] does not [=map/exist=], return |aggregationKeys|.
+1. Let |values| be |map|["<code>[=source-registration JSON key/aggregation_keys=]</code>"].
 1. If |values| is not an [=ordered map=], return null.
 1. If |values|'s [=map/size=] is greater than the
     [=max aggregation keys per source registration=], return null.
@@ -2085,31 +2110,31 @@ a [=moment=] |sourceTime|, and a [=duration=] |eventReportWindow|:
 To <dfn>parse top-level report windows</dfn> given a [=map=] |map|, a [=moment=] |sourceTime|,
 a [=source type=] |sourceType|, and a [=duration=] |expiry|:
 
-1. If |map|["`event_report_window`"] [=map/exists=] and
-    |map|["`event_report_windows`"] [=map/exists=], return an error.
-1. If |map|["`event_report_window`"] [=map/exists=]:
+1. If |map|["<code>[=source-registration JSON key/event_report_window=]</code>"] [=map/exists=] and
+    |map|["<code>[=source-registration JSON key/event_report_windows=]</code>"] [=map/exists=], return an error.
+1. If |map|["<code>[=source-registration JSON key/event_report_window=]</code>"] [=map/exists=]:
     1. Let |eventReportWindow| be the result of running [=parse a duration=]
-        with |map|, "`event_report_window`", and ([=min report window=], |expiry|).
+        with |map|, "<code>[=source-registration JSON key/event_report_window=]</code>", and ([=min report window=], |expiry|).
     1. If |eventReportWindow| is an error, return |eventReportWindow|.
     1. Return the result of [=obtaining default effective windows=] given |sourceType|, |sourceTime|, and |eventReportWindow|.
-1. If |map|["`event_report_windows`"] does not [=map/exist=], return the result
+1. If |map|["<code>[=source-registration JSON key/event_report_windows=]</code>"] does not [=map/exist=], return the result
     of [=obtaining default effective windows=] given |sourceType|, |sourceTime|,
     and |expiry|.
 1. Return the result of [=parsing report windows=] with
-    |map|["`event_report_windows`"], |sourceTime|, and |expiry|.
+    |map|["<code>[=source-registration JSON key/event_report_windows=]</code>"], |sourceTime|, and |expiry|.
 
 To <dfn>parse report windows</dfn> given a |value|, a
 [=moment=] |sourceTime|, and a [=duration=] |expiry|:
 
 1. If |value| is not a [=map=], return an error.
 1. Let |startDuration| be 0 seconds.
-1. If |value|["`start_time`"] [=map/exists=]:
-    1. Let |start| be |value|["`start_time`"].
+1. If |value|["<code>[=source-registration JSON key/start_time=]</code>"] [=map/exists=]:
+    1. Let |start| be |value|["<code>[=source-registration JSON key/start_time=]</code>"].
     1. If |start| is not a non-negative integer, return an error.
     1. Set |startDuration| to |start| seconds.
     1. If |startDuration| is greater than |expiry|, return an error.
-1. If |value|["`end_times`"] does not [=map/exist=] or is not a [=list=], return an error.
-1. Let |endDurations| be |value|["`end_times`"].
+1. If |value|["<code>[=source-registration JSON key/end_times=]</code>"] does not [=map/exist=] or is not a [=list=], return an error.
+1. Let |endDurations| be |value|["<code>[=source-registration JSON key/end_times=]</code>"].
 1. If the [=list/size=] of |endDurations| is greater than [=max settable event-level report windows=], return an error.
 1. If |endDurations| [=list/is empty=], return an error.
 1. Let |windows| be a new [=list=].
@@ -2139,23 +2164,23 @@ proposal.
 To <dfn>parse summary window operator</dfn> given a [=map=] |map|:
 
 1. Let |value| be "<code>[=summary window operator/count=]</code>".
-1. If |map|["`summary_window_operator`"] [=map/exists=]:
-    1. If |map|["`summary_window_operator`"] is not a [=string=], return an
+1. If |map|["<code>[=source-registration JSON key/summary_window_operator=]</code>"] [=map/exists=]:
+    1. If |map|["<code>[=source-registration JSON key/summary_window_operator=]</code>"] is not a [=string=], return an
         error.
-    1. If |map|["`summary_window_operator`"] is not a
+    1. If |map|["<code>[=source-registration JSON key/summary_window_operator=]</code>"] is not a
         [=summary window operator=], return an error.
-    1. Set |value| to |map|["`summary_window_operator`"].
+    1. Set |value| to |map|["<code>[=source-registration JSON key/summary_window_operator=]</code>"].
 1. Return |value|.
 
 To <dfn>parse summary buckets</dfn> given a [=map=] |map| and an integer |maxEventLevelReports|:
 
 1. Let |values| be [=the inclusive range|the range=] 1 to
     |maxEventLevelReports|, inclusive.
-1. If |map|["`summary_buckets`"] [=map/exists=]:
-    1. If |map|["`summary_buckets`"] is not a [=list=], [=list/is empty=], or
+1. If |map|["<code>[=source-registration JSON key/summary_buckets=]</code>"] [=map/exists=]:
+    1. If |map|["<code>[=source-registration JSON key/summary_buckets=]</code>"] is not a [=list=], [=list/is empty=], or
         its [=list/size=] is greater than |maxEventLevelReports|, return an
         error.
-    1. Set |values| to |map|["`summary_buckets`"].
+    1. Set |values| to |map|["<code>[=source-registration JSON key/summary_buckets=]</code>"].
 1. Let |prev| be 0.
 1. Let |summaryBuckets| be a new [=list=].
 1. [=list/iterate|For each=] |item| of |values|:
@@ -2199,38 +2224,38 @@ To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
 1. If |defaultReportWindows| is an error, return an error.
 1. Let |specs| be a new [=trigger spec map=].
 1. If [=experimental Flexible Event support=] is true and
-    |map|["`trigger_specs`"] [=map/exists=]:
-    1. If |map|["`trigger_data`"] [=map/exists=], return an error.
-    1. If |map|["`trigger_specs`"] is not a [=list=] or its
+    |map|["<code>[=source-registration JSON key/trigger_specs=]</code>"] [=map/exists=]:
+    1. If |map|["<code>[=source-registration JSON key/trigger_data=]</code>"] [=map/exists=], return an error.
+    1. If |map|["<code>[=source-registration JSON key/trigger_specs=]</code>"] is not a [=list=] or its
         [=list/size=] is greater than [=max distinct trigger data per source=],
         return an error.
-    1. [=list/iterate|For each=] |item| of |map|["`trigger_specs`"]:
+    1. [=list/iterate|For each=] |item| of |map|["<code>[=source-registration JSON key/trigger_specs=]</code>"]:
         1. If |item| is not a [=map=], return an error.
         1. Let |spec| be a new [=trigger spec=] with the following items:
             : [=trigger spec/event-level report windows=]
             :: |defaultReportWindows|
-        1. If |item|["`event_report_windows`"] [=map/exists=]:
+        1. If |item|["<code>[=source-registration JSON key/event_report_windows=]</code>"] [=map/exists=]:
             1. Let |reportWindows| be the result of
-                [=parsing report windows=] with |item|["`event_report_windows`"],
+                [=parsing report windows=] with |item|["<code>[=source-registration JSON key/event_report_windows=]</code>"],
                 |sourceTime|, and |expiry|.
             1. If |reportWindows| is an error, return it.
             1. Set |spec|'s [=trigger spec/event-level report windows=] to
                 |reportWindows|.
-        1. If |item|["`trigger_data`"] does not [=map/exist=], return an error.
+        1. If |item|["<code>[=source-registration JSON key/trigger_data=]</code>"] does not [=map/exist=], return an error.
         1. Let |allowEmpty| be false.
         1. If the result of running
             [=parse trigger data into a trigger spec map=] with
-            |item|["`trigger_data`"], |spec|, |specs|, and |allowEmpty| is
+            |item|["<code>[=source-registration JSON key/trigger_data=]</code>"], |spec|, |specs|, and |allowEmpty| is
             false, return an error.
 1. Otherwise:
     1. Let |spec| be a new [=trigger spec=] with the following items:
         : [=trigger spec/event-level report windows=]
         :: |defaultReportWindows|
-    1. If |map|["`trigger_data`"] [=map/exists=]:
+    1. If |map|["<code>[=source-registration JSON key/trigger_data=]</code>"] [=map/exists=]:
         1. Let |allowEmpty| be true.
         1. If the result of running
             [=parse trigger data into a trigger spec map=] with
-            |map|["`trigger_data`"], |spec|, |specs|, and |allowEmpty| is false,
+            |map|["<code>[=source-registration JSON key/trigger_data=]</code>"], |spec|, |specs|, and |allowEmpty| is false,
             return an error.
     1. Otherwise:
         1. [=set/iterate|For each=] integer |triggerData| of
@@ -2259,26 +2284,26 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. If |attributionDestinations| is null, return null.
 1. Let |sourceEventId| be the result of running
     [=parse an optional 64-bit unsigned integer=] with |value|,
-    "`source_event_id`", and 0.
+    "<code>[=source-registration JSON key/source_event_id=]</code>", and 0.
 1. If |sourceEventId| is an error, return null.
 1. Let |expiry| be the result of running [=parse a duration=] with |value|,
-    "`expiry`", and [=valid source expiry range=].
+    "<code>[=source-registration JSON key/expiry=]</code>", and [=valid source expiry range=].
 1. If |expiry| is an error, return null.
 1. If |sourceType| is "<code>[=source type/event=]</code>", round |expiry| away
     from zero to the nearest day (86400 seconds).
 1. Let |priority| be the result of running
-    [=parse an optional 64-bit signed integer=] with |value|, "`priority`", and
+    [=parse an optional 64-bit signed integer=] with |value|, "<code>[=source-registration JSON key/priority=]</code>", and
     0.
 1. If |priority| is an error, return null.
 1. Let |filterData| be a new [=filter map=].
-1. If |value|["`filter_data`"] [=map/exists=]:
+1. If |value|["<code>[=source-registration JSON key/filter_data=]</code>"] [=map/exists=]:
     1. Set |filterData| to the result of running [=parse filter data=] with
-        |value|["`filter_data`"].
+        |value|["<code>[=source-registration JSON key/filter_data=]</code>"].
     1. If |filterData| is null, return null.
     1. If |filterData|["`source_type`"] [=map/exists=], return null.
 1. [=map/Set=] |filterData|["`source_type`"] to « |sourceType| ».
 1. Let |debugKey| be the result of running
-    [=parse an optional 64-bit unsigned integer=] with |value|, "`debug_key`",
+    [=parse an optional 64-bit unsigned integer=] with |value|, "<code>[=source-registration JSON key/debug_key=]</code>",
     and null.
 1. If |debugKey| is an error, set |debugKey| to null.
 1. Let |debugCookieSet| be false.
@@ -2289,14 +2314,14 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
 1. If |aggregationKeys| is null, return null.
 1. Let |maxAttributionsPerSource| be [=default event-level attributions per source=][|sourceType|].
-1. Set |maxAttributionsPerSource| to |value|["`max_event_level_reports`"] if it [=map/exists=].
+1. Set |maxAttributionsPerSource| to |value|["<code>[=source-registration JSON key/max_event_level_reports=]</code>"] if it [=map/exists=].
 1. If |maxAttributionsPerSource| is not a non-negative integer, or is greater than [=max settable event-level attributions per source=], return null.
 1. Let |aggregatableReportWindowEnd| be the result of running [=parse a duration=]
-    with |value|, "`aggregatable_report_window`", and ([=min report window=], |expiry|).
+    with |value|, "<code>[=source-registration JSON key/aggregatable_report_window=]</code>", and ([=min report window=], |expiry|).
 1. If |aggregatableReportWindowEnd| is an error, return null.
 1. Let |debugReportingEnabled| be false.
-1. If |value|["`debug_reporting`"] [=map/exists=] and is a [=boolean=], set
-    |debugReportingEnabled| to |value|["`debug_reporting`"].
+1. If |value|["<code>[=source-registration JSON key/debug_reporting=]</code>"] [=map/exists=] and is a [=boolean=], set
+    |debugReportingEnabled| to |value|["<code>[=source-registration JSON key/debug_reporting=]</code>"].
 1. Let |aggregatableReportWindow| be a new [=report window=] with the following items:
 
     : [=report window/start=]
@@ -2305,10 +2330,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |sourceTime| + |aggregatableReportWindowEnd|
 
 1. Let |triggerDataMatchingMode| be "<code>[=trigger-data matching mode/modulus=]</code>".
-1. If |value|["`trigger_data_matching`"] [=map/exists=]:
-    1. If |value|["`trigger_data_matching`"] is not a [=string=], return null.
-    1. If |value|["`trigger_data_matching`"] is not a [=trigger-data matching mode=], return null.
-    1. Set |triggerDataMatchingMode| to |value|["`trigger_data_matching`"].
+1. If |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"] [=map/exists=]:
+    1. If |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"] is not a [=string=], return null.
+    1. If |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"] is not a [=trigger-data matching mode=], return null.
+    1. Set |triggerDataMatchingMode| to |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"].
 1. Let |triggerSpecs| be the result of [=parsing trigger specs=] with |value|,
     |sourceTime|, |sourceType|, |expiry|, and |triggerDataMatchingMode|.
 1. If |triggerSpecs| is an error, return null.
@@ -2320,7 +2345,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |triggerSpecs|
 
 1. Let |epsilon| be the user agent's [=max settable event-level epsilon=].
-1. Set |epsilon| to |value|["`event_level_epsilon`"] if it [=map/exists=]:
+1. Set |epsilon| to |value|["<code>[=source-registration JSON key/event_level_epsilon=]</code>"] if it [=map/exists=]:
 1. If |epsilon| is not a double, is less than 0, or is greater than the user agent's [=max settable event-level epsilon=], return null.
 1. If [=automation local testing mode=] is true, set |epsilon| to `∞`.
 1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
