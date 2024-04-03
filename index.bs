@@ -2900,9 +2900,9 @@ To <dfn>match an attribution source against filters and negated filters</dfn> gi
     |source|, |notFilters|, |moment|, and [=match an attribution source against filters/isNegated=] set to true is false, return false.
 1. Return true.
 
-<h3 dfn id="should-block-attribution-for-attribution-limit">Should attribution be blocked by attribution rate limit</h3>
+<h3 id="should-block-attribution-for-rate-limits">Should attribution be blocked by rate limits</h3>
 
-Given an [=attribution trigger=] |trigger|, an [=attribution source=] |sourceToAttribute|, and a [=attribution rate-limit record/scope=] |rateLimitScope|:
+To <dfn>check if attribution should be blocked by attribution rate limit</dfn> given an [=attribution trigger=] |trigger|, an [=attribution source=] |sourceToAttribute|, and a [=attribution rate-limit record/scope=] |rateLimitScope|:
 
 1. Let |matchingRateLimitRecords| be all [=attribution rate-limit records=] |record| of [=attribution rate-limit cache=] where all of the following are true:
      * |record|'s [=attribution rate-limit record/scope=] is |rateLimitScope|
@@ -2913,12 +2913,10 @@ Given an [=attribution trigger=] |trigger|, an [=attribution source=] |sourceToA
 1. If |matchingRateLimitRecords|'s [=list/size=] is greater than or equal to [=max attributions per rate-limit window=], return <strong>blocked</strong>.
 1. Return <strong>allowed</strong>.
 
-<h3 dfn id="should-block-attribution-for-rate-limits">Should attribution be blocked by rate limits</h3>
-
-Given an [=attribution trigger=] |trigger|, an [=attribution source=]
+To <dfn>check if attribution should be blocked by rate limits</dfn> given an [=attribution trigger=] |trigger|, an [=attribution source=]
 |sourceToAttribute|, and an [=attribution rate-limit record=] |newRecord|:
 
-1. If the result of running [=should attribution be blocked by attribution rate limit=] with |trigger|, |sourceToAttribute|,
+1. If the result of running [=check if attribution should be blocked by attribution rate limit=] with |trigger|, |sourceToAttribute|,
     and |newRecord|'s [=attribution rate-limit record/scope=] is <strong>blocked</strong>:
     1. Let |debugDataType| be "<code>[=trigger debug data type/trigger-event-attributions-per-source-destination-limit=]</code>".
     1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/aggregatable-attribution=]</code>",
@@ -3190,7 +3188,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     :: null
     : [=attribution rate-limit record/entity ID=]
     :: |report|'s [=event-level report/report ID=]
-1. If the result of running [=should attribution be blocked by rate limits=]
+1. If the result of running [=check if attribution should be blocked by rate limits=]
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null, return it.
 1. If |sourceToAttribute|'s [=attribution source/event-level attributable=] value
     is false:
@@ -3297,7 +3295,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
     :: null
     : [=attribution rate-limit record/entity ID=]
     :: null
-1. If the result of running [=should attribution be blocked by rate limits=]
+1. If the result of running [=check if attribution should be blocked by rate limits=]
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
     return it.
 1. If |sourceToAttribute|'s [=attribution source/number of aggregatable reports=] value is equal to [=max aggregatable reports per source=], then:
