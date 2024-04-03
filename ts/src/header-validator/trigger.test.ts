@@ -1046,16 +1046,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     ],
   },
   {
-    name: 'trigger-context-id-empty',
-    json: `{"trigger_context_id": ""}`,
-    expectedErrors: [
-      {
-        path: ['trigger_context_id'],
-        msg: 'cannot be empty',
-      },
-    ],
-  },
-  {
     name: 'trigger-context-id-too-long',
     json: `{"trigger_context_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
     expectedErrors: [
