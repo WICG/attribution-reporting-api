@@ -1037,7 +1037,7 @@ An <dfn>attribution rate-limit record</dfn> is a [=struct=] with the following i
 :: A [=moment=].
 : <dfn>expiry time</dfn>
 :: Null or a [=moment=].
-: <dfn>entity ID</dfn>
+: <dfn>event-level report ID</dfn>
 :: Null or an [=event-level report=]'s [=event-level report/report ID=].
 
 </dl>
@@ -2566,7 +2566,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         :: |source|'s [=attribution source/source time=]
         : [=attribution rate-limit record/expiry time=]
         :: |source|'s [=attribution source/expiry time=]
-        : [=attribution rate-limit record/entity ID=]
+        : [=attribution rate-limit record/event-level report ID=]
         :: null
     1. If the result of running [=should processing be blocked by reporting-origin limit=] with
         |rateLimitRecord| is <strong>blocked</strong>:
@@ -2599,7 +2599,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
             :: |source|'s [=attribution source/source time=]
             : [=attribution rate-limit record/expiry time=]
             :: null
-            : [=attribution rate-limit record/entity ID=]
+            : [=attribution rate-limit record/event-level report ID=]
             :: null
         1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. Run [=obtain and deliver a debug report on source registration=] with |debugDataType| and |source|.
@@ -3122,7 +3122,7 @@ To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
 1. [=set/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
 1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
 1. Let |rateLimitRecord| be the element from [=attribution rate-limit cache=] whose 
-    [=attribution rate-limit record/entity ID=] is equal to |lowestPriorityReport|'s [=event-level report/report ID=]
+    [=attribution rate-limit record/event-level report ID=] is equal to |lowestPriorityReport|'s [=event-level report/report ID=]
     and [=attribution rate-limit record/scope=] is equal to "<code>[=rate-limit scope/event-attribution=]</code>".
 1. [=Assert=]: |rateLimitRecord| is not null.
 
@@ -3216,7 +3216,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     :: |sourceToAttribute|'s [=attribution source/source time=]
     : [=attribution rate-limit record/expiry time=]
     :: null
-    : [=attribution rate-limit record/entity ID=]
+    : [=attribution rate-limit record/event-level report ID=]
     :: |report|'s [=event-level report/report ID=]
 1. If the result of running [=check if attribution should be blocked by rate limits=]
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null, return it.
@@ -3323,7 +3323,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
     :: |sourceToAttribute|'s [=attribution source/source time=]
     : [=attribution rate-limit record/expiry time=]
     :: null
-    : [=attribution rate-limit record/entity ID=]
+    : [=attribution rate-limit record/event-level report ID=]
     :: null
 1. If the result of running [=check if attribution should be blocked by rate limits=]
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
