@@ -46,8 +46,11 @@ A trigger is rejected due to no matching sources in storage that match <reportin
 #### `trigger-no-matching-filter-data`
 A trigger is rejected due to no [matching filter data](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters).
 
-#### `trigger-attributions-per-source-destination-limit`
-A trigger is rejected due to the [max attributions rate limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits).
+#### `trigger-event-attributions-per-source-destination-limit`
+An event-level attribution is rejected due to the [max attributions rate limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits).
+
+#### `trigger-aggregate-attributions-per-source-destination-limit`
+An aggregatable attribution is rejected due to the [max attributions rate limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits).
 
 #### `trigger-reporting-origin-limit`
 A trigger is rejected due to the [attributed reporting origin limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits).
@@ -138,7 +141,8 @@ This table defines the fields in the `body` dictionary.
 | [`source-unknown-error`](#source-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`trigger-no-matching-source`](#trigger-no-matching-source) | ✓ | ❌ | ❌ | ❌ | ❌ | ✓ |
 | [`trigger-no-matching-filter-data`](#trigger-no-matching-filter-data) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-attributions-per-source-destination-limit`](#trigger-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [`trigger-event-attributions-per-source-destination-limit`](#trigger-event-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [`trigger-aggregate-attributions-per-source-destination-limit`](#trigger-aggregate-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-reporting-origin-limit`](#trigger-reporting-origin-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-deduplicated`](#trigger-event-deduplicated) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-no-matching-configurations`](#trigger-event-no-matching-configurations) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
