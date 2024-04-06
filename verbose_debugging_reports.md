@@ -32,6 +32,12 @@ A source is rejected due to the [destinations per source and reporting site rate
 #### `source-unknown-error`
 System error.
 
+#### `source-channel-capacity-limit`
+A source is rejected due to exceeding the [channel-capacity limit](https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source).
+
+#### `source-trigger-state-cardinality-limit`
+A source is rejected due to exceeding the [max trigger-state cardinality](https://wicg.github.io/attribution-reporting-api/#max-trigger-state-cardinality).
+
 #### `source-reporting-origin-per-site-limit`
 A source is rejected due to the [reporting origins per source and reporting site limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits).
 
@@ -132,12 +138,14 @@ This table defines the fields in the `body` dictionary.
 
 | `type` | `attribution_destination`| `limit` | `source_debug_key` | `source_event_id` | `source_site` | `trigger_debug_key` |
 | --- | --- | --- | --- | --- | --- | --- |
+| [`source-channel-capacity-limit`](#source-channel-capacity-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-destination-rate-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-reporting-origin-per-site-limit`](#source-reporting-origin-per-site-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-success`](#source-success) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
+| [`source-trigger-state-cardinality-limit`](#source-trigger-state-cardinality-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-unknown-error`](#source-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`trigger-no-matching-source`](#trigger-no-matching-source) | ✓ | ❌ | ❌ | ❌ | ❌ | ✓ |
 | [`trigger-no-matching-filter-data`](#trigger-no-matching-filter-data) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
