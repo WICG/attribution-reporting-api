@@ -427,6 +427,16 @@ is dropped.
 
 We encourage developers to suggest different use cases they may have for this API extension, and we will update this explainer with sample configurations for those use cases.
 
+## Attribution Rate Limit
+
+Attribution rate-limit behavior will be based on the number of reports generated
+rather than the number of triggers that lead to report generation. For example:
+The first report in the
+["Reporting trigger value buckets"](#reporting-trigger-value-buckets) example
+will be counted as 1 contribution towards the
+[max attribution per rate-limit window](https://wicg.github.io/attribution-reporting-api/#max-attributions-per-rate-limit-window)
+limit despite it being the result of contributions from 3 triggers.
+
 ## Privacy considerations
 
 We will publish an [algorithm](https://github.com/WICG/attribution-reporting-api/tree/main/ts#flexible-event) which computes the number of output states for a given source registration. From this we will be able to:

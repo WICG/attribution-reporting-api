@@ -38,6 +38,9 @@ A source is rejected due to exceeding the [channel-capacity limit](https://wicg.
 #### `source-trigger-state-cardinality-limit`
 A source is rejected due to exceeding the [max trigger-state cardinality](https://wicg.github.io/attribution-reporting-api/#max-trigger-state-cardinality).
 
+#### `source-reporting-origin-per-site-limit`
+A source is rejected due to the [reporting origins per source and reporting site limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits).
+
 ### Trigger debugging reports
 
 Here are the debugging reports supported for [attribution trigger
@@ -49,8 +52,11 @@ A trigger is rejected due to no matching sources in storage that match <reportin
 #### `trigger-no-matching-filter-data`
 A trigger is rejected due to no [matching filter data](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters).
 
-#### `trigger-attributions-per-source-destination-limit`
-A trigger is rejected due to the [max attributions rate limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits).
+#### `trigger-event-attributions-per-source-destination-limit`
+An event-level attribution is rejected due to the [max attributions rate limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits).
+
+#### `trigger-aggregate-attributions-per-source-destination-limit`
+An aggregatable attribution is rejected due to the [max attributions rate limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits).
 
 #### `trigger-reporting-origin-limit`
 A trigger is rejected due to the [attributed reporting origin limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits).
@@ -136,13 +142,15 @@ This table defines the fields in the `body` dictionary.
 | [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-destination-rate-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
+| [`source-reporting-origin-per-site-limit`](#source-reporting-origin-per-site-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-success`](#source-success) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`source-trigger-state-cardinality-limit`](#source-trigger-state-cardinality-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
 | [`source-unknown-error`](#source-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
 | [`trigger-no-matching-source`](#trigger-no-matching-source) | ✓ | ❌ | ❌ | ❌ | ❌ | ✓ |
 | [`trigger-no-matching-filter-data`](#trigger-no-matching-filter-data) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-attributions-per-source-destination-limit`](#trigger-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [`trigger-event-attributions-per-source-destination-limit`](#trigger-event-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [`trigger-aggregate-attributions-per-source-destination-limit`](#trigger-aggregate-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-reporting-origin-limit`](#trigger-reporting-origin-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-deduplicated`](#trigger-event-deduplicated) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
 | [`trigger-event-no-matching-configurations`](#trigger-event-no-matching-configurations) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
