@@ -1,4 +1,5 @@
 import * as psl from 'psl'
+import * as uuid from 'uuid'
 import * as constants from '../constants'
 import { SourceType } from '../source-type'
 import { VendorSpecificValues } from '../vendor-specific-values'
@@ -17,18 +18,24 @@ const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const UINT32_MAX: number = 2 ** 32 - 1
 
-class RegistrationContext extends Context {
+class GenericContext extends Context {
+  constructor(readonly parseFullFlex: boolean) {
+    super()
+  }
+}
+
+class RegistrationContext extends GenericContext {
   constructor(
     readonly vsv: Readonly<VendorSpecificValues>,
-    readonly parseFullFlex: boolean
+    parseFullFlex: boolean
   ) {
-    super()
+    super(parseFullFlex)
   }
 }
 
 class SourceContext extends RegistrationContext {
   constructor(
-    vsv: Readonly<VendorSpecificValues>,
+    vsv: VendorSpecificValues,
     parseFullFlex: boolean,
     readonly sourceType: SourceType,
     readonly noteInfoGain: boolean
@@ -339,7 +346,8 @@ function suitableScope(
   ctx: Context,
   s: string,
   label: string,
-  scope: (url: URL) => string
+  scope: (url: URL) => string,
+  rejectExtraComponents: boolean
 ): Maybe<string> {
   let url
   try {
@@ -362,6 +370,12 @@ function suitableScope(
 
   const scoped = scope(url)
   if (s !== scoped) {
+    if (rejectExtraComponents) {
+      ctx.error(
+        `must not contain URL components other than ${label} (${scoped})`
+      )
+      return None
+    }
     ctx.warning(
       `URL components other than ${label} (${scoped}) will be ignored`
     )
@@ -369,19 +383,28 @@ function suitableScope(
   return some(scoped)
 }
 
-function suitableOrigin(ctx: Context, j: Json): Maybe<string> {
+function suitableOrigin(
+  ctx: Context,
+  j: Json,
+  rejectExtraComponents: boolean = false
+): Maybe<string> {
   return string(ctx, j).map((s) =>
-    suitableScope(ctx, s, 'origin', (u) => u.origin)
+    suitableScope(ctx, s, 'origin', (u) => u.origin, rejectExtraComponents)
   )
 }
 
-function suitableSite(ctx: Context, j: Json): Maybe<string> {
+function suitableSite(
+  ctx: Context,
+  j: Json,
+  rejectExtraComponents: boolean = false
+): Maybe<string> {
   return string(ctx, j).map((s) =>
     suitableScope(
       ctx,
       s,
       'site',
-      (u) => `${u.protocol}//${psl.get(u.hostname)}`
+      (u) => `${u.protocol}//${psl.get(u.hostname)}`,
+      rejectExtraComponents
     )
   )
 }
@@ -1541,4 +1564,113 @@ export function validateTrigger(
     json,
     trigger
   )
+}
+
+export type EventLevelReport = {
+  attributionDestination: string | string[]
+  randomizedTriggerRate: number
+  reportId: string
+  scheduledReportTime: bigint
+  sourceDebugKey: bigint | null
+  sourceType: SourceType
+  sourceEventId: bigint
+  triggerData: bigint
+  triggerDebugKey: bigint | null
+  triggerSummaryBucket: [number, number] | null
+}
+
+function reportDestination(ctx: Context, j: Json): Maybe<string | string[]> {
+  const suitableSiteNoExtraneous = (ctx: Context, j: Json) =>
+    suitableSite(ctx, j, /*rejectExtraComponents=*/ true)
+
+  return typeSwitch<string | string[]>(ctx, j, {
+    string: (ctx, j) => suitableSiteNoExtraneous(ctx, j),
+    list: (ctx, j) =>
+      array(ctx, j, suitableSiteNoExtraneous, { minLength: 2, maxLength: 3 }),
+  })
+}
+
+function randomizedTriggerRate(ctx: Context, j: Json): Maybe<number> {
+  return number(ctx, j).filter((n) => isInRange(ctx, n, 0, 1))
+}
+
+function randomUuid(ctx: Context, j: Json): Maybe<string> {
+  return string(ctx, j).filter((s) => {
+    if (!uuid.validate(s)) {
+      ctx.error('must be a valid UUID')
+      return false
+    }
+    if (uuid.version(s) !== 4) {
+      ctx.error('must be a version 4 (random) UUID')
+      return false
+    }
+    return true
+  })
+}
+
+function triggerSummaryBucket(ctx: Context, j: Json): Maybe<[number, number]> {
+  let prev = 1
+  let prevDesc = 'minimum bucket start'
+
+  const endpoint = (ctx: Context, j: Json): Maybe<number> =>
+    number(ctx, j)
+      .filter((n) => isInteger(ctx, n))
+      .filter((n) =>
+        isInRange(
+          ctx,
+          n,
+          prev,
+          UINT32_MAX,
+          `must be >= ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
+        )
+      )
+      .peek((n) => {
+        prev = n
+        prevDesc = 'bucket start'
+      })
+
+  return array(ctx, j, endpoint, {
+    minLength: 2,
+    maxLength: 2,
+    keepGoing: false,
+  }) as Maybe<[number, number]>
+}
+
+function eventLevelReport(
+  ctx: GenericContext,
+  j: Json
+): Maybe<EventLevelReport> {
+  return object(ctx, j).map((j) => {
+    return struct(ctx, j, {
+      attributionDestination: field(
+        'attribution_destination',
+        reportDestination
+      ),
+      randomizedTriggerRate: field(
+        'randomized_trigger_rate',
+        randomizedTriggerRate
+      ),
+      reportId: field('report_id', randomUuid),
+      scheduledReportTime: field('scheduled_report_time', int64),
+      sourceDebugKey: field('source_debug_key', uint64, null),
+      sourceEventId: field('source_event_id', uint64),
+      sourceType: field('source_type', (ctx, j) =>
+        enumerated(ctx, j, SourceType)
+      ),
+      triggerData: field('trigger_data', uint64),
+      // TODO: Flex can issue multiple trigger debug keys.
+      triggerDebugKey: field('trigger_debug_key', uint64, null),
+
+      triggerSummaryBucket: ctx.parseFullFlex
+        ? field('trigger_summary_bucket', triggerSummaryBucket)
+        : () => some(null),
+    })
+  })
+}
+
+export function validateEventLevelReport(
+  json: string,
+  parseFullFlex: boolean = false
+): [ValidationResult, Maybe<EventLevelReport>] {
+  return validateJSON(new GenericContext(parseFullFlex), json, eventLevelReport)
 }
