@@ -1586,7 +1586,7 @@ function reportDestination(ctx: Context, j: Json): Maybe<string | string[]> {
   return typeSwitch<string | string[]>(ctx, j, {
     string: (ctx, j) => suitableSiteNoExtraneous(ctx, j),
     list: (ctx, j) =>
-      array(ctx, j, suitableSiteNoExtraneous, { minLength: 1, maxLength: 3 }),
+      array(ctx, j, suitableSiteNoExtraneous, { minLength: 2, maxLength: 3 }),
   })
 }
 

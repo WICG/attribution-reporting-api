@@ -133,6 +133,48 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
   },
 
   {
+    name: 'full-flex-trigger-summary-bucket-type',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2",
+      "trigger_summary_bucket": null
+    }`,
+    parseFullFlex: true,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a list',
+        path: ['trigger_summary_bucket'],
+      },
+    ],
+  },
+  {
+    name: 'full-flex-trigger-summary-bucket-item-type',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2",
+      "trigger_summary_bucket": ["1", 2]
+    }`,
+    parseFullFlex: true,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a number',
+        path: ['trigger_summary_bucket', 0],
+      },
+    ],
+  },
+  {
     name: 'full-flex-trigger-summary-bucket-empty',
     json: `{
       "attribution_destination": "https://d.test",
@@ -215,6 +257,25 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
       },
     ],
   },
+  {
+    name: 'invalid-report-id-version',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "00000000-0000-0000-0000-000000000000",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a version 4 (random) UUID',
+        path: ['report_id'],
+      },
+    ],
+  },
 
   {
     name: 'invalid-destination-components',
@@ -232,6 +293,321 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
       {
         msg: 'must not contain URL components other than site (https://d.test)',
         path: ['attribution_destination'],
+      },
+    ],
+  },
+  {
+    name: 'invalid-destination-type',
+    json: `{
+      "attribution_destination": null,
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a string or a list',
+        path: ['attribution_destination'],
+      },
+    ],
+  },
+  {
+    name: 'invalid-destination-size',
+    json: `{
+      "attribution_destination": ["https://d.test"],
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'length must be in the range [2, 3]',
+        path: ['attribution_destination'],
+      },
+    ],
+  },
+
+  {
+    name: 'invalid-scheduled-report-time-type',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": 789,
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a string',
+        path: ['scheduled_report_time'],
+      },
+    ],
+  },
+  {
+    name: 'invalid-scheduled-report-time-value',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "x",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be an int64 (must match /^-?[0-9]+$/)',
+        path: ['scheduled_report_time'],
+      },
+    ],
+  },
+
+  {
+    name: 'invalid-source-event-id-type',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": 1,
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a string',
+        path: ['source_event_id'],
+      },
+    ],
+  },
+  {
+    name: 'invalid-source-event-id-value',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "x",
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        path: ['source_event_id'],
+      },
+    ],
+  },
+
+  {
+    name: 'invalid-trigger-data-type',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": 2
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a string',
+        path: ['trigger_data'],
+      },
+    ],
+  },
+  {
+    name: 'invalid-trigger-data-value',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "x"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        path: ['trigger_data'],
+      },
+    ],
+  },
+
+  {
+    name: 'invalid-randomized-trigger-rate-type',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": "0.4",
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a number',
+        path: ['randomized_trigger_rate'],
+      },
+    ],
+  },
+  {
+    name: 'invalid-randomized-trigger-rate-value',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": -1,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be in the range [0, 1]',
+        path: ['randomized_trigger_rate'],
+      },
+    ],
+  },
+
+  {
+    name: 'invalid-source-type-type',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": null,
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a string',
+        path: ['source_type'],
+      },
+    ],
+  },
+  {
+    name: 'invalid-source-type-value',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "x",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be one of the following (case-sensitive): event, navigation',
+        path: ['source_type'],
+      },
+    ],
+  },
+
+  {
+    name: 'invalid-source-debug-key-type',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_debug_key": 3,
+      "source_event_id": "1",
+      "source_type": "event",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a string',
+        path: ['source_debug_key'],
+      },
+    ],
+  },
+  {
+    name: 'invalid-source-debug-key-value',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_debug_key": "x",
+      "source_event_id": "1",
+      "source_type": "event",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        path: ['source_debug_key'],
+      },
+    ],
+  },
+
+  {
+    name: 'invalid-trigger-debug-key-type',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "event",
+      "trigger_data": "2",
+      "trigger_debug_key": 3
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a string',
+        path: ['trigger_debug_key'],
+      },
+    ],
+  },
+  {
+    name: 'invalid-trigger-debug-key-value',
+    json: `{
+      "attribution_destination": "https://d.test",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "event",
+      "trigger_data": "2",
+      "trigger_debug_key": "x"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        path: ['trigger_debug_key'],
       },
     ],
   },
