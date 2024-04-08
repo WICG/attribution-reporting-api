@@ -215,6 +215,26 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
       },
     ],
   },
+
+  {
+    name: 'invalid-destination-components',
+    json: `{
+      "attribution_destination": "https://d.test/x",
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'must not contain URL components other than site (https://d.test)',
+        path: ['attribution_destination'],
+      },
+    ],
+  },
 ]
 
 testCases.forEach((tc) =>
