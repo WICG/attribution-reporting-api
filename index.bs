@@ -70,6 +70,8 @@ spec: infra; type: dfn; urlPrefix: https://infra.spec.whatwg.org/
 spec: fenced-frame; type: dfn; urlPrefix: https://wicg.github.io/fenced-frame/;
     for: navigable
         text: top-level traversable; url: #navigable-top-level-traversable
+    for: fenced navigable container
+        text: fenced navigable; url:#fenced-navigable-container-fenced-navigable
 spec: multipage; type: dfn; urlPrefix: https://html.spec.whatwg.org/multipage/;
     for: scheme and host
         text: host; url: #concept-scheme-and-host-host
@@ -808,6 +810,8 @@ An attribution source is a [=struct=] with the following items:
 :: A [=trigger-data matching mode=].
 : <dfn>debug cookie set</dfn> (default false)
 :: A [=boolean=].
+: <dfn>fenced</dfn>
+:: A [=boolean=].
 
 </dl>
 
@@ -933,6 +937,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: An [=aggregatable source registration time configuration=].
 : <dfn>trigger context ID</dfn>
 :: Null or a [=string=].
+: <dfn>fenced</dfn>
+:: A [=boolean=].
 
 </dl>
 
@@ -1645,9 +1651,10 @@ Given an [=attribution rate-limit record=] |record| and a [=moment=] |now|:
 
 <h3 id="obtaining-and-delivering-debug-report">Obtaining and delivering an attribution debug report</h3>
 
-To <dfn>obtain and deliver a debug report</dfn> given a [=list=] of [=attribution debug data=] |data|
-and a [=suitable origin=] |reportingOrigin|:
+To <dfn>obtain and deliver a debug report</dfn> given a [=list=] of [=attribution debug data=] |data|,
+a [=suitable origin=] |reportingOrigin|, and a [=boolean=] |fenced|:
 
+1. If |fenced| is true, return.
 1. Let |debugReport| be an [=attribution debug report=] with the items:
     : [=attribution debug report/data=]
     :: |data|
@@ -1696,8 +1703,8 @@ To <dfn>validate a background attributionsrc eligibility</dfn> given an
     "<code>[=eligibility/event-source-or-trigger=]</code>".
 
 To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, an
-[=origin=] |contextOrigin|, an [=eligibility=] |eligibility|, and a
-{{Document}} |document|:
+[=origin=] |contextOrigin|, an [=eligibility=] |eligibility|, a [=boolean=] |fenced|,
+and a {{Document}} |document|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
 1. If |url|'s [=url/origin=] is not [=check if an origin is suitable|suitable=],
@@ -1718,7 +1725,7 @@ To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, an
     :   [=request/Attribution Reporting eligibility=]
     ::  |eligibility|
 1. [=Fetch=] |request| with [=fetch/processResponse=] being
-    [=process an attributionsrc response=] with |contextOrigin|, |eligibility|,
+    [=process an attributionsrc response=] with |contextOrigin|, |eligibility|, |fenced|,
     and |request|'s [=request/trigger verification metadata=].
 
 Issue: Audit other properties on |request| and set them properly.
@@ -1742,18 +1749,19 @@ To <dfn>make background attributionsrc requests</dfn> given an
         |element|'s [=Node/node document=]. If that is not successful,
         [=iteration/continue=]. Otherwise, let |url| be the resulting
         [=URL record=].
+    1. Let |fenced| be true if |element|'s [=node navigable=] is a [=fenced navigable container/fenced navigable=], false otherwise.
     1. Run [=make a background attributionsrc request=] with |url|,
-        |element|'s [=node/context origin=], |eligibility|, and |element|'s [=Node/node document=].
+        |element|'s [=node/context origin=], |eligibility|, |fenced|, and |element|'s [=Node/node document=].
 
 Issue: Consider allowing the user agent to limit the size of |tokens|.
 
 To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=] |contextOrigin|,
-an [=eligibility=] |eligibility|, a [=request/trigger verification metadata=] |triggerVerificationMetadata|,
+an [=eligibility=] |eligibility|, a [=boolean=] |fenced|, a [=request/trigger verification metadata=] |triggerVerificationMetadata|,
 and a [=response=] |response|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
 1. Run [=process an attribution eligible response=] with |contextOrigin|,
-    |eligibility|, and |response|.
+    |eligibility|, |fenced|, |triggerVerificationMetadata|, and |response|.
 
 To <dfn>get the registration platform</dfn> given a [=header value=] or null |webHeader|,
 a [=header value=] or null |osHeader|, and a [=registrar=] or null |preferredPlatform|:
@@ -1789,7 +1797,8 @@ a [=header value=] or null |osHeader|, and a [=registrar=] or null |preferredPla
 To <dfn>process an attribution source response</dfn> given a [=suitable origin=]
 |contextOrigin|, a [=suitable origin=] |reportingOrigin|, a [=source type=]
 |sourceType|, a [=header value=] or null |webSourceHeader|, a [=header value=]
-or null |osSourceHeader|, and a [=registration info=] |registrationInfo|:
+or null |osSourceHeader|, a [=registration info=] |registrationInfo|, and a
+[=boolean=] |fenced|:
 
 1. Let |platform| be the result of [=get the registration platform=] with
     |webSourceHeader|, |osSourceHeader|, and |registrationInfo|'s
@@ -1802,11 +1811,11 @@ or null |osSourceHeader|, and a [=registration info=] |registrationInfo|:
     ::
         1. Let |source| be the result of running
             [=parse source-registration JSON=] with |webSourceHeader|,
-            |contextOrigin|, |reportingOrigin|, |sourceType|, and [=current wall time=].
+            |contextOrigin|, |reportingOrigin|, |sourceType|, [=current wall time=], and |fenced|.
         1. If |source| is null:
             1. If |reportHeaderErrors| is true, run [=obtain and deliver debug reports on registration header errors=]
                 with "`Attribution-Reporting-Register-Source`",
-                |webSourceHeader|, |reportingOrigin|, and |contextOrigin|.
+                |webSourceHeader|, |reportingOrigin|, |contextOrigin|, and |fenced|.
             1. Return.
         1. [=process an attribution source|Process=] |source|.
     : "<code>[=registrar/os=]</code>"
@@ -1816,12 +1825,12 @@ or null |osSourceHeader|, and a [=registration info=] |registrationInfo|:
         1. If |osSourceRegistrations| is null:
             1. If |reportHeaderErrors| is true, run [=obtain and deliver debug reports on registration header errors=]
                 with "`Attribution-Reporting-Register-OS-Source`",
-                |osSourceHeader|, |reportingOrigin|, and |contextOrigin|.
+                |osSourceHeader|, |reportingOrigin|, |contextOrigin|, and |fenced|.
             1. Return.
         1. Process |osSourceRegistrations| according to an [=implementation-defined=] algorithm.
         1. Run [=obtain and deliver debug reports on OS registrations=] with
             "<code>[=OS debug data type/os-source-delegated=]</code>", |osSourceRegistrations|,
-            and |contextOrigin|.
+            |contextOrigin|, and |fenced|.
 
     </dl>
 
@@ -1829,7 +1838,8 @@ To <dfn>process an attribution trigger response</dfn> given a [=suitable origin=
 |contextOrigin|, a [=suitable origin=] |reportingOrigin|, a [=response=] |response|,
 a [=request/trigger verification metadata=] |triggerVerificationMetadata|,
 a [=header value=] or null |webTriggerHeader|, a [=header value=] or null
-|osTriggerHeader|, and a [=registration info=] |registrationInfo|:
+|osTriggerHeader|, a [=registration info=] |registrationInfo|, and a [=boolean=]
+|fenced|:
 
 1. Let |platform| be the result of [=get the registration platform=]
     with |webTriggerHeader|, |osTriggerHeader|, and |registrationInfo|'s
@@ -1847,11 +1857,11 @@ a [=header value=] or null |webTriggerHeader|, a [=header value=] or null
             and |triggerVerificationMetadata|.
         1. Let |trigger| be the result of running
             [=create an attribution trigger=] with |webTriggerHeader|
-            |destinationSite|, |reportingOrigin|, |triggerVerifications|, and [=current wall time=].
+            |destinationSite|, |reportingOrigin|, |triggerVerifications|, [=current wall time=], and |fenced|.
         1. If |trigger| is null:
             1. If |reportHeaderErrors| is true, run [=obtain and deliver debug reports on registration header errors=]
                 with "`Attribution-Reporting-Register-Trigger`",
-                |webTriggerHeader|, |reportingOrigin|, and |contextOrigin|.
+                |webTriggerHeader|, |reportingOrigin|, |contextOrigin|, and |fenced|.
             1. Return.
         1. [=Maybe defer and then complete trigger attribution=] with |trigger|.
     : "<code>[=registrar/os=]</code>"
@@ -1861,12 +1871,12 @@ a [=header value=] or null |webTriggerHeader|, a [=header value=] or null
         1. If |osTriggerRegistrations| is null:
             1. If |reportHeaderErrors| is true, run [=obtain and deliver debug reports on registration header errors=]
                 with "`Attribution-Reporting-Register-OS-Trigger`",
-                |osTriggerHeader|, |reportingOrigin|, and |contextOrigin|.
+                |osTriggerHeader|, |reportingOrigin|, |contextOrigin|, and |fenced|.
             1. Return.
         1. Process |osTriggerRegistrations| according to an [=implementation-defined=] algorithm.
         1. Run [=obtain and deliver debug reports on OS registrations=] with
             "<code>[=OS debug data type/os-trigger-delegated=]</code>", |osTriggerRegistrations|,
-            and |contextOrigin|.
+            |contextOrigin|, and |fenced|.
 
      </dl>
 
@@ -1876,7 +1886,8 @@ and a [=header name=] header:
     is a [=byte-case-insensitive=] match for |header|, in order.
 
 To <dfn export>process an attribution eligible response</dfn> given a [=suitable origin=]
-|contextOrigin|, an [=eligibility=] |eligibility|, and a [=response=] |response|:
+|contextOrigin|, an [=eligibility=] |eligibility|, a [=boolean=] |fenced|,
+a [=request/trigger verification metadata=] |triggerVerificationMetadata|, and a [=response=] |response|:
 
 1. The user-agent MAY ignore the response; if so, return.
 
@@ -1939,17 +1950,18 @@ To <dfn export>process an attribution eligible response</dfn> given a [=suitable
         1. If |hasSourceRegistration| is true:
             1. Run [=process an attribution source response=]
                 with |contextOrigin|, |reportingOrigin|, "<code>[=source type/event=]</code>",
-                |sourceHeader|, |osSourceHeader|, and |registrationInfo|.
+                |sourceHeader|, |osSourceHeader|, |registrationInfo|, and |fenced|.
         1. If |hasTriggerRegistration| is true:
             1. Run [=process an attribution trigger response=]
                 with |contextOrigin|, |reportingOrigin|, |response|, |triggerVerificationMetadata|, |triggerHeader|,
-                |osTriggerHeader|, and |registrationInfo|.
+                |osTriggerHeader|, |registrationInfo|, and |fenced|.
 
     </dl>
 
 To <dfn>obtain and deliver debug reports on registration header errors</dfn>
 given a [=header name=] |headerName|, a [=header value=] |headerValue|, a
-[=suitable origin=] |reportingOrigin|, and a [=suitable origin=] |contextOrigin|:
+[=suitable origin=] |reportingOrigin|, a [=suitable origin=] |contextOrigin|,
+and a [=boolean=] |fenced|:
 
 1. Let |contextSite| be the result of [=obtaining a site=] from |contextOrigin|.
 1. Let |body| be a new [=map=] with the following key/value pairs:
@@ -1964,7 +1976,7 @@ given a [=header name=] |headerName|, a [=header value=] |headerValue|, a
     :: "<code>[=header errors debug data type/header-parsing-error=]</code>"
     : [=attribution debug data/body=]
     :: |body|
-1. Run [=obtain and deliver a debug report=] with « |data| » and |reportingOrigin|.
+1. Run [=obtain and deliver a debug report=] with « |data| », |reportingOrigin|, and |fenced|.
 
 Note: The user agent may optionally include error details of any type in |body|["`error`"].
 
@@ -2286,7 +2298,7 @@ from this algorithm.
 
 To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 |json|, a [=suitable origin=] |sourceOrigin|, a [=suitable origin=] |reportingOrigin|, a
-[=source type=] |sourceType|, and a [=moment=] |sourceTime|:
+[=source type=] |sourceType|, a [=moment=] |sourceTime|, and a [=boolean=] |fenced|:
 
 1. Let |value| be the result of running
     [=parse JSON bytes to an Infra value=] with |json|.
@@ -2395,6 +2407,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |triggerDataMatchingMode|
     : [=attribution source/debug cookie set=]
     :: |debugCookieSet|
+    : [=attribution source/fenced=]
+    :: |fenced|
 1. Return |source|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -2519,7 +2533,8 @@ To <dfn>obtain and deliver a debug report on source registration</dfn> given a
     :: |dataType|
     : [=attribution debug data/body=]
     :: |body|
-1. Run [=obtain and deliver a debug report=] with « |data| » and |source|'s [=attribution source/reporting origin=].
+1. Run [=obtain and deliver a debug report=] with « |data| », |source|'s [=attribution source/reporting origin=],
+    and |source|'s [=attribution source/fenced=].
 
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
 
@@ -2797,7 +2812,7 @@ To <dfn>parse aggregatable dedup keys</dfn> given an [=ordered map=] |map|:
 
 To <dfn noexport>create an attribution trigger</dfn> given a [=byte sequence=]
 |json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, a [=list=] of [=trigger verification=] |triggerVerifications|,
-and a [=moment=] |triggerTime|:
+a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
 
 1. Let |value| be the result of running
     [=parse JSON bytes to an Infra value=] with |json|.
@@ -2875,6 +2890,8 @@ and a [=moment=] |triggerTime|:
     :: |aggregatableSourceRegTimeConfig|
     : [=attribution trigger/trigger context ID=]
     :: |triggerContextID|
+    : [=attribution trigger/fenced=]
+    :: |fenced|
 1. Return |trigger|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -3380,7 +3397,8 @@ an [=attribution trigger=] |trigger| and an optional [=attribution source=]
     with |dataType|, |trigger|, |sourceToAttribute| and
     [=obtain debug data on trigger registration/report=] set to null.
 1. If |debugData| is null, return.
-1. Run [=obtain and deliver a debug report=] with « |debugData| » and |trigger|'s [=attribution trigger/reporting origin=].
+1. Run [=obtain and deliver a debug report=] with « |debugData| », |trigger|'s [=attribution trigger/reporting origin=],
+    and |trigger|'s [=attribution trigger/fenced=].
 
 To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
 
@@ -4127,7 +4145,7 @@ To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
 
 To <dfn>obtain and deliver debug reports on OS registrations</dfn> given an
 [=OS debug data type=] |dataType|, a [=list=] of [=OS registrations=] |registrations|,
-and an [=origin=] |contextOrigin|:
+an [=origin=] |contextOrigin|, and a [=boolean=] |fenced|:
 
 1. [=Assert=]: |registrations| is not [=list/is empty|empty=].
 1. Let |contextSite| be the result of [=obtaining a site=] from |contextOrigin|.
@@ -4146,7 +4164,7 @@ and an [=origin=] |contextOrigin|:
         :: |dataType|
         : [=attribution debug data/body=]
         :: |body|
-    1. Run [=obtain and deliver a debug report=] with « |data| » and |origin|.
+    1. Run [=obtain and deliver a debug report=] with « |data| », |origin|, and |fenced|.
 
 
 # Report Verification Algorithms # {#report-verification}
