@@ -61,7 +61,8 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       ],
       aggregatableSourceRegistrationTime:
         AggregatableSourceRegistrationTime.include,
-      aggregationCoordinatorOrigin: null,
+      aggregationCoordinatorOrigin:
+        'https://publickeyservice.msmt.aws.privacysandboxservices.com',
       triggerContextID: null,
       aggregatableTriggerData: [
         {
@@ -1005,11 +1006,27 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregation-coordinator-origin-path-ignored',
-    json: `{"aggregation_coordinator_origin": "https://b.a.test/x"}`,
+    json: `{"aggregation_coordinator_origin": "https://b.A.tEsT/x"}`,
+    vsv: {
+      aggregationCoordinatorOrigins: ['https://b.a.test'],
+    },
     expectedWarnings: [
       {
         path: ['aggregation_coordinator_origin'],
         msg: 'URL components other than origin (https://b.a.test) will be ignored',
+      },
+    ],
+  },
+  {
+    name: 'aggregation-coordinator-origin-not-on-allowlist',
+    json: `{"aggregation_coordinator_origin": "https://c.a.test"}`,
+    vsv: {
+      aggregationCoordinatorOrigins: ['https://d.a.test', 'https://b.a.test'],
+    },
+    expectedErrors: [
+      {
+        path: ['aggregation_coordinator_origin'],
+        msg: 'must be one of the following: https://d.a.test, https://b.a.test',
       },
     ],
   },

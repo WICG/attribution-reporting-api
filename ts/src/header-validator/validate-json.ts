@@ -1468,13 +1468,27 @@ function triggerContextID(
   })
 }
 
+function aggregationCoordinatorOrigin(
+  ctx: RegistrationContext,
+  j: Json
+): Maybe<string> {
+  return suitableOrigin(ctx, j).filter((s) => {
+    if (!ctx.vsv.aggregationCoordinatorOrigins.includes(s)) {
+      const allowed = ctx.vsv.aggregationCoordinatorOrigins.join(', ')
+      ctx.error(`must be one of the following: ${allowed}`)
+      return false
+    }
+    return true
+  })
+}
+
 export type Trigger = CommonDebug &
   FilterPair & {
     aggregatableDedupKeys: AggregatableDedupKey[]
     aggregatableTriggerData: AggregatableTriggerDatum[]
     aggregatableSourceRegistrationTime: AggregatableSourceRegistrationTime
     aggregatableValuesConfigurations: AggregatableValuesConfiguration[]
-    aggregationCoordinatorOrigin: string | null
+    aggregationCoordinatorOrigin: string
     eventTriggerData: EventTriggerDatum[]
     triggerContextID: string | null
   }
@@ -1507,8 +1521,8 @@ function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
         aggregatableSourceRegistrationTime: () => aggregatableSourceRegTimeVal,
         aggregationCoordinatorOrigin: field(
           'aggregation_coordinator_origin',
-          suitableOrigin,
-          null
+          aggregationCoordinatorOrigin,
+          ctx.vsv.aggregationCoordinatorOrigins[0]
         ),
         eventTriggerData: field('event_trigger_data', eventTriggerData, []),
         triggerContextID: field(
