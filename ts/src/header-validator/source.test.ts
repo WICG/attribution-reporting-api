@@ -47,10 +47,6 @@ const testCases: TestCase[] = [
       debugReporting: true,
       destination: new Set(['https://a.test']),
       eventLevelEpsilon: 14,
-      eventReportWindows: {
-        startTime: 0,
-        endTimes: [3601],
-      },
       expiry: 86400,
       filterData: new Map([['b', new Set(['c'])]]),
       priority: 2n,

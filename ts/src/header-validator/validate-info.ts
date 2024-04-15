@@ -1,6 +1,11 @@
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
-import { Token, parseDictionary } from 'structured-headers'
+import {
+  Dictionary,
+  Token,
+  parseDictionary,
+  serializeDictionary,
+} from 'structured-headers'
 
 export type Info = {
   preferredPlatform: null | 'os' | 'web'
@@ -64,4 +69,13 @@ export function validateInfo(str: string): [ValidationResult, Maybe<Info>] {
     ctx.finish(),
     ok ? Maybe.some({ preferredPlatform, reportHeaderErrors }) : Maybe.None,
   ]
+}
+
+export function serializeInfo(info: Info): string {
+  const map: Dictionary = new Map()
+  if (info.preferredPlatform !== null) {
+    map.set('preferred-platform', [info.preferredPlatform, new Map()])
+  }
+  map.set('report-header-errors', [info.reportHeaderErrors, new Map()])
+  return serializeDictionary(map)
 }
