@@ -1,7 +1,10 @@
 const path = require('path')
 
 module.exports = {
-  entry: './src/header-validator/index.ts',
+  entry: {
+    main: './src/header-validator/index.ts',
+    'filters-main': './src/header-validator/filters-index.ts',
+  },
   module: {
     rules: [
       {
@@ -19,7 +22,7 @@ module.exports = {
     extensions: ['.ts', '.js'],
   },
   output: {
-    filename: 'main.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist', 'header-validator'),
   },
 }

@@ -627,7 +627,7 @@ function filterDataKeyValue(
 
 export type FilterData = Map<string, Set<string>>
 
-function filterData(ctx: Context, j: Json): Maybe<FilterData> {
+export function filterData(ctx: Context, j: Json): Maybe<FilterData> {
   return keyValues(
     ctx,
     j,
@@ -693,6 +693,10 @@ export type FilterPair = {
 const filterFields: StructFields<FilterPair> = {
   positive: field('filters', orFilters, []),
   negative: field('not_filters', orFilters, []),
+}
+
+export function filterPair(ctx: Context, j: Json): Maybe<FilterPair> {
+  return struct(ctx, j, filterFields)
 }
 
 export type CommonDebug = {
@@ -1534,7 +1538,7 @@ function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
     .peek((t) => warnInconsistentAggregatableKeys(ctx, t))
 }
 
-function validateJSON<T, C extends Context = Context>(
+export function validateJSON<T, C extends Context = Context>(
   ctx: C,
   json: string,
   f: CtxFunc<C, Json, Maybe<T>>

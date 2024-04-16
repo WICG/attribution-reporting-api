@@ -18,7 +18,7 @@ $(OUT_DIR)/index.html: index.bs $(OUT_DIR)
 		exit 22 \
 	);
 
-validator: $(OUT_DIR)/validate-headers.html $(OUT_DIR)/validate-headers.js
+validator: $(OUT_DIR)/validate-headers.html $(OUT_DIR)/validate-headers.js $(OUT_DIR)/filters.html $(OUT_DIR)/filters-main.js
 
 $(OUT_DIR)/validate-headers.html: ts/src/header-validator/index.html $(OUT_DIR)
 	@ cp $< $@
@@ -29,9 +29,15 @@ $(OUT_DIR)/validate-headers.js: ts/dist/header-validator/main.js $(OUT_DIR)
 $(OUT_DIR):
 	@ mkdir -p $@
 
-ts/dist/header-validator/main.js: ts/package.json ts/tsconfig.json ts/webpack.config.js ts/src/*.ts ts/src/*/*.ts
+ts/dist/header-validator/main.js ts/dist/header-validator/filters-main.js: ts/package.json ts/tsconfig.json ts/webpack.config.js ts/src/*.ts ts/src/*/*.ts
 	@ npm ci --prefix ./ts
 	@ npm run pack --prefix ./ts
 
 clean:
 	@ rm -rf $(OUT_DIR)
+
+$(OUT_DIR)/filters.html: ts/src/header-validator/filters.html $(OUT_DIR)
+	@ cp $< $@
+
+$(OUT_DIR)/filters-main.js: ts/dist/header-validator/filters-main.js $(OUT_DIR)
+	@ cp $< $@
