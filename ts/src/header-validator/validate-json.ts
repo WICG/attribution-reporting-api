@@ -1106,20 +1106,18 @@ export enum TriggerDataMatching {
 
 function triggerDataMatching(
   ctx: Context,
-  j: Json,
-  specs: Maybe<TriggerSpec[]>
+  j: Json
 ): Maybe<TriggerDataMatching> {
-  return enumerated(ctx, j, TriggerDataMatching).filter((v) => {
-    if (v !== TriggerDataMatching.modulus) {
+  return enumerated(ctx, j, TriggerDataMatching)
+}
+
+function isTriggerDataMatchingValidForSpecs(ctx: Context, s: Source): boolean {
+  return ctx.scope('trigger_data_matching', () => {
+    if (s.triggerDataMatching !== TriggerDataMatching.modulus) {
       return true
     }
 
-    if (specs.value === undefined) {
-      ctx.error('cannot be fully validated without valid trigger specs')
-      return false
-    }
-
-    const triggerData: number[] = specs.value
+    const triggerData: number[] = s.triggerSpecs
       .flatMap((spec) => Array.from(spec.triggerData))
       .sort()
 
@@ -1242,7 +1240,7 @@ function source(ctx: SourceContext, j: Json): Maybe<Source> {
 
         triggerDataMatching: field(
           'trigger_data_matching',
-          (ctx, j) => triggerDataMatching(ctx, j, triggerSpecsVal),
+          triggerDataMatching,
           TriggerDataMatching.modulus
         ),
 
@@ -1250,6 +1248,7 @@ function source(ctx: SourceContext, j: Json): Maybe<Source> {
         ...priorityField,
       })
     })
+    .filter((s) => isTriggerDataMatchingValidForSpecs(ctx, s))
     .peek((s) => channelCapacity(ctx, s))
     .peek((s) => warnInconsistentMaxEventLevelReportsAndTriggerSpecs(ctx, s))
 }
