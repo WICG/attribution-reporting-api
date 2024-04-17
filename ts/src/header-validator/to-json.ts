@@ -171,14 +171,14 @@ function serializeFilterConfig(fc: parsed.FilterConfig): FilterConfig {
 }
 
 export type FilterPair = {
-  positive: FilterConfig[]
-  negative: FilterConfig[]
+  filters: FilterConfig[]
+  not_filters: FilterConfig[]
 }
 
 function serializeFilterPair(fp: parsed.FilterPair): FilterPair {
   return {
-    positive: Array.from(fp.positive, serializeFilterConfig),
-    negative: Array.from(fp.negative, serializeFilterConfig),
+    filters: Array.from(fp.positive, serializeFilterConfig),
+    not_filters: Array.from(fp.negative, serializeFilterConfig),
   }
 }
 

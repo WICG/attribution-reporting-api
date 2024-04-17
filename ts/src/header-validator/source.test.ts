@@ -1,6 +1,8 @@
+import { strict as assert } from 'assert'
 import { SourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
+import { serializeSource } from './to-json'
 import {
   Source,
   SummaryWindowOperator,
@@ -1926,13 +1928,29 @@ const testCases: TestCase[] = [
 ]
 
 testCases.forEach((tc) =>
-  jsontest.run(tc, () =>
-    validateSource(
+  jsontest.run(tc, () => {
+    const result = validateSource(
       tc.json,
       { ...vsv.Chromium, ...tc.vsv },
       tc.sourceType ?? SourceType.navigation,
       tc.parseFullFlex ?? false,
       tc.noteInfoGain ?? false
     )
-  )
+
+    if (result[1].value !== undefined) {
+      const str = JSON.stringify(
+        serializeSource(result[1].value, tc.parseFullFlex ?? false)
+      )
+      const [_, reparsed] = validateSource(
+        str,
+        { ...vsv.Chromium, ...tc.vsv },
+        tc.sourceType ?? SourceType.navigation,
+        tc.parseFullFlex ?? false,
+        tc.noteInfoGain ?? false
+      )
+      assert.deepEqual(reparsed, result[1], str)
+    }
+
+    return result
+  })
 )
