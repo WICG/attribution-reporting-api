@@ -91,7 +91,7 @@ function validate(): void {
       result = validateEligible(input.value)
       break
     case 'info':
-      result = validateInfo(input.value)
+      result = validateInfo(input.value)[0]
       break
     default:
       return
