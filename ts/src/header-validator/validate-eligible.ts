@@ -1,11 +1,20 @@
 import { Context, ValidationResult } from './context'
+import { Maybe } from './maybe'
 import { parseDictionary } from 'structured-headers'
 
 const navigationSourceKey = 'navigation-source'
 const eventSourceKey = 'event-source'
 const triggerKey = 'trigger'
 
-export function validateEligible(str: string): ValidationResult {
+export type Eligible = {
+  navigationSource: boolean
+  eventSource: boolean
+  trigger: boolean
+}
+
+export function validateEligible(
+  str: string
+): [ValidationResult, Maybe<Eligible>] {
   const ctx = new Context()
 
   let dict
@@ -13,7 +22,7 @@ export function validateEligible(str: string): ValidationResult {
     dict = parseDictionary(str)
   } catch (err) {
     const msg = err instanceof Error ? err.toString() : 'unknown error'
-    return ctx.finish(msg)
+    return [ctx.finish(msg), Maybe.None]
   }
 
   let navigationSource = false
@@ -51,7 +60,8 @@ export function validateEligible(str: string): ValidationResult {
     ctx.error(
       `${navigationSourceKey} is mutually exclusive with ${eventSourceKey} and ${triggerKey}`
     )
+    return [ctx.finish(), Maybe.None]
   }
 
-  return ctx.finish()
+  return [ctx.finish(), Maybe.some({ navigationSource, eventSource, trigger })]
 }

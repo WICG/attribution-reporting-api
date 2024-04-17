@@ -88,7 +88,7 @@ function validate(): void {
       result = validateOsRegistration(input.value)[0]
       break
     case 'eligible':
-      result = validateEligible(input.value)
+      result = validateEligible(input.value)[0]
       break
     case 'info':
       result = validateInfo(input.value)
