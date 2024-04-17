@@ -1,33 +1,48 @@
 import { Context, ValidationResult } from './context'
+import { Maybe } from './maybe'
 import { InnerList, Item, parseList } from 'structured-headers'
 
-function validateURL(ctx: Context, member: InnerList | Item): void {
+export type OsItem = {
+  url: URL
+  debugReporting: boolean
+}
+
+function parseItem(ctx: Context, member: InnerList | Item): OsItem | undefined {
   if (typeof member[0] !== 'string') {
     ctx.warning('ignored, must be a string')
     return
   }
 
+  let url
   try {
-    new URL(member[0])
+    url = new URL(member[0])
   } catch {
     ctx.warning('ignored, must contain a valid URL')
     return
   }
+
+  let debugReporting = false
 
   for (const [key, value] of member[1]) {
     ctx.scope(key, () => {
       if (key === 'debug-reporting') {
         if (typeof value !== 'boolean') {
           ctx.warning('ignored, must be a boolean')
+        } else {
+          debugReporting = value
         }
       } else {
         ctx.warning('unknown parameter')
       }
     })
   }
+
+  return { url, debugReporting }
 }
 
-export function validateOsRegistration(str: string): ValidationResult {
+export function validateOsRegistration(
+  str: string
+): [ValidationResult, Maybe<OsItem[]>] {
   const ctx = new Context()
 
   let list
@@ -35,9 +50,17 @@ export function validateOsRegistration(str: string): ValidationResult {
     list = parseList(str)
   } catch (err) {
     const msg = err instanceof Error ? err.toString() : 'unknown error'
-    return ctx.finish(msg)
+    return [ctx.finish(msg), Maybe.None]
   }
 
-  list.forEach((member, i) => ctx.scope(i, () => validateURL(ctx, member)))
-  return ctx.finish()
+  const items: OsItem[] = []
+  list.forEach((member, i) =>
+    ctx.scope(i, () => {
+      const item = parseItem(ctx, member)
+      if (item) {
+        items.push(item)
+      }
+    })
+  )
+  return [ctx.finish(), Maybe.some(items)]
 }

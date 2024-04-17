@@ -84,10 +84,8 @@ function validate(): void {
       )[0]
       break
     case 'os-source':
-      result = validateOsRegistration(input.value)
-      break
     case 'os-trigger':
-      result = validateOsRegistration(input.value)
+      result = validateOsRegistration(input.value)[0]
       break
     case 'eligible':
       result = validateEligible(input.value)
