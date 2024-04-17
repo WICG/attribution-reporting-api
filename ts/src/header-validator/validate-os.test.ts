@@ -1,8 +1,11 @@
+import { strict as assert } from 'assert'
 import * as testutil from './util.test'
-import { validateOsRegistration } from './validate-os'
+import { Maybe } from './maybe'
+import { OsItem, validateOsRegistration } from './validate-os'
 
 type TestCase = testutil.TestCase & {
   input: string
+  expected?: Maybe<OsItem[]>
 }
 
 const tests: TestCase[] = [
@@ -10,7 +13,19 @@ const tests: TestCase[] = [
   { input: '"https://a.test/"' },
   { input: '"http://localhost/"' },
   { input: '"http://127.0.0.1/"' },
-  { input: '"https://a.test/", "https://b.test/"' },
+  {
+    input: '"https://a.test/x"; debug-reporting=?1, "https://b.test/y"',
+    expected: Maybe.some([
+      {
+        url: new URL('https://a.test/x'),
+        debugReporting: true,
+      },
+      {
+        url: new URL('https://b.test/y'),
+        debugReporting: false,
+      },
+    ]),
+  },
   { input: '"https://a.test/"; debug-reporting' },
   { input: '"https://a.test/"; debug-reporting=?0' },
   { input: '"http://a.test"' },
@@ -24,6 +39,12 @@ const tests: TestCase[] = [
         msg: 'unknown parameter',
       },
     ],
+    expected: Maybe.some([
+      {
+        url: new URL('https://a.test/'),
+        debugReporting: false,
+      },
+    ]),
   },
 
   // Invalid header syntax
@@ -32,6 +53,7 @@ const tests: TestCase[] = [
     expectedErrors: [
       { msg: 'Error: Parse error: Unexpected input at offset 0' },
     ],
+    expected: Maybe.None,
   },
 
   // Not a string
@@ -43,6 +65,12 @@ const tests: TestCase[] = [
         msg: 'ignored, must be a string',
       },
     ],
+    expected: Maybe.some([
+      {
+        url: new URL('https://a.test/'),
+        debugReporting: false,
+      },
+    ]),
   },
   {
     input: '("https://a.test/")',
@@ -56,7 +84,23 @@ const tests: TestCase[] = [
 
   // Invalid URL
   {
-    input: '"a.test"',
+    input: '"a.test", "https://b.test/"',
+    expectedWarnings: [
+      {
+        path: [0],
+        msg: 'ignored, must contain a valid URL',
+      },
+    ],
+    expected: Maybe.some([
+      {
+        url: new URL('https://b.test/'),
+        debugReporting: false,
+      },
+    ]),
+  },
+  // Relative URL
+  {
+    input: '"/x"',
     expectedWarnings: [
       {
         path: [0],
@@ -74,9 +118,25 @@ const tests: TestCase[] = [
         msg: 'ignored, must be a boolean',
       },
     ],
+    expected: Maybe.some([
+      {
+        url: new URL('https://b.test/'),
+        debugReporting: false,
+      },
+      {
+        url: new URL('https://a.test/'),
+        debugReporting: false,
+      },
+    ]),
   },
 ]
 
 tests.forEach((tc) =>
-  testutil.run(tc, /*name=*/ tc.input, () => validateOsRegistration(tc.input))
+  testutil.run(tc, /*name=*/ tc.input, () => {
+    const [validationResult, value] = validateOsRegistration(tc.input)
+    if (tc.expected !== undefined) {
+      assert.deepEqual(value, tc.expected)
+    }
+    return validationResult
+  })
 )
