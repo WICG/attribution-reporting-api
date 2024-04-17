@@ -1865,6 +1865,19 @@ const testCases: TestCase[] = [
     ],
   },
   {
+    name: 'trigger-data-matching-defaulted-modulus-trigger-data-not-contiguous-within',
+    json: `{
+      "destination": "https://a.test",
+      "trigger_data": [0, 1, 3]
+    }`,
+    expectedErrors: [
+      {
+        path: ['trigger_data_matching'],
+        msg: 'trigger_data must form a contiguous sequence of integers starting at 0 for modulus',
+      },
+    ],
+  },
+  {
     name: 'trigger-data-matching-modulus-valid-across',
     json: `{
       "destination": "https://a.test",
@@ -1891,7 +1904,7 @@ const testCases: TestCase[] = [
     json: `{
       "destination": "https://a.test",
       "max_event_level_reports": 0,
-      "trigger_data": [1]
+      "trigger_data": [0]
     }`,
     expectedWarnings: [
       {
