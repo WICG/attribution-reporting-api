@@ -175,7 +175,9 @@ name.
 Whenever an <{img}> or a <{script}> |element| is created or |element|'s
 {{HTMLAttributionSrcElementUtils/attributionSrc}} attribute is set or changed,
 run [=make background attributionsrc requests=] with |element| and
-"<code>[=eligibility/event-source-or-trigger=]</code>".
+"<code>[=eligibility/event-source-or-trigger=]</code>" and the current state of
+|element|'s <{img/referrerpolicy}> content attribute or
+<{script/referrerpolicy}> content attribute.
 
 Issue: More precisely specify which mutations are relevant for the
 attributionsrc attribute.
@@ -233,7 +235,7 @@ add the steps
 1. If |subject| has an `attributionsrc` attribute:
     1. Set |navigationSourceEligible| to true.
     1. [=Make background attributionsrc requests=] with |subject| and
-        "<code>[=eligibility/navigation-source=]</code>".
+        "<code>[=eligibility/navigation-source=]</code>", and |referrerPolicy|.
 
 Add "and [=navigate/navigationSourceEligible=] set to
 |navigationSourceEligible|" to the step
@@ -304,7 +306,8 @@ add the steps
             parsing failed, [=iteration/continue=].
         1. [=list/Append=] |urlRecord| to |attributionSrcUrls|.
 
-Issue: Use |attributionSrcUrls| with [=make a background attributionsrc request=].
+Issue: Use |attributionSrcUrls| and |referrerPolicy| with
+[=make a background attributionsrc request=].
 
 In each step that calls [=navigate=], set [=navigate/navigationSourceEligible=]
 to |navigationSourceEligible|.
@@ -1704,7 +1707,7 @@ To <dfn>validate a background attributionsrc eligibility</dfn> given an
 
 To <dfn>make a background attributionsrc request</dfn> given a [=URL=] |url|, an
 [=origin=] |contextOrigin|, an [=eligibility=] |eligibility|, a [=boolean=] |fenced|,
-and a {{Document}} |document|:
+a {{Document}} |document|, and a [=referrer policy=] |referrerPolicy|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
 1. If |url|'s [=url/origin=] is not [=check if an origin is suitable|suitable=],
@@ -1724,6 +1727,8 @@ and a {{Document}} |document|:
     ::  true
     :   [=request/Attribution Reporting eligibility=]
     ::  |eligibility|
+    :   [=request/referrer policy=]
+    ::  |referrerPolicy|
 1. [=Fetch=] |request| with [=fetch/processResponse=] being
     [=process an attributionsrc response=] with |contextOrigin|, |eligibility|, |fenced|,
     and |request|'s [=request/trigger verification metadata=].
@@ -1736,8 +1741,8 @@ we cannot process registrations through integration with [=fetch=].
 Issue: Check for transient activation with "<code>[=eligibility/navigation-source=]</code>".
 
 To <dfn>make background attributionsrc requests</dfn> given an
-{{HTMLAttributionSrcElementUtils}} |element| and an [=eligibility=]
-|eligibility|:
+{{HTMLAttributionSrcElementUtils}} |element|, an [=eligibility=] |eligibility|,
+and a [=referrer policy=] |referrerPolicy|:
 
 1. Let |attributionSrc| be |element|'s
     {{HTMLAttributionSrcElementUtils/attributionSrc}}.
@@ -1751,7 +1756,8 @@ To <dfn>make background attributionsrc requests</dfn> given an
         [=URL record=].
     1. Let |fenced| be true if |element|'s [=node navigable=] is a [=fenced navigable container/fenced navigable=], false otherwise.
     1. Run [=make a background attributionsrc request=] with |url|,
-        |element|'s [=node/context origin=], |eligibility|, |fenced|, and |element|'s [=Node/node document=].
+        |element|'s [=node/context origin=], |eligibility|, |fenced|,
+        |element|'s [=Node/node document=], and |referrerPolicy|.
 
 Issue: Consider allowing the user agent to limit the size of |tokens|.
 
