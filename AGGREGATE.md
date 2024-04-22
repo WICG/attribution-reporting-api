@@ -524,7 +524,7 @@ _aggregate_ values. It is expected that as a privacy protection mechanism, a
 certain amount of noise will be added to each output key's aggregate value.
 
 Currently the aggregation service can be deployed on Amazon Web Services (AWS) and
-Google Cloud Platform (GCP). We expect to support other cloud providers in the future.
+Google Cloud Platform (GCP). We expect to support other cloud providers in the future. See the [Public Cloud TEE requirements explainer](https://github.com/privacysandbox/protected-auction-services-docs/blob/main/public_cloud_tees.md) for more details. 
 
 Trigger registration will accept an optional string field `aggregation_coordinator_origin`
 to allow developers to specify the deployment option for the aggregation service
