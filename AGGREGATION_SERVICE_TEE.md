@@ -360,7 +360,7 @@ The initial implementation strategy for the aggregation service is as follows:
 * The TEE based aggregation service implementation would be deployed
   on cloud service(s) which support needed security features.  We
   envision the aggregation service being capable of being deployed with
-  multiple cloud providers.
+  multiple cloud providers. See the [Public Cloud TEE requirements explainer](https://github.com/privacysandbox/protected-auction-services-docs/blob/main/public_cloud_tees.md) for more details.
   * Currently the aggregation service can be deployed on Amazon Web Services
     (AWS) and Google Cloud Platform (GCP). We expect to support more cloud
     providers in the future.
