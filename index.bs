@@ -4320,6 +4320,33 @@ The [=remote end steps=] are:
 
 Note: Without this, reports would be subject to noise and delays, making testing difficult.
 
+## Send pending reports ## {#webdriver-sendpendingreports}
+
+<figure id="table-webdriver-sendpendingreports" class="table">
+    <table class="data">
+        <thead>
+            <tr>
+                <th>HTTP Method</th>
+                <th>URI Template</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>POST</td>
+                <td>`/session/{session id}/ara/`<dfn>`sendpendingreports`</dfn></td>
+            </tr>
+        </tbody>
+    </table>
+</figure>
+
+The [=remote end steps=] are:
+
+1. [=list/iterate|For each=] |cache| of « [=event-level report cache=], [=aggregatable report cache=] »:
+    1. [=set/iterate|For each=] |report| of |cache|:
+        1. [=set/Remove=] |report| from |cache|.
+        1. [=Attempt to deliver a report|Attempt to deliver=] |report|.
+1. Return [=success=] with data `null`.
+
 # Security considerations # {#security-considerations}
 
 ## Same-Origin Policy ## {#same-origin-policy}
