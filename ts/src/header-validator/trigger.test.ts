@@ -1,5 +1,7 @@
+import { strict as assert } from 'assert'
 import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
+import { serializeTrigger } from './to-json'
 import {
   AggregatableSourceRegistrationTime,
   Trigger,
@@ -1162,11 +1164,25 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 ]
 
 testCases.forEach((tc) =>
-  jsontest.run(tc, () =>
-    validateTrigger(
+  jsontest.run(tc, () => {
+    const result = validateTrigger(
       tc.json,
       { ...vsv.Chromium, ...tc.vsv },
       tc.parseFullFlex ?? false
     )
-  )
+
+    if (result[1].value !== undefined) {
+      const str = JSON.stringify(
+        serializeTrigger(result[1].value, tc.parseFullFlex ?? false)
+      )
+      const [_, reparsed] = validateTrigger(
+        str,
+        { ...vsv.Chromium, ...tc.vsv },
+        tc.parseFullFlex ?? false
+      )
+      assert.deepEqual(reparsed, result[1], str)
+    }
+
+    return result
+  })
 )

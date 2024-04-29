@@ -1,6 +1,10 @@
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
-import { parseDictionary } from 'structured-headers'
+import {
+  Dictionary,
+  parseDictionary,
+  serializeDictionary,
+} from 'structured-headers'
 
 const navigationSourceKey = 'navigation-source'
 const eventSourceKey = 'event-source'
@@ -64,4 +68,18 @@ export function validateEligible(
   }
 
   return [ctx.finish(), Maybe.some({ navigationSource, eventSource, trigger })]
+}
+
+export function serializeEligible(e: Eligible): string {
+  const map: Dictionary = new Map()
+  if (e.navigationSource) {
+    map.set(navigationSourceKey, [true, new Map()])
+  }
+  if (e.eventSource) {
+    map.set(eventSourceKey, [true, new Map()])
+  }
+  if (e.trigger) {
+    map.set(triggerKey, [true, new Map()])
+  }
+  return serializeDictionary(map)
 }

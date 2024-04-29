@@ -1,6 +1,12 @@
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
-import { InnerList, Item, parseList } from 'structured-headers'
+import {
+  InnerList,
+  Item,
+  List,
+  parseList,
+  serializeList,
+} from 'structured-headers'
 
 export type OsItem = {
   url: URL
@@ -63,4 +69,15 @@ export function validateOsRegistration(
     })
   )
   return [ctx.finish(), Maybe.some(items)]
+}
+
+export function serializeOsRegistration(items: OsItem[]): string {
+  const list: List = []
+  for (const item of items) {
+    list.push([
+      item.url.toString(),
+      new Map([['debug-reporting', item.debugReporting]]),
+    ])
+  }
+  return serializeList(list)
 }

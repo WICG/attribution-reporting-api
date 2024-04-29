@@ -1,10 +1,12 @@
 import { SourceType } from '../source-type'
-import { Issue, PathComponent } from './context'
+import { Issue, PathComponent, ValidationResult } from './context'
 import * as vsv from '../vendor-specific-values'
+import { Maybe } from './maybe'
 import { validateSource, validateTrigger } from './validate-json'
-import { validateEligible } from './validate-eligible'
-import { validateOsRegistration } from './validate-os'
-import { validateInfo } from './validate-info'
+import { serializeEligible, validateEligible } from './validate-eligible'
+import { serializeOsRegistration, validateOsRegistration } from './validate-os'
+import { serializeInfo, validateInfo } from './validate-info'
+import { serializeSource, serializeTrigger } from './to-json'
 
 const form = document.querySelector('form')! as HTMLFormElement
 const input = form.querySelector('textarea')! as HTMLTextAreaElement
@@ -19,6 +21,7 @@ const successDiv = document.querySelector('#success')!
 const sourceTypeFieldset = document.querySelector(
   '#source-type'
 )! as HTMLFieldSetElement
+const effective = document.querySelector('#effective')!
 
 const pathfulTmpl = document.querySelector(
   '#pathful-issue'
@@ -58,6 +61,13 @@ function sourceType(): SourceType {
   throw new TypeError()
 }
 
+function transformResult<T>(
+  r: [ValidationResult, Maybe<T>],
+  f: (v: T) => string
+): [ValidationResult, Maybe<string>] {
+  return [r[0], r[1].map(f)]
+}
+
 function validate(): void {
   sourceTypeFieldset.disabled = true
   flexCheckbox.disabled = true
@@ -67,47 +77,68 @@ function validate(): void {
     case 'source':
       sourceTypeFieldset.disabled = false
       flexCheckbox.disabled = false
-      result = validateSource(
-        input.value,
-        vsv.Chromium,
-        sourceType(),
-        flexCheckbox.checked,
-        /*noteInfoGain=*/ true
-      )[0]
+      result = transformResult(
+        validateSource(
+          input.value,
+          vsv.Chromium,
+          sourceType(),
+          flexCheckbox.checked,
+          /*noteInfoGain=*/ true
+        ),
+        (source) =>
+          JSON.stringify(
+            serializeSource(source, flexCheckbox.checked),
+            /*replacer=*/ null,
+            '  '
+          )
+      )
       break
     case 'trigger':
       flexCheckbox.disabled = false
-      result = validateTrigger(
-        input.value,
-        vsv.Chromium,
-        flexCheckbox.checked
-      )[0]
+      result = transformResult(
+        validateTrigger(input.value, vsv.Chromium, flexCheckbox.checked),
+        (trigger) =>
+          JSON.stringify(
+            serializeTrigger(trigger, flexCheckbox.checked),
+            /*replacer=*/ null,
+            '  '
+          )
+      )
       break
     case 'os-source':
     case 'os-trigger':
-      result = validateOsRegistration(input.value)[0]
+      result = transformResult(
+        validateOsRegistration(input.value),
+        serializeOsRegistration
+      )
       break
     case 'eligible':
-      result = validateEligible(input.value)[0]
+      result = transformResult(validateEligible(input.value), serializeEligible)
       break
     case 'info':
-      result = validateInfo(input.value)[0]
+      result = transformResult(validateInfo(input.value), serializeInfo)
       break
     default:
       return
   }
 
   const successEl = document.createElement('div')
-  if (result.errors.length === 0 && result.warnings.length === 0) {
+  if (result[0].errors.length === 0 && result[0].warnings.length === 0) {
     successEl.textContent = 'The header is valid.'
   } else {
     successEl.textContent = ''
   }
   successDiv.replaceChildren(successEl)
 
-  errorList.replaceChildren(...result.errors.map(makeLi))
-  warningList.replaceChildren(...result.warnings.map(makeLi))
-  noteList.replaceChildren(...result.notes.map(makeLi))
+  errorList.replaceChildren(...result[0].errors.map(makeLi))
+  warningList.replaceChildren(...result[0].warnings.map(makeLi))
+  noteList.replaceChildren(...result[0].notes.map(makeLi))
+
+  if (result[1].value === undefined) {
+    effective.replaceChildren()
+  } else {
+    effective.textContent = result[1].value
+  }
 }
 
 form.addEventListener('input', validate)

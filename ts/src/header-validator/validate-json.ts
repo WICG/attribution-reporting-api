@@ -1155,7 +1155,6 @@ export type Source = CommonDebug &
     aggregatableReportWindow: number
     aggregationKeys: Map<string, bigint>
     destination: Set<string>
-    eventReportWindows: EventReportWindows
     expiry: number
     filterData: FilterData
     maxEventLevelReports: number
@@ -1231,7 +1230,6 @@ function source(ctx: SourceContext, j: Json): Maybe<Source> {
           eventLevelEpsilon,
           ctx.vsv.maxSettableEventLevelEpsilon
         ),
-        eventReportWindows: () => eventReportWindowsVal,
         expiry: () => expiryVal,
         filterData: field('filter_data', filterData, new Map()),
         maxEventLevelReports: () => maxEventLevelReportsVal,
