@@ -66,3 +66,4 @@ Companies who may be interested in participating in tests and early adoption opp
 | Clarin | Publisher | | mfranco@clarin.com |
 | Globo | Publisher  | | adtech-delivery@g.globo |
 | A Gazeta | Publisher | | cdutra@redegazeta.com.br |
+| Bullwhip Technologies | Analytics SaaS | | privacysandbox@bullwhip.io |
