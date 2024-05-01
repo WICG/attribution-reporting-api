@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Attribution Reporting Filters</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 1em;
+  width: 100%;
+}
+
+form {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+form > fieldset {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.5em;
+}
+
+form > fieldset > textarea {
+  flex: 1;
+  resize: none;
+}
+</style>
+<body>
+<form>
+  <noscript>JavaScript is required to use this form.</noscript>
+  <fieldset>
+    <legend>Input</legend>
+    <div>
+      <label>Seconds Between Source and Trigger Time: <input type=number min=0 max=2592000 value=2592000 name=source-age required></label>
+      Source Type:
+      <label><input type=radio name=source-type value=event checked>event</label>
+      <label><input type=radio name=source-type value=navigation>navigation</label>
+    </div>
+    <label for=filter-data>Source Filter Data (JSON):</label>
+    <textarea id=filter-data name=filter-data required>{}</textarea>
+    <label for=filters>Trigger Filters (JSON):</label>
+    <textarea id=filters name=filters required>{"filters": [], "not_filters": []}</textarea>
+  </fieldset>
+  <fieldset>
+    <legend>Output</legend>
+    <output>
+      <p>Matches: <span id=matches>false</span>
+      <fieldset>
+        <legend>Source</legend>
+        <p>Errors: <ul id=source-errors></ul>
+        <p>Warnings: <ul id=source-warnings></ul>
+      </fieldset>
+      <fieldset>
+        <legend>Trigger</legend>
+        <p>Errors: <ul id=trigger-errors></ul>
+        <p>Warnings: <ul id=trigger-warnings></ul>
+      </fieldset>
+    </output>
+  </fieldset>
+</form>
+<template id="pathful-issue">
+  <li><code></code> <span></span></li>
+</template>
+<script src="filters-main.js"></script>
