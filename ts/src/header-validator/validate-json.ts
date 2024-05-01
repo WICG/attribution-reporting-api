@@ -1397,10 +1397,15 @@ function aggregatableSourceRegistrationTime(
   return enumerated(ctx, j, AggregatableSourceRegistrationTime)
 }
 
-// TODO(apasel422): Update with new AggregatableValuesConfiguration structure.
-function warnInconsistentAggregatableKeys(_ctx: Context, _t: Trigger): void {
-  /*  
-const triggerDataKeys = new Set<string>()
+function warnInconsistentAggregatableKeys(ctx: Context, t: Trigger): void {
+  const allAggregatableValueKeys = new Set<string>()
+  for (const cfg of t.aggregatableValuesConfigurations) {
+    for (const key of cfg.values.keys()) {
+      allAggregatableValueKeys.add(key)
+    }
+  }
+
+  const triggerDataKeys = new Set<string>()
 
   ctx.scope('aggregatable_trigger_data', () => {
     for (const [index, datum] of t.aggregatableTriggerData.entries()) {
@@ -1408,7 +1413,7 @@ const triggerDataKeys = new Set<string>()
         for (const key of datum.sourceKeys) {
           triggerDataKeys.add(key)
 
-          if (!t.aggregatableValues.has(key)) {
+          if (!allAggregatableValueKeys.has(key)) {
             ctx.scope('source_keys', () =>
               ctx.warning(
                 `key "${key}" will never result in a contribution due to absence from aggregatable_values`
@@ -1421,17 +1426,14 @@ const triggerDataKeys = new Set<string>()
   })
 
   ctx.scope('aggregatable_values', () => {
-    for (const key of t.aggregatableValues.keys()) {
+    for (const key of allAggregatableValueKeys) {
       if (!triggerDataKeys.has(key)) {
-        ctx.scope(key, () =>
-          ctx.warning(
-            'absence from aggregatable_trigger_data source_keys equivalent to presence with key_piece 0x0'
-          )
+        ctx.warning(
+          `key "${key}"'s absence from aggregatable_trigger_data source_keys equivalent to presence with key_piece 0x0`
         )
       }
     }
   })
-*/
 }
 
 function triggerContextID(
