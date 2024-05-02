@@ -1,7 +1,8 @@
 import { SourceType } from '../source-type'
-import { Issue, PathComponent, ValidationResult } from './context'
+import { ValidationResult } from './context'
 import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
+import { makeLi } from './issue-utils'
 import { validateSource, validateTrigger } from './validate-json'
 import { serializeEligible, validateEligible } from './validate-eligible'
 import { serializeOsRegistration, validateOsRegistration } from './validate-os'
@@ -23,35 +24,7 @@ const sourceTypeFieldset = document.querySelector(
 )! as HTMLFieldSetElement
 const effective = document.querySelector('#effective')!
 
-const pathfulTmpl = document.querySelector(
-  '#pathful-issue'
-) as HTMLTemplateElement
-
 const flexCheckbox = form.elements.namedItem('flex') as HTMLInputElement
-
-function pathPart(p: PathComponent): string {
-  return typeof p === 'string' ? `["${p}"]` : `[${p}]`
-}
-
-function makeLi({ path, msg }: Issue): HTMLElement {
-  let li
-
-  if (Array.isArray(path)) {
-    if (path.length === 0) {
-      li = document.createElement('li')
-      li.textContent = msg
-    } else {
-      li = pathfulTmpl.content.cloneNode(true) as HTMLElement
-      li.querySelector('code')!.textContent = path.map(pathPart).join('')
-      li.querySelector('span')!.textContent = msg
-    }
-  } else {
-    li = document.createElement('li')
-    li.textContent = msg
-  }
-
-  return li
-}
 
 function sourceType(): SourceType {
   const v = sourceTypeRadios.value

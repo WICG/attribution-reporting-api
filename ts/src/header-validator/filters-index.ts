@@ -1,6 +1,7 @@
 import { SourceType } from '../source-type'
-import { Context, Issue, PathComponent } from './context'
+import { Context } from './context'
 import * as filters from './filters'
+import { makeLi } from './issue-utils'
 import { validateJSON, filterPair, filterData } from './validate-json'
 
 const form = document.querySelector('form')! as HTMLFormElement
@@ -19,34 +20,6 @@ const sourceWarningList = document.querySelector('#source-warnings')!
 const triggerErrorList = document.querySelector('#trigger-errors')!
 const triggerWarningList = document.querySelector('#trigger-warnings')!
 const matchesSpan = document.querySelector('#matches')! as HTMLElement
-
-const pathfulTmpl = document.querySelector(
-  '#pathful-issue'
-) as HTMLTemplateElement
-
-function pathPart(p: PathComponent): string {
-  return typeof p === 'string' ? `["${p}"]` : `[${p}]`
-}
-
-function makeLi({ path, msg }: Issue): HTMLElement {
-  let li
-
-  if (Array.isArray(path)) {
-    if (path.length === 0) {
-      li = document.createElement('li')
-      li.textContent = msg
-    } else {
-      li = pathfulTmpl.content.cloneNode(true) as HTMLElement
-      li.querySelector('code')!.textContent = path.map(pathPart).join('')
-      li.querySelector('span')!.textContent = msg
-    }
-  } else {
-    li = document.createElement('li')
-    li.textContent = msg
-  }
-
-  return li
-}
 
 function sourceType(): SourceType {
   const v = sourceTypeRadios.value
