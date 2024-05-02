@@ -545,6 +545,10 @@ Source and trigger registration has additional optional functionality to both:
 
 This can be done via simple extensions to the registration configuration.
 
+We provide
+[an interactive tool](https://wicg.github.io/attribution-reporting-api/filters)
+for experimenting with filters.
+
 Source registration:
 ```jsonc
 {
