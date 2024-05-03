@@ -782,7 +782,7 @@ An attribution source is a [=struct=] with the following items:
 :: A [=moment=].
 : <dfn>number of event-level reports</dfn>
 :: Number of [=event-level reports=] created for this [=attribution source=].
-: <dfn>Max number of event-level reports</dfn>
+: <dfn>max number of event-level reports</dfn>
 :: The maximum number of [=event-level reports=] that can be created for this [=attribution source=].
 : <dfn>event-level attributable</dfn> (default true)
 :: A [=boolean=].
@@ -1629,7 +1629,7 @@ Given an [=attribution rate-limit record=] |newRecord|:
 
 1. Let |max| be [=max source reporting origins per rate-limit window=].
 1. Let |scopeSet| be « "<code>[=rate-limit scope/source=]</code>" ».
-1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/event-attribution=]</code>" 
+1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/event-attribution=]</code>"
      or "<code>[=rate-limit scope/aggregatable-attribution=]</code>":
      1. Set |max| to [=max attribution reporting origins per rate-limit window=].
      1. Set |scopeSet| to « "<code>[=rate-limit scope/event-attribution=]</code>", "<code>[=rate-limit scope/aggregatable-attribution=]</code>" ».
@@ -1647,7 +1647,7 @@ Given an [=attribution rate-limit record=] |newRecord|:
 
 Given an [=attribution rate-limit record=] |record| and a [=moment=] |now|:
 1. If the [=duration from=] |record|'s [=attribution rate-limit record|time=] and |now| is <= [=attribution rate-limit window=] , return false.
-1. If |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/event-attribution=]</code>" 
+1. If |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/event-attribution=]</code>"
     or "<code>[=rate-limit scope/aggregatable-attribution=]</code>", return true.
 1. If |record|'s [=attribution rate-limit record/expiry time=] is after |now|, return false.
 1. Return true.
@@ -3187,13 +3187,13 @@ To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
     return "<code>[=event-level-report-replacement result/drop-new-report-low-priority=]</code>".
 1. [=set/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
 1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
-1. Let |rateLimitRecord| be the element from [=attribution rate-limit cache=] whose 
+1. Let |rateLimitRecord| be the element from [=attribution rate-limit cache=] whose
     [=attribution rate-limit record/event-level report ID=] is equal to |lowestPriorityReport|'s [=event-level report/report ID=]
     and [=attribution rate-limit record/scope=] is equal to "<code>[=rate-limit scope/event-attribution=]</code>".
 1. [=Assert=]: |rateLimitRecord| is not null.
 
-    Note: We are making an implicit assumption that [=attribution rate-limit window=] is 
-    greater than or equal to |sourceToAttribute|'s [=attribution source/expiry=]. 
+    Note: We are making an implicit assumption that [=attribution rate-limit window=] is
+    greater than or equal to |sourceToAttribute|'s [=attribution source/expiry=].
     If this assumption does not hold then |rateLimitRecord| might be null.
 
 1. [=set/Remove=] |rateLimitRecord| from the [=attribution rate-limit cache=].
@@ -3312,7 +3312,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 1. If |sourceToAttribute|'s [=attribution source/randomized response=] is:
     <dl class="switch">
     : null
-    :: 
+    ::
         1. [=set/Append=] |report| to the [=event-level report cache=].
         1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
     : not null
