@@ -3259,13 +3259,6 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
         |trigger|, |sourceToAttribute| and [=obtain debug data on trigger registration/report=] set to null.
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. [=Assert=]: |windowResult| is <strong>falls within</strong>.
-1. Let |numMatchingReports| be the number of entries in the [=event-level report cache=] whose
-    [=event-level report/attribution destinations=] [=set/contains=] |trigger|'s [=attribution trigger/attribution destination=].
-1. If |numMatchingReports| is greater than or equal to the user agent's [=max event-level reports per attribution destination=]:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-event-storage-limit=]</code>", |trigger|, |sourceToAttribute| and
-        [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
 1. Let |report| be the result of running [=obtain an event-level report=] with |sourceToAttribute|,
     |trigger|'s [=attribution trigger/trigger time=], |trigger|'s [=attribution trigger/debug key=],
     |matchedConfig|'s [=event-level trigger configuration/priority=], and |specEntry|.
@@ -3294,7 +3287,14 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 1. If the result of running [=maybe replace event-level report=] with |sourceToAttribute| and |report| is:
     <dl class="switch">
     : "<code>[=event-level-report-replacement result/add-new-report=]</code>"
-    :: Do nothing.
+    ::
+         1. Let |numMatchingReports| be the number of entries in the [=event-level report cache=] whose
+             [=event-level report/attribution destinations=] [=set/contains=] |trigger|'s [=attribution trigger/attribution destination=].
+         1. If |numMatchingReports| is greater than or equal to the user agent's [=max event-level reports per attribution destination=]:
+             1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
+                 with "<code>[=trigger debug data type/trigger-event-storage-limit=]</code>", |trigger|, |sourceToAttribute| and
+                 [=obtain debug data on trigger registration/report=] set to null.
+             1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
     : "<code>[=event-level-report-replacement result/drop-new-report-none-to-replace=]</code>"
     ::
          1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
