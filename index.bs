@@ -1439,6 +1439,12 @@ To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destina
 1. If |destinationStrings|'s [=set/size=] is equal to 1, return |destinationStrings|[0].
 1. Return |destinationStrings|.
 
+Note: |destinations| is required to be sorted to avoid revealing extra
+information about the original source registration, namely the order of the
+"<code>[=source-registration JSON key/destination=]</code>" field in the
+original JSON registration, which can be used to distinguish semantically
+equivalent registrations.
+
 To <dfn>check if a scheme is suitable</dfn> given a [=string=] |scheme|:
 
 1. If |scheme| is "`http`" or "`https`", return true.
@@ -2089,6 +2095,10 @@ To <dfn>parse attribution destinations</dfn> from a [=map=] |map|:
     being less than |b| if |a|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>,
     is less than |b|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
 1. Return |result|.
+
+Note: Sorting |result| helps ensure that registrations with the same set of
+destinations are equivalent, regardless of the order of sites in the
+registration JSON.
 
 To <dfn>parse a duration</dfn> given a [=map=] |map|, a [=string=] |key|, and a
 tuple of [=durations=] (|clampStart|, |clampEnd|):
