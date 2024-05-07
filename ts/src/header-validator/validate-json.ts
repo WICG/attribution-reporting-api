@@ -1603,7 +1603,19 @@ function reportDestination(ctx: Context, j: Json): Maybe<string | string[]> {
   return typeSwitch<string | string[]>(ctx, j, {
     string: (ctx, j) => suitableSiteNoExtraneous(ctx, j),
     list: (ctx, j) =>
-      array(ctx, j, suitableSiteNoExtraneous, { minLength: 2, maxLength: 3 }),
+      array(ctx, j, suitableSiteNoExtraneous, {
+        minLength: 2,
+        maxLength: 3,
+      }).peek((v) => {
+        for (let i = 1; i < v.length; ++i) {
+          if (v[i]! < v[i - 1]!) {
+            ctx.warning(
+              'although order is semantically irrelevant, list is expected to be sorted'
+            )
+            break
+          }
+        }
+      }),
   })
 }
 

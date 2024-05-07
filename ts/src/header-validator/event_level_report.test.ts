@@ -334,6 +334,36 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
       },
     ],
   },
+  {
+    name: 'unsorted-destination',
+    json: `{
+      "attribution_destination": ["https://d.test", "https://c.test"],
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.some({
+      attributionDestination: ['https://d.test', 'https://c.test'],
+      randomizedTriggerRate: 0.4,
+      reportId: 'ac908546-2609-49d9-95b0-b796f9774da6',
+      scheduledReportTime: 789n,
+      sourceDebugKey: null,
+      sourceType: SourceType.navigation,
+      sourceEventId: 1n,
+      triggerData: 2n,
+      triggerDebugKey: null,
+      triggerSummaryBucket: null,
+    }),
+    expectedWarnings: [
+      {
+        msg: 'although order is semantically irrelevant, list is expected to be sorted',
+        path: ['attribution_destination'],
+      },
+    ],
+  },
 
   {
     name: 'invalid-scheduled-report-time-type',
