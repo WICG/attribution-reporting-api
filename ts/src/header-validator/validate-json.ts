@@ -1606,15 +1606,16 @@ function reportDestination(ctx: Context, j: Json): Maybe<string | string[]> {
       array(ctx, j, suitableSiteNoExtraneous, {
         minLength: 2,
         maxLength: 3,
-      }).peek((v) => {
+      }).filter((v) => {
         for (let i = 1; i < v.length; ++i) {
           if (v[i]! < v[i - 1]!) {
-            ctx.warning(
-              'although order is semantically irrelevant, list is expected to be sorted'
+            ctx.error(
+              'although order is semantically irrelevant, list must be sorted'
             )
-            break
+            return false
           }
         }
+        return true
       }),
   })
 }
