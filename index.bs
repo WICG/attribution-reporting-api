@@ -1428,6 +1428,10 @@ a [=string=] |key|, and a possibly null 64-bit unsigned integer |default|:
 To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destinations|, run the following steps:
 
 1. [=Assert=]: |destinations| is not [=set/is empty|empty=].
+1. [=Assert=]: |destinations| is [=list/sort in ascending order|sorted=] in
+    ascending order, with |a| being less than |b| if |a|,
+    <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>,
+    is less than |b|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
 1. Let |destinationStrings| be a [=list=].
 1. [=list/iterate|For each=] |destination| in |destinations|:
     1. [=Assert=]: |destination| is not the [=opaque origin=].
@@ -1435,8 +1439,11 @@ To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destina
 1. If |destinationStrings|'s [=set/size=] is equal to 1, return |destinationStrings|[0].
 1. Return |destinationStrings|.
 
-Issue: |destinationStrings| should be sorted to avoid revealing the ordering
-of destinations within the original source registration.
+Note: |destinations| is required to be sorted to avoid revealing extra
+information about the original source registration, namely the order of the
+"<code>[=source-registration JSON key/destination=]</code>" field in the
+original JSON registration, which can be used to distinguish semantically
+equivalent registrations.
 
 To <dfn>check if a scheme is suitable</dfn> given a [=string=] |scheme|:
 
@@ -2084,7 +2091,14 @@ To <dfn>parse attribution destinations</dfn> from a [=map=] |map|:
     1. [=set/Append=] |destination| to |result|.
 1. If |result| [=set/is empty=] or its [=set/size=] is greater than the
     [=max destinations per source=], return null.
+1. [=list/sort in ascending order|Sort=] |result| in ascending order, with |a|
+    being less than |b| if |a|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>,
+    is less than |b|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
 1. Return |result|.
+
+Note: Sorting |result| helps ensure that registrations with the same set of
+destinations are equivalent, regardless of the order of sites in the
+registration JSON.
 
 To <dfn>parse a duration</dfn> given a [=map=] |map|, a [=string=] |key|, and a
 tuple of [=durations=] (|clampStart|, |clampEnd|):
