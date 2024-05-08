@@ -607,7 +607,7 @@ A randomized response output configuration is a [=struct=] with the following it
 
 <h3 dfn-type=dfn>Randomized source response</h3>
 
-A randomized source response is null or a [=set=] of [=trigger states=].
+A randomized source response is null or a [=list=] of [=trigger states=].
 
 <h3 id="attribution-filtering">Attribution filtering</h3>
 
@@ -2012,8 +2012,9 @@ To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized respo
         1. [=set/Append=] |state| to |possibleTriggerStates|.
 1. Let |possibleValues| be a new [=set=].
 1. [=set/iterate|For each=] integer |attributions| of [=the range=] 0 to |config|'s [=randomized response output configuration/max attributions per source=], inclusive:
-    1. [=set/Append=] to |possibleValues| all distinct |attributions|-length combinations of
-        |possibleTriggerStates|.
+    1. [=set/Append=] to |possibleValues| all distinct
+        |attributions|-[=list/size=] combinations of |possibleTriggerStates|
+        with repetition.
 1. Return |possibleValues|.
 
 To <dfn>obtain a randomized source response pick rate</dfn> given a [=randomized response output configuration=] |config| and a double |epsilon|:
@@ -2635,13 +2636,13 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     the [=attribution rate-limit cache=].
 1. [=list/Remove=] all [=attribution rate-limit records=] |entry| from the [=attribution rate-limit cache=] if the result of running
     [=can attribution rate-limit record be removed=] with |entry| and |source|'s [=attribution source/source time=] is true.
-1. If |source|'s [=attribution source/randomized response=] is not null and is a [=set=]:
-    1. [=set/iterate|For each=] [=trigger state=] |triggerState| of |source|'s
+1. If |source|'s [=attribution source/randomized response=] is not null and is a [=list=]:
+    1. [=list/iterate|For each=] [=trigger state=] |triggerState| of |source|'s
         [=attribution source/randomized response=]:
         1. Let |fakeReport| be the result of running [=obtain a fake report=]
             with |source| and |triggerState|.
         1. [=set/Append=] |fakeReport| to the [=event-level report cache=].
-    1. If |source|'s [=attribution source/randomized response=] is not [=set/is empty|empty=],
+    1. If |source|'s [=attribution source/randomized response=] is not [=list/is empty|empty=],
         then set |source|'s [=attribution source/event-level attributable=] value to false.
     1. [=map/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
         1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
@@ -3226,7 +3227,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 1. If |trigger|'s [=attribution trigger/event-level trigger configurations=]
     [=list/is empty=], return the [=triggering result=]
     ("<code>[=triggering status/dropped=]</code>", null).
-1. If |sourceToAttribute|'s [=attribution source/randomized response=] is not null and is not [=set/is empty|empty=]:
+1. If |sourceToAttribute|'s [=attribution source/randomized response=] is not null and is not [=list/is empty|empty=]:
     1. [=Assert=]: |sourceToAttribute|'s [=attribution source/event-level attributable=] is false.
     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
         with "<code>[=trigger debug data type/trigger-event-noise=]</code>", |trigger|, |sourceToAttribute| and
