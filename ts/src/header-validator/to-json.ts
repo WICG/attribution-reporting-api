@@ -36,6 +36,46 @@ function serializePriority(p: parsed.Priority): Priority {
   return { priority: p.priority.toString() }
 }
 
+export type KeyPiece = {
+  key_piece: string
+}
+
+function serializeKeyPiece(p: parsed.KeyPiece): KeyPiece {
+  return { key_piece: `0x${p.keyPiece.toString(16)}` }
+}
+
+export type AggregateDebugReportingData = KeyPiece & {
+  types: string[]
+  value: number
+}
+
+function serializeAggregateDebugReportingData(
+  d: parsed.AggregateDebugReportingData
+): AggregateDebugReportingData {
+  return {
+    ...serializeKeyPiece(d),
+
+    types: Array.from(d.types),
+    value: d.value,
+  }
+}
+
+export type AggregateDebugReportingConfig = KeyPiece & {
+  aggregation_coordinator_origin: string
+  data: AggregateDebugReportingData[]
+}
+
+function serializeAggregateDebugReportingConfig(
+  d: parsed.AggregateDebugReportingConfig
+): AggregateDebugReportingConfig {
+  return {
+    ...serializeKeyPiece(d),
+
+    aggregation_coordinator_origin: d.aggregationCoordinatorOrigin,
+    data: Array.from(d.data, serializeAggregateDebugReportingData),
+  }
+}
+
 export type EventReportWindows = {
   event_report_windows: { start_time: number; end_times: number[] }
 }
@@ -72,6 +112,21 @@ function serializeTriggerSpec(ts: parsed.TriggerSpec): TriggerSpec {
 
     summary_buckets: Array.from(ts.summaryBuckets),
     summary_window_operator: ts.summaryWindowOperator,
+  }
+}
+
+export type SourceAggregateDebugReportingConfig =
+  AggregateDebugReportingConfig & {
+    budget: number
+  }
+
+function serializeSourceAggregateDebugReportingConfig(
+  d: parsed.SourceAggregateDebugReportingConfig
+): SourceAggregateDebugReportingConfig {
+  return {
+    ...serializeAggregateDebugReportingConfig(d),
+
+    budget: d.budget,
   }
 }
 
@@ -122,6 +177,7 @@ export type Source = CommonDebug &
     max_event_level_reports: number
     source_event_id: string
     trigger_data_matching: string
+    aggregate_debug_reporting?: SourceAggregateDebugReportingConfig
   }
 
 export function serializeSource(s: parsed.Source, fullFlex: boolean): Source {
@@ -151,6 +207,9 @@ export function serializeSource(s: parsed.Source, fullFlex: boolean): Source {
     max_event_level_reports: s.maxEventLevelReports,
     source_event_id: s.sourceEventId.toString(),
     trigger_data_matching: s.triggerDataMatching,
+    ...ifNotNull('aggregate_debug_reporting', s.aggregateDebugReporting, (v) =>
+      serializeSourceAggregateDebugReportingConfig(v)
+    ),
   }
 }
 
@@ -227,18 +286,18 @@ function serializeAggregatableDedupKey(
   }
 }
 
-export type AggregatableTriggerDatum = FilterPair & {
-  key_piece: string
-  source_keys: string[]
-}
+export type AggregatableTriggerDatum = FilterPair &
+  KeyPiece & {
+    source_keys: string[]
+  }
 
 function serializeAggregatableTriggerDatum(
   d: parsed.AggregatableTriggerDatum
 ): AggregatableTriggerDatum {
   return {
     ...serializeFilterPair(d),
+    ...serializeKeyPiece(d),
 
-    key_piece: `0x${d.keyPiece.toString(16)}`,
     source_keys: Array.from(d.sourceKeys),
   }
 }
@@ -266,6 +325,7 @@ export type Trigger = CommonDebug &
     aggregation_coordinator_origin: string
     event_trigger_data: EventTriggerDatum[]
     trigger_context_id?: string
+    aggregate_debug_reporting?: AggregateDebugReportingConfig
   }
 
 export function serializeTrigger(
@@ -300,5 +360,9 @@ export function serializeTrigger(
     ),
 
     ...ifNotNull('trigger_context_id', t.triggerContextID, (v) => v),
+
+    ...ifNotNull('aggregate_debug_reporting', t.aggregateDebugReporting, (v) =>
+      serializeAggregateDebugReportingConfig(v)
+    ),
   }
 }

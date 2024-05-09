@@ -41,7 +41,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "trigger_data": "1"
       }],
       "filters": {"f": []},
-      "not_filters": {"g": []}
+      "not_filters": {"g": []},
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+        "data": [{
+          "types": ["trigger-unknown-error"],
+          "key_piece": "0x5",
+          "value": 123
+        }]
+      }
     }`,
     expected: Maybe.some({
       aggregatableDedupKeys: [
@@ -66,6 +74,18 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       aggregationCoordinatorOrigin:
         'https://publickeyservice.msmt.aws.privacysandboxservices.com',
       triggerContextID: null,
+      aggregateDebugReporting: {
+        keyPiece: 1n,
+        data: [
+          {
+            types: ['trigger-unknown-error'],
+            keyPiece: 5n,
+            value: 123,
+          },
+        ],
+        aggregationCoordinatorOrigin:
+          'https://publickeyservice.msmt.aws.privacysandboxservices.com',
+      },
       aggregatableTriggerData: [
         {
           positive: [
@@ -1074,6 +1094,374 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['trigger_context_id'],
         msg: 'is prohibited for aggregatable_source_registration_time include',
+      },
+    ],
+  },
+
+  {
+    name: 'aggregate-debug-reporting-wrong-type',
+    json: `{
+      "aggregate_debug_reporting": 1
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting'],
+        msg: 'must be an object',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-empty',
+    json: `{
+      "aggregate_debug_reporting": {}
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'key_piece'],
+        msg: 'required',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-key-piece-wrong-type',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": 1
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'key_piece'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-key-piece-wrong-format',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "1"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'key_piece'],
+        msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-aggregation-coordinator-origin-wrong-format',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"aggregation_coordinator_origin": 1
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'aggregation_coordinator_origin'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-aggregation-coordinator-origin-not-url',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"aggregation_coordinator_origin": "a.test"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'aggregation_coordinator_origin'],
+        msg: 'invalid URL',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-aggregation-coordinator-origin-untrustworthy',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"aggregation_coordinator_origin": "http://a.test"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'aggregation_coordinator_origin'],
+        msg: 'URL must use HTTP/HTTPS and be potentially trustworthy',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-wrong-type',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": {}
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data'],
+        msg: 'must be a list',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-wrong-type',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [1]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0],
+        msg: 'must be an object',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-empty',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types'],
+        msg: 'required',
+      },
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        msg: 'required',
+      },
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'key_piece'],
+        msg: 'required',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-key-piece-wrong-type',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": 1,
+          "types": ["trigger-unknown-error"],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'key_piece'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-key-piece-wrong-format',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "1",
+          "types": ["trigger-unknown-error"],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'key_piece'],
+        msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-value-wrong-type',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x1",
+          "types": ["trigger-unknown-error"],
+          "value": "1"
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        msg: 'must be a number',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-value-below-min',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x1",
+          "types": ["trigger-unknown-error"],
+          "value": 0 
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        msg: 'must be in the range [1, 65536]',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-value-above-max',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x1",
+          "types": ["trigger-unknown-error"],
+          "value": 65537 
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        msg: 'must be in the range [1, 65536]',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-wrong-type',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x1",
+          "types": "1",
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types'],
+        msg: 'must be a list',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-empty',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x2",
+          "types": [],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types'],
+        msg: 'length must be in the range [1, Infinity]',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-elem-wrong-type',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x2",
+          "types": [1],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types', 0],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-elem-unknown-duplicate',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x2",
+          "types": ["abc", "abc"],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedWarnings: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types', 0],
+        msg: 'unknown type',
+      },
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types', 1],
+        msg: 'unknown type',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-elem-duplicate',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x2",
+          "types": ["trigger-unknown-error", "trigger-unknown-error"],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data'],
+        msg: 'duplicate type: trigger-unknown-error',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-elem-duplicate-across',
+    json: `{
+      "aggregate_debug_reporting": {
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x2",
+          "types": ["unspecified"],
+          "value": 123
+	}, {
+          "key_piece": "0x3",
+          "types": ["unspecified"],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data'],
+        msg: 'duplicate type: unspecified',
       },
     ],
   },

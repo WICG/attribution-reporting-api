@@ -39,7 +39,16 @@ const testCases: TestCase[] = [
       "filter_data": {"b": ["c"]},
       "priority": "2",
       "source_event_id": "3",
-      "max_event_level_reports": 2
+      "max_event_level_reports": 2,
+      "aggregate_debug_reporting": {
+        "budget": 1234,
+        "key_piece": "0x2",
+        "data": [ {
+          "key_piece": "0x1",
+          "types": ["source-success"],
+          "value": 123
+        } ]
+      }
     }`,
     sourceType: SourceType.navigation,
     expected: Maybe.some({
@@ -66,6 +75,19 @@ const testCases: TestCase[] = [
         },
       ],
       triggerDataMatching: TriggerDataMatching.modulus,
+      aggregateDebugReporting: {
+        budget: 1234,
+        keyPiece: 2n,
+        data: [
+          {
+            keyPiece: 1n,
+            types: ['source-success'],
+            value: 123,
+          },
+        ],
+        aggregationCoordinatorOrigin:
+          'https://publickeyservice.msmt.aws.privacysandboxservices.com',
+      },
     }),
   },
 
@@ -1353,6 +1375,487 @@ const testCases: TestCase[] = [
       {
         path: ['event_level_epsilon'],
         msg: 'must be in the range [0, 14]',
+      },
+    ],
+  },
+
+  {
+    name: 'aggregate-debug-reporting-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": 1
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting'],
+        msg: 'must be an object',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-empty',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {}
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'budget'],
+        msg: 'required',
+      },
+      {
+        path: ['aggregate_debug_reporting', 'key_piece'],
+        msg: 'required',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-budget-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": "1",
+        "key_piece": "0x1"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'budget'],
+        msg: 'must be a number',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-budget-below-min',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 0,
+        "key_piece": "0x1"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'budget'],
+        msg: 'must be in the range [1, 65536]',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-budget-above-max',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 65537,
+        "key_piece": "0x1"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'budget'],
+        msg: 'must be in the range [1, 65536]',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-key-piece-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": 1
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'key_piece'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-key-piece-wrong-format',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "1"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'key_piece'],
+        msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-aggregation-coordinator-origin-wrong-format',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"aggregation_coordinator_origin": 1
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'aggregation_coordinator_origin'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-aggregation-coordinator-origin-not-url',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"aggregation_coordinator_origin": "a.test"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'aggregation_coordinator_origin'],
+        msg: 'invalid URL',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-aggregation-coordinator-origin-untrustworthy',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"aggregation_coordinator_origin": "http://a.test"
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'aggregation_coordinator_origin'],
+        msg: 'URL must use HTTP/HTTPS and be potentially trustworthy',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": {}
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data'],
+        msg: 'must be a list',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": [1]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0],
+        msg: 'must be an object',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-empty',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": [{}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types'],
+        msg: 'required',
+      },
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        msg: 'required',
+      },
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'key_piece'],
+        msg: 'required',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-key-piece-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": 1,
+          "types": ["source-success"],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'key_piece'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-key-piece-wrong-format',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "1",
+          "types": ["source-success"],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'key_piece'],
+        msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-value-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x1",
+          "types": ["source-success"],
+          "value": "1"
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        msg: 'must be a number',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-value-below-min',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 789,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x1",
+          "types": ["source-success"],
+          "value": 0 
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        msg: 'must be in the range [1, 65536]',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-value-above-max',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 789,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x1",
+          "types": ["source-success"],
+          "value": 65537 
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        msg: 'must be in the range [1, 65536]',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-value-above-budget',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 789,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x1",
+          "types": ["source-success"],
+          "value": 790
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting'],
+        msg: 'data contains value greater than budget (789)',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x1",
+          "types": "1",
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types'],
+        msg: 'must be a list',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-empty',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x2",
+          "types": [],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types'],
+        msg: 'length must be in the range [1, Infinity]',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-elem-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x2",
+          "types": [1],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types', 0],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-elem-unknown-duplicate',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x2",
+          "types": ["abc", "abc"],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedWarnings: [
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types', 0],
+        msg: 'unknown type',
+      },
+      {
+        path: ['aggregate_debug_reporting', 'data', 0, 'types', 1],
+        msg: 'unknown type',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-elem-duplicate',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x2",
+          "types": ["source-success", "source-success"],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data'],
+        msg: 'duplicate type: source-success',
+      },
+    ],
+  },
+  {
+    name: 'aggregate-debug-reporting-data-elem-types-elem-duplicate-across',
+    json: `{
+      "destination": "https://a.test",
+      "aggregate_debug_reporting": {
+        "budget": 123,
+        "key_piece": "0x1",
+	"data": [{
+          "key_piece": "0x2",
+          "types": ["unspecified"],
+          "value": 123
+	}, {
+          "key_piece": "0x3",
+          "types": ["unspecified"],
+          "value": 123
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregate_debug_reporting', 'data'],
+        msg: 'duplicate type: unspecified',
       },
     ],
   },
