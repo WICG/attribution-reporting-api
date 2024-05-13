@@ -10,7 +10,7 @@ _Note: This document describes possible new functionality in the Attribution Rep
 - [Goals](#goals)
 - [Pre-Attribution Filtering](#pre-attribution-filtering)
   - [API changes](#api-changes)
-  - [Updating attribution scope value](#updating-attribution-scope-value)
+  - [Updating attribution scope values](#updating-attribution-scope-values)
   - [Deletion logic](#deletion-logic)
 - [Attribution scope example](#attribution-scope-examples)
 - [Privacy Considerations](#privacy-considerations)
