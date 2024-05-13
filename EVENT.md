@@ -330,7 +330,9 @@ ignore invalid registrations:
 Note: the `Attribution-Reporting-Eligible` header is subject to the browser adding
 "GREASE" parameters, to ensure that servers use a spec-compliant structured
 header parser. See [here](https://wicg.github.io/attribution-reporting-api/#example-1c153954)
-for an example.
+for an example. For this header, only the structured-dictionary **keys** should
+be interpreted: the values and parameters are currently unused, but may have
+meaning in the future.
 
 ### Data limits and noise
 

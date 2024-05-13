@@ -55,6 +55,14 @@ background requests will be made and the browser will not set
 `<script>` requests.
 
 If the `Attribution-Reporting-Support` header indicates OS support, the reporting origin can optionally respond to the request with a [list structured header](https://httpwg.org/specs/rfc8941.html#list) containing one or more URLs that indicates a desire to use the OS's attribution API instead of the browser's. Note that the API also allows browsers to only support OS-level attribution if they choose.
+
+Note: the `Attribution-Reporting-Support` header is subject to the browser adding
+"GREASE" parameters, to ensure that servers use a spec-compliant structured
+header parser. See [here](https://wicg.github.io/attribution-reporting-api/#example-a67a61e7)
+for an example. For this header, only the structured-dictionary **keys** should
+be interpreted: the values and parameters are currently unused, but may have
+meaning in the future.
+
 ```http
 // Registers a source against a native OS attribution API
 Attribution-Reporting-Register-OS-Source: "https://adtech.example/register", "https://other-adtech.example/register"
