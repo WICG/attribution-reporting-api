@@ -746,7 +746,7 @@ function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
   return hex128(ctx, j)
 }
 
-function aggregationKeys(ctx: Context, j: Json): Maybe<Map<string, bigint>> {
+function aggregationKeys(ctx: Context, j: Json): Maybe<AggregationKeys> {
   return keyValues(
     ctx,
     j,
@@ -1154,10 +1154,12 @@ function warnInconsistentMaxEventLevelReportsAndTriggerSpecs(
   }
 }
 
+export type AggregationKeys = Map<string, bigint>
+
 export type Source = CommonDebug &
   Priority & {
     aggregatableReportWindow: number
-    aggregationKeys: Map<string, bigint>
+    aggregationKeys: AggregationKeys
     destination: Set<string>
     expiry: number
     filterData: FilterData
@@ -1279,8 +1281,10 @@ function aggregatableTriggerData(
   )
 }
 
+export type AggregatableValues = Map<string, number>
+
 export type AggregatableValuesConfiguration = FilterPair & {
-  values: Map<string, number>
+  values: AggregatableValues
 }
 
 function aggregatableKeyValue(
@@ -1300,7 +1304,7 @@ function aggregatableKeyValue(
 function aggregatableKeyValues(
   ctx: Context,
   j: Json
-): Maybe<Map<string, number>> {
+): Maybe<AggregatableValues> {
   return keyValues(ctx, j, aggregatableKeyValue)
 }
 
