@@ -1185,13 +1185,23 @@ A <dfn>triggering status</dfn> is one of the following:
 Note: "<code>[=triggering status/noised=]</code>" only applies for [=triggering event-level attribution=] when it is attributed
 successfully but dropped as the noise was applied to the source.
 
+A <dfn>trigger debug data</dfn> is [=tuple=] with the following items:
+
+<dl dfn-for="trigger debug data">
+: <dfn>data type</dfn>
+:: A [=trigger debug data type=].
+: <dfn>report</dfn>
+:: Null or an [=attribution report=].
+
+</dl>
+
 A triggering result is a [=tuple=] with the following items:
 
 <dl dfn-for="triggering result">
 : <dfn>status</dfn>
 :: A [=triggering status=].
 : <dfn>debug data</dfn>
-:: Null or an [=attribution debug data=].
+:: Null or a [=trigger debug data=].
 
 </dl>
 
@@ -3042,16 +3052,11 @@ To <dfn>check if attribution should be blocked by rate limits</dfn> given an [=a
     1. Let |debugDataType| be "<code>[=trigger debug data type/trigger-event-attributions-per-source-destination-limit=]</code>".
     1. If |newRecord|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/aggregatable-attribution=]</code>",
         set |debugDataType| to "<code>[=trigger debug data type/trigger-aggregate-attributions-per-source-destination-limit=]</code>".
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with |debugDataType|, |trigger|, |sourceToAttribute|, and
-        [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", (|debugDataType|, null)).
 1. If the result of running [=should processing be blocked by reporting-origin limit=] with
     |newRecord| is <strong>blocked</strong>:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-reporting-origin-limit=]</code>", |trigger|, |sourceToAttribute| and
-        [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-reporting-origin-limit=]</code>", null)).
 1. Return null.
 
 <h3 algorithm id="creating-aggregatable-contributions">Creating aggregatable contributions</h3>
@@ -3241,10 +3246,8 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     ("<code>[=triggering status/dropped=]</code>", null).
 1. If |sourceToAttribute|'s [=attribution source/randomized response=] is not null and is not [=list/is empty|empty=]:
     1. [=Assert=]: |sourceToAttribute|'s [=attribution source/event-level attributable=] is false.
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-event-noise=]</code>", |trigger|, |sourceToAttribute| and
-        [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-event-noise=]</code>", null)).
 1. Let |matchedConfig| be null.
 1. [=set/iterate|For each=] [=event-level trigger configuration=] |config| of |trigger|'s
     [=attribution trigger/event-level trigger configurations=]:
@@ -3256,38 +3259,28 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
         1. Set |matchedConfig| to |config|.
         1. [=iteration/Break=].
 1. If |matchedConfig| is null:
-    1. Let |debugData| be the result of running
-        [=obtain debug data on trigger registration=] with "<code>[=trigger debug data type/trigger-event-no-matching-configurations=]</code>",
-        |trigger|, |sourceToAttribute| and [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-event-no-matching-configurations=]</code>", null)).
 1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null and
     |sourceToAttribute|'s [=attribution source/dedup keys=] [=list/contains=] it:
-     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-         with "<code>[=trigger debug data type/trigger-event-deduplicated=]</code>", |trigger|, |sourceToAttribute| and
-         [=obtain debug data on trigger registration/report=] set to null.
-     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+         ("<code>[=trigger debug data type/trigger-event-deduplicated=]</code>", null)).
 1. Let |specEntry| be the result of [=finding a matching trigger spec=] with
     |sourceToAttribute| and |matchedConfig|'s
     [=event-level trigger configuration/trigger data=].
 1. If |specEntry| is null:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-event-no-matching-trigger-data=]</code>", |trigger|, |sourceToAttribute| and
-        [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-event-no-matching-trigger-data=]</code>", null)).
 1. Let |windowResult| be the result of [=check whether a moment falls within a window=]
     with |trigger|'s [=attribution trigger/trigger time=] and
     |specEntry|'s [=map/value=]'s [=trigger spec/event-level report windows=]'s
     [=report window list/total window=].
 1. If |windowResult| is <strong>falls before</strong>:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-event-report-window-not-started=]</code>",
-        |trigger|, |sourceToAttribute| and [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-event-report-window-not-started=]</code>", null)).
 1. If |windowResult| is <strong>falls after</strong>:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-event-report-window-passed=]</code>",
-        |trigger|, |sourceToAttribute| and [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-event-report-window-passed=]</code>", null)).
 1. [=Assert=]: |windowResult| is <strong>falls within</strong>.
 1. Let |report| be the result of running [=obtain an event-level report=] with |sourceToAttribute|,
     |trigger|'s [=attribution trigger/trigger time=], |trigger|'s [=attribution trigger/debug key=],
@@ -3311,9 +3304,8 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null, return it.
 1. If |sourceToAttribute|'s [=attribution source/event-level attributable=] value
     is false:
-     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-         with "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>", |trigger|, |sourceToAttribute| and |report|.
-     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+         ("<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>", |report|)).
 1. If the result of running [=maybe replace event-level report=] with |sourceToAttribute| and |report| is:
     <dl class="switch">
     : "<code>[=event-level-report-replacement result/add-new-report=]</code>"
@@ -3321,20 +3313,16 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
          1. Let |numMatchingReports| be the number of entries in the [=event-level report cache=] whose
              [=event-level report/attribution destinations=] [=set/contains=] |trigger|'s [=attribution trigger/attribution destination=].
          1. If |numMatchingReports| is greater than or equal to the user agent's [=max event-level reports per attribution destination=]:
-             1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-                 with "<code>[=trigger debug data type/trigger-event-storage-limit=]</code>", |trigger|, |sourceToAttribute| and
-                 [=obtain debug data on trigger registration/report=] set to null.
-             1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+             1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+                 ("<code>[=trigger debug data type/trigger-event-storage-limit=]</code>", null)).
     : "<code>[=event-level-report-replacement result/drop-new-report-none-to-replace=]</code>"
     ::
-         1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-             with "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>", |trigger|, |sourceToAttribute| and |report|.
-         1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+         1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+             ("<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>", |report|)).
     : "<code>[=event-level-report-replacement result/drop-new-report-low-priority=]</code>"
     ::
-         1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-             with "<code>[=trigger debug data type/trigger-event-low-priority=]</code>", |trigger|, |sourceToAttribute| and |report|.
-         1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+         1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+             ("<code>[=trigger debug data type/trigger-event-low-priority=]</code>", |report|)).
 
     </dl>
 1. Let |triggeringStatus| be "<code>[=triggering status/attributed=]</code>".
@@ -3348,9 +3336,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     : not null
     ::
         1. Set |triggeringStatus| to "<code>[=triggering status/noised=]</code>".
-        1. Set |debugData| to the result of running [=obtain debug data on trigger registration=]
-            with "<code>[=trigger debug data type/trigger-event-noise=]</code>", |trigger|, |sourceToAttribute| and
-            [=obtain debug data on trigger registration/report=] set to null.
+        1. Set |debugData| to ("<code>[=trigger debug data type/trigger-event-noise=]</code>", null).
 
     </dl>
 1. Increment |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
@@ -3372,10 +3358,8 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. Let |windowResult| be the result of [=check whether a moment falls within a window=] with |trigger|'s
     [=attribution trigger/trigger time=] and |sourceToAttribute|'s [=attribution source/aggregatable report window=].
 1. If |windowResult| is <strong>falls after</strong>:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-aggregate-report-window-passed=]</code>", |trigger|, |sourceToAttribute|
-        and [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-aggregate-report-window-passed=]</code>", null)).
 1. [=Assert=]: |windowResult| is <strong>falls within</strong>.
 1. Let |matchedDedupKey| be null.
 1. [=list/iterate|For each=] [=aggregatable dedup key=] |aggregatableDedupKey| of |trigger|'s [=attribution trigger/aggregatable dedup keys=]:
@@ -3387,25 +3371,19 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
         1. [=iteration/Break=].
 1. If |matchedDedupKey| is not null and |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=]
     [=list/contains=] it:
-     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-         with "<code>[=trigger debug data type/trigger-aggregate-deduplicated=]</code>", |trigger|, |sourceToAttribute|
-         and [=obtain debug data on trigger registration/report=] set to null.
-     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+         ("<code>[=trigger debug data type/trigger-aggregate-deduplicated=]</code>", null)).
 1. Let |report| be the result of running [=obtain an aggregatable report=] with |sourceToAttribute| and |trigger|.
 1. If |report|'s [=aggregatable report/contributions=] [=list/is empty=]:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=] with
-        "<code>[=trigger debug data type/trigger-aggregate-no-contributions=]</code>", |trigger|, |sourceToAttribute| and
-        [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-aggregate-no-contributions=]</code>", null)).
 1. Let |numMatchingReports| be the number of entries in the [=aggregatable report cache=] whose
     [=aggregatable report/effective attribution destination=] equals |trigger|'s [=attribution trigger/attribution destination=]
      and [=aggregatable report/is null report=] is false.
 1. If |numMatchingReports| is greater than or equal to the user agent's
     [=max aggregatable reports per attribution destination=]:
-     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-         with "<code>[=trigger debug data type/trigger-aggregate-storage-limit=]</code>", |trigger|, |sourceToAttribute| and
-         [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-aggregate-storage-limit=]</code>", null)).
 1. Let |rateLimitRecord| be a new [=attribution rate-limit record=] with the items:
     : [=attribution rate-limit record/scope=]
     :: "<code>[=rate-limit scope/aggregatable-attribution=]</code>"
@@ -3425,15 +3403,12 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
     return it.
 1. If |sourceToAttribute|'s [=attribution source/number of aggregatable reports=] value is equal to [=max aggregatable reports per source=], then:
-    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=] with
-        "<code>[=trigger debug data type/trigger-aggregate-excessive-reports=]</code>", |trigger|, |sourceToAttribute|, and |report|.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-aggregate-excessive-reports=]</code>", null)).
 1. If the result of running [=check if an attribution source can create aggregatable contributions=]
     with |report| and |sourceToAttribute| is false:
-     1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-         with "<code>[=trigger debug data type/trigger-aggregate-insufficient-budget=]</code>", |trigger|, |sourceToAttribute| and
-        [=obtain debug data on trigger registration/report=] set to null.
-    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", |debugData|).
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-aggregate-insufficient-budget=]</code>", null)).
 1. Add |report| to the [=aggregatable report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of aggregatable reports=] value by 1.
 1. Increment |sourceToAttribute|'s [=attribution source/aggregatable budget consumed=] value by
@@ -3448,15 +3423,19 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
-To <dfn>obtain and deliver a debug report on trigger registration</dfn> given a [=trigger debug data type=] |dataType|,
-an [=attribution trigger=] |trigger| and an optional [=attribution source=]
+To <dfn>obtain and deliver a debug report on trigger registration</dfn>
+given a [=set=] of [=trigger debug data=] |dataSet|, an [=attribution trigger=] |trigger|,
+and an optional [=attribution source=]
 <dfn for="obtain and deliver a debug report on trigger registration"><var>sourceToAttribute</var></dfn>:
 
-1. Let |debugData| be the result of running [=obtain debug data on trigger registration=]
-    with |dataType|, |trigger|, |sourceToAttribute| and
-    [=obtain debug data on trigger registration/report=] set to null.
-1. If |debugData| is null, return.
-1. Run [=obtain and deliver a debug report=] with « |debugData| », |trigger|'s [=attribution trigger/reporting origin=],
+1. Let |debugDataList| be a new [=list=].
+1. [=set/iterate|For each=] |data| of |dataSet|:
+    1. Let |debugData| be the result of running [=obtain debug data on trigger registration=] with
+        |data|'s [=trigger debug data/data type=], |trigger|, |sourceToAttribute|,
+        and |data|'s [=trigger debug data/report=].
+    1. If |debugData| is not null, [=list/append=] |debugData| to |debugDataList|.
+1. If |debugDataList| [=list/is empty=], return.
+1. Run [=obtain and deliver a debug report=] with |debugDataList|, |trigger|'s [=attribution trigger/reporting origin=],
     and |trigger|'s [=attribution trigger/fenced=].
 
 To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
@@ -3489,8 +3468,9 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     [=set/is empty=] and |hasAggregatableData| is false, return.
 1. Let |matchingSources| be the result of running [=find matching sources=] with |trigger|.
 1. If |matchingSources| [=list/is empty=]:
-    1. Run [=obtain and deliver a debug report on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-no-matching-source=]</code>", |trigger| and [=obtain and deliver a debug report on trigger registration/sourceToAttribute=] set to null.
+    1. Run [=obtain and deliver a debug report on trigger registration=] with
+        « ("<code>[=trigger debug data type/trigger-no-matching-source=]</code>", null) »,
+        |trigger| and [=obtain and deliver a debug report on trigger registration/sourceToAttribute=] set to null.
     1. If |hasAggregatableData| is true, then run [=generate null reports and assign private state tokens=]
         with |trigger| and [=generate null reports and assign private state tokens/report=] set to null.
     1. Return.
@@ -3500,8 +3480,8 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=],
     |trigger|'s [=attribution trigger/negated filters=], and
     |trigger|'s [=attribution trigger/trigger time=] is false:
-    1. Run [=obtain and deliver a debug report on trigger registration=]
-        with "<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>",
+    1. Run [=obtain and deliver a debug report on trigger registration=] with
+        « ("<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>", null) »,
         |trigger|, and |sourceToAttribute|.
     1. If |hasAggregatableData| is true, then run [=generate null reports and assign private state tokens=]
         with |trigger| and [=generate null reports and assign private state tokens/report=] set to null.
@@ -3513,16 +3493,13 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     with |trigger| and |sourceToAttribute|.
 1. Let |aggregatableResult| be the result of running [=trigger aggregatable attribution=]
     with |trigger| and |sourceToAttribute|.
-1. Let |eventLevelDebugData| be |eventLevelResult|'s [=triggering result/debug data=].
-1. Let |aggregatableDebugData| be |aggregatableResult|'s [=triggering result/debug data=].
-1. Let |debugDataList| be an [=list/is empty|empty=] [=list=].
-1. If |eventLevelDebugData| is not null, then [=list/append=] |eventLevelDebugData| to |debugDataList|.
-1. If |aggregatableDebugData| is not null:
-    1. If |debugDataList| [=list/is empty=] or |aggregatableDebugData|'s [=attribution debug data/data type=]
-        does not equal |eventLevelDebugData|'s [=attribution debug data/data type=],
-        then [=list/append=] |aggregatableDebugData| to |debugDataList|.
-1. If |debugDataList| is not [=list/is empty|empty=], then run [=obtain and deliver a debug report=]
-    with |debugDataList| and |trigger|'s [=attribution trigger/reporting origin=].
+1. Let |debugDataSet| be a new [=set=].
+1. If |eventLevelResult|'s [=triggering result/debug data=] is not null,
+    then [=set/append=] |eventLevelResult|'s [=triggering result/debug data=] to |debugDataSet|.
+1. If |aggregatableResult|'s [=triggering result/debug data=] is not null,
+    then [=set/append=] |aggregatableResult|'s [=triggering result/debug data=] to |debugDataSet|.
+1. Run [=obtain and deliver a debug report on trigger registration=] with |debugDataSet|,
+    |trigger|, and |sourceToAttribute|.
 1. If |hasAggregatableData| and |aggregatableResult|'s [=triggering result/status=] is "<code>[=triggering status/dropped=]</code>",
     run [=generate null reports and assign private state tokens=] with |trigger| and
     [=generate null reports and assign private state tokens/report=] set to null.
