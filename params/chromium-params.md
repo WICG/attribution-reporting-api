@@ -25,7 +25,7 @@ Chromium's implementation assigns the following values:
 | [Randomized aggregatable report delay][] | [10 minutes][randomized aggregatable report delay value] |
 | [Max event-level channel capacity for navigation sources][] | [11.5 bits][max event-level channel capacity for navigations value] |
 | [Max event-level channel capacity for event sources][] | [6.5 bits][max event-level channel capacity for events value] |
-| [Max unique attribution scope sets per navigation][] | [1][max unique attribution scope sets per navigation] |
+| [Max unique attribution scope sets per navigation][] | [1][max unique attribution scope sets per navigation value] |
 
 [Max pending sources per source origin]: https://wicg.github.io/attribution-reporting-api/#max-pending-sources-per-source-origin
 [max pending sources per source origin value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=151;drc=3be0e68c5ed56aba7c321cbaea22558eee61fc50
