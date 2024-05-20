@@ -65,4 +65,4 @@ Chromium's implementation assigns the following values:
 [Max event-level channel capacity for event sources]: https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source
 [max event-level channel capacity for events value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=114;drc=22c828d3e18706a79fde266109d0e9290a679c56
 [Max unique attribution scope sets per navigation]: .
-[ax unique attribution scope sets per navigation]: .
+[max unique attribution scope sets per navigation value]: .
