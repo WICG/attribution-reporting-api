@@ -711,7 +711,7 @@ function aggregationCoordinatorOriginField(
 
 export type AggregateDebugReportingConfig = KeyPiece & {
   aggregationCoordinatorOrigin: string
-  data: AggregateDebugReportingData[]
+  debugData: AggregateDebugReportingData[]
 }
 
 const aggregateDebugReportingConfig: StructFields<
@@ -719,7 +719,7 @@ const aggregateDebugReportingConfig: StructFields<
   RegistrationContext
 > = {
   aggregationCoordinatorOrigin: aggregationCoordinatorOriginField,
-  data: field('data', aggregateDebugReportingDataList, []),
+  debugData: field('debug_data', aggregateDebugReportingDataList, []),
 
   ...keyPieceField,
 }
@@ -920,7 +920,7 @@ function sourceAggregateDebugReportingConfig(
 
     ...aggregateDebugReportingConfig,
   }).filter((s) => {
-    for (const d of s.data) {
+    for (const d of s.debugData) {
       if (d.value > s.budget) {
         ctx.error(`data contains value greater than budget (${s.budget})`)
         return false

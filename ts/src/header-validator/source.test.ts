@@ -43,7 +43,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 1234,
         "key_piece": "0x2",
-        "data": [ {
+        "debug_data": [ {
           "key_piece": "0x1",
           "types": ["source-success"],
           "value": 123
@@ -78,7 +78,7 @@ const testCases: TestCase[] = [
       aggregateDebugReporting: {
         budget: 1234,
         keyPiece: 2n,
-        data: [
+        debugData: [
           {
             keyPiece: 1n,
             types: ['source-success'],
@@ -1547,12 +1547,12 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": {}
+	"debug_data": {}
       }
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data'],
+        path: ['aggregate_debug_reporting', 'debug_data'],
         msg: 'must be a list',
       },
     ],
@@ -1564,12 +1564,12 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": [1]
+	"debug_data": [1]
       }
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data', 0],
+        path: ['aggregate_debug_reporting', 'debug_data', 0],
         msg: 'must be an object',
       },
     ],
@@ -1581,20 +1581,20 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": [{}]
+	"debug_data": [{}]
       }
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'types'],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'required',
       },
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'required',
       },
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'key_piece'],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'required',
       },
     ],
@@ -1606,7 +1606,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": 1,
           "types": ["source-success"],
           "value": 123
@@ -1615,7 +1615,7 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'key_piece'],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'must be a string',
       },
     ],
@@ -1627,7 +1627,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": "1",
           "types": ["source-success"],
           "value": 123
@@ -1636,7 +1636,7 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'key_piece'],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
       },
     ],
@@ -1648,7 +1648,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
           "value": "1"
@@ -1657,7 +1657,7 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be a number',
       },
     ],
@@ -1669,7 +1669,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 789,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
           "value": 0 
@@ -1678,7 +1678,7 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be in the range [1, 65536]',
       },
     ],
@@ -1690,7 +1690,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 789,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
           "value": 65537 
@@ -1699,7 +1699,7 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'value'],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be in the range [1, 65536]',
       },
     ],
@@ -1711,7 +1711,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 789,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
           "value": 790
@@ -1732,7 +1732,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": "0x1",
           "types": "1",
           "value": 123
@@ -1741,7 +1741,7 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'types'],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'must be a list',
       },
     ],
@@ -1753,7 +1753,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": "0x2",
           "types": [],
           "value": 123
@@ -1762,7 +1762,7 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'types'],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'length must be in the range [1, Infinity]',
       },
     ],
@@ -1774,7 +1774,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": "0x2",
           "types": [1],
           "value": 123
@@ -1783,7 +1783,7 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'types', 0],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types', 0],
         msg: 'must be a string',
       },
     ],
@@ -1795,7 +1795,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": "0x2",
           "types": ["abc", "abc"],
           "value": 123
@@ -1804,11 +1804,11 @@ const testCases: TestCase[] = [
     }`,
     expectedWarnings: [
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'types', 0],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types', 0],
         msg: 'unknown type',
       },
       {
-        path: ['aggregate_debug_reporting', 'data', 0, 'types', 1],
+        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types', 1],
         msg: 'unknown type',
       },
     ],
@@ -1820,7 +1820,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": "0x2",
           "types": ["source-success", "source-success"],
           "value": 123
@@ -1829,7 +1829,7 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data'],
+        path: ['aggregate_debug_reporting', 'debug_data'],
         msg: 'duplicate type: source-success',
       },
     ],
@@ -1841,7 +1841,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"data": [{
+	"debug_data": [{
           "key_piece": "0x2",
           "types": ["unspecified"],
           "value": 123
@@ -1854,7 +1854,7 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'data'],
+        path: ['aggregate_debug_reporting', 'debug_data'],
         msg: 'duplicate type: unspecified',
       },
     ],

@@ -62,7 +62,7 @@ function serializeAggregateDebugReportingData(
 
 export type AggregateDebugReportingConfig = KeyPiece & {
   aggregation_coordinator_origin: string
-  data: AggregateDebugReportingData[]
+  debug_data: AggregateDebugReportingData[]
 }
 
 function serializeAggregateDebugReportingConfig(
@@ -72,7 +72,7 @@ function serializeAggregateDebugReportingConfig(
     ...serializeKeyPiece(d),
 
     aggregation_coordinator_origin: d.aggregationCoordinatorOrigin,
-    data: Array.from(d.data, serializeAggregateDebugReportingData),
+    debug_data: Array.from(d.debugData, serializeAggregateDebugReportingData),
   }
 }
 
