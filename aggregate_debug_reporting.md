@@ -8,7 +8,7 @@
   - [Introduction](#introduction)
   - [API changes](#api-changes)
     - [Opting-in aggregate debug reporting](#opting-in-aggregate-debug-reporting)
-    - [Aggregatable debug reports](#aggregatable-debug--reports)
+    - [Aggregatable debug reports](#aggregatable-debug-reports)
       - [Encrypted payload](#encrypted-payload)
   - [Privacy and Security](#privacy-and-security)
     - [Contribution bounding and budgeting](#contribution-bounding-and-budgeting)
