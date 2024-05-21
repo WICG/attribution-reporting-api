@@ -54,7 +54,7 @@ will accept an optional dictionary field:
      "key_piece": "0x120", // required, source- or trigger-side key piece
      "debug_data": [    
         {  
-          "types": ["source-destination-limit",  "source-destination-rate-limit"], // required to be non-empty
+          "types": ["source-destination-limit", "source-destination-rate-limit"], // required to be non-empty
           "key_piece": "0x1", // required
           "value": 123 // required
        },
