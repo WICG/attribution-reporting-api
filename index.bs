@@ -1670,11 +1670,10 @@ positive integer |maxValue|, a [=boolean=] |isSource|, and an [=aggregate debug 
 1. Let |aggregationCoordinator| be [=default aggregation coordinator=].
 1. If |map|["<code>[=aggregate-debug-reporting JSON key/aggregation_coordinator_origin=]</code>"]
     [=map/exists=]:
-    1. Let |aggregationCoordinatorOrigin| be the result of [=parsing aggregation coordinator=].
-    1. If |aggregationCoordinatorOrigin| is null, return |default|.
+    1. Set |aggregationCoordinator| to the result of [=parsing aggregation coordinator=].
+    1. If |aggregationCoordinator| is null, return |default|.
 1. Let |aggregateDebugReportingConfig| be a new [=aggregate debug reporting config=]
     with the items:
-
     : [=aggregate debug reporting config/key piece=]
     :: |keyPiece|
     : [=aggregate debug reporting config/debug data=]
@@ -1682,6 +1681,9 @@ positive integer |maxValue|, a [=boolean=] |isSource|, and an [=aggregate debug 
     : [=aggregate debug reporting config/aggregation coordinator=]
     :: |aggregationCoordinator|
 1. Return |aggregateDebugReportingConfig|.
+
+Note: The parsing errors are intentially ignored in this algorithm with |default|
+returned to avoid data loss with the optional debug reporting feature.
 
 <h3 id="getting-registration-info">Getting registration info</h3>
 
