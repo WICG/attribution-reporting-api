@@ -50,21 +50,21 @@ will accept an optional dictionary field:
   ..., // existing fields
 
   "aggregatable_debug_reporting": {
-     "budget": 1024, // required, source registration only
-     "key_piece": "0x120", // required, source- or trigger-side key piece
-     "debug_data": [    
-        {  
-          "types": ["source-destination-limit", "source-destination-rate-limit"], // required to be non-empty
-          "key_piece": "0x1", // required
-          "value": 123 // required
-       },
-       {  
-         "types": ["unspecified"],
-          "key_piece": "0x7",
-          "value": 789
-        }
-     ], // defaults to [], i.e. doesn't opt-in to any debug types 
-     "aggregation_coordinator_origin": "https://publickeyservice.msmt.aws.privacysandboxservices.com" // defaults to implementation-defined default origin
+    "budget": 1024, // required, source registration only
+    "key_piece": "0x120", // required, source- or trigger-side key piece
+    "debug_data": [    
+      {  
+        "types": ["source-destination-limit", "source-destination-rate-limit"], // required to be non-empty
+        "key_piece": "0x1", // required
+        "value": 123 // required
+      },
+      {  
+        "types": ["unspecified"],
+         "key_piece": "0x7",
+         "value": 789
+       }
+    ], // defaults to [], i.e. doesn't opt-in to any debug types 
+    "aggregation_coordinator_origin": "https://publickeyservice.msmt.aws.privacysandboxservices.com" // defaults to implementation-defined default origin
   }
 }
 ```
