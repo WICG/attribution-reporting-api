@@ -49,7 +49,7 @@ will accept an optional dictionary field:
 {
   ..., // existing fields
 
-  "aggregate_debug_reporting": {
+  "aggregatable_debug_reporting": {
      "budget": 1024, // required, source registration only
      "key_piece": "0x120", // required, source- or trigger-side key piece
      "debug_data": [    
