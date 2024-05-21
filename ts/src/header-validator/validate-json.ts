@@ -29,7 +29,8 @@ class GenericContext extends Context {
 class RegistrationContext extends GenericContext {
   constructor(
     readonly vsv: Readonly<VendorSpecificValues>,
-    parseFullFlex: boolean
+    parseFullFlex: boolean,
+    readonly aggregateDebugTypes: Readonly<[string, ...string[]]>
   ) {
     super(parseFullFlex)
   }
@@ -42,7 +43,7 @@ class SourceContext extends RegistrationContext {
     readonly sourceType: SourceType,
     readonly noteInfoGain: boolean
   ) {
-    super(vsv, parseFullFlex)
+    super(vsv, parseFullFlex, constants.sourceAggregateDebugTypes)
   }
 }
 
@@ -629,11 +630,7 @@ const priorityField: StructFields<Priority> = {
 }
 
 function isDebugTypeSupported(ctx: RegistrationContext, s: string) {
-  if (ctx instanceof SourceContext) {
-    return constants.sourceAggregateDebugTypes.includes(s)
-  } else {
-    return constants.triggerAggregateDebugTypes.includes(s)
-  }
+  return ctx.aggregateDebugTypes.includes(s)
 }
 
 function aggregateDebugType(ctx: RegistrationContext, j: Json): Maybe<string> {
@@ -1619,7 +1616,11 @@ export function validateTrigger(
   parseFullFlex: boolean = false
 ): [ValidationResult, Maybe<Trigger>] {
   return validateJSON(
-    new RegistrationContext(vsv, parseFullFlex),
+    new RegistrationContext(
+      vsv,
+      parseFullFlex,
+      constants.triggerAggregateDebugTypes
+    ),
     json,
     trigger
   )

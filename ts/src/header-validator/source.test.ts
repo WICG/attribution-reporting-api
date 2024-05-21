@@ -1496,7 +1496,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"aggregation_coordinator_origin": 1
+        "aggregation_coordinator_origin": 1
       }
     }`,
     expectedErrors: [
@@ -1513,7 +1513,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"aggregation_coordinator_origin": "a.test"
+        "aggregation_coordinator_origin": "a.test"
       }
     }`,
     expectedErrors: [
@@ -1530,7 +1530,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"aggregation_coordinator_origin": "http://a.test"
+        "aggregation_coordinator_origin": "http://a.test"
       }
     }`,
     expectedErrors: [
@@ -1547,7 +1547,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": {}
+        "debug_data": {}
       }
     }`,
     expectedErrors: [
@@ -1564,7 +1564,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": [1]
+        "debug_data": [1]
       }
     }`,
     expectedErrors: [
@@ -1581,7 +1581,7 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": [{}]
+        "debug_data": [{}]
       }
     }`,
     expectedErrors: [
@@ -1606,11 +1606,11 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": 1,
           "types": ["source-success"],
           "value": 123
-	}]
+        }]
       }
     }`,
     expectedErrors: [
@@ -1627,11 +1627,11 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": "1",
           "types": ["source-success"],
           "value": 123
-	}]
+        }]
       }
     }`,
     expectedErrors: [
@@ -1648,11 +1648,11 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
           "value": "1"
-	}]
+        }]
       }
     }`,
     expectedErrors: [
@@ -1669,11 +1669,11 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 789,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
           "value": 0 
-	}]
+        }]
       }
     }`,
     expectedErrors: [
@@ -1690,11 +1690,11 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 789,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
           "value": 65537 
-	}]
+        }]
       }
     }`,
     expectedErrors: [
@@ -1711,11 +1711,11 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 789,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
           "value": 790
-	}]
+        }]
       }
     }`,
     expectedErrors: [
@@ -1732,11 +1732,11 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": "0x1",
           "types": "1",
           "value": 123
-	}]
+        }]
       }
     }`,
     expectedErrors: [
@@ -1753,11 +1753,11 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": "0x2",
           "types": [],
           "value": 123
-	}]
+        }]
       }
     }`,
     expectedErrors: [
@@ -1774,11 +1774,11 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": "0x2",
           "types": [1],
           "value": 123
-	}]
+        }]
       }
     }`,
     expectedErrors: [
@@ -1795,11 +1795,11 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": "0x2",
           "types": ["abc", "abc"],
           "value": 123
-	}]
+        }]
       }
     }`,
     expectedWarnings: [
@@ -1820,11 +1820,11 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": "0x2",
           "types": ["source-success", "source-success"],
           "value": 123
-	}]
+        }]
       }
     }`,
     expectedErrors: [
@@ -1841,15 +1841,15 @@ const testCases: TestCase[] = [
       "aggregate_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-	"debug_data": [{
+        "debug_data": [{
           "key_piece": "0x2",
           "types": ["unspecified"],
           "value": 123
-	}, {
+        }, {
           "key_piece": "0x3",
           "types": ["unspecified"],
           "value": 123
-	}]
+        }]
       }
     }`,
     expectedErrors: [
