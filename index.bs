@@ -760,11 +760,11 @@ To <dfn>find a matching trigger spec</dfn> given an [=attribution source=]
 
     </dl>
 
-<h3 dfn-type=dfn>Aggregate debug reporting config</h3>
+<h3 dfn-type=dfn>Aggregatable debug reporting config</h3>
 
-An aggregate debug reporting config is a [=struct=] with the following items:
+An aggregatable debug reporting config is a [=struct=] with the following items:
 
-<dl dfn-for="aggregate debug reporting config">
+<dl dfn-for="aggregatable debug reporting config">
 : <dfn>key piece</dfn> (default 0)
 :: A non-negative 128-bit integer.
 : <dfn>debug data</dfn> (default an [=map/is empty|empty=] [=map=])
@@ -839,8 +839,8 @@ An attribution source is a [=struct=] with the following items:
 :: A [=boolean=].
 : <dfn>remaining aggregatable debug budget</dfn>
 :: A non-negative integer.
-: <dfn>aggregate debug reporting config</dfn>
-:: An [=aggregate debug reporting config=].
+: <dfn>aggregatable debug reporting config</dfn>
+:: An [=aggregatable debug reporting config=].
 
 </dl>
 
@@ -968,8 +968,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: Null or a [=string=].
 : <dfn>fenced</dfn>
 :: A [=boolean=].
-: <dfn>aggregate debug reporting config</dfn>
-:: An [=aggregate debug reporting config=].
+: <dfn>aggregatable debug reporting config</dfn>
+:: An [=aggregatable debug reporting config=].
 
 </dl>
 
@@ -1585,11 +1585,11 @@ To <dfn>parse an aggregation coordinator</dfn> given |value|:
 1. If |url|'s [=url/origin=] is not an [=aggregation coordinator=], return null.
 1. Return |url|'s [=url/origin=].
 
-<h3 id="parsing-aggregate-debug-reporting-config">Parsing aggregate debug reporting config</h3>
+<h3 id="parsing-aggregatable-debug-reporting-config">Parsing aggregatable debug reporting config</h3>
 
-An <dfn>aggregate-debug-reporting JSON key</dfn> is one of the following:
+An <dfn>aggregatable-debug-reporting JSON key</dfn> is one of the following:
 
-<ul dfn-for="aggregate-debug-reporting JSON key">
+<ul dfn-for="aggregatable-debug-reporting JSON key">
 <li>"<dfn><code>aggregation_coordinator_origin</code></dfn>"
 <li>"<dfn><code>debug_data</code></dfn>"
 <li>"<dfn><code>key_piece</code></dfn>"
@@ -1597,7 +1597,7 @@ An <dfn>aggregate-debug-reporting JSON key</dfn> is one of the following:
 <li>"<dfn><code>value</code></dfn>"
 </ul>
 
-To <dfn>parse aggregate debug reporting data</dfn> given a |dataList|, a
+To <dfn>parse aggregatable debug reporting data</dfn> given a |dataList|, a
 positive integer |maxValue|, and a [=boolean=] |isSource|:
 
 1. [=Assert=]: |maxValue| is less than or equal to [=allowed aggregatable budget per source=].
@@ -1615,25 +1615,25 @@ positive integer |maxValue|, and a [=boolean=] |isSource|:
 1. Let |unspecifiedContribution| be null.
 1. [=list/iterate|For each=] |data| of |dataList|:
     1. If |data| is not a [=map=], return null.
-    1. If |data|["<code>[=aggregate-debug-reporting JSON key/key_piece=]</code>"]
+    1. If |data|["<code>[=aggregatable-debug-reporting JSON key/key_piece=]</code>"]
         does not [=map/exist=], return null.
-    1. If |data|["<code>[=aggregate-debug-reporting JSON key/key_piece=]</code>"]
+    1. If |data|["<code>[=aggregatable-debug-reporting JSON key/key_piece=]</code>"]
         is not a [=string=], return null.
     1. Let |dataKeyPiece| be the result of running [=parse an aggregation key piece=]
-        with |data|["<code>[=aggregate-debug-reporting JSON key/key_piece=]</code>"].
+        with |data|["<code>[=aggregatable-debug-reporting JSON key/key_piece=]</code>"].
     1. If |dataKeyPiece| is an error, return null.
-    1. If |data|["<code>[=aggregate-debug-reporting JSON key/value=]</code>"]
+    1. If |data|["<code>[=aggregatable-debug-reporting JSON key/value=]</code>"]
         does not [=map/exist=], return null.
-    1. If |data|["<code>[=aggregate-debug-reporting JSON key/value=]</code>"] is
+    1. If |data|["<code>[=aggregatable-debug-reporting JSON key/value=]</code>"] is
         not an integer or is less than or equal to 0 or is greater than |maxValue|, return null.
     1. Let |contribution| be a new [=aggregatable contribution=] with the items:
         : [=aggregatable contribution/key=]
         :: |dataKeyPiece|
         : [=aggregatable contribution/value=]
-        :: |data|["<code>[=aggregate-debug-reporting JSON key/value=]</code>"]
-    1. If |data|["<code>[=aggregate-debug-reporting JSON key/types=]</code>"] does
+        :: |data|["<code>[=aggregatable-debug-reporting JSON key/value=]</code>"]
+    1. If |data|["<code>[=aggregatable-debug-reporting JSON key/types=]</code>"] does
         not [=map/exist=], return null.
-    1. Let |dataTypes| be |data|["<code>[=aggregate-debug-reporting JSON key/types=]</code>"].
+    1. Let |dataTypes| be |data|["<code>[=aggregatable-debug-reporting JSON key/types=]</code>"].
     1. If |dataTypes| is not a [=list=] or [=list/is empty=], return null.
     1. [=list/iterate|For each=] |type| of |dataTypes|:
         1. If |type| is not a [=string=], return null.
@@ -1650,37 +1650,37 @@ positive integer |maxValue|, and a [=boolean=] |isSource|:
         |debugDataMap|[|type|] to |unspecifiedContribution|.
 1. Return |debugDataMap|.
 
-To <dfn>parse aggregate debug reporting config</dfn> given a [=map=] |map|, a
-positive integer |maxValue|, a [=boolean=] |isSource|, and an [=aggregate debug reporting config=]
+To <dfn>parse an aggregatable debug reporting config</dfn> given a [=map=] |map|, a
+positive integer |maxValue|, a [=boolean=] |isSource|, and an [=aggregatable debug reporting config=]
 |default|:
 
-1. If |map|["<code>[=aggregate-debug-reporting JSON key/key_piece=]</code>"] does not
+1. If |map|["<code>[=aggregatable-debug-reporting JSON key/key_piece=]</code>"] does not
     [=map/exist=], return |default|.
-1. If |map|["<code>[=aggregate-debug-reporting JSON key/key_piece=]</code>"] is not a
+1. If |map|["<code>[=aggregatable-debug-reporting JSON key/key_piece=]</code>"] is not a
     [=string=], return |default|.
 1. Let |keyPiece| be the result of running [=parse an aggregation key piece=]
-    with |map|["<code>[=aggregate-debug-reporting JSON key/key_piece=]</code>"].
+    with |map|["<code>[=aggregatable-debug-reporting JSON key/key_piece=]</code>"].
 1. If |keyPiece| is an error, return |default|.
 1. Let |debugDataMap| be a new [=map=].
-1. If |map|["<code>[=aggregate-debug-reporting JSON key/debug_data=]</code>"] [=map/exists=]:
-    1. Set |debugDataMap| to the result of running [=parse aggregate debug reporting data=]
-        with |map|["<code>[=aggregate-debug-reporting JSON key/debug_data=]</code>"], |maxValue|,
+1. If |map|["<code>[=aggregatable-debug-reporting JSON key/debug_data=]</code>"] [=map/exists=]:
+    1. Set |debugDataMap| to the result of running [=parse aggregatable debug reporting data=]
+        with |map|["<code>[=aggregatable-debug-reporting JSON key/debug_data=]</code>"], |maxValue|,
         and |isSource|.
     1. If |debugDataMap| is null, return |default|.
 1. Let |aggregationCoordinator| be [=default aggregation coordinator=].
-1. If |map|["<code>[=aggregate-debug-reporting JSON key/aggregation_coordinator_origin=]</code>"]
+1. If |map|["<code>[=aggregatable-debug-reporting JSON key/aggregation_coordinator_origin=]</code>"]
     [=map/exists=]:
-    1. Set |aggregationCoordinator| to the result of [=parsing aggregation coordinator=].
+    1. Set |aggregationCoordinator| to the result of [=parsing an aggregation coordinator=].
     1. If |aggregationCoordinator| is null, return |default|.
-1. Let |aggregateDebugReportingConfig| be a new [=aggregate debug reporting config=]
+1. Let |aggregatableDebugReportingConfig| be a new [=aggregatable debug reporting config=]
     with the items:
-    : [=aggregate debug reporting config/key piece=]
+    : [=aggregatable debug reporting config/key piece=]
     :: |keyPiece|
-    : [=aggregate debug reporting config/debug data=]
+    : [=aggregatable debug reporting config/debug data=]
     :: |debugDataMap|
-    : [=aggregate debug reporting config/aggregation coordinator=]
+    : [=aggregatable debug reporting config/aggregation coordinator=]
     :: |aggregationCoordinator|
-1. Return |aggregateDebugReportingConfig|.
+1. Return |aggregatableDebugReportingConfig|.
 
 Note: The parsing errors are intentionally ignored in this algorithm with |default|
 returned to avoid data loss from the optional debug reporting feature.
@@ -2189,8 +2189,8 @@ Note: This algorithm computes the channel capacity [[CHAN]] of a q-ary symmetric
 A <dfn>source-registration JSON key</dfn> is one of the following:
 
 <ul dfn-for="source-registration JSON key">
+<li>"<dfn><code>aggregatable_debug_reporting</code></dfn>"
 <li>"<dfn><code>aggregatable_report_window</code></dfn>"
-<li>"<dfn><code>aggregate_debug_reporting</code></dfn>"
 <li>"<dfn><code>aggregation_keys</code></dfn>"
 <li>"<dfn><code>budget</code></dfn>"
 <li>"<dfn><code>debug_key</code></dfn>"
@@ -2463,8 +2463,8 @@ To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
 Issue: Invoke [=parse summary buckets=] and [=parse summary window operator=]
 from this algorithm.
 
-To <dfn>parse a source aggregate debug reporting config</dfn> given |value|, a
-non-negative integer |defaultBudget|, and an [=aggregate debug reporting config=]
+To <dfn>parse a source aggregatable debug reporting config</dfn> given |value|, a
+non-negative integer |defaultBudget|, and an [=aggregatable debug reporting config=]
 |defaultConfig|:
 
 1. If |value| is not a [=map=], return the [=tuple=] (|defaultBudget|, |defaultConfig|).
@@ -2474,7 +2474,7 @@ non-negative integer |defaultBudget|, and an [=aggregate debug reporting config=
 1. If |budget| is not an integer or is less than or equal to 0 or is greater than
     [=allowed aggregatable budget per source=], return the [=tuple=] (|defaultBudget|, |defaultConfig|).
 1. Let |isSource| be true.
-1. Let |config| be the result of running [=parse aggregate debug reporting config=]
+1. Let |config| be the result of running [=parse an aggregatable debug reporting config=]
     with |value|, |budget|, |isSource|, and |defaultConfig|.
 1. Return the [=tuple=] (|budget|, |config|).
 
@@ -2547,14 +2547,14 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Set |epsilon| to |value|["<code>[=source-registration JSON key/event_level_epsilon=]</code>"] if it [=map/exists=]:
 1. If |epsilon| is not a double, is less than 0, or is greater than the user agent's [=max settable event-level epsilon=], return null.
 1. Let |aggregatableDebugBudget| be 0.
-1. Let |aggregateDebugReportingConfig| be a new [=aggregate debug reporting config=].
-1. If |value|["<code>[=source-registration JSON key/aggregate_debug_reporting=]</code>"] [=map/exists=]:
-    1. Let |aggregateDebugReportingResult| be the result of running
-        [=parse source aggregate debug reporting config=] with
-        |value|["<code>[=source-registration JSON key/aggregate_debug_reporting=]</code>"],
-        |aggregatableDebugBudget|, and |aggregateDebugReportingConfig|.
-    1. Set |aggregatableDebugBudget| to |aggregateDebugReportingResult|[0].
-    1. Set |aggregateDebugReportingConfig| to |aggregateDebugReportingResult|[1].
+1. Let |aggregatableDebugReportingConfig| be a new [=aggregatable debug reporting config=].
+1. If |value|["<code>[=source-registration JSON key/aggregatable_debug_reporting=]</code>"] [=map/exists=]:
+    1. Let |aggregatableDebugReportingResult| be the result of running
+        [=parse a source aggregatable debug reporting config=] with
+        |value|["<code>[=source-registration JSON key/aggregatable_debug_reporting=]</code>"],
+        |aggregatableDebugBudget|, and |aggregatableDebugReportingConfig|.
+    1. Set |aggregatableDebugBudget| to |aggregatableDebugReportingResult|[0].
+    1. Set |aggregatableDebugReportingConfig| to |aggregatableDebugReportingResult|[1].
 1. Let |aggregatableAttributionBudget| be [=allowed aggregatable budget per source=] - |aggregatableDebugBudget|.
 1. If [=automation local testing mode=] is true, set |epsilon| to `∞`.
 1. Let |source| be a new [=attribution source=] struct whose items are:
@@ -2605,8 +2605,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |fenced|
     : [=attribution source/remaining aggregatable debug budget=]
     :: |aggregatableDebugBudget|
-    : [=attribution source/aggregate debug reporting config=]
-    :: |aggregateDebugReportingConfig|
+    : [=attribution source/aggregatable debug reporting config=]
+    :: |aggregatableDebugReportingConfig|
 1. Return |source|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -2866,11 +2866,11 @@ should be fully determined regardless of the result of checks on implicitly repo
 A <dfn>trigger-registration JSON key</dfn> is one of the following:
 
 <ul dfn-for="trigger-registration JSON key">
+<li>"<dfn><code>aggregatable_debug_reporting</code></dfn>"
 <li>"<dfn><code>aggregatable_deduplication_keys</code></dfn>"
 <li>"<dfn><code>aggregatable_source_registration_time</code></dfn>"
 <li>"<dfn><code>aggregatable_trigger_data</code></dfn>"
 <li>"<dfn><code>aggregatable_values</code></dfn>"
-<li>"<dfn><code>aggregate_debug_reporting</code></dfn>"
 <li>"<dfn><code>aggregation_coordinator_origin</code></dfn>"
 <li>"<dfn><code>debug_key</code></dfn>"
 <li>"<dfn><code>debug_reporting</code></dfn>"
@@ -3078,7 +3078,7 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
     |debugReportingEnabled| to value["<code>[=trigger-registration JSON key/debug_reporting=]</code>"].
 1. Let |aggregationCoordinator| be [=default aggregation coordinator=].
 1. If |value|["<code>[=trigger-registration JSON key/aggregation_coordinator_origin=]</code>"] [=map/exists=]:
-    1. Set |aggregationCoordinator| to the result of running [=parse aggregation coordinator=] with
+    1. Set |aggregationCoordinator| to the result of running [=parse an aggregation coordinator=] with
         |value|["<code>[=trigger-registration JSON key/aggregation_coordinator_origin=]</code>"].
     1. If |aggregationCoordinator| is null, return null.
 1. Let |aggregatableSourceRegTimeConfig| be "<code>[=aggregatable source registration time configuration/exclude=]</code>".
@@ -3094,12 +3094,12 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
         return null.
     1. If |aggregatableSourceRegTimeConfig| is not "<code>[=aggregatable source registration time configuration/exclude=]</code>", return null.
     1. Set |triggerContextID| to |value|["<code>[=trigger-registration JSON key/trigger_context_id=]</code>"].
-1. Let |aggregateDebugReportingConfig| be a new [=aggregate debug reporting config=].
-1. If |value|["<code>[=trigger-registration JSON key/aggregate_debug_reporting=]</code>"] [=map/exists=]:
+1. Let |aggregatableDebugReportingConfig| be a new [=aggregatable debug reporting config=].
+1. If |value|["<code>[=trigger-registration JSON key/aggregatable_debug_reporting=]</code>"] [=map/exists=]:
     1. Let |isSource| be false.
-    1. Set |aggregateDebugReportingConfig| to the result of running [=parse aggregate debug reporting config=]
-        with |value|["<code>[=trigger-registration JSON key/aggregate_debug_reporting=]</code>"],
-        [=allowed aggregatable budget per source=], |isSource|, and |aggregateDebugReportingConfig|.
+    1. Set |aggregatableDebugReportingConfig| to the result of running [=parse an aggregatable debug reporting config=]
+        with |value|["<code>[=trigger-registration JSON key/aggregatable_debug_reporting=]</code>"],
+        [=allowed aggregatable budget per source=], |isSource|, and |aggregatableDebugReportingConfig|.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -3133,8 +3133,8 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
     :: |triggerContextID|
     : [=attribution trigger/fenced=]
     :: |fenced|
-    : [=attribution trigger/aggregate debug reporting config=]
-    :: |aggregateDebugReportingConfig|
+    : [=attribution trigger/aggregatable debug reporting config=]
+    :: |aggregatableDebugReportingConfig|
 1. Return |trigger|.
 
 Issue: Determine proper charset-handling for the JSON header value.

@@ -42,7 +42,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       }],
       "filters": {"f": []},
       "not_filters": {"g": []},
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "types": ["trigger-unknown-error"],
@@ -74,7 +74,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       aggregationCoordinatorOrigin:
         'https://publickeyservice.msmt.aws.privacysandboxservices.com',
       triggerContextID: null,
-      aggregateDebugReporting: {
+      aggregatableDebugReporting: {
         keyPiece: 1n,
         debugData: [
           {
@@ -1099,159 +1099,168 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
 
   {
-    name: 'aggregate-debug-reporting-wrong-type',
+    name: 'aggregatable-debug-reporting-wrong-type',
     json: `{
-      "aggregate_debug_reporting": 1
+      "aggregatable_debug_reporting": 1
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting'],
+        path: ['aggregatable_debug_reporting'],
         msg: 'must be an object',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-empty',
+    name: 'aggregatable-debug-reporting-empty',
     json: `{
-      "aggregate_debug_reporting": {}
+      "aggregatable_debug_reporting": {}
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'key_piece'],
+        path: ['aggregatable_debug_reporting', 'key_piece'],
         msg: 'required',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-key-piece-wrong-type',
+    name: 'aggregatable-debug-reporting-key-piece-wrong-type',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": 1
       }
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'key_piece'],
+        path: ['aggregatable_debug_reporting', 'key_piece'],
         msg: 'must be a string',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-key-piece-wrong-format',
+    name: 'aggregatable-debug-reporting-key-piece-wrong-format',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "1"
       }
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'key_piece'],
+        path: ['aggregatable_debug_reporting', 'key_piece'],
         msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-aggregation-coordinator-origin-wrong-format',
+    name: 'aggregatable-debug-reporting-aggregation-coordinator-origin-wrong-format',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "aggregation_coordinator_origin": 1
       }
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'aggregation_coordinator_origin'],
+        path: [
+          'aggregatable_debug_reporting',
+          'aggregation_coordinator_origin',
+        ],
         msg: 'must be a string',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-aggregation-coordinator-origin-not-url',
+    name: 'aggregatable-debug-reporting-aggregation-coordinator-origin-not-url',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "aggregation_coordinator_origin": "a.test"
       }
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'aggregation_coordinator_origin'],
+        path: [
+          'aggregatable_debug_reporting',
+          'aggregation_coordinator_origin',
+        ],
         msg: 'invalid URL',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-aggregation-coordinator-origin-untrustworthy',
+    name: 'aggregatable-debug-reporting-aggregation-coordinator-origin-untrustworthy',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "aggregation_coordinator_origin": "http://a.test"
       }
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'aggregation_coordinator_origin'],
+        path: [
+          'aggregatable_debug_reporting',
+          'aggregation_coordinator_origin',
+        ],
         msg: 'URL must use HTTP/HTTPS and be potentially trustworthy',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-wrong-type',
+    name: 'aggregatable-debug-reporting-data-wrong-type',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": {}
       }
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data'],
+        path: ['aggregatable_debug_reporting', 'debug_data'],
         msg: 'must be a list',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-wrong-type',
+    name: 'aggregatable-debug-reporting-data-elem-wrong-type',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [1]
       }
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0],
         msg: 'must be an object',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-empty',
+    name: 'aggregatable-debug-reporting-data-elem-empty',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{}]
       }
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types'],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'required',
       },
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'value'],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'required',
       },
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'key_piece'],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'required',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-key-piece-wrong-type',
+    name: 'aggregatable-debug-reporting-data-elem-key-piece-wrong-type',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "key_piece": 1,
@@ -1262,15 +1271,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'key_piece'],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'must be a string',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-key-piece-wrong-format',
+    name: 'aggregatable-debug-reporting-data-elem-key-piece-wrong-format',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "key_piece": "1",
@@ -1281,15 +1290,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'key_piece'],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-value-wrong-type',
+    name: 'aggregatable-debug-reporting-data-elem-value-wrong-type',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "key_piece": "0x1",
@@ -1300,15 +1309,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'value'],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be a number',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-value-below-min',
+    name: 'aggregatable-debug-reporting-data-elem-value-below-min',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "key_piece": "0x1",
@@ -1319,15 +1328,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'value'],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be in the range [1, 65536]',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-value-above-max',
+    name: 'aggregatable-debug-reporting-data-elem-value-above-max',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "key_piece": "0x1",
@@ -1338,15 +1347,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'value'],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be in the range [1, 65536]',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-types-wrong-type',
+    name: 'aggregatable-debug-reporting-data-elem-types-wrong-type',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "key_piece": "0x1",
@@ -1357,15 +1366,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types'],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'must be a list',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-types-empty',
+    name: 'aggregatable-debug-reporting-data-elem-types-empty',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "key_piece": "0x2",
@@ -1376,15 +1385,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types'],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'length must be in the range [1, Infinity]',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-types-elem-wrong-type',
+    name: 'aggregatable-debug-reporting-data-elem-types-elem-wrong-type',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "key_piece": "0x2",
@@ -1395,15 +1404,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types', 0],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
         msg: 'must be a string',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-types-elem-unknown-duplicate',
+    name: 'aggregatable-debug-reporting-data-elem-types-elem-unknown-duplicate',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "key_piece": "0x2",
@@ -1414,19 +1423,19 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedWarnings: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types', 0],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
         msg: 'unknown type',
       },
       {
-        path: ['aggregate_debug_reporting', 'debug_data', 0, 'types', 1],
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
         msg: 'unknown type',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-types-elem-duplicate',
+    name: 'aggregatable-debug-reporting-data-elem-types-elem-duplicate',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "key_piece": "0x2",
@@ -1437,15 +1446,15 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data'],
+        path: ['aggregatable_debug_reporting', 'debug_data'],
         msg: 'duplicate type: trigger-unknown-error',
       },
     ],
   },
   {
-    name: 'aggregate-debug-reporting-data-elem-types-elem-duplicate-across',
+    name: 'aggregatable-debug-reporting-data-elem-types-elem-duplicate-across',
     json: `{
-      "aggregate_debug_reporting": {
+      "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
           "key_piece": "0x2",
@@ -1460,7 +1469,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregate_debug_reporting', 'debug_data'],
+        path: ['aggregatable_debug_reporting', 'debug_data'],
         msg: 'duplicate type: unspecified',
       },
     ],

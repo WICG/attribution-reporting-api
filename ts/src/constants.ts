@@ -51,7 +51,7 @@ export const defaultTriggerDataCardinality: Readonly<
   [SourceType.navigation]: 8n,
 }
 
-export const sourceAggregateDebugTypes: Readonly<[string, ...string[]]> = [
+export const sourceAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'source-channel-capacity-limit',
   'source-destination-limit',
   'source-destination-rate-limit',
@@ -64,7 +64,7 @@ export const sourceAggregateDebugTypes: Readonly<[string, ...string[]]> = [
   'unspecified',
 ]
 
-export const triggerAggregateDebugTypes: Readonly<[string, ...string[]]> = [
+export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'trigger-aggregate-attributions-per-source-destination-limit',
   'trigger-aggregate-deduplicated',
   'trigger-aggregate-excessive-reports',
