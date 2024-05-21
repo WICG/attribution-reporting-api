@@ -8,7 +8,7 @@
   - [Introduction](#introduction)
   - [API changes](#api-changes)
     - [Opting-in aggregate debug reporting](#opting-in-aggregate-debug-reporting)
-    - [Aggregatable debug  reports](#aggregatable-debug--reports)
+    - [Aggregatable debug reports](#aggregatable-debug--reports)
       - [Encrypted payload](#encrypted-payload)
   - [Privacy and Security](#privacy-and-security)
     - [Contribution bounding and budgeting](#contribution-bounding-and-budgeting)
@@ -51,7 +51,7 @@ will accept an optional dictionary field:
 
   "aggregate_debug_reporting": {
      "budget": 1024, // required, source registration only
-     "key_piece": "0x120", // required, source or trigger side key piece
+     "key_piece": "0x120", // required, source- or trigger-side key piece
      "debug_data": [    
         {  
           "types": ["source-destination-limit",  "source-destination-rate-limit"], // required to be non-empty
@@ -63,31 +63,31 @@ will accept an optional dictionary field:
           "key_piece": "0x7",
           "value": 789
         }
-     ], // default to [], i.e. not opt-in to any debug types 
-     "aggregation_coordinator_origin": "https://publickeyservice.msmt.aws.privacysandboxservices.com" // default to implementation-defined default origin
+     ], // defaults to [], i.e. doesn't opt-in to any debug types 
+     "aggregation_coordinator_origin": "https://publickeyservice.msmt.aws.privacysandboxservices.com" // defaults to implementation-defined default origin
   }
 }
 ```
 
 The source registration can pre-allocate `budget` from the total L1 budget
-(L1 = 65 536) for debug reporting, and the remaining will be used for aggregate
+(L1 = 65536) for debug reporting, and the remaining will be used for aggregate
 attribution reporting.
 
 The configuration accepts an optional list field `debug_data` to allow
 developers to specify the aggregation key piece as a hex-string and the
-corresponding histogram value for debug types they opt-in to receiving debug
-reports. When "unspecified" value is set, any non-explicitly specified debug
-types will be reported with the corresponding key piece and value, otherwise
+corresponding histogram value for debug types they opt-in to receiving.
+When the `unspecified` value is set, any non-explicitly specified debug
+types will be reported with the corresponding key piece and value; otherwise
 they will not be reported. The list of supported debug types will be documented
 in the [specification](https://wicg.github.io/attribution-reporting-api/).
 
 The configuration also accepts an optional string field
 `aggregation_coordinator_origin` to allow developers to specify the deployment
-option for the aggregation service supported by the browser. This is default to
-the implementation-defined default origin if it’s not present.
+option for the aggregation service supported by the browser. This defaults to
+the implementation-defined default origin if omitted.
 
 The final histogram bucket key is defined as a combination (bitwise OR) of the
-source-side key piece if available,  the trigger-side key piece if available,
+source-side key piece if available, the trigger-side key piece if available,
 and the key piece for the corresponding debug type.
 
 Final keys will be restricted to a maximum of 128 bits. This means that hex
@@ -128,7 +128,7 @@ JSON-encoded with the following schema:
 }
 ```
 
-Note: If the source registration specifies a list of destinations, the smallest
+Note: If the source registration specifies a list of destinations, the first
 one in lexicographical order will be used for debug reporting.
 
 #### Encrypted payload
@@ -137,8 +137,7 @@ The `payload` should be a [CBOR](https://cbor.io) map encrypted via
 [HPKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hpke/) and then base64-
 encoded. The map will have the following structure:
 
-```
-// CBOR
+```cbor
 {
   "operation": "histogram",  // Allows for the service to support other operations in the future
   "data": [{
@@ -170,7 +169,7 @@ differential privacy, e.g. by using Laplace noise scaled based on the L1
 sensitivity and a desired privacy parameter epsilon. The effective epsilon
 needs to be scaled based on the budget allocated for debug reporting.
 
-Note: The L1 budget (65 536) is shared between the aggregatable attribution
+Note: The L1 budget (65536) is shared between the aggregatable attribution
 reports and the aggregatable debug reports that are associated with the same
 source registration.
 
@@ -202,14 +201,14 @@ rolling time window. If this threshold is hit, the browser will stop scheduling
 aggregatable debug reports for the rest of the time period for attribution
 registrations matching that tuple.
 
-Strawman: L1 bound of 65 536 per <top-level site, reporting site> per day.
+Strawman: L1 bound of 65536 per <top-level site, reporting site> per day.
 
 Additionally, to mitigate the attack in which multiple reporting sites collude
 with each other to infer user data from the debug reports, the browser can also
 bound the contributions that any top-level site can make to the histogram
 within a rolling time window.
 
-Strawman: L1 bound of 2<sup>20</sup> = 1 048 576 per top-level site per day.
+Strawman: L1 bound of 2<sup>20</sup> = 1048576 per top-level site per day.
 
 There will also be a maximum limit of 5 aggregatable debug reports per source
 to limit the cross-site leakage on a per-source level.
