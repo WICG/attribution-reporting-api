@@ -2835,11 +2835,11 @@ To <dfn>parse aggregatable filtering ID max bytes</dfn> given a [=map=] |map|:
     1. Otherwise, return null.
 1. Return |maxBytes|.
 
-To <dfn>parse aggregatable key-values value</dfn> given a |value|:
-1. If |value| is not an integer, return null.
-1. If |value| is less than or equal to 0, return null.
-1. If |value| is greater than [=allowed aggregatable budget per source=], return null.
-1. Return |value|.
+To <dfn>validate aggregatable key-values value</dfn> given a |value|:
+1. If |value| is not an integer, return false.
+1. If |value| is less than or equal to 0, return false.
+1. If |value| is greater than [=allowed aggregatable budget per source=], return false.
+1. Return true.
 
 To <dfn>parse aggregatable key-values</dfn> given a [=map=] |map| and an integer |maxBytes|:
 
@@ -2849,8 +2849,8 @@ To <dfn>parse aggregatable key-values</dfn> given a [=map=] |map| and an integer
         return null.
     1. If |value| is not a [=map=] or an integer, return null.
     1. If |value| is an integer:
-        1. Let |val| be the result of running [=parse aggregatable key-values value=] with |value|.
-        1. If |val| is null, return null.
+        1. If the result of running [=validate aggregatable key-values value=] with |value| is false, return null.
+        1. Set |val| to |value|.
         1. [=map/Set=] |out|[|key|] to a new [=aggregatable key value=] whose items are
             : [=aggregatable key value/value=]
             :: |val|
@@ -2858,9 +2858,8 @@ To <dfn>parse aggregatable key-values</dfn> given a [=map=] |map| and an integer
             :: [=default filtering ID value=]
         1. [=iteration/Continue=].
     1. If |value|["`value`"] does not [=map/exist=], return null.
-    1. Let |val| be the result of running
-        [=parse aggregatable key-values value=] with |value|["`value`"]|.
-    1. If |val| is null, return null.    
+    1. If the result of running [=validate aggregatable key-values value=] with |value|["`value`"] is false, return null.
+    1. Set |val| to |value|["`value`"].  
     1. Let |filteringId| be [=default filtering ID value=].
     1. If |value|["`filtering_id`"] [=map/exists=]:
         1. Set |filteringId| to the result of applying the
