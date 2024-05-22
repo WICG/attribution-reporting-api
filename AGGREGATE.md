@@ -521,7 +521,8 @@ with optional `filtering_id` field.
     "geoValue": {
       "value": 1664,
       "filtering_id": "23", // must fit within <aggregatable_filtering_id_max_bytes> bytes
-  },
+    }
+  }
 }
 ```
 
