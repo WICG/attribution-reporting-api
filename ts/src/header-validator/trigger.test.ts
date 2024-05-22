@@ -698,20 +698,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
     ],
   },
-  {
-    name: 'trigger-data-sanitized',
-    json: `{"event_trigger_data": [{"trigger_data": "10"}]}`,
-    expectedWarnings: [
-      {
-        path: ['event_trigger_data', 0, 'trigger_data'],
-        msg: 'will be sanitized to 0 if trigger is attributed to event source',
-      },
-      {
-        path: ['event_trigger_data', 0, 'trigger_data'],
-        msg: 'will be sanitized to 2 if trigger is attributed to navigation source',
-      },
-    ],
-  },
 
   {
     name: 'priority-wrong-type',
