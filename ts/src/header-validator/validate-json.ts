@@ -267,22 +267,6 @@ function uint64(ctx: Context, j: Json): Maybe<bigint> {
     )
 }
 
-function triggerData(ctx: Context, j: Json): Maybe<bigint> {
-  return uint64(ctx, j).peek((n) => {
-    Object.entries(constants.defaultTriggerDataCardinality).forEach(
-      ([t, c]) => {
-        if (n >= c) {
-          ctx.warning(
-            `will be sanitized to ${
-              n % c
-            } if trigger is attributed to ${t} source`
-          )
-        }
-      }
-    )
-  })
-}
-
 function number(ctx: Context, j: Json): Maybe<number> {
   return typeSwitch(ctx, j, { number: (_ctx, j) => some(j) })
 }
@@ -1354,7 +1338,7 @@ function eventTriggerData(
 ): Maybe<EventTriggerDatum[]> {
   return array(ctx, j, (ctx, j) =>
     struct(ctx, j, {
-      triggerData: field('trigger_data', triggerData, 0n),
+      triggerData: field('trigger_data', uint64, 0n),
 
       value: ctx.parseFullFlex
         ? field('value', eventTriggerValue, 1)
