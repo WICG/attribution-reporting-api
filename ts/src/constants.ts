@@ -54,3 +54,5 @@ export const defaultTriggerDataCardinality: Readonly<
 export const defaultAggregatableFilteringIdMaxBytes: number = 1
 
 export const maxAggregatableFilteringIdMaxBytesValue: number = 8
+
+export const defaultFilteringIdValue: bigint = 0n

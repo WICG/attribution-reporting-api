@@ -244,12 +244,10 @@ function serializeAggregatableTriggerDatum(
 }
 
 export type AggregatableValues = {
-  [key: string]:
-    | number
-    | {
-        value: number
-        filtering_id: string
-      }
+  [key: string]: {
+    value: number
+    filtering_id: string
+  }
 }
 
 export type AggregatableValuesConfiguration = FilterPair & {
@@ -263,7 +261,10 @@ function serializeAggregatableValuesConfiguration(
   for (const [key, value] of c.values.entries()) {
     values[key] =
       typeof value == 'number'
-        ? value
+        ? {
+            value,
+            filtering_id: '0',
+          }
         : {
             value: value.value,
             filtering_id: value.filteringId.toString(),

@@ -87,8 +87,8 @@ test('basic', () => {
   const aggregatableValuesCfgs: AggregatableValuesConfiguration[] = [
     {
       values: new Map([
-        ['key1', 32768],
-        ['key2', 1664],
+        ['key1', { value: 32768, filteringId: 0n }],
+        ['key2', { value: 1664, filteringId: 0n }],
       ]),
       positive: [],
       negative: [],
@@ -151,7 +151,7 @@ test('values-filtered', async (t) => {
     assert.deepEqual(
       createWith([
         {
-          values: new Map([['key1', 32768]]),
+          values: new Map([['key1', { value: 32768, filteringId: 0n }]]),
           positive: [
             {
               map: new Map([['product', new Set(['2'])]]),
@@ -169,7 +169,7 @@ test('values-filtered', async (t) => {
     assert.deepEqual(
       createWith([
         {
-          values: new Map([['key1', 32768]]),
+          values: new Map([['key1', { value: 32768, filteringId: 0n }]]),
           positive: [
             {
               map: new Map([['product', new Set(['2'])]]),
@@ -179,7 +179,7 @@ test('values-filtered', async (t) => {
           negative: [],
         },
         {
-          values: new Map([['key2', 1664]]),
+          values: new Map([['key2', { value: 1664, filteringId: 0n }]]),
           positive: [
             {
               map: new Map([['product', new Set(['1'])]]),
@@ -197,7 +197,7 @@ test('values-filtered', async (t) => {
     assert.deepEqual(
       createWith([
         {
-          values: new Map([['key1', 32768]]),
+          values: new Map([['key1', { value: 32768, filteringId: 0n }]]),
           positive: [
             {
               map: new Map([['product', new Set(['1'])]]),
@@ -207,7 +207,7 @@ test('values-filtered', async (t) => {
           negative: [],
         },
         {
-          values: new Map([['key2', 1664]]),
+          values: new Map([['key2', { value: 1664, filteringId: 0n }]]),
           positive: [
             {
               map: new Map([['product', new Set(['1'])]]),
@@ -225,7 +225,7 @@ test('values-filtered', async (t) => {
     assert.deepEqual(
       createWith([
         {
-          values: new Map([['key3', 32768]]),
+          values: new Map([['key3', { value: 32768, filteringId: 0n }]]),
           positive: [
             {
               map: new Map([['product', new Set(['1'])]]),
@@ -237,7 +237,7 @@ test('values-filtered', async (t) => {
         // Shouldn't contribute as only the first aggregatable values
         // entry with matching filters is considered
         {
-          values: new Map([['key2', 1664]]),
+          values: new Map([['key2', { value: 1664, filteringId: 0n }]]),
           positive: [
             {
               map: new Map([['product', new Set(['1'])]]),
@@ -255,7 +255,7 @@ test('values-filtered', async (t) => {
     assert.deepEqual(
       createWith([
         {
-          values: new Map([['key1', 32768]]),
+          values: new Map([['key1', { value: 32768, filteringId: 0n }]]),
           positive: [],
           negative: [
             {
@@ -265,7 +265,7 @@ test('values-filtered', async (t) => {
           ],
         },
         {
-          values: new Map([['key2', 1664]]),
+          values: new Map([['key2', { value: 1664, filteringId: 0n }]]),
           positive: [
             {
               map: new Map([['product', new Set(['1'])]]),

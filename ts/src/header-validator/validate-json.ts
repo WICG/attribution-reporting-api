@@ -1265,18 +1265,16 @@ function aggregatableTriggerData(
   )
 }
 
+export type AggregatableValuesValue = {
+  value: number
+  filteringId: bigint
+}
+
+export type AggregatableValues = Map<string, AggregatableValuesValue>
+
 export type AggregatableValuesConfiguration = FilterPair & {
   values: AggregatableValues
 }
-
-export type AggregatableValuesValue =
-  | {
-      value: number
-      filteringId: bigint
-    }
-  | number
-
-export type AggregatableValues = Map<string, AggregatableValuesValue>
 
 function aggregatableKeyValueValue(ctx: Context, j: Json): Maybe<number> {
   return number(ctx, j)
@@ -1295,19 +1293,20 @@ function aggregatableKeyValue(
   }
 
   return typeSwitch(ctx, j, {
-    number: (ctx, j) => aggregatableKeyValueValue(ctx, j),
+    number: (ctx, j) =>
+      aggregatableKeyValueValue(ctx, j).map((j) => ({
+        value: j,
+        filteringId: constants.defaultFilteringIdValue,
+      })),
     object: (ctx, j) =>
       struct(ctx, j, {
         value: field('value', aggregatableKeyValueValue),
-        filteringId: field('filtering_id', uint64, null),
-      }).map((t) =>
-        t.filteringId !== null
-          ? some<AggregatableValuesValue>({
-              value: t.value,
-              filteringId: t.filteringId,
-            })
-          : some(t.value)
-      ),
+        filteringId: field(
+          'filtering_id',
+          uint64,
+          constants.defaultFilteringIdValue
+        ),
+      }),
   })
 }
 
