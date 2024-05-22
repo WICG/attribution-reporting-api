@@ -24,7 +24,10 @@ function createAggregatableContributionsFromKeysAndValues(
     if (value === undefined) {
       continue
     }
-    contributions.push({ key, value })
+    contributions.push({
+      key,
+      value: typeof value === 'number' ? value : value.value,
+    })
   }
   return contributions
 }

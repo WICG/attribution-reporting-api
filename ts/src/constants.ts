@@ -50,3 +50,7 @@ export const defaultTriggerDataCardinality: Readonly<
   [SourceType.event]: 2n,
   [SourceType.navigation]: 8n,
 }
+
+export const defaultAggregatableFilteringIdMaxBytes: number = 1
+
+export const maxAggregatableFilteringIdMaxBytesValue: number = 8

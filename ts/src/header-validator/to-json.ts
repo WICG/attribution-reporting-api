@@ -243,17 +243,35 @@ function serializeAggregatableTriggerDatum(
   }
 }
 
+export type AggregatableValues = {
+  [key: string]:
+    | number
+    | {
+        value: number
+        filtering_id: string
+      }
+}
+
 export type AggregatableValuesConfiguration = FilterPair & {
-  values: { [key: string]: number }
+  values: AggregatableValues
 }
 
 function serializeAggregatableValuesConfiguration(
   c: parsed.AggregatableValuesConfiguration
 ): AggregatableValuesConfiguration {
+  const values: AggregatableValues = {}
+  for (const [key, value] of c.values.entries()) {
+    values[key] =
+      typeof value == 'number'
+        ? value
+        : {
+            value: value.value,
+            filtering_id: value.filteringId.toString(),
+          }
+  }
   return {
     ...serializeFilterPair(c),
-
-    values: Object.fromEntries(c.values.entries()),
+    values,
   }
 }
 
@@ -262,6 +280,7 @@ export type Trigger = CommonDebug &
     aggregatable_deduplication_keys: AggregatableDedupKey[]
     aggregatable_source_registration_time: string
     aggregatable_trigger_data: AggregatableTriggerDatum[]
+    aggregatable_filtering_id_max_bytes: number
     aggregatable_values: AggregatableValuesConfiguration[]
     aggregation_coordinator_origin: string
     event_trigger_data: EventTriggerDatum[]
@@ -287,6 +306,8 @@ export function serializeTrigger(
       t.aggregatableTriggerData,
       serializeAggregatableTriggerDatum
     ),
+
+    aggregatable_filtering_id_max_bytes: t.aggregatableFilteringIdMaxBytes,
 
     aggregatable_values: Array.from(
       t.aggregatableValuesConfigurations,
