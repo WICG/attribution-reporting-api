@@ -251,7 +251,12 @@ function matchesPattern(
 function uint64(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
     .filter((s) =>
-      matchesPattern(ctx, s, uintRegex, 'must be a non-negative integer')
+      matchesPattern(
+        ctx,
+        s,
+        uintRegex,
+        'string must represent a non-negative integer'
+      )
     )
     .map(BigInt)
     .filter((n) =>
@@ -305,7 +310,9 @@ function positiveInteger(ctx: Context, j: Json): Maybe<number> {
 
 function int64(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) => matchesPattern(ctx, s, intRegex, 'must be an integer'))
+    .filter((s) =>
+      matchesPattern(ctx, s, intRegex, 'string must represent an integer')
+    )
     .map(BigInt)
     .filter((n) =>
       isInRange(

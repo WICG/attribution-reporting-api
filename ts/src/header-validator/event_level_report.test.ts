@@ -387,7 +387,7 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
     expected: Maybe.None,
     expectedErrors: [
       {
-        msg: 'must be an integer (must match /^-?[0-9]+$/)',
+        msg: 'string must represent an integer (must match /^-?[0-9]+$/)',
         path: ['scheduled_report_time'],
       },
     ],
@@ -426,7 +426,7 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
     expected: Maybe.None,
     expectedErrors: [
       {
-        msg: 'must be a non-negative integer (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
         path: ['source_event_id'],
       },
     ],
@@ -465,7 +465,7 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
     expected: Maybe.None,
     expectedErrors: [
       {
-        msg: 'must be a non-negative integer (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
         path: ['trigger_data'],
       },
     ],
@@ -584,7 +584,7 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
     expected: Maybe.None,
     expectedErrors: [
       {
-        msg: 'must be a non-negative integer (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
         path: ['source_debug_key'],
       },
     ],
@@ -625,7 +625,7 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
     expected: Maybe.None,
     expectedErrors: [
       {
-        msg: 'must be a non-negative integer (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
         path: ['trigger_debug_key'],
       },
     ],
