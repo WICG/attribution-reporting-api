@@ -1570,9 +1570,7 @@ function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
         aggregatableDebugReporting: field(
           'aggregatable_debug_reporting',
           (ctx, j) =>
-            struct(ctx, j, {
-              ...aggregatableDebugReportingConfig,
-            }),
+            struct(ctx, j, aggregatableDebugReportingConfig),
           null
         ),
         ...commonDebugFields,
