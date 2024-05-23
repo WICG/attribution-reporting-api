@@ -55,7 +55,7 @@ function struct<T extends object, C extends Context = Context>(
   warnUnknown: boolean = true
 ): Maybe<T> {
   return object(ctx, d).map((d) => {
-    let t: Partial<T> = {}
+    const t: Partial<T> = {}
 
     let ok = true
     for (const prop in fields) {
@@ -134,7 +134,6 @@ function exclusive<T, C extends Context = Context>(
 }
 
 type TypeSwitch<T, C extends Context = Context> = {
-  null?: CtxFunc<C, null, Maybe<T>>
   boolean?: CtxFunc<C, boolean, Maybe<T>>
   number?: CtxFunc<C, number, Maybe<T>>
   string?: CtxFunc<C, string, Maybe<T>>
@@ -147,9 +146,6 @@ function typeSwitch<T, C extends Context = Context>(
   j: Json,
   ts: TypeSwitch<T, C>
 ): Maybe<T> {
-  if (j === null && ts.null !== undefined) {
-    return ts.null(ctx, j)
-  }
   if (typeof j === 'boolean' && ts.boolean !== undefined) {
     return ts.boolean(ctx, j)
   }
@@ -167,7 +163,7 @@ function typeSwitch<T, C extends Context = Context>(
   }
 
   const allowed = Object.keys(ts)
-    .map((t) => `${t === 'object' ? 'an' : t === 'null' ? '' : 'a'} ${t}`)
+    .map((t) => `${t === 'object' ? 'an' : 'a'} ${t}`)
     .join(' or ')
   ctx.error(`must be ${allowed}`)
   return None

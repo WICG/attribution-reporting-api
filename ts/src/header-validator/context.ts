@@ -43,7 +43,7 @@ export class Context {
   }
 
   finish(topLevelError?: string): ValidationResult {
-    if (typeof topLevelError !== 'undefined') {
+    if (topLevelError !== undefined) {
       this.result.errors.push({ msg: topLevelError })
     }
     return this.result
