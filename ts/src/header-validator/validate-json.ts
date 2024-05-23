@@ -1446,8 +1446,6 @@ function areFilteringIdsWithinMaxBytes(
     ] of t.aggregatableValuesConfigurations.entries()) {
       const evaluate = () => {
         for (const [key, value] of configurations.values) {
-          if (typeof value === 'number') continue
-
           ctx.scope(key, () => {
             ctx.scope('filtering_id', () => {
               if (!isInRange(ctx, value.filteringId, 0n, maxValue, msg)) {
