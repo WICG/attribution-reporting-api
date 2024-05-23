@@ -1598,21 +1598,13 @@ An <dfn>aggregatable-debug-reporting JSON key</dfn> is one of the following:
 </ul>
 
 To <dfn>parse aggregatable debug reporting data</dfn> given a |dataList|, a
-positive integer |maxValue|, and a [=boolean=] |isSource|:
+positive integer |maxValue|, and a [=set=] of [=debug data types=]
+|supportedTypes|:
 
 1. [=Assert=]: |maxValue| is less than or equal to [=allowed aggregatable budget per source=].
 1. If |dataList| is not a [=list=], return null.
 1. Let |debugDataMap| be a new [=map=].
-1. Let |supportedTypes| be a new [=set=].
 1. Let |unknownTypes| be a new [=set=].
-1. If |isSource| is:
-    <dl class="switch">
-    : true
-    :: Set |supportedTypes| to the [=set=] of all [=source debug data types=].
-    : false
-    :: Set |supportedTypes| to the [=set=] of all [=trigger debug data types=].
-
-    </dl>
 1. Let |unspecifiedContribution| be null.
 1. [=list/iterate|For each=] |data| of |dataList|:
     1. If |data| is not a [=map=], return null.
@@ -1655,8 +1647,8 @@ positive integer |maxValue|, and a [=boolean=] |isSource|:
 1. Return |debugDataMap|.
 
 To <dfn>parse an aggregatable debug reporting config</dfn> given a [=map=] |map|, a
-positive integer |maxValue|, a [=boolean=] |isSource|, and an [=aggregatable debug reporting config=]
-|default|:
+positive integer |maxValue|, a [=set=] of [=debug data types=] |supportedTypes|,
+and an [=aggregatable debug reporting config=] |default|:
 
 1. If |map|["<code>[=aggregatable-debug-reporting JSON key/key_piece=]</code>"] does not
     [=map/exist=], return |default|.
@@ -1669,7 +1661,7 @@ positive integer |maxValue|, a [=boolean=] |isSource|, and an [=aggregatable deb
 1. If |map|["<code>[=aggregatable-debug-reporting JSON key/debug_data=]</code>"] [=map/exists=]:
     1. Set |debugDataMap| to the result of running [=parse aggregatable debug reporting data=]
         with |map|["<code>[=aggregatable-debug-reporting JSON key/debug_data=]</code>"], |maxValue|,
-        and |isSource|.
+        and |supportedTypes|.
     1. If |debugDataMap| is null, return |default|.
 1. Let |aggregationCoordinator| be [=default aggregation coordinator=].
 1. If |map|["<code>[=aggregatable-debug-reporting JSON key/aggregation_coordinator_origin=]</code>"]
@@ -2477,9 +2469,9 @@ non-negative integer |defaultBudget|, and an [=aggregatable debug reporting conf
 1. Let |budget| be |value|["<code>[=source-registration JSON key/budget=]</code>"].
 1. If |budget| is not an integer or is less than or equal to 0 or is greater than
     [=allowed aggregatable budget per source=], return the [=tuple=] (|defaultBudget|, |defaultConfig|).
-1. Let |isSource| be true.
+1. Let |supportedTypes| be the set of all [=source debug data types=].
 1. Let |config| be the result of running [=parse an aggregatable debug reporting config=]
-    with |value|, |budget|, |isSource|, and |defaultConfig|.
+    with |value|, |budget|, |supportedTypes|, and |defaultConfig|.
 1. Return the [=tuple=] (|budget|, |config|).
 
 To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
@@ -3100,10 +3092,10 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
     1. Set |triggerContextID| to |value|["<code>[=trigger-registration JSON key/trigger_context_id=]</code>"].
 1. Let |aggregatableDebugReportingConfig| be a new [=aggregatable debug reporting config=].
 1. If |value|["<code>[=trigger-registration JSON key/aggregatable_debug_reporting=]</code>"] [=map/exists=]:
-    1. Let |isSource| be false.
+    1. Let |supportedTypes| be the [=set=] of all [=trigger debug data types=].
     1. Set |aggregatableDebugReportingConfig| to the result of running [=parse an aggregatable debug reporting config=]
         with |value|["<code>[=trigger-registration JSON key/aggregatable_debug_reporting=]</code>"],
-        [=allowed aggregatable budget per source=], |isSource|, and |aggregatableDebugReportingConfig|.
+        [=allowed aggregatable budget per source=], |supportedTypes|, and |aggregatableDebugReportingConfig|.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
