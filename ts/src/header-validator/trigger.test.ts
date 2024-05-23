@@ -1149,8 +1149,32 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   }`,
     expectedErrors: [
       {
-        path: ['aggregatable_values', 1, 'y', 'filtering_id'],
+        path: ['aggregatable_values', 1, 'values', 'y', 'filtering_id'],
         msg: 'must be in the range [0, 65535]',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-values-with-invalid-filtering_id-non-default-max',
+    json: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "source_keys": ["x", "y"]
+      }],
+      "aggregatable_filtering_id_max_bytes": "2",
+      "aggregatable_values": [
+        {"values": {"x": 5 }},
+        {"values": {"y": { "value": 10, "filtering_id": "65536" }}}
+      ]
+  }`,
+    expectedErrors: [
+      {
+        msg: 'must be a number',
+        path: ['aggregatable_filtering_id_max_bytes'],
+      },
+      {
+        path: ['aggregatable_values', 1, 'values', 'y', 'filtering_id'],
+        msg: 'cannot be fully validated without a valid aggregatable_filtering_id_max_bytes',
       },
     ],
   },
