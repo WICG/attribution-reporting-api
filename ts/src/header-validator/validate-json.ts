@@ -12,8 +12,8 @@ const { None, some } = Maybe
 export type JsonDict = { [key: string]: Json }
 export type Json = null | boolean | number | string | Json[] | JsonDict
 
-const uint64Regex = /^[0-9]+$/
-const int64Regex = /^-?[0-9]+$/
+const uintRegex = /^[0-9]+$/
+const intRegex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const UINT32_MAX: number = 2 ** 32 - 1
@@ -55,7 +55,7 @@ function struct<T extends object, C extends Context = Context>(
   warnUnknown: boolean = true
 ): Maybe<T> {
   return object(ctx, d).map((d) => {
-    let t: Partial<T> = {}
+    const t: Partial<T> = {}
 
     let ok = true
     for (const prop in fields) {
@@ -134,7 +134,6 @@ function exclusive<T, C extends Context = Context>(
 }
 
 type TypeSwitch<T, C extends Context = Context> = {
-  null?: CtxFunc<C, null, Maybe<T>>
   boolean?: CtxFunc<C, boolean, Maybe<T>>
   number?: CtxFunc<C, number, Maybe<T>>
   string?: CtxFunc<C, string, Maybe<T>>
@@ -147,9 +146,6 @@ function typeSwitch<T, C extends Context = Context>(
   j: Json,
   ts: TypeSwitch<T, C>
 ): Maybe<T> {
-  if (j === null && ts.null !== undefined) {
-    return ts.null(ctx, j)
-  }
   if (typeof j === 'boolean' && ts.boolean !== undefined) {
     return ts.boolean(ctx, j)
   }
@@ -167,7 +163,7 @@ function typeSwitch<T, C extends Context = Context>(
   }
 
   const allowed = Object.keys(ts)
-    .map((t) => `${t === 'object' ? 'an' : t === 'null' ? '' : 'a'} ${t}`)
+    .map((t) => `${t === 'object' ? 'an' : 'a'} ${t}`)
     .join(' or ')
   ctx.error(`must be ${allowed}`)
   return None
@@ -254,7 +250,14 @@ function matchesPattern(
 
 function uint64(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) => matchesPattern(ctx, s, uint64Regex, 'must be a uint64'))
+    .filter((s) =>
+      matchesPattern(
+        ctx,
+        s,
+        uintRegex,
+        'string must represent a non-negative integer'
+      )
+    )
     .map(BigInt)
     .filter((n) =>
       isInRange(
@@ -307,7 +310,9 @@ function positiveInteger(ctx: Context, j: Json): Maybe<number> {
 
 function int64(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) => matchesPattern(ctx, s, int64Regex, 'must be an int64'))
+    .filter((s) =>
+      matchesPattern(ctx, s, intRegex, 'string must represent an integer')
+    )
     .map(BigInt)
     .filter((n) =>
       isInRange(

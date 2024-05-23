@@ -495,7 +495,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['debug_key'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },
@@ -540,7 +540,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['aggregatable_deduplication_keys', 0, 'deduplication_key'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },
@@ -699,7 +699,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'trigger_data'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },
@@ -724,7 +724,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'priority'],
-        msg: 'must be an int64 (must match /^-?[0-9]+$/)',
+        msg: 'string must represent an integer (must match /^-?[0-9]+$/)',
       },
     ],
   },
@@ -749,7 +749,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'deduplication_key'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },

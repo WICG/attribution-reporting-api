@@ -31,7 +31,7 @@ export function validateInfo(str: string): [ValidationResult, Maybe<Info>] {
     ctx.scope(key, () => {
       switch (key) {
         case 'preferred-platform':
-          if (typeof value[0] !== 'object' || value[0].constructor !== Token) {
+          if (!(value[0] instanceof Token)) {
             ctx.error('must be a token')
             ok = false
             return
