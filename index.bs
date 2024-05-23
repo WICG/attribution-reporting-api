@@ -1318,6 +1318,16 @@ controls the maximum [=map/size=] of a [=trigger spec map=] for an
 the maximum [=string/length=] of an [=attribution trigger=]'s [=attribution trigger/trigger context ID=].
 Its value is 64.
 
+<dfn>Default filtering ID value</dfn> is a non-negative integer which allows flexible
+contribution filtering of aggregatable reports. Its value is 0.
+
+<dfn>Default filtering ID max bytes</dfn> is a positive integer controlling the
+max bytes used if none is explicitly chosen. Its value is 1.
+
+<dfn>Valid filtering ID max bytes range</dfn> is a [=set=] of positive integers
+controlling the allowable values of max bytes. Its value is [=the inclusive
+range|the range=] 1 to 8, inclusive.
+
 # Vendor-Specific Values # {#vendor-specific-values}
 
 <dfn>Max pending sources per source origin</dfn> is a positive integer that
@@ -1415,16 +1425,6 @@ obtain the public key for encrypting an [=aggregatable report=] by default.
 <dfn>Verification tokens per trigger</dfn> is a positive integer that controls the number of
 encoded masked messages sent for signature when [=set trigger verification request headers|initiating trigger verification=]
 and the maximum number of [=serialized private state tokens=] that can be attached to an [=attribution trigger=].
-
-<dfn>Default filtering ID value</dfn> is a positive integer which allows flexible
-contribution filtering of aggregatable reports. Its value is 0.
-
-<dfn>Default filtering ID max bytes</dfn> is a positive integer controlling the
-max bytes used if none is explicitly chosen. Its value is 1.
-
-<dfn>Valid filtering ID max bytes range</dfn> is a [=set=] of positive integers
-controlling the allowable values of max bytes. Its value is [=the inclusive
-range|the range=] 1 to 8, inclusive.
 
 # General Algorithms # {#general-algorithms}
 
@@ -2719,6 +2719,7 @@ A <dfn>trigger-registration JSON key</dfn> is one of the following:
 <li>"<dfn><code>aggregatable_deduplication_keys</code></dfn>"
 <li>"<dfn><code>aggregatable_source_registration_time</code></dfn>"
 <li>"<dfn><code>aggregatable_trigger_data</code></dfn>"
+<li>"<dfn><code>aggregatable_filtering_id_max_bytes</code></dfn>"
 <li>"<dfn><code>aggregatable_values</code></dfn>"
 <li>"<dfn><code>aggregation_coordinator_origin</code></dfn>"
 <li>"<dfn><code>debug_key</code></dfn>"
@@ -2828,8 +2829,8 @@ To <dfn>parse aggregatable trigger data</dfn> given a [=map=] |map|:
 To <dfn>parse aggregatable filtering ID max bytes</dfn> given a [=map=] |map|:
 
 1. Let |maxBytes| be [=default filtering ID max bytes=].
-1. If |map|["`aggregatable_filtering_id_max_bytes`"] [=map/exists=]:
-    1. Let |maxBytesValue| be |map|["`aggregatable_filtering_id_max_bytes`"].
+1. If |map|["<code>[=trigger-registration JSON key/aggregatable_filtering_id_max_bytes=]</code>"] [=map/exists=]:
+    1. Let |maxBytesValue| be |map|["<code>[=trigger-registration JSON key/aggregatable_filtering_id_max_bytes=]</code>"].
     1. If |maxBytesValue| is a non-negative integer and is [=set/contained=] in the [=valid filtering ID max bytes range=],
         set |maxBytes| to |maxBytesValue|.
     1. Otherwise, return null.
@@ -2850,27 +2851,25 @@ To <dfn>parse aggregatable key-values</dfn> given a [=map=] |map| and an integer
     1. If |value| is not a [=map=] or an integer, return null.
     1. If |value| is an integer:
         1. If the result of running [=validate aggregatable key-values value=] with |value| is false, return null.
-        1. Set |val| to |value|.
         1. [=map/Set=] |out|[|key|] to a new [=aggregatable key value=] whose items are
             : [=aggregatable key value/value=]
-            :: |val|
-            : [=aggregatable key value/filtering id=]
+            :: |value|
+            : [=aggregatable key value/filtering ID=]
             :: [=default filtering ID value=]
         1. [=iteration/Continue=].
     1. If |value|["`value`"] does not [=map/exist=], return null.
     1. If the result of running [=validate aggregatable key-values value=] with |value|["`value`"] is false, return null.
-    1. Set |val| to |value|["`value`"].  
     1. Let |filteringId| be [=default filtering ID value=].
     1. If |value|["`filtering_id`"] [=map/exists=]:
         1. Set |filteringId| to the result of applying the
             <a spec="html">rules for parsing non-negative integers</a> to |value|["`filtering_id`"].
         1. If |filteringId| is an error, return null.
-        1. If |filteringId| is not in in [=the exclusive range|the range=]
+        1. If |filteringId| is not in [=the exclusive range|the range=]
             0 to 256<sup>|maxBytes|</sup>, exclusive, return null.    
     1.  [=map/Set=] |out|[|key|] to a new [=aggregatable key value=] whose items are
         : [=aggregatable key value/value=]
-        :: |val|
-        : [=aggregatable key value/filtering id=]
+        :: |value|["`value`"]
+        : [=aggregatable key value/filtering ID=]
         :: |filteringId|
 1. Return |out|.
 
@@ -3937,7 +3936,7 @@ is the result of running the following steps:
             |contribution|'s [=aggregatable contribution/value=] and 4.
         : "`id`"
         :: The result of [=encoding an unsigned k-byte integer=] given
-            |contribution|'s  [=aggregatable contribution/filtering ID=] and
+            |contribution|'s [=aggregatable contribution/filtering ID=] and
             |report|'s [=aggregatable report/filtering ID max bytes=].
 
     1. [=list/Append=] |contributionData| to |payloadData|.

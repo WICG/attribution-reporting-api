@@ -510,7 +510,7 @@ for the purpose of report verification.
 ### Optional: flexible contribution filtering with filtering IDs
 
 Trigger registration's `aggregatable_values`'s values will accept dictionaries
-with optional `filtering_id` field. 
+with an optional `filtering_id` field. 
 
 ```jsonc
 {
@@ -537,12 +537,12 @@ bytes, (1 byte = 8 bits) by default. We limit the size of the ID space to
 prevent unnecessarily increasing the payload size and thus storage and
 processing costs.
 
-This size can be increased via the `aggregatable_filtering_id_max_bytes`
-property.  To avoid amplifying a counting attack due to the resulting different
-payload size, the browser will unconditionally send an aggregatable report on
-every trigger registration with a non default (higher than 1) max bytes. A null
-report will be sent in the case that the trigger registration did not generate
-an attribution report. The source registration time will always be excluded from
+This size can be increased via the `aggregatable_filtering_id_max_bytes` field.
+To avoid amplifying a counting attack due to the resulting different payload
+size, the browser will unconditionally send an aggregatable report on every
+trigger registration with a non default (higher than 1) max bytes. A null report
+will be sent in the case that the trigger registration did not generate an
+attribution report. The source registration time will always be excluded from
 the aggregatable report with a non default max bytes. This behavior is the same
 as when a trigger context ID is set.
 

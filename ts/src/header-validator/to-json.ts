@@ -259,16 +259,10 @@ function serializeAggregatableValuesConfiguration(
 ): AggregatableValuesConfiguration {
   const values: AggregatableValues = {}
   for (const [key, value] of c.values.entries()) {
-    values[key] =
-      typeof value == 'number'
-        ? {
-            value,
-            filtering_id: '0',
-          }
-        : {
-            value: value.value,
-            filtering_id: value.filteringId.toString(),
-          }
+    values[key] = {
+      value: value.value,
+      filtering_id: value.filteringId.toString(),
+    }
   }
   return {
     ...serializeFilterPair(c),
