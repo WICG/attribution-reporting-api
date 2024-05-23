@@ -54,14 +54,14 @@ will accept an optional dictionary field:
     "key_piece": "0x120", // required, source- or trigger-side key piece
     "debug_data": [    
       {  
-        "types": ["source-destination-limit", "source-destination-rate-limit"], // required to be non-empty
+        "types": ["source-destination-limit", "source-destination-rate-limit"], // required to be present and non-empty
         "key_piece": "0x1", // required
         "value": 123 // required
       },
       {  
         "types": ["unspecified"],
-         "key_piece": "0x7",
-         "value": 789
+        "key_piece": "0x7",
+        "value": 789
        }
     ], // defaults to [], i.e. doesn't opt-in to any debug types 
     "aggregation_coordinator_origin": "https://publickeyservice.msmt.aws.privacysandboxservices.com" // defaults to implementation-defined default origin
@@ -79,7 +79,7 @@ corresponding histogram value for debug types they opt-in to receiving.
 When the `unspecified` value is set, any non-explicitly specified debug
 types will be reported with the corresponding key piece and value; otherwise
 they will not be reported. The list of supported debug types will be documented
-in the [specification](https://wicg.github.io/attribution-reporting-api/).
+in the [specification](https://wicg.github.io/attribution-reporting-api/#attribution-debug-data).
 
 The configuration also accepts an optional string field
 `aggregation_coordinator_origin` to allow developers to specify the deployment
