@@ -12,8 +12,8 @@ const { None, some } = Maybe
 export type JsonDict = { [key: string]: Json }
 export type Json = null | boolean | number | string | Json[] | JsonDict
 
-const uint64Regex = /^[0-9]+$/
-const int64Regex = /^-?[0-9]+$/
+const uintRegex = /^[0-9]+$/
+const intRegex = /^-?[0-9]+$/
 const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const UINT32_MAX: number = 2 ** 32 - 1
@@ -250,7 +250,14 @@ function matchesPattern(
 
 function uint64(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) => matchesPattern(ctx, s, uint64Regex, 'must be a uint64'))
+    .filter((s) =>
+      matchesPattern(
+        ctx,
+        s,
+        uintRegex,
+        'string must represent a non-negative integer'
+      )
+    )
     .map(BigInt)
     .filter((n) =>
       isInRange(
@@ -303,7 +310,9 @@ function positiveInteger(ctx: Context, j: Json): Maybe<number> {
 
 function int64(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) => matchesPattern(ctx, s, int64Regex, 'must be an int64'))
+    .filter((s) =>
+      matchesPattern(ctx, s, intRegex, 'string must represent an integer')
+    )
     .map(BigInt)
     .filter((n) =>
       isInRange(

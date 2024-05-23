@@ -480,7 +480,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['source_event_id'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },
@@ -507,7 +507,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['debug_key'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },
@@ -534,7 +534,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['priority'],
-        msg: 'must be an int64 (must match /^-?[0-9]+$/)',
+        msg: 'string must represent an integer (must match /^-?[0-9]+$/)',
       },
     ],
   },
@@ -595,7 +595,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['aggregatable_report_window'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },
@@ -608,7 +608,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['aggregatable_report_window'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },
@@ -700,7 +700,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['event_report_window'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },
@@ -713,7 +713,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['event_report_window'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },
@@ -759,7 +759,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['expiry'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },
@@ -772,7 +772,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['expiry'],
-        msg: 'must be a uint64 (must match /^[0-9]+$/)',
+        msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
       },
     ],
   },
