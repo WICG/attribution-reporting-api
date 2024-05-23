@@ -18,7 +18,7 @@ _Note: This document describes possible new functionality in the Attribution Rep
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 <br>
-The current attribution logic in the Attribution Reporting API may not be ideal for use-cases where an API caller needs more fine grain control over the attribution granularity (i.e. campaign, product, conversion ID, etc.) before a source is chosen for attribution. Currently available features such as top-level filters are not sufficient for this use-case because they happen after a source has been selected (i.e. after destination matching) which results in either no attribution occuring or incorrect attribution depending on the top-level filters that are set. We can support this use-case by allowing registrations to specify predefined attribution scopes that will be considered for filtering *before* attributing a source, in order to more efficiently extract utility out of the API. 
+The current attribution logic in the Attribution Reporting API may not be ideal for use-cases where an API caller needs finer-grained control over the attribution granularity (e.g. campaign, product, conversion ID, etc.) before a source is chosen for attribution. Currently available features such as top-level filters are not sufficient for this use-case because they happen after a source has been selected (i.e. after destination matching), which results in either no attribution occurring or incorrect attribution depending on the top-level filters that are set. We can support this use-case by allowing registrations to specify predefined attribution scopes that will be considered for filtering *before* attributing a source, in order to more efficiently extract utility from the API. 
 
 ## Goals
 
@@ -26,16 +26,15 @@ In general, the approach here is to allow API callers to specify a list of strin
 
 * Allow finer-grained filtering before attribution, trading off additional filtering with noise levels
 
-
 ## Pre-Attribution Filtering
 
 ### API changes
 
-The following optional parameters will be added to the JSON in  `Attribution-Reporting-Register-Source` during source registration: `attribution_scopes`, `attribution_scope_limit` and `max_event_states`:
+The following optional parameters will be added to the JSON in `Attribution-Reporting-Register-Source` during source registration: `attribution_scopes`, `attribution_scope_limit`, and `max_event_states`:
 
 ```jsonc
 {
-  ..., //existing fields
+  ..., // existing fields
 
   // Optional
   // Represents the total number of distinct scopes allowed per destination for the source reporting origin.
@@ -56,7 +55,7 @@ The following optional parameters will be added to the JSON in  `Attribution-Rep
   // Represents the maximum number of event states that an API caller plans to use across all
   // subsequent event-source registrations.
   // Example: default event source for event-level reports supports 1 attribution report, 1 reporting window,
-  // and 1 bit of trigger data for a max number of event states of 3.
+  // and 1 bit of trigger data for a total of 3 event states.
   // This is used to calculate the information gain for event-level reports.
   // This is not required for navigation sources because navigations require explicit user action
   // and are therefore harder to abuse.
@@ -72,17 +71,16 @@ The following optional parameter will be added to the JSON in  `Attribution-Repo
 
 ```jsonc
 {
-  ..., //existing fields
+  ..., // existing fields
 
   // Optional
   // Represents a list of attribution scopes for a particular trigger.
-  // Triggers will only match sources whose attribution_scopes contains at least one of the trigger’s
+  // Triggers will only match sources whose attribution_scopes contains at least one of the trigger's
   // attribution_scopes, if specified.
   // Attribution scope values must be strings. Each string has a maximum length of 50.
   // Each list has a maximum length of 20.
   // Defaults to the empty list if omitted.
   "attribution_scopes": <list of strings>,
-
 }
 ```
 
@@ -90,25 +88,21 @@ Only sources whose `attribution_scopes` contains at least one of the trigger’s
 
 If there are multiple sources whose `attribution_scopes` contains at least one of the trigger’s `attribution_scopes`, then attribution will take place among the sources within the particular `attribution_scopes` according to current [Attribution Reporting API logic](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#trigger-attribution-algorithm).
 
-If the trigger registration does not specify an `attribution_scopes` then all sources are considered for attribution.
+If the trigger registration's `attribution_scopes` is empty, then all sources are considered for attribution.
 
-Once an `attribution_scope_limit` is set, the last K values (i.e. where K = `attribution_scope_limit`) of `attribution_scopes` will be considered the final set of `attribution_scopes` values and any source with additional `attribution_scopes` values will be treated as if the attribution scopes were empty.
+Once an `attribution_scope_limit` is set, the last K values (where K = `attribution_scope_limit`) of `attribution_scopes` will be considered the final set of `attribution_scopes` values and any source with additional `attribution_scopes` values will be treated as if the attribution scopes were empty.
 
-
-If a source registration is specified with a configuration that has a higher number of potential event states than the most recent `max_event_states` for the same reporting origin, then the source will be rejected and the registration will fail. Additionally, if the `max_event_states` field is changed in a future source registration, then all other previous pending source registrations with a different `max_event_states` will be ignored in subsequent attribution report generation flows, but will still count towards rate limits. 
-
+If a source registration is specified with a configuration that has a higher number of event states than the most recent `max_event_states` for the same reporting origin, then the source will be rejected and the registration will fail. Additionally, if the `max_event_states` field is changed in a future source registration, then all other previous pending source registrations with a different `max_event_states` will be ignored in subsequent attribution report generation flows, but will still count towards rate limits. 
 
 ### Updating attribution scope values
 
 An API caller may want to update the value of `attribution_scope_limit` for certain registrations or at a certain time. For example, when an advertiser starts a new campaign the API caller may want to increase the value of `attribution_scope_limit` to account for this new campaign.
 
-The `attribution_scope_limit` value can be updated during source registration at any time. However, any pending sources (previously registered) that have been specified with an `attribution_scope_limit` less than the current source registration’s `attribution_scope_limit`  will be deleted.
-
+The `attribution_scope_limit` value can be updated during source registration at any time. However, any pending sources (previously registered) that have been specified with an `attribution_scope_limit` less than the current source registration’s `attribution_scope_limit` will be deleted.
 
 ### Deletion logic
 
 If a source is attributed to the current trigger, then all other eligible sources considered for attribution (across all `attribution_scopes`) will be deleted.
-
 
 ## Attribution Scope Examples
 
@@ -116,14 +110,13 @@ If a source is attributed to the current trigger, then all other eligible source
 
 This example shows an API caller that manages 3 advertisers that all sell products on the same destination site (scheme + eTLD+1). In this example the API caller uses an `attribution_scope_limit` of 3 and tracks each advertiser with a distinct `attribution_scopes` value. Additionally, the user browsing the web sees 4 different ads from these advertisers and each one has a source registration associated:
 
-
 ```jsonc
 // source registration 1 for advertiser1 at t=0
 {
   ..., // existing fields
   "attribution_scope_limit": 3,
-  "attribution_scopes": ["advertiser1"]
-    "max_event_states": 3
+  "attribution_scopes": ["advertiser1"],
+  "max_event_states": 3
 }
 ```
 
@@ -132,7 +125,7 @@ This example shows an API caller that manages 3 advertisers that all sell produc
 {
   ..., // existing fields
   "attribution_scope_limit": 3,
-  "attribution_scopes": ["advertiser1"]
+  "attribution_scopes": ["advertiser1"],
   "max_event_states": 3
 }
 ```
@@ -142,7 +135,7 @@ This example shows an API caller that manages 3 advertisers that all sell produc
 {
   ..., // existing fields
   "attribution_scope_limit": 3,
-  "attribution_scopes": ["advertiser2"]
+  "attribution_scopes": ["advertiser2"],
   "max_event_states": 3
 }
 ```
@@ -151,7 +144,7 @@ This example shows an API caller that manages 3 advertisers that all sell produc
 {
   ..., // existing fields
   "attribution_scope_limit": 3,
-  "attribution_scopes": ["advertiser3"]
+  "attribution_scopes": ["advertiser3"],
   "max_num_event_states": 3
 }
 ```
@@ -172,14 +165,13 @@ The API automatically performs attribution between any sources that have `attrib
 
 This example shows an API caller that manages an ad banner that contains multiple images for different campaigns (for example: Phones and TVs). In this example the API caller needs sources and triggers that span across multiple `attribution_scopes` at once:
 
-
 ```jsonc
 // source registration 1 for campaign promoting products 1, 2, and 3 at t=0
 {
   ..., // existing fields
   "attribution_scope_limit": 4,
-  "attribution_scopes": ["product1", "product2", "product3"]
-    "max_event_states": 3
+  "attribution_scopes": ["product1", "product2", "product3"],
+  "max_event_states": 3
 }
 ```
 
@@ -188,7 +180,7 @@ This example shows an API caller that manages an ad banner that contains multipl
 {
   ..., // existing fields
   "attribution_scope_limit": 4,
-  "attribution_scopes": ["product2"]
+  "attribution_scopes": ["product2"],
   "max_event_states": 3
 }
 ```
@@ -198,7 +190,7 @@ This example shows an API caller that manages an ad banner that contains multipl
 {
   ..., // existing fields
   "attribution_scope_limit": 4,
-  "attribution_scopes": ["product4"]
+  "attribution_scopes": ["product4"],
   "max_event_states": 3
 }
 ```
@@ -215,7 +207,6 @@ The user then converts at a later time on the destination site and makes a purch
 
 In this example the API will start by finding any sources that have an `attribution_scopes` that matches at least one of the trigger registration `attribution_scopes`. In this example that would be source registration 1 and 2. The API will then perform attribution between these two sources. In this example source registration 2 will win the attribution process because it was the most recent source registration. The API caller would receive an attribution report attributing the trigger registration to source registration 2.
 
-
 ## Privacy Considerations
 
 ### Impact on flexible event-level reporting
@@ -226,11 +217,10 @@ TODO: Update [script](https://github.com/WICG/attribution-reporting-api/tree/mai
 
 Note that the `attribution_scope_limit` does not have any impact on the privacy mechanisms used in Aggregatable Reports.
 
-
 ### Additional Privacy Limits
 
-It is possible for an adversary to register multiple navigation sources during source registration, and use these multiple sources, each with a different attribution scopes value, to gain additional information about a user based on which attribution scope is chosen. To prevent this abuse the number of unique attribution scope sets per {report origin} per navigation needs to be limited.
+It is possible for an adversary to register multiple navigation sources during source registration, and use these multiple sources, each with a different attribution scopes value, to gain additional information about a user based on which attribution scope is chosen. To prevent this abuse the number of unique attribution scope sets per reporting origin per navigation needs to be limited.
 
 TODO: update [parameters](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md) table with new rate limit
 
-Strawman: 1 unique attribution scope set per { reporting origin } per navigation
+Strawman: 1 unique attribution scope set per reporting origin per navigation
