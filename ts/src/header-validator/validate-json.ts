@@ -34,6 +34,10 @@ class RegistrationContext extends GenericContext {
   ) {
     super(parseFullFlex)
   }
+
+  isDebugTypeSupported(s: string): boolean {
+    return this.aggregatableDebugTypes.includes(s)
+  }
 }
 
 class SourceContext extends RegistrationContext {
@@ -629,16 +633,12 @@ const priorityField: StructFields<Priority> = {
   priority: field('priority', int64, 0n),
 }
 
-function isDebugTypeSupported(ctx: RegistrationContext, s: string) {
-  return ctx.aggregatableDebugTypes.includes(s)
-}
-
 function aggregatableDebugType(
   ctx: RegistrationContext,
   j: Json
 ): Maybe<string> {
   return string(ctx, j).peek((s) => {
-    if (!isDebugTypeSupported(ctx, s)) {
+    if (!ctx.isDebugTypeSupported(s)) {
       ctx.warning('unknown type')
     }
   })
@@ -680,7 +680,7 @@ function aggregatableDebugReportingDataList(
     const dups = new Set<string>()
     for (const d of data) {
       for (const t of d.types) {
-        if (!isDebugTypeSupported(ctx, t)) {
+        if (!ctx.isDebugTypeSupported(t)) {
           continue
         }
         if (types.has(t)) {
