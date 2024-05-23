@@ -315,7 +315,9 @@ encoded. The map will have the following structure:
   "operation": "histogram",  // Allows for the service to support other operations in the future
   "data": [{
     "bucket": <bucket, encoded as a 16-byte (i.e. 128-bit) big-endian bytestring>,
-    "value": <value, encoded as a 4-byte (i.e. 32-bit) big-endian bytestring> 
+    "value": <value, encoded as a 4-byte (i.e. 32-bit) big-endian bytestring>,
+    // k is equal to the value `aggregatable_filtering_id_max_bytes`, defaults to 1 (i.e. 8-bit).
+    "id": <filtering ID, encoded as a k-byte big-endian bytestring, defaults to 0>
   }, ...]
 }
 ```
@@ -509,8 +511,8 @@ for the purpose of report verification.
 
 ### Optional: flexible contribution filtering with filtering IDs
 
-Trigger registration's `aggregatable_values`'s values will accept dictionaries
-with an optional `filtering_id` field. 
+Trigger registration's `aggregatable_values`'s values can be integers or
+dictionaries with an optional `filtering_id` field. 
 
 ```jsonc
 {
