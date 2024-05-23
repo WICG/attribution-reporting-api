@@ -1,8 +1,10 @@
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
+import { field, struct, validateDictionary } from './validate-structured'
 import {
   Dictionary,
-  parseDictionary,
+  InnerList,
+  Item,
   serializeDictionary,
 } from 'structured-headers'
 
@@ -16,58 +18,36 @@ export type Eligible = {
   trigger: boolean
 }
 
+function presence(ctx: Context, v: Item | InnerList): Maybe<boolean> {
+  if (v[0] !== true) {
+    ctx.warning('ignoring dictionary value')
+  }
+
+  if (v[1].size !== 0) {
+    ctx.warning('ignoring parameters')
+  }
+
+  return Maybe.some(true)
+}
+
 export function validateEligible(
   str: string
 ): [ValidationResult, Maybe<Eligible>] {
-  const ctx = new Context()
-
-  let dict
-  try {
-    dict = parseDictionary(str)
-  } catch (err) {
-    const msg = err instanceof Error ? err.toString() : 'unknown error'
-    return [ctx.finish(msg), Maybe.None]
-  }
-
-  let navigationSource = false
-  let eventSource = false
-  let trigger = false
-
-  for (const [key, value] of dict) {
-    ctx.scope(key, () => {
-      switch (key) {
-        case eventSourceKey:
-          eventSource = true
-          break
-        case triggerKey:
-          trigger = true
-          break
-        case navigationSourceKey:
-          navigationSource = true
-          break
-        default:
-          ctx.warning('unknown dictionary key')
-          break
+  return validateDictionary(new Context(), str, (ctx, d) =>
+    struct(ctx, d, {
+      navigationSource: field(navigationSourceKey, presence, false),
+      eventSource: field(eventSourceKey, presence, false),
+      trigger: field(triggerKey, presence, false),
+    }).filter((v) => {
+      if (v.navigationSource && (v.eventSource || v.trigger)) {
+        ctx.error(
+          `${navigationSourceKey} is mutually exclusive with ${eventSourceKey} and ${triggerKey}`
+        )
+        return false
       }
-
-      if (value[0] !== true) {
-        ctx.warning('ignoring dictionary value')
-      }
-
-      if (value[1].size !== 0) {
-        ctx.warning('ignoring parameters')
-      }
+      return true
     })
-  }
-
-  if (navigationSource && (eventSource || trigger)) {
-    ctx.error(
-      `${navigationSourceKey} is mutually exclusive with ${eventSourceKey} and ${triggerKey}`
-    )
-    return [ctx.finish(), Maybe.None]
-  }
-
-  return [ctx.finish(), Maybe.some({ navigationSource, eventSource, trigger })]
+  )
 }
 
 export function serializeEligible(e: Eligible): string {

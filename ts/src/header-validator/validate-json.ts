@@ -4,7 +4,9 @@ import * as constants from '../constants'
 import { SourceType } from '../source-type'
 import { VendorSpecificValues } from '../vendor-specific-values'
 import { Context, PathComponent, ValidationResult } from './context'
-import { Maybe, Maybeable } from './maybe'
+import { Maybe } from './maybe'
+import { CtxFunc } from './validate'
+import * as validate from './validate'
 import * as privacy from '../flexible-event/privacy'
 
 const { None, some } = Maybe
@@ -44,93 +46,32 @@ class SourceContext extends RegistrationContext {
   }
 }
 
-type StructFields<T extends object, C extends Context = Context> = {
-  [K in keyof T]-?: CtxFunc<C, JsonDict, Maybe<T[K]>>
-}
+const {
+  exclusive,
+  field,
+  struct: structInternal,
+} = validate.make<JsonDict, Json>(
+  /*getAndDelete=*/ (d, name) => {
+    const v = d[name]
+    delete d[name]
+    return v
+  },
+  /*unknownKeys=*/ (d) => Object.keys(d),
+  /*warnUnknownMsg=*/ 'unknown field'
+)
 
-function struct<T extends object, C extends Context = Context>(
+type StructFields<
+  T extends object,
+  C extends Context = Context,
+> = validate.StructFields<T, JsonDict, C>
+
+function struct<T extends object, C extends Context>(
   ctx: C,
   d: Json,
   fields: StructFields<T, C>,
   warnUnknown: boolean = true
 ): Maybe<T> {
-  return object(ctx, d).map((d) => {
-    const t: Partial<T> = {}
-
-    let ok = true
-    for (const prop in fields) {
-      let itemOk = false
-      fields[prop](ctx, d).peek((v) => {
-        itemOk = true
-        t[prop] = v
-      })
-      ok = ok && itemOk
-    }
-
-    if (warnUnknown) {
-      for (const key in d) {
-        ctx.scope(key, () => ctx.warning('unknown field'))
-      }
-    }
-
-    return ok ? some(t as T) : None
-  })
-}
-
-type CtxFunc<C extends Context, I, O> = (ctx: C, i: I) => O
-
-function field<T, C extends Context = Context>(
-  name: string,
-  f: CtxFunc<C, Json, Maybe<T>>,
-  valueIfAbsent?: Maybeable<T>
-): CtxFunc<C, JsonDict, Maybe<T>> {
-  return (ctx: C, d: JsonDict): Maybe<T> =>
-    ctx.scope(name, () => {
-      const v = d[name]
-      if (v === undefined) {
-        if (valueIfAbsent === undefined) {
-          ctx.error('required')
-          return None
-        }
-        return Maybe.flatten(valueIfAbsent)
-      }
-      delete d[name] // for unknown field warning
-      return f(ctx, v)
-    })
-}
-
-type Exclusive<T, C extends Context = Context> = {
-  [key: string]: CtxFunc<C, Json, Maybe<T>>
-}
-
-function exclusive<T, C extends Context = Context>(
-  x: Exclusive<T, C>,
-  valueIfAbsent: Maybeable<T>
-): CtxFunc<C, JsonDict, Maybe<T>> {
-  return (ctx: C, d: JsonDict): Maybe<T> => {
-    const found: string[] = []
-    let v: Maybe<T> = None
-
-    for (const [key, f] of Object.entries(x)) {
-      const j = d[key]
-      if (j !== undefined) {
-        found.push(key)
-        v = ctx.scope(key, () => f(ctx, j))
-        delete d[key] // for unknown field warning
-      }
-    }
-
-    if (found.length === 1) {
-      return v
-    }
-
-    if (found.length > 1) {
-      ctx.error(`mutually exclusive fields: ${found.join(', ')}`)
-      return None
-    }
-
-    return Maybe.flatten(valueIfAbsent)
-  }
+  return object(ctx, d).map((d) => structInternal(ctx, d, fields, warnUnknown))
 }
 
 type TypeSwitch<T, C extends Context = Context> = {
