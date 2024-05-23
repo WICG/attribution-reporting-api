@@ -919,11 +919,12 @@ function sourceAggregatableDebugReportingConfig(
   return struct(ctx, j, {
     budget: field('budget', aggregatableValue),
 
-    // TODO: Consider passing the parsed budget to validate the debug data.
     ...aggregatableDebugReportingConfig,
   }).filter((s) => {
     for (const d of s.debugData) {
       if (d.value > s.budget) {
+        // TODO: Consider passing the parsed budget to validate the debug data and
+        // give more precise path information.
         ctx.error(`data contains value greater than budget (${s.budget})`)
         return false
       }
