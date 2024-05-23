@@ -1811,6 +1811,45 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
+    sourceType: SourceType.navigation,
+    expected: Maybe.some({
+      aggregatableReportWindow: 2592000,
+      aggregationKeys: new Map(),
+      debugKey: null,
+      debugReporting: false,
+      destination: new Set(['https://a.test']),
+      eventLevelEpsilon: 14,
+      expiry: 2592000,
+      filterData: new Map(),
+      priority: 0n,
+      sourceEventId: 0n,
+      maxEventLevelReports: 3,
+      triggerSpecs: [
+        {
+          eventReportWindows: {
+            startTime: 0,
+            endTimes: [172800, 604800, 2592000],
+          },
+          summaryBuckets: [1, 2, 3],
+          summaryWindowOperator: SummaryWindowOperator.count,
+          triggerData: new Set([0, 1, 2, 3, 4, 5, 6, 7]),
+        },
+      ],
+      triggerDataMatching: TriggerDataMatching.modulus,
+      aggregatableDebugReporting: {
+        budget: 123,
+        keyPiece: 1n,
+        debugData: [
+          {
+            keyPiece: 2n,
+            types: ['abc', 'abc'],
+            value: 123,
+          },
+        ],
+        aggregationCoordinatorOrigin:
+          'https://publickeyservice.msmt.aws.privacysandboxservices.com',
+      },
+    }),
     expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],

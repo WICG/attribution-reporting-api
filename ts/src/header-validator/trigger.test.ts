@@ -1421,6 +1421,33 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         }]
       }
     }`,
+    expected: Maybe.some({
+      aggregatableDedupKeys: [],
+      aggregatableSourceRegistrationTime:
+        AggregatableSourceRegistrationTime.exclude,
+      aggregationCoordinatorOrigin:
+        'https://publickeyservice.msmt.aws.privacysandboxservices.com',
+      triggerContextID: null,
+      aggregatableDebugReporting: {
+        keyPiece: 1n,
+        debugData: [
+          {
+            types: ['abc', 'abc'],
+            keyPiece: 2n,
+            value: 123,
+          },
+        ],
+        aggregationCoordinatorOrigin:
+          'https://publickeyservice.msmt.aws.privacysandboxservices.com',
+      },
+      aggregatableTriggerData: [],
+      aggregatableValuesConfigurations: [],
+      debugKey: null,
+      debugReporting: false,
+      eventTriggerData: [],
+      positive: [],
+      negative: [],
+    }),
     expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],

@@ -698,6 +698,7 @@ function aggregatableDebugReportingDataList(
   })
 }
 
+// Consider making this a StructFields.
 function aggregationCoordinatorOriginField(
   ctx: RegistrationContext,
   j: JsonDict
@@ -918,6 +919,7 @@ function sourceAggregatableDebugReportingConfig(
   return struct(ctx, j, {
     budget: field('budget', aggregatableValue),
 
+    // TODO: Consider passing the parsed budget to validate the debug data.
     ...aggregatableDebugReportingConfig,
   }).filter((s) => {
     for (const d of s.debugData) {
