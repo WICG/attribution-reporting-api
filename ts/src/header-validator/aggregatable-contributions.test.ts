@@ -87,7 +87,7 @@ test('basic', () => {
   const aggregatableValuesCfgs: AggregatableValuesConfiguration[] = [
     {
       values: new Map([
-        ['key1', { value: 32768, filteringId: 0n }],
+        ['key1', { value: 32768, filteringId: 25n }],
         ['key2', { value: 1664, filteringId: 0n }],
       ]),
       positive: [],
@@ -109,10 +109,12 @@ test('basic', () => {
     {
       key: 1369n,
       value: 32768,
+      filteringId: 25n,
     },
     {
       key: 2693n,
       value: 1664,
+      filteringId: 0n,
     },
   ])
 })
@@ -189,7 +191,7 @@ test('values-filtered', async (t) => {
           negative: [],
         },
       ]),
-      [{ key: 1029n, value: 1664 }]
+      [{ key: 1029n, value: 1664, filteringId: 0n }]
     )
   )
 
@@ -217,7 +219,7 @@ test('values-filtered', async (t) => {
           negative: [],
         },
       ]),
-      [{ key: 1369n, value: 32768 }]
+      [{ key: 1369n, value: 32768, filteringId: 0n }]
     )
   )
 
@@ -275,7 +277,7 @@ test('values-filtered', async (t) => {
           negative: [],
         },
       ]),
-      [{ key: 1029n, value: 1664 }]
+      [{ key: 1029n, value: 1664, filteringId: 0n }]
     )
   )
 })
