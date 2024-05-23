@@ -653,7 +653,7 @@ const keyPieceField: StructFields<KeyPiece> = {
 }
 
 export type AggregatableDebugReportingData = KeyPiece & {
-  types: string[]
+  types: Set<string>
   value: number
 }
 
@@ -663,7 +663,10 @@ function aggregatableDebugReportingData(
 ): Maybe<AggregatableDebugReportingData> {
   return struct(ctx, j, {
     types: field('types', (ctx, j) =>
-      array(ctx, j, aggregatableDebugType, { minLength: 1 })
+      set(ctx, j, aggregatableDebugType, {
+        minLength: 1,
+        requireDistinct: true,
+      })
     ),
     value: field('value', aggregatableValue),
 
@@ -680,9 +683,6 @@ function aggregatableDebugReportingDataList(
     const dups = new Set<string>()
     for (const d of data) {
       for (const t of d.types) {
-        if (!ctx.isDebugTypeSupported(t)) {
-          continue
-        }
         if (types.has(t)) {
           dups.add(t)
         } else {

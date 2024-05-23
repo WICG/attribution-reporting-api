@@ -78,7 +78,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         keyPiece: 1n,
         debugData: [
           {
-            types: ['trigger-unknown-error'],
+            types: new Set(['trigger-unknown-error']),
             keyPiece: 5n,
             value: 123,
           },
@@ -1421,33 +1421,12 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         }]
       }
     }`,
-    expected: Maybe.some({
-      aggregatableDedupKeys: [],
-      aggregatableSourceRegistrationTime:
-        AggregatableSourceRegistrationTime.exclude,
-      aggregationCoordinatorOrigin:
-        'https://publickeyservice.msmt.aws.privacysandboxservices.com',
-      triggerContextID: null,
-      aggregatableDebugReporting: {
-        keyPiece: 1n,
-        debugData: [
-          {
-            types: ['abc', 'abc'],
-            keyPiece: 2n,
-            value: 123,
-          },
-        ],
-        aggregationCoordinatorOrigin:
-          'https://publickeyservice.msmt.aws.privacysandboxservices.com',
+    expectedErrors: [
+      {
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
+        msg: 'duplicate value abc',
       },
-      aggregatableTriggerData: [],
-      aggregatableValuesConfigurations: [],
-      debugKey: null,
-      debugReporting: false,
-      eventTriggerData: [],
-      positive: [],
-      negative: [],
-    }),
+    ],
     expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
@@ -1455,6 +1434,39 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
+        msg: 'unknown type',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-debug-reporting-data-elem-types-elem-unknown-duplicate-across',
+    json: `{
+      "aggregatable_debug_reporting": {
+        "key_piece": "0x1",
+        "debug_data": [{
+          "key_piece": "0x2",
+          "types": ["abc"],
+          "value": 123
+        }, {
+          "key_piece": "0x1",
+          "types": ["abc"],
+          "value": 456
+	}]
+      }
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_debug_reporting', 'debug_data'],
+        msg: 'duplicate type: abc',
+      },
+    ],
+    expectedWarnings: [
+      {
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
+        msg: 'unknown type',
+      },
+      {
+        path: ['aggregatable_debug_reporting', 'debug_data', 1, 'types', 0],
         msg: 'unknown type',
       },
     ],
@@ -1473,8 +1485,8 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
     expectedErrors: [
       {
-        path: ['aggregatable_debug_reporting', 'debug_data'],
-        msg: 'duplicate type: trigger-unknown-error',
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
+        msg: 'duplicate value trigger-unknown-error',
       },
     ],
   },

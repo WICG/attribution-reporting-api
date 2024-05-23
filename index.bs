@@ -1604,6 +1604,7 @@ positive integer |maxValue|, and a [=boolean=] |isSource|:
 1. If |dataList| is not a [=list=], return null.
 1. Let |debugDataMap| be a new [=map=].
 1. Let |supportedTypes| be a new [=set=].
+1. Let |unknownTypes| be a new [=set=].
 1. If |isSource| is:
     <dl class="switch">
     : true
@@ -1641,9 +1642,12 @@ positive integer |maxValue|, and a [=boolean=] |isSource|:
             1. If |unspecifiedContribution| is not null, return null.
             1. Set |unspecifiedContribution| to |contribution|.
             1. [=iteration/Continue=].
-        1. If |supportedTypes| does not [=set/contain=] |type|, [=iteration/continue=].
-        1. If |debugDataMap|[|type|] [=map/exists=], return null.
-        1. [=map/Set=] |debugDataMap|[|type|] to |contribution|.
+        1. If |supportedTypes| [=set/contains=] |type|:
+            1. If |debugDataMap|[|type|] [=map/exists=], return null.
+            1. [=map/Set=] |debugDataMap|[|type|] to |contribution|.
+        1. Otherwise:
+            1. If |unknownTypes| [=set/contains=] |type|, return null.
+            1. [=set/Append=] |type| to |unknownTypes|.
 1. If |unspecifiedContribution| is null, return |debugDataMap|.
 1. [=set/iterate|For each=] |type| of |supportedTypes|:
     1. If |debugDataMap|[|type|] does not [=map/exist=], [=map/set=]
