@@ -30,7 +30,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "not_filters": {"c": ["d"]},
         "source_keys": ["x", "y"]
       }],
-      "aggregatable_filtering_id_max_bytes": 2,
+      "aggregatable_filtering_id_max_bytes": 1,
       "aggregatable_values": {"x": 5,  "y": {"value": 10, "filtering_id": "25" }},
       "debug_key": "5",
       "debug_reporting": true,
@@ -85,7 +85,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           sourceKeys: new Set(['x', 'y']),
         },
       ],
-      aggregatableFilteringIdMaxBytes: 2,
+      aggregatableFilteringIdMaxBytes: 1,
       aggregatableValuesConfigurations: [
         {
           values: new Map([
@@ -1091,6 +1091,30 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['aggregatable_filtering_id_max_bytes'],
         msg: 'must be in the range [1, 8]',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable_filtering_id_max_bytes-invalid-aggregatable-source-registration-time',
+    json: `{"aggregatable_filtering_id_max_bytes": 2, "aggregatable_source_registration_time": 1}`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_source_registration_time'],
+        msg: 'must be a string',
+      },
+      {
+        path: ['aggregatable_filtering_id_max_bytes'],
+        msg: 'cannot be fully validated without a valid aggregatable_source_registration_time',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable_filtering_id_max_bytes-prohibited-aggregatable-source-registration-time-include',
+    json: `{"aggregatable_filtering_id_max_bytes": 2, "aggregatable_source_registration_time": "include"}`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_filtering_id_max_bytes'],
+        msg: 'with a non-default value (higher than 1) is prohibited for aggregatable_source_registration_time include',
       },
     ],
   },

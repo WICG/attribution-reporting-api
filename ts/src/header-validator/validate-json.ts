@@ -1336,12 +1336,36 @@ function aggregatableValuesConfigurations(
   })
 }
 
-function aggregatableFilteringIdMaxBytes(ctx: Context, j: Json): Maybe<number> {
+function aggregatableFilteringIdMaxBytes(
+  ctx: Context,
+  j: Json,
+  aggregatableSourceRegTime: Maybe<AggregatableSourceRegistrationTime>
+): Maybe<number> {
   return number(ctx, j)
     .filter((n) => isInteger(ctx, n))
     .filter((n) =>
       isInRange(ctx, n, 1, constants.maxAggregatableFilteringIdMaxBytesValue)
     )
+    .filter((n) => {
+      if (aggregatableSourceRegTime.value === undefined) {
+        ctx.error(
+          `cannot be fully validated without a valid aggregatable_source_registration_time`
+        )
+        return false
+      }
+      if (
+        aggregatableSourceRegTime.value !==
+          AggregatableSourceRegistrationTime.exclude &&
+        n != constants.defaultAggregatableFilteringIdMaxBytes
+      ) {
+        ctx.error(
+          `with a non-default value (higher than 1) is prohibited for aggregatable_source_registration_time ${aggregatableSourceRegTime.value}`
+        )
+        return false
+      }
+
+      return true
+    })
 }
 
 export type EventTriggerDatum = FilterPair &
@@ -1583,7 +1607,12 @@ function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
         ),
         aggregatableFilteringIdMaxBytes: field(
           'aggregatable_filtering_id_max_bytes',
-          aggregatableFilteringIdMaxBytes,
+          (ctx, j) =>
+            aggregatableFilteringIdMaxBytes(
+              ctx,
+              j,
+              aggregatableSourceRegTimeVal
+            ),
           constants.defaultAggregatableFilteringIdMaxBytes
         ),
         aggregatableValuesConfigurations: field(
