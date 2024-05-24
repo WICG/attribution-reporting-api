@@ -102,7 +102,7 @@ The `attribution_scope_limit` value can be updated during source registration at
 
 ### Deletion logic
 
-If a source is attributed to the current trigger, then all other eligible sources considered for attribution (across all `attribution_scopes`) will be deleted.
+If the current trigger is attributed to a source, then all other eligible sources considered for attribution (across all `attribution_scopes`) will be deleted.
 
 ## Attribution Scope Examples
 
