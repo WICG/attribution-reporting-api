@@ -13,6 +13,7 @@ _Note: This document describes possible new functionality in the Attribution Rep
   - [Updating attribution scope values](#updating-attribution-scope-values)
   - [Deletion logic](#deletion-logic)
 - [Attribution scope example](#attribution-scope-examples)
+- [Alternatives Considered](#alternatives-considered)
 - [Privacy Considerations](#privacy-considerations)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -206,6 +207,10 @@ The user then converts at a later time on the destination site and makes a purch
 ```
 
 In this example the API will start by finding any sources that have an `attribution_scopes` that matches at least one of the trigger registration `attribution_scopes`. In this example that would be source registration 1 and 2. The API will then perform attribution between these two sources. In this example source registration 2 will win the attribution process because it was the most recent source registration. The API caller would receive an attribution report attributing the trigger registration to source registration 2.
+
+## Alternatives Considered
+
+One alternative that was considered was instead of using `attribution_scopes` the API would perform attribution matching on a finer granularity than site (e.g. origin or path). This approach would allow the rest of the API logic to continue working as it does currently. However, the `attribution_scopes` proposal gives users additional flexibility in case their URL structures do not match their logical scope structures. Additionally, matching on finer granularity than site may open additional potential attack vectors and would require additional rate limits.
 
 ## Privacy Considerations
 
