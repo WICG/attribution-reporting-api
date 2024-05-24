@@ -1663,31 +1663,26 @@ function eventLevelReport(
   ctx: GenericContext,
   j: Json
 ): Maybe<EventLevelReport> {
-  return object(ctx, j).map((j) => {
-    return struct(ctx, j, {
-      attributionDestination: field(
-        'attribution_destination',
-        reportDestination
-      ),
-      randomizedTriggerRate: field(
-        'randomized_trigger_rate',
-        randomizedTriggerRate
-      ),
-      reportId: field('report_id', randomUuid),
-      scheduledReportTime: field('scheduled_report_time', int64),
-      sourceDebugKey: field('source_debug_key', uint64, null),
-      sourceEventId: field('source_event_id', uint64),
-      sourceType: field('source_type', (ctx, j) =>
-        enumerated(ctx, j, SourceType)
-      ),
-      triggerData: field('trigger_data', uint64),
-      // TODO: Flex can issue multiple trigger debug keys.
-      triggerDebugKey: field('trigger_debug_key', uint64, null),
+  return struct(ctx, j, {
+    attributionDestination: field('attribution_destination', reportDestination),
+    randomizedTriggerRate: field(
+      'randomized_trigger_rate',
+      randomizedTriggerRate
+    ),
+    reportId: field('report_id', randomUuid),
+    scheduledReportTime: field('scheduled_report_time', int64),
+    sourceDebugKey: field('source_debug_key', uint64, null),
+    sourceEventId: field('source_event_id', uint64),
+    sourceType: field('source_type', (ctx, j) =>
+      enumerated(ctx, j, SourceType)
+    ),
+    triggerData: field('trigger_data', uint64),
+    // TODO: Flex can issue multiple trigger debug keys.
+    triggerDebugKey: field('trigger_debug_key', uint64, null),
 
-      triggerSummaryBucket: ctx.parseFullFlex
-        ? field('trigger_summary_bucket', triggerSummaryBucket)
-        : () => some(null),
-    })
+    triggerSummaryBucket: ctx.parseFullFlex
+      ? field('trigger_summary_bucket', triggerSummaryBucket)
+      : () => some(null),
   })
 }
 
