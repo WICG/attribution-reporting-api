@@ -2726,6 +2726,7 @@ A <dfn>trigger-registration JSON key</dfn> is one of the following:
 <li>"<dfn><code>debug_reporting</code></dfn>"
 <li>"<dfn><code>deduplication_key</code></dfn>"
 <li>"<dfn><code>event_trigger_data</code></dfn>"
+<li>"<dfn><code>filtering_id</code></dfn>"
 <li>"<dfn><code>filters</code></dfn>"
 <li>"<dfn><code>key_piece</code></dfn>"
 <li>"<dfn><code>not_filters</code></dfn>"
@@ -2857,18 +2858,18 @@ To <dfn>parse aggregatable key-values</dfn> given a [=map=] |map| and a positive
             : [=aggregatable key value/filtering ID=]
             :: [=default filtering ID value=]
         1. [=iteration/Continue=].
-    1. If |value|["`value`"] does not [=map/exist=], return null.
+    1. If |value|["<code>[=trigger-registration JSON key/value=]</code>"] does not [=map/exist=], return null.
     1. If the result of running [=validate aggregatable key-values value=] with |value|["`value`"] is false, return null.
     1. Let |filteringId| be [=default filtering ID value=].
-    1. If |value|["`filtering_id`"] [=map/exists=]:
+    1. If |value|["<code>[=trigger-registration JSON key/filtering_id=]</code>"] [=map/exists=]:
         1. Set |filteringId| to the result of applying the
-            <a spec="html">rules for parsing non-negative integers</a> to |value|["`filtering_id`"].
+            <a spec="html">rules for parsing non-negative integers</a> to |value|["<code>[=trigger-registration JSON key/filtering_id=]</code>"].
         1. If |filteringId| is an error, return null.
         1. If |filteringId| is not in [=the exclusive range|the range=]
             0 to 256<sup>|maxBytes|</sup>, exclusive, return null.    
     1.  [=map/Set=] |out|[|key|] to a new [=aggregatable key value=] whose items are
         : [=aggregatable key value/value=]
-        :: |value|["`value`"]
+        :: |value|["<code>[=trigger-registration JSON key/value=]</code>"]
         : [=aggregatable key value/filtering ID=]
         :: |filteringId|
 1. Return |out|.
