@@ -53,9 +53,11 @@ export const defaultTriggerDataCardinality: Readonly<
 
 export const sourceAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'source-channel-capacity-limit',
+  'source-destination-global-rate-limit',
   'source-destination-limit',
   'source-destination-rate-limit',
   'source-noised',
+  'source-reporting-origin-limit',
   'source-reporting-origin-per-site-limit',
   'source-storage-limit',
   'source-success',
