@@ -2859,7 +2859,8 @@ To <dfn>parse aggregatable key-values</dfn> given a [=map=] |map| and a positive
             :: [=default filtering ID value=]
         1. [=iteration/Continue=].
     1. If |value|["<code>[=trigger-registration JSON key/value=]</code>"] does not [=map/exist=], return null.
-    1. If the result of running [=validate aggregatable key-values value=] with |value|["`value`"] is false, return null.
+    1. If the result of running [=validate aggregatable key-values value=] with
+        |value|["<code>[=trigger-registration JSON key/value=]</code>"] is false, return null.
     1. Let |filteringId| be [=default filtering ID value=].
     1. If |value|["<code>[=trigger-registration JSON key/filtering_id=]</code>"] [=map/exists=]:
         1. Set |filteringId| to the result of applying the
@@ -2987,9 +2988,6 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
     1. If |value|["<code>[=trigger-registration JSON key/trigger_context_id=]</code>"]'s [=string/length=] is greater than the [=max length per trigger context ID=],
         return null.
     1. Set |triggerContextID| to |value|["<code>[=trigger-registration JSON key/trigger_context_id=]</code>"].
-1. If |aggregatableSourceRegTimeConfig| is not "<code>[=aggregatable source registration time configuration/exclude=]</code>":
-    1. If |triggerContextID| is not null, return null.
-    1. If |filteringIdsMaxBytes| is not equal to [=default filtering ID max bytes=], return null.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -3025,6 +3023,8 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
     :: |fenced|
     : [=attribution trigger/aggregatable filtering ID max bytes=]
     :: |filteringIdsMaxBytes|
+1. If |aggregatableSourceRegTimeConfig| is not "<code>[=aggregatable source registration time configuration/exclude=]</code>"
+    and the result of running [=check if an aggregatable report should be unconditionally sent=] with |trigger| is true, return null.
 1. Return |trigger|.
 
 Issue: Determine proper charset-handling for the JSON header value.

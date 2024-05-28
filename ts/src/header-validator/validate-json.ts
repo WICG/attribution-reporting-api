@@ -1386,7 +1386,7 @@ function aggregatableFilteringIdMaxBytes(
         n !== constants.defaultAggregatableFilteringIdMaxBytes
       ) {
         ctx.error(
-          `with a non-default value (higher than 1) is prohibited for aggregatable_source_registration_time ${aggregatableSourceRegTime.value}`
+          `with a non-default value (higher than ${constants.defaultAggregatableFilteringIdMaxBytes}) is prohibited for aggregatable_source_registration_time ${aggregatableSourceRegTime.value}`
         )
         return false
       }
