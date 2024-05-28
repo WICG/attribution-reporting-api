@@ -1063,7 +1063,7 @@ An <dfn>attribution rate-limit record</dfn> is a [=struct=] with the following i
 <h3 dfn-type=dfn>Attribution debug data</h3>
 
 A <dfn>debug data type</dfn> is a non-empty string that specifies the set of data that is
-contained in the [=attribution debug data/body=] of an [=attribution debug data=].
+contained in a [=verbose debug report=].
 
 A <dfn>source debug data type</dfn> is a [=debug data type=] for source registrations.
 Possible values are:
@@ -1124,23 +1124,23 @@ registration header errors. Possible values are:
 <li>"<dfn><code>header-parsing-error</code></dfn>"
 </ul>
 
-An attribution debug data is a [=struct=] with the following items:
+<h3 dfn-type=dfn>Verbose debug report</h3>
 
-<dl dfn-for="attribution debug data">
+A <dfn>verbose debug data</dfn> is a [=struct=] with the following items:
+
+<dl dfn-for="verbose debug data">
 : <dfn>data type</dfn>
 :: A [=debug data type=].
 : <dfn>body</dfn>
-:: A [=map=] whose fields are determined by the [=attribution debug data/data type=].
+:: A [=map=] whose fields are determined by the [=verbose debug data/data type=].
 
 </dl>
 
-<h3 dfn-type=dfn>Attribution debug report</h3>
+A verbose debug report is a [=struct=] with the following items:
 
-An attribution debug report is a [=struct=] with the following items:
-
-<dl dfn-for="attribution debug report">
+<dl dfn-for="verbose debug report">
 : <dfn>data</dfn>
-:: A [=list=] of [=attribution debug data=].
+:: A [=list=] of [=verbose debug data=].
 : <dfn>reporting origin</dfn>
 :: A [=suitable origin=].
 
@@ -1681,16 +1681,16 @@ Given an [=attribution rate-limit record=] |record| and a [=moment=] |now|:
 1. If |record|'s [=attribution rate-limit record/expiry time=] is after |now|, return false.
 1. Return true.
 
-<h3 id="obtaining-and-delivering-debug-report">Obtaining and delivering an attribution debug report</h3>
+<h3 id="obtaining-and-delivering-verbose-debug-report">Obtaining and delivering a verbose debug report</h3>
 
-To <dfn>obtain and deliver a debug report</dfn> given a [=list=] of [=attribution debug data=] |data|,
+To <dfn>obtain and deliver a verbose debug report</dfn> given a [=list=] of [=verbose debug data=] |data|,
 a [=suitable origin=] |reportingOrigin|, and a [=boolean=] |fenced|:
 
 1. If |fenced| is true, return.
-1. Let |debugReport| be an [=attribution debug report=] with the items:
-    : [=attribution debug report/data=]
+1. Let |debugReport| be a [=verbose debug report=] with the items:
+    : [=verbose debug report/data=]
     :: |data|
-    : [=attribution debug report/reporting origin=]
+    : [=verbose debug report/reporting origin=]
     :: |reportingOrigin|
 1. [=Queue a task=] to [=attempt to deliver a verbose debug report=] with |debugReport|.
 
@@ -1997,12 +1997,12 @@ and a [=boolean=] |fenced|:
     :: |headerName|.
     : "`value`"
     :: |headerValue|.
-1. Let |data| be a new [=attribution debug data=] with the items:
-    : [=attribution debug data/data type=]
+1. Let |data| be a new [=verbose debug data=] with the items:
+    : [=verbose debug data/data type=]
     :: "<code>[=header errors debug data type/header-parsing-error=]</code>"
-    : [=attribution debug data/body=]
+    : [=verbose debug data/body=]
     :: |body|
-1. Run [=obtain and deliver a debug report=] with « |data| », |reportingOrigin|, and |fenced|.
+1. Run [=obtain and deliver a verbose debug report=] with « |data| », |reportingOrigin|, and |fenced|.
 
 Note: The user agent may optionally include error details of any type in |body|["`error`"].
 
@@ -2525,7 +2525,7 @@ a [=trigger state=] |triggerState|:
     |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
 1. Return |fakeReport|.
 
-To <dfn>obtain and deliver a debug report on source registration</dfn> given a
+To <dfn>obtain and deliver a verbose debug report on source registration</dfn> given a
 [=source debug data type=] |dataType|, an [=attribution source=] |source|, and
 an optional [=boolean=] |isNoised| (default false):
 
@@ -2573,12 +2573,12 @@ an optional [=boolean=] |isNoised| (default false):
          [=serialize an integer|serialized=].
 
     </dl>
-1. Let |data| be a new [=attribution debug data=] with the items:
-    : [=attribution debug data/data type=]
+1. Let |data| be a new [=verbose debug data=] with the items:
+    : [=verbose debug data/data type=]
     :: |dataTypeToReport|
-    : [=attribution debug data/body=]
+    : [=verbose debug data/body=]
     :: |body|
-1. Run [=obtain and deliver a debug report=] with « |data| », |source|'s [=attribution source/reporting origin=],
+1. Run [=obtain and deliver a verbose debug report=] with « |data| », |source|'s [=attribution source/reporting origin=],
     and |source|'s [=attribution source/fenced=].
 
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
@@ -2595,11 +2595,11 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. Let |epsilon| be |source|'s [=attribution source/event-level epsilon=].
 1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
 1. If |channelCapacity| is an error:
-    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-trigger-state-cardinality-limit=]</code>" and |source|.
+    1. Run [=obtain and deliver a verbose debug report on source registration=] with "<code>[=source debug data type/source-trigger-state-cardinality-limit=]</code>" and |source|.
     1. Return.
 1. Let |sourceType| be |source|'s [=attribution source/source type=].
 1. If |channelCapacity| is greater than [=max event-level channel capacity per source=][|sourceType|]:
-    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-channel-capacity-limit=]</code>" and |source|.
+    1. Run [=obtain and deliver a verbose debug report on source registration=] with "<code>[=source debug data type/source-channel-capacity-limit=]</code>" and |source|.
     1. Return.
 1. Set |source|'s [=attribution source/randomized response=] to the result of
     [=obtaining a randomized source response=] with |randomizedResponseConfig| and |epsilon|.
@@ -2614,25 +2614,25 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     [=attribution source/source origin=] are [=same origin=].
 1. If |pendingSourcesForSourceOrigin|'s [=list/size=] is greater than or equal
     to the user agent's [=max pending sources per source origin=]:
-    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-storage-limit=]</code>" and |source|.
+    1. Run [=obtain and deliver a verbose debug report on source registration=] with "<code>[=source debug data type/source-storage-limit=]</code>" and |source|.
     1. Return.
 1. If the result of running [=check if an attribution source exceeds the unexpired destination limit=]
     with |source| is true:
-    1. Run [=obtain and deliver a debug report on source registration=] with "[=source debug data type/source-destination-limit=]</code>" and |source|.
+    1. Run [=obtain and deliver a verbose debug report on source registration=] with "[=source debug data type/source-destination-limit=]</code>" and |source|.
     1. Return.
 1. If the result of running [=check if an attribution source should be blocked by reporting-origin per site limit=]
     with |source| is <strong>blocked</strong>:
-    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-reporting-origin-per-site-limit=]</code>" and |source|.
+    1. Run [=obtain and deliver a verbose debug report on source registration=] with "<code>[=source debug data type/source-reporting-origin-per-site-limit=]</code>" and |source|.
     1. Return.
 1. Let |destinationRateLimitResult| be the result of running [=check if an attribution source exceeds the time-based destination limit=] with |source|.
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit reporting limit=]</code>":
-    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-destination-rate-limit=]</code>" and |source|.
+    1. Run [=obtain and deliver a verbose debug report on source registration=] with "<code>[=source debug data type/source-destination-rate-limit=]</code>" and |source|.
     1. Return.
 1. Let |debugDataType| be "<code>[=source debug data type/source-success=]</code>".
 1. Let |isNoised| be true if |source|'s [=attribution source/randomized response=]
     is not null, otherwise false.
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit global limit=]</code>":
-    1. Run [=obtain and deliver a debug report on source registration=] with "<code>[=source debug data type/source-destination-global-rate-limit=]</code>", |source|, and |isNoised|.
+    1. Run [=obtain and deliver a verbose debug report on source registration=] with "<code>[=source debug data type/source-destination-global-rate-limit=]</code>", |source|, and |isNoised|.
     1. Return.
 1. Let |newRateLimitRecords| be a new [=set=].
 1. [=set/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
@@ -2653,7 +2653,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         :: null
     1. If the result of running [=should processing be blocked by reporting-origin limit=] with
         |rateLimitRecord| is <strong>blocked</strong>:
-        1. Run [=obtain and deliver a debug report on source registration=] with
+        1. Run [=obtain and deliver a verbose debug report on source registration=] with
             "<code>[=source debug data type/source-reporting-origin-limit=]</code>", |source|,
             and |isNoised|.
         1. Return.
@@ -2687,7 +2687,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
             : [=attribution rate-limit record/event-level report ID=]
             :: null
         1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
-1. Run [=obtain and deliver a debug report on source registration=] with |debugDataType|, |source|,
+1. Run [=obtain and deliver a verbose debug report on source registration=] with |debugDataType|, |source|,
     and |isNoised|.
 1. [=set/Append=] |source| to |cache|.
 
@@ -2696,7 +2696,7 @@ privacy budget of all possible destinations.
 
 Note: The limits that are not reported as <code>[=source debug data type/source-success=]</code> should be
 checked before any limits that are reported implicitly as <code>[=source debug data type/source-success=]</code>
-to prevent side-channel leakage of cross-origin data. Furthermore, the [=attribution debug data=]
+to prevent side-channel leakage of cross-origin data. Furthermore, the [=verbose debug data=]
 should be fully determined regardless of the result of checks on implicitly reported limits.
 
 # Triggering Algorithms # {#trigger-algorithms}
@@ -3180,10 +3180,10 @@ and an optional [=attribution report=] <dfn for="obtain debug data on trigger re
     [=attribution trigger/reporting origin=] and |trigger|'s [=attribution trigger/attribution destination=] is <strong>blocked</strong>, return null.
 1. If |sourceToAttribute| is not null and |sourceToAttribute|'s [=attribution source/debug cookie set=] is false,
      return null.
-1. Let |data| be a new [=attribution debug data=] with the items:
-    : [=attribution debug data/data type=]
+1. Let |data| be a new [=verbose debug data=] with the items:
+    : [=verbose debug data/data type=]
     :: |dataType|.
-    : [=attribution debug data/body=]
+    : [=verbose debug data/body=]
     :: The result of running [=obtain debug data body on trigger registration=] with |dataType|, |trigger|, |sourceToAttribute| and |report|.
 1. Return |data|.
 
@@ -3432,10 +3432,10 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 
 <h3 algorithm id="triggering-attribution">Triggering attribution</h3>
 
-To <dfn>obtain and deliver a debug report on trigger registration</dfn>
+To <dfn>obtain and deliver a verbose debug report on trigger registration</dfn>
 given a [=set=] of [=trigger debug data=] |dataSet|, an [=attribution trigger=] |trigger|,
 and an optional [=attribution source=]
-<dfn for="obtain and deliver a debug report on trigger registration"><var>sourceToAttribute</var></dfn>:
+<dfn for="obtain and deliver a verbose debug report on trigger registration"><var>sourceToAttribute</var></dfn>:
 
 1. Let |debugDataList| be a new [=list=].
 1. [=set/iterate|For each=] |data| of |dataSet|:
@@ -3444,7 +3444,7 @@ and an optional [=attribution source=]
         and |data|'s [=trigger debug data/report=].
     1. If |debugData| is not null, [=list/append=] |debugData| to |debugDataList|.
 1. If |debugDataList| [=list/is empty=], return.
-1. Run [=obtain and deliver a debug report=] with |debugDataList|, |trigger|'s [=attribution trigger/reporting origin=],
+1. Run [=obtain and deliver a verbose debug report=] with |debugDataList|, |trigger|'s [=attribution trigger/reporting origin=],
     and |trigger|'s [=attribution trigger/fenced=].
 
 To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
@@ -3477,9 +3477,9 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     [=set/is empty=] and |hasAggregatableData| is false, return.
 1. Let |matchingSources| be the result of running [=find matching sources=] with |trigger|.
 1. If |matchingSources| [=list/is empty=]:
-    1. Run [=obtain and deliver a debug report on trigger registration=] with
+    1. Run [=obtain and deliver a verbose debug report on trigger registration=] with
         « ("<code>[=trigger debug data type/trigger-no-matching-source=]</code>", null) »,
-        |trigger|, and [=obtain and deliver a debug report on trigger registration/sourceToAttribute=] set to null.
+        |trigger|, and [=obtain and deliver a verbose debug report on trigger registration/sourceToAttribute=] set to null.
     1. If |hasAggregatableData| is true, then run [=generate null reports and assign private state tokens=]
         with |trigger| and [=generate null reports and assign private state tokens/report=] set to null.
     1. Return.
@@ -3489,7 +3489,7 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     |sourceToAttribute|, |trigger|'s [=attribution trigger/filters=],
     |trigger|'s [=attribution trigger/negated filters=], and
     |trigger|'s [=attribution trigger/trigger time=] is false:
-    1. Run [=obtain and deliver a debug report on trigger registration=] with
+    1. Run [=obtain and deliver a verbose debug report on trigger registration=] with
         « ("<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>", null) »,
         |trigger|, and |sourceToAttribute|.
     1. If |hasAggregatableData| is true, then run [=generate null reports and assign private state tokens=]
@@ -3507,7 +3507,7 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     then [=set/append=] |eventLevelResult|'s [=triggering result/debug data=] to |debugDataSet|.
 1. If |aggregatableResult|'s [=triggering result/debug data=] is not null,
     then [=set/append=] |aggregatableResult|'s [=triggering result/debug data=] to |debugDataSet|.
-1. Run [=obtain and deliver a debug report on trigger registration=] with |debugDataSet|,
+1. Run [=obtain and deliver a verbose debug report on trigger registration=] with |debugDataSet|,
     |trigger|, and |sourceToAttribute|.
 1. If |hasAggregatableData| and |aggregatableResult|'s [=triggering result/status=] is "<code>[=triggering status/dropped=]</code>",
     run [=generate null reports and assign private state tokens=] with |trigger| and
@@ -3976,17 +3976,17 @@ to perform deduplication and prevent double counting, in the event that the user
 reports on failure. To prevent the report recipient from learning additional information about
 whether a user is online, retries might be limited in number and subject to random delays.
 
-<h3 id="serialize-debug-report-body">Serialize attribution debug report body</h3>
+<h3 id="serialize-verbose-debug-report-body">Serialize verbose debug report body</h3>
 
-To <dfn>serialize an [=attribution debug report=]</dfn> |report|, run the following steps:
+To <dfn>serialize a [=verbose debug report=]</dfn> |report|, run the following steps:
 
 1. Let |collection| be a new [=list=].
-1. [=list/iterate|For each=] |debugData| of |report|'s [=attribution debug report/data=]:
+1. [=list/iterate|For each=] |debugData| of |report|'s [=verbose debug report/data=]:
     1. Let |data| be a [=map=] of the following key/value pairs:
         : "`type`"
-        :: |debugData|'s [=attribution debug data/data type=]
+        :: |debugData|'s [=verbose debug data/data type=]
         : "`body`"
-        :: |debugData|'s [=attribution debug data/body=]
+        :: |debugData|'s [=verbose debug data/body=]
     1. [=list/Append=] |data| to |collection|.
 1. Return the [=byte sequence=] resulting from executing [=serialize an Infra value to JSON bytes=] on |collection|.
 
@@ -4019,11 +4019,11 @@ To <dfn>generate an attribution report URL</dfn> given an [=attribution report=]
 1. Return the result of running [=generate a report URL=] with |report|'s
     [=attribution report/reporting origin=] and |path|.
 
-To <dfn>generate an attribution debug report URL</dfn> given an [=attribution debug report=] |report|:
+To <dfn>generate a verbose debug report URL</dfn> given a [=verbose debug report=] |report|:
 
 1. Let |path| be «"`debug`", "`verbose`"».
 1. Return the result of running [=generate a report URL=] with |report|'s
-    [=attribution debug report/reporting origin=] and |path|.
+    [=verbose debug report/reporting origin=] and |path|.
 
 <h3 id="create-report-request">Creating a report request</h3>
 
@@ -4111,11 +4111,11 @@ To <dfn>attempt to deliver a debug report</dfn> given an [=attribution report=] 
 
 <h3 id="issue-verbose-debug-report-request">Issuing a verbose debug request</h3>
 
-To <dfn>attempt to deliver a verbose debug report</dfn> given an [=attribution debug report=] |report|:
+To <dfn>attempt to deliver a verbose debug report</dfn> given a [=verbose debug report=] |report|:
 
 1. The user-agent MAY ignore the report; if so, return.
-1. Let |url| be the result of executing [=generate an attribution debug report URL=] on |report|.
-1. Let |data| be the result of executing [=serialize an attribution debug report=] on |report|.
+1. Let |url| be the result of executing [=generate a verbose debug report URL=] on |report|.
+1. Let |data| be the result of executing [=serialize a verbose debug report=] on |report|.
 1. Let |request| be the result of executing [=create a report request=] on |url| and |data|.
 1. [=Fetch=] |request|.
 
@@ -4206,12 +4206,12 @@ an [=origin=] |contextOrigin|, and a [=boolean=] |fenced|:
         : "`registration_url`"
         :: |registration|'s [=OS registration/URL=], [=url serializer|serialized=].
 
-    1. Let |data| be a new [=attribution debug data=] with the items:
-        : [=attribution debug data/data type=]
+    1. Let |data| be a new [=verbose debug data=] with the items:
+        : [=verbose debug data/data type=]
         :: |dataType|
-        : [=attribution debug data/body=]
+        : [=verbose debug data/body=]
         :: |body|
-    1. Run [=obtain and deliver a debug report=] with « |data| », |origin|, and |fenced|.
+    1. Run [=obtain and deliver a verbose debug report=] with « |data| », |origin|, and |fenced|.
 
 
 # Report Verification Algorithms # {#report-verification}
@@ -4394,15 +4394,15 @@ This trades off security for privacy, in that the limits are there to reduce the
 of many origins colluding together to violate privacy. API deployments should monitor
 for abuse using these vectors to evaluate the trade-off.
 
-The generation of [=attribution debug reports=] involves reads to the [=attribution source cache=],
+The generation of [=verbose debug reports=] involves reads to the [=attribution source cache=],
 [=event-level report cache=], [=aggregatable report cache=], and [=attribution rate-limit cache=],
-and the [=attribution debug data=] sent to a given [=origin=] may encode non-Same-Origin
+and the [=verbose debug data=] sent to a given [=origin=] may encode non-Same-Origin
 data that are generated from grouping together data submitted by multiple [=origins=],
 e.g. failures due to rate-limits that are not fully compliant with the Same-Origin Policy.
 This is of greater concern for source registrations as the [=attribution source/source origin=]
-could intentionally hit a rate-limit to identify sensitive user data. These [=attribution debug data=]
+could intentionally hit a rate-limit to identify sensitive user data. These [=verbose debug data=]
 cannot be reported explicitly and may be reported as a [=source debug data type/source-success=]
-[=attribution debug report=]. This is a tradeoff between security and utility, and mitigates the
+[=verbose debug report=]. This is a tradeoff between security and utility, and mitigates the
 security concern with respect to the Same-Origin Policy. The risk is of less concern for
 trigger registrations as [=attribution sources=] have to be registered to start with and
 it requires browsing activity on multiple sites.
@@ -4489,7 +4489,7 @@ Issue: model the channel capacity of a trigger registration.
 
 Fine-grained cross-site information may be embedded in [=attribution reports=] sent with
 [=generate an attribution report URL/isDebugReport=] being true and certain [=debug data type|types=]
-of [=attribution debug reports=]. These reports will only be [=check if cookie-based debugging is allowed|allowed=]
+of [=verbose debug reports=]. These reports will only be [=check if cookie-based debugging is allowed|allowed=]
 when third-party cookies are available, in which case the API caller
 had the capability to learn the underlying information.
 
