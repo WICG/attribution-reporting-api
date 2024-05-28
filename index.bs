@@ -3796,6 +3796,11 @@ of running the following steps:
     :: |report|'s [=aggregatable report/effective attribution destination=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
     : "`report_id`"
     :: |report|'s [=aggregatable report/report ID=]
+
+    Note: The inclusion of "`report_id`" in the shared info is intended to allow the report recipient
+    to perform deduplication and prevent double counting, in the event that the user agent retries
+    reports on failure. 
+
     : "`reporting_origin`"
     :: |reportingOrigin|, [=serialization of an origin|serialized=]
     : "`scheduled_report_time`"
@@ -3922,6 +3927,11 @@ To <dfn>obtain an event-level report body</dfn> given an [=attribution report=] 
     :: |report|'s [=event-level report/trigger data=], [=serialize an integer|serialized=]
     : "`report_id`"
     :: |report|'s [=event-level report/report ID=]
+
+    Note: The inclusion of "`report_id`" in the report body is intended to allow the report recipient
+    to perform deduplication and prevent double counting, in the event that the user agent retries
+    reports on failure.
+
     : "`scheduled_report_time`"
     :: |report|'s [=event-level report/report time=] in seconds since the UNIX epoch, [=serialize an integer|serialized=]
 
@@ -3972,11 +3982,6 @@ To <dfn>serialize an [=attribution report=]</dfn> |report|, run the following st
     <dt>[=aggregatable report=]</dt>
     <dd>Return the result of running [=serialize an aggregatable report=] with |report|.</dd>
     </dl>
-
-Note: The inclusion of "`report_id`" in the report body is intended to allow the report recipient
-to perform deduplication and prevent double counting, in the event that the user agent retries
-reports on failure. To prevent the report recipient from learning additional information about
-whether a user is online, retries might be limited in number and subject to random delays.
 
 <h3 id="serialize-verbose-debug-report-body">Serialize verbose debug report body</h3>
 
@@ -4097,6 +4102,8 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
 Issue(220): This fetch should use a network partition key for an opaque origin.
 
 A user agent MAY retry this algorithm in the event that there was an error.
+To prevent the report recipient from learning additional information about
+whether a user is online, retries might be limited in number and subject to random delays.
 
 <h3 id="issue-debug-report-request">Issuing a debug report request</h3>
 
