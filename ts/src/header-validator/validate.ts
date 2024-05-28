@@ -185,3 +185,17 @@ export function array<T, V, C extends Context = Context>(
   }
   return Maybe.some(arr)
 }
+
+export function enumerated<T>(
+  ctx: Context,
+  s: string,
+  e: Record<string, T>
+): Maybe<T> {
+  const v = e[s]
+  if (v !== undefined) {
+    return Maybe.some(v)
+  }
+  const allowed = Object.keys(e).join(', ')
+  ctx.error(`must be one of the following (case-sensitive): ${allowed}`)
+  return Maybe.None
+}

@@ -1,5 +1,6 @@
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
+import * as validate from './validate'
 import { field, struct, validateDictionary } from './validate-structured'
 import {
   Dictionary,
@@ -9,10 +10,13 @@ import {
   serializeDictionary,
 } from 'structured-headers'
 
-export type PreferredPlatform = null | 'os' | 'web'
+export enum PreferredPlatform {
+  os = 'os',
+  web = 'web',
+}
 
 export type Info = {
-  preferredPlatform: PreferredPlatform
+  preferredPlatform: PreferredPlatform | null
   reportHeaderErrors: boolean
 }
 
@@ -24,15 +28,13 @@ function preferredPlatform(
     ctx.error('must be a token')
     return Maybe.None
   }
-  const token = v[0].toString()
-  if (token !== 'os' && token !== 'web') {
-    ctx.error('must be one of the following (case-sensitive): os, web')
-    return Maybe.None
-  }
-  if (v[1].size !== 0) {
-    ctx.warning('ignoring parameters')
-  }
-  return Maybe.some(token)
+  return validate
+    .enumerated(ctx, v[0].toString(), PreferredPlatform)
+    .peek((_) => {
+      if (v[1].size !== 0) {
+        ctx.warning('ignoring parameters')
+      }
+    })
 }
 
 function reportHeaderErrors(ctx: Context, v: Item | InnerList): Maybe<boolean> {
