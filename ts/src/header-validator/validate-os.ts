@@ -1,5 +1,6 @@
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
+import * as validate from './validate'
 import {
   InnerList,
   Item,
@@ -13,10 +14,10 @@ export type OsItem = {
   debugReporting: boolean
 }
 
-function parseItem(ctx: Context, member: InnerList | Item): OsItem | undefined {
+function parseItem(ctx: Context, member: InnerList | Item): Maybe<OsItem> {
   if (typeof member[0] !== 'string') {
     ctx.warning('ignored, must be a string')
-    return
+    return Maybe.None
   }
 
   let url
@@ -24,7 +25,7 @@ function parseItem(ctx: Context, member: InnerList | Item): OsItem | undefined {
     url = new URL(member[0])
   } catch {
     ctx.warning('ignored, must contain a valid URL')
-    return
+    return Maybe.None
   }
 
   let debugReporting = false
@@ -43,7 +44,7 @@ function parseItem(ctx: Context, member: InnerList | Item): OsItem | undefined {
     })
   }
 
-  return { url, debugReporting }
+  return Maybe.some({ url, debugReporting })
 }
 
 export function validateOsRegistration(
@@ -59,16 +60,13 @@ export function validateOsRegistration(
     return [ctx.finish(msg), Maybe.None]
   }
 
-  const items: OsItem[] = []
-  list.forEach((member, i) =>
-    ctx.scope(i, () => {
-      const item = parseItem(ctx, member)
-      if (item) {
-        items.push(item)
-      }
-    })
+  const items = validate.array(
+    ctx,
+    list.entries(),
+    parseItem,
+    validate.ItemErrorAction.ignore
   )
-  return [ctx.finish(), Maybe.some(items)]
+  return [ctx.finish(), items]
 }
 
 export function serializeOsRegistration(items: OsItem[]): string {

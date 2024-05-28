@@ -3,9 +3,9 @@ import * as uuid from 'uuid'
 import * as constants from '../constants'
 import { SourceType } from '../source-type'
 import { VendorSpecificValues } from '../vendor-specific-values'
-import { Context, PathComponent, ValidationResult } from './context'
+import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
-import { CtxFunc } from './validate'
+import { CtxFunc, ItemErrorAction, isCollection } from './validate'
 import * as validate from './validate'
 import * as privacy from '../flexible-event/privacy'
 
@@ -411,7 +411,7 @@ function endTimes(
   return array(ctx, j, endTime, {
     minLength: 1,
     maxLength: 5,
-    keepGoing: false, // suppress unhelpful cascaded errors
+    itemErrorAction: ItemErrorAction.earlyExit, // suppress unhelpful cascaded errors
   })
 }
 
@@ -448,24 +448,6 @@ function legacyDuration(ctx: Context, j: Json): Maybe<number | bigint> {
   })
 }
 
-function isCollection<P extends PathComponent, C extends Context = Context>(
-  ctx: C,
-  js: Iterable<[P, Json]>,
-  f: CtxFunc<C, [P, Json], Maybe<unknown>>,
-  keepGoing: boolean = true
-): boolean {
-  let ok = true
-  for (const [c, j] of js) {
-    let itemOk = false
-    ctx.scope(c, () => f(ctx, [c, j]).peek(() => (itemOk = true)))
-    if (!itemOk && !keepGoing) {
-      return false
-    }
-    ok = ok && itemOk
-  }
-  return ok
-}
-
 type SetOpts = ListOpts & {
   requireDistinct?: boolean
 }
@@ -500,7 +482,7 @@ function set<T extends number | string, C extends Context = Context>(
 }
 
 type ArrayOpts = ListOpts & {
-  keepGoing?: boolean
+  itemErrorAction?: ItemErrorAction
 }
 
 function array<T, C extends Context = Context>(
@@ -509,18 +491,9 @@ function array<T, C extends Context = Context>(
   f: CtxFunc<C, Json, Maybe<T>>,
   opts?: ArrayOpts
 ): Maybe<T[]> {
-  const arr: T[] = []
-
-  return list(ctx, j, opts)
-    .filter((js) =>
-      isCollection(
-        ctx,
-        js.entries(),
-        (ctx, [_i, j]) => f(ctx, j).peek((v) => arr.push(v)),
-        opts?.keepGoing
-      )
-    )
-    .map(() => arr)
+  return list(ctx, j, opts).map((js) =>
+    validate.array(ctx, js.entries(), f, opts?.itemErrorAction)
+  )
 }
 
 function filterDataKeyValue(
@@ -876,7 +849,7 @@ function summaryBuckets(
     minLength: 1,
     maxLength,
     maxLengthErrSuffix: ' (max_event_level_reports)',
-    keepGoing: false, // suppress unhelpful cascaded errors
+    itemErrorAction: ItemErrorAction.earlyExit, // suppress unhelpful cascaded errors
   })
 }
 
@@ -1596,7 +1569,7 @@ function triggerSummaryBucket(ctx: Context, j: Json): Maybe<[number, number]> {
   return array(ctx, j, endpoint, {
     minLength: 2,
     maxLength: 2,
-    keepGoing: false,
+    itemErrorAction: ItemErrorAction.earlyExit,
   }) as Maybe<[number, number]>
 }
 
