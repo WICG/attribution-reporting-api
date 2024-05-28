@@ -1,6 +1,7 @@
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
 import * as validate from './validate'
+import { param } from './validate-structured'
 import {
   InnerList,
   Item,
@@ -20,7 +21,7 @@ function parseItem(ctx: Context, member: InnerList | Item): Maybe<OsItem> {
     return Maybe.None
   }
 
-  let url
+  let url: URL
   try {
     url = new URL(member[0])
   } catch {
@@ -28,23 +29,20 @@ function parseItem(ctx: Context, member: InnerList | Item): Maybe<OsItem> {
     return Maybe.None
   }
 
-  let debugReporting = false
-
-  for (const [key, value] of member[1]) {
-    ctx.scope(key, () => {
-      if (key === 'debug-reporting') {
+  return param.struct(ctx, member[1], {
+    url: () => Maybe.some(url),
+    debugReporting: param.field(
+      'debug-reporting',
+      (ctx, value) => {
         if (typeof value !== 'boolean') {
           ctx.warning('ignored, must be a boolean')
-        } else {
-          debugReporting = value
+          value = false
         }
-      } else {
-        ctx.warning('unknown parameter')
-      }
-    })
-  }
-
-  return Maybe.some({ url, debugReporting })
+        return Maybe.some(value)
+      },
+      false
+    ),
+  })
 }
 
 export function validateOsRegistration(
