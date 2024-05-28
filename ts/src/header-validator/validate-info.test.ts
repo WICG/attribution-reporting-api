@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert'
 import * as testutil from './util.test'
 import { Maybe } from './maybe'
-import { Info, validateInfo } from './validate-info'
+import { Info, PreferredPlatform, validateInfo } from './validate-info'
 
 type TestCase = testutil.TestCase & {
   input: string
@@ -15,7 +15,7 @@ const tests: TestCase[] = [
   {
     input: 'preferred-platform=web',
     expected: Maybe.some({
-      preferredPlatform: 'web',
+      preferredPlatform: PreferredPlatform.web,
       reportHeaderErrors: false,
     }),
   },
@@ -32,7 +32,7 @@ const tests: TestCase[] = [
   {
     input: 'preferred-platform=os,report-header-errors=?0',
     expected: Maybe.some({
-      preferredPlatform: 'os',
+      preferredPlatform: PreferredPlatform.os,
       reportHeaderErrors: false,
     }),
   },

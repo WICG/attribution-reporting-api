@@ -1285,15 +1285,7 @@ function aggregatableDedupKeys(
 }
 
 function enumerated<T>(ctx: Context, j: Json, e: Record<string, T>): Maybe<T> {
-  return string(ctx, j).map((s) => {
-    const v = e[s]
-    if (v !== undefined) {
-      return v
-    }
-    const allowed = Object.keys(e).join(', ')
-    ctx.error(`must be one of the following (case-sensitive): ${allowed}`)
-    return None
-  })
+  return string(ctx, j).map((s) => validate.enumerated(ctx, s, e))
 }
 
 export enum AggregatableSourceRegistrationTime {
