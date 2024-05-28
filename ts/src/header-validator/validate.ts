@@ -1,4 +1,4 @@
-import { Context } from './context'
+import { Context, PathComponent } from './context'
 import { Maybe, Maybeable } from './maybe'
 
 export type CtxFunc<C extends Context, I, O> = (ctx: C, i: I) => O
@@ -131,4 +131,57 @@ export function make<D, V>(
     field: field(getAndDelete),
     struct: struct(unknownKeys, warnUnknownMsg),
   }
+}
+
+export enum ItemErrorAction {
+  ignore,
+  reportButKeepGoing,
+  earlyExit,
+}
+
+export function isCollection<
+  P extends PathComponent,
+  V,
+  C extends Context = Context,
+>(
+  ctx: C,
+  vs: Iterable<[P, V]>,
+  f: CtxFunc<C, [P, V], Maybe<unknown>>,
+  itemErrorAction: ItemErrorAction = ItemErrorAction.reportButKeepGoing
+): boolean {
+  let ok = true
+  for (const [c, v] of vs) {
+    let itemOk = false
+    ctx.scope(c, () => f(ctx, [c, v]).peek(() => (itemOk = true)))
+    if (!itemOk) {
+      if (itemErrorAction === ItemErrorAction.earlyExit) {
+        return false
+      }
+      if (itemErrorAction === ItemErrorAction.reportButKeepGoing) {
+        ok = false
+      }
+    }
+  }
+  return ok
+}
+
+export function array<T, V, C extends Context = Context>(
+  ctx: C,
+  vs: Iterable<[number, V]>,
+  f: CtxFunc<C, V, Maybe<T>>,
+  itemErrorAction: ItemErrorAction = ItemErrorAction.reportButKeepGoing
+): Maybe<T[]> {
+  const arr: T[] = []
+
+  if (
+    !isCollection(
+      ctx,
+      vs,
+      (ctx, [_i, v]) => f(ctx, v).peek((v) => arr.push(v)),
+      itemErrorAction
+    )
+  ) {
+    return Maybe.None
+  }
+  return Maybe.some(arr)
 }
