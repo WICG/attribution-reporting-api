@@ -58,8 +58,6 @@ The following optional parameters will be added to the JSON in `Attribution-Repo
   // Example: default event source for event-level reports supports 1 attribution report, 1 reporting window,
   // and 1 bit of trigger data for a total of 3 event states.
   // This is used to calculate the information gain for event-level reports.
-  // This is not required for navigation sources because navigations require explicit user action
-  // and are therefore harder to abuse.
   // Max event states must be integers > 0.
   // Defaults to 3 if omitted.
   // The flexible event-level script linked in the Privacy Considerations section below can be used to
