@@ -5,7 +5,7 @@ import { SourceType } from '../source-type'
 import { VendorSpecificValues } from '../vendor-specific-values'
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
-import { CtxFunc, ItemErrorAction, isCollection } from './validate'
+import { CtxFunc, ItemErrorAction } from './validate'
 import * as validate from './validate'
 import * as privacy from '../flexible-event/privacy'
 
@@ -132,22 +132,16 @@ function keyValues<V, C extends Context = Context>(
   f: CtxFunc<C, [key: string, val: Json], Maybe<V>>,
   maxKeys: number = Infinity
 ): Maybe<Map<string, V>> {
-  const map = new Map<string, V>()
+  return object(ctx, j).map((d) => {
+    const entries = Object.entries(d)
 
-  return object(ctx, j)
-    .filter((d) => {
-      const entries = Object.entries(d)
+    if (entries.length > maxKeys) {
+      ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
+      return None
+    }
 
-      if (entries.length > maxKeys) {
-        ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
-        return false
-      }
-
-      return isCollection(ctx, entries, (ctx, [key, j]) =>
-        f(ctx, [key, j]).peek((v) => map.set(key, v))
-      )
-    })
-    .map(() => map)
+    return validate.keyValues(ctx, entries, f)
+  })
 }
 
 type ListOpts = {
@@ -458,27 +452,9 @@ function set<T extends number | string, C extends Context = Context>(
   f: CtxFunc<C, Json, Maybe<T>>,
   opts?: SetOpts
 ): Maybe<Set<T>> {
-  const set = new Set<T>()
-
-  return list(ctx, j, opts)
-    .filter((js) =>
-      isCollection(ctx, js.entries(), (ctx, [_i, j]) =>
-        f(ctx, j).filter((v) => {
-          if (set.has(v)) {
-            const msg = `duplicate value ${v}`
-            if (opts?.requireDistinct) {
-              ctx.error(msg)
-              return false
-            }
-            ctx.warning(msg)
-          } else {
-            set.add(v)
-          }
-          return true
-        })
-      )
-    )
-    .map(() => set)
+  return list(ctx, j, opts).map((js) =>
+    validate.set(ctx, js.entries(), f, opts?.requireDistinct)
+  )
 }
 
 type ArrayOpts = ListOpts & {
