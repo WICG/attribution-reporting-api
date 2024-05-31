@@ -29,9 +29,14 @@ class GenericContext extends Context {
 class RegistrationContext extends GenericContext {
   constructor(
     readonly vsv: Readonly<VendorSpecificValues>,
-    parseFullFlex: boolean
+    parseFullFlex: boolean,
+    readonly aggregatableDebugTypes: Readonly<[string, ...string[]]>
   ) {
     super(parseFullFlex)
+  }
+
+  isDebugTypeSupported(s: string): boolean {
+    return this.aggregatableDebugTypes.includes(s)
   }
 }
 
@@ -42,7 +47,7 @@ class SourceContext extends RegistrationContext {
     readonly sourceType: SourceType,
     readonly noteInfoGain: boolean
   ) {
-    super(vsv, parseFullFlex)
+    super(vsv, parseFullFlex, constants.sourceAggregatableDebugTypes)
   }
 }
 
@@ -604,6 +609,98 @@ const priorityField: StructFields<Priority> = {
   priority: field('priority', int64, 0n),
 }
 
+function aggregatableDebugType(
+  ctx: RegistrationContext,
+  j: Json
+): Maybe<string> {
+  return string(ctx, j).peek((s) => {
+    if (!ctx.isDebugTypeSupported(s)) {
+      ctx.warning('unknown type')
+    }
+  })
+}
+
+export type KeyPiece = {
+  keyPiece: bigint
+}
+
+const keyPieceField: StructFields<KeyPiece> = {
+  keyPiece: field('key_piece', hex128),
+}
+
+export type AggregatableDebugReportingData = KeyPiece & {
+  types: Set<string>
+  value: number
+}
+
+function aggregatableDebugReportingData(
+  ctx: RegistrationContext,
+  j: Json
+): Maybe<AggregatableDebugReportingData> {
+  return struct(ctx, j, {
+    types: field('types', (ctx, j) =>
+      set(ctx, j, aggregatableDebugType, {
+        minLength: 1,
+        requireDistinct: true,
+      })
+    ),
+    value: field('value', aggregatableValue),
+
+    ...keyPieceField,
+  })
+}
+
+function aggregatableDebugReportingDataList(
+  ctx: RegistrationContext,
+  j: Json
+): Maybe<AggregatableDebugReportingData[]> {
+  return array(ctx, j, aggregatableDebugReportingData).filter((data) => {
+    const types = new Set<string>()
+    const dups = new Set<string>()
+    for (const d of data) {
+      for (const t of d.types) {
+        if (types.has(t)) {
+          dups.add(t)
+        } else {
+          types.add(t)
+        }
+      }
+    }
+    if (dups.size > 0) {
+      ctx.error(`duplicate type: ${Array.from(dups).join(', ')}`)
+      return false
+    }
+    return true
+  })
+}
+
+// Consider making this a StructFields.
+function aggregationCoordinatorOriginField(
+  ctx: RegistrationContext,
+  j: JsonDict
+): Maybe<string> {
+  return field(
+    'aggregation_coordinator_origin',
+    aggregationCoordinatorOrigin,
+    ctx.vsv.aggregationCoordinatorOrigins[0]
+  )(ctx, j)
+}
+
+export type AggregatableDebugReportingConfig = KeyPiece & {
+  aggregationCoordinatorOrigin: string
+  debugData: AggregatableDebugReportingData[]
+}
+
+const aggregatableDebugReportingConfig: StructFields<
+  AggregatableDebugReportingConfig,
+  RegistrationContext
+> = {
+  aggregationCoordinatorOrigin: aggregationCoordinatorOriginField,
+  debugData: field('debug_data', aggregatableDebugReportingDataList, []),
+
+  ...keyPieceField,
+}
+
 function aggregationKeyIdentifierLength(
   ctx: Context,
   s: string,
@@ -784,6 +881,32 @@ export type TriggerSpec = {
   summaryBuckets: number[]
   summaryWindowOperator: SummaryWindowOperator
   triggerData: Set<number>
+}
+
+export type SourceAggregatableDebugReportingConfig =
+  AggregatableDebugReportingConfig & {
+    budget: number
+  }
+
+function sourceAggregatableDebugReportingConfig(
+  ctx: RegistrationContext,
+  j: Json
+): Maybe<SourceAggregatableDebugReportingConfig> {
+  return struct(ctx, j, {
+    budget: field('budget', aggregatableValue),
+
+    ...aggregatableDebugReportingConfig,
+  }).filter((s) => {
+    for (const d of s.debugData) {
+      if (d.value > s.budget) {
+        // TODO: Consider passing the parsed budget to validate the debug data and
+        // give more precise path information.
+        ctx.error(`data contains value greater than budget (${s.budget})`)
+        return false
+      }
+    }
+    return true
+  })
 }
 
 function summaryBuckets(
@@ -1049,6 +1172,7 @@ export type Source = CommonDebug &
     triggerDataMatching: TriggerDataMatching
 
     eventLevelEpsilon: number
+    aggregatableDebugReporting: SourceAggregatableDebugReportingConfig | null
   }
 
 function source(ctx: SourceContext, j: Json): Maybe<Source> {
@@ -1120,6 +1244,11 @@ function source(ctx: SourceContext, j: Json): Maybe<Source> {
         maxEventLevelReports: () => maxEventLevelReportsVal,
         sourceEventId: field('source_event_id', uint64, 0n),
         triggerSpecs: () => triggerSpecsVal,
+        aggregatableDebugReporting: field(
+          'aggregatable_debug_reporting',
+          sourceAggregatableDebugReportingConfig,
+          null
+        ),
 
         triggerDataMatching: field(
           'trigger_data_matching',
@@ -1142,10 +1271,10 @@ function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
   )
 }
 
-export type AggregatableTriggerDatum = FilterPair & {
-  keyPiece: bigint
-  sourceKeys: Set<string>
-}
+export type AggregatableTriggerDatum = FilterPair &
+  KeyPiece & {
+    sourceKeys: Set<string>
+  }
 
 function aggregatableTriggerData(
   ctx: RegistrationContext,
@@ -1153,9 +1282,9 @@ function aggregatableTriggerData(
 ): Maybe<AggregatableTriggerDatum[]> {
   return array(ctx, j, (ctx, j) =>
     struct(ctx, j, {
-      keyPiece: field('key_piece', hex128),
       sourceKeys: field('source_keys', sourceKeys, new Set<string>()),
       ...filterFields,
+      ...keyPieceField,
     })
   )
 }
@@ -1166,6 +1295,14 @@ export type AggregatableValuesConfiguration = FilterPair & {
   values: AggregatableValues
 }
 
+function aggregatableValue(ctx: Context, j: Json): Maybe<number> {
+  return number(ctx, j)
+    .filter((n) => isInteger(ctx, n))
+    .filter((n) =>
+      isInRange(ctx, n, 1, constants.allowedAggregatableBudgetPerSource)
+    )
+}
+
 function aggregatableKeyValue(
   ctx: Context,
   [key, j]: [string, Json]
@@ -1173,11 +1310,7 @@ function aggregatableKeyValue(
   if (!aggregationKeyIdentifierLength(ctx, key, 'key ')) {
     return None
   }
-  return number(ctx, j)
-    .filter((n) => isInteger(ctx, n))
-    .filter((n) =>
-      isInRange(ctx, n, 1, constants.allowedAggregatableBudgetPerSource)
-    )
+  return aggregatableValue(ctx, j)
 }
 
 function aggregatableKeyValues(
@@ -1369,6 +1502,7 @@ export type Trigger = CommonDebug &
     aggregationCoordinatorOrigin: string
     eventTriggerData: EventTriggerDatum[]
     triggerContextID: string | null
+    aggregatableDebugReporting: AggregatableDebugReportingConfig | null
   }
 
 function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
@@ -1397,15 +1531,16 @@ function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
           []
         ),
         aggregatableSourceRegistrationTime: () => aggregatableSourceRegTimeVal,
-        aggregationCoordinatorOrigin: field(
-          'aggregation_coordinator_origin',
-          aggregationCoordinatorOrigin,
-          ctx.vsv.aggregationCoordinatorOrigins[0]
-        ),
+        aggregationCoordinatorOrigin: aggregationCoordinatorOriginField,
         eventTriggerData: field('event_trigger_data', eventTriggerData, []),
         triggerContextID: field(
           'trigger_context_id',
           (ctx, j) => triggerContextID(ctx, j, aggregatableSourceRegTimeVal),
+          null
+        ),
+        aggregatableDebugReporting: field(
+          'aggregatable_debug_reporting',
+          (ctx, j) => struct(ctx, j, aggregatableDebugReportingConfig),
           null
         ),
         ...commonDebugFields,
@@ -1452,7 +1587,11 @@ export function validateTrigger(
   parseFullFlex: boolean = false
 ): [ValidationResult, Maybe<Trigger>] {
   return validateJSON(
-    new RegistrationContext(vsv, parseFullFlex),
+    new RegistrationContext(
+      vsv,
+      parseFullFlex,
+      constants.triggerAggregatableDebugTypes
+    ),
     json,
     trigger
   )

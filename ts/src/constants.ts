@@ -50,3 +50,43 @@ export const defaultTriggerDataCardinality: Readonly<
   [SourceType.event]: 2n,
   [SourceType.navigation]: 8n,
 }
+
+export const sourceAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
+  'source-channel-capacity-limit',
+  'source-destination-global-rate-limit',
+  'source-destination-limit',
+  'source-destination-rate-limit',
+  'source-noised',
+  'source-reporting-origin-limit',
+  'source-reporting-origin-per-site-limit',
+  'source-storage-limit',
+  'source-success',
+  'source-trigger-state-cardinality-limit',
+  'source-unknown-error',
+  'unspecified',
+]
+
+export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
+  'trigger-aggregate-attributions-per-source-destination-limit',
+  'trigger-aggregate-deduplicated',
+  'trigger-aggregate-excessive-reports',
+  'trigger-aggregate-no-contributions',
+  'trigger-aggregate-insufficient-budget',
+  'trigger-aggregate-storage-limit',
+  'trigger-aggregate-report-window-passed',
+  'trigger-event-attributions-per-source-destination-limit',
+  'trigger-event-deduplicated',
+  'trigger-event-excessive-reports',
+  'trigger-event-low-priority',
+  'trigger-event-no-matching-configurations',
+  'trigger-event-no-matching-trigger-data',
+  'trigger-event-noise',
+  'trigger-event-report-window-not-started',
+  'trigger-event-report-window-passed',
+  'trigger-event-storage-limit',
+  'trigger-no-matching-source',
+  'trigger-no-matching-filter-data',
+  'trigger-reporting-origin-limit',
+  'trigger-unknown-error',
+  'unspecified',
+]
