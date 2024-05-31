@@ -25,7 +25,7 @@ The current attribution logic in the Attribution Reporting API may not be ideal 
 
 In general, the approach here is to allow API callers to specify a list of strings for sources and triggers during registration that can be used for filtering before attribution takes place:
 
-* Allow finer-grained filtering before attribution, trading off additional filtering with noise levels
+* Allow finer-grained filtering before attribution, trading off additional filtering with source configuration flexibility
 
 ## Pre-Attribution Filtering
 
@@ -101,7 +101,7 @@ The `attribution_scope_limit` value can be updated during source registration at
 
 ### Deletion logic
 
-If the current trigger is attributed to a source, then all other eligible sources considered for attribution (across all `attribution_scopes`) will be deleted.
+If the current trigger passes the top-level filter check during the attribution process, then all other eligible sources considered for attribution (across all `attribution_scopes`) will be deleted.
 
 ## Attribution Scope Examples
 
@@ -158,7 +158,7 @@ The user then converts at a later time on the destination site by purchasing a p
 }
 ```
 
-The API automatically performs attribution between any sources that have `attribution_scopes` that are not disjoint with the trigger `attribution_scopes`. Any sources that do not have an `attribution_scopes` that matches at least one of the trigger registration `attribution_scopes` are deleted (assuming there is a source that gets attributed and a report is generated; if no report is generated then no sources are deleted). In this example, the API caller would receive an attribution report attributing the trigger registration to advertiser1’s second source registration.
+The API automatically performs attribution between any sources that have `attribution_scopes` that are not disjoint with the trigger `attribution_scopes`. Any sources that do not have an `attribution_scopes` that matches at least one of the trigger registration `attribution_scopes` are deleted (assuming the source that is chosen passes the top-level filter check; if it does not then no sources are deleted). In this example, the API caller would receive an attribution report attributing the trigger registration to advertiser1’s second source registration.
 
 ### Example 2: multiple attribution scope values per source and trigger
 
