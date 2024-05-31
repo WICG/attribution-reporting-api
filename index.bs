@@ -2187,9 +2187,9 @@ and a [=boolean=] |fenced|:
 
 Note: The user agent may optionally include error details of any type in |body|["`error`"].
 
-<h3 id="attribution-debug-mode">Attribution debug mode</h3>
+<h3 id="attribution-debugging">Attribution debugging</h3>
 
-To <dfn>check if attribution debug mode can be enabled</dfn> given an [=attribution debug info=] |debugInfo|:
+To <dfn>check if attribution debugging can be enabled</dfn> given an [=attribution debug info=] |debugInfo|:
 
 1. If |debugInfo|'s [=attribution debug info/source debug key=] is null,
     return false.
@@ -2232,9 +2232,10 @@ given an [=aggregatable debug rate-limit record=] |newRecord|:
 
 To <dfn>obtain and deliver an aggregatable debug report</dfn> given a [=list=]
 of [=aggregatable contributions=] |contributions|,
-an [=origin=] |reportingOrigin|, a [=site=] |effectiveDestination|,
+an [=suitable origin=] |reportingOrigin|, a [=site=] |effectiveDestination|,
 an [=aggregation coordinator=] |aggregationCoordinator|, and a [=moment=] |now|:
 
+1. [=Assert=]: |effectiveDestination| is not the [=opaque origin=].
 1. Let |report| be a new [=aggregatable debug report=] with the items:
     : [=aggregatable debug report/reporting origin=]
     :: |reportingOrigin|
@@ -3719,7 +3720,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 1. If |matchedConfig|'s [=event-level trigger configuration/dedup key=] is not null,
     [=list/append=] it to |sourceToAttribute|'s [=attribution source/dedup keys=].
 1. If |triggeringStatus| is "<code>[=triggering status/attributed=]</code>" and
-    the result of [=checking if attribution debug mode can be enabled=]
+    the result of [=checking if attribution debugging can be enabled=]
     with |report|'s [=event-level report/attribution debug info=] is true, [=queue a task=] to
     [=attempt to deliver a debug report=] with |report|.
 1. Return the [=triggering result=] (|triggeringStatus|, |debugData|).
@@ -3792,7 +3793,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. If |matchedDedupKey| is not null, [=list/append=] it to |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=].
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. Run [=generate null attribution reports and assign private state tokens=] with |trigger| and |report|.
-1. If the result of [=checking if attribution debug mode can be enabled=]
+1. If the result of [=checking if attribution debugging can be enabled=]
     with |report|'s [=aggregatable attribution report/attribution debug info=] is true,
     [=queue a task=] to [=attempt to deliver a debug report=] with |report|.
 1. Return the [=triggering result=] ("<code>[=triggering status/attributed=]</code>", null).
@@ -4184,7 +4185,7 @@ of running the following steps:
     <dl class="switch">
     : [=aggregatable attribution report=]
     :: 
-        1. If the result of [=checking if attribution debug mode can be enabled=] with
+        1. If the result of [=checking if attribution debugging can be enabled=] with
             |report|'s [=aggregatable attribution report/attribution debug info=] is true,
             return <strong>enabled</strong>.
         1. Return <strong>disabled</strong>.
