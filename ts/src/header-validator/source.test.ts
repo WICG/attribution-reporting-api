@@ -4,7 +4,6 @@ import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
 import { serializeSource } from './to-json'
 import {
-  DestinationLimitAlgorithm,
   Source,
   SummaryWindowOperator,
   TriggerDataMatching,
@@ -35,10 +34,7 @@ const testCases: TestCase[] = [
       "debug_key": "1",
       "debug_reporting": true,
       "destination": "https://a.test",
-      "destination_limit": {
-        "algorithm": "priority_fifo",
-        "priority": "1"
-      },
+      "destination_limit_priority": "1",
       "event_report_window": "3601",
       "expiry": "86400",
       "filter_data": {"b": ["c"]},
@@ -62,10 +58,7 @@ const testCases: TestCase[] = [
       debugKey: 1n,
       debugReporting: true,
       destination: new Set(['https://a.test']),
-      destinationLimit: {
-        algorithm: DestinationLimitAlgorithm.priority_fifo,
-        priority: 1n,
-      },
+      destinationLimitPriority: 1n,
       eventLevelEpsilon: 14,
       expiry: 86400,
       filterData: new Map([['b', new Set(['c'])]]),
@@ -1248,31 +1241,15 @@ const testCases: TestCase[] = [
       },
     ],
   },
-
-  {
-    name: 'destination-limit-wrong-type',
-    json: `{
-      "destination": "https://a.test",
-      "destination_limit": 1
-    }`,
-    expectedErrors: [
-      {
-        path: ['destination_limit'],
-        msg: 'must be an object',
-      },
-    ],
-  },
   {
     name: 'destination-limit-priority-wrong-type',
     json: `{
       "destination": "https://a.test",
-      "destination_limit": {
-        "priority": 1
-       }
+      "destination_limit_priority": 1
     }`,
     expectedErrors: [
       {
-        path: ['destination_limit', 'priority'],
+        path: ['destination_limit_priority'],
         msg: 'must be a string',
       },
     ],
@@ -1281,44 +1258,12 @@ const testCases: TestCase[] = [
     name: 'destination-limit-priority-wrong-format',
     json: `{
       "destination": "https://a.test",
-      "destination_limit": {
-        "priority": "x"
-      }
+      "destination_limit_priority": "x"
     }`,
     expectedErrors: [
       {
-        path: ['destination_limit', 'priority'],
-        msg: 'must be an int64 (must match /^-?[0-9]+$/)',
-      },
-    ],
-  },
-  {
-    name: 'destination-limit-algorithm-wrong-value',
-    json: `{
-      "destination": "https://a.test",
-      "destination_limit": {
-        "algorithm": "x"
-      }
-    }`,
-    expectedErrors: [
-      {
-        path: ['destination_limit', 'algorithm'],
-        msg: 'must be one of the following (case-sensitive): priority_fifo, lifo',
-      },
-    ],
-  },
-  {
-    name: 'destination-limit-lifo-non-default-priority',
-    json: `{
-      "destination": "https://a.test",
-      "destination_limit": {
-        "priority": "123"
-      }
-    }`,
-    expectedNotes: [
-      {
-        path: ['destination_limit', 'priority'],
-        msg: 'non-default priority (123) for algorithm lifo (may still be used by future priority_fifo source)',
+        path: ['destination_limit_priority'],
+        msg: 'string must represent an integer (must match /^-?[0-9]+$/)',
       },
     ],
   },

@@ -174,7 +174,7 @@ export type Source = CommonDebug &
     aggregation_keys: { [key: string]: string }
     aggregatable_report_window: number
     destination: string[]
-    destination_limit: DestinationLimit
+    destination_limit_priority: string
     event_level_epsilon: number
     expiry: number
     filter_data: { [key: string]: string[] }
@@ -206,7 +206,7 @@ export function serializeSource(s: parsed.Source, fullFlex: boolean): Source {
 
     aggregatable_report_window: s.aggregatableReportWindow,
     destination: Array.from(s.destination),
-    destination_limit: serializeDestinationLimit(s.destinationLimit),
+    destination_limit_priority: s.destinationLimitPriority.toString(),
     event_level_epsilon: s.eventLevelEpsilon,
     expiry: s.expiry,
     max_event_level_reports: s.maxEventLevelReports,

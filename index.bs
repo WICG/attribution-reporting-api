@@ -2375,7 +2375,7 @@ A <dfn>source-registration JSON key</dfn> is one of the following:
 <li>"<dfn><code>debug_key</code></dfn>"
 <li>"<dfn><code>debug_reporting</code></dfn>"
 <li>"<dfn><code>destination</code></dfn>"
-<li>"<dfn><code>destination_limit</code></dfn>"
+<li>"<dfn><code>destination_limit_priority</code></dfn>"
 <li>"<dfn><code>end_times</code></dfn>"
 <li>"<dfn><code>event_level_epsilon</code></dfn>"
 <li>"<dfn><code>event_report_window</code></dfn>"
@@ -2681,19 +2681,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     [=parse an optional 64-bit signed integer=] with |value|, "<code>[=source-registration JSON key/priority=]</code>", and
     0.
 1. If |priority| is an error, return null.
-1. Let |destinationLimitAlgorithm| be "<code>[=destination limit algorithm/lifo=]</code>".
-1. Let |destinationLimitPriority| be 0.
-1. If |value|["<code>[=source-registration JSON key/destination_limit=]</code>"] [=map/exists=]:
-    1. Let |destinationLimit| be |value|["<code>[=source-registration JSON key/destination_limit=]</code>"].
-    1. If |destinationLimit| is not a [=map=], return null.
-    1. Set |destinationLimitPriority| to the result of running
-        [=parse an optional 64-bit signed integer=] with |destinationLimit|,
-        "<code>[=source-registration JSON key/priority=]</code>", and 0.
-    1. If |destinationLimitPriority| is an error, return null.
-    1. If |destinationLimit|["<code>[=source-registration JSON key/algorithm=]</code>"] [=map/exists=]:
-        1. If |destinationLimit|["<code>[=source-registration JSON key/algorithm=]</code>"] is not
-            a [=destination limit algorithm=], return null.
-        1. Set |destinationLimitAlgorithm| to |destinationLimit|["<code>[=source-registration JSON key/algorithm=]</code>"].
+1. Let |destinationLimitPriority| be the result of running
+    [=parse an optional 64-bit signed integer=] with |value|,
+    "<code>[=source-registration JSON key/destination_limit_priority=]</code>", and 0.
+1. If |destinationLimitPriority| is an error, return null.
 1. Let |filterData| be a new [=filter map=].
 1. If |value|["<code>[=source-registration JSON key/filter_data=]</code>"] [=map/exists=]:
     1. Set |filterData| to the result of running [=parse filter data=] with
@@ -3018,8 +3009,7 @@ optional [=boolean=] |isNoised| (default false), and an optional [=boolean=]
         [=serialize an integer|serialized=].
 
     Note: The "`source_destination_limit`" field may be included to indicate that
-    [=max destinations covered by unexpired sources=] was hit and
-    the [=destination limit algorithm/priority_fifo=] algorithm was applied, which is not
+    [=max destinations covered by unexpired sources=] was hit, which is not
     reported as "<code>[=source debug data type/source-destination-limit=]</code>" to prevent side-channel
     leakage of cross-origin data.
 
@@ -3133,16 +3123,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. Let |sourcesToDeleteForDestinationLimit| be the result of running [=get sources to delete for the unexpired destination limit=]
     with |source|.
 1. Let |destinationLimitHit| be false if |sourcesToDeleteForDestinationLimit| [=set/is empty=], true otherwise.
-1. Let |dropNewSource| be false.
-1. If |source|'s [=attribution source/destination limit algorithm=] is:
-    <dl class="switch">
-    : "<code>[=destination limit algorithm/priority_fifo=]</code>"
-    :: Set |dropNewSource| to true if |sourcesToDeleteForDestinationLimit| [=set/contains=] |source|'s [=attribution source/source identifier=].
-    : "<code>[=destination limit algorithm/lifo=]</code>"
-    :: Set |dropNewSource| to |destinationLimitHit|.
-
-    </dl>
-1. If |dropNewSource| is true:
+1. If |sourcesToDeleteForDestinationLimit| [=set/contains=] |source|'s [=attribution source/source identifier=]:
     1. Run [=obtain and deliver a verbose debug report on source registration=] with "[=source debug data type/source-destination-limit=]</code>" and |source|.
     1. Return.
 1. Run [=delete sources for unexpired destination limit=] with |sourcesToDeleteForDestinationLimit| and |source|'s [=attribution source/source time=].
@@ -3150,7 +3131,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. Let |isNoised| be true if |source|'s [=attribution source/randomized response=]
     is not null, otherwise false.
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit global limit=]</code>":
-    1. Run [=obtain and deliver a verbose debug report on source registration=] with "<code>[=source debug data type/source-success=]</code>",
+    1. Run [=obtain and deliver a verbose debug report on source registration=] with "<code>[=source debug data type/source-destination-global-rate-limit=]</code>",
         |source|, |isNoised|, and |destinationLimitHit|.
     1. Return.
 1. Let |newRateLimitRecords| be a new [=set=].
@@ -3174,7 +3155,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         :: |source|'s [=attribution source/destination limit priority=]
     1. If the result of running [=should processing be blocked by reporting-origin limit=] with
         |rateLimitRecord| is <strong>blocked</strong>:
-        1. Run [=obtain and deliver a verbose debug report on source registration=] with "<code>[=source debug data type/source-success=]</code>",
+        1. Run [=obtain and deliver a verbose debug report on source registration=] with "<code>[=source debug data type/source-reporting-origin-limit=]</code>",
             |source|, |isNoised|, and |destinationLimitHit|.
         1. Return.
     1. [=set/Append=] |rateLimitRecord| to |newRateLimitRecords|.
