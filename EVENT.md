@@ -1148,8 +1148,7 @@ attack, the browser should maintain these limits per reporting site. This
 effectively limits the number of unique sites covered per {source site, reporting site} applied to all unexpired sources regardless of type at source time.
 
 The browser can also limit the number of `destination` sites per {source site, reporting site, 1 day}
-to mitigate the history reconstruction attack as new `destination` sites can be
-registered when the `priority_fifo` algorithm is used.
+to mitigate the history reconstruction attack.
 
 #### Limiting the number of unique destinations per source site
 
