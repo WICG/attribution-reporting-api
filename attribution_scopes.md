@@ -158,7 +158,7 @@ The user then converts at a later time on the destination site by purchasing a p
 }
 ```
 
-The API automatically performs attribution between any sources that have `attribution_scopes` that are not disjoint with the trigger `attribution_scopes`. Any sources that do not have an `attribution_scopes` that matches at least one of the trigger registration `attribution_scopes` are deleted (assuming the source that is chosen passes the top-level context filter checks; if it does not then no sources are deleted). In this example, the API caller would receive an attribution report attributing the trigger registration to advertiser1’s second source registration.
+The API automatically performs attribution between any sources that have `attribution_scopes` that are not disjoint with the trigger `attribution_scopes`. Any sources that do not have an `attribution_scopes` that matches at least one of the trigger registration `attribution_scopes` are deleted (assuming the source that is chosen passes the top-level filter check; if it does not then no sources are deleted). In this example, the API caller would receive an attribution report attributing the trigger registration to advertiser1’s second source registration.
 
 ### Example 2: multiple attribution scope values per source and trigger
 
