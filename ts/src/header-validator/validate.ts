@@ -227,3 +227,56 @@ export function enumerated<T>(
   ctx.error(`must be one of the following (case-sensitive): ${allowed}`)
   return Maybe.None
 }
+
+export function matchesPattern(
+  ctx: Context,
+  s: string,
+  p: RegExp,
+  errPrefix: string
+): boolean {
+  if (!p.test(s)) {
+    ctx.error(`${errPrefix} (must match ${p})`)
+    return false
+  }
+  return true
+}
+
+export function isInteger(ctx: Context, n: number): boolean {
+  if (!Number.isInteger(n)) {
+    ctx.error('must be an integer')
+    return false
+  }
+  return true
+}
+
+export function isInRange<N extends bigint | number>(
+  ctx: Context,
+  n: N,
+  min: N,
+  max: N,
+  msg: string = `must be in the range [${min}, ${max}]`
+): boolean {
+  if (n < min || n > max) {
+    ctx.error(msg)
+    return false
+  }
+  return true
+}
+
+export function clamp<N extends bigint | number>(
+  ctx: Context,
+  n: N,
+  min: N,
+  max: N,
+  maxSuffix: string = ''
+): N {
+  if (n < min) {
+    ctx.warning(`will be clamped to min of ${min}`)
+    return min
+  }
+  if (n > max) {
+    ctx.warning(`will be clamped to max of ${max}${maxSuffix}`)
+    return max
+  }
+  return n
+}
