@@ -1115,30 +1115,23 @@ sites represented by unexpired sources for a source-site.
 
 The browser can place a limit on the number of a source site's unexpired source's
 unique `destination` sites. Source registrations will accept an optional field
-`destination_limit` to allow developers to select the behavior when an attribution
-source is registered for a site that is not already registered by any of the
-unexpired sources and a source site is at its limit.
+`destination_limit_priority` to allow developers to prioritize the destinations
+registered with this source with respect to other destinations for the purpose
+of source deactivation.
 
 ```jsonc
 {
   ..., // existing fields
-  "destination_limit": {
-    "algorithm": "lifo", // or "priority_fifo", defaults to "lifo" if not present
-    "priority": "[64-bit signed integer]" // defaults to 0 if not present
-  }
+  "destination_limit_priority": "[64-bit signed integer]" // defaults to 0 if not present
 }
 ```
 
-The `priority` field is used to prioritize the destinations registered with this
-source with respect to other destinations for the purpose of source deactivation.
-
-The `algorithm` field is used to select the algorithm to determine the final
-`destination` sites that the browser selects. When "lifo" is used, the browser
-will drop the new source if the source site is at its limit. When "priority_fifo"
-is used, the browser will sort the `destination` sites registered by unexpired
-sources, including the new source, by `priority` in descending order and by
-the registration time in descending order. The browser will then select the
-first few `destination` sites within this limit, and delete pending sources and
+When an attribution source is registered for a site that is not already in the
+unexpired sources and a source site is at its limit, the browser will sort the
+`destination` sites registered by unexpired sources, including the new source,
+by `destination_limit_priority` in descending order and by the registration
+time in descending order. The browser will then select the first few
+`destination` sites within this limit, and delete pending sources and
 aggregatable reports associated with the unselected `destination` sites. The
 event-level reports are not deleted as the leak of user's browsing history is
 mitigated by fake reports within differential privacy.
