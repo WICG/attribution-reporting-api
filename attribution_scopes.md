@@ -101,7 +101,7 @@ The `attribution_scope_limit` value can be updated during source registration at
 
 ### Deletion logic
 
-If the current trigger passes the top-level context filter check during the attribution process, then all other eligible sources considered for attribution (across all `attribution_scopes`) will be deleted.
+If the current trigger passes the top-level filter check during the attribution process, then all other eligible sources considered for attribution (across all `attribution_scopes`) will be deleted.
 
 ## Attribution Scope Examples
 
