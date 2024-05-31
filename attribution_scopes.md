@@ -25,7 +25,7 @@ The current attribution logic in the Attribution Reporting API may not be ideal 
 
 In general, the approach here is to allow API callers to specify a list of strings for sources and triggers during registration that can be used for filtering before attribution takes place:
 
-* Allow finer-grained filtering before attribution, trading off additional filtering with noise levels
+* Allow finer-grained filtering before attribution, trading off additional filtering with source configuration flexibility
 
 ## Pre-Attribution Filtering
 
