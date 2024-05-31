@@ -1132,8 +1132,8 @@ unexpired sources and a source site is at its limit, the browser will sort the
 by `destination_limit_priority` in descending order and by the registration
 time in descending order. The browser will then select the first few
 `destination` sites within this limit, and delete pending sources and
-aggregatable reports associated with the unselected `destination` sites. The
-event-level reports are not deleted as the leak of user's browsing history is
+aggregatable reports associated with the unselected `destination` sites. Any
+event-level reports are not deleted, as the leak of user's browsing history is
 mitigated by fake reports within differential privacy.
 
 The lower this value, the harder it is for a reporting origin to use the API to
