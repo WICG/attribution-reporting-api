@@ -2976,9 +2976,22 @@ a [=trigger state=] |triggerState|:
     |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
 1. Return |fakeReport|.
 
+To <dfn>check if a source debug data type is a verbose debug data type</dfn>
+given a [=source debug data type=] |dataType|:
+
+1. If |dataType| is:
+    <dl class="switch">
+    : "<code>[=source debug data type/source-destination-global-rate-limit=]</code>"
+    : "<code>[=source debug data type/source-destination-limit-replaced=]</code>"
+    : "<code>[=source debug data type/source-reporting-origin-limit=]</code>"
+    :: Return false.
+
+    </dl>
+1. Return true.
+
 To <dfn>obtain and deliver a verbose debug report on source registration</dfn> given a
-[=set=] of [=source debug data types=] |dataTypes|, an [=attribution source=] |source|, an
-optional [=boolean=] |isNoised|, and an optional [=boolean=] |destinationLimitHit|:
+[=set=] of [=source debug data types=] |dataTypes|, an [=attribution source=] |source|,
+and a [=boolean=] |isNoised|:
 
 1. If |source|'s [=attribution source/debug reporting enabled=] is false, return.
 1. If |source|'s [=attribution source/debug cookie set=] is false, return.
@@ -2991,19 +3004,23 @@ optional [=boolean=] |isNoised|, and an optional [=boolean=] |destinationLimitHi
     :: |source|'s [=attribution source/source site=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
 1. If |source|'s [=attribution source/debug key=] is not null, [=map/set=] |body|["`source_debug_key`"]
     to |source|'s [=attribution source/debug key=], [=serialize an integer|serialized=].
-1. Let |dataList| be a new [=list=].
+1. Let |dataTypeToReport| be null.
 1. [=set/iterate|For each=] |dataType| of |dataTypes|:
-    1. Let |dataTypeToReport| be |dataType|.
+    1. Let |effectiveDataType| be |dataType|.
     1. If |dataType| is:
         <dl class="switch">
             : "<code>[=source debug data type/source-destination-global-rate-limit=]</code>"
             : "<code>[=source debug data type/source-reporting-origin-limit=]</code>"
-            :: Set |dataTypeToReport| to "<code>[=source debug data type/source-success=]</code>".
+            :: Set |effectiveDataType| to "<code>[=source debug data type/source-success=]</code>".
 
         </dl>
-    1. If |dataTypeToReport| is "<code>[=source debug data type/source-success=]</code>"
-        and |isNoised| is true, set |dataTypeToReport| to "<code>[=source debug data type/source-noised=]</code>".
-    1. If |dataTypeToReport| is:
+    1. If |effectiveDataType| is "<code>[=source debug data type/source-success=]</code>"
+        and |isNoised| is true, set |effectiveDataType| to "<code>[=source debug data type/source-noised=]</code>".
+    1. If the result of [=checking if a source debug data type is a verbose debug data type=]
+        is true:
+        1. [=Assert=]: |dataTypeToReport| is null.
+        1. Set |dataTypeToReport| to |effectiveDataType|.
+    1. If |effectiveDataType| is:
         <dl class="switch">
         : "<code>[=source debug data type/source-destination-limit=]</code>"
         :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations covered by unexpired sources=],
@@ -3038,18 +3055,18 @@ optional [=boolean=] |isNoised|, and an optional [=boolean=] |destinationLimitHi
             [=serialize an integer|serialized=].
 
         </dl>
-    1. Let |data| be a new [=verbose debug data=] with the items:
-        : [=verbose debug data/data type=]
-        :: |dataTypeToReport|
-        : [=verbose debug data/body=]
-        :: |body|
-    1. [=list/Append=] |data| to |dataList|.
-1. Run [=obtain and deliver a verbose debug report=] with |dataList|, |source|'s [=attribution source/reporting origin=],
+1. [=Assert=]: |dataTypeToReport| is not null.
+1. Let |data| be a new [=verbose debug data=] with the items:
+    : [=verbose debug data/data type=]
+    :: |dataTypeToReport|
+    : [=verbose debug data/body=]
+    :: |body|
+1. Run [=obtain and deliver a verbose debug report=] with « |data| », |source|'s [=attribution source/reporting origin=],
     and |source|'s [=attribution source/fenced=].
 
 To <dfn>obtain and deliver an aggregatable debug report on source registration</dfn>
 given a [=set=] of [=source debug data types=] |dataTypes|, an [=attribution source=] |source|,
-a [=boolean=] |isNoised|, and an optional [=boolean=] |destinationLimitHit|:
+and a [=boolean=] |isNoised|:
 
 1. If |source|'s [=attribution source/fenced=] is true, return.
 1. Let |config| be |source|'s [=attribution source/aggregatable debug reporting config=].
@@ -3076,13 +3093,12 @@ a [=boolean=] |isNoised|, and an optional [=boolean=] |destinationLimitHit|:
 
 To <dfn>obtain and deliver debug reports on source registration</dfn>
 given a [=set=] of [=source debug data types=] |dataTypes|, an [=attribution source=] |source|,
-, an optional [=boolean=] |isNoised| (default false), and an optional [=boolean=]
-|destinationLimitHit| (default false):
+, and an optional [=boolean=] |isNoised| (default false):
 
 1. Run [=obtain and deliver a verbose debug report on source registration=]
-    with |dataTypes|, |source|, |isNoised|, and |destinationLimitHit|.
+    with |dataTypes|, |source|, and |isNoised|.
 1. Run [=obtain and deliver an aggregatable debug report on source registration=]
-    with |dataTypes|, |source|, |isNoised|, and |destinationLimitHit|.
+    with |dataTypes|, |source|, and |isNoised|.
 
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
 
@@ -3149,7 +3165,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     1. [=set/Append=] "<code>[=source debug data type/source-destination-global-rate-limit=]</code>"
         to |debugDataTypes|.
     1. Run [=obtain and deliver debug reports on source registration=]
-        with |debugDataTypes|, |source|, |isNoised|, and |destinationLimitHit|.
+        with |debugDataTypes|, |source|, and |isNoised|.
     1. Return.
 1. Let |newRateLimitRecords| be a new [=set=].
 1. [=set/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
@@ -3175,7 +3191,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         1. [=set/Append=] "<code>[=source debug data type/source-reporting-origin-limit=]</code>"
             to |debugDataTypes|.
         1. Run [=obtain and deliver debug reports on source registration=]
-            with |debugDataTypes|, |source|, |isNoised|, and |destinationLimitHit|.
+            with |debugDataTypes|, |source|, and |isNoised|.
         1. Return.
     1. [=set/Append=] |rateLimitRecord| to |newRateLimitRecords|.
 1. [=set/iterate|For each=] |record| of |newRateLimitRecords|, [=set/append=] |record| to
@@ -3210,7 +3226,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. [=set/Append=] "<code>[=source debug data type/source-success=]</code>" to
     |debugDataTypes|.
 1. Run [=obtain and deliver debug reports on source registration=] with
-    |debugDataTypes|, |source|, |isNoised|, and |destinationLimitHit|.
+    |debugDataTypes|, |source| and |isNoised|.
 1. [=set/Append=] |source| to |cache|.
 
 Note: Because a fake report does not have a "real" effective destination, we need to subtract from the
