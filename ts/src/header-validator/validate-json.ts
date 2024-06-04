@@ -3,8 +3,17 @@ import * as uuid from 'uuid'
 import * as constants from '../constants'
 import { SourceType } from '../source-type'
 import { VendorSpecificValues } from '../vendor-specific-values'
-import { Context, PathComponent, ValidationResult } from './context'
-import { Maybe, Maybeable } from './maybe'
+import { Context, ValidationResult } from './context'
+import { Maybe } from './maybe'
+import {
+  CtxFunc,
+  ItemErrorAction,
+  clamp,
+  isInteger,
+  isInRange,
+  matchesPattern,
+} from './validate'
+import * as validate from './validate'
 import * as privacy from '../flexible-event/privacy'
 
 const { None, some } = Maybe
@@ -27,9 +36,14 @@ class GenericContext extends Context {
 class RegistrationContext extends GenericContext {
   constructor(
     readonly vsv: Readonly<VendorSpecificValues>,
-    parseFullFlex: boolean
+    parseFullFlex: boolean,
+    readonly aggregatableDebugTypes: Readonly<[string, ...string[]]>
   ) {
     super(parseFullFlex)
+  }
+
+  isDebugTypeSupported(s: string): boolean {
+    return this.aggregatableDebugTypes.includes(s)
   }
 }
 
@@ -40,97 +54,36 @@ class SourceContext extends RegistrationContext {
     readonly sourceType: SourceType,
     readonly noteInfoGain: boolean
   ) {
-    super(vsv, parseFullFlex)
+    super(vsv, parseFullFlex, constants.sourceAggregatableDebugTypes)
   }
 }
 
-type StructFields<T extends object, C extends Context = Context> = {
-  [K in keyof T]-?: CtxFunc<C, JsonDict, Maybe<T[K]>>
-}
+const {
+  exclusive,
+  field,
+  struct: structInternal,
+} = validate.make<JsonDict, Json>(
+  /*getAndDelete=*/ (d, name) => {
+    const v = d[name]
+    delete d[name]
+    return v
+  },
+  /*unknownKeys=*/ (d) => Object.keys(d),
+  /*warnUnknownMsg=*/ 'unknown field'
+)
 
-function struct<T extends object, C extends Context = Context>(
+type StructFields<
+  T extends object,
+  C extends Context = Context,
+> = validate.StructFields<T, JsonDict, C>
+
+function struct<T extends object, C extends Context>(
   ctx: C,
   d: Json,
   fields: StructFields<T, C>,
   warnUnknown: boolean = true
 ): Maybe<T> {
-  return object(ctx, d).map((d) => {
-    const t: Partial<T> = {}
-
-    let ok = true
-    for (const prop in fields) {
-      let itemOk = false
-      fields[prop](ctx, d).peek((v) => {
-        itemOk = true
-        t[prop] = v
-      })
-      ok = ok && itemOk
-    }
-
-    if (warnUnknown) {
-      for (const key in d) {
-        ctx.scope(key, () => ctx.warning('unknown field'))
-      }
-    }
-
-    return ok ? some(t as T) : None
-  })
-}
-
-type CtxFunc<C extends Context, I, O> = (ctx: C, i: I) => O
-
-function field<T, C extends Context = Context>(
-  name: string,
-  f: CtxFunc<C, Json, Maybe<T>>,
-  valueIfAbsent?: Maybeable<T>
-): CtxFunc<C, JsonDict, Maybe<T>> {
-  return (ctx: C, d: JsonDict): Maybe<T> =>
-    ctx.scope(name, () => {
-      const v = d[name]
-      if (v === undefined) {
-        if (valueIfAbsent === undefined) {
-          ctx.error('required')
-          return None
-        }
-        return Maybe.flatten(valueIfAbsent)
-      }
-      delete d[name] // for unknown field warning
-      return f(ctx, v)
-    })
-}
-
-type Exclusive<T, C extends Context = Context> = {
-  [key: string]: CtxFunc<C, Json, Maybe<T>>
-}
-
-function exclusive<T, C extends Context = Context>(
-  x: Exclusive<T, C>,
-  valueIfAbsent: Maybeable<T>
-): CtxFunc<C, JsonDict, Maybe<T>> {
-  return (ctx: C, d: JsonDict): Maybe<T> => {
-    const found: string[] = []
-    let v: Maybe<T> = None
-
-    for (const [key, f] of Object.entries(x)) {
-      const j = d[key]
-      if (j !== undefined) {
-        found.push(key)
-        v = ctx.scope(key, () => f(ctx, j))
-        delete d[key] // for unknown field warning
-      }
-    }
-
-    if (found.length === 1) {
-      return v
-    }
-
-    if (found.length > 1) {
-      ctx.error(`mutually exclusive fields: ${found.join(', ')}`)
-      return None
-    }
-
-    return Maybe.flatten(valueIfAbsent)
-  }
+  return object(ctx, d).map((d) => structInternal(ctx, d, fields, warnUnknown))
 }
 
 type TypeSwitch<T, C extends Context = Context> = {
@@ -191,22 +144,16 @@ function keyValues<V, C extends Context = Context>(
   f: CtxFunc<C, [key: string, val: Json], Maybe<V>>,
   maxKeys: number = Infinity
 ): Maybe<Map<string, V>> {
-  const map = new Map<string, V>()
+  return object(ctx, j).map((d) => {
+    const entries = Object.entries(d)
 
-  return object(ctx, j)
-    .filter((d) => {
-      const entries = Object.entries(d)
+    if (entries.length > maxKeys) {
+      ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
+      return None
+    }
 
-      if (entries.length > maxKeys) {
-        ctx.error(`exceeds the maximum number of keys (${maxKeys})`)
-        return false
-      }
-
-      return isCollection(ctx, entries, (ctx, [key, j]) =>
-        f(ctx, [key, j]).peek((v) => map.set(key, v))
-      )
-    })
-    .map(() => map)
+    return validate.keyValues(ctx, entries, f)
+  })
 }
 
 type ListOpts = {
@@ -275,28 +222,6 @@ function uint64(ctx: Context, j: Json): Maybe<bigint> {
 
 function number(ctx: Context, j: Json): Maybe<number> {
   return typeSwitch(ctx, j, { number: (_ctx, j) => some(j) })
-}
-
-function isInteger(ctx: Context, n: number): boolean {
-  if (!Number.isInteger(n)) {
-    ctx.error('must be an integer')
-    return false
-  }
-  return true
-}
-
-function isInRange<N extends bigint | number>(
-  ctx: Context,
-  n: N,
-  min: N,
-  max: N,
-  msg: string = `must be in the range [${min}, ${max}]`
-): boolean {
-  if (n < min || n > max) {
-    ctx.error(msg)
-    return false
-  }
-  return true
 }
 
 function nonNegativeInteger(ctx: Context, j: Json): Maybe<number> {
@@ -473,7 +398,7 @@ function endTimes(
   return array(ctx, j, endTime, {
     minLength: 1,
     maxLength: 5,
-    keepGoing: false, // suppress unhelpful cascaded errors
+    itemErrorAction: ItemErrorAction.earlyExit, // suppress unhelpful cascaded errors
   })
 }
 
@@ -510,24 +435,6 @@ function legacyDuration(ctx: Context, j: Json): Maybe<number | bigint> {
   })
 }
 
-function isCollection<P extends PathComponent, C extends Context = Context>(
-  ctx: C,
-  js: Iterable<[P, Json]>,
-  f: CtxFunc<C, [P, Json], Maybe<unknown>>,
-  keepGoing: boolean = true
-): boolean {
-  let ok = true
-  for (const [c, j] of js) {
-    let itemOk = false
-    ctx.scope(c, () => f(ctx, [c, j]).peek(() => (itemOk = true)))
-    if (!itemOk && !keepGoing) {
-      return false
-    }
-    ok = ok && itemOk
-  }
-  return ok
-}
-
 type SetOpts = ListOpts & {
   requireDistinct?: boolean
 }
@@ -538,31 +445,13 @@ function set<T extends number | string, C extends Context = Context>(
   f: CtxFunc<C, Json, Maybe<T>>,
   opts?: SetOpts
 ): Maybe<Set<T>> {
-  const set = new Set<T>()
-
-  return list(ctx, j, opts)
-    .filter((js) =>
-      isCollection(ctx, js.entries(), (ctx, [_i, j]) =>
-        f(ctx, j).filter((v) => {
-          if (set.has(v)) {
-            const msg = `duplicate value ${v}`
-            if (opts?.requireDistinct) {
-              ctx.error(msg)
-              return false
-            }
-            ctx.warning(msg)
-          } else {
-            set.add(v)
-          }
-          return true
-        })
-      )
-    )
-    .map(() => set)
+  return list(ctx, j, opts).map((js) =>
+    validate.set(ctx, js.entries(), f, opts?.requireDistinct)
+  )
 }
 
 type ArrayOpts = ListOpts & {
-  keepGoing?: boolean
+  itemErrorAction?: ItemErrorAction
 }
 
 function array<T, C extends Context = Context>(
@@ -571,18 +460,9 @@ function array<T, C extends Context = Context>(
   f: CtxFunc<C, Json, Maybe<T>>,
   opts?: ArrayOpts
 ): Maybe<T[]> {
-  const arr: T[] = []
-
-  return list(ctx, j, opts)
-    .filter((js) =>
-      isCollection(
-        ctx,
-        js.entries(),
-        (ctx, [_i, j]) => f(ctx, j).peek((v) => arr.push(v)),
-        opts?.keepGoing
-      )
-    )
-    .map(() => arr)
+  return list(ctx, j, opts).map((js) =>
+    validate.array(ctx, js.entries(), f, opts?.itemErrorAction)
+  )
 }
 
 function filterDataKeyValue(
@@ -717,6 +597,98 @@ const priorityField: StructFields<Priority> = {
   priority: field('priority', int64, 0n),
 }
 
+function aggregatableDebugType(
+  ctx: RegistrationContext,
+  j: Json
+): Maybe<string> {
+  return string(ctx, j).peek((s) => {
+    if (!ctx.isDebugTypeSupported(s)) {
+      ctx.warning('unknown type')
+    }
+  })
+}
+
+export type KeyPiece = {
+  keyPiece: bigint
+}
+
+const keyPieceField: StructFields<KeyPiece> = {
+  keyPiece: field('key_piece', hex128),
+}
+
+export type AggregatableDebugReportingData = KeyPiece & {
+  types: Set<string>
+  value: number
+}
+
+function aggregatableDebugReportingData(
+  ctx: RegistrationContext,
+  j: Json
+): Maybe<AggregatableDebugReportingData> {
+  return struct(ctx, j, {
+    types: field('types', (ctx, j) =>
+      set(ctx, j, aggregatableDebugType, {
+        minLength: 1,
+        requireDistinct: true,
+      })
+    ),
+    value: field('value', aggregatableValue),
+
+    ...keyPieceField,
+  })
+}
+
+function aggregatableDebugReportingDataList(
+  ctx: RegistrationContext,
+  j: Json
+): Maybe<AggregatableDebugReportingData[]> {
+  return array(ctx, j, aggregatableDebugReportingData).filter((data) => {
+    const types = new Set<string>()
+    const dups = new Set<string>()
+    for (const d of data) {
+      for (const t of d.types) {
+        if (types.has(t)) {
+          dups.add(t)
+        } else {
+          types.add(t)
+        }
+      }
+    }
+    if (dups.size > 0) {
+      ctx.error(`duplicate type: ${Array.from(dups).join(', ')}`)
+      return false
+    }
+    return true
+  })
+}
+
+// Consider making this a StructFields.
+function aggregationCoordinatorOriginField(
+  ctx: RegistrationContext,
+  j: JsonDict
+): Maybe<string> {
+  return field(
+    'aggregation_coordinator_origin',
+    aggregationCoordinatorOrigin,
+    ctx.vsv.aggregationCoordinatorOrigins[0]
+  )(ctx, j)
+}
+
+export type AggregatableDebugReportingConfig = KeyPiece & {
+  aggregationCoordinatorOrigin: string
+  debugData: AggregatableDebugReportingData[]
+}
+
+const aggregatableDebugReportingConfig: StructFields<
+  AggregatableDebugReportingConfig,
+  RegistrationContext
+> = {
+  aggregationCoordinatorOrigin: aggregationCoordinatorOriginField,
+  debugData: field('debug_data', aggregatableDebugReportingDataList, []),
+
+  ...keyPieceField,
+}
+
 function aggregationKeyIdentifierLength(
   ctx: Context,
   s: string,
@@ -745,24 +717,6 @@ function aggregationKeys(ctx: Context, j: Json): Maybe<AggregationKeys> {
     aggregationKey,
     constants.maxAggregationKeysPerSource
   )
-}
-
-function clamp<N extends bigint | number>(
-  ctx: Context,
-  n: N,
-  min: N,
-  max: N,
-  maxSuffix: string = ''
-): N {
-  if (n < min) {
-    ctx.warning(`will be clamped to min of ${min}`)
-    return min
-  }
-  if (n > max) {
-    ctx.warning(`will be clamped to max of ${max}${maxSuffix}`)
-    return max
-  }
-  return n
 }
 
 function roundAwayFromZeroToNearestDay(n: number): number {
@@ -899,6 +853,32 @@ export type TriggerSpec = {
   triggerData: Set<number>
 }
 
+export type SourceAggregatableDebugReportingConfig =
+  AggregatableDebugReportingConfig & {
+    budget: number
+  }
+
+function sourceAggregatableDebugReportingConfig(
+  ctx: RegistrationContext,
+  j: Json
+): Maybe<SourceAggregatableDebugReportingConfig> {
+  return struct(ctx, j, {
+    budget: field('budget', aggregatableValue),
+
+    ...aggregatableDebugReportingConfig,
+  }).filter((s) => {
+    for (const d of s.debugData) {
+      if (d.value > s.budget) {
+        // TODO: Consider passing the parsed budget to validate the debug data and
+        // give more precise path information.
+        ctx.error(`data contains value greater than budget (${s.budget})`)
+        return false
+      }
+    }
+    return true
+  })
+}
+
 function summaryBuckets(
   ctx: Context,
   j: Json,
@@ -938,7 +918,7 @@ function summaryBuckets(
     minLength: 1,
     maxLength,
     maxLengthErrSuffix: ' (max_event_level_reports)',
-    keepGoing: false, // suppress unhelpful cascaded errors
+    itemErrorAction: ItemErrorAction.earlyExit, // suppress unhelpful cascaded errors
   })
 }
 
@@ -1162,6 +1142,7 @@ export type Source = CommonDebug &
     triggerDataMatching: TriggerDataMatching
 
     eventLevelEpsilon: number
+    aggregatableDebugReporting: SourceAggregatableDebugReportingConfig | null
   }
 
 function source(ctx: SourceContext, j: Json): Maybe<Source> {
@@ -1233,6 +1214,11 @@ function source(ctx: SourceContext, j: Json): Maybe<Source> {
         maxEventLevelReports: () => maxEventLevelReportsVal,
         sourceEventId: field('source_event_id', uint64, 0n),
         triggerSpecs: () => triggerSpecsVal,
+        aggregatableDebugReporting: field(
+          'aggregatable_debug_reporting',
+          sourceAggregatableDebugReportingConfig,
+          null
+        ),
 
         triggerDataMatching: field(
           'trigger_data_matching',
@@ -1255,10 +1241,10 @@ function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
   )
 }
 
-export type AggregatableTriggerDatum = FilterPair & {
-  keyPiece: bigint
-  sourceKeys: Set<string>
-}
+export type AggregatableTriggerDatum = FilterPair &
+  KeyPiece & {
+    sourceKeys: Set<string>
+  }
 
 function aggregatableTriggerData(
   ctx: RegistrationContext,
@@ -1266,9 +1252,9 @@ function aggregatableTriggerData(
 ): Maybe<AggregatableTriggerDatum[]> {
   return array(ctx, j, (ctx, j) =>
     struct(ctx, j, {
-      keyPiece: field('key_piece', hex128),
       sourceKeys: field('source_keys', sourceKeys, new Set<string>()),
       ...filterFields,
+      ...keyPieceField,
     })
   )
 }
@@ -1450,15 +1436,7 @@ function aggregatableDedupKeys(
 }
 
 function enumerated<T>(ctx: Context, j: Json, e: Record<string, T>): Maybe<T> {
-  return string(ctx, j).map((s) => {
-    const v = e[s]
-    if (v !== undefined) {
-      return v
-    }
-    const allowed = Object.keys(e).join(', ')
-    ctx.error(`must be one of the following (case-sensitive): ${allowed}`)
-    return None
-  })
+  return string(ctx, j).map((s) => validate.enumerated(ctx, s, e))
 }
 
 export enum AggregatableSourceRegistrationTime {
@@ -1567,6 +1545,7 @@ export type Trigger = CommonDebug &
     aggregationCoordinatorOrigin: string
     eventTriggerData: EventTriggerDatum[]
     triggerContextID: string | null
+    aggregatableDebugReporting: AggregatableDebugReportingConfig | null
   }
 
 function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
@@ -1609,15 +1588,16 @@ function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
           []
         ),
         aggregatableSourceRegistrationTime: () => aggregatableSourceRegTimeVal,
-        aggregationCoordinatorOrigin: field(
-          'aggregation_coordinator_origin',
-          aggregationCoordinatorOrigin,
-          ctx.vsv.aggregationCoordinatorOrigins[0]
-        ),
+        aggregationCoordinatorOrigin: aggregationCoordinatorOriginField,
         eventTriggerData: field('event_trigger_data', eventTriggerData, []),
         triggerContextID: field(
           'trigger_context_id',
           (ctx, j) => triggerContextID(ctx, j, aggregatableSourceRegTimeVal),
+          null
+        ),
+        aggregatableDebugReporting: field(
+          'aggregatable_debug_reporting',
+          (ctx, j) => struct(ctx, j, aggregatableDebugReportingConfig),
           null
         ),
         ...commonDebugFields,
@@ -1664,7 +1644,11 @@ export function validateTrigger(
   parseFullFlex: boolean = false
 ): [ValidationResult, Maybe<Trigger>] {
   return validateJSON(
-    new RegistrationContext(vsv, parseFullFlex),
+    new RegistrationContext(
+      vsv,
+      parseFullFlex,
+      constants.triggerAggregatableDebugTypes
+    ),
     json,
     trigger
   )
@@ -1749,7 +1733,7 @@ function triggerSummaryBucket(ctx: Context, j: Json): Maybe<[number, number]> {
   return array(ctx, j, endpoint, {
     minLength: 2,
     maxLength: 2,
-    keepGoing: false,
+    itemErrorAction: ItemErrorAction.earlyExit,
   }) as Maybe<[number, number]>
 }
 
@@ -1757,31 +1741,26 @@ function eventLevelReport(
   ctx: GenericContext,
   j: Json
 ): Maybe<EventLevelReport> {
-  return object(ctx, j).map((j) => {
-    return struct(ctx, j, {
-      attributionDestination: field(
-        'attribution_destination',
-        reportDestination
-      ),
-      randomizedTriggerRate: field(
-        'randomized_trigger_rate',
-        randomizedTriggerRate
-      ),
-      reportId: field('report_id', randomUuid),
-      scheduledReportTime: field('scheduled_report_time', int64),
-      sourceDebugKey: field('source_debug_key', uint64, null),
-      sourceEventId: field('source_event_id', uint64),
-      sourceType: field('source_type', (ctx, j) =>
-        enumerated(ctx, j, SourceType)
-      ),
-      triggerData: field('trigger_data', uint64),
-      // TODO: Flex can issue multiple trigger debug keys.
-      triggerDebugKey: field('trigger_debug_key', uint64, null),
+  return struct(ctx, j, {
+    attributionDestination: field('attribution_destination', reportDestination),
+    randomizedTriggerRate: field(
+      'randomized_trigger_rate',
+      randomizedTriggerRate
+    ),
+    reportId: field('report_id', randomUuid),
+    scheduledReportTime: field('scheduled_report_time', int64),
+    sourceDebugKey: field('source_debug_key', uint64, null),
+    sourceEventId: field('source_event_id', uint64),
+    sourceType: field('source_type', (ctx, j) =>
+      enumerated(ctx, j, SourceType)
+    ),
+    triggerData: field('trigger_data', uint64),
+    // TODO: Flex can issue multiple trigger debug keys.
+    triggerDebugKey: field('trigger_debug_key', uint64, null),
 
-      triggerSummaryBucket: ctx.parseFullFlex
-        ? field('trigger_summary_bucket', triggerSummaryBucket)
-        : () => some(null),
-    })
+    triggerSummaryBucket: ctx.parseFullFlex
+      ? field('trigger_summary_bucket', triggerSummaryBucket)
+      : () => some(null),
   })
 }
 
