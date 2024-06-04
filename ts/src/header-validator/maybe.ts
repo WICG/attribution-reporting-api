@@ -13,17 +13,26 @@ export class Maybe<T> {
 
   private constructor(private readonly t?: T) {}
 
-  filter(f: (t: T) => boolean): Maybe<T> {
-    return this.t === undefined || !f(this.t) ? Maybe.None : this
+  filter<C extends unknown[]>(
+    f: (t: T, ...args: C) => boolean,
+    ...args: C
+  ): Maybe<T> {
+    return this.t === undefined || !f(this.t, ...args) ? Maybe.None : this
   }
 
-  map<U>(f: (t: T) => Maybeable<U>): Maybe<U> {
-    return this.t === undefined ? Maybe.None : Maybe.flatten(f(this.t))
+  map<U, C extends unknown[]>(
+    f: (t: T, ...args: C) => Maybeable<U>,
+    ...args: C
+  ): Maybe<U> {
+    return this.t === undefined ? Maybe.None : Maybe.flatten(f(this.t, ...args))
   }
 
-  peek(f: (t: T) => void): Maybe<T> {
+  peek<C extends unknown[]>(
+    f: (t: T, ...args: C) => void,
+    ...args: C
+  ): Maybe<T> {
     if (this.t !== undefined) {
-      f(this.t)
+      f(this.t, ...args)
     }
     return this
   }
