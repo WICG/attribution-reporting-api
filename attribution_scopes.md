@@ -53,7 +53,7 @@ The following optional parameters will be added to the JSON in `Attribution-Repo
   "attribution_scopes": <list of strings>,
 
   // Optional
-  // Represents the maximum number of event states that an API caller plans to use across all
+  // Represents the maximum number of event states that an API caller plans to use in
   // subsequent event-source registrations.
   // Example: default event source for event-level reports supports 1 attribution report, 1 reporting window,
   // and 1 bit of trigger data for a total of 3 event states.
@@ -89,9 +89,9 @@ If there are multiple sources whose `attribution_scopes` contains at least one o
 
 If the trigger registration's `attribution_scopes` is empty, then all sources are considered for attribution.
 
-Once an `attribution_scope_limit` is set, the last K values (where K = `attribution_scope_limit`) of `attribution_scopes` will be considered the final set of `attribution_scopes` values and any source with additional `attribution_scopes` values will be treated as if the attribution scopes were empty.
+Once an `attribution_scope_limit` is set, the last K values (where K = `attribution_scope_limit`) of `attribution_scopes` will be considered the final set of `attribution_scopes` values per reporting origin per destination site, and any source with additional `attribution_scopes` values will be treated as if the attribution scopes were empty.
 
-If a source registration is specified with a configuration that has a higher number of event states than the most recent `max_event_states` for the same reporting origin, then the source will be rejected and the registration will fail. Additionally, if the `max_event_states` field is changed in a future source registration, then all other previous pending source registrations with a different `max_event_states` will be ignored in subsequent attribution report generation flows, but will still count towards rate limits. 
+For sources that use the `attribution_scopes` feature, if the source registration is specified with a configuration that has a higher number of event states than the most recent `max_event_states` for the same reporting origin, then the source will be rejected and the registration will fail. Additionally, if the `max_event_states` field is changed in a future source registration, then all other previous pending source registrations with a different `max_event_states` will be ignored in subsequent attribution report generation flows, but will still count towards rate limits. 
 
 ### Updating attribution scope values
 
@@ -101,7 +101,7 @@ The `attribution_scope_limit` value can be updated during source registration at
 
 ### Deletion logic
 
-If the current trigger passes the top-level filter check during the attribution process, then all other eligible sources considered for attribution (across all `attribution_scopes`) will be deleted.
+If the current trigger passes the top-level filter check during the attribution process, then all other eligible sources considered for attribution (across all `attribution_scopes` and including eligible sources that do not use the `attribution_scopes` feature) will be deleted.
 
 ## Attribution Scope Examples
 
