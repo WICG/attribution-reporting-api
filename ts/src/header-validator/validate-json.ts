@@ -182,19 +182,6 @@ function list(
   })
 }
 
-function matchesPattern(
-  ctx: Context,
-  s: string,
-  p: RegExp,
-  errPrefix: string
-): boolean {
-  if (!p.test(s)) {
-    ctx.error(`${errPrefix} (must match ${p})`)
-    return false
-  }
-  return true
-}
-
 function uint(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
     .filter((s) =>
@@ -632,7 +619,7 @@ function aggregatableDebugReportingData(
         requireDistinct: true,
       })
     ),
-    value: field('value', aggregatableValue),
+    value: field('value', aggregatableKeyValueValue),
 
     ...keyPieceField,
   })
@@ -863,7 +850,7 @@ function sourceAggregatableDebugReportingConfig(
   j: Json
 ): Maybe<SourceAggregatableDebugReportingConfig> {
   return struct(ctx, j, {
-    budget: field('budget', aggregatableValue),
+    budget: field('budget', aggregatableKeyValueValue),
 
     ...aggregatableDebugReportingConfig,
   }).filter((s) => {
