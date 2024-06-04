@@ -620,7 +620,6 @@ function aggregatableDebugReportingData(
       })
     ),
     value: field('value', aggregatableKeyValueValue),
-
     ...keyPieceField,
   })
 }
@@ -851,7 +850,6 @@ function sourceAggregatableDebugReportingConfig(
 ): Maybe<SourceAggregatableDebugReportingConfig> {
   return struct(ctx, j, {
     budget: field('budget', aggregatableKeyValueValue),
-
     ...aggregatableDebugReportingConfig,
   }).filter((s) => {
     for (const d of s.debugData) {
@@ -1264,7 +1262,7 @@ function aggregatableKeyValueValue(ctx: Context, j: Json): Maybe<number> {
       isInRange(ctx, n, 1, constants.allowedAggregatableBudgetPerSource)
     )
 }
-
+  
 function aggregatableKeyValue(
   ctx: Context,
   [key, j]: [string, Json],
