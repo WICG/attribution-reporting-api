@@ -171,7 +171,7 @@ export function array<T, V, C extends Context = Context>(
     isCollection(
       vs,
       ctx,
-      ([_i, v], ctx) => f(v, ctx).peek((v) => arr.push(v)),
+      ([_i, v]) => f(v, ctx).peek((v) => arr.push(v)),
       itemErrorAction
     )
   )

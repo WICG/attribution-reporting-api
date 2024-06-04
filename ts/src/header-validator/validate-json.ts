@@ -83,7 +83,7 @@ function struct<T extends object, C extends Context>(
   fields: StructFields<T, C>,
   warnUnknown: boolean = true
 ): Maybe<T> {
-  return object(d, ctx).map((d) => structInternal(d, ctx, fields, warnUnknown))
+  return object(d, ctx).map(structInternal, ctx, fields, warnUnknown)
 }
 
 type TypeSwitch<T, C extends Context = Context> = {
@@ -186,23 +186,19 @@ function isLengthValid(
 
 function uint64(j: Json, ctx: Context): Maybe<bigint> {
   return string(j, ctx)
-    .filter((s) =>
-      matchesPattern(
-        s,
-        ctx,
-        uintRegex,
-        'string must represent a non-negative integer'
-      )
+    .filter(
+      matchesPattern,
+      ctx,
+      uintRegex,
+      'string must represent a non-negative integer'
     )
     .map(BigInt)
-    .filter((n) =>
-      isInRange(
-        n,
-        ctx,
-        0n,
-        2n ** 64n - 1n,
-        'must fit in an unsigned 64-bit integer'
-      )
+    .filter(
+      isInRange,
+      ctx,
+      0n,
+      2n ** 64n - 1n,
+      'must fit in an unsigned 64-bit integer'
     )
 }
 
@@ -212,36 +208,32 @@ function number(j: Json, ctx: Context): Maybe<number> {
 
 function nonNegativeInteger(j: Json, ctx: Context): Maybe<number> {
   return number(j, ctx)
-    .filter((n) => isInteger(n, ctx))
-    .filter((n) => isInRange(n, ctx, 0, Infinity, 'must be non-negative'))
+    .filter(isInteger, ctx)
+    .filter(isInRange, ctx, 0, Infinity, 'must be non-negative')
 }
 
 function positiveInteger(j: Json, ctx: Context): Maybe<number> {
   return number(j, ctx)
-    .filter((n) => isInteger(n, ctx))
-    .filter((n) => isInRange(n, ctx, 1, Infinity, 'must be positive'))
+    .filter(isInteger, ctx)
+    .filter(isInRange, ctx, 1, Infinity, 'must be positive')
 }
 
 function int64(j: Json, ctx: Context): Maybe<bigint> {
   return string(j, ctx)
-    .filter((s) =>
-      matchesPattern(s, ctx, intRegex, 'string must represent an integer')
-    )
+    .filter(matchesPattern, ctx, intRegex, 'string must represent an integer')
     .map(BigInt)
-    .filter((n) =>
-      isInRange(
-        n,
-        ctx,
-        (-2n) ** (64n - 1n),
-        2n ** (64n - 1n) - 1n,
-        'must fit in a signed 64-bit integer'
-      )
+    .filter(
+      isInRange,
+      ctx,
+      (-2n) ** (64n - 1n),
+      2n ** (64n - 1n) - 1n,
+      'must fit in a signed 64-bit integer'
     )
 }
 
 function hex128(j: Json, ctx: Context): Maybe<bigint> {
   return string(j, ctx)
-    .filter((s) => matchesPattern(s, ctx, hex128Regex, 'must be a hex128'))
+    .filter(matchesPattern, ctx, hex128Regex, 'must be a hex128')
     .map(BigInt)
 }
 
@@ -291,8 +283,12 @@ function suitableOrigin(
   ctx: Context,
   rejectExtraComponents: boolean = false
 ): Maybe<string> {
-  return string(j, ctx).map((s) =>
-    suitableScope(s, ctx, 'origin', (u) => u.origin, rejectExtraComponents)
+  return string(j, ctx).map(
+    suitableScope,
+    ctx,
+    'origin',
+    (u) => u.origin,
+    rejectExtraComponents
   )
 }
 
@@ -301,14 +297,12 @@ function suitableSite(
   ctx: Context,
   rejectExtraComponents: boolean = false
 ): Maybe<string> {
-  return string(j, ctx).map((s) =>
-    suitableScope(
-      s,
-      ctx,
-      'site',
-      (u) => `${u.protocol}//${psl.get(u.hostname)}`,
-      rejectExtraComponents
-    )
+  return string(j, ctx).map(
+    suitableScope,
+    ctx,
+    'site',
+    (u) => `${u.protocol}//${psl.get(u.hostname)}`,
+    rejectExtraComponents
   )
 }
 
@@ -321,9 +315,12 @@ function destination(j: Json, ctx: Context): Maybe<Set<string>> {
 
 function maxEventLevelReports(j: Json, ctx: Context): Maybe<number> {
   return number(j, ctx)
-    .filter((n) => isInteger(n, ctx))
-    .filter((n) =>
-      isInRange(n, ctx, 0, constants.maxSettableEventLevelAttributionsPerSource)
+    .filter(isInteger, ctx)
+    .filter(
+      isInRange,
+      ctx,
+      0,
+      constants.maxSettableEventLevelAttributionsPerSource
     )
 }
 
@@ -333,7 +330,7 @@ function startTime(
   expiry: Maybe<number>
 ): Maybe<number> {
   return number(j, ctx)
-    .filter((n) => isInteger(n, ctx))
+    .filter(isInteger, ctx)
     .filter((n) => {
       if (expiry.value === undefined) {
         ctx.error('cannot be fully validated without a valid expiry')
@@ -370,11 +367,13 @@ function endTimes(
 
   const endTime = (j: Json): Maybe<number> =>
     positiveInteger(j, ctx)
-      .map((n) =>
-        clamp(n, ctx, constants.minReportWindow, expiry.value!, ' (expiry)')
-      )
-      .filter((n) =>
-        isInRange(n, ctx, prev + 1, Infinity, `must be > ${prevDesc} (${prev})`)
+      .map(clamp, ctx, constants.minReportWindow, expiry.value!, ' (expiry)')
+      .filter(
+        isInRange,
+        ctx,
+        prev + 1,
+        Infinity,
+        `must be > ${prevDesc} (${prev})`
       )
       .peek((n) => {
         prev = n
@@ -532,7 +531,7 @@ function filterConfig(j: Json, ctx: Context): Maybe<FilterConfig> {
     ctx,
     {
       lookbackWindow: field('_lookback_window', positiveInteger, null),
-      map: (ctx, j) => keyValues(ctx, j, filterKeyValue),
+      map: (j) => keyValues(j, ctx, filterKeyValue),
     },
     /*warnUnknown=*/ false
   )
@@ -718,7 +717,7 @@ function roundAwayFromZeroToNearestDay(n: number): number {
 
 function expiry(j: Json, ctx: SourceContext): Maybe<number> {
   return legacyDuration(j, ctx)
-    .map((n) => clamp(n, ctx, ...constants.validSourceExpiryRange))
+    .map(clamp, ctx, ...constants.validSourceExpiryRange)
     .map(Number) // guaranteed to fit based on the clamping
     .map((n) => {
       switch (ctx.sourceType) {
@@ -768,14 +767,15 @@ function eventReportWindow(
   ctx: SourceContext,
   expiry: Maybe<number>
 ): Maybe<EventReportWindows> {
-  return singleReportWindow(j, ctx, expiry).map((n) =>
-    defaultEventReportWindows(n, ctx)
-  )
+  return singleReportWindow(j, ctx, expiry).map(defaultEventReportWindows, ctx)
 }
 
 function eventLevelEpsilon(j: Json, ctx: RegistrationContext): Maybe<number> {
-  return number(j, ctx).filter((n) =>
-    isInRange(n, ctx, 0, ctx.vsv.maxSettableEventLevelEpsilon)
+  return number(j, ctx).filter(
+    isInRange,
+    ctx,
+    0,
+    ctx.vsv.maxSettableEventLevelEpsilon
   )
 }
 
@@ -887,15 +887,13 @@ function summaryBuckets(
 
   const bucket = (j: Json): Maybe<number> =>
     number(j, ctx)
-      .filter((n) => isInteger(n, ctx))
-      .filter((n) =>
-        isInRange(
-          n,
-          ctx,
-          prev + 1,
-          UINT32_MAX,
-          `must be > ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
-        )
+      .filter(isInteger, ctx)
+      .filter(
+        isInRange,
+        ctx,
+        prev + 1,
+        UINT32_MAX,
+        `must be > ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
       )
       .peek((n) => {
         prev = n
@@ -912,8 +910,8 @@ function summaryBuckets(
 
 function fullFlexTriggerDatum(j: Json, ctx: Context): Maybe<number> {
   return number(j, ctx)
-    .filter((n) => isInteger(n, ctx))
-    .filter((n) => isInRange(n, ctx, 0, UINT32_MAX))
+    .filter(isInteger, ctx)
+    .filter(isInRange, ctx, 0, UINT32_MAX)
 }
 
 function triggerDataSet(
@@ -1147,7 +1145,7 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
           event_report_window: (j) => eventReportWindow(j, ctx, expiryVal),
           event_report_windows: (j) => eventReportWindows(j, ctx, expiryVal),
         },
-        expiryVal.map((n) => defaultEventReportWindows(n, ctx))
+        expiryVal.map(defaultEventReportWindows, ctx)
       )(j, ctx)
 
       const maxEventLevelReportsVal = field(
@@ -1215,14 +1213,14 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
         ...priorityField,
       })
     })
-    .filter((s) => isTriggerDataMatchingValidForSpecs(s, ctx))
-    .peek((s) => channelCapacity(s, ctx))
-    .peek((s) => warnInconsistentMaxEventLevelReportsAndTriggerSpecs(s, ctx))
+    .filter(isTriggerDataMatchingValidForSpecs, ctx)
+    .peek(channelCapacity, ctx)
+    .peek(warnInconsistentMaxEventLevelReportsAndTriggerSpecs, ctx)
 }
 
 function sourceKeys(j: Json, ctx: Context): Maybe<Set<string>> {
   return set(j, ctx, (j) =>
-    string(j, ctx).filter((s) => aggregationKeyIdentifierLength(s, ctx))
+    string(j, ctx).filter(aggregationKeyIdentifierLength, ctx)
   )
 }
 
@@ -1252,10 +1250,8 @@ export type AggregatableValuesConfiguration = FilterPair & {
 
 function aggregatableValue(j: Json, ctx: Context): Maybe<number> {
   return number(j, ctx)
-    .filter((n) => isInteger(n, ctx))
-    .filter((n) =>
-      isInRange(n, ctx, 1, constants.allowedAggregatableBudgetPerSource)
-    )
+    .filter(isInteger, ctx)
+    .filter(isInRange, ctx, 1, constants.allowedAggregatableBudgetPerSource)
 }
 
 function aggregatableKeyValue(
@@ -1303,15 +1299,13 @@ export type EventTriggerDatum = FilterPair &
 
 function eventTriggerValue(j: Json, ctx: RegistrationContext): Maybe<number> {
   return number(j, ctx)
-    .filter((n) => isInteger(n, ctx))
-    .filter((n) =>
-      isInRange(
-        n,
-        ctx,
-        1,
-        UINT32_MAX,
-        `must be >= 1 and <= uint32 max (${UINT32_MAX})`
-      )
+    .filter(isInteger, ctx)
+    .filter(
+      isInRange,
+      ctx,
+      1,
+      UINT32_MAX,
+      `must be >= 1 and <= uint32 max (${UINT32_MAX})`
     )
 }
 
@@ -1349,7 +1343,7 @@ function aggregatableDedupKeys(
 }
 
 function enumerated<T>(j: Json, ctx: Context, e: Record<string, T>): Maybe<T> {
-  return string(j, ctx).map((s) => validate.enumerated(s, ctx, e))
+  return string(j, ctx).map(validate.enumerated, ctx, e)
 }
 
 export enum AggregatableSourceRegistrationTime {
@@ -1502,7 +1496,7 @@ function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
         ...filterFields,
       })
     })
-    .peek((t) => warnInconsistentAggregatableKeys(t, ctx))
+    .peek(warnInconsistentAggregatableKeys, ctx)
 }
 
 export function validateJSON<T, C extends Context = Context>(
@@ -1590,7 +1584,7 @@ function reportDestination(j: Json, ctx: Context): Maybe<string | string[]> {
 }
 
 function randomizedTriggerRate(j: Json, ctx: Context): Maybe<number> {
-  return number(j, ctx).filter((n) => isInRange(n, ctx, 0, 1))
+  return number(j, ctx).filter(isInRange, ctx, 0, 1)
 }
 
 function randomUuid(j: Json, ctx: Context): Maybe<string> {
@@ -1613,15 +1607,13 @@ function triggerSummaryBucket(j: Json, ctx: Context): Maybe<[number, number]> {
 
   const endpoint = (j: Json): Maybe<number> =>
     number(j, ctx)
-      .filter((n) => isInteger(n, ctx))
-      .filter((n) =>
-        isInRange(
-          n,
-          ctx,
-          prev,
-          UINT32_MAX,
-          `must be >= ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
-        )
+      .filter(isInteger, ctx)
+      .filter(
+        isInRange,
+        ctx,
+        prev,
+        UINT32_MAX,
+        `must be >= ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
       )
       .peek((n) => {
         prev = n
