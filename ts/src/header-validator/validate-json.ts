@@ -5,7 +5,14 @@ import { SourceType } from '../source-type'
 import { VendorSpecificValues } from '../vendor-specific-values'
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
-import { CtxFunc, ItemErrorAction } from './validate'
+import {
+  CtxFunc,
+  ItemErrorAction,
+  clamp,
+  isInteger,
+  isInRange,
+  matchesPattern,
+} from './validate'
 import * as validate from './validate'
 import * as privacy from '../flexible-event/privacy'
 
@@ -175,19 +182,6 @@ function list(
   })
 }
 
-function matchesPattern(
-  ctx: Context,
-  s: string,
-  p: RegExp,
-  errPrefix: string
-): boolean {
-  if (!p.test(s)) {
-    ctx.error(`${errPrefix} (must match ${p})`)
-    return false
-  }
-  return true
-}
-
 function uint64(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
     .filter((s) =>
@@ -212,28 +206,6 @@ function uint64(ctx: Context, j: Json): Maybe<bigint> {
 
 function number(ctx: Context, j: Json): Maybe<number> {
   return typeSwitch(ctx, j, { number: (_ctx, j) => some(j) })
-}
-
-function isInteger(ctx: Context, n: number): boolean {
-  if (!Number.isInteger(n)) {
-    ctx.error('must be an integer')
-    return false
-  }
-  return true
-}
-
-function isInRange<N extends bigint | number>(
-  ctx: Context,
-  n: N,
-  min: N,
-  max: N,
-  msg: string = `must be in the range [${min}, ${max}]`
-): boolean {
-  if (n < min || n > max) {
-    ctx.error(msg)
-    return false
-  }
-  return true
 }
 
 function nonNegativeInteger(ctx: Context, j: Json): Maybe<number> {
@@ -729,24 +701,6 @@ function aggregationKeys(ctx: Context, j: Json): Maybe<AggregationKeys> {
     aggregationKey,
     constants.maxAggregationKeysPerSource
   )
-}
-
-function clamp<N extends bigint | number>(
-  ctx: Context,
-  n: N,
-  min: N,
-  max: N,
-  maxSuffix: string = ''
-): N {
-  if (n < min) {
-    ctx.warning(`will be clamped to min of ${min}`)
-    return min
-  }
-  if (n > max) {
-    ctx.warning(`will be clamped to max of ${max}${maxSuffix}`)
-    return max
-  }
-  return n
 }
 
 function roundAwayFromZeroToNearestDay(n: number): number {
