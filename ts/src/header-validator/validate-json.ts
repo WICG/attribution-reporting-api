@@ -156,30 +156,32 @@ function keyValues<V, C extends Context = Context>(
   })
 }
 
-type ListOpts = {
+type LengthOpts = {
   minLength?: number
   maxLength?: number
   maxLengthErrSuffix?: string
 }
 
-function list(
+function list(ctx: Context, j: Json): Maybe<Json[]> {
+  return typeSwitch(ctx, j, { list: (_ctx, j) => some(j) })
+}
+
+function isLengthValid(
   ctx: Context,
-  j: Json,
+  length: number,
   {
     minLength = 0,
     maxLength = Infinity,
     maxLengthErrSuffix = '',
-  }: ListOpts = {}
-): Maybe<Json[]> {
-  return typeSwitch(ctx, j, { list: (_ctx, j) => some(j) }).filter((j) => {
-    if (j.length > maxLength || j.length < minLength) {
-      ctx.error(
-        `length must be in the range [${minLength}, ${maxLength}${maxLengthErrSuffix}]`
-      )
-      return false
-    }
-    return true
-  })
+  }: LengthOpts = {}
+): boolean {
+  if (length > maxLength || length < minLength) {
+    ctx.error(
+      `length must be in the range [${minLength}, ${maxLength}${maxLengthErrSuffix}]`
+    )
+    return false
+  }
+  return true
 }
 
 function uint64(ctx: Context, j: Json): Maybe<bigint> {
@@ -419,7 +421,7 @@ function legacyDuration(ctx: Context, j: Json): Maybe<number | bigint> {
   })
 }
 
-type SetOpts = ListOpts & {
+type SetOpts = LengthOpts & {
   requireDistinct?: boolean
 }
 
@@ -429,12 +431,14 @@ function set<T extends number | string, C extends Context = Context>(
   f: CtxFunc<C, Json, Maybe<T>>,
   opts?: SetOpts
 ): Maybe<Set<T>> {
-  return list(ctx, j, opts).map((js) =>
-    validate.set(ctx, js.entries(), f, opts?.requireDistinct)
-  )
+  // TODO(https://github.com/WICG/attribution-reporting-api/issues/1321): Size
+  // checks should be performed on the resulting set, not on the list.
+  return list(ctx, j)
+    .filter((js) => isLengthValid(ctx, js.length, opts))
+    .map((js) => validate.set(ctx, js.entries(), f, opts?.requireDistinct))
 }
 
-type ArrayOpts = ListOpts & {
+type ArrayOpts = LengthOpts & {
   itemErrorAction?: ItemErrorAction
 }
 
@@ -444,9 +448,9 @@ function array<T, C extends Context = Context>(
   f: CtxFunc<C, Json, Maybe<T>>,
   opts?: ArrayOpts
 ): Maybe<T[]> {
-  return list(ctx, j, opts).map((js) =>
-    validate.array(ctx, js.entries(), f, opts?.itemErrorAction)
-  )
+  return list(ctx, j)
+    .filter((js) => isLengthValid(ctx, js.length, opts))
+    .map((js) => validate.array(ctx, js.entries(), f, opts?.itemErrorAction))
 }
 
 function filterDataKeyValue(
