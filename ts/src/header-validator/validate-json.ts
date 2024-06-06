@@ -270,7 +270,7 @@ function suitableScope(
   }
 
   const scoped = scope(url)
-  if (s !== scoped) {
+  if (url.toString() !== new URL(scoped).toString()) {
     if (rejectExtraComponents) {
       ctx.error(
         `must not contain URL components other than ${label} (${scoped})`
