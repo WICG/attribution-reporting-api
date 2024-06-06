@@ -350,7 +350,7 @@ const testCases: TestCase[] = [
     name: 'filter-data-too-many-values',
     json: JSON.stringify({
       destination: 'https://a.test',
-      filter_data: { a: Array.from({ length: 51 }, (_, i) => [`${i}`, []]) },
+      filter_data: { a: Array.from({ length: 51 }, (_, i) => `${i}`) },
     }),
     expectedErrors: [
       {
