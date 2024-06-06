@@ -1576,9 +1576,9 @@ function reportDestination(ctx: Context, j: Json): Maybe<string | string[]> {
         maxLength: 3,
       }).filter((v) => {
         for (let i = 1; i < v.length; ++i) {
-          if (v[i]! < v[i - 1]!) {
+          if (v[i]! <= v[i - 1]!) {
             ctx.error(
-              'although order is semantically irrelevant, list must be sorted'
+              'although order is semantically irrelevant, list must be sorted and contain no duplicates'
             )
             return false
           }
