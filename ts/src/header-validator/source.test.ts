@@ -107,7 +107,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'destination-url-components',
-    json: `{"destination": ["https://a.test/b?c=d#e", "https://x.y.test", "https://sub.a.test/z"]}`,
+    json: `{"destination": ["https://a.test/b?c=d#e", "https://x.Y.test", "https://sub.A.test/z"]}`,
     expectedWarnings: [
       {
         path: ['destination', 0],

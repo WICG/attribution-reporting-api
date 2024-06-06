@@ -356,7 +356,7 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
   {
     name: 'duplicate-destination',
     json: `{
-      "attribution_destination": ["https://a.test", "https://a.test"],
+      "attribution_destination": ["https://a.test", "https://A.test"],
       "randomized_trigger_rate": 0.4,
       "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
       "scheduled_report_time": "789",
