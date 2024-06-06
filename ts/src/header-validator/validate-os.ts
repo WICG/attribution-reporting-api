@@ -15,7 +15,7 @@ export type OsItem = {
   debugReporting: boolean
 }
 
-function parseItem(ctx: Context, member: InnerList | Item): Maybe<OsItem> {
+function parseItem(member: InnerList | Item, ctx: Context): Maybe<OsItem> {
   if (typeof member[0] !== 'string') {
     ctx.warning('ignored, must be a string')
     return Maybe.None
@@ -29,11 +29,11 @@ function parseItem(ctx: Context, member: InnerList | Item): Maybe<OsItem> {
     return Maybe.None
   }
 
-  return param.struct(ctx, member[1], {
+  return param.struct(member[1], ctx, {
     url: () => Maybe.some(url),
     debugReporting: param.field(
       'debug-reporting',
-      (ctx, value) => {
+      (value) => {
         if (typeof value !== 'boolean') {
           ctx.warning('ignored, must be a boolean')
           value = false
@@ -59,8 +59,8 @@ export function validateOsRegistration(
   }
 
   const items = validate.array(
-    ctx,
     list.entries(),
+    ctx,
     parseItem,
     validate.ItemErrorAction.ignore
   )

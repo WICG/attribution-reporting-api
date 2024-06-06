@@ -21,15 +21,15 @@ export type Info = {
 }
 
 function preferredPlatform(
-  ctx: Context,
-  v: Item | InnerList
+  v: Item | InnerList,
+  ctx: Context
 ): Maybe<PreferredPlatform> {
   if (!(v[0] instanceof Token)) {
     ctx.error('must be a token')
     return Maybe.None
   }
   return validate
-    .enumerated(ctx, v[0].toString(), PreferredPlatform)
+    .enumerated(v[0].toString(), ctx, PreferredPlatform)
     .peek((_) => {
       if (v[1].size !== 0) {
         ctx.warning('ignoring parameters')
@@ -37,7 +37,7 @@ function preferredPlatform(
     })
 }
 
-function reportHeaderErrors(ctx: Context, v: Item | InnerList): Maybe<boolean> {
+function reportHeaderErrors(v: Item | InnerList, ctx: Context): Maybe<boolean> {
   if (typeof v[0] !== 'boolean') {
     ctx.error('must be a boolean')
     return Maybe.None
@@ -49,8 +49,8 @@ function reportHeaderErrors(ctx: Context, v: Item | InnerList): Maybe<boolean> {
 }
 
 export function validateInfo(str: string): [ValidationResult, Maybe<Info>] {
-  return validateDictionary(new Context(), str, (ctx, d) =>
-    struct(ctx, d, {
+  return validateDictionary(str, new Context(), (d, ctx) =>
+    struct(d, ctx, {
       preferredPlatform: field('preferred-platform', preferredPlatform, null),
       reportHeaderErrors: field(
         'report-header-errors',
