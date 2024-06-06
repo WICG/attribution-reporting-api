@@ -1263,6 +1263,30 @@ function aggregatableKeyValueValue(ctx: Context, j: Json): Maybe<number> {
     )
 }
 
+function aggregatableKeyValueFilteringId(
+  ctx: Context,
+  j: Json,
+  maxBytes: Maybe<number>
+): Maybe<bigint> {
+  return uint(ctx, j).filter((n) => {
+    if (maxBytes.value === undefined) {
+      ctx.error(
+        `cannot be fully validated without a valid aggregatable_filtering_id_max_bytes`
+      )
+      return false
+    }
+    return isInRange(
+      ctx,
+      n,
+      0n,
+      256n ** BigInt(maxBytes.value) - 1n,
+      maxBytes.value == constants.defaultAggregatableFilteringIdMaxBytes
+        ? 'must be in the range [0, 255]. It exceeds the default max size of 1 byte. To increase, specify the aggregatable_filtering_id_max_bytes property.'
+        : undefined
+    )
+  })
+}
+
 function aggregatableKeyValue(
   ctx: Context,
   [key, j]: [string, Json],
@@ -1282,23 +1306,7 @@ function aggregatableKeyValue(
       struct(ctx, j, {
         value: field('value', aggregatableKeyValueValue),
         filteringId: field('filtering_id', (ctx, j) =>
-          uint(ctx, j).filter((n) => {
-            if (maxBytes.value === undefined) {
-              ctx.error(
-                `cannot be fully validated without a valid aggregatable_filtering_id_max_bytes`
-              )
-              return false
-            }
-            return isInRange(
-              ctx,
-              n,
-              0n,
-              256n ** BigInt(maxBytes.value) - 1n,
-              maxBytes.value == constants.defaultAggregatableFilteringIdMaxBytes
-                ? 'must be in the range [0, 255]. It exceeds the default max size of 1 byte. To increase, specify the aggregatable_filtering_id_max_bytes property.'
-                : undefined
-            )
-          })
+          aggregatableKeyValueFilteringId(ctx, j, maxBytes)
         ),
       }),
   })

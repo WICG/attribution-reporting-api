@@ -109,7 +109,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       aggregatableValuesConfigurations: [
         {
           values: new Map([
-            ['x', { value: 5, filteringId: 0n }] as any,
+            ['x', { value: 5, filteringId: 0n }],
             ['y', { value: 10, filteringId: 25n }],
           ]),
           positive: [],

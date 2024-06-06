@@ -542,10 +542,10 @@ processing costs.
 This size can be increased via the `aggregatable_filtering_id_max_bytes` field.
 To avoid amplifying a counting attack due to the resulting different payload
 size, the browser will unconditionally send an aggregatable report on every
-trigger registration with a non default (higher than 1) max bytes. A null report
+trigger registration with a non-default (greater than 1) max bytes. A null report
 will be sent in the case that the trigger registration did not generate an
 attribution report. The source registration time will always be excluded from
-the aggregatable report with a non default max bytes. This behavior is the same
+the aggregatable report with a non-default max bytes. This behavior is the same
 as when a trigger context ID is set.
 
 See [flexible_filtering.md](https://github.com/patcg-individual-drafts/private-aggregation-api/blob/main/flexible_filtering.md) for more details.
