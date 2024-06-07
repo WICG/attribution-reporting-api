@@ -280,3 +280,27 @@ export function clamp<N extends bigint | number>(
   }
   return n
 }
+
+export type LengthOpts = {
+  minLength?: number
+  maxLength?: number
+  maxLengthErrSuffix?: string
+}
+
+export function isLengthValid(
+  length: number,
+  ctx: Context,
+  {
+    minLength = 0,
+    maxLength = Infinity,
+    maxLengthErrSuffix = '',
+  }: LengthOpts = {}
+): boolean {
+  if (length > maxLength || length < minLength) {
+    ctx.error(
+      `length must be in the range [${minLength}, ${maxLength}${maxLengthErrSuffix}]`
+    )
+    return false
+  }
+  return true
+}

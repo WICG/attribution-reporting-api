@@ -8,9 +8,11 @@ import { Maybe } from './maybe'
 import {
   CtxFunc,
   ItemErrorAction,
+  LengthOpts,
   clamp,
   isInteger,
   isInRange,
+  isLengthValid,
   matchesPattern,
 } from './validate'
 import * as validate from './validate'
@@ -156,32 +158,8 @@ function keyValues<V, C extends Context = Context>(
   })
 }
 
-type LengthOpts = {
-  minLength?: number
-  maxLength?: number
-  maxLengthErrSuffix?: string
-}
-
 function list(j: Json, ctx: Context): Maybe<Json[]> {
   return typeSwitch(j, ctx, { list: some })
-}
-
-function isLengthValid(
-  length: number,
-  ctx: Context,
-  {
-    minLength = 0,
-    maxLength = Infinity,
-    maxLengthErrSuffix = '',
-  }: LengthOpts = {}
-): boolean {
-  if (length > maxLength || length < minLength) {
-    ctx.error(
-      `length must be in the range [${minLength}, ${maxLength}${maxLengthErrSuffix}]`
-    )
-    return false
-  }
-  return true
 }
 
 function uint64(j: Json, ctx: Context): Maybe<bigint> {
