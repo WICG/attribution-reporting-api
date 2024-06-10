@@ -2858,12 +2858,12 @@ To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of
 1. [=set/iterate|For each=] [=attribution source=] |source| of the [=attribution source cache=]:
     1. [=set/Remove=] |source| from the [=attribution source cache=] if |sourcesToDelete|
         [=set/contains=] |source|'s [=attribution source/source identifier=].
+1. Let |deletedEventLevelReports| be a new [=set=].
 1. [=set/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
-    1. If |report|'s [=event-level report/trigger time=] is greater than or equal to |now|,
-        [=set/remove=] |report| from the [=event-level report cache=].
-
-        Note: This would only delete [=obtain a fake report|fake reports=] that would never be
-        stored if they were true [=event-level reports=].
+    1. If |sourcesToDelete| [=set/contains=] |report|'s [=event-level report/source identifier=]
+        and |report|'s [=event-level report/trigger time=] is greater than or equal to |now|:
+        1. [=set/Append=] |report|'s [=event-level report/report ID=] to |deletedEventLevelReports|.
+        1. [=set/Remove=] |report| from the [=event-level report cache=].
 1. Let |deletedAggregatableReports| be a new [=set=].
 1. [=set/iterate|For each=] [=aggregatable attribution report=] |report| of the [=aggregatable attribution report cache=]:
     1. If |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable attribution report/source identifier=]:
@@ -2875,6 +2875,9 @@ To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of
         : "<code>[=rate-limit scope/source=]</code>"
         :: Set |record|'s [=attribution rate-limit record/deactivated for unexpired destination limit=] to
             true if |sourcesToDelete| [=set/contains=] |record|'s [=attribution rate-limit record/entity ID=].
+        : "<code>[=rate-limit scope/event-attribution=]</code>"
+        :: [=set/Remove=] |record| from the [=attribution rate-limit cache=] if
+            |deletedEventLevelReports| [=set/contains=] |record|'s [=attribution rate-limit record/entity ID=].
         : "<code>[=rate-limit scope/aggregatable-attribution=]</code>"
         :: [=set/Remove=] |record| from the [=attribution rate-limit cache=] if
             |deletedAggregatableReports| [=set/contains=] |record|'s [=attribution rate-limit record/entity ID=].
