@@ -1208,15 +1208,15 @@ function aggregatableKeyValue(
   }
 
   return typeSwitch(j, ctx, {
-    number: (j, ctx) =>
+    number: (j) =>
       aggregatableKeyValueValue(j, ctx).map((j) => ({
         value: j,
         filteringId: constants.defaultFilteringIdValue,
       })),
-    object: (j, ctx) =>
+    object: (j) =>
       struct(j, ctx, {
         value: field('value', aggregatableKeyValueValue),
-        filteringId: field('filtering_id', (j, ctx) =>
+        filteringId: field('filtering_id', (j) =>
           aggregatableKeyValueFilteringId(j, ctx, maxBytes)
         ),
       }),
@@ -1237,11 +1237,11 @@ function aggregatableValuesConfigurations(
   maxBytes: Maybe<number>
 ): Maybe<AggregatableValuesConfiguration[]> {
   return typeSwitch(j, ctx, {
-    object: (j, ctx) =>
+    object: (j) =>
       aggregatableKeyValues(j, ctx, maxBytes).map((values) => [
         { values, positive: [], negative: [] },
       ]),
-    list: (j, ctx) =>
+    list: (j) =>
       array(j, ctx, (j) =>
         struct(j, ctx, {
           values: field('values', (j, ctx) =>
@@ -1466,7 +1466,7 @@ function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
 
       const aggregatableFilteringIdMaxBytesVal = field(
         'aggregatable_filtering_id_max_bytes',
-        (j, ctx) =>
+        (j) =>
           aggregatableFilteringIdMaxBytes(j, ctx, aggregatableSourceRegTimeVal),
         constants.defaultAggregatableFilteringIdMaxBytes
       )(j, ctx)
@@ -1481,10 +1481,10 @@ function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
           aggregatableFilteringIdMaxBytesVal,
         aggregatableValuesConfigurations: field(
           'aggregatable_values',
-          (ctx, j) =>
+          (j) =>
             aggregatableValuesConfigurations(
-              ctx,
               j,
+              ctx,
               aggregatableFilteringIdMaxBytesVal
             ),
           []
