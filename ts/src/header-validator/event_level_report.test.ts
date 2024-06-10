@@ -348,7 +348,26 @@ const testCases: jsontest.TestCase<EventLevelReport>[] = [
     expected: Maybe.None,
     expectedErrors: [
       {
-        msg: 'although order is semantically irrelevant, list must be sorted',
+        msg: 'although order is semantically irrelevant, list must be sorted and contain no duplicates',
+        path: ['attribution_destination'],
+      },
+    ],
+  },
+  {
+    name: 'duplicate-destination',
+    json: `{
+      "attribution_destination": ["https://a.test", "https://A.test"],
+      "randomized_trigger_rate": 0.4,
+      "report_id": "ac908546-2609-49d9-95b0-b796f9774da6",
+      "scheduled_report_time": "789",
+      "source_event_id": "1",
+      "source_type": "navigation",
+      "trigger_data": "2"
+    }`,
+    expected: Maybe.None,
+    expectedErrors: [
+      {
+        msg: 'although order is semantically irrelevant, list must be sorted and contain no duplicates',
         path: ['attribution_destination'],
       },
     ],

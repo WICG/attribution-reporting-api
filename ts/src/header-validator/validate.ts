@@ -1,15 +1,16 @@
+import * as psl from 'psl'
 import { Context, PathComponent } from './context'
 import { Maybe, Maybeable } from './maybe'
 
-export type CtxFunc<C extends Context, I, O> = (ctx: C, i: I) => O
+export type CtxFunc<C extends Context, I, O> = (i: I, ctx: C) => O
 
 export type StructFields<T extends object, D, C extends Context = Context> = {
   [K in keyof T]-?: CtxFunc<C, D, Maybe<T[K]>>
 }
 
 type StructFunc<D> = <T extends object, C extends Context>(
-  ctx: C,
   d: D,
+  ctx: C,
   fields: StructFields<T, D, C>,
   warnUnknown?: boolean
 ) => Maybe<T>
@@ -19,8 +20,8 @@ function struct<D>(
   warnUnknownMsg: string
 ): StructFunc<D> {
   return <T extends object, C extends Context>(
-    ctx: C,
     d: D,
+    ctx: C,
     fields: StructFields<T, D, C>,
     warnUnknown = true
   ) => {
@@ -29,7 +30,7 @@ function struct<D>(
     let ok = true
     for (const prop in fields) {
       let itemOk = false
-      fields[prop](ctx, d).peek((v) => {
+      fields[prop](d, ctx).peek((v) => {
         itemOk = true
         t[prop] = v
       })
@@ -60,7 +61,7 @@ function field<D, V>(getAndDelete: GetAndDeleteFunc<D, V>): FieldFunc<D, V> {
       f: CtxFunc<C, V, Maybe<T>>,
       valueIfAbsent?: Maybeable<T>
     ) =>
-    (ctx: C, d: D): Maybe<T> =>
+    (d: D, ctx: C): Maybe<T> =>
       ctx.scope(name, () => {
         const v = getAndDelete(d, name)
         if (v === undefined) {
@@ -70,7 +71,7 @@ function field<D, V>(getAndDelete: GetAndDeleteFunc<D, V>): FieldFunc<D, V> {
           }
           return Maybe.flatten(valueIfAbsent)
         }
-        return f(ctx, v)
+        return f(v, ctx)
       })
 }
 
@@ -90,7 +91,7 @@ function exclusive<D, V>(
       x: Exclusive<T, V, C>,
       valueIfAbsent: Maybeable<T>
     ) =>
-    (ctx: C, d: D): Maybe<T> => {
+    (d: D, ctx: C): Maybe<T> => {
       const found: string[] = []
       let v: Maybe<T> = Maybe.None
 
@@ -98,7 +99,7 @@ function exclusive<D, V>(
         const j = getAndDelete(d, key)
         if (j !== undefined) {
           found.push(key)
-          v = ctx.scope(key, () => f(ctx, j))
+          v = ctx.scope(key, () => f(j, ctx))
         }
       }
 
@@ -140,15 +141,15 @@ export enum ItemErrorAction {
 }
 
 function isCollection<P extends PathComponent, V, C extends Context>(
-  ctx: C,
   vs: Iterable<[P, V]>,
+  ctx: C,
   f: CtxFunc<C, [P, V], Maybe<unknown>>,
   itemErrorAction: ItemErrorAction = ItemErrorAction.reportButKeepGoing
 ): boolean {
   let ok = true
   for (const [c, v] of vs) {
     let itemOk = false
-    ctx.scope(c, () => f(ctx, [c, v]).peek(() => (itemOk = true)))
+    ctx.scope(c, () => f([c, v], ctx).peek(() => (itemOk = true)))
     if (!itemOk) {
       if (itemErrorAction === ItemErrorAction.earlyExit) {
         return false
@@ -162,30 +163,30 @@ function isCollection<P extends PathComponent, V, C extends Context>(
 }
 
 export function array<T, V, C extends Context = Context>(
-  ctx: C,
   vs: Iterable<[number, V]>,
+  ctx: C,
   f: CtxFunc<C, V, Maybe<T>>,
   itemErrorAction: ItemErrorAction = ItemErrorAction.reportButKeepGoing
 ): Maybe<T[]> {
   return Maybe.some(new Array<T>()).filter((arr) =>
     isCollection(
-      ctx,
       vs,
-      (ctx, [_i, v]) => f(ctx, v).peek((v) => arr.push(v)),
+      ctx,
+      ([_i, v]) => f(v, ctx).peek((v) => arr.push(v)),
       itemErrorAction
     )
   )
 }
 
 export function set<T extends number | string, V, C extends Context = Context>(
-  ctx: C,
   vs: Iterable<[number, V]>,
+  ctx: C,
   f: CtxFunc<C, V, Maybe<T>>,
   requireDistinct: boolean = false
 ): Maybe<Set<T>> {
   return Maybe.some(new Set<T>()).filter((set) =>
-    isCollection(ctx, vs, (ctx, [_i, v]) =>
-      f(ctx, v).filter((v) => {
+    isCollection(vs, ctx, ([_i, v]) =>
+      f(v, ctx).filter((v) => {
         if (set.has(v)) {
           const msg = `duplicate value ${v}`
           if (requireDistinct) {
@@ -203,20 +204,20 @@ export function set<T extends number | string, V, C extends Context = Context>(
 }
 
 export function keyValues<T, V, C extends Context = Context>(
-  ctx: C,
   vs: Iterable<[string, V]>,
+  ctx: C,
   f: CtxFunc<C, [string, V], Maybe<T>>
 ): Maybe<Map<string, T>> {
   return Maybe.some(new Map<string, T>()).filter((map) =>
-    isCollection(ctx, vs, (ctx, [key, v]) =>
-      f(ctx, [key, v]).peek((v) => map.set(key, v))
+    isCollection(vs, ctx, ([key, v]) =>
+      f([key, v], ctx).peek((v) => map.set(key, v))
     )
   )
 }
 
 export function enumerated<T>(
-  ctx: Context,
   s: string,
+  ctx: Context,
   e: Record<string, T>
 ): Maybe<T> {
   const v = e[s]
@@ -229,8 +230,8 @@ export function enumerated<T>(
 }
 
 export function matchesPattern(
-  ctx: Context,
   s: string,
+  ctx: Context,
   p: RegExp,
   errPrefix: string
 ): boolean {
@@ -241,7 +242,7 @@ export function matchesPattern(
   return true
 }
 
-export function isInteger(ctx: Context, n: number): boolean {
+export function isInteger(n: number, ctx: Context): boolean {
   if (!Number.isInteger(n)) {
     ctx.error('must be an integer')
     return false
@@ -250,8 +251,8 @@ export function isInteger(ctx: Context, n: number): boolean {
 }
 
 export function isInRange<N extends bigint | number>(
-  ctx: Context,
   n: N,
+  ctx: Context,
   min: N,
   max: N,
   msg: string = `must be in the range [${min}, ${max}]`
@@ -264,8 +265,8 @@ export function isInRange<N extends bigint | number>(
 }
 
 export function clamp<N extends bigint | number>(
-  ctx: Context,
   n: N,
+  ctx: Context,
   min: N,
   max: N,
   maxSuffix: string = ''
@@ -279,4 +280,91 @@ export function clamp<N extends bigint | number>(
     return max
   }
   return n
+}
+
+export type LengthOpts = {
+  minLength?: number
+  maxLength?: number
+  maxLengthErrSuffix?: string
+}
+
+export function isLengthValid(
+  length: number,
+  ctx: Context,
+  {
+    minLength = 0,
+    maxLength = Infinity,
+    maxLengthErrSuffix = '',
+  }: LengthOpts = {}
+): boolean {
+  if (length > maxLength || length < minLength) {
+    ctx.error(
+      `length must be in the range [${minLength}, ${maxLength}${maxLengthErrSuffix}]`
+    )
+    return false
+  }
+  return true
+}
+
+function suitableScope(
+  s: string,
+  ctx: Context,
+  label: string,
+  scope: (url: URL) => string,
+  rejectExtraComponents: boolean
+): Maybe<string> {
+  let url
+  try {
+    url = new URL(s)
+  } catch {
+    ctx.error('invalid URL')
+    return Maybe.None
+  }
+
+  if (
+    url.protocol !== 'https:' &&
+    !(
+      url.protocol === 'http:' &&
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
+    )
+  ) {
+    ctx.error('URL must use HTTP/HTTPS and be potentially trustworthy')
+    return Maybe.None
+  }
+
+  const scoped = scope(url)
+  if (url.toString() !== new URL(scoped).toString()) {
+    if (rejectExtraComponents) {
+      ctx.error(
+        `must not contain URL components other than ${label} (${scoped})`
+      )
+      return Maybe.None
+    }
+    ctx.warning(
+      `URL components other than ${label} (${scoped}) will be ignored`
+    )
+  }
+  return Maybe.some(scoped)
+}
+
+export function suitableOrigin(
+  s: string,
+  ctx: Context,
+  rejectExtraComponents: boolean = false
+): Maybe<string> {
+  return suitableScope(s, ctx, 'origin', (u) => u.origin, rejectExtraComponents)
+}
+
+export function suitableSite(
+  s: string,
+  ctx: Context,
+  rejectExtraComponents: boolean = false
+): Maybe<string> {
+  return suitableScope(
+    s,
+    ctx,
+    'site',
+    (u) => `${u.protocol}//${psl.get(u.hostname)}`,
+    rejectExtraComponents
+  )
 }

@@ -1,4 +1,3 @@
-import * as psl from 'psl'
 import * as uuid from 'uuid'
 import * as constants from '../constants'
 import { SourceType } from '../source-type'
@@ -8,10 +7,14 @@ import { Maybe } from './maybe'
 import {
   CtxFunc,
   ItemErrorAction,
+  LengthOpts,
   clamp,
   isInteger,
   isInRange,
+  isLengthValid,
   matchesPattern,
+  suitableOrigin,
+  suitableSite,
 } from './validate'
 import * as validate from './validate'
 import * as privacy from '../flexible-event/privacy'
@@ -78,12 +81,12 @@ type StructFields<
 > = validate.StructFields<T, JsonDict, C>
 
 function struct<T extends object, C extends Context>(
-  ctx: C,
   d: Json,
+  ctx: C,
   fields: StructFields<T, C>,
   warnUnknown: boolean = true
 ): Maybe<T> {
-  return object(ctx, d).map((d) => structInternal(ctx, d, fields, warnUnknown))
+  return object(d, ctx).map(structInternal, ctx, fields, warnUnknown)
 }
 
 type TypeSwitch<T, C extends Context = Context> = {
@@ -95,24 +98,24 @@ type TypeSwitch<T, C extends Context = Context> = {
 }
 
 function typeSwitch<T, C extends Context = Context>(
-  ctx: C,
   j: Json,
+  ctx: C,
   ts: TypeSwitch<T, C>
 ): Maybe<T> {
   if (typeof j === 'boolean' && ts.boolean !== undefined) {
-    return ts.boolean(ctx, j)
+    return ts.boolean(j, ctx)
   }
   if (typeof j === 'number' && ts.number !== undefined) {
-    return ts.number(ctx, j)
+    return ts.number(j, ctx)
   }
   if (typeof j === 'string' && ts.string !== undefined) {
-    return ts.string(ctx, j)
+    return ts.string(j, ctx)
   }
   if (Array.isArray(j) && ts.list !== undefined) {
-    return ts.list(ctx, j)
+    return ts.list(j, ctx)
   }
   if (isObject(j) && ts.object !== undefined) {
-    return ts.object(ctx, j)
+    return ts.object(j, ctx)
   }
 
   const allowed = Object.keys(ts)
@@ -122,29 +125,29 @@ function typeSwitch<T, C extends Context = Context>(
   return None
 }
 
-function string(ctx: Context, j: Json): Maybe<string> {
-  return typeSwitch(ctx, j, { string: (_ctx, j) => some(j) })
+function string(j: Json, ctx: Context): Maybe<string> {
+  return typeSwitch(j, ctx, { string: some })
 }
 
-function bool(ctx: Context, j: Json): Maybe<boolean> {
-  return typeSwitch(ctx, j, { boolean: (_ctx, j) => some(j) })
+function bool(j: Json, ctx: Context): Maybe<boolean> {
+  return typeSwitch(j, ctx, { boolean: some })
 }
 
 function isObject(j: Json): j is JsonDict {
   return j !== null && typeof j === 'object' && j.constructor === Object
 }
 
-function object(ctx: Context, j: Json): Maybe<JsonDict> {
-  return typeSwitch(ctx, j, { object: (_ctx, j) => some(j) })
+function object(j: Json, ctx: Context): Maybe<JsonDict> {
+  return typeSwitch(j, ctx, { object: some })
 }
 
 function keyValues<V, C extends Context = Context>(
-  ctx: C,
   j: Json,
+  ctx: C,
   f: CtxFunc<C, [key: string, val: Json], Maybe<V>>,
   maxKeys: number = Infinity
 ): Maybe<Map<string, V>> {
-  return object(ctx, j).map((d) => {
+  return object(j, ctx).map((d) => {
     const entries = Object.entries(d)
 
     if (entries.length > maxKeys) {
@@ -152,197 +155,108 @@ function keyValues<V, C extends Context = Context>(
       return None
     }
 
-    return validate.keyValues(ctx, entries, f)
+    return validate.keyValues(entries, ctx, f)
   })
 }
 
-type ListOpts = {
-  minLength?: number
-  maxLength?: number
-  maxLengthErrSuffix?: string
-}
-
-function list(
-  ctx: Context,
-  j: Json,
-  {
-    minLength = 0,
-    maxLength = Infinity,
-    maxLengthErrSuffix = '',
-  }: ListOpts = {}
-): Maybe<Json[]> {
-  return typeSwitch(ctx, j, { list: (_ctx, j) => some(j) }).filter((j) => {
-    if (j.length > maxLength || j.length < minLength) {
-      ctx.error(
-        `length must be in the range [${minLength}, ${maxLength}${maxLengthErrSuffix}]`
-      )
-      return false
-    }
-    return true
-  })
+function list(j: Json, ctx: Context): Maybe<Json[]> {
+  return typeSwitch(j, ctx, { list: some })
 }
 
 function uint(ctx: Context, j: Json): Maybe<bigint> {
   return string(ctx, j)
-    .filter((s) =>
-      matchesPattern(
+    .filter(
+      matchesPattern,
         ctx,
         s,
         uintRegex,
         'string must represent a non-negative integer'
-      )
     )
     .map(BigInt)
 }
 
 function uint64(ctx: Context, j: Json): Maybe<bigint> {
-  return uint(ctx, j).filter((n) =>
-    isInRange(
+  return uint(ctx, j).filter(
+    isInRange,
       ctx,
-      n,
       0n,
       2n ** 64n - 1n,
       'must fit in an unsigned 64-bit integer'
-    )
   )
 }
 
-function number(ctx: Context, j: Json): Maybe<number> {
-  return typeSwitch(ctx, j, { number: (_ctx, j) => some(j) })
+function number(j: Json, ctx: Context): Maybe<number> {
+  return typeSwitch(j, ctx, { number: some })
 }
 
-function nonNegativeInteger(ctx: Context, j: Json): Maybe<number> {
-  return number(ctx, j)
-    .filter((n) => isInteger(ctx, n))
-    .filter((n) => isInRange(ctx, n, 0, Infinity, 'must be non-negative'))
+function nonNegativeInteger(j: Json, ctx: Context): Maybe<number> {
+  return number(j, ctx)
+    .filter(isInteger, ctx)
+    .filter(isInRange, ctx, 0, Infinity, 'must be non-negative')
 }
 
-function positiveInteger(ctx: Context, j: Json): Maybe<number> {
-  return number(ctx, j)
-    .filter((n) => isInteger(ctx, n))
-    .filter((n) => isInRange(ctx, n, 1, Infinity, 'must be positive'))
+function positiveInteger(j: Json, ctx: Context): Maybe<number> {
+  return number(j, ctx)
+    .filter(isInteger, ctx)
+    .filter(isInRange, ctx, 1, Infinity, 'must be positive')
 }
 
-function int64(ctx: Context, j: Json): Maybe<bigint> {
-  return string(ctx, j)
-    .filter((s) =>
-      matchesPattern(ctx, s, intRegex, 'string must represent an integer')
-    )
+function int64(j: Json, ctx: Context): Maybe<bigint> {
+  return string(j, ctx)
+    .filter(matchesPattern, ctx, intRegex, 'string must represent an integer')
     .map(BigInt)
-    .filter((n) =>
-      isInRange(
-        ctx,
-        n,
-        (-2n) ** (64n - 1n),
-        2n ** (64n - 1n) - 1n,
-        'must fit in a signed 64-bit integer'
-      )
-    )
-}
-
-function hex128(ctx: Context, j: Json): Maybe<bigint> {
-  return string(ctx, j)
-    .filter((s) => matchesPattern(ctx, s, hex128Regex, 'must be a hex128'))
-    .map(BigInt)
-}
-
-function suitableScope(
-  ctx: Context,
-  s: string,
-  label: string,
-  scope: (url: URL) => string,
-  rejectExtraComponents: boolean
-): Maybe<string> {
-  let url
-  try {
-    url = new URL(s)
-  } catch {
-    ctx.error('invalid URL')
-    return None
-  }
-
-  if (
-    url.protocol !== 'https:' &&
-    !(
-      url.protocol === 'http:' &&
-      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
-    )
-  ) {
-    ctx.error('URL must use HTTP/HTTPS and be potentially trustworthy')
-    return None
-  }
-
-  const scoped = scope(url)
-  if (s !== scoped) {
-    if (rejectExtraComponents) {
-      ctx.error(
-        `must not contain URL components other than ${label} (${scoped})`
-      )
-      return None
-    }
-    ctx.warning(
-      `URL components other than ${label} (${scoped}) will be ignored`
-    )
-  }
-  return some(scoped)
-}
-
-function suitableOrigin(
-  ctx: Context,
-  j: Json,
-  rejectExtraComponents: boolean = false
-): Maybe<string> {
-  return string(ctx, j).map((s) =>
-    suitableScope(ctx, s, 'origin', (u) => u.origin, rejectExtraComponents)
-  )
-}
-
-function suitableSite(
-  ctx: Context,
-  j: Json,
-  rejectExtraComponents: boolean = false
-): Maybe<string> {
-  return string(ctx, j).map((s) =>
-    suitableScope(
+    .filter(
+      isInRange,
       ctx,
-      s,
-      'site',
-      (u) => `${u.protocol}//${psl.get(u.hostname)}`,
-      rejectExtraComponents
+      (-2n) ** (64n - 1n),
+      2n ** (64n - 1n) - 1n,
+      'must fit in a signed 64-bit integer'
     )
-  )
 }
 
-function destination(ctx: Context, j: Json): Maybe<Set<string>> {
-  return typeSwitch(ctx, j, {
-    string: (ctx, j) => suitableSite(ctx, j).map((s) => new Set([s])),
-    list: (ctx, j) => set(ctx, j, suitableSite, { minLength: 1, maxLength: 3 }),
+function hex128(j: Json, ctx: Context): Maybe<bigint> {
+  return string(j, ctx)
+    .filter(matchesPattern, ctx, hex128Regex, 'must be a hex128')
+    .map(BigInt)
+}
+
+function destination(j: Json, ctx: Context): Maybe<Set<string>> {
+  return typeSwitch(j, ctx, {
+    string: (j) => suitableSite(j, ctx).map((s) => new Set([s])),
+    list: (j) =>
+      set(j, ctx, (j) => string(j, ctx).map(suitableSite, ctx), {
+        minLength: 1,
+        maxLength: 3,
+      }),
   })
 }
 
-function maxEventLevelReports(ctx: Context, j: Json): Maybe<number> {
-  return number(ctx, j)
-    .filter((n) => isInteger(ctx, n))
-    .filter((n) =>
-      isInRange(ctx, n, 0, constants.maxSettableEventLevelAttributionsPerSource)
+function maxEventLevelReports(j: Json, ctx: Context): Maybe<number> {
+  return number(j, ctx)
+    .filter(isInteger, ctx)
+    .filter(
+      isInRange,
+      ctx,
+      0,
+      constants.maxSettableEventLevelAttributionsPerSource
     )
 }
 
 function startTime(
-  ctx: Context,
   j: Json,
+  ctx: Context,
   expiry: Maybe<number>
 ): Maybe<number> {
-  return number(ctx, j)
-    .filter((n) => isInteger(ctx, n))
+  return number(j, ctx)
+    .filter(isInteger, ctx)
     .filter((n) => {
       if (expiry.value === undefined) {
         ctx.error('cannot be fully validated without a valid expiry')
         return false
       }
       return isInRange(
-        ctx,
         n,
+        ctx,
         0,
         expiry.value,
         `must be non-negative and <= expiry (${expiry.value})`
@@ -351,8 +265,8 @@ function startTime(
 }
 
 function endTimes(
-  ctx: Context,
   j: Json,
+  ctx: Context,
   expiry: Maybe<number>,
   startTime: Maybe<number>
 ): Maybe<number[]> {
@@ -369,20 +283,22 @@ function endTimes(
   let prev = startTime.value
   let prevDesc = 'start_time'
 
-  const endTime = (ctx: Context, j: Json): Maybe<number> =>
-    positiveInteger(ctx, j)
-      .map((n) =>
-        clamp(ctx, n, constants.minReportWindow, expiry.value!, ' (expiry)')
-      )
-      .filter((n) =>
-        isInRange(ctx, n, prev + 1, Infinity, `must be > ${prevDesc} (${prev})`)
+  const endTime = (j: Json): Maybe<number> =>
+    positiveInteger(j, ctx)
+      .map(clamp, ctx, constants.minReportWindow, expiry.value!, ' (expiry)')
+      .filter(
+        isInRange,
+        ctx,
+        prev + 1,
+        Infinity,
+        `must be > ${prevDesc} (${prev})`
       )
       .peek((n) => {
         prev = n
         prevDesc = 'previous end_time'
       })
 
-  return array(ctx, j, endTime, {
+  return array(j, ctx, endTime, {
     minLength: 1,
     maxLength: 5,
     itemErrorAction: ItemErrorAction.earlyExit, // suppress unhelpful cascaded errors
@@ -395,66 +311,68 @@ export type EventReportWindows = {
 }
 
 function eventReportWindows(
-  ctx: SourceContext,
   j: Json,
+  ctx: SourceContext,
   expiry: Maybe<number>
 ): Maybe<EventReportWindows> {
-  return object(ctx, j).map((j) => {
+  return object(j, ctx).map((j) => {
     const startTimeValue = field(
       'start_time',
-      (ctx, j) => startTime(ctx, j, expiry),
+      (j) => startTime(j, ctx, expiry),
       0
-    )(ctx, j)
+    )(j, ctx)
 
-    return struct(ctx, j, {
+    return struct(j, ctx, {
       startTime: () => startTimeValue,
-      endTimes: field('end_times', (ctx, j) =>
-        endTimes(ctx, j, expiry, startTimeValue)
+      endTimes: field('end_times', (j) =>
+        endTimes(j, ctx, expiry, startTimeValue)
       ),
     })
   })
 }
 
-function legacyDuration(ctx: Context, j: Json): Maybe<number | bigint> {
-  return typeSwitch<number | bigint>(ctx, j, {
+function legacyDuration(j: Json, ctx: Context): Maybe<number | bigint> {
+  return typeSwitch<number | bigint>(j, ctx, {
     number: nonNegativeInteger,
     string: uint64,
   })
 }
 
-type SetOpts = ListOpts & {
+type SetOpts = LengthOpts & {
   requireDistinct?: boolean
 }
 
 function set<T extends number | string, C extends Context = Context>(
-  ctx: C,
   j: Json,
+  ctx: C,
   f: CtxFunc<C, Json, Maybe<T>>,
   opts?: SetOpts
 ): Maybe<Set<T>> {
-  return list(ctx, j, opts).map((js) =>
-    validate.set(ctx, js.entries(), f, opts?.requireDistinct)
-  )
+  // TODO(https://github.com/WICG/attribution-reporting-api/issues/1321): Size
+  // checks should be performed on the resulting set, not on the list.
+  return list(j, ctx)
+    .filter((js) => isLengthValid(js.length, ctx, opts))
+    .map((js) => validate.set(js.entries(), ctx, f, opts?.requireDistinct))
 }
 
-type ArrayOpts = ListOpts & {
+type ArrayOpts = LengthOpts & {
   itemErrorAction?: ItemErrorAction
 }
 
 function array<T, C extends Context = Context>(
-  ctx: C,
   j: Json,
+  ctx: C,
   f: CtxFunc<C, Json, Maybe<T>>,
   opts?: ArrayOpts
 ): Maybe<T[]> {
-  return list(ctx, j, opts).map((js) =>
-    validate.array(ctx, js.entries(), f, opts?.itemErrorAction)
-  )
+  return list(j, ctx)
+    .filter((js) => isLengthValid(js.length, ctx, opts))
+    .map((js) => validate.array(js.entries(), ctx, f, opts?.itemErrorAction))
 }
 
 function filterDataKeyValue(
-  ctx: Context,
-  [key, j]: [string, Json]
+  [key, j]: [string, Json],
+  ctx: Context
 ): Maybe<Set<string>> {
   if (key === 'source_type' || key === '_lookback_window') {
     ctx.error('is prohibited because it is implicitly set')
@@ -479,25 +397,25 @@ function filterDataKeyValue(
     return None
   }
 
-  return set(ctx, j, (ctx, j) => string(ctx, j).filter(filterStringLength), {
+  return set(j, ctx, (j) => string(j, ctx).filter(filterStringLength), {
     maxLength: constants.maxValuesPerFilterDataEntry,
   })
 }
 
 export type FilterData = Map<string, Set<string>>
 
-export function filterData(ctx: Context, j: Json): Maybe<FilterData> {
+export function filterData(j: Json, ctx: Context): Maybe<FilterData> {
   return keyValues(
-    ctx,
     j,
+    ctx,
     filterDataKeyValue,
     constants.maxEntriesPerFilterData
   )
 }
 
 function filterKeyValue(
-  ctx: Context,
-  [key, j]: [string, Json]
+  [key, j]: [string, Json],
+  ctx: Context
 ): Maybe<Set<string>> {
   if (key.startsWith('_')) {
     ctx.error('is prohibited as keys starting with "_" are reserved')
@@ -516,7 +434,7 @@ function filterKeyValue(
         }
       : () => {}
 
-  return set(ctx, j, (ctx, j) => string(ctx, j).peek(peek))
+  return set(j, ctx, (j) => string(j, ctx).peek(peek))
 }
 
 export type FilterConfig = {
@@ -524,23 +442,23 @@ export type FilterConfig = {
   map: Map<string, Set<string>>
 }
 
-function filterConfig(ctx: Context, j: Json): Maybe<FilterConfig> {
+function filterConfig(j: Json, ctx: Context): Maybe<FilterConfig> {
   // `lookbackWindow` must come before `map` to ensure it is processed first.
   return struct(
-    ctx,
     j,
+    ctx,
     {
       lookbackWindow: field('_lookback_window', positiveInteger, null),
-      map: (ctx, j) => keyValues(ctx, j, filterKeyValue),
+      map: (j) => keyValues(j, ctx, filterKeyValue),
     },
     /*warnUnknown=*/ false
   )
 }
 
-function orFilters(ctx: Context, j: Json): Maybe<FilterConfig[]> {
-  return typeSwitch(ctx, j, {
-    list: (ctx, j) => array(ctx, j, filterConfig),
-    object: (ctx, j) => filterConfig(ctx, j).map((v) => [v]),
+function orFilters(j: Json, ctx: Context): Maybe<FilterConfig[]> {
+  return typeSwitch(j, ctx, {
+    list: (j) => array(j, ctx, filterConfig),
+    object: (j) => filterConfig(j, ctx).map((v) => [v]),
   })
 }
 
@@ -554,8 +472,8 @@ const filterFields: StructFields<FilterPair> = {
   negative: field('not_filters', orFilters, []),
 }
 
-export function filterPair(ctx: Context, j: Json): Maybe<FilterPair> {
-  return struct(ctx, j, filterFields)
+export function filterPair(j: Json, ctx: Context): Maybe<FilterPair> {
+  return struct(j, ctx, filterFields)
 }
 
 export type CommonDebug = {
@@ -585,10 +503,10 @@ const priorityField: StructFields<Priority> = {
 }
 
 function aggregatableDebugType(
-  ctx: RegistrationContext,
-  j: Json
+  j: Json,
+  ctx: RegistrationContext
 ): Maybe<string> {
-  return string(ctx, j).peek((s) => {
+  return string(j, ctx).peek((s) => {
     if (!ctx.isDebugTypeSupported(s)) {
       ctx.warning('unknown type')
     }
@@ -609,12 +527,12 @@ export type AggregatableDebugReportingData = KeyPiece & {
 }
 
 function aggregatableDebugReportingData(
-  ctx: RegistrationContext,
-  j: Json
+  j: Json,
+  ctx: RegistrationContext
 ): Maybe<AggregatableDebugReportingData> {
-  return struct(ctx, j, {
-    types: field('types', (ctx, j) =>
-      set(ctx, j, aggregatableDebugType, {
+  return struct(j, ctx, {
+    types: field('types', (j) =>
+      set(j, ctx, aggregatableDebugType, {
         minLength: 1,
         requireDistinct: true,
       })
@@ -625,10 +543,10 @@ function aggregatableDebugReportingData(
 }
 
 function aggregatableDebugReportingDataList(
-  ctx: RegistrationContext,
-  j: Json
+  j: Json,
+  ctx: RegistrationContext
 ): Maybe<AggregatableDebugReportingData[]> {
-  return array(ctx, j, aggregatableDebugReportingData).filter((data) => {
+  return array(j, ctx, aggregatableDebugReportingData).filter((data) => {
     const types = new Set<string>()
     const dups = new Set<string>()
     for (const d of data) {
@@ -650,14 +568,14 @@ function aggregatableDebugReportingDataList(
 
 // Consider making this a StructFields.
 function aggregationCoordinatorOriginField(
-  ctx: RegistrationContext,
-  j: JsonDict
+  j: JsonDict,
+  ctx: RegistrationContext
 ): Maybe<string> {
   return field(
     'aggregation_coordinator_origin',
     aggregationCoordinatorOrigin,
     ctx.vsv.aggregationCoordinatorOrigins[0]
-  )(ctx, j)
+  )(j, ctx)
 }
 
 export type AggregatableDebugReportingConfig = KeyPiece & {
@@ -676,8 +594,8 @@ const aggregatableDebugReportingConfig: StructFields<
 }
 
 function aggregationKeyIdentifierLength(
-  ctx: Context,
   s: string,
+  ctx: Context,
   errPrefix: string = ''
 ): boolean {
   if (s.length > constants.maxLengthPerAggregationKeyIdentifier) {
@@ -689,17 +607,17 @@ function aggregationKeyIdentifierLength(
   return true
 }
 
-function aggregationKey(ctx: Context, [key, j]: [string, Json]): Maybe<bigint> {
-  if (!aggregationKeyIdentifierLength(ctx, key, 'key ')) {
+function aggregationKey([key, j]: [string, Json], ctx: Context): Maybe<bigint> {
+  if (!aggregationKeyIdentifierLength(key, ctx, 'key ')) {
     return None
   }
-  return hex128(ctx, j)
+  return hex128(j, ctx)
 }
 
-function aggregationKeys(ctx: Context, j: Json): Maybe<AggregationKeys> {
+function aggregationKeys(j: Json, ctx: Context): Maybe<AggregationKeys> {
   return keyValues(
-    ctx,
     j,
+    ctx,
     aggregationKey,
     constants.maxAggregationKeysPerSource
   )
@@ -714,9 +632,9 @@ function roundAwayFromZeroToNearestDay(n: number): number {
   return r - (r % constants.SECONDS_PER_DAY)
 }
 
-function expiry(ctx: SourceContext, j: Json): Maybe<number> {
-  return legacyDuration(ctx, j)
-    .map((n) => clamp(ctx, n, ...constants.validSourceExpiryRange))
+function expiry(j: Json, ctx: SourceContext): Maybe<number> {
+  return legacyDuration(j, ctx)
+    .map(clamp, ctx, ...constants.validSourceExpiryRange)
     .map(Number) // guaranteed to fit based on the clamping
     .map((n) => {
       switch (ctx.sourceType) {
@@ -735,24 +653,24 @@ function expiry(ctx: SourceContext, j: Json): Maybe<number> {
 }
 
 function singleReportWindow(
-  ctx: Context,
   j: Json,
+  ctx: Context,
   expiry: Maybe<number>
 ): Maybe<number> {
-  return legacyDuration(ctx, j)
+  return legacyDuration(j, ctx)
     .map((n) => {
       if (expiry.value === undefined) {
         ctx.error('cannot be fully validated without a valid expiry')
         return None
       }
-      return clamp(ctx, n, constants.minReportWindow, expiry.value, ' (expiry)')
+      return clamp(n, ctx, constants.minReportWindow, expiry.value, ' (expiry)')
     })
     .map(Number)
 }
 
 function defaultEventReportWindows(
-  ctx: SourceContext,
-  end: number
+  end: number,
+  ctx: SourceContext
 ): EventReportWindows {
   const endTimes = constants.defaultEarlyEventLevelReportWindows[
     ctx.sourceType
@@ -762,22 +680,23 @@ function defaultEventReportWindows(
 }
 
 function eventReportWindow(
-  ctx: SourceContext,
   j: Json,
+  ctx: SourceContext,
   expiry: Maybe<number>
 ): Maybe<EventReportWindows> {
-  return singleReportWindow(ctx, j, expiry).map((n) =>
-    defaultEventReportWindows(ctx, n)
+  return singleReportWindow(j, ctx, expiry).map(defaultEventReportWindows, ctx)
+}
+
+function eventLevelEpsilon(j: Json, ctx: RegistrationContext): Maybe<number> {
+  return number(j, ctx).filter(
+    isInRange,
+    ctx,
+    0,
+    ctx.vsv.maxSettableEventLevelEpsilon
   )
 }
 
-function eventLevelEpsilon(ctx: RegistrationContext, j: Json): Maybe<number> {
-  return number(ctx, j).filter((n) =>
-    isInRange(ctx, n, 0, ctx.vsv.maxSettableEventLevelEpsilon)
-  )
-}
-
-function channelCapacity(ctx: SourceContext, s: Source): void {
+function channelCapacity(s: Source, ctx: SourceContext): void {
   const numStatesWords = 'number of possible output states'
 
   const perTriggerDataConfigs = s.triggerSpecs.flatMap((spec) =>
@@ -845,10 +764,10 @@ export type SourceAggregatableDebugReportingConfig =
   }
 
 function sourceAggregatableDebugReportingConfig(
-  ctx: RegistrationContext,
-  j: Json
+  j: Json,
+  ctx: RegistrationContext
 ): Maybe<SourceAggregatableDebugReportingConfig> {
-  return struct(ctx, j, {
+  return struct(j, ctx, {
     budget: field('budget', aggregatableKeyValueValue),
     ...aggregatableDebugReportingConfig,
   }).filter((s) => {
@@ -865,8 +784,8 @@ function sourceAggregatableDebugReportingConfig(
 }
 
 function summaryBuckets(
-  ctx: Context,
   j: Json,
+  ctx: Context,
   maxEventLevelReports: Maybe<number>
 ): Maybe<number[]> {
   let maxLength
@@ -882,24 +801,22 @@ function summaryBuckets(
   let prev = 0
   let prevDesc = 'implicit minimum'
 
-  const bucket = (ctx: Context, j: Json): Maybe<number> =>
-    number(ctx, j)
-      .filter((n) => isInteger(ctx, n))
-      .filter((n) =>
-        isInRange(
-          ctx,
-          n,
-          prev + 1,
-          UINT32_MAX,
-          `must be > ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
-        )
+  const bucket = (j: Json): Maybe<number> =>
+    number(j, ctx)
+      .filter(isInteger, ctx)
+      .filter(
+        isInRange,
+        ctx,
+        prev + 1,
+        UINT32_MAX,
+        `must be > ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
       )
       .peek((n) => {
         prev = n
         prevDesc = 'previous value'
       })
 
-  return array(ctx, j, bucket, {
+  return array(j, ctx, bucket, {
     minLength: 1,
     maxLength,
     maxLengthErrSuffix: ' (max_event_level_reports)',
@@ -907,18 +824,18 @@ function summaryBuckets(
   })
 }
 
-function fullFlexTriggerDatum(ctx: Context, j: Json): Maybe<number> {
-  return number(ctx, j)
-    .filter((n) => isInteger(ctx, n))
-    .filter((n) => isInRange(ctx, n, 0, UINT32_MAX))
+function fullFlexTriggerDatum(j: Json, ctx: Context): Maybe<number> {
+  return number(j, ctx)
+    .filter(isInteger, ctx)
+    .filter(isInRange, ctx, 0, UINT32_MAX)
 }
 
 function triggerDataSet(
-  ctx: Context,
   j: Json,
+  ctx: Context,
   allowEmpty: boolean = false
 ): Maybe<Set<number>> {
-  return set(ctx, j, fullFlexTriggerDatum, {
+  return set(j, ctx, fullFlexTriggerDatum, {
     minLength: allowEmpty ? 0 : 1,
     maxLength: constants.maxTriggerDataPerSource,
     requireDistinct: true,
@@ -936,30 +853,30 @@ function makeDefaultSummaryBuckets(maxEventLevelReports: number): number[] {
 }
 
 function triggerSpec(
-  ctx: SourceContext,
   j: Json,
+  ctx: SourceContext,
   deps: TriggerSpecDeps
 ): Maybe<TriggerSpec> {
   const defaultSummaryBuckets = deps.maxEventLevelReports.map(
     makeDefaultSummaryBuckets
   )
 
-  return struct(ctx, j, {
+  return struct(j, ctx, {
     eventReportWindows: field(
       'event_report_windows',
-      (ctx, j) => eventReportWindows(ctx, j, deps.expiry),
+      (j) => eventReportWindows(j, ctx, deps.expiry),
       deps.eventReportWindows
     ),
 
     summaryBuckets: field(
       'summary_buckets',
-      (ctx, j) => summaryBuckets(ctx, j, deps.maxEventLevelReports),
+      (j) => summaryBuckets(j, ctx, deps.maxEventLevelReports),
       defaultSummaryBuckets
     ),
 
     summaryWindowOperator: field(
       'summary_window_operator',
-      (ctx, j) => enumerated(ctx, j, SummaryWindowOperator),
+      (j) => enumerated(j, ctx, SummaryWindowOperator),
       SummaryWindowOperator.count
     ),
 
@@ -968,11 +885,11 @@ function triggerSpec(
 }
 
 function triggerSpecs(
-  ctx: SourceContext,
   j: Json,
+  ctx: SourceContext,
   deps: TriggerSpecDeps
 ): Maybe<TriggerSpec[]> {
-  return array(ctx, j, (ctx, j) => triggerSpec(ctx, j, deps), {
+  return array(j, ctx, (j) => triggerSpec(j, ctx, deps), {
     maxLength: constants.maxTriggerDataPerSource,
   }).filter((specs) => {
     const triggerData = new Set<number>()
@@ -1005,11 +922,11 @@ function triggerSpecs(
 }
 
 function triggerSpecsFromTriggerData(
-  ctx: Context,
   j: Json,
+  ctx: Context,
   deps: TriggerSpecDeps
 ): Maybe<TriggerSpec[]> {
-  return triggerDataSet(ctx, j, /*allowEmpty=*/ true).map((triggerData) => {
+  return triggerDataSet(j, ctx, /*allowEmpty=*/ true).map((triggerData) => {
     if (
       triggerData.size === 0 ||
       deps.eventReportWindows.value === undefined ||
@@ -1066,13 +983,13 @@ export enum TriggerDataMatching {
 }
 
 function triggerDataMatching(
-  ctx: Context,
-  j: Json
+  j: Json,
+  ctx: Context
 ): Maybe<TriggerDataMatching> {
-  return enumerated(ctx, j, TriggerDataMatching)
+  return enumerated(j, ctx, TriggerDataMatching)
 }
 
-function isTriggerDataMatchingValidForSpecs(ctx: Context, s: Source): boolean {
+function isTriggerDataMatchingValidForSpecs(s: Source, ctx: Context): boolean {
   return ctx.scope('trigger_data_matching', () => {
     if (s.triggerDataMatching !== TriggerDataMatching.modulus) {
       return true
@@ -1094,8 +1011,8 @@ function isTriggerDataMatchingValidForSpecs(ctx: Context, s: Source): boolean {
 }
 
 function warnInconsistentMaxEventLevelReportsAndTriggerSpecs(
-  ctx: Context,
-  s: Source
+  s: Source,
+  ctx: Context
 ): void {
   const allowsReports = s.maxEventLevelReports > 0
   const hasSpecs = s.triggerSpecs.length > 0
@@ -1130,30 +1047,28 @@ export type Source = CommonDebug &
     aggregatableDebugReporting: SourceAggregatableDebugReportingConfig | null
   }
 
-function source(ctx: SourceContext, j: Json): Maybe<Source> {
-  return object(ctx, j)
+function source(j: Json, ctx: SourceContext): Maybe<Source> {
+  return object(j, ctx)
     .map((j) => {
       const expiryVal = field(
         'expiry',
         expiry,
         constants.validSourceExpiryRange[1]
-      )(ctx, j)
+      )(j, ctx)
 
       const eventReportWindowsVal = exclusive(
         {
-          event_report_window: (ctx: SourceContext, j) =>
-            eventReportWindow(ctx, j, expiryVal),
-          event_report_windows: (ctx, j) =>
-            eventReportWindows(ctx, j, expiryVal),
+          event_report_window: (j) => eventReportWindow(j, ctx, expiryVal),
+          event_report_windows: (j) => eventReportWindows(j, ctx, expiryVal),
         },
-        expiryVal.map((n) => defaultEventReportWindows(ctx, n))
-      )(ctx, j)
+        expiryVal.map(defaultEventReportWindows, ctx)
+      )(j, ctx)
 
       const maxEventLevelReportsVal = field(
         'max_event_level_reports',
         maxEventLevelReports,
         constants.defaultEventLevelAttributionsPerSource[ctx.sourceType]
-      )(ctx, j)
+      )(j, ctx)
 
       const defaultTriggerSpecsVal = defaultTriggerSpecs(
         ctx,
@@ -1169,22 +1084,21 @@ function source(ctx: SourceContext, j: Json): Maybe<Source> {
 
       const triggerSpecsVal = exclusive(
         {
-          trigger_data: (ctx, j) =>
-            triggerSpecsFromTriggerData(ctx, j, triggerSpecsDeps),
+          trigger_data: (j) =>
+            triggerSpecsFromTriggerData(j, ctx, triggerSpecsDeps),
           ...(ctx.parseFullFlex
             ? {
-                trigger_specs: (ctx: SourceContext, j) =>
-                  triggerSpecs(ctx, j, triggerSpecsDeps),
+                trigger_specs: (j) => triggerSpecs(j, ctx, triggerSpecsDeps),
               }
             : {}),
         },
         defaultTriggerSpecsVal
-      )(ctx, j)
+      )(j, ctx)
 
-      return struct(ctx, j, {
+      return struct(j, ctx, {
         aggregatableReportWindow: field(
           'aggregatable_report_window',
-          (ctx, j) => singleReportWindow(ctx, j, expiryVal),
+          (j) => singleReportWindow(j, ctx, expiryVal),
           expiryVal
         ),
         aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
@@ -1215,14 +1129,14 @@ function source(ctx: SourceContext, j: Json): Maybe<Source> {
         ...priorityField,
       })
     })
-    .filter((s) => isTriggerDataMatchingValidForSpecs(ctx, s))
-    .peek((s) => channelCapacity(ctx, s))
-    .peek((s) => warnInconsistentMaxEventLevelReportsAndTriggerSpecs(ctx, s))
+    .filter(isTriggerDataMatchingValidForSpecs, ctx)
+    .peek(channelCapacity, ctx)
+    .peek(warnInconsistentMaxEventLevelReportsAndTriggerSpecs, ctx)
 }
 
-function sourceKeys(ctx: Context, j: Json): Maybe<Set<string>> {
-  return set(ctx, j, (ctx, j) =>
-    string(ctx, j).filter((s) => aggregationKeyIdentifierLength(ctx, s))
+function sourceKeys(j: Json, ctx: Context): Maybe<Set<string>> {
+  return set(j, ctx, (j) =>
+    string(j, ctx).filter(aggregationKeyIdentifierLength, ctx)
   )
 }
 
@@ -1232,11 +1146,11 @@ export type AggregatableTriggerDatum = FilterPair &
   }
 
 function aggregatableTriggerData(
-  ctx: RegistrationContext,
-  j: Json
+  j: Json,
+  ctx: RegistrationContext
 ): Maybe<AggregatableTriggerDatum[]> {
-  return array(ctx, j, (ctx, j) =>
-    struct(ctx, j, {
+  return array(j, ctx, (j) =>
+    struct(j, ctx, {
       sourceKeys: field('source_keys', sourceKeys, new Set<string>()),
       ...filterFields,
       ...keyPieceField,
@@ -1255,17 +1169,15 @@ export type AggregatableValuesConfiguration = FilterPair & {
   values: AggregatableValues
 }
 
-function aggregatableKeyValueValue(ctx: Context, j: Json): Maybe<number> {
+function aggregatableKeyValueValue(j: Json, ctx: Context): Maybe<number> {
   return number(ctx, j)
-    .filter((n) => isInteger(ctx, n))
-    .filter((n) =>
-      isInRange(ctx, n, 1, constants.allowedAggregatableBudgetPerSource)
-    )
+    .filter(isInteger, ctx)
+    .filter(isInRange(ctx, 1, constants.allowedAggregatableBudgetPerSource)
 }
 
 function aggregatableKeyValueFilteringId(
-  ctx: Context,
   j: Json,
+  ctx: Context,
   maxBytes: Maybe<number>
 ): Maybe<bigint> {
   return uint(ctx, j).filter((n) => {
@@ -1276,8 +1188,8 @@ function aggregatableKeyValueFilteringId(
       return false
     }
     return isInRange(
-      ctx,
       n,
+      ctx,
       0n,
       256n ** BigInt(maxBytes.value) - 1n,
       maxBytes.value == constants.defaultAggregatableFilteringIdMaxBytes
@@ -1289,53 +1201,44 @@ function aggregatableKeyValueFilteringId(
 
 function aggregatableKeyValue(
   ctx: Context,
-  [key, j]: [string, Json],
+  j: Json,
   maxBytes: Maybe<number>
-): Maybe<AggregatableValuesValue> {
-  if (!aggregationKeyIdentifierLength(ctx, key, 'key ')) {
-    return None
-  }
-
-  return typeSwitch(ctx, j, {
-    number: (ctx, j) =>
-      aggregatableKeyValueValue(ctx, j).map((j) => ({
+): Maybe<AggregatableValues> {
+  return keyValues(ctx, j, (ctx, j) =>   return typeSwitch(ctx, j, {
+    number: (j, ctx) =>
+      aggregatableKeyValueValue(j, ctx).map((j) => ({
         value: j,
         filteringId: constants.defaultFilteringIdValue,
       })),
-    object: (ctx, j) =>
-      struct(ctx, j, {
+    object: (j, ctx) =>
+      struct(j, ctx, {
         value: field('value', aggregatableKeyValueValue),
-        filteringId: field('filtering_id', (ctx, j) =>
-          aggregatableKeyValueFilteringId(ctx, j, maxBytes)
-        ),
+        filteringId: field('filtering_id', aggregatableKeyValueFilteringId, maxBytes),
       }),
   })
 }
 
 function aggregatableKeyValues(
-  ctx: Context,
   j: Json,
-  maxBytes: Maybe<number>
+  ctx: Context
 ): Maybe<AggregatableValues> {
-  return keyValues(ctx, j, (ctx, j) => aggregatableKeyValue(ctx, j, maxBytes))
+  return keyValues(j, ctx, aggregatableKeyValue)
 }
 
 function aggregatableValuesConfigurations(
-  ctx: Context,
   j: Json,
+  ctx: Context,
   maxBytes: Maybe<number>
 ): Maybe<AggregatableValuesConfiguration[]> {
-  return typeSwitch(ctx, j, {
-    object: (ctx, j) =>
-      aggregatableKeyValues(ctx, j, maxBytes).map((values) => [
+  return typeSwitch(j, ctx, {
+    object: (j, ctx) =>
+      aggregatableKeyValues(j, ctx, maxBytes).map((values) => [
         { values, positive: [], negative: [] },
       ]),
-    list: (ctx, j) =>
-      array(ctx, j, (ctx, j) =>
-        struct(ctx, j, {
-          values: field('values', (ctx, j) =>
-            aggregatableKeyValues(ctx, j, maxBytes)
-          ),
+    list: (j, ctx) =>
+      array(j, ctx, (j) =>
+        struct(j, ctx, {
+          values: field('values', aggregatableKeyValues),
           ...filterFields,
         })
       ),
@@ -1381,26 +1284,24 @@ export type EventTriggerDatum = FilterPair &
     value: number
   }
 
-function eventTriggerValue(ctx: RegistrationContext, j: Json): Maybe<number> {
-  return number(ctx, j)
-    .filter((n) => isInteger(ctx, n))
-    .filter((n) =>
-      isInRange(
-        ctx,
-        n,
-        1,
-        UINT32_MAX,
-        `must be >= 1 and <= uint32 max (${UINT32_MAX})`
-      )
+function eventTriggerValue(j: Json, ctx: RegistrationContext): Maybe<number> {
+  return number(j, ctx)
+    .filter(isInteger, ctx)
+    .filter(
+      isInRange,
+      ctx,
+      1,
+      UINT32_MAX,
+      `must be >= 1 and <= uint32 max (${UINT32_MAX})`
     )
 }
 
 function eventTriggerData(
-  ctx: RegistrationContext,
-  j: Json
+  j: Json,
+  ctx: RegistrationContext
 ): Maybe<EventTriggerDatum[]> {
-  return array(ctx, j, (ctx, j) =>
-    struct(ctx, j, {
+  return array(j, ctx, (j) =>
+    struct(j, ctx, {
       triggerData: field('trigger_data', uint64, 0n),
 
       value: ctx.parseFullFlex
@@ -1417,19 +1318,19 @@ function eventTriggerData(
 export type AggregatableDedupKey = FilterPair & DedupKey
 
 function aggregatableDedupKeys(
-  ctx: RegistrationContext,
-  j: Json
+  j: Json,
+  ctx: RegistrationContext
 ): Maybe<AggregatableDedupKey[]> {
-  return array(ctx, j, (ctx, j) =>
-    struct(ctx, j, {
+  return array(j, ctx, (j) =>
+    struct(j, ctx, {
       ...dedupKeyField,
       ...filterFields,
     })
   )
 }
 
-function enumerated<T>(ctx: Context, j: Json, e: Record<string, T>): Maybe<T> {
-  return string(ctx, j).map((s) => validate.enumerated(ctx, s, e))
+function enumerated<T>(j: Json, ctx: Context, e: Record<string, T>): Maybe<T> {
+  return string(j, ctx).map(validate.enumerated, ctx, e)
 }
 
 export enum AggregatableSourceRegistrationTime {
@@ -1438,13 +1339,13 @@ export enum AggregatableSourceRegistrationTime {
 }
 
 function aggregatableSourceRegistrationTime(
-  ctx: Context,
-  j: Json
+  j: Json,
+  ctx: Context
 ): Maybe<AggregatableSourceRegistrationTime> {
-  return enumerated(ctx, j, AggregatableSourceRegistrationTime)
+  return enumerated(j, ctx, AggregatableSourceRegistrationTime)
 }
 
-function warnInconsistentAggregatableKeys(ctx: Context, t: Trigger): void {
+function warnInconsistentAggregatableKeys(t: Trigger, ctx: Context): void {
   const allAggregatableValueKeys = new Set<string>()
   for (const cfg of t.aggregatableValuesConfigurations) {
     for (const key of cfg.values.keys()) {
@@ -1484,11 +1385,11 @@ function warnInconsistentAggregatableKeys(ctx: Context, t: Trigger): void {
 }
 
 function triggerContextID(
-  ctx: Context,
   j: Json,
+  ctx: Context,
   aggregatableSourceRegTime: Maybe<AggregatableSourceRegistrationTime>
 ): Maybe<string> {
-  return string(ctx, j).filter((s) => {
+  return string(j, ctx).filter((s) => {
     if (s.length > constants.maxLengthPerTriggerContextID) {
       ctx.error(
         `exceeds max length per trigger context ID (${s.length} > ${constants.maxLengthPerTriggerContextID})`
@@ -1515,17 +1416,19 @@ function triggerContextID(
 }
 
 function aggregationCoordinatorOrigin(
-  ctx: RegistrationContext,
-  j: Json
+  j: Json,
+  ctx: RegistrationContext
 ): Maybe<string> {
-  return suitableOrigin(ctx, j).filter((s) => {
-    if (!ctx.vsv.aggregationCoordinatorOrigins.includes(s)) {
-      const allowed = ctx.vsv.aggregationCoordinatorOrigins.join(', ')
-      ctx.error(`must be one of the following: ${allowed}`)
-      return false
-    }
-    return true
-  })
+  return string(j, ctx)
+    .map(suitableOrigin, ctx)
+    .filter((s) => {
+      if (!ctx.vsv.aggregationCoordinatorOrigins.includes(s)) {
+        const allowed = ctx.vsv.aggregationCoordinatorOrigins.join(', ')
+        ctx.error(`must be one of the following: ${allowed}`)
+        return false
+      }
+      return true
+    })
 }
 
 export type Trigger = CommonDebug &
@@ -1541,23 +1444,23 @@ export type Trigger = CommonDebug &
     aggregatableDebugReporting: AggregatableDebugReportingConfig | null
   }
 
-function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
-  return object(ctx, j)
+function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
+  return object(j, ctx)
     .map((j) => {
       const aggregatableSourceRegTimeVal = field(
         'aggregatable_source_registration_time',
         aggregatableSourceRegistrationTime,
         AggregatableSourceRegistrationTime.exclude
-      )(ctx, j)
+      )(j, ctx)
 
       const aggregatableFilteringIdMaxBytesVal = field(
         'aggregatable_filtering_id_max_bytes',
-        (ctx, j) =>
-          aggregatableFilteringIdMaxBytes(ctx, j, aggregatableSourceRegTimeVal),
+        (j, ctx) =>
+          aggregatableFilteringIdMaxBytes(j, ctx, aggregatableSourceRegTimeVal),
         constants.defaultAggregatableFilteringIdMaxBytes
-      )(ctx, j)
+      )(j, ctx)
 
-      return struct(ctx, j, {
+      return struct(j, ctx, {
         aggregatableTriggerData: field(
           'aggregatable_trigger_data',
           aggregatableTriggerData,
@@ -1585,19 +1488,19 @@ function trigger(ctx: RegistrationContext, j: Json): Maybe<Trigger> {
         eventTriggerData: field('event_trigger_data', eventTriggerData, []),
         triggerContextID: field(
           'trigger_context_id',
-          (ctx, j) => triggerContextID(ctx, j, aggregatableSourceRegTimeVal),
+          (j) => triggerContextID(j, ctx, aggregatableSourceRegTimeVal),
           null
         ),
         aggregatableDebugReporting: field(
           'aggregatable_debug_reporting',
-          (ctx, j) => struct(ctx, j, aggregatableDebugReportingConfig),
+          (j) => struct(j, ctx, aggregatableDebugReportingConfig),
           null
         ),
         ...commonDebugFields,
         ...filterFields,
       })
     })
-    .peek((t) => warnInconsistentAggregatableKeys(ctx, t))
+    .peek(warnInconsistentAggregatableKeys, ctx)
 }
 
 export function validateJSON<T, C extends Context = Context>(
@@ -1613,7 +1516,7 @@ export function validateJSON<T, C extends Context = Context>(
     return [ctx.finish(msg), None]
   }
 
-  const v = f(ctx, value)
+  const v = f(value, ctx)
   return [ctx.finish(), v]
 }
 
@@ -1660,21 +1563,21 @@ export type EventLevelReport = {
   triggerSummaryBucket: [number, number] | null
 }
 
-function reportDestination(ctx: Context, j: Json): Maybe<string | string[]> {
-  const suitableSiteNoExtraneous = (ctx: Context, j: Json) =>
-    suitableSite(ctx, j, /*rejectExtraComponents=*/ true)
+function reportDestination(j: Json, ctx: Context): Maybe<string | string[]> {
+  const suitableSiteNoExtraneous = (s: string) =>
+    suitableSite(s, ctx, /*rejectExtraComponents=*/ true)
 
-  return typeSwitch<string | string[]>(ctx, j, {
-    string: (ctx, j) => suitableSiteNoExtraneous(ctx, j),
-    list: (ctx, j) =>
-      array(ctx, j, suitableSiteNoExtraneous, {
+  return typeSwitch<string | string[]>(j, ctx, {
+    string: suitableSiteNoExtraneous,
+    list: (j) =>
+      array(j, ctx, (j) => string(j, ctx).map(suitableSiteNoExtraneous), {
         minLength: 2,
         maxLength: 3,
       }).filter((v) => {
         for (let i = 1; i < v.length; ++i) {
-          if (v[i]! < v[i - 1]!) {
+          if (v[i]! <= v[i - 1]!) {
             ctx.error(
-              'although order is semantically irrelevant, list must be sorted'
+              'although order is semantically irrelevant, list must be sorted and contain no duplicates'
             )
             return false
           }
@@ -1684,12 +1587,12 @@ function reportDestination(ctx: Context, j: Json): Maybe<string | string[]> {
   })
 }
 
-function randomizedTriggerRate(ctx: Context, j: Json): Maybe<number> {
-  return number(ctx, j).filter((n) => isInRange(ctx, n, 0, 1))
+function randomizedTriggerRate(j: Json, ctx: Context): Maybe<number> {
+  return number(j, ctx).filter(isInRange, ctx, 0, 1)
 }
 
-function randomUuid(ctx: Context, j: Json): Maybe<string> {
-  return string(ctx, j).filter((s) => {
+function randomUuid(j: Json, ctx: Context): Maybe<string> {
+  return string(j, ctx).filter((s) => {
     if (!uuid.validate(s)) {
       ctx.error('must be a valid UUID')
       return false
@@ -1702,28 +1605,26 @@ function randomUuid(ctx: Context, j: Json): Maybe<string> {
   })
 }
 
-function triggerSummaryBucket(ctx: Context, j: Json): Maybe<[number, number]> {
+function triggerSummaryBucket(j: Json, ctx: Context): Maybe<[number, number]> {
   let prev = 1
   let prevDesc = 'minimum bucket start'
 
-  const endpoint = (ctx: Context, j: Json): Maybe<number> =>
-    number(ctx, j)
-      .filter((n) => isInteger(ctx, n))
-      .filter((n) =>
-        isInRange(
-          ctx,
-          n,
-          prev,
-          UINT32_MAX,
-          `must be >= ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
-        )
+  const endpoint = (j: Json): Maybe<number> =>
+    number(j, ctx)
+      .filter(isInteger, ctx)
+      .filter(
+        isInRange,
+        ctx,
+        prev,
+        UINT32_MAX,
+        `must be >= ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
       )
       .peek((n) => {
         prev = n
         prevDesc = 'bucket start'
       })
 
-  return array(ctx, j, endpoint, {
+  return array(j, ctx, endpoint, {
     minLength: 2,
     maxLength: 2,
     itemErrorAction: ItemErrorAction.earlyExit,
@@ -1731,10 +1632,10 @@ function triggerSummaryBucket(ctx: Context, j: Json): Maybe<[number, number]> {
 }
 
 function eventLevelReport(
-  ctx: GenericContext,
-  j: Json
+  j: Json,
+  ctx: GenericContext
 ): Maybe<EventLevelReport> {
-  return struct(ctx, j, {
+  return struct(j, ctx, {
     attributionDestination: field('attribution_destination', reportDestination),
     randomizedTriggerRate: field(
       'randomized_trigger_rate',
