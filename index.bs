@@ -1377,15 +1377,16 @@ controls the maximum [=map/size=] of a [=trigger spec map=] for an
 the maximum [=string/length=] of an [=attribution trigger=]'s [=attribution trigger/trigger context ID=].
 Its value is 64.
 
-<dfn>Default filtering ID value</dfn> is a non-negative integer which allows flexible
-contribution filtering of aggregatable reports. Its value is 0.
+<dfn>Default filtering ID value</dfn> is a non-negative integer. Its value is 0.
+It is the default value for flexible contribution filtering of aggregatable
+reports.
 
-<dfn>Default filtering ID max bytes</dfn> is a positive integer controlling the
+<dfn>Default filtering ID max bytes</dfn> is a positive integer that controls the
 max bytes used if none is explicitly chosen. Its value is 1. The max bytes value
-limits the size of filtering IDs within an aggregatable report.
+limits the size of filtering IDs within an [=aggregatable attribution report=].
 
 <dfn>Valid filtering ID max bytes range</dfn> is a [=set=] of positive integers
-controlling the allowable values of max bytes. Its value is [=the inclusive
+that controls the allowable values of max bytes. Its value is [=the inclusive
 range|the range=] 1 to 8, inclusive.
 
 <dfn>Max contributions per aggregatable debug report</dfn> is a positive
@@ -3216,9 +3217,9 @@ To <dfn>parse aggregatable filtering ID max bytes</dfn> given a [=map=] |map|:
 
 1. Let |maxBytes| be [=default filtering ID max bytes=].
 1. If |map|["<code>[=trigger-registration JSON key/aggregatable_filtering_id_max_bytes=]</code>"] [=map/exists=]:
-    1. Let |maxBytesValue| be |map|["<code>[=trigger-registration JSON key/aggregatable_filtering_id_max_bytes=]</code>"].
-    1. If |maxBytesValue| is a positive integer and is [=set/contained=] in the [=valid filtering ID max bytes range=],
-        set |maxBytes| to |maxBytesValue|.
+    1. Let |maxBytes| be |map|["<code>[=trigger-registration JSON key/aggregatable_filtering_id_max_bytes=]</code>"].
+    1. If |maxBytes| is a positive integer and is [=set/contained=] in the [=valid filtering ID max bytes range=],
+        return |maxBytes|.
     1. Otherwise, return null.
 1. Return |maxBytes|.
 
@@ -3415,7 +3416,7 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
     : [=attribution trigger/aggregatable debug reporting config=]
     :: |aggregatableDebugReportingConfig|
 1. If |aggregatableSourceRegTimeConfig| is not "<code>[=aggregatable source registration time configuration/exclude=]</code>"
-    and the result of running [=check if an aggregatable report should be unconditionally sent=] with |trigger| is true, return null.
+    and the result of running [=check if an aggregatable attribution report should be unconditionally sent=] with |trigger| is true, return null.
 1. Return |trigger|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -3488,7 +3489,7 @@ To <dfn>match an attribution source against filters and negated filters</dfn> gi
 
 <h3 dfn id="should-send-a-report-unconditionally">Should send a report unconditionally</h3>
 
-To <dfn>check if an aggregatable report should be unconditionally sent</dfn> given an [=attribution trigger=] |trigger|:
+To <dfn>check if an aggregatable attribution report should be unconditionally sent</dfn> given an [=attribution trigger=] |trigger|:
 
 1. If |trigger|'s [=attribution trigger/trigger context ID=] is not null, return true.
 1. If |trigger|'s [=attribution trigger/aggregatable filtering ID max bytes=]
@@ -4045,7 +4046,7 @@ To <dfn>obtain an aggregatable attribution report delivery time</dfn> given an [
 |trigger|, perform the following steps. They return a [=moment=].
 
 1. Let |triggerTime| be |trigger|'s [=attribution trigger/trigger time=].
-1. If the result of running [=check if an aggregatable report should be unconditionally sent=] with |trigger|
+1. If the result of running [=check if an aggregatable attribution report should be unconditionally sent=] with |trigger|
     is true, return |triggerTime|.
 1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive) with uniform probability.
 1. Return |triggerTime| + |r| * [=randomized aggregatable attribution report delay=].
@@ -4176,7 +4177,7 @@ To <dfn>generate null attribution reports</dfn> given an [=attribution trigger=]
 1. Let |nullReports| be a new [=list=].
 1. If |trigger|'s [=attribution trigger/aggregatable source registration time configuration=] is "<code>[=aggregatable source registration time configuration/exclude=]</code>":
     1. Let |randomizedNullReportRate| be [=randomized null attribution report rate excluding source registration time=].
-    1. If the result of running [=check if an aggregatable report should be unconditionally sent=] with |trigger|
+    1. If the result of running [=check if an aggregatable attribution report should be unconditionally sent=] with |trigger|
         is true, set |randomizedNullReportRate| to 1.
     1. If |report| is null and the result of [=determining if a randomized null attribution report is generated=] with
         |randomizedNullReportRate| is true:
@@ -4326,7 +4327,7 @@ of running the following steps:
     : "`scheduled_report_time`"
     :: |report|'s [=aggregatable report/report time=] in seconds since the UNIX epoch, [=serialize an integer|serialized=]
     : "`version`"
-    :: "`0.1`"
+    :: "`1.0`"
     
     Note: The "`version`" value needs to be bumped if the <a href="https://github.com/privacysandbox/aggregation-service">aggregation service</a> upgrades.
 
