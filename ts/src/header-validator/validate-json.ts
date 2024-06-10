@@ -163,25 +163,24 @@ function list(j: Json, ctx: Context): Maybe<Json[]> {
   return typeSwitch(j, ctx, { list: some })
 }
 
-function uint(ctx: Context, j: Json): Maybe<bigint> {
-  return string(ctx, j)
+function uint(j: Json, ctx: Context): Maybe<bigint> {
+  return string(j, ctx)
     .filter(
       matchesPattern,
-        ctx,
-        s,
-        uintRegex,
-        'string must represent a non-negative integer'
+      ctx,
+      uintRegex,
+      'string must represent a non-negative integer'
     )
     .map(BigInt)
 }
 
-function uint64(ctx: Context, j: Json): Maybe<bigint> {
-  return uint(ctx, j).filter(
+function uint64(j: Json, ctx: Context): Maybe<bigint> {
+  return uint(j, ctx).filter(
     isInRange,
-      ctx,
-      0n,
-      2n ** 64n - 1n,
-      'must fit in an unsigned 64-bit integer'
+    ctx,
+    0n,
+    2n ** 64n - 1n,
+    'must fit in an unsigned 64-bit integer'
   )
 }
 
@@ -1170,9 +1169,9 @@ export type AggregatableValuesConfiguration = FilterPair & {
 }
 
 function aggregatableKeyValueValue(j: Json, ctx: Context): Maybe<number> {
-  return number(ctx, j)
+  return number(j, ctx)
     .filter(isInteger, ctx)
-    .filter(isInRange(ctx, 1, constants.allowedAggregatableBudgetPerSource)
+    .filter(isInRange, ctx, 1, constants.allowedAggregatableBudgetPerSource)
 }
 
 function aggregatableKeyValueFilteringId(
@@ -1180,7 +1179,7 @@ function aggregatableKeyValueFilteringId(
   ctx: Context,
   maxBytes: Maybe<number>
 ): Maybe<bigint> {
-  return uint(ctx, j).filter((n) => {
+  return uint(j, ctx).filter((n) => {
     if (maxBytes.value === undefined) {
       ctx.error(
         `cannot be fully validated without a valid aggregatable_filtering_id_max_bytes`
@@ -1200,11 +1199,15 @@ function aggregatableKeyValueFilteringId(
 }
 
 function aggregatableKeyValue(
+  [key, j]: [string, Json],
   ctx: Context,
-  j: Json,
   maxBytes: Maybe<number>
-): Maybe<AggregatableValues> {
-  return keyValues(ctx, j, (ctx, j) =>   return typeSwitch(ctx, j, {
+): Maybe<AggregatableValuesValue> {
+  if (!aggregationKeyIdentifierLength(key, ctx, 'key ')) {
+    return None
+  }
+
+  return typeSwitch(j, ctx, {
     number: (j, ctx) =>
       aggregatableKeyValueValue(j, ctx).map((j) => ({
         value: j,
@@ -1213,16 +1216,19 @@ function aggregatableKeyValue(
     object: (j, ctx) =>
       struct(j, ctx, {
         value: field('value', aggregatableKeyValueValue),
-        filteringId: field('filtering_id', aggregatableKeyValueFilteringId, maxBytes),
+        filteringId: field('filtering_id', (j, ctx) =>
+          aggregatableKeyValueFilteringId(j, ctx, maxBytes)
+        ),
       }),
   })
 }
 
 function aggregatableKeyValues(
   j: Json,
-  ctx: Context
+  ctx: Context,
+  maxBytes: Maybe<number>
 ): Maybe<AggregatableValues> {
-  return keyValues(j, ctx, aggregatableKeyValue)
+  return keyValues(j, ctx, (j, ctx) => aggregatableKeyValue(j, ctx, maxBytes))
 }
 
 function aggregatableValuesConfigurations(
@@ -1238,7 +1244,9 @@ function aggregatableValuesConfigurations(
     list: (j, ctx) =>
       array(j, ctx, (j) =>
         struct(j, ctx, {
-          values: field('values', aggregatableKeyValues),
+          values: field('values', (j, ctx) =>
+            aggregatableKeyValues(j, ctx, maxBytes)
+          ),
           ...filterFields,
         })
       ),
@@ -1246,14 +1254,17 @@ function aggregatableValuesConfigurations(
 }
 
 function aggregatableFilteringIdMaxBytes(
-  ctx: Context,
   j: Json,
+  ctx: Context,
   aggregatableSourceRegTime: Maybe<AggregatableSourceRegistrationTime>
 ): Maybe<number> {
-  return number(ctx, j)
-    .filter((n) => isInteger(ctx, n))
-    .filter((n) =>
-      isInRange(ctx, n, 1, constants.maxAggregatableFilteringIdMaxBytesValue)
+  return number(j, ctx)
+    .filter(isInteger, ctx)
+    .filter(
+      isInRange,
+      ctx,
+      1,
+      constants.maxAggregatableFilteringIdMaxBytesValue
     )
     .filter((n) => {
       if (aggregatableSourceRegTime.value === undefined) {
