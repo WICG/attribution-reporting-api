@@ -1,4 +1,3 @@
-import * as psl from 'psl'
 import * as uuid from 'uuid'
 import * as constants from '../constants'
 import { SourceType } from '../source-type'
@@ -14,6 +13,8 @@ import {
   isInRange,
   isLengthValid,
   matchesPattern,
+  suitableOrigin,
+  suitableSite,
 } from './validate'
 import * as validate from './validate'
 import * as privacy from '../flexible-event/privacy'
@@ -215,79 +216,14 @@ function hex128(j: Json, ctx: Context): Maybe<bigint> {
     .map(BigInt)
 }
 
-function suitableScope(
-  s: string,
-  ctx: Context,
-  label: string,
-  scope: (url: URL) => string,
-  rejectExtraComponents: boolean
-): Maybe<string> {
-  let url
-  try {
-    url = new URL(s)
-  } catch {
-    ctx.error('invalid URL')
-    return None
-  }
-
-  if (
-    url.protocol !== 'https:' &&
-    !(
-      url.protocol === 'http:' &&
-      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
-    )
-  ) {
-    ctx.error('URL must use HTTP/HTTPS and be potentially trustworthy')
-    return None
-  }
-
-  const scoped = scope(url)
-  if (url.toString() !== new URL(scoped).toString()) {
-    if (rejectExtraComponents) {
-      ctx.error(
-        `must not contain URL components other than ${label} (${scoped})`
-      )
-      return None
-    }
-    ctx.warning(
-      `URL components other than ${label} (${scoped}) will be ignored`
-    )
-  }
-  return some(scoped)
-}
-
-function suitableOrigin(
-  j: Json,
-  ctx: Context,
-  rejectExtraComponents: boolean = false
-): Maybe<string> {
-  return string(j, ctx).map(
-    suitableScope,
-    ctx,
-    'origin',
-    (u) => u.origin,
-    rejectExtraComponents
-  )
-}
-
-function suitableSite(
-  j: Json,
-  ctx: Context,
-  rejectExtraComponents: boolean = false
-): Maybe<string> {
-  return string(j, ctx).map(
-    suitableScope,
-    ctx,
-    'site',
-    (u) => `${u.protocol}//${psl.get(u.hostname)}`,
-    rejectExtraComponents
-  )
-}
-
 function destination(j: Json, ctx: Context): Maybe<Set<string>> {
   return typeSwitch(j, ctx, {
     string: (j) => suitableSite(j, ctx).map((s) => new Set([s])),
-    list: (j) => set(j, ctx, suitableSite, { minLength: 1, maxLength: 3 }),
+    list: (j) =>
+      set(j, ctx, (j) => string(j, ctx).map(suitableSite, ctx), {
+        minLength: 1,
+        maxLength: 3,
+      }),
   })
 }
 
@@ -1410,14 +1346,16 @@ function aggregationCoordinatorOrigin(
   j: Json,
   ctx: RegistrationContext
 ): Maybe<string> {
-  return suitableOrigin(j, ctx).filter((s) => {
-    if (!ctx.vsv.aggregationCoordinatorOrigins.includes(s)) {
-      const allowed = ctx.vsv.aggregationCoordinatorOrigins.join(', ')
-      ctx.error(`must be one of the following: ${allowed}`)
-      return false
-    }
-    return true
-  })
+  return string(j, ctx)
+    .map(suitableOrigin, ctx)
+    .filter((s) => {
+      if (!ctx.vsv.aggregationCoordinatorOrigins.includes(s)) {
+        const allowed = ctx.vsv.aggregationCoordinatorOrigins.join(', ')
+        ctx.error(`must be one of the following: ${allowed}`)
+        return false
+      }
+      return true
+    })
 }
 
 export type Trigger = CommonDebug &
@@ -1538,13 +1476,13 @@ export type EventLevelReport = {
 }
 
 function reportDestination(j: Json, ctx: Context): Maybe<string | string[]> {
-  const suitableSiteNoExtraneous = (j: Json) =>
-    suitableSite(j, ctx, /*rejectExtraComponents=*/ true)
+  const suitableSiteNoExtraneous = (s: string) =>
+    suitableSite(s, ctx, /*rejectExtraComponents=*/ true)
 
   return typeSwitch<string | string[]>(j, ctx, {
     string: suitableSiteNoExtraneous,
     list: (j) =>
-      array(j, ctx, suitableSiteNoExtraneous, {
+      array(j, ctx, (j) => string(j, ctx).map(suitableSiteNoExtraneous), {
         minLength: 2,
         maxLength: 3,
       }).filter((v) => {

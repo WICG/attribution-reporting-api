@@ -1,3 +1,4 @@
+import * as psl from 'psl'
 import { Context, PathComponent } from './context'
 import { Maybe, Maybeable } from './maybe'
 
@@ -303,4 +304,67 @@ export function isLengthValid(
     return false
   }
   return true
+}
+
+function suitableScope(
+  s: string,
+  ctx: Context,
+  label: string,
+  scope: (url: URL) => string,
+  rejectExtraComponents: boolean
+): Maybe<string> {
+  let url
+  try {
+    url = new URL(s)
+  } catch {
+    ctx.error('invalid URL')
+    return Maybe.None
+  }
+
+  if (
+    url.protocol !== 'https:' &&
+    !(
+      url.protocol === 'http:' &&
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1')
+    )
+  ) {
+    ctx.error('URL must use HTTP/HTTPS and be potentially trustworthy')
+    return Maybe.None
+  }
+
+  const scoped = scope(url)
+  if (url.toString() !== new URL(scoped).toString()) {
+    if (rejectExtraComponents) {
+      ctx.error(
+        `must not contain URL components other than ${label} (${scoped})`
+      )
+      return Maybe.None
+    }
+    ctx.warning(
+      `URL components other than ${label} (${scoped}) will be ignored`
+    )
+  }
+  return Maybe.some(scoped)
+}
+
+export function suitableOrigin(
+  s: string,
+  ctx: Context,
+  rejectExtraComponents: boolean = false
+): Maybe<string> {
+  return suitableScope(s, ctx, 'origin', (u) => u.origin, rejectExtraComponents)
+}
+
+export function suitableSite(
+  s: string,
+  ctx: Context,
+  rejectExtraComponents: boolean = false
+): Maybe<string> {
+  return suitableScope(
+    s,
+    ctx,
+    'site',
+    (u) => `${u.protocol}//${psl.get(u.hostname)}`,
+    rejectExtraComponents
+  )
 }
