@@ -1228,7 +1228,7 @@ function aggregatableKeyValues(
   ctx: Context,
   maxBytes: Maybe<number>
 ): Maybe<AggregatableValues> {
-  return keyValues(j, ctx, (j, ctx) => aggregatableKeyValue(j, ctx, maxBytes))
+  return keyValues(j, ctx, (j) => aggregatableKeyValue(j, ctx, maxBytes))
 }
 
 function aggregatableValuesConfigurations(
@@ -1244,7 +1244,7 @@ function aggregatableValuesConfigurations(
     list: (j) =>
       array(j, ctx, (j) =>
         struct(j, ctx, {
-          values: field('values', (j, ctx) =>
+          values: field('values', (j) =>
             aggregatableKeyValues(j, ctx, maxBytes)
           ),
           ...filterFields,
