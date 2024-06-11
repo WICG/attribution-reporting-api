@@ -197,6 +197,31 @@ const testCases: TestCase[] = [
       },
     ],
   },
+  {
+    name: 'destination-list-empty',
+    json: `{"destination": []}`,
+    expectedErrors: [
+      {
+        path: ['destination'],
+        msg: 'length must be in the range [1, 3]',
+      },
+    ],
+  },
+  {
+    name: 'destination-list-too-long',
+    json: `{"destination": [
+      "https://a.test",
+      "https://b.test/1",
+      "https://b.test/2",
+      "https://c.test/3"
+    ]}`,
+    expectedErrors: [
+      {
+        path: ['destination'],
+        msg: 'length must be in the range [1, 3]',
+      },
+    ],
+  },
 
   {
     name: 'filter-data-wrong-type',
@@ -350,7 +375,7 @@ const testCases: TestCase[] = [
     name: 'filter-data-too-many-values',
     json: JSON.stringify({
       destination: 'https://a.test',
-      filter_data: { a: Array.from({ length: 51 }, (_, i) => `${i}`) },
+      filter_data: { a: Array.from({ length: 51 }, () => '') },
     }),
     expectedErrors: [
       {
@@ -2076,6 +2101,19 @@ const testCases: TestCase[] = [
       {
         path: ['trigger_data', 2],
         msg: 'duplicate value 1',
+      },
+    ],
+  },
+  {
+    name: 'trigger-data-too-many-within',
+    json: JSON.stringify({
+      destination: 'https://a.test',
+      trigger_data: Array.from({ length: 33 }, () => 0),
+    }),
+    expectedErrors: [
+      {
+        path: ['trigger_data'],
+        msg: 'length must be in the range [0, 32]',
       },
     ],
   },
