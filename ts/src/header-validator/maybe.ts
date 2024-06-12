@@ -1,7 +1,7 @@
 export type Maybeable<T> = T | Maybe<T>
 
 export class Maybe<T> {
-  static readonly None: Maybe<any> = new Maybe()
+  static readonly None = new Maybe<never>()
 
   static some<T>(t: T): Maybe<T> {
     return new Maybe(t)
