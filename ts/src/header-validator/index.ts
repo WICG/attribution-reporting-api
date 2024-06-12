@@ -9,8 +9,8 @@ import { serializeOsRegistration, validateOsRegistration } from './validate-os'
 import { serializeInfo, validateInfo } from './validate-info'
 import { serializeSource, serializeTrigger } from './to-json'
 
-const form = document.querySelector('form')! as HTMLFormElement
-const input = form.querySelector('textarea')! as HTMLTextAreaElement
+const form = document.querySelector<HTMLFormElement>('form')!
+const input = form.querySelector<HTMLTextAreaElement>('textarea')!
 const headerRadios = form.elements.namedItem('header')! as RadioNodeList
 const sourceTypeRadios = form.elements.namedItem(
   'source-type'
@@ -19,9 +19,8 @@ const errorList = document.querySelector('#errors')!
 const warningList = document.querySelector('#warnings')!
 const noteList = document.querySelector('#notes')!
 const successDiv = document.querySelector('#success')!
-const sourceTypeFieldset = document.querySelector(
-  '#source-type'
-)! as HTMLFieldSetElement
+const sourceTypeFieldset =
+  document.querySelector<HTMLFieldSetElement>('#source-type')!
 const effective = document.querySelector('#effective')!
 
 const flexCheckbox = form.elements.namedItem('flex') as HTMLInputElement
@@ -116,7 +115,7 @@ function validate(): void {
 
 form.addEventListener('input', validate)
 
-document.querySelector('#linkify')!.addEventListener('click', async () => {
+document.querySelector('#linkify')!.addEventListener('click', () => {
   const url = new URL(location.toString())
   url.search = ''
   url.searchParams.set('header', headerRadios.value)
@@ -128,7 +127,7 @@ document.querySelector('#linkify')!.addEventListener('click', async () => {
 
   url.searchParams.set('flex', flexCheckbox.checked.toString())
 
-  await navigator.clipboard.writeText(url.toString())
+  void navigator.clipboard.writeText(url.toString())
 })
 
 // Note: The `json` and `header` query params are relied on by DevTools as of

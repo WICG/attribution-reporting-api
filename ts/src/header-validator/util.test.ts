@@ -13,7 +13,7 @@ export function run(
   name: string,
   f: () => context.ValidationResult
 ): void {
-  test(name, () => {
+  void test(name, () => {
     const result = f()
     assert.deepEqual(result, {
       errors: tc.expectedErrors ?? [],

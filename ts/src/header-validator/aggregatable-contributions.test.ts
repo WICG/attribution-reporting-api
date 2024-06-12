@@ -12,7 +12,7 @@ import {
 const sourceTime = 1
 const triggerTime = sourceTime + 5
 
-test('basic', () => {
+void test('basic', () => {
   const filterData: FilterData = new Map([['filter', new Set(['value'])]])
 
   const aggregationKeys: AggregationKeys = new Map([
@@ -117,7 +117,7 @@ test('basic', () => {
   ])
 })
 
-test('values-filtered', async (t) => {
+void test('values-filtered', async (t) => {
   const filterData: FilterData = new Map([['product', new Set(['1'])]])
 
   const aggregationKeys: AggregationKeys = new Map([

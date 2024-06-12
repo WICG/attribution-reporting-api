@@ -635,7 +635,7 @@ function expiry(j: Json, ctx: SourceContext): Maybe<number> {
     .map(Number) // guaranteed to fit based on the clamping
     .map((n) => {
       switch (ctx.sourceType) {
-        case SourceType.event:
+        case SourceType.event: {
           const r = roundAwayFromZeroToNearestDay(n)
           if (n !== r) {
             ctx.warning(
@@ -643,6 +643,7 @@ function expiry(j: Json, ctx: SourceContext): Maybe<number> {
             )
           }
           return r
+        }
         case SourceType.navigation:
           return n
       }
@@ -697,7 +698,7 @@ function channelCapacity(s: Source, ctx: SourceContext): void {
   const numStatesWords = 'number of possible output states'
 
   const perTriggerDataConfigs = s.triggerSpecs.flatMap((spec) =>
-    Array(spec.triggerData.size).fill(
+    Array<privacy.PerTriggerDataConfig>(spec.triggerData.size).fill(
       new privacy.PerTriggerDataConfig(
         spec.eventReportWindows.endTimes.length,
         spec.summaryBuckets.length
@@ -1420,7 +1421,7 @@ export function validateJSON<T, C extends Context = Context>(
   json: string,
   f: CtxFunc<C, Json, Maybe<T>>
 ): [ValidationResult, Maybe<T>] {
-  let value
+  let value: unknown
   try {
     value = JSON.parse(json)
   } catch (err) {
@@ -1428,7 +1429,7 @@ export function validateJSON<T, C extends Context = Context>(
     return [ctx.finish(msg), None]
   }
 
-  const v = f(value, ctx)
+  const v = f(value as Json, ctx)
   return [ctx.finish(), v]
 }
 

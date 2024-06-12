@@ -1590,7 +1590,7 @@ testCases.forEach((tc) =>
       const str = JSON.stringify(
         serializeTrigger(result[1].value, tc.parseFullFlex ?? false)
       )
-      const [_, reparsed] = validateTrigger(
+      const [, reparsed] = validateTrigger(
         str,
         { ...vsv.Chromium, ...tc.vsv },
         tc.parseFullFlex ?? false
