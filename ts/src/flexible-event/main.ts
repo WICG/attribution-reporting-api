@@ -18,7 +18,7 @@ function commaSeparatedInts(str: string): Wrapped<number[]> {
 
 function parseSourceType(str: string): SourceType {
   if (!(str in SourceType)) {
-    throw 'unknown source type'
+    throw new Error('unknown source type')
   }
   return str as SourceType
 }
@@ -89,9 +89,9 @@ if (options.json_file !== undefined) {
   config = source.map(
     (source) =>
       new Config(
-        source.maxEventLevelReports!,
+        source.maxEventLevelReports,
         source.triggerSpecs.flatMap((spec) =>
-          new Array(spec.triggerData.size).fill(
+          new Array<PerTriggerDataConfig>(spec.triggerData.size).fill(
             new PerTriggerDataConfig(
               spec.eventReportWindows.endTimes.length,
               spec.summaryBuckets.length
@@ -101,10 +101,10 @@ if (options.json_file !== undefined) {
       )
   )
 } else if (options.windows === undefined || options.buckets === undefined) {
-  throw 'windows and buckets must be specified if json_file is not'
+  throw new Error('windows and buckets must be specified if json_file is not')
 } else {
   if (options.windows.value.length !== options.buckets.value.length) {
-    throw 'windows and buckets must have same length'
+    throw new Error('windows and buckets must have same length')
   }
   config = Maybe.some(
     new Config(

@@ -34,7 +34,7 @@ const flipProbabilityTests = [
   },
 ]
 
-test('flipProbabilityDp', async (t) => {
+void test('flipProbabilityDp', async (t) => {
   await Promise.all(
     flipProbabilityTests.map((tc, i) =>
       t.test(`${i}`, () => {
@@ -83,7 +83,7 @@ const infoGainTests = [
   },
 ]
 
-test('maxInformationGain', async (t) => {
+void test('maxInformationGain', async (t) => {
   await Promise.all(
     infoGainTests.map((tc, i) =>
       t.test(`${i}`, () => {
@@ -102,7 +102,7 @@ const binaryEntropyTests = [
   { x: 0.99, expected: 0.08079313589591124 },
 ]
 
-test('binaryEntropy', async (t) => {
+void test('binaryEntropy', async (t) => {
   await Promise.all(
     binaryEntropyTests.map((tc) =>
       t.test(`${tc.x}`, () => {
@@ -127,7 +127,7 @@ function defaultConfig(sourceType: SourceType): Config {
   )
 }
 
-test('computeConfigData', async (t) => {
+void test('computeConfigData', async (t) => {
   await t.test('navigation', () => {
     assert.deepStrictEqual(
       defaultConfig(SourceType.navigation).computeConfigData(

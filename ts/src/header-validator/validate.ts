@@ -172,7 +172,7 @@ export function array<T, V, C extends Context = Context>(
     isCollection(
       vs,
       ctx,
-      ([_i, v]) => f(v, ctx).peek((v) => arr.push(v)),
+      ([, v]) => f(v, ctx).peek((v) => arr.push(v)),
       itemErrorAction
     )
   )
@@ -185,7 +185,7 @@ export function set<T extends number | string, V, C extends Context = Context>(
   requireDistinct: boolean = false
 ): Maybe<Set<T>> {
   return Maybe.some(new Set<T>()).filter((set) =>
-    isCollection(vs, ctx, ([_i, v]) =>
+    isCollection(vs, ctx, ([, v]) =>
       f(v, ctx).filter((v) => {
         if (set.has(v)) {
           const msg = `duplicate value ${v}`

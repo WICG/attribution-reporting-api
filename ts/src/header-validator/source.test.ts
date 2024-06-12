@@ -2532,7 +2532,7 @@ testCases.forEach((tc) =>
       const str = JSON.stringify(
         serializeSource(result[1].value, tc.parseFullFlex ?? false)
       )
-      const [_, reparsed] = validateSource(
+      const [, reparsed] = validateSource(
         str,
         { ...vsv.Chromium, ...tc.vsv },
         tc.sourceType ?? SourceType.navigation,

@@ -29,7 +29,7 @@ export const param = validate.make<Parameters, BareItem>(
   /*warnUnknownMsg=*/ 'unknown parameter'
 )
 
-export function validateDictionary<T extends Object, C extends Context>(
+export function validateDictionary<T, C extends Context>(
   str: string,
   ctx: C,
   f: CtxFunc<C, Dictionary, Maybe<T>>

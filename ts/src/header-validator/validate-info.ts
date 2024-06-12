@@ -30,7 +30,7 @@ function preferredPlatform(
   }
   return validate
     .enumerated(v[0].toString(), ctx, PreferredPlatform)
-    .peek((_) => {
+    .peek(() => {
       if (v[1].size !== 0) {
         ctx.warning('ignoring parameters')
       }
