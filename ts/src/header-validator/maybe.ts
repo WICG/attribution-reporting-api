@@ -1,14 +1,8 @@
-export type Maybeable<T> = T | Maybe<T>
-
 export class Maybe<T> {
   static readonly None = new Maybe<never>()
 
   static some<T>(this: void, t: T): Maybe<T> {
     return new Maybe(t)
-  }
-
-  static flatten<T>(this: void, t: Maybeable<T>): Maybe<T> {
-    return t instanceof Maybe ? t : Maybe.some(t)
   }
 
   private constructor(private readonly t?: T) {}
@@ -21,10 +15,17 @@ export class Maybe<T> {
   }
 
   map<U, C extends unknown[]>(
-    f: (t: T, ...args: C) => Maybeable<U>,
+    f: (t: T, ...args: C) => U,
     ...args: C
   ): Maybe<U> {
-    return this.t === undefined ? Maybe.None : Maybe.flatten(f(this.t, ...args))
+    return this.t === undefined ? Maybe.None : new Maybe<U>(f(this.t, ...args))
+  }
+
+  flatMap<U, C extends unknown[]>(
+    f: (t: T, ...args: C) => Maybe<U>,
+    ...args: C
+  ): Maybe<U> {
+    return this.t === undefined ? Maybe.None : f(this.t, ...args)
   }
 
   peek<C extends unknown[]>(f: (t: T, ...args: C) => void, ...args: C): this {
