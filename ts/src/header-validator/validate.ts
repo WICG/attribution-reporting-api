@@ -1,6 +1,6 @@
 import * as psl from 'psl'
 import { Context, PathComponent } from './context'
-import { Maybe, Maybeable } from './maybe'
+import { Maybe } from './maybe'
 
 export type CtxFunc<C extends Context, I, O> = (i: I, ctx: C) => O
 
@@ -52,14 +52,14 @@ type GetAndDeleteFunc<D, V> = (d: D, name: string) => V | undefined
 type FieldFunc<D, V> = <T, C extends Context>(
   name: string,
   f: CtxFunc<C, V, Maybe<T>>,
-  valueIfAbsent?: Maybeable<T>
+  valueIfAbsent?: T
 ) => CtxFunc<C, D, Maybe<T>>
 
 function field<D, V>(getAndDelete: GetAndDeleteFunc<D, V>): FieldFunc<D, V> {
   return <T, C extends Context>(
       name: string,
       f: CtxFunc<C, V, Maybe<T>>,
-      valueIfAbsent?: Maybeable<T>
+      valueIfAbsent?: T
     ) =>
     (d: D, ctx: C): Maybe<T> =>
       ctx.scope(name, () => {
@@ -69,7 +69,33 @@ function field<D, V>(getAndDelete: GetAndDeleteFunc<D, V>): FieldFunc<D, V> {
             ctx.error('required')
             return Maybe.None
           }
-          return Maybe.flatten(valueIfAbsent)
+          return Maybe.some(valueIfAbsent)
+        }
+        return f(v, ctx)
+      })
+}
+
+type FieldMaybeDefaultFunc<D, V> = <T, C extends Context>(
+  name: string,
+  f: CtxFunc<C, V, Maybe<T>>,
+  valueIfAbsent: Maybe<T>
+) => CtxFunc<C, D, Maybe<T>>
+
+// TODO(apaseltiner): Merge this function back into `field` since it is
+// identical other than whether the default value is T or Maybe<T>.
+function fieldMaybeDefault<D, V>(
+  getAndDelete: GetAndDeleteFunc<D, V>
+): FieldMaybeDefaultFunc<D, V> {
+  return <T, C extends Context>(
+      name: string,
+      f: CtxFunc<C, V, Maybe<T>>,
+      valueIfAbsent: Maybe<T>
+    ) =>
+    (d: D, ctx: C): Maybe<T> =>
+      ctx.scope(name, () => {
+        const v = getAndDelete(d, name)
+        if (v === undefined) {
+          return valueIfAbsent
         }
         return f(v, ctx)
       })
@@ -81,7 +107,7 @@ export type Exclusive<T, V, C extends Context> = {
 
 type ExclusiveFunc<D, V> = <T, C extends Context>(
   x: Exclusive<T, V, C>,
-  valueIfAbsent: Maybeable<T>
+  valueIfAbsent: Maybe<T>
 ) => CtxFunc<C, D, Maybe<T>>
 
 function exclusive<D, V>(
@@ -89,7 +115,7 @@ function exclusive<D, V>(
 ): ExclusiveFunc<D, V> {
   return <T, C extends Context>(
       x: Exclusive<T, V, C>,
-      valueIfAbsent: Maybeable<T>
+      valueIfAbsent: Maybe<T>
     ) =>
     (d: D, ctx: C): Maybe<T> => {
       const found: string[] = []
@@ -112,13 +138,14 @@ function exclusive<D, V>(
         return Maybe.None
       }
 
-      return Maybe.flatten(valueIfAbsent)
+      return valueIfAbsent
     }
 }
 
 type Funcs<D, V> = {
   exclusive: ExclusiveFunc<D, V>
   field: FieldFunc<D, V>
+  fieldMaybeDefault: FieldMaybeDefaultFunc<D, V>
   struct: StructFunc<D>
 }
 
@@ -130,6 +157,7 @@ export function make<D, V>(
   return {
     exclusive: exclusive(getAndDelete),
     field: field(getAndDelete),
+    fieldMaybeDefault: fieldMaybeDefault(getAndDelete),
     struct: struct(unknownKeys, warnUnknownMsg),
   }
 }
