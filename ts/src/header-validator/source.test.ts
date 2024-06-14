@@ -34,6 +34,7 @@ const testCases: TestCase[] = [
       "debug_key": "1",
       "debug_reporting": true,
       "destination": "https://a.test",
+      "destination_limit_priority": "1",
       "event_report_window": "3601",
       "expiry": "86400",
       "filter_data": {"b": ["c"]},
@@ -57,6 +58,7 @@ const testCases: TestCase[] = [
       debugKey: 1n,
       debugReporting: true,
       destination: new Set(['https://a.test']),
+      destinationLimitPriority: 1n,
       eventLevelEpsilon: 14,
       expiry: 86400,
       filterData: new Map([['b', new Set(['c'])]]),
@@ -1261,6 +1263,32 @@ const testCases: TestCase[] = [
       {
         path: ['event_report_windows', 'end_times', 0],
         msg: 'will be clamped to max of 259200 (expiry)',
+      },
+    ],
+  },
+  {
+    name: 'destination-limit-priority-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "destination_limit_priority": 1
+    }`,
+    expectedErrors: [
+      {
+        path: ['destination_limit_priority'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'destination-limit-priority-wrong-format',
+    json: `{
+      "destination": "https://a.test",
+      "destination_limit_priority": "x"
+    }`,
+    expectedErrors: [
+      {
+        path: ['destination_limit_priority'],
+        msg: 'string must represent an integer (must match /^-?[0-9]+$/)',
       },
     ],
   },

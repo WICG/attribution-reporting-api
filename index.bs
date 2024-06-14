@@ -843,6 +843,8 @@ An attribution source is a [=struct=] with the following items:
 :: Number of [=aggregatable debug reports=] created for this [=attribution source=].
 : <dfn>aggregatable debug reporting config</dfn>
 :: An [=aggregatable debug reporting config=].
+: <dfn>destination limit priority</dfn>
+:: A 64-bit integer.
 
 </dl>
 
@@ -1064,6 +1066,8 @@ An <dfn>aggregatable attribution report</dfn> is an [=aggregatable report=] with
 :: Null or a [=string=].
 : <dfn>attribution debug info</dfn>
 :: An [=attribution debug info=].
+: <dfn>source identifier</dfn>
+:: A [=string=].
 
 </dl>
 
@@ -1094,8 +1098,14 @@ An <dfn>attribution rate-limit record</dfn> is a [=struct=] with the following i
 :: A [=moment=].
 : <dfn>expiry time</dfn>
 :: Null or a [=moment=].
-: <dfn>event-level report ID</dfn>
-:: Null or an [=event-level report=]'s [=event-level report/report ID=].
+: <dfn>entity ID</dfn>
+:: Null for [=obtain a fake report|fake reports=] or an [=event-level report=]'s [=event-level report/report ID=] or an
+    [=aggregatable attribution report=]'s [=aggregatable attribution report/report ID=] or an
+    [=attribution source=]'s [=attribution source/source identifier=].
+: <dfn>deactivated for unexpired destination limit</dfn> (default false)
+:: A [=boolean=].
+: <dfn>destination limit priority</dfn> (default null)
+:: Null or a 64-bit integer.
 
 </dl>
 
@@ -1127,6 +1137,8 @@ Possible values are:
 <li>"<dfn><code>source-channel-capacity-limit</code></dfn>"
 <li>"<dfn><code>source-destination-global-rate-limit</code></dfn>"
 <li>"<dfn><code>source-destination-limit</code></dfn>"
+<li>"<dfn><code>source-destination-limit-replaced</code></dfn>"
+<li>"<dfn><code>source-destination-per-day-rate-limit</code></dfn>"
 <li>"<dfn><code>source-destination-rate-limit</code></dfn>"
 <li>"<dfn><code>source-noised</code></dfn>"
 <li>"<dfn><code>source-reporting-origin-limit</code></dfn>"
@@ -1433,6 +1445,11 @@ for [=attribution sources=] with a given [=attribution source/source site=] per 
 The second controls the maximum number of distinct [=sites=] across all [=attribution source/attribution destinations=]
 for [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting origin=] [=site=])
 per [=destination rate-limit window=].
+
+<dfn>Max destinations per source reporting site per day</dfn> is an integer that controls
+the maximum number of distinct [=sites=] across all [=attribution source/attribution destinations=]
+for [=attribution sources=] with a given ([=attribution source/source site=], [=attribution source/reporting origin=] [=site=])
+per day.
 
 <dfn>Max source reporting origins per rate-limit window</dfn> is a positive
 integer that controls the maximum number of distinct
@@ -2361,6 +2378,7 @@ A <dfn>source-registration JSON key</dfn> is one of the following:
 <li>"<dfn><code>debug_key</code></dfn>"
 <li>"<dfn><code>debug_reporting</code></dfn>"
 <li>"<dfn><code>destination</code></dfn>"
+<li>"<dfn><code>destination_limit_priority</code></dfn>"
 <li>"<dfn><code>end_times</code></dfn>"
 <li>"<dfn><code>event_level_epsilon</code></dfn>"
 <li>"<dfn><code>event_report_window</code></dfn>"
@@ -2666,6 +2684,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     [=parse an optional 64-bit signed integer=] with |value|, "<code>[=source-registration JSON key/priority=]</code>", and
     0.
 1. If |priority| is an error, return null.
+1. Let |destinationLimitPriority| be the result of running
+    [=parse an optional 64-bit signed integer=] with |value|,
+    "<code>[=source-registration JSON key/destination_limit_priority=]</code>", and 0.
+1. If |destinationLimitPriority| is an error, return null.
 1. Let |filterData| be a new [=filter map=].
 1. If |value|["<code>[=source-registration JSON key/filter_data=]</code>"] [=map/exists=]:
     1. Set |filterData| to the result of running [=parse filter data=] with
@@ -2772,6 +2794,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |aggregatableDebugBudget|
     : [=attribution source/aggregatable debug reporting config=]
     :: |aggregatableDebugReportingConfig|
+    : [=attribution source/destination limit priority=]
+    :: |destinationLimitPriority|
 1. Return |source|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -2812,19 +2836,123 @@ To <dfn>check if an [=attribution source=] exceeds the time-based destination li
 Note: When both limits are hit, we interpret it as "<code>[=destination rate-limit result/hit reporting limit=]</code>"
 for debug reporting.
 
-To <dfn>check if an [=attribution source=] exceeds the unexpired destination limit</dfn> given an
-[=attribution source=] |source|, run the following steps:
+To <dfn>check if an [=attribution source=] exceeds the per day destination limits</dfn>
+given an [=attribution source=] |source|, run the following steps:
 
-1. Let |unexpiredSources| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
+1. Let |matchingSources| be all [=attribution rate-limit records=] |record| in the [=attribution rate-limit cache=] where all of the following are true:
      * |record|'s [=attribution rate-limit record/scope=] is "<code>[=rate-limit scope/source=]</code>"
      * |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are equal
-     * |record|'s [=attribution rate-limit record/reporting origin=] and |source|'s [=attribution source/reporting origin=] are [=same site=]
+     * |record|'s [=attribution rate-limit record/reporting origin=] is [=same site=] with
+        |source|'s [=attribution source/reporting origin=]
      * |record|'s [=attribution rate-limit record/expiry time=] is greater than |source|'s [=attribution source/source time=]
-1. Let |unexpiredDestinations| be a new [=set=].
-1. For each [=attribution rate-limit record=] |unexpiredRecord| of |unexpiredSources|:
-    1. [=set/Append=] |unexpiredRecord|'s [=attribution rate-limit record/attribution destination=] to |unexpiredDestinations|.
-1. Let |newDestinations| be the result of taking the [=set/union=] of |unexpiredDestinations| and |source|'s [=attribution source/attribution destinations=].
-1. Return whether |newDestinations|'s [=set/size=] is greater than the user agent's [=max destinations covered by unexpired sources=].
+     * The [=duration from=] |record|'s [=attribution rate-limit record/time=] and |source|'s [=attribution source/source time=]
+        is less than 1 day
+1. Let |destinations| be the [=set=] of all [=attribution rate-limit record/attribution destination=] in |matchingSources|,
+    [=set/union|unioned=] with |source|'s [=attribution source/attribution destinations=].
+1. Return whether |destinations|'s [=set/size=] is greater than [=max destinations per source reporting site per day=].
+
+To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of
+[=attribution source/source identifiers=] |sourcesToDelete| and a [=moment=] |now|:
+
+1. If |sourcesToDelete| [=set/is empty=], return.
+1. [=set/iterate|For each=] [=attribution source=] |source| of the [=attribution source cache=]:
+    1. [=set/Remove=] |source| from the [=attribution source cache=] if |sourcesToDelete|
+        [=set/contains=] |source|'s [=attribution source/source identifier=].
+1. Let |deletedEventLevelReports| be a new [=set=].
+1. [=set/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
+    1. If |sourcesToDelete| [=set/contains=] |report|'s [=event-level report/source identifier=]
+        and |report|'s [=event-level report/trigger time=] is greater than or equal to |now|:
+        1. [=set/Append=] |report|'s [=event-level report/report ID=] to |deletedEventLevelReports|.
+        1. [=set/Remove=] |report| from the [=event-level report cache=].
+1. Let |deletedAggregatableReports| be a new [=set=].
+1. [=set/iterate|For each=] [=aggregatable attribution report=] |report| of the [=aggregatable attribution report cache=]:
+    1. If |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable attribution report/source identifier=]:
+        1. [=set/Append=] |report|'s [=aggregatable attribution report/report ID=] to |deletedAggregatableReports|.
+        1. [=set/Remove=] |report| from the [=aggregatable attribution report cache=].
+1. [=set/iterate|For each=] [=attribution rate-limit record=] |record| of the [=attribution rate-limit cache=]:
+    1. If |record|'s [=attribution rate-limit record/scope=] is:
+        <dl class="switch">
+        : "<code>[=rate-limit scope/source=]</code>"
+        :: Set |record|'s [=attribution rate-limit record/deactivated for unexpired destination limit=] to
+            true if |sourcesToDelete| [=set/contains=] |record|'s [=attribution rate-limit record/entity ID=].
+        : "<code>[=rate-limit scope/event-attribution=]</code>"
+        :: [=set/Remove=] |record| from the [=attribution rate-limit cache=] if
+            |deletedEventLevelReports| [=set/contains=] |record|'s [=attribution rate-limit record/entity ID=].
+        : "<code>[=rate-limit scope/aggregatable-attribution=]</code>"
+        :: [=set/Remove=] |record| from the [=attribution rate-limit cache=] if
+            |deletedAggregatableReports| [=set/contains=] |record|'s [=attribution rate-limit record/entity ID=].
+
+        </dl>
+
+A <dfn>destination limit record</dfn> is a [=struct=] with the following items:
+
+<dl dfn-for="destination limit record">
+: <dfn>attribution destination</dfn>
+:: A [=site=].
+: <dfn>priority</dfn>
+:: A 64-bit integer.
+: <dfn>time</dfn>
+:: A [=moment=]
+: <dfn>source identifier</dfn>
+:: A [=string=].
+
+</dl>
+
+To <dfn>get sources to delete for the unexpired destination limit</dfn> given an
+[=attribution source=] |source|, run the following steps:
+1. Let |destinationRecords| be a new [=list=].
+1. [=set/iterate|For each=] [=attribution rate-limit record=] |record| of the [=attribution rate-limit cache=]:
+    1. If |record|'s [=attribution rate-limit record/scope=] is not "<code>[=rate-limit scope/source=]</code>", [=iteration/continue=].
+    1. If |record|'s [=attribution rate-limit record/deactivated for unexpired destination limit=] is true, [=iteration/continue=].
+    1. If |record|'s [=attribution rate-limit record/source site=] and |source|'s [=attribution source/source site=] are not equal, [=iteration/continue=].
+    1. If |record|'s [=attribution rate-limit record/reporting origin=] and |source|'s [=attribution source/reporting origin=] are not [=same site=], [=iteration/continue=].
+    1. If |record|'s [=attribution rate-limit record/expiry time=] is less than or equal to |source|'s [=attribution source/source time=], [=iteration/continue=].
+    1. [=Assert=]: |record|'s [=attribution rate-limit record/destination limit priority=] is not null.
+    1. [=Assert=]: |record|'s [=attribution rate-limit record/entity ID=] is not null.
+    1. Let |destinationRecord| be a new [=destination limit record=] struct whose items are:
+
+        : [=destination limit record/attribution destination=]
+        :: |record|'s [=attribution rate-limit record/attribution destination=]
+        : [=destination limit record/priority=]
+        :: |record|'s [=attribution rate-limit record/destination limit priority=]
+        : [=destination limit record/time=]
+        :: |record|'s [=attribution rate-limit record/time=]
+        : [=destination limit record/source identifier=]
+        :: |record|'s [=attribution rate-limit record/entity ID=]
+
+    1. [=list/Append=] |destinationRecord| to |destinationRecords|.
+1. [=set/iterate|For each=] [=site=] |destination| of |source|'s [=attribution source/attribution destinations=]:
+    1. Let |destinationRecord| be a new [=destination limit record=] struct whose items are:
+
+        : [=destination limit record/attribution destination=]
+        :: |destination|
+        : [=destination limit record/priority=]
+        :: |source|'s [=attribution source/destination limit priority=]
+        : [=destination limit record/time=]
+        :: |source|'s [=attribution source/source time=]
+        : [=destination limit record/source identifier=]
+        :: |record|'s [=attribution source/source identifier=]
+
+    1. [=list/Append=] |destinationRecord| to |destinationRecords|.
+1. [=list/sort in descending order|Sort=] |destinationRecords| in descending order, with |a| less than |b| if the following steps return true:
+    1. If |a|'s [=destination limit record/priority=] is less than |b|'s [=destination limit record/priority=], return true.
+    1. If |a|'s [=destination limit record/priority=] is greater than |b|'s [=destination limit record/priority=], return false.
+    1. If |a|'s [=destination limit record/time=] is less than |b|'s [=destination limit record/time=], return true.
+    1. If |a|'s [=destination limit record/time=] is greater than |b|'s [=destination limit record/time=], return false.
+    1. If |a|'s <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
+        [=destination limit record/attribution destination=]
+        is less than |b|'s <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>
+        [=destination limit record/attribution destination=], return true.
+    1. Return false.
+1. Let |sourcesToDelete| be a new [=set=].
+1. Let |newDestinations| be a new [=set=].
+1. [=set/iterate|For each=] [=destination limit record=] |record| of |destinationRecords|:
+    1. Let |destination| be |record|'s [=destination limit record/attribution destination=].
+    1. If |newDestinations|'s [=set/size=] is less than the user agent's [=max destinations covered by unexpired sources=],
+        [=set/append=] |destination| to |newDestinations|.
+    1. Otherwise, if |newDestinations| does not [=set/contain=] |destination|:
+        1. [=set/Append=] |record|'s [=destination limit record/source identifier=] to |sourcesToDelete|.
+1. Return |sourcesToDelete|.
 
 To <dfn>check if an [=attribution source=] should be blocked by reporting-origin per site limit</dfn> given an [=attribution source=] |source|:
 
@@ -2842,8 +2970,7 @@ a [=trigger state=] |triggerState|:
 
 1. Let |specEntry| be the [=map/entry=] for
     |source|'s [=attribution source/trigger specs=][|triggerState|'s [=trigger state/trigger data=]].
-1. Let |triggerTime| be the greatest [=moment=] that is strictly less than
-    |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
+1. Let |triggerTime| be |triggerState|'s [=trigger state/report window=]'s [=report window/start=].
 1. Let |priority| be 0.
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |triggerTime|, [=obtain an event-level report/triggerDebugKey=] set to null,
@@ -2852,9 +2979,22 @@ a [=trigger state=] |triggerState|:
     |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
 1. Return |fakeReport|.
 
+To <dfn>check if a source debug data type is a verbose debug data type</dfn>
+given a [=source debug data type=] |dataType|:
+
+1. If |dataType| is:
+    <dl class="switch">
+    : "<code>[=source debug data type/source-destination-global-rate-limit=]</code>"
+    : "<code>[=source debug data type/source-destination-limit-replaced=]</code>"
+    : "<code>[=source debug data type/source-reporting-origin-limit=]</code>"
+    :: Return false.
+
+    </dl>
+1. Return true.
+
 To <dfn>obtain and deliver a verbose debug report on source registration</dfn> given a
-[=source debug data type=] |dataType|, an [=attribution source=] |source|, and
-a [=boolean=] |isNoised|:
+[=set=] of [=source debug data types=] |dataTypes|, an [=attribution source=] |source|,
+and a [=boolean=] |isNoised|:
 
 1. If |source|'s [=attribution source/debug reporting enabled=] is false, return.
 1. If |source|'s [=attribution source/debug cookie set=] is false, return.
@@ -2867,39 +3007,58 @@ a [=boolean=] |isNoised|:
     :: |source|'s [=attribution source/source site=], <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
 1. If |source|'s [=attribution source/debug key=] is not null, [=map/set=] |body|["`source_debug_key`"]
     to |source|'s [=attribution source/debug key=], [=serialize an integer|serialized=].
-1. Let |dataTypeToReport| be |dataType|.
-1. If |dataType| is:
-    <dl class="switch">
-        : "<code>[=source debug data type/source-destination-global-rate-limit=]</code>"
-        : "<code>[=source debug data type/source-reporting-origin-limit=]</code>"
-        :: Set |dataTypeToReport| to "<code>[=source debug data type/source-success=]</code>".
+1. Let |dataTypeToReport| be null.
+1. [=set/iterate|For each=] |dataType| of |dataTypes|:
+    1. Let |effectiveDataType| be |dataType|.
+    1. If |dataType| is:
+        <dl class="switch">
+            : "<code>[=source debug data type/source-destination-global-rate-limit=]</code>"
+            : "<code>[=source debug data type/source-reporting-origin-limit=]</code>"
+            :: Set |effectiveDataType| to "<code>[=source debug data type/source-success=]</code>".
 
-    </dl>
-1. If |dataTypeToReport| is "<code>[=source debug data type/source-success=]</code>"
-    and |isNoised| is true, set |dataTypeToReport| to "<code>[=source debug data type/source-noised=]</code>".
-1. If |dataTypeToReport| is:
-    <dl class="switch">
-    : "<code>[=source debug data type/source-destination-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations covered by unexpired sources=],
-         [=serialize an integer|serialized=].
-    : "<code>[=source debug data type/source-destination-rate-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations per rate-limit window=][1],
-         [=serialize an integer|serialized=].
-    : "<code>[=source debug data type/source-storage-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max pending sources per source origin=],
-         [=serialize an integer|serialized=].
-    : "<code>[=source debug data type/source-channel-capacity-limit=]</code>"
-    ::
-        1. Let |sourceType| be |source|'s [=attribution source/source type=].
-        1. [=map/Set=] |body|["`limit`"] to the user agent's [=max event-level channel capacity per source=][|sourceType|].
-    : "<code>[=source debug data type/source-trigger-state-cardinality-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max trigger-state cardinality=],
-        [=serialize an integer|serialized=].
-    : "<code>[=source debug data type/source-reporting-origin-per-site-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max source reporting origins per source reporting site=],
-         [=serialize an integer|serialized=].
+        </dl>
+    1. If |effectiveDataType| is "<code>[=source debug data type/source-success=]</code>"
+        and |isNoised| is true, set |effectiveDataType| to "<code>[=source debug data type/source-noised=]</code>".
+    1. If the result of [=checking if a source debug data type is a verbose debug data type=]
+        is true:
+        1. [=Assert=]: |dataTypeToReport| is null.
+        1. Set |dataTypeToReport| to |effectiveDataType|.
+    1. If |effectiveDataType| is:
+        <dl class="switch">
+        : "<code>[=source debug data type/source-destination-limit=]</code>"
+        :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations covered by unexpired sources=],
+            [=serialize an integer|serialized=].
+        : "<code>[=source debug data type/source-destination-limit-replaced=]</code>"
+        :: [=map/Set=] |body|["`source_destination_limit`"] to the user agent's
+            [=max destinations covered by unexpired sources=], [=serialize an integer|serialized=].
 
-    </dl>
+        Note: The "`source_destination_limit`" field may be included to indicate that
+        [=max destinations covered by unexpired sources=] was hit, which is not
+        reported as "<code>[=source debug data type/source-destination-limit=]</code>" to prevent side-channel
+        leakage of cross-origin data.
+
+        : "<code>[=source debug data type/source-destination-rate-limit=]</code>"
+        :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations per rate-limit window=][1],
+             [=serialize an integer|serialized=].
+        : "<code>[=source debug data type/source-destination-per-day-rate-limit=]</code>"
+        :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations per source reporting site per day=],
+             [=serialize an integer|serialized=].
+        : "<code>[=source debug data type/source-storage-limit=]</code>"
+        :: [=map/Set=] |body|["`limit`"] to the user agent's [=max pending sources per source origin=],
+            [=serialize an integer|serialized=].
+        : "<code>[=source debug data type/source-channel-capacity-limit=]</code>"
+        ::
+            1. Let |sourceType| be |source|'s [=attribution source/source type=].
+            1. [=map/Set=] |body|["`limit`"] to the user agent's [=max event-level channel capacity per source=][|sourceType|].
+        : "<code>[=source debug data type/source-trigger-state-cardinality-limit=]</code>"
+        :: [=map/Set=] |body|["`limit`"] to the user agent's [=max trigger-state cardinality=],
+            [=serialize an integer|serialized=].
+        : "<code>[=source debug data type/source-reporting-origin-per-site-limit=]</code>"
+        :: [=map/Set=] |body|["`limit`"] to the user agent's [=max source reporting origins per source reporting site=],
+            [=serialize an integer|serialized=].
+
+        </dl>
+1. [=Assert=]: |dataTypeToReport| is not null.
 1. Let |data| be a new [=verbose debug data=] with the items:
     : [=verbose debug data/data type=]
     :: |dataTypeToReport|
@@ -2909,7 +3068,7 @@ a [=boolean=] |isNoised|:
     and |source|'s [=attribution source/fenced=].
 
 To <dfn>obtain and deliver an aggregatable debug report on source registration</dfn>
-given a [=source debug data type=] |dataType|, an [=attribution source=] |source|,
+given a [=set=] of [=source debug data types=] |dataTypes|, an [=attribution source=] |source|,
 and a [=boolean=] |isNoised|:
 
 1. If |source|'s [=attribution source/fenced=] is true, return.
@@ -2917,17 +3076,18 @@ and a [=boolean=] |isNoised|:
 1. Let |debugDataMap| be |config|'s [=aggregatable debug reporting config/debug data=].
 1. If |debugDataMap| [=map/is empty=], return.
 1. Let |contributions| be a new [=list=].
-1. Let |dataTypeToReport| be |dataType|.
-1. If |dataTypeToReport| is "<code>[=source debug data type/source-success=]</code>"
-    and |isNoised| is true, set |dataTypeToReport| to "<code>[=source debug data type/source-noised=]</code>".
-1. If |debugDataMap|[|dataTypeToReport|] [=map/exists=]:
-    1. Let |contribution| be a new [=aggregatable contribution=] with items:
-        : [=aggregatable contribution/key=]
-        :: |debugDataMap|[|dataTypeToReport|]'s [=aggregatable contribution/key=] bitwise-OR
-            |config|'s [=aggregatable debug reporting config/key piece=]
-        : [=aggregatable contribution/value=]
-        :: |debugDataMap|[|dataTypeToReport|]'s [=aggregatable contribution/value=]
-    1. [=list/Append=] |contribution| to |contributions|.
+1. [=set/iterate|For each=] |dataType| of |dataTypes|:
+    1. Let |dataTypeToReport| be |dataType|.
+    1. If |dataType| is "<code>[=source debug data type/source-success=]</code>"
+        and |isNoised| is true, set |dataTypeToReport| to "<code>[=source debug data type/source-noised=]</code>".
+    1. If |debugDataMap|[|dataTypeToReport|] [=map/exists=]:
+        1. Let |contribution| be a new [=aggregatable contribution=] with items:
+            : [=aggregatable contribution/key=]
+            :: |debugDataMap|[|dataTypeToReport|]'s [=aggregatable contribution/key=] bitwise-OR
+                |config|'s [=aggregatable debug reporting config/key piece=]
+            : [=aggregatable contribution/value=]
+            :: |debugDataMap|[|dataTypeToReport|]'s [=aggregatable contribution/value=]
+        1. [=list/Append=] |contribution| to |contributions|.
 1. Run [=obtain and deliver an aggregatable debug report on registration=] with |contributions|,
     |source|'s [=attribution source/source site=], |source|'s [=attribution source/reporting origin=],
     |source|, |source|'s [=attribution source/attribution destinations=][0],
@@ -2935,13 +3095,13 @@ and a [=boolean=] |isNoised|:
     and |source|'s [=attribution source/source time=].
 
 To <dfn>obtain and deliver debug reports on source registration</dfn>
-given a [=source debug data type=] |dataType|, an [=attribution source=] |source|,
+given a [=set=] of [=source debug data types=] |dataTypes|, an [=attribution source=] |source|,
 and an optional [=boolean=] |isNoised| (default false):
 
 1. Run [=obtain and deliver a verbose debug report on source registration=]
-    with |dataType|, |source|, and |isNoised|.
+    with |dataTypes|, |source|, and |isNoised|.
 1. Run [=obtain and deliver an aggregatable debug report on source registration=]
-    with |dataType|, |source|, and |isNoised|.
+    with |dataTypes|, |source|, and |isNoised|.
 
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
 
@@ -2957,11 +3117,13 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. Let |epsilon| be |source|'s [=attribution source/event-level epsilon=].
 1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
 1. If |channelCapacity| is an error:
-    1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-trigger-state-cardinality-limit=]</code>" and |source|.
+    1. Run [=obtain and deliver debug reports on source registration=] with
+        « "<code>[=source debug data type/source-trigger-state-cardinality-limit=]</code>" » and |source|.
     1. Return.
 1. Let |sourceType| be |source|'s [=attribution source/source type=].
 1. If |channelCapacity| is greater than [=max event-level channel capacity per source=][|sourceType|]:
-    1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-channel-capacity-limit=]</code>" and |source|.
+    1. Run [=obtain and deliver debug reports on source registration=] with
+        « "<code>[=source debug data type/source-channel-capacity-limit=]</code>" » and |source|.
     1. Return.
 1. Set |source|'s [=attribution source/randomized response=] to the result of
     [=obtaining a randomized source response=] with |randomizedResponseConfig| and |epsilon|.
@@ -2976,24 +3138,37 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     [=attribution source/source origin=] are [=same origin=].
 1. If |pendingSourcesForSourceOrigin|'s [=list/size=] is greater than or equal
     to the user agent's [=max pending sources per source origin=]:
-    1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-storage-limit=]</code>" and |source|.
-    1. Return.
-1. If the result of running [=check if an attribution source exceeds the unexpired destination limit=]
-    with |source| is true:
-    1. Run [=obtain and deliver debug reports on source registration=] with "[=source debug data type/source-destination-limit=]</code>" and |source|.
-    1. Return.
-1. If the result of running [=check if an attribution source should be blocked by reporting-origin per site limit=]
-    with |source| is <strong>blocked</strong>:
-    1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-reporting-origin-per-site-limit=]</code>" and |source|.
+    1. Run [=obtain and deliver debug reports on source registration=] with
+        « "<code>[=source debug data type/source-storage-limit=]</code>" » and |source|.
     1. Return.
 1. Let |destinationRateLimitResult| be the result of running [=check if an attribution source exceeds the time-based destination limit=] with |source|.
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit reporting limit=]</code>":
-    1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-destination-rate-limit=]</code>" and |source|.
+    1. Run [=obtain and deliver debug reports on source registration=] with
+        « "<code>[=source debug data type/source-destination-rate-limit=]</code>" » and |source|.
     1. Return.
+1. If the result of running [=check if an attribution source exceeds the per day destination limit=]
+    with |source| is true:
+    1. Run [=obtain and deliver debug reports on source registration=] with
+        « "<code>[=source debug data type/source-destination-per-day-rate-limit=]</code>" » and |source|.
+    1. Return.
+1. Let |sourcesToDeleteForDestinationLimit| be the result of running [=get sources to delete for the unexpired destination limit=]
+    with |source|.
+1. If |sourcesToDeleteForDestinationLimit| [=set/contains=] |source|'s [=attribution source/source identifier=]:
+    1. Run [=obtain and deliver debug reports on source registration=] with
+        "<code>[=source debug data type/source-destination-limit=]</code>" and |source|.
+    1. Return.
+1. Let |debugDataTypes| be a new [=set=].
+1. If |sourcesToDeleteForDestinationLimit| is not [=set/is empty|empty=],
+    [=set/append=] "<code>[=source debug data type/source-destination-limit-replaced=]</code>"
+    to |debugDataTypes|.
+1. Run [=delete sources for unexpired destination limit=] with |sourcesToDeleteForDestinationLimit| and |source|'s [=attribution source/source time=].
 1. Let |isNoised| be true if |source|'s [=attribution source/randomized response=]
     is not null, otherwise false.
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit global limit=]</code>":
-    1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-destination-global-rate-limit=]</code>", |source|, and |isNoised|.
+    1. [=set/Append=] "<code>[=source debug data type/source-destination-global-rate-limit=]</code>"
+        to |debugDataTypes|.
+    1. Run [=obtain and deliver debug reports on source registration=]
+        with |debugDataTypes|, |source|, and |isNoised|.
     1. Return.
 1. Let |newRateLimitRecords| be a new [=set=].
 1. [=set/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
@@ -3010,13 +3185,16 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         :: |source|'s [=attribution source/source time=]
         : [=attribution rate-limit record/expiry time=]
         :: |source|'s [=attribution source/expiry time=]
-        : [=attribution rate-limit record/event-level report ID=]
-        :: null
+        : [=attribution rate-limit record/entity ID=]
+        :: |source|'s [=attribution source/source identifier=]
+        : [=attribution rate-limit record/destination limit priority=]
+        :: |source|'s [=attribution source/destination limit priority=]
     1. If the result of running [=should processing be blocked by reporting-origin limit=] with
         |rateLimitRecord| is <strong>blocked</strong>:
-        1. Run [=obtain and deliver debug reports on source registration=] with
-            "<code>[=source debug data type/source-reporting-origin-limit=]</code>", |source|,
-            and |isNoised|.
+        1. [=set/Append=] "<code>[=source debug data type/source-reporting-origin-limit=]</code>"
+            to |debugDataTypes|.
+        1. Run [=obtain and deliver debug reports on source registration=]
+            with |debugDataTypes|, |source|, and |isNoised|.
         1. Return.
     1. [=set/Append=] |rateLimitRecord| to |newRateLimitRecords|.
 1. [=set/iterate|For each=] |record| of |newRateLimitRecords|, [=set/append=] |record| to
@@ -3045,12 +3223,13 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
             :: |source|'s [=attribution source/source time=]
             : [=attribution rate-limit record/expiry time=]
             :: null
-            : [=attribution rate-limit record/event-level report ID=]
+            : [=attribution rate-limit record/entity ID=]
             :: null
         1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
+1. [=set/Append=] "<code>[=source debug data type/source-success=]</code>" to
+    |debugDataTypes|.
 1. Run [=obtain and deliver debug reports on source registration=] with
-    "<code>[=source debug data type/source-success=]</code>", |source|,
-    and |isNoised|.
+    |debugDataTypes|, |source|, and |isNoised|.
 1. [=set/Append=] |source| to |cache|.
 
 Note: Because a fake report does not have a "real" effective destination, we need to subtract from the
@@ -3603,7 +3782,7 @@ To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
 1. [=set/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
 1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
 1. Let |rateLimitRecord| be the element from [=attribution rate-limit cache=] whose
-    [=attribution rate-limit record/event-level report ID=] is equal to |lowestPriorityReport|'s [=event-level report/report ID=]
+    [=attribution rate-limit record/entity ID=] is equal to |lowestPriorityReport|'s [=event-level report/report ID=]
     and [=attribution rate-limit record/scope=] is equal to "<code>[=rate-limit scope/event-attribution=]</code>".
 1. [=Assert=]: |rateLimitRecord| is not null.
 
@@ -3678,7 +3857,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     :: |sourceToAttribute|'s [=attribution source/source time=]
     : [=attribution rate-limit record/expiry time=]
     :: null
-    : [=attribution rate-limit record/event-level report ID=]
+    : [=attribution rate-limit record/entity ID=]
     :: |report|'s [=event-level report/report ID=]
 1. If the result of running [=check if attribution should be blocked by rate limits=]
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null, return it.
@@ -3777,7 +3956,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
     :: |sourceToAttribute|'s [=attribution source/source time=]
     : [=attribution rate-limit record/expiry time=]
     :: null
-    : [=attribution rate-limit record/event-level report ID=]
+    : [=attribution rate-limit record/entity ID=]
     :: null
 1. If the result of running [=check if attribution should be blocked by rate limits=]
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
@@ -4032,6 +4211,8 @@ an [=attribution trigger=] |trigger|:
     :: |trigger|'s [=attribution trigger/aggregatable source registration time configuration=].
     : [=aggregatable attribution report/trigger context ID=]
     :: |trigger|'s [=attribution trigger/trigger context ID=]
+    : [=aggregatable attribution report/source identifier=]
+    :: |source|'s [=attribution source/source identifier=].
 1. Return |report|.
 
 <h3 id="generating-randomized-null-attribution-reports">Generating randomized null attribution reports</h3>

@@ -1047,6 +1047,7 @@ export type Source = CommonDebug &
 
     eventLevelEpsilon: number
     aggregatableDebugReporting: SourceAggregatableDebugReportingConfig | null
+    destinationLimitPriority: bigint
   }
 
 function source(j: Json, ctx: SourceContext): Maybe<Source> {
@@ -1125,6 +1126,11 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
           'trigger_data_matching',
           triggerDataMatching,
           TriggerDataMatching.modulus
+        ),
+        destinationLimitPriority: field(
+          'destination_limit_priority',
+          int64,
+          0n
         ),
 
         ...commonDebugFields,

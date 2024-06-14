@@ -29,6 +29,9 @@ is rejected due to the following limits to mitigate security concerns:
 #### `source-destination-rate-limit`
 A source is rejected due to the [destinations per source and reporting site rate limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-per-source-site).
 
+#### `source-destination-per-day-rate-limit`
+A source is rejected due to the [destinations per source and reporting site per day rate limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources).
+
 #### `source-unknown-error`
 System error.
 
@@ -134,34 +137,39 @@ otherwise the dictionary may include the following fields:
 * `source_site`: The site on which source was registered, e.g. `"https://source.example"`.
 * `trigger_debug_key`: The debug key in the trigger registration, omitted if not set.
 
+If `type` is [`source-success`](#source-success) or [`source-noised`](#source-noised), the `body`
+dictionary may include a `source_destination_limit` field if the [destination limit](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources)
+was exceeded.
+
 This table defines the fields in the `body` dictionary.
 
-| `type` | `attribution_destination`| `limit` | `source_debug_key` | `source_event_id` | `source_site` | `trigger_debug_key` |
-| --- | --- | --- | --- | --- | --- | --- |
-| [`source-channel-capacity-limit`](#source-channel-capacity-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
-| [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
-| [`source-destination-rate-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
-| [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
-| [`source-reporting-origin-per-site-limit`](#source-reporting-origin-per-site-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
-| [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
-| [`source-success`](#source-success) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
-| [`source-trigger-state-cardinality-limit`](#source-trigger-state-cardinality-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
-| [`source-unknown-error`](#source-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ |
-| [`trigger-no-matching-source`](#trigger-no-matching-source) | ✓ | ❌ | ❌ | ❌ | ❌ | ✓ |
-| [`trigger-no-matching-filter-data`](#trigger-no-matching-filter-data) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-event-attributions-per-source-destination-limit`](#trigger-event-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-aggregate-attributions-per-source-destination-limit`](#trigger-aggregate-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-reporting-origin-limit`](#trigger-reporting-origin-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-event-deduplicated`](#trigger-event-deduplicated) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-event-no-matching-configurations`](#trigger-event-no-matching-configurations) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-event-noise`](#trigger-event-noise) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-event-storage-limit`](#trigger-event-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-event-report-window-not-started`](#trigger-event-report-window-not-started) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-event-report-window-passed`](#trigger-event-report-window-passed) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-aggregate-deduplicated`](#trigger-aggregate-deduplicated) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-aggregate-excessive-reports`](#trigger-aggregate-excessive-reports) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-aggregate-no-contributions`](#trigger-aggregate-no-contributions) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-aggregate-insufficient-budget`](#trigger-aggregate-insufficient-budget) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-aggregate-storage-limit`](#trigger-aggregate-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-aggregate-report-window-passed`](#trigger-aggregate-report-window-passed) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
-| [`trigger-unknown-error`](#trigger-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ |
+| `type` | `attribution_destination`| `limit` | `source_debug_key` | `source_event_id` | `source_site` | `trigger_debug_key` | `source_destination_limit` |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [`source-channel-capacity-limit`](#source-channel-capacity-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |
+| [`source-destination-limit`](#source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |
+| [`source-destination-per-day-rate-limit`](#source-destination-per-day-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |
+| [`source-destination-rate-limit`](#source-destination-rate-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |
+| [`source-noised`](#source-noised) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ | ✓ |
+| [`source-reporting-origin-per-site-limit`](#source-reporting-origin-per-site-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |
+| [`source-storage-limit`](#source-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |
+| [`source-success`](#source-success) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ | ✓ |
+| [`source-trigger-state-cardinality-limit`](#source-trigger-state-cardinality-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ | ❌ |
+| [`source-unknown-error`](#source-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ❌ | ❌ |
+| [`trigger-no-matching-source`](#trigger-no-matching-source) | ✓ | ❌ | ❌ | ❌ | ❌ | ✓ | ❌ |
+| [`trigger-no-matching-filter-data`](#trigger-no-matching-filter-data) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-event-attributions-per-source-destination-limit`](#trigger-event-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-aggregate-attributions-per-source-destination-limit`](#trigger-aggregate-attributions-per-source-destination-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-reporting-origin-limit`](#trigger-reporting-origin-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-event-deduplicated`](#trigger-event-deduplicated) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-event-no-matching-configurations`](#trigger-event-no-matching-configurations) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-event-noise`](#trigger-event-noise) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-event-storage-limit`](#trigger-event-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-event-report-window-not-started`](#trigger-event-report-window-not-started) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-event-report-window-passed`](#trigger-event-report-window-passed) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-aggregate-deduplicated`](#trigger-aggregate-deduplicated) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-aggregate-excessive-reports`](#trigger-aggregate-excessive-reports) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-aggregate-no-contributions`](#trigger-aggregate-no-contributions) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-aggregate-insufficient-budget`](#trigger-aggregate-insufficient-budget) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-aggregate-storage-limit`](#trigger-aggregate-storage-limit) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-aggregate-report-window-passed`](#trigger-aggregate-report-window-passed) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ | ❌ |
+| [`trigger-unknown-error`](#trigger-unknown-error) | ✓ | ❌ | ✓ | ✓ | ✓ | ✓ | ❌ |

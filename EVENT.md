@@ -1114,9 +1114,27 @@ trying to measure user visits on, the browser can limit the number `destination`
 sites represented by unexpired sources for a source-site.
 
 The browser can place a limit on the number of a source site's unexpired source's
-unique `destination` sites. When an attribution source is registered for a site
-that is not already in the unexpired sources and a source site is at its limit,
-the browser will drop the new source.
+unique `destination` sites. Source registrations will accept an optional field
+`destination_limit_priority` to allow developers to prioritize the destinations
+registered with this source with respect to other destinations for the purpose
+of source deactivation.
+
+```jsonc
+{
+  ..., // existing fields
+  "destination_limit_priority": "[64-bit signed integer]" // defaults to 0 if not present
+}
+```
+
+When an attribution source is registered for a site that is not already in the
+unexpired sources and a source site is at its limit, the browser will sort the
+`destination` sites registered by unexpired sources, including the new source,
+by `destination_limit_priority` in descending order and by the registration
+time in descending order. The browser will then select the first few
+`destination` sites within this limit, and delete pending sources and
+aggregatable reports associated with the unselected `destination` sites. Any
+event-level reports are not deleted, as the leak of user's browsing history is
+mitigated by fake reports within differential privacy.
 
 The lower this value, the harder it is for a reporting origin to use the API to
 try and measure user browsing activity not associated with ads being shown.
@@ -1128,6 +1146,9 @@ origin on a site to push the other attribution sources out of the browser. See
 the [denial of service](#denial-of-service) for more details. To prevent this
 attack, the browser should maintain these limits per reporting site. This
 effectively limits the number of unique sites covered per {source site, reporting site} applied to all unexpired sources regardless of type at source time.
+
+The browser can also limit the number of `destination` sites per {source site, reporting site, 1 day}
+to mitigate the history reconstruction attack.
 
 #### Limiting the number of unique destinations per source site
 
