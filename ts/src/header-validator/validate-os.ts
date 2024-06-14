@@ -31,17 +31,15 @@ function parseItem(member: InnerList | Item, ctx: Context): Maybe<OsItem> {
 
   return param.struct(member[1], ctx, {
     url: () => Maybe.some(url),
-    debugReporting: param.field(
-      'debug-reporting',
-      (value) => {
-        if (typeof value !== 'boolean') {
-          ctx.warning('ignored, must be a boolean')
-          value = false
-        }
-        return Maybe.some(value)
-      },
-      false
-    ),
+    debugReporting: param.field('debug-reporting', (value) => {
+      if (value === undefined) {
+        value = false
+      } else if (typeof value !== 'boolean') {
+        ctx.warning('ignored, must be a boolean')
+        value = false
+      }
+      return Maybe.some(value)
+    }),
   })
 }
 
