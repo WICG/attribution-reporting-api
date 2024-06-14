@@ -51,6 +51,12 @@ export const defaultTriggerDataCardinality: Readonly<
   [SourceType.navigation]: 8n,
 }
 
+export const defaultAggregatableFilteringIdMaxBytes: number = 1
+
+export const maxAggregatableFilteringIdMaxBytesValue: number = 8
+
+export const defaultFilteringIdValue: bigint = 0n
+
 export const sourceAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'source-channel-capacity-limit',
   'source-destination-global-rate-limit',

@@ -164,7 +164,7 @@ function list(j: Json, ctx: Context): Maybe<Json[]> {
   return typeSwitch(j, ctx, { list: some })
 }
 
-function uint64(j: Json, ctx: Context): Maybe<bigint> {
+function uint(j: Json, ctx: Context): Maybe<bigint> {
   return string(j, ctx)
     .filter(
       matchesPattern,
@@ -173,13 +173,16 @@ function uint64(j: Json, ctx: Context): Maybe<bigint> {
       'string must represent a non-negative integer'
     )
     .map(BigInt)
-    .filter(
-      isInRange,
-      ctx,
-      0n,
-      2n ** 64n - 1n,
-      'must fit in an unsigned 64-bit integer'
-    )
+}
+
+function uint64(j: Json, ctx: Context): Maybe<bigint> {
+  return uint(j, ctx).filter(
+    isInRange,
+    ctx,
+    0n,
+    2n ** 64n - 1n,
+    'must fit in an unsigned 64-bit integer'
+  )
 }
 
 function number(j: Json, ctx: Context): Maybe<number> {
@@ -536,8 +539,7 @@ function aggregatableDebugReportingData(
         requireDistinct: true,
       })
     ),
-    value: field('value', aggregatableValue),
-
+    value: field('value', aggregatableKeyValueValue),
     ...keyPieceField,
   })
 }
@@ -769,8 +771,7 @@ function sourceAggregatableDebugReportingConfig(
   ctx: RegistrationContext
 ): Maybe<SourceAggregatableDebugReportingConfig> {
   return struct(j, ctx, {
-    budget: field('budget', aggregatableValue),
-
+    budget: field('budget', aggregatableKeyValueValue),
     ...aggregatableDebugReportingConfig,
   }).filter((s) => {
     for (const d of s.debugData) {
@@ -1166,52 +1167,135 @@ function aggregatableTriggerData(
   )
 }
 
-export type AggregatableValues = Map<string, number>
+export type AggregatableValuesValue = {
+  value: number
+  filteringId: bigint
+}
+
+export type AggregatableValues = Map<string, AggregatableValuesValue>
 
 export type AggregatableValuesConfiguration = FilterPair & {
   values: AggregatableValues
 }
 
-function aggregatableValue(j: Json, ctx: Context): Maybe<number> {
+function aggregatableKeyValueValue(j: Json, ctx: Context): Maybe<number> {
   return number(j, ctx)
     .filter(isInteger, ctx)
     .filter(isInRange, ctx, 1, constants.allowedAggregatableBudgetPerSource)
 }
 
+function aggregatableKeyValueFilteringId(
+  j: Json,
+  ctx: Context,
+  maxBytes: Maybe<number>
+): Maybe<bigint> {
+  return uint(j, ctx).filter((n) => {
+    if (maxBytes.value === undefined) {
+      ctx.error(
+        `cannot be fully validated without a valid aggregatable_filtering_id_max_bytes`
+      )
+      return false
+    }
+    return isInRange(
+      n,
+      ctx,
+      0n,
+      256n ** BigInt(maxBytes.value) - 1n,
+      maxBytes.value == constants.defaultAggregatableFilteringIdMaxBytes
+        ? 'must be in the range [0, 255]. It exceeds the default max size of 1 byte. To increase, specify the aggregatable_filtering_id_max_bytes property.'
+        : undefined
+    )
+  })
+}
+
 function aggregatableKeyValue(
   [key, j]: [string, Json],
-  ctx: Context
-): Maybe<number> {
+  ctx: Context,
+  maxBytes: Maybe<number>
+): Maybe<AggregatableValuesValue> {
   if (!aggregationKeyIdentifierLength(key, ctx, 'key ')) {
     return None
   }
-  return aggregatableValue(j, ctx)
+
+  return typeSwitch(j, ctx, {
+    number: (j) =>
+      aggregatableKeyValueValue(j, ctx).map((j) => ({
+        value: j,
+        filteringId: constants.defaultFilteringIdValue,
+      })),
+    object: (j) =>
+      struct(j, ctx, {
+        value: field('value', aggregatableKeyValueValue),
+        filteringId: field('filtering_id', (j) =>
+          aggregatableKeyValueFilteringId(j, ctx, maxBytes)
+        ),
+      }),
+  })
 }
 
 function aggregatableKeyValues(
   j: Json,
-  ctx: Context
+  ctx: Context,
+  maxBytes: Maybe<number>
 ): Maybe<AggregatableValues> {
-  return keyValues(j, ctx, aggregatableKeyValue)
+  return keyValues(j, ctx, (j) => aggregatableKeyValue(j, ctx, maxBytes))
 }
 
 function aggregatableValuesConfigurations(
   j: Json,
-  ctx: Context
+  ctx: Context,
+  maxBytes: Maybe<number>
 ): Maybe<AggregatableValuesConfiguration[]> {
   return typeSwitch(j, ctx, {
     object: (j) =>
-      aggregatableKeyValues(j, ctx).map((values) => [
+      aggregatableKeyValues(j, ctx, maxBytes).map((values) => [
         { values, positive: [], negative: [] },
       ]),
     list: (j) =>
       array(j, ctx, (j) =>
         struct(j, ctx, {
-          values: field('values', aggregatableKeyValues),
+          values: field('values', (j) =>
+            aggregatableKeyValues(j, ctx, maxBytes)
+          ),
           ...filterFields,
         })
       ),
   })
+}
+
+function aggregatableFilteringIdMaxBytes(
+  j: Json,
+  ctx: Context,
+  aggregatableSourceRegTime: Maybe<AggregatableSourceRegistrationTime>
+): Maybe<number> {
+  return number(j, ctx)
+    .filter(isInteger, ctx)
+    .filter(
+      isInRange,
+      ctx,
+      1,
+      constants.maxAggregatableFilteringIdMaxBytesValue
+    )
+    .filter((n) => {
+      if (aggregatableSourceRegTime.value === undefined) {
+        ctx.error(
+          `cannot be fully validated without a valid aggregatable_source_registration_time`
+        )
+        return false
+      }
+      if (
+        aggregatableSourceRegTime.value !==
+          AggregatableSourceRegistrationTime.exclude &&
+        n !== constants.defaultAggregatableFilteringIdMaxBytes
+      ) {
+        ctx.error(
+          `with a non-default value (higher than ${constants.defaultAggregatableFilteringIdMaxBytes}) is prohibited for aggregatable_source_registration_time ${aggregatableSourceRegTime.value}`
+        )
+        return false
+      }
+
+      return true
+    })
 }
 
 export type EventTriggerDatum = FilterPair &
@@ -1373,6 +1457,7 @@ export type Trigger = CommonDebug &
     aggregatableDedupKeys: AggregatableDedupKey[]
     aggregatableTriggerData: AggregatableTriggerDatum[]
     aggregatableSourceRegistrationTime: AggregatableSourceRegistrationTime
+    aggregatableFilteringIdMaxBytes: number
     aggregatableValuesConfigurations: AggregatableValuesConfiguration[]
     aggregationCoordinatorOrigin: string
     eventTriggerData: EventTriggerDatum[]
@@ -1389,15 +1474,29 @@ function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
         AggregatableSourceRegistrationTime.exclude
       )(j, ctx)
 
+      const aggregatableFilteringIdMaxBytesVal = field(
+        'aggregatable_filtering_id_max_bytes',
+        (j) =>
+          aggregatableFilteringIdMaxBytes(j, ctx, aggregatableSourceRegTimeVal),
+        constants.defaultAggregatableFilteringIdMaxBytes
+      )(j, ctx)
+
       return struct(j, ctx, {
         aggregatableTriggerData: field(
           'aggregatable_trigger_data',
           aggregatableTriggerData,
           []
         ),
+        aggregatableFilteringIdMaxBytes: () =>
+          aggregatableFilteringIdMaxBytesVal,
         aggregatableValuesConfigurations: field(
           'aggregatable_values',
-          aggregatableValuesConfigurations,
+          (j) =>
+            aggregatableValuesConfigurations(
+              j,
+              ctx,
+              aggregatableFilteringIdMaxBytesVal
+            ),
           []
         ),
         aggregatableDedupKeys: field(

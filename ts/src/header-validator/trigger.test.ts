@@ -28,9 +28,10 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "filters": {"a": ["b"]},
         "key_piece": "0x1",
         "not_filters": {"c": ["d"]},
-        "source_keys": ["x"]
+        "source_keys": ["x", "y"]
       }],
-      "aggregatable_values": {"x": 5},
+      "aggregatable_filtering_id_max_bytes": 1,
+      "aggregatable_values": {"x": 5,  "y": {"value": 10, "filtering_id": "25" }},
       "debug_key": "5",
       "debug_reporting": true,
       "event_trigger_data": [{
@@ -101,12 +102,16 @@ const testCases: jsontest.TestCase<Trigger>[] = [
               map: new Map([['c', new Set(['d'])]]),
             },
           ],
-          sourceKeys: new Set(['x']),
+          sourceKeys: new Set(['x', 'y']),
         },
       ],
+      aggregatableFilteringIdMaxBytes: 1,
       aggregatableValuesConfigurations: [
         {
-          values: new Map([['x', 5]]),
+          values: new Map([
+            ['x', { value: 5, filteringId: 0n }],
+            ['y', { value: 10, filteringId: 25n }],
+          ]),
           positive: [],
           negative: [],
         },
@@ -376,7 +381,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     expectedErrors: [
       {
         path: ['aggregatable_values', 'a'],
-        msg: 'must be a number',
+        msg: 'must be a number or an object',
       },
     ],
   },
@@ -1097,7 +1102,102 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
     ],
   },
-
+  {
+    name: 'aggregatable_filtering_id_max_bytes-too-big',
+    json: `{
+      "aggregatable_filtering_id_max_bytes": 9
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_filtering_id_max_bytes'],
+        msg: 'must be in the range [1, 8]',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable_filtering_id_max_bytes-invalid-aggregatable-source-registration-time',
+    json: `{"aggregatable_filtering_id_max_bytes": 2, "aggregatable_source_registration_time": 1}`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_source_registration_time'],
+        msg: 'must be a string',
+      },
+      {
+        path: ['aggregatable_filtering_id_max_bytes'],
+        msg: 'cannot be fully validated without a valid aggregatable_source_registration_time',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable_filtering_id_max_bytes-prohibited-aggregatable-source-registration-time-include',
+    json: `{"aggregatable_filtering_id_max_bytes": 2, "aggregatable_source_registration_time": "include"}`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_filtering_id_max_bytes'],
+        msg: 'with a non-default value (higher than 1) is prohibited for aggregatable_source_registration_time include',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-values-with-too-big-filtering_id',
+    json: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "source_keys": ["x", "y"]
+      }],
+      "aggregatable_values": {"x": 5, "y": { "value": 10, "filtering_id": "256" }}
+  }`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_values', 'y', 'filtering_id'],
+        msg: 'must be in the range [0, 255]. It exceeds the default max size of 1 byte. To increase, specify the aggregatable_filtering_id_max_bytes property.',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-values-with-too-big-filtering_id-non-default-max',
+    json: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "source_keys": ["x", "y"]
+      }],
+      "aggregatable_filtering_id_max_bytes": 2,
+      "aggregatable_values": [
+        {"values": {"x": 5 }},
+        {"values": {"y": { "value": 10, "filtering_id": "65536" }}}
+      ]
+  }`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_values', 1, 'values', 'y', 'filtering_id'],
+        msg: 'must be in the range [0, 65535]',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-values-with-invalid-filtering_id-non-default-max',
+    json: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "source_keys": ["x", "y"]
+      }],
+      "aggregatable_filtering_id_max_bytes": "2",
+      "aggregatable_values": [
+        {"values": {"x": 5 }},
+        {"values": {"y": { "value": 10, "filtering_id": "65536" }}}
+      ]
+  }`,
+    expectedErrors: [
+      {
+        msg: 'must be a number',
+        path: ['aggregatable_filtering_id_max_bytes'],
+      },
+      {
+        path: ['aggregatable_values', 1, 'values', 'y', 'filtering_id'],
+        msg: 'cannot be fully validated without a valid aggregatable_filtering_id_max_bytes',
+      },
+    ],
+  },
   {
     name: 'aggregatable-debug-reporting-wrong-type',
     json: `{

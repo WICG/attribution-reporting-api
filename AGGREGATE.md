@@ -315,7 +315,9 @@ encoded. The map will have the following structure:
   "operation": "histogram",  // Allows for the service to support other operations in the future
   "data": [{
     "bucket": <bucket, encoded as a 16-byte (i.e. 128-bit) big-endian bytestring>,
-    "value": <value, encoded as a 4-byte (i.e. 32-bit) big-endian bytestring> 
+    "value": <value, encoded as a 4-byte (i.e. 32-bit) big-endian bytestring>,
+    // k is equal to the value `aggregatable_filtering_id_max_bytes`, defaults to 1 (i.e. 8-bit).
+    "id": <filtering ID, encoded as a k-byte big-endian bytestring, defaults to 0>
   }, ...]
 }
 ```
@@ -506,6 +508,47 @@ and achieves all of the higher priority [security goals](https://github.com/WICG
 A similar design was proposed for the
 [Private Aggregation API](https://github.com/patcg-individual-drafts/private-aggregation-api/blob/main/report_verification.md#shared-storage)
 for the purpose of report verification.
+
+### Optional: flexible contribution filtering with filtering IDs
+
+Trigger registration's `aggregatable_values`'s values can be integers or
+dictionaries with an optional `filtering_id` field. 
+
+```jsonc
+{
+  ..., // existing fields
+  "aggregatable_filtering_id_max_bytes": 2, // defaults to 1
+  "aggregatable_values": {
+    "campaignCounts": 32768,
+    "geoValue": {
+      "value": 1664,
+      "filtering_id": "23" // must fit within <aggregatable_filtering_id_max_bytes> bytes
+    }
+  }
+}
+```
+
+These IDs will be included in the encrypted aggregatable report payload
+contributions.
+
+Queries to the aggregation service can provide a list of allowed filtering IDs
+and all contributions with non-allowed IDs will be filtered out.
+
+The filtering IDs need to be unsigned integers limited to a small number of
+bytes, (1 byte = 8 bits) by default. We limit the size of the ID space to
+prevent unnecessarily increasing the payload size and thus storage and
+processing costs.
+
+This size can be increased via the `aggregatable_filtering_id_max_bytes` field.
+To avoid amplifying a counting attack due to the resulting different payload
+size, the browser will unconditionally send an aggregatable report on every
+trigger registration with a non-default (greater than 1) max bytes. A null report
+will be sent in the case that the trigger registration did not generate an
+attribution report. The source registration time will always be excluded from
+the aggregatable report with a non-default max bytes. This behavior is the same
+as when a trigger context ID is set.
+
+See [flexible_filtering.md](https://github.com/patcg-individual-drafts/private-aggregation-api/blob/main/flexible_filtering.md) for more details.
 
 ## Data processing through a Secure Aggregation Service
 
