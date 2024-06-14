@@ -181,10 +181,10 @@ const testCases: TestCase[] = [
 ]
 
 testCases.forEach((tc) => {
-  const sourceData = tc.sourceData ?? new Map()
+  const sourceData = tc.sourceData ?? new Map<string, Set<string>>()
   const sourceType = tc.sourceType ?? SourceType.navigation
 
-  test(`${tc.name}-positive`, () => {
+  void test(`${tc.name}-positive`, () => {
     const actual = filters.match(
       sourceTime,
       sourceData,
@@ -198,7 +198,7 @@ testCases.forEach((tc) => {
     assert.equal(actual, tc.expectedPositive)
   })
 
-  test(`${tc.name}-negative`, () => {
+  void test(`${tc.name}-negative`, () => {
     const actual = filters.match(
       sourceTime,
       sourceData,

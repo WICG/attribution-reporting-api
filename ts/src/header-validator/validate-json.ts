@@ -64,6 +64,7 @@ class SourceContext extends RegistrationContext {
 const {
   exclusive,
   field,
+  fieldMaybeDefault,
   struct: structInternal,
 } = validate.make<JsonDict, Json>(
   /*getAndDelete=*/ (d, name) => {
@@ -86,7 +87,7 @@ function struct<T extends object, C extends Context>(
   fields: StructFields<T, C>,
   warnUnknown: boolean = true
 ): Maybe<T> {
-  return object(d, ctx).map(structInternal, ctx, fields, warnUnknown)
+  return object(d, ctx).flatMap(structInternal, ctx, fields, warnUnknown)
 }
 
 type TypeSwitch<T, C extends Context = Context> = {
@@ -147,7 +148,7 @@ function keyValues<V, C extends Context = Context>(
   f: CtxFunc<C, [key: string, val: Json], Maybe<V>>,
   maxKeys: number = Infinity
 ): Maybe<Map<string, V>> {
-  return object(j, ctx).map((d) => {
+  return object(j, ctx).flatMap((d) => {
     const entries = Object.entries(d)
 
     if (entries.length > maxKeys) {
@@ -223,7 +224,7 @@ function destination(j: Json, ctx: Context): Maybe<Set<string>> {
   return typeSwitch(j, ctx, {
     string: (j) => suitableSite(j, ctx).map((s) => new Set([s])),
     list: (j) =>
-      set(j, ctx, (j) => string(j, ctx).map(suitableSite, ctx), {
+      set(j, ctx, (j) => string(j, ctx).flatMap(suitableSite, ctx), {
         minLength: 1,
         maxLength: 3,
       }),
@@ -314,7 +315,7 @@ function eventReportWindows(
   ctx: SourceContext,
   expiry: Maybe<number>
 ): Maybe<EventReportWindows> {
-  return object(j, ctx).map((j) => {
+  return object(j, ctx).flatMap((j) => {
     const startTimeValue = field(
       'start_time',
       (j) => startTime(j, ctx, expiry),
@@ -351,7 +352,7 @@ function set<T extends number | string, C extends Context = Context>(
   // checks should be performed on the resulting set, not on the list.
   return list(j, ctx)
     .filter((js) => isLengthValid(js.length, ctx, opts))
-    .map((js) => validate.set(js.entries(), ctx, f, opts?.requireDistinct))
+    .flatMap((js) => validate.set(js.entries(), ctx, f, opts?.requireDistinct))
 }
 
 type ArrayOpts = LengthOpts & {
@@ -366,7 +367,9 @@ function array<T, C extends Context = Context>(
 ): Maybe<T[]> {
   return list(j, ctx)
     .filter((js) => isLengthValid(js.length, ctx, opts))
-    .map((js) => validate.array(js.entries(), ctx, f, opts?.itemErrorAction))
+    .flatMap((js) =>
+      validate.array(js.entries(), ctx, f, opts?.itemErrorAction)
+    )
 }
 
 function filterDataKeyValue(
@@ -637,7 +640,7 @@ function expiry(j: Json, ctx: SourceContext): Maybe<number> {
     .map(Number) // guaranteed to fit based on the clamping
     .map((n) => {
       switch (ctx.sourceType) {
-        case SourceType.event:
+        case SourceType.event: {
           const r = roundAwayFromZeroToNearestDay(n)
           if (n !== r) {
             ctx.warning(
@@ -645,6 +648,7 @@ function expiry(j: Json, ctx: SourceContext): Maybe<number> {
             )
           }
           return r
+        }
         case SourceType.navigation:
           return n
       }
@@ -699,7 +703,7 @@ function channelCapacity(s: Source, ctx: SourceContext): void {
   const numStatesWords = 'number of possible output states'
 
   const perTriggerDataConfigs = s.triggerSpecs.flatMap((spec) =>
-    Array(spec.triggerData.size).fill(
+    Array<privacy.PerTriggerDataConfig>(spec.triggerData.size).fill(
       new privacy.PerTriggerDataConfig(
         spec.eventReportWindows.endTimes.length,
         spec.summaryBuckets.length
@@ -861,13 +865,13 @@ function triggerSpec(
   )
 
   return struct(j, ctx, {
-    eventReportWindows: field(
+    eventReportWindows: fieldMaybeDefault(
       'event_report_windows',
       (j) => eventReportWindows(j, ctx, deps.expiry),
       deps.eventReportWindows
     ),
 
-    summaryBuckets: field(
+    summaryBuckets: fieldMaybeDefault(
       'summary_buckets',
       (j) => summaryBuckets(j, ctx, deps.maxEventLevelReports),
       defaultSummaryBuckets
@@ -952,7 +956,7 @@ function defaultTriggerSpecs(
   eventReportWindows: Maybe<EventReportWindows>,
   maxEventLevelReports: Maybe<number>
 ): Maybe<TriggerSpec[]> {
-  return eventReportWindows.map((eventReportWindows) =>
+  return eventReportWindows.flatMap((eventReportWindows) =>
     maxEventLevelReports.map((maxEventLevelReports) => [
       {
         eventReportWindows,
@@ -1044,11 +1048,12 @@ export type Source = CommonDebug &
 
     eventLevelEpsilon: number
     aggregatableDebugReporting: SourceAggregatableDebugReportingConfig | null
+    destinationLimitPriority: bigint
   }
 
 function source(j: Json, ctx: SourceContext): Maybe<Source> {
   return object(j, ctx)
-    .map((j) => {
+    .flatMap((j) => {
       const expiryVal = field(
         'expiry',
         expiry,
@@ -1095,7 +1100,7 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
       )(j, ctx)
 
       return struct(j, ctx, {
-        aggregatableReportWindow: field(
+        aggregatableReportWindow: fieldMaybeDefault(
           'aggregatable_report_window',
           (j) => singleReportWindow(j, ctx, expiryVal),
           expiryVal
@@ -1122,6 +1127,11 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
           'trigger_data_matching',
           triggerDataMatching,
           TriggerDataMatching.modulus
+        ),
+        destinationLimitPriority: field(
+          'destination_limit_priority',
+          int64,
+          0n
         ),
 
         ...commonDebugFields,
@@ -1341,7 +1351,7 @@ function aggregatableDedupKeys(
 }
 
 function enumerated<T>(j: Json, ctx: Context, e: Record<string, T>): Maybe<T> {
-  return string(j, ctx).map(validate.enumerated, ctx, e)
+  return string(j, ctx).flatMap(validate.enumerated, ctx, e)
 }
 
 export enum AggregatableSourceRegistrationTime {
@@ -1431,7 +1441,7 @@ function aggregationCoordinatorOrigin(
   ctx: RegistrationContext
 ): Maybe<string> {
   return string(j, ctx)
-    .map(suitableOrigin, ctx)
+    .flatMap(suitableOrigin, ctx)
     .filter((s) => {
       if (!ctx.vsv.aggregationCoordinatorOrigins.includes(s)) {
         const allowed = ctx.vsv.aggregationCoordinatorOrigins.join(', ')
@@ -1457,7 +1467,7 @@ export type Trigger = CommonDebug &
 
 function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
   return object(j, ctx)
-    .map((j) => {
+    .flatMap((j) => {
       const aggregatableSourceRegTimeVal = field(
         'aggregatable_source_registration_time',
         aggregatableSourceRegistrationTime,
@@ -1519,7 +1529,7 @@ export function validateJSON<T, C extends Context = Context>(
   json: string,
   f: CtxFunc<C, Json, Maybe<T>>
 ): [ValidationResult, Maybe<T>] {
-  let value
+  let value: unknown
   try {
     value = JSON.parse(json)
   } catch (err) {
@@ -1527,7 +1537,7 @@ export function validateJSON<T, C extends Context = Context>(
     return [ctx.finish(msg), None]
   }
 
-  const v = f(value, ctx)
+  const v = f(value as Json, ctx)
   return [ctx.finish(), v]
 }
 
@@ -1581,7 +1591,7 @@ function reportDestination(j: Json, ctx: Context): Maybe<string | string[]> {
   return typeSwitch<string | string[]>(j, ctx, {
     string: suitableSiteNoExtraneous,
     list: (j) =>
-      array(j, ctx, (j) => string(j, ctx).map(suitableSiteNoExtraneous), {
+      array(j, ctx, (j) => string(j, ctx).flatMap(suitableSiteNoExtraneous), {
         minLength: 2,
         maxLength: 3,
       }).filter((v) => {

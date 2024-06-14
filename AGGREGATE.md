@@ -611,7 +611,7 @@ output maintains proper privacy.
 A goal of this work is to have a framework which can support differentially
 private aggregate measurement. In principle this can be achieved if the
 aggregation service adds noise proportional to the `L1` budget in principle,
-e.g. noise distributed according to Laplace(epsilon / L1) should achieve epsilon
+e.g. noise distributed according to Laplace(L1/epsilon) should achieve epsilon
 differential privacy. With small enough values of epsilon, reports for a given
 source will be well-protected in an aggregate release.
 

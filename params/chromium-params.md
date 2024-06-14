@@ -17,6 +17,7 @@ Chromium's implementation assigns the following values:
 | [Max destinations covered by unexpired sources][] | [100][max destinations covered by unexpired sources value] |
 | [Destination rate-limit window][] | [1 minute][destination rate-limit window value]
 | [Max destinations per rate-limit window][] | [50][max destinations per rate-limit window per reporting site] per reporting site, [200][max destinations per rate-limit window total] total
+| [Max destinations per reporting site per day][] | [100]
 | [Max source reporting origins per rate-limit window][] | [100][max source reporting origins per rate-limit window value] |
 | [Max source reporting origins per source reporting site][] | [1][max source reporting origins per source reporting site value]
 | [Origin rate-limit window][] | [1 day][origin rate-limit window value]
@@ -48,6 +49,7 @@ Chromium's implementation assigns the following values:
 [Max destinations per rate-limit window]: https://wicg.github.io/attribution-reporting-api/#max-destinations-per-rate-limit-window
 [Max destinations per rate-limit window per reporting site]: https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:content/browser/attribution_reporting/destination_throttler.h;l=29;drc=1890f3f74c8100eb1a3e945d34d6fd576d2a9061
 [Max destinations per rate-limit window total]: https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:content/browser/attribution_reporting/destination_throttler.h;l=28;drc=1890f3f74c8100eb1a3e945d34d6fd576d2a9061
+[Max destinations per reporting site per day]: https://wicg.github.io/attribution-reporting-api/#max-destinations-per-reporting-site-per-day
 [Max source reporting origins per rate-limit window]: https://wicg.github.io/attribution-reporting-api/#max-source-reporting-origins-per-rate-limit-window
 [max source reporting origins per rate-limit window value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=28;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Max source reporting origins per source reporting site]: https://wicg.github.io/attribution-reporting-api/#max-source-reporting-origins-per-source-reporting-site

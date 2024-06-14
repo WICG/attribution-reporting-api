@@ -18,10 +18,10 @@ export class PerTriggerDataConfig {
     readonly numSummaryBuckets: number
   ) {
     if (this.numWindows <= 0) {
-      throw 'numWindows must be > 0'
+      throw new Error('numWindows must be > 0')
     }
     if (this.numSummaryBuckets < 0) {
-      throw 'numSummaryBuckets must be >= 0'
+      throw new Error('numSummaryBuckets must be >= 0')
     }
   }
 }
@@ -35,7 +35,7 @@ export class Config {
       this.maxEventLevelReports < 0 ||
       !Number.isInteger(this.maxEventLevelReports)
     ) {
-      throw 'maxEventLevelReports must be an integer >= 0'
+      throw new Error('maxEventLevelReports must be an integer >= 0')
     }
   }
 
@@ -171,7 +171,7 @@ function epsilonToBoundInfoGainAndDp(
   let epsLow = 0
   let epsHigh = epsilonUpperBound
 
-  while (true) {
+  for (;;) {
     const epsilon = (epsHigh + epsLow) / 2
     const infoGain = maxInformationGain(numStates, epsilon)
 

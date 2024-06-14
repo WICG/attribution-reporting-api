@@ -34,6 +34,7 @@ const testCases: TestCase[] = [
       "debug_key": "1",
       "debug_reporting": true,
       "destination": "https://a.test",
+      "destination_limit_priority": "1",
       "event_report_window": "3601",
       "expiry": "86400",
       "filter_data": {"b": ["c"]},
@@ -57,6 +58,7 @@ const testCases: TestCase[] = [
       debugKey: 1n,
       debugReporting: true,
       destination: new Set(['https://a.test']),
+      destinationLimitPriority: 1n,
       eventLevelEpsilon: 14,
       expiry: 86400,
       filterData: new Map([['b', new Set(['c'])]]),
@@ -194,6 +196,31 @@ const testCases: TestCase[] = [
       {
         path: ['destination'],
         msg: 'URL must use HTTP/HTTPS and be potentially trustworthy',
+      },
+    ],
+  },
+  {
+    name: 'destination-list-empty',
+    json: `{"destination": []}`,
+    expectedErrors: [
+      {
+        path: ['destination'],
+        msg: 'length must be in the range [1, 3]',
+      },
+    ],
+  },
+  {
+    name: 'destination-list-too-long',
+    json: `{"destination": [
+      "https://a.test",
+      "https://b.test/1",
+      "https://b.test/2",
+      "https://c.test/3"
+    ]}`,
+    expectedErrors: [
+      {
+        path: ['destination'],
+        msg: 'length must be in the range [1, 3]',
       },
     ],
   },
@@ -350,7 +377,7 @@ const testCases: TestCase[] = [
     name: 'filter-data-too-many-values',
     json: JSON.stringify({
       destination: 'https://a.test',
-      filter_data: { a: Array.from({ length: 51 }, (_, i) => `${i}`) },
+      filter_data: { a: Array.from({ length: 51 }, () => '') },
     }),
     expectedErrors: [
       {
@@ -1239,6 +1266,32 @@ const testCases: TestCase[] = [
       },
     ],
   },
+  {
+    name: 'destination-limit-priority-wrong-type',
+    json: `{
+      "destination": "https://a.test",
+      "destination_limit_priority": 1
+    }`,
+    expectedErrors: [
+      {
+        path: ['destination_limit_priority'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'destination-limit-priority-wrong-format',
+    json: `{
+      "destination": "https://a.test",
+      "destination_limit_priority": "x"
+    }`,
+    expectedErrors: [
+      {
+        path: ['destination_limit_priority'],
+        msg: 'string must represent an integer (must match /^-?[0-9]+$/)',
+      },
+    ],
+  },
 
   {
     name: 'channel-capacity-default-event',
@@ -2080,6 +2133,19 @@ const testCases: TestCase[] = [
     ],
   },
   {
+    name: 'trigger-data-too-many-within',
+    json: JSON.stringify({
+      destination: 'https://a.test',
+      trigger_data: Array.from({ length: 33 }, () => 0),
+    }),
+    expectedErrors: [
+      {
+        path: ['trigger_data'],
+        msg: 'length must be in the range [0, 32]',
+      },
+    ],
+  },
+  {
     name: 'trigger-data-duplicated-across',
     json: `{
       "destination": "https://a.test",
@@ -2494,7 +2560,7 @@ testCases.forEach((tc) =>
       const str = JSON.stringify(
         serializeSource(result[1].value, tc.parseFullFlex ?? false)
       )
-      const [_, reparsed] = validateSource(
+      const [, reparsed] = validateSource(
         str,
         { ...vsv.Chromium, ...tc.vsv },
         tc.sourceType ?? SourceType.navigation,
