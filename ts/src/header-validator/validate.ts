@@ -168,13 +168,13 @@ export enum ItemErrorAction {
   earlyExit,
 }
 
-function makeCollection<Col, P extends PathComponent, V, C extends Context>(
-  out: Col,
+function makeCollection<Coll, P extends PathComponent, V, C extends Context>(
+  out: Coll,
   vs: Iterable<[P, V]>,
   ctx: C,
-  f: (out: Col, v: V, p: P) => Maybe<unknown>,
+  f: (out: Coll, v: V, p: P) => Maybe<unknown>,
   itemErrorAction: ItemErrorAction = ItemErrorAction.reportButKeepGoing
-): Maybe<Col> {
+): Maybe<Coll> {
   let ok = true
   for (const [p, v] of vs) {
     const itemOk = ctx.scope(p, () => f(out, v, p).value !== undefined)
