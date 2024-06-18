@@ -168,7 +168,7 @@ export enum ItemErrorAction {
   earlyExit,
 }
 
-function makeCollection<Coll, P extends PathComponent, V, C extends Context>(
+function collection<Coll, P extends PathComponent, V, C extends Context>(
   out: Coll,
   vs: Iterable<[P, V]>,
   ctx: C,
@@ -196,7 +196,7 @@ export function array<T, V, C extends Context = Context>(
   f: CtxFunc<C, V, Maybe<T>>,
   itemErrorAction: ItemErrorAction = ItemErrorAction.reportButKeepGoing
 ): Maybe<T[]> {
-  return makeCollection(
+  return collection(
     new Array<T>(),
     vs,
     ctx,
@@ -211,7 +211,7 @@ export function set<T extends number | string, V, C extends Context = Context>(
   f: CtxFunc<C, V, Maybe<T>>,
   requireDistinct: boolean = false
 ): Maybe<Set<T>> {
-  return makeCollection(new Set<T>(), vs, ctx, (set, v) =>
+  return collection(new Set<T>(), vs, ctx, (set, v) =>
     f(v, ctx).filter((v) => {
       if (set.has(v)) {
         const msg = `duplicate value ${v}`
@@ -233,7 +233,7 @@ export function keyValues<T, V, C extends Context = Context>(
   ctx: C,
   f: CtxFunc<C, [string, V], Maybe<T>>
 ): Maybe<Map<string, T>> {
-  return makeCollection(new Map<string, T>(), vs, ctx, (map, v, key) =>
+  return collection(new Map<string, T>(), vs, ctx, (map, v, key) =>
     f([key, v], ctx).peek((v) => map.set(key, v))
   )
 }
