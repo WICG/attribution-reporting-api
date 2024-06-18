@@ -50,7 +50,8 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           "key_piece": "0x5",
           "value": 123
         }]
-      }
+      },
+      "attribution_scopes": ["1"]
     }`,
     expected: Maybe.some({
       aggregatableDedupKeys: [
@@ -150,7 +151,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           map: new Map([['g', new Set()]]),
         },
       ],
-      attributionScopes: new Set(),
+      attributionScopes: new Set("1"),
     }),
   },
   {

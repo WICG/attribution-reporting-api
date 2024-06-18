@@ -743,7 +743,6 @@ function channelCapacity(s: Source, ctx: SourceContext): void {
 
   if (
     ctx.sourceType === SourceType.event &&
-    s.attributionScopeLimit !== null &&
     out.numStates > s.maxEventStates
   ) {
     ctx.error(
@@ -783,9 +782,15 @@ function validateAttributionScopeFields(
         ctx.error('must be set if attribution_scopes is set')
         return false
       }
+      if (s.maxEventStates !== constants.defaultMaxEventStates) {
+        ctx.error('must be set if max_event_states is set')
+        return false
+      }
       return true
     }
-    return isInRange(s.attributionScopes.size, ctx, 1, s.attributionScopeLimit)
+    return isInRange(s.attributionScopes.size, ctx, 1, s.attributionScopeLimit,
+        `attribution scopes size must be in the range [1, ${s.attributionScopeLimit}]`
+    )
   })
 }
 

@@ -49,7 +49,10 @@ const testCases: TestCase[] = [
           "types": ["source-success"],
           "value": 123
         } ]
-      }
+      },
+      "attribution_scope_limit": 3,
+      "attribution_scopes": ["1"],
+      "max_event_states": 4
     }`,
     sourceType: SourceType.navigation,
     expected: Maybe.some({
@@ -90,9 +93,9 @@ const testCases: TestCase[] = [
         aggregationCoordinatorOrigin:
           'https://publickeyservice.msmt.aws.privacysandboxservices.com',
       },
-      attributionScopeLimit: null,
-      attributionScopes: new Set<string>(),
-      maxEventStates: 3,
+      attributionScopeLimit: 3,
+      attributionScopes: new Set<string>("1"),
+      maxEventStates: 4,
     }),
   },
 
@@ -1372,6 +1375,8 @@ const testCases: TestCase[] = [
     name: 'trigger-state-cardinality-invalid',
     json: `{
       "destination": "https://a.test",
+      "attribution_scope_limit": 3,
+      "attribution_scopes": ["1"],
       "max_event_states": 2
     }`,
     sourceType: SourceType.event,
@@ -1387,6 +1392,10 @@ const testCases: TestCase[] = [
       {
         path: [],
         msg: 'number of possible output states (3) exceeds max cardinality (2)',
+      },
+      {
+        path: [],
+        msg: 'number of possible output states (3) exceeds max event states (2)',
       },
     ],
   },
@@ -2605,6 +2614,20 @@ const testCases: TestCase[] = [
     ],
   },
   {
+    name: 'empty-attribution-scopes-with-limit',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scope_limit": 3,
+      "attribution_scopes": []
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scope_limit'],
+        msg: 'must be in the range [1, 3]',
+      },
+    ],
+  },
+  {
     name: 'missing-attribution-scope-limit-attribution-scopes',
     json: `{
       "destination": "https://a.test",
@@ -2614,6 +2637,19 @@ const testCases: TestCase[] = [
       {
         path: ['attribution_scope_limit'],
         msg: 'must be set if attribution_scopes is set',
+      },
+    ],
+  },
+  {
+    name: 'missing-attribution-scope-limit-max-event-states',
+    json: `{
+      "destination": "https://a.test",
+      "max_event_states": 5
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scope_limit'],
+        msg: 'must be set if max_event_states is set',
       },
     ],
   },
@@ -2669,7 +2705,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
-        msg: 'must be in the range [1, 1]',
+        msg: 'attribution scopes size must be in the range [1, 1]',
       },
     ],
   },
