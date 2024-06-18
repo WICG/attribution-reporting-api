@@ -168,26 +168,26 @@ export enum ItemErrorAction {
   earlyExit,
 }
 
-function isCollection<P extends PathComponent, V, C extends Context>(
+function collection<Coll, P extends PathComponent, V, C extends Context>(
+  out: Coll,
   vs: Iterable<[P, V]>,
   ctx: C,
-  f: CtxFunc<C, [P, V], Maybe<unknown>>,
+  f: (out: Coll, v: V, p: P) => Maybe<unknown>,
   itemErrorAction: ItemErrorAction = ItemErrorAction.reportButKeepGoing
-): boolean {
+): Maybe<Coll> {
   let ok = true
-  for (const [c, v] of vs) {
-    let itemOk = false
-    ctx.scope(c, () => f([c, v], ctx).peek(() => (itemOk = true)))
+  for (const [p, v] of vs) {
+    const itemOk = ctx.scope(p, () => f(out, v, p).value !== undefined)
     if (!itemOk) {
       if (itemErrorAction === ItemErrorAction.earlyExit) {
-        return false
+        return Maybe.None
       }
       if (itemErrorAction === ItemErrorAction.reportButKeepGoing) {
         ok = false
       }
     }
   }
-  return ok
+  return ok ? Maybe.some(out) : Maybe.None
 }
 
 export function array<T, V, C extends Context = Context>(
@@ -196,13 +196,12 @@ export function array<T, V, C extends Context = Context>(
   f: CtxFunc<C, V, Maybe<T>>,
   itemErrorAction: ItemErrorAction = ItemErrorAction.reportButKeepGoing
 ): Maybe<T[]> {
-  return Maybe.some(new Array<T>()).filter((arr) =>
-    isCollection(
-      vs,
-      ctx,
-      ([, v]) => f(v, ctx).peek((v) => arr.push(v)),
-      itemErrorAction
-    )
+  return collection(
+    new Array<T>(),
+    vs,
+    ctx,
+    (arr, v) => f(v, ctx).peek((v) => arr.push(v)),
+    itemErrorAction
   )
 }
 
@@ -212,22 +211,20 @@ export function set<T extends number | string, V, C extends Context = Context>(
   f: CtxFunc<C, V, Maybe<T>>,
   requireDistinct: boolean = false
 ): Maybe<Set<T>> {
-  return Maybe.some(new Set<T>()).filter((set) =>
-    isCollection(vs, ctx, ([, v]) =>
-      f(v, ctx).filter((v) => {
-        if (set.has(v)) {
-          const msg = `duplicate value ${v}`
-          if (requireDistinct) {
-            ctx.error(msg)
-            return false
-          }
-          ctx.warning(msg)
-        } else {
-          set.add(v)
+  return collection(new Set<T>(), vs, ctx, (set, v) =>
+    f(v, ctx).filter((v) => {
+      if (set.has(v)) {
+        const msg = `duplicate value ${v}`
+        if (requireDistinct) {
+          ctx.error(msg)
+          return false
         }
-        return true
-      })
-    )
+        ctx.warning(msg)
+      } else {
+        set.add(v)
+      }
+      return true
+    })
   )
 }
 
@@ -236,10 +233,8 @@ export function keyValues<T, V, C extends Context = Context>(
   ctx: C,
   f: CtxFunc<C, [string, V], Maybe<T>>
 ): Maybe<Map<string, T>> {
-  return Maybe.some(new Map<string, T>()).filter((map) =>
-    isCollection(vs, ctx, ([key, v]) =>
-      f([key, v], ctx).peek((v) => map.set(key, v))
-    )
+  return collection(new Map<string, T>(), vs, ctx, (map, v, key) =>
+    f([key, v], ctx).peek((v) => map.set(key, v))
   )
 }
 

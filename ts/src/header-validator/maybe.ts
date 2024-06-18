@@ -1,4 +1,4 @@
-export class Maybe<T> {
+export class Maybe<out T> {
   static readonly None = new Maybe<never>()
 
   static some<T>(this: void, t: T): Maybe<T> {
