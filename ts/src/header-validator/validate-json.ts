@@ -1226,8 +1226,10 @@ function aggregatableKeyValue(
     object: (j) =>
       struct(j, ctx, {
         value: field('value', aggregatableKeyValueValue),
-        filteringId: field('filtering_id', (j) =>
-          aggregatableKeyValueFilteringId(j, ctx, maxBytes)
+        filteringId: field(
+          'filtering_id',
+          (j) => aggregatableKeyValueFilteringId(j, ctx, maxBytes),
+          0n
         ),
       }),
   })
