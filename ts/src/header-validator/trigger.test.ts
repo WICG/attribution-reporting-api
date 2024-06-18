@@ -170,6 +170,18 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
   },
   {
+    name: 'missing-optional-filtering-id',
+    json: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "source_keys": ["a"]
+      }],
+      "aggregatable_values": {
+        "a": { "value": 3 }
+      }
+    }`,
+  },
+  {
     name: 'or-filters',
     json: `{
       "aggregatable_trigger_data": [{
