@@ -3249,20 +3249,20 @@ To <dfn>remove associated event reports</dfn> given an [=attribution source/sour
 To <dfn>remove sources with attribution scopes not selected for destination</dfn> given a [=site=] |destination| and an [=attribution source=] |pendingSource|:
 1. Let |attributionScopeRecords| be a new [=list=].
 1. [=set/iterate|For each=] |attributionScope| in |pendingSource|'s [=attribution source/attribution scopes=]:
-    1. [=list/Append=] the [=tuple=] (|attributionScope|, |pendingSource|'s [=attribution source/source time=], |pendingSource|) to |attributionScopeRecords|.
+    1. [=list/Append=] the [=tuple=] (|attributionScope|, |pendingSource|) to |attributionScopeRecords|.
 1. [=set/iterate|For each=] |source| of the [=attribution source cache=]:
     1. If |source|'s [=attribution source/reporting origin=] and |pendingSource|'s [=attribution source/reporting origin=] are not [=same origin=], [=iteration/continue=].
     1. If |source|'s [=attribution source/attribution destinations=] does not [=set/contain=] |destination|, [=iteration/continue=].
     1. [=set/iterate|For each=] |attributionScope| in |source|'s [=attribution source/attribution scopes=]:
-        1. [=list/Append=] the [=tuple=] (|attributionScope|, |source|'s [=attribution source/source time=], |source|) to |attributionScopeRecords|.
+        1. [=list/Append=] the [=tuple=] (|attributionScope|, |source|) to |attributionScopeRecords|.
 1. [=list/sort in ascending order|Sort=] |attributionScopeRecords| in ascending order with |a| being less than |b| if any of the following are true:
-      * |a|[1] is greater than |b|[1].
-      * |a|[1] is equal to |b|[1] and |a|[0] is greater than |b|[0].
+      * |a|[1]'s [=attribution source/source time=] is greater than |b|[1]'s [=attribution source/source time=].
+      * |a|[1]'s [=attribution source/source time=] is equal to |b|[1]'s [=attribution source/source time=] and |a|[0] is greater than |b|[0].
 1. Let |selectedAttributionScopes| be a new [=set=].
 1. Let |sourcesToRemove| be a new [=set=].
 1. [=list/iterate|For each=] |record| of |attributionScopeRecords|:
     1. If |selectedAttributionScopes|'s [=set/size=] is less than |pendingSource|'s [=attribution source/attribution scope limit=], [=set/append=] |record|[0] to |selectedAttributionScopes|.
-    1. Otherwise, if |selectedAttributionScopes| does not [=set/contain=] |record|[0], [=set/append=] |record|[2] to |sourcesToRemove|.
+    1. Otherwise, if |selectedAttributionScopes| does not [=set/contain=] |record|[0], [=set/append=] |record|[1] to |sourcesToRemove|.
 1. [=set/iterate|For each=] |source| of the |sourcesToRemove|:
     1. [=Remove associated event reports=] with |source|'s [=attribution source/source identifier=] and |pendingSource|'s [=attribution source/source time=].
     1. [=set/Remove=] |source| from the [=attribution source cache=].
