@@ -13,8 +13,10 @@ import {
   isInRange,
   isLengthValid,
   matchesPattern,
+  required,
   suitableOrigin,
   suitableSite,
+  withDefault,
 } from './validate'
 import * as validate from './validate'
 import * as privacy from '../flexible-event/privacy'
@@ -64,7 +66,6 @@ class SourceContext extends RegistrationContext {
 const {
   exclusive,
   field,
-  fieldMaybeDefault,
   struct: structInternal,
 } = validate.make<JsonDict, Json>(
   /*getAndDelete=*/ (d, name) => {
@@ -231,15 +232,20 @@ function destination(j: Json, ctx: Context): Maybe<Set<string>> {
   })
 }
 
-function maxEventLevelReports(j: Json, ctx: Context): Maybe<number> {
-  return number(j, ctx)
-    .filter(isInteger, ctx)
-    .filter(
-      isInRange,
-      ctx,
-      0,
-      constants.maxSettableEventLevelAttributionsPerSource
-    )
+function maxEventLevelReports(
+  j: Json | undefined,
+  ctx: SourceContext
+): Maybe<number> {
+  return j === undefined
+    ? some(constants.defaultEventLevelAttributionsPerSource[ctx.sourceType])
+    : number(j, ctx)
+        .filter(isInteger, ctx)
+        .filter(
+          isInRange,
+          ctx,
+          0,
+          constants.maxSettableEventLevelAttributionsPerSource
+        )
 }
 
 function startTime(
@@ -318,15 +324,13 @@ function eventReportWindows(
   return object(j, ctx).flatMap((j) => {
     const startTimeValue = field(
       'start_time',
-      (j) => startTime(j, ctx, expiry),
-      0
+      withDefault(startTime, 0),
+      expiry
     )(j, ctx)
 
     return struct(j, ctx, {
       startTime: () => startTimeValue,
-      endTimes: field('end_times', (j) =>
-        endTimes(j, ctx, expiry, startTimeValue)
-      ),
+      endTimes: field('end_times', required(endTimes), expiry, startTimeValue),
     })
   })
 }
@@ -450,7 +454,10 @@ function filterConfig(j: Json, ctx: Context): Maybe<FilterConfig> {
     j,
     ctx,
     {
-      lookbackWindow: field('_lookback_window', positiveInteger, null),
+      lookbackWindow: field(
+        '_lookback_window',
+        withDefault(positiveInteger, null)
+      ),
       map: (j) => keyValues(j, ctx, filterKeyValue),
     },
     /*warnUnknown=*/ false
@@ -470,8 +477,8 @@ export type FilterPair = {
 }
 
 const filterFields: StructFields<FilterPair> = {
-  positive: field('filters', orFilters, []),
-  negative: field('not_filters', orFilters, []),
+  positive: field('filters', withDefault(orFilters, [])),
+  negative: field('not_filters', withDefault(orFilters, [])),
 }
 
 export function filterPair(j: Json, ctx: Context): Maybe<FilterPair> {
@@ -484,8 +491,8 @@ export type CommonDebug = {
 }
 
 const commonDebugFields: StructFields<CommonDebug> = {
-  debugKey: field('debug_key', uint64, null),
-  debugReporting: field('debug_reporting', bool, false),
+  debugKey: field('debug_key', withDefault(uint64, null)),
+  debugReporting: field('debug_reporting', withDefault(bool, false)),
 }
 
 export type DedupKey = {
@@ -493,7 +500,7 @@ export type DedupKey = {
 }
 
 const dedupKeyField: StructFields<DedupKey> = {
-  dedupKey: field('deduplication_key', uint64, null),
+  dedupKey: field('deduplication_key', withDefault(uint64, null)),
 }
 
 export type Priority = {
@@ -501,7 +508,7 @@ export type Priority = {
 }
 
 const priorityField: StructFields<Priority> = {
-  priority: field('priority', int64, 0n),
+  priority: field('priority', withDefault(int64, 0n)),
 }
 
 function aggregatableDebugType(
@@ -520,7 +527,7 @@ export type KeyPiece = {
 }
 
 const keyPieceField: StructFields<KeyPiece> = {
-  keyPiece: field('key_piece', hex128),
+  keyPiece: field('key_piece', required(hex128)),
 }
 
 export type AggregatableDebugReportingData = KeyPiece & {
@@ -533,13 +540,11 @@ function aggregatableDebugReportingData(
   ctx: RegistrationContext
 ): Maybe<AggregatableDebugReportingData> {
   return struct(j, ctx, {
-    types: field('types', (j) =>
-      set(j, ctx, aggregatableDebugType, {
-        minLength: 1,
-        requireDistinct: true,
-      })
-    ),
-    value: field('value', aggregatableKeyValueValue),
+    types: field('types', required(set), aggregatableDebugType, {
+      minLength: 1,
+      requireDistinct: true,
+    }),
+    value: field('value', required(aggregatableKeyValueValue)),
     ...keyPieceField,
   })
 }
@@ -568,30 +573,35 @@ function aggregatableDebugReportingDataList(
   })
 }
 
-// Consider making this a StructFields.
-function aggregationCoordinatorOriginField(
-  j: JsonDict,
-  ctx: RegistrationContext
-): Maybe<string> {
-  return field(
-    'aggregation_coordinator_origin',
-    aggregationCoordinatorOrigin,
-    ctx.vsv.aggregationCoordinatorOrigins[0]
-  )(j, ctx)
+export type AggregationCoordinatorOrigin = {
+  aggregationCoordinatorOrigin: string
 }
 
-export type AggregatableDebugReportingConfig = KeyPiece & {
-  aggregationCoordinatorOrigin: string
-  debugData: AggregatableDebugReportingData[]
+const aggregationCoordinatorOriginField: StructFields<
+  AggregationCoordinatorOrigin,
+  RegistrationContext
+> = {
+  aggregationCoordinatorOrigin: field(
+    'aggregation_coordinator_origin',
+    aggregationCoordinatorOrigin
+  ),
 }
+
+export type AggregatableDebugReportingConfig = KeyPiece &
+  AggregationCoordinatorOrigin & {
+    debugData: AggregatableDebugReportingData[]
+  }
 
 const aggregatableDebugReportingConfig: StructFields<
   AggregatableDebugReportingConfig,
   RegistrationContext
 > = {
-  aggregationCoordinatorOrigin: aggregationCoordinatorOriginField,
-  debugData: field('debug_data', aggregatableDebugReportingDataList, []),
+  debugData: field(
+    'debug_data',
+    withDefault(aggregatableDebugReportingDataList, [])
+  ),
 
+  ...aggregationCoordinatorOriginField,
   ...keyPieceField,
 }
 
@@ -690,7 +700,7 @@ function eventReportWindow(
   return singleReportWindow(j, ctx, expiry).map(defaultEventReportWindows, ctx)
 }
 
-function eventLevelEpsilon(j: Json, ctx: RegistrationContext): Maybe<number> {
+function eventLevelEpsilon(j: Json, ctx: SourceContext): Maybe<number> {
   return number(j, ctx).filter(
     isInRange,
     ctx,
@@ -771,7 +781,7 @@ function sourceAggregatableDebugReportingConfig(
   ctx: RegistrationContext
 ): Maybe<SourceAggregatableDebugReportingConfig> {
   return struct(j, ctx, {
-    budget: field('budget', aggregatableKeyValueValue),
+    budget: field('budget', required(aggregatableKeyValueValue)),
     ...aggregatableDebugReportingConfig,
   }).filter((s) => {
     for (const d of s.debugData) {
@@ -787,7 +797,7 @@ function sourceAggregatableDebugReportingConfig(
 }
 
 function summaryBuckets(
-  j: Json,
+  j: Json | undefined,
   ctx: Context,
   maxEventLevelReports: Maybe<number>
 ): Maybe<number[]> {
@@ -799,6 +809,10 @@ function summaryBuckets(
     maxLength = constants.maxSettableEventLevelAttributionsPerSource
   } else {
     maxLength = maxEventLevelReports.value
+  }
+
+  if (j === undefined) {
+    return maxEventLevelReports.map(makeDefaultSummaryBuckets)
   }
 
   let prev = 0
@@ -860,30 +874,26 @@ function triggerSpec(
   ctx: SourceContext,
   deps: TriggerSpecDeps
 ): Maybe<TriggerSpec> {
-  const defaultSummaryBuckets = deps.maxEventLevelReports.map(
-    makeDefaultSummaryBuckets
-  )
-
   return struct(j, ctx, {
-    eventReportWindows: fieldMaybeDefault(
-      'event_report_windows',
-      (j) => eventReportWindows(j, ctx, deps.expiry),
-      deps.eventReportWindows
+    eventReportWindows: field('event_report_windows', (j) =>
+      j === undefined
+        ? deps.eventReportWindows
+        : eventReportWindows(j, ctx, deps.expiry)
     ),
 
-    summaryBuckets: fieldMaybeDefault(
+    summaryBuckets: field(
       'summary_buckets',
-      (j) => summaryBuckets(j, ctx, deps.maxEventLevelReports),
-      defaultSummaryBuckets
+      summaryBuckets,
+      deps.maxEventLevelReports
     ),
 
     summaryWindowOperator: field(
       'summary_window_operator',
-      (j) => enumerated(j, ctx, SummaryWindowOperator),
-      SummaryWindowOperator.count
+      withDefault(enumerated, SummaryWindowOperator.count),
+      SummaryWindowOperator
     ),
 
-    triggerData: field('trigger_data', triggerDataSet),
+    triggerData: field('trigger_data', required(triggerDataSet)),
   })
 }
 
@@ -985,13 +995,6 @@ export enum TriggerDataMatching {
   modulus = 'modulus',
 }
 
-function triggerDataMatching(
-  j: Json,
-  ctx: Context
-): Maybe<TriggerDataMatching> {
-  return enumerated(j, ctx, TriggerDataMatching)
-}
-
 function isTriggerDataMatchingValidForSpecs(s: Source, ctx: Context): boolean {
   return ctx.scope('trigger_data_matching', () => {
     if (s.triggerDataMatching !== TriggerDataMatching.modulus) {
@@ -1056,8 +1059,7 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
     .flatMap((j) => {
       const expiryVal = field(
         'expiry',
-        expiry,
-        constants.validSourceExpiryRange[1]
+        withDefault(expiry, constants.validSourceExpiryRange[1])
       )(j, ctx)
 
       const eventReportWindowsVal = exclusive(
@@ -1070,8 +1072,7 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
 
       const maxEventLevelReportsVal = field(
         'max_event_level_reports',
-        maxEventLevelReports,
-        constants.defaultEventLevelAttributionsPerSource[ctx.sourceType]
+        maxEventLevelReports
       )(j, ctx)
 
       const defaultTriggerSpecsVal = defaultTriggerSpecs(
@@ -1100,38 +1101,36 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
       )(j, ctx)
 
       return struct(j, ctx, {
-        aggregatableReportWindow: fieldMaybeDefault(
-          'aggregatable_report_window',
-          (j) => singleReportWindow(j, ctx, expiryVal),
-          expiryVal
+        aggregatableReportWindow: field('aggregatable_report_window', (j) =>
+          j === undefined ? expiryVal : singleReportWindow(j, ctx, expiryVal)
         ),
-        aggregationKeys: field('aggregation_keys', aggregationKeys, new Map()),
-        destination: field('destination', destination),
+        aggregationKeys: field(
+          'aggregation_keys',
+          withDefault(aggregationKeys, new Map())
+        ),
+        destination: field('destination', required(destination)),
         eventLevelEpsilon: field(
           'event_level_epsilon',
-          eventLevelEpsilon,
-          ctx.vsv.maxSettableEventLevelEpsilon
+          withDefault(eventLevelEpsilon, ctx.vsv.maxSettableEventLevelEpsilon)
         ),
         expiry: () => expiryVal,
-        filterData: field('filter_data', filterData, new Map()),
+        filterData: field('filter_data', withDefault(filterData, new Map())),
         maxEventLevelReports: () => maxEventLevelReportsVal,
-        sourceEventId: field('source_event_id', uint64, 0n),
+        sourceEventId: field('source_event_id', withDefault(uint64, 0n)),
         triggerSpecs: () => triggerSpecsVal,
         aggregatableDebugReporting: field(
           'aggregatable_debug_reporting',
-          sourceAggregatableDebugReportingConfig,
-          null
+          withDefault(sourceAggregatableDebugReportingConfig, null)
         ),
 
         triggerDataMatching: field(
           'trigger_data_matching',
-          triggerDataMatching,
-          TriggerDataMatching.modulus
+          withDefault(enumerated, TriggerDataMatching.modulus),
+          TriggerDataMatching
         ),
         destinationLimitPriority: field(
           'destination_limit_priority',
-          int64,
-          0n
+          withDefault(int64, 0n)
         ),
 
         ...commonDebugFields,
@@ -1160,7 +1159,7 @@ function aggregatableTriggerData(
 ): Maybe<AggregatableTriggerDatum[]> {
   return array(j, ctx, (j) =>
     struct(j, ctx, {
-      sourceKeys: field('source_keys', sourceKeys, new Set<string>()),
+      sourceKeys: field('source_keys', withDefault(sourceKeys, new Set())),
       ...filterFields,
       ...keyPieceField,
     })
@@ -1225,11 +1224,11 @@ function aggregatableKeyValue(
       })),
     object: (j) =>
       struct(j, ctx, {
-        value: field('value', aggregatableKeyValueValue),
+        value: field('value', required(aggregatableKeyValueValue)),
         filteringId: field(
           'filtering_id',
-          (j) => aggregatableKeyValueFilteringId(j, ctx, maxBytes),
-          0n
+          withDefault(aggregatableKeyValueFilteringId, 0n),
+          maxBytes
         ),
       }),
   })
@@ -1256,9 +1255,7 @@ function aggregatableValuesConfigurations(
     list: (j) =>
       array(j, ctx, (j) =>
         struct(j, ctx, {
-          values: field('values', (j) =>
-            aggregatableKeyValues(j, ctx, maxBytes)
-          ),
+          values: field('values', required(aggregatableKeyValues), maxBytes),
           ...filterFields,
         })
       ),
@@ -1325,10 +1322,10 @@ function eventTriggerData(
 ): Maybe<EventTriggerDatum[]> {
   return array(j, ctx, (j) =>
     struct(j, ctx, {
-      triggerData: field('trigger_data', uint64, 0n),
+      triggerData: field('trigger_data', withDefault(uint64, 0n)),
 
       value: ctx.parseFullFlex
-        ? field('value', eventTriggerValue, 1)
+        ? field('value', withDefault(eventTriggerValue, 1))
         : () => some(1),
 
       ...filterFields,
@@ -1359,13 +1356,6 @@ function enumerated<T>(j: Json, ctx: Context, e: Record<string, T>): Maybe<T> {
 export enum AggregatableSourceRegistrationTime {
   exclude = 'exclude',
   include = 'include',
-}
-
-function aggregatableSourceRegistrationTime(
-  j: Json,
-  ctx: Context
-): Maybe<AggregatableSourceRegistrationTime> {
-  return enumerated(j, ctx, AggregatableSourceRegistrationTime)
 }
 
 function warnInconsistentAggregatableKeys(t: Trigger, ctx: Context): void {
@@ -1439,29 +1429,31 @@ function triggerContextID(
 }
 
 function aggregationCoordinatorOrigin(
-  j: Json,
+  j: Json | undefined,
   ctx: RegistrationContext
 ): Maybe<string> {
-  return string(j, ctx)
-    .flatMap(suitableOrigin, ctx)
-    .filter((s) => {
-      if (!ctx.vsv.aggregationCoordinatorOrigins.includes(s)) {
-        const allowed = ctx.vsv.aggregationCoordinatorOrigins.join(', ')
-        ctx.error(`must be one of the following: ${allowed}`)
-        return false
-      }
-      return true
-    })
+  return j === undefined
+    ? some(ctx.vsv.aggregationCoordinatorOrigins[0])
+    : string(j, ctx)
+        .flatMap(suitableOrigin, ctx)
+        .filter((s) => {
+          if (!ctx.vsv.aggregationCoordinatorOrigins.includes(s)) {
+            const allowed = ctx.vsv.aggregationCoordinatorOrigins.join(', ')
+            ctx.error(`must be one of the following: ${allowed}`)
+            return false
+          }
+          return true
+        })
 }
 
 export type Trigger = CommonDebug &
-  FilterPair & {
+  FilterPair &
+  AggregationCoordinatorOrigin & {
     aggregatableDedupKeys: AggregatableDedupKey[]
     aggregatableTriggerData: AggregatableTriggerDatum[]
     aggregatableSourceRegistrationTime: AggregatableSourceRegistrationTime
     aggregatableFilteringIdMaxBytes: number
     aggregatableValuesConfigurations: AggregatableValuesConfiguration[]
-    aggregationCoordinatorOrigin: string
     eventTriggerData: EventTriggerDatum[]
     triggerContextID: string | null
     aggregatableDebugReporting: AggregatableDebugReportingConfig | null
@@ -1472,53 +1464,51 @@ function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
     .flatMap((j) => {
       const aggregatableSourceRegTimeVal = field(
         'aggregatable_source_registration_time',
-        aggregatableSourceRegistrationTime,
-        AggregatableSourceRegistrationTime.exclude
+        withDefault(enumerated, AggregatableSourceRegistrationTime.exclude),
+        AggregatableSourceRegistrationTime
       )(j, ctx)
 
       const aggregatableFilteringIdMaxBytesVal = field(
         'aggregatable_filtering_id_max_bytes',
-        (j) =>
-          aggregatableFilteringIdMaxBytes(j, ctx, aggregatableSourceRegTimeVal),
-        constants.defaultAggregatableFilteringIdMaxBytes
+        withDefault(
+          aggregatableFilteringIdMaxBytes,
+          constants.defaultAggregatableFilteringIdMaxBytes
+        ),
+        aggregatableSourceRegTimeVal
       )(j, ctx)
 
       return struct(j, ctx, {
         aggregatableTriggerData: field(
           'aggregatable_trigger_data',
-          aggregatableTriggerData,
-          []
+          withDefault(aggregatableTriggerData, [])
         ),
         aggregatableFilteringIdMaxBytes: () =>
           aggregatableFilteringIdMaxBytesVal,
         aggregatableValuesConfigurations: field(
           'aggregatable_values',
-          (j) =>
-            aggregatableValuesConfigurations(
-              j,
-              ctx,
-              aggregatableFilteringIdMaxBytesVal
-            ),
-          []
+          withDefault(aggregatableValuesConfigurations, []),
+          aggregatableFilteringIdMaxBytesVal
         ),
         aggregatableDedupKeys: field(
           'aggregatable_deduplication_keys',
-          aggregatableDedupKeys,
-          []
+          withDefault(aggregatableDedupKeys, [])
         ),
         aggregatableSourceRegistrationTime: () => aggregatableSourceRegTimeVal,
-        aggregationCoordinatorOrigin: aggregationCoordinatorOriginField,
-        eventTriggerData: field('event_trigger_data', eventTriggerData, []),
+        eventTriggerData: field(
+          'event_trigger_data',
+          withDefault(eventTriggerData, [])
+        ),
         triggerContextID: field(
           'trigger_context_id',
-          (j) => triggerContextID(j, ctx, aggregatableSourceRegTimeVal),
-          null
+          withDefault(triggerContextID, null),
+          aggregatableSourceRegTimeVal
         ),
         aggregatableDebugReporting: field(
           'aggregatable_debug_reporting',
-          (j) => struct(j, ctx, aggregatableDebugReportingConfig),
-          null
+          withDefault(struct, null),
+          aggregatableDebugReportingConfig
         ),
+        ...aggregationCoordinatorOriginField,
         ...commonDebugFields,
         ...filterFields,
       })
@@ -1659,24 +1649,25 @@ function eventLevelReport(
   ctx: GenericContext
 ): Maybe<EventLevelReport> {
   return struct(j, ctx, {
-    attributionDestination: field('attribution_destination', reportDestination),
+    attributionDestination: field(
+      'attribution_destination',
+      required(reportDestination)
+    ),
     randomizedTriggerRate: field(
       'randomized_trigger_rate',
-      randomizedTriggerRate
+      required(randomizedTriggerRate)
     ),
-    reportId: field('report_id', randomUuid),
-    scheduledReportTime: field('scheduled_report_time', int64),
-    sourceDebugKey: field('source_debug_key', uint64, null),
-    sourceEventId: field('source_event_id', uint64),
-    sourceType: field('source_type', (ctx, j) =>
-      enumerated(ctx, j, SourceType)
-    ),
-    triggerData: field('trigger_data', uint64),
+    reportId: field('report_id', required(randomUuid)),
+    scheduledReportTime: field('scheduled_report_time', required(int64)),
+    sourceDebugKey: field('source_debug_key', withDefault(uint64, null)),
+    sourceEventId: field('source_event_id', required(uint64)),
+    sourceType: field('source_type', required(enumerated), SourceType),
+    triggerData: field('trigger_data', required(uint64)),
     // TODO: Flex can issue multiple trigger debug keys.
-    triggerDebugKey: field('trigger_debug_key', uint64, null),
+    triggerDebugKey: field('trigger_debug_key', withDefault(uint64, null)),
 
     triggerSummaryBucket: ctx.parseFullFlex
-      ? field('trigger_summary_bucket', triggerSummaryBucket)
+      ? field('trigger_summary_bucket', required(triggerSummaryBucket))
       : () => some(null),
   })
 }

@@ -21,9 +21,12 @@ export type Info = {
 }
 
 function preferredPlatform(
-  v: Item | InnerList,
+  v: Item | InnerList | undefined,
   ctx: Context
-): Maybe<PreferredPlatform> {
+): Maybe<PreferredPlatform | null> {
+  if (v === undefined) {
+    return Maybe.some(null)
+  }
   if (!(v[0] instanceof Token)) {
     ctx.error('must be a token')
     return Maybe.None
@@ -37,7 +40,13 @@ function preferredPlatform(
     })
 }
 
-function reportHeaderErrors(v: Item | InnerList, ctx: Context): Maybe<boolean> {
+function reportHeaderErrors(
+  v: Item | InnerList | undefined,
+  ctx: Context
+): Maybe<boolean> {
+  if (v === undefined) {
+    return Maybe.some(false)
+  }
   if (typeof v[0] !== 'boolean') {
     ctx.error('must be a boolean')
     return Maybe.None
@@ -51,12 +60,8 @@ function reportHeaderErrors(v: Item | InnerList, ctx: Context): Maybe<boolean> {
 export function validateInfo(str: string): [ValidationResult, Maybe<Info>] {
   return validateDictionary(str, new Context(), (d, ctx) =>
     struct(d, ctx, {
-      preferredPlatform: field('preferred-platform', preferredPlatform, null),
-      reportHeaderErrors: field(
-        'report-header-errors',
-        reportHeaderErrors,
-        false
-      ),
+      preferredPlatform: field('preferred-platform', preferredPlatform),
+      reportHeaderErrors: field('report-header-errors', reportHeaderErrors),
     })
   )
 }

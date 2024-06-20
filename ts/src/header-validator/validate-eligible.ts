@@ -18,7 +18,14 @@ export type Eligible = {
   trigger: boolean
 }
 
-function presence(v: Item | InnerList, ctx: Context): Maybe<boolean> {
+function presence(
+  v: Item | InnerList | undefined,
+  ctx: Context
+): Maybe<boolean> {
+  if (v === undefined) {
+    return Maybe.some(false)
+  }
+
   if (v[0] !== true) {
     ctx.warning('ignoring dictionary value')
   }
@@ -35,9 +42,9 @@ export function validateEligible(
 ): [ValidationResult, Maybe<Eligible>] {
   return validateDictionary(str, new Context(), (d, ctx) =>
     struct(d, ctx, {
-      navigationSource: field(navigationSourceKey, presence, false),
-      eventSource: field(eventSourceKey, presence, false),
-      trigger: field(triggerKey, presence, false),
+      navigationSource: field(navigationSourceKey, presence),
+      eventSource: field(eventSourceKey, presence),
+      trigger: field(triggerKey, presence),
     }).filter((v) => {
       if (v.navigationSource && (v.eventSource || v.trigger)) {
         ctx.error(
