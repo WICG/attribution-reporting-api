@@ -105,7 +105,7 @@ function serializeTriggerData(d: Set<number>): TriggerData {
 export type TriggerSpec = EventReportWindows &
   TriggerData & {
     summary_buckets: number[]
-    summary_window_operator: string
+    summary_operator: string
   }
 
 function serializeTriggerSpec(ts: parsed.TriggerSpec): TriggerSpec {
@@ -114,7 +114,7 @@ function serializeTriggerSpec(ts: parsed.TriggerSpec): TriggerSpec {
     ...serializeTriggerData(ts.triggerData),
 
     summary_buckets: Array.from(ts.summaryBuckets),
-    summary_window_operator: ts.summaryWindowOperator,
+    summary_operator: ts.summaryOperator,
   }
 }
 
