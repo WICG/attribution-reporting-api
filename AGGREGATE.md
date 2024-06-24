@@ -19,6 +19,7 @@
   - [Storage limits](#storage-limits)
   - [Hide the true number of attribution reports](#hide-the-true-number-of-attribution-reports)
   - [Optional: reduce report delay with trigger context ID](#optional-reduce-report-delay-with-trigger-context-id)
+  - [Optional: flexible contribution filtering with filtering IDs](#optional-flexible-contribution-filtering-with-filtering-ids)
 - [Data processing through a Secure Aggregation Service](#data-processing-through-a-secure-aggregation-service)
 - [Privacy considerations](#privacy-considerations)
   - [Differential Privacy](#differential-privacy)
