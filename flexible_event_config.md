@@ -79,7 +79,6 @@ In addition to the parameters that were added in Phase 1, we will add one additi
     // Represents an operator that summarizes the triggers within a window
     // count: number of triggers attributed within a window
     // value_sum: sum of the value of triggers within a window
-    // The summary is reported as an index into a bucketization scheme.
     // Defaults to "count"
     "summary_window_operator": <one of "count" or "value_sum">,
 
