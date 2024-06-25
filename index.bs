@@ -562,13 +562,11 @@ To <dfn>clear site data</dfn> given an [=origin=] |origin|:
 
 1. [=set/iterate|For each=] [=attribution source=] |source| of the [=attribution source cache=]:
     1. If |source|'s [=attribution source/reporting origin=] and |origin| are [=same origin=],
-        [=set/remove=] |source| from the [=attribution source cache=].
-1. [=set/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
-    1. If |report|'s [=event-level report/reporting origin=] and |origin| are [=same origin=],
-        [=set/remove=] |report| from the [=event-level report cache=].
-1. [=set/iterate|For each=] [=aggregatable attribution report=] |report| of the [=aggregatable attribution report cache=]:
-    1. If |report|'s [=aggregatable attribution report/reporting origin=] and |origin| are [=same origin=],
-        [=set/remove=] |report| from the [=aggregatable attribution report cache=].
+        [=remove an attribution source|remove=] |source| with
+        [=remove an attribution source/flushPendingEventLevelReports=] set to false.
+1. [=set/iterate|For each=] [=attribution report=] |report| of the [=report cache=]:
+    1. If |report|'s [=attribution report/reporting origin=] and |origin| are [=same origin=],
+        [=set/remove=] |report| from the [=report cache=].
 
 Note: We deliberately do *not* remove matching entries from the
 [=attribution rate-limit cache=] and [=aggregatable debug rate-limit cache=], as doing so would allow a site to reset and
@@ -802,6 +800,8 @@ An attribution source is a [=struct=] with the following items:
 :: A 64-bit integer.
 : <dfn>source time</dfn>
 :: A [=moment=].
+: <dfn>pending event-level reports</dfn>
+:: A [=list=] of [=event-level reports=] attributed to this [=attribution source=] that haven't yet been sent.
 : <dfn>number of event-level reports</dfn>
 :: Number of [=event-level reports=] created for this [=attribution source=].
 : <dfn>max number of event-level reports</dfn>
@@ -1303,9 +1303,7 @@ A destination rate-limit result is one of the following:
 
 A user agent holds an <dfn>attribution source cache</dfn>, which is a [=set=] of [=attribution sources=].
 
-A user agent holds an <dfn>event-level report cache</dfn>, which is a [=set=] of [=event-level reports=].
-
-A user agent holds an <dfn>aggregatable attribution report cache</dfn>, which is a [=set=] of [=aggregatable attribution reports=].
+A user agent holds a <dfn>report cache</dfn>, which is a [=set=] of [=attribution reports=] to be sent.
 
 A user agent holds an <dfn>attribution rate-limit cache</dfn>, which is a [=set=] of [=attribution rate-limit records=].
 
@@ -1440,12 +1438,10 @@ is "<code>[=aggregatable source registration time configuration/include=]</code>
 this is 0.
 
 <dfn>Max event-level reports per attribution destination</dfn> is a positive integer that
-controls how many [=event-level reports=] can be in the
-[=event-level report cache=] per [=site=] in
-[=event-level report/attribution destinations=].
+controls how many [=event-level reports=] can be pending at once per attribution destination.
 
 <dfn>Max aggregatable attribution reports per attribution destination</dfn> is a positive integer that controls how
-many [=aggregatable attribution reports=] can be in the [=aggregatable attribution report cache=] per
+many [=aggregatable attribution reports=] can be in the [=report cache=] per
 [=aggregatable attribution report/effective attribution destination=].
 
 <dfn>Max event-level channel capacity per source</dfn> is a [=map=] that
@@ -2828,6 +2824,16 @@ Issue: Determine proper charset-handling for the JSON header value.
 
 <h3 id="processing-an-attribution-source">Processing an attribution source</h3>
 
+To <dfn>remove an [=attribution source=]</dfn> |source| given a [=boolean=]
+<dfn for="remove an attribution source"><var>flushPendingEventLevelReports</var></dfn>:
+
+1. [=Assert=]: The [=attribution source cache=] [=set/contains=] |source|.
+1. If |flushPendingEventLevelReports| is true:
+    1. [=list/iterate|For each=] |report| of |source|'s [=attribution source/pending event-level reports=]:
+        1. [=list/Remove=] |report| from |source|'s [=attribution source/pending event-level reports=].
+        1. [=set/Append=] |report| to the [=report cache=].
+1. [=set/Remove=] |source| from the [=attribution source cache=].
+
 To <dfn>check if an [=attribution source=] exceeds the time-based destination limits</dfn> given an
 [=attribution source=] |source|, run the following steps:
 
@@ -2885,16 +2891,17 @@ To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of
     1. [=set/Remove=] |source| from the [=attribution source cache=] if |sourcesToDelete|
         [=set/contains=] |source|'s [=attribution source/source identifier=].
 1. Let |deletedEventLevelReports| be a new [=set=].
-1. [=set/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
-    1. If |sourcesToDelete| [=set/contains=] |report|'s [=event-level report/source identifier=]
-        and |report|'s [=event-level report/trigger time=] is greater than or equal to |now|:
-        1. [=set/Append=] |report|'s [=event-level report/report ID=] to |deletedEventLevelReports|.
-        1. [=set/Remove=] |report| from the [=event-level report cache=].
 1. Let |deletedAggregatableReports| be a new [=set=].
-1. [=set/iterate|For each=] [=aggregatable attribution report=] |report| of the [=aggregatable attribution report cache=]:
-    1. If |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable attribution report/source identifier=]:
-        1. [=set/Append=] |report|'s [=aggregatable attribution report/report ID=] to |deletedAggregatableReports|.
-        1. [=set/Remove=] |report| from the [=aggregatable attribution report cache=].
+1. [=set/iterate|For each=] |report| of the [=report cache=]:
+    1. If |report| is an [=event-level report=]:
+        1. If |sourcesToDelete| [=set/contains=] |report|'s [=event-level report/source identifier=]
+            and |report|'s [=event-level report/trigger time=] is greater than or equal to |now|:
+            1. [=set/Append=] |report|'s [=event-level report/report ID=] to |deletedEventLevelReports|.
+            1. [=set/Remove=] |report| from the [=report cache=].
+    1. If |report| is an [=aggregatable attribution report=]:
+        1. If |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable attribution report/source identifier=]:
+            1. [=set/Append=] |report|'s [=aggregatable attribution report/report ID=] to |deletedAggregatableReports|.
+            1. [=set/Remove=] |report| from the [=report cache=].
 1. [=set/iterate|For each=] [=attribution rate-limit record=] |record| of the [=attribution rate-limit cache=]:
     1. If |record|'s [=attribution rate-limit record/scope=] is:
         <dl class="switch">
@@ -2909,6 +2916,9 @@ To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of
             |deletedAggregatableReports| [=set/contains=] |record|'s [=attribution rate-limit record/entity ID=].
 
         </dl>
+
+Issue: This algorithm should use [=remove an attribution source=] instead of
+directly modifying the [=attribution source cache=].
 
 A <dfn>destination limit record</dfn> is a [=struct=] with the following items:
 
@@ -3135,7 +3145,9 @@ To <dfn>delete expired sources</dfn> given a [=moment=] |now|:
 
 1. [=set/iterate|For each=] |source| of the [=attribution source cache=]:
     1. If |source|'s [=attribution source/expiry time=] is less than |now|,
-        [=set/remove=] |source| from the [=attribution source cache=].
+        [=remove an attribution source|remove=] |source| with
+        [=remove an attribution source/flushPendingEventLevelReports=] set to
+        true.
 
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
 
@@ -3239,7 +3251,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         [=attribution source/randomized response=]:
         1. Let |fakeReport| be the result of running [=obtain a fake report=]
             with |source| and |triggerState|.
-        1. [=set/Append=] |fakeReport| to the [=event-level report cache=].
+        1. [=set/Append=] |fakeReport| to the [=report cache=].
     1. If |source|'s [=attribution source/randomized response=] is not [=list/is empty|empty=],
         then set |source|'s [=attribution source/event-level attributable=] value to false.
     1. [=map/iterate|For each=] |destination| in |source|'s [=attribution source/attribution destinations=]:
@@ -3861,7 +3873,7 @@ To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
     |sourceToAttribute|'s [=attribution source/max number of event-level reports=].
 1. If |sourceToAttribute|'s [=attribution source/number of event-level reports=] is less than
     |sourceToAttribute|'s [=attribution source/max number of event-level reports=], return "<code>[=event-level-report-replacement result/add-new-report=]</code>".
-1. Let |matchingReports| be a new [=list=] whose elements are all the elements in the [=event-level report cache=] whose [=event-level report/report time=] and [=event-level report/source identifier=] are equal to |report|'s, [=list/sorted in ascending order=] using [=event-level report/is lower-priority than=].
+1. Let |matchingReports| be a new [=list=] whose elements are all the elements in |sourceToAttribute|'s [=attribution source/pending event-level reports=] whose [=event-level report/report time=] is equal to |report|'s, [=list/sorted in ascending order=] using [=event-level report/is lower-priority than=].
 1. If |matchingReports| [=list/is empty=]:
     1. Set |sourceToAttribute|'s [=attribution source/event-level attributable=] value to false.
     1. Return "<code>[=event-level-report-replacement result/drop-new-report-none-to-replace=]</code>".
@@ -3870,7 +3882,7 @@ To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
 1. Let |lowestPriorityReport| be |matchingReports|[0].
 1. If |report| [=event-level report/is lower-priority than=] |lowestPriorityReport|,
     return "<code>[=event-level-report-replacement result/drop-new-report-low-priority=]</code>".
-1. [=set/Remove=] |lowestPriorityReport| from the [=event-level report cache=].
+1. [=set/Remove=] |lowestPriorityReport| from |sourceToAttribute|'s [=attribution source/pending event-level reports=].
 1. Decrement |sourceToAttribute|'s [=attribution source/number of event-level reports=] value by 1.
 1. Let |rateLimitRecord| be the element from [=attribution rate-limit cache=] whose
     [=attribution rate-limit record/entity ID=] is equal to |lowestPriorityReport|'s [=event-level report/report ID=]
@@ -3960,8 +3972,11 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     <dl class="switch">
     : "<code>[=event-level-report-replacement result/add-new-report=]</code>"
     ::
-         1. Let |numMatchingReports| be the number of entries in the [=event-level report cache=] whose
-             [=event-level report/attribution destinations=] [=set/contains=] |trigger|'s [=attribution trigger/attribution destination=].
+         1. Let |numMatchingReports| be 0.
+         1. [=set/iterate|For each=] |source| in the [=attribution source cache=]:
+             1. [=list/iterate|For each=] |report| in |source|'s [=attribution source/pending event-level reports=]:
+                 1. If |report|'s [=event-level report/attribution destinations=] [=set/contains=] |trigger|'s [=attribution trigger/attribution destination=],
+                     increment |numMatchingReports| by 1.
          1. If |numMatchingReports| is greater than or equal to the user agent's [=max event-level reports per attribution destination=]:
              1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
                  ("<code>[=trigger debug data type/trigger-event-storage-limit=]</code>", null)).
@@ -3981,7 +3996,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     <dl class="switch">
     : null
     ::
-        1. [=set/Append=] |report| to the [=event-level report cache=].
+        1. [=list/Append=] |report| to |sourceToAttribute|'s [=attribution source/pending event-level reports=].
         1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
     : not null
     ::
@@ -4027,7 +4042,8 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. If |report|'s [=aggregatable attribution report/contributions=] [=list/is empty=]:
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
         ("<code>[=trigger debug data type/trigger-aggregate-no-contributions=]</code>", null)).
-1. Let |numMatchingReports| be the number of entries in the [=aggregatable attribution report cache=] whose
+1. Let |numMatchingReports| be the number of entries in the [=report cache=] that are
+    [=aggregatable attribution reports=] whose
     [=aggregatable attribution report/effective attribution destination=] equals |trigger|'s [=attribution trigger/attribution destination=]
      and [=aggregatable attribution report/is null report=] is false.
 1. If |numMatchingReports| is greater than or equal to the user agent's
@@ -4059,7 +4075,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
     with |report| and |sourceToAttribute| is false:
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
         ("<code>[=trigger debug data type/trigger-aggregate-insufficient-budget=]</code>", null)).
-1. [=set/Append=] |report| to the [=aggregatable attribution report cache=].
+1. [=set/Append=] |report| to the [=report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of aggregatable attribution reports=] value by 1.
 1. Decrement |sourceToAttribute|'s [=attribution source/remaining aggregatable attribution budget=] value by
     |report|'s [=aggregatable attribution report/required aggregatable budget=].
@@ -4181,7 +4197,8 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     1. Return.
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
 1. [=list/iterate|For each=] |item| of |matchingSources|:
-    1. [=set/Remove=] |item| from the [=attribution source cache=].
+    1. [=remove an attribution source|Remove=] |item| with
+        [=remove an attribution source/flushPendingEventLevelReports=] set to true.
 1. Let |eventLevelResult| be the result of running [=trigger event-level attribution=]
     with |trigger| and |sourceToAttribute|.
 1. Let |aggregatableResult| be the result of running [=trigger aggregatable attribution=]
@@ -4367,7 +4384,7 @@ To <dfn>generate null attribution reports</dfn> given an [=attribution trigger=]
         |randomizedNullReportRate| is true:
         1. Let |nullReport| be the result of [=obtaining a null attribution report=] with |trigger| and |trigger|'s
             [=attribution trigger/trigger time=].
-        1. [=set/Append=] |nullReport| to the [=aggregatable attribution report cache=].
+        1. [=set/Append=] |nullReport| to the [=report cache=].
         1. [=list/Append=] |nullReport| to |nullReports|.
 1. Otherwise:
     1. [=Assert=]: |trigger|'s [=attribution trigger/trigger context ID=] is null.
@@ -4382,7 +4399,7 @@ To <dfn>generate null attribution reports</dfn> given an [=attribution trigger=]
             1. [=iteration/Continue=].
         1. If the result of [=determining if a randomized null attribution report is generated=] with [=randomized null attribution report rate including source registration time=] is true:
             1. Let |nullReport| be the result of [=obtaining a null attribution report=] with |trigger| and |fakeSourceTime|.
-            1. [=set/Append=] |nullReport| to the [=aggregatable attribution report cache=].
+            1. [=set/Append=] |nullReport| to the [=report cache=].
             1. [=list/Append=] |nullReport| to |nullReports|.
 1. Return |nullReports|.
 
@@ -4427,21 +4444,26 @@ Issue: Specify this in terms of <a href="https://html.spec.whatwg.org/multipage/
 
 # Report delivery # {#report-delivery}
 
-The user agent MUST periodically run [=queue reports for delivery=] on the
-[=event-level report cache=] and [=aggregatable attribution report cache=].
+The user agent MUST periodically run [=queue reports for delivery=].
 
-To <dfn>queue reports for delivery</dfn> given a [=set=] of
-[=attribution reports=] |cache|, run the following steps:
+To <dfn>queue reports for delivery</dfn>, run the following steps:
 
-1. [=set/iterate|For each=] |report| of |cache|:
+1. [=set/iterate|For each=] |source| of the [=attribution source cache=]:
+  1. [=list/iterate|For each=] |report| of |source|'s [=attribution source/pending event-level reports=]:
+      1. If |report|'s [=attribution report/report time=] is greater than the
+          [=current wall time=], [=iteration/continue=].
+      1. [=list/Remove=] |report| from |source|'s [=attribution source/pending event-level reports=].
+      1. [=set/Append=] |report| to the [=report cache=].
+1. [=set/iterate|For each=] |report| of the [=report cache=]:
   1. If |report|'s [=attribution report/report time=] is greater than the
       [=current wall time=], [=iteration/continue=].
-  1. [=set/Remove=] |report| from |cache|.
+  1. [=set/Remove=] |report| from the [=report cache=].
 
       Note: In order to support sending, waiting, and retries across various
        forms of interruption, including shutdown, the user agent may need to
        persist reports that are in the process of being sent in some other
        storage.
+
   1. Run the following steps [=in parallel=]:
       1. Wait an [=implementation-defined=] random non-negative [=duration=].
 
@@ -4821,8 +4843,8 @@ This algorithm constructs a [=request=] and attempts to deliver it to a [=suitab
 
 To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |report|, run the following steps:
 
-1. [=Assert=]: Neither the [=event-level report cache=] nor the
-    [=aggregatable attribution report cache=] [=set/contains=] |report|.
+1. [=Assert=]: The [=report cache=] does not [=set/contain=] |report|.
+1. [=Assert=]: No [=attribution source=] in the [=attribution source cache=]'s [=attribution source/pending event-level reports=] [=set/contains=] |report|.
 1. The user-agent MAY ignore the report; if so, return.
 1. Let |url| be the result of executing [=generate an attribution report URL=] on |report|.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
@@ -5109,10 +5131,13 @@ Note: Without this, reports would be subject to noise and delays, making testing
 
 The [=remote end steps=] are:
 
-1. [=list/iterate|For each=] |cache| of « [=event-level report cache=], [=aggregatable attribution report cache=] »:
-    1. [=set/iterate|For each=] |report| of |cache|:
-        1. [=set/Remove=] |report| from |cache|.
+1. [=set/iterate|For each=] |source| of the [=attribution source cache=]:
+    1. [=list/iterate|For each=] |report| of |source|'s [=attribution source/pending event-level reports=]:
+        1. [=list/Remove=] |report| from |source|'s [=attribution source/pending event-level reports=].
         1. [=Attempt to deliver a report|Attempt to deliver=] |report|.
+1. [=set/iterate|For each=] |report| of the [=report cache=]:
+     1. [=set/Remove=] |report| from the [=report cache=].
+     1. [=Attempt to deliver a report|Attempt to deliver=] |report|.
 1. Return [=success=] with data `null`.
 
 # Security considerations # {#security-considerations}
@@ -5121,8 +5146,8 @@ The [=remote end steps=] are:
 
 *This section is non-normative.*
 
-Writes to the [=attribution source cache=], [=event-level report cache=], and
-[=aggregatable attribution report cache=] are separated by the reporting [=origin=], and reports sent
+Writes to the [=attribution source cache=] and
+[=report cache=] are separated by the reporting [=origin=], and reports sent
 to a given [=origin=] are generated via data only written to by that [=origin=], via
 HTTP response headers.
 
@@ -5145,7 +5170,7 @@ of many origins colluding together to violate privacy. API deployments should mo
 for abuse using these vectors to evaluate the trade-off.
 
 The generation of [=verbose debug reports=] involves reads to the [=attribution source cache=],
-[=event-level report cache=], [=aggregatable attribution report cache=], and [=attribution rate-limit cache=],
+[=report cache=], and [=attribution rate-limit cache=],
 and the [=verbose debug data=] sent to a given [=origin=] may encode non-Same-Origin
 data that are generated from grouping together data submitted by multiple [=origins=],
 e.g. failures due to rate-limits that are not fully compliant with the Same-Origin Policy.
