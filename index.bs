@@ -944,7 +944,6 @@ An <dfn>aggregatable source registration time configuration</dfn> is one of the 
 
 </dl>
 
-
 <h3 dfn-type=dfn>Attribution trigger</h3>
 
 An attribution trigger is a [=struct=] with the following items:
@@ -1299,7 +1298,6 @@ A destination rate-limit result is one of the following:
 <li>"<dfn><code>hit global limit</code></dfn>"
 <li>"<dfn><code>hit reporting limit</code></dfn>"
 </ul>
-
 
 # Storage # {#storage}
 
@@ -2295,7 +2293,7 @@ an [=aggregation coordinator=] |aggregationCoordinator|, and a [=moment=] |now|:
     :: |contributions|
     : [=aggregatable debug report/aggregation coordinator=]
     :: |aggregationCoordinator|
-    
+
 1. [=Queue a task=] to [=attempt to deliver an aggregatable debug report=] with |report|.
 
 To <dfn>obtain and deliver an aggregatable debug report on registration</dfn> given a [=list=] |contributions|,
@@ -2381,7 +2379,6 @@ To <dfn>obtain a randomized source response</dfn> given a [=randomized response 
 1. Let |pickRate| be the result of [=obtaining a randomized source response pick rate=] with |config| and |epsilon|.
 1. Return the result of [=obtaining a randomized response=] with null, |possibleValues|, and
     |pickRate|.
-
 
 <h3 algorithm id="computing-channel-capacity">Computing channel capacity</h3>
 
@@ -3134,10 +3131,15 @@ and an optional [=boolean=] |isNoised| (default false):
 1. Run [=obtain and deliver an aggregatable debug report on source registration=]
     with |dataTypes|, |source|, and |isNoised|.
 
+To <dfn>delete expired sources</dfn> given a [=moment=] |now|:
+
+1. [=set/iterate|For each=] |source| of the [=attribution source cache=]:
+    1. If |source|'s [=attribution source/expiry time=] is less than |now|,
+        [=set/remove=] |source| from the [=attribution source cache=].
+
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
 
-1. Let |cache| be the user agent's [=attribution source cache=].
-1. [=list/Remove=] all [=attribution sources=] |entry| in |cache| where |entry|'s [=attribution source/expiry time=] is less than |source|'s [=attribution source/source time=].
+1. [=Delete expired sources=] with |source|'s [=attribution source/source time=].
 1. Let |randomizedResponseConfig| be a new [=randomized response output configuration=] whose items are:
 
     : [=randomized response output configuration/max attributions per source=]
@@ -3164,7 +3166,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     |source|'s [=attribution source/randomized response=] is null,
     [=attribution source/randomized response=]'s [=list/size=] otherwise.
 1. Let |pendingSourcesForSourceOrigin| be the [=set=] of all
-    [=attribution sources=] |pendingSource| of |cache| where |pendingSource|'s
+    [=attribution sources=] |pendingSource| of the [=attribution source cache=] where |pendingSource|'s
     [=attribution source/source origin=] and |source|'s
     [=attribution source/source origin=] are [=same origin=].
 1. If |pendingSourcesForSourceOrigin|'s [=list/size=] is greater than or equal
@@ -3261,7 +3263,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     |debugDataTypes|.
 1. Run [=obtain and deliver debug reports on source registration=] with
     |debugDataTypes|, |source|, and |isNoised|.
-1. [=set/Append=] |source| to |cache|.
+1. [=set/Append=] |source| to the [=attribution source cache=].
 
 Note: Because a fake report does not have a "real" effective destination, we need to subtract from the
 privacy budget of all possible destinations.
@@ -3431,7 +3433,7 @@ To <dfn>parse aggregatable key-values</dfn> given a [=map=] |map| and a positive
             <a spec="html">rules for parsing non-negative integers</a> to |value|["<code>[=trigger-registration JSON key/filtering_id=]</code>"].
         1. If |filteringId| is an error, return null.
         1. If |filteringId| is not in [=the exclusive range|the range=]
-            0 to 256<sup>|maxBytes|</sup>, exclusive, return null.    
+            0 to 256<sup>|maxBytes|</sup>, exclusive, return null.
     1.  [=map/Set=] |out|[|key|] to a new [=aggregatable key value=] whose items are
         : [=aggregatable key value/value=]
         :: |value|["<code>[=trigger-registration JSON key/value=]</code>"]
@@ -3515,7 +3517,7 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
     with |value|.
 1. If |aggregatableTriggerData| is null, return null.
 1. Let |filteringIdsMaxBytes| be the result of [=parsing aggregatable filtering ID max bytes=] with |value|.
-1. If |filteringIdsMaxBytes| is null, return null. 
+1. If |filteringIdsMaxBytes| is null, return null.
 1. Let |aggregatableValuesConfigurations| be the result of running
     [=parse aggregatable values=] with |value| and |filteringIdsMaxBytes|.
 1. If |aggregatableValuesConfigurations| is null, return null.
@@ -4197,7 +4199,7 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
 1. [=list/Remove=] all [=attribution rate-limit records=] |entry| from the [=attribution rate-limit cache=] if the result of running
     [=can attribution rate-limit record be removed=] with |entry| and |trigger|'s [=attribution trigger/trigger time=] is true.
 
-Issue(1287): Consider replacing |debugDataSet| with a [=list=]. 
+Issue(1287): Consider replacing |debugDataSet| with a [=list=].
 
 <h3 algorithm id="delivery-time">Establishing report delivery time</h3>
 
@@ -4264,7 +4266,7 @@ a 64-bit integer priority |priority|, and a [=trigger spec map=] [=map/entry=]
     : [=event-level report/report ID=]
     :: The result of [=generating a random UUID=].
     : [=event-level report/attribution debug info=]
-    :: (|source|'s [=attribution source/debug key=], |triggerDebugKey|). 
+    :: (|source|'s [=attribution source/debug key=], |triggerDebugKey|).
 1. Return |report|.
 
 <h3 id="obtaining-required-aggregatable-budget">Obtaining an aggregatable report's required budget</h3>
@@ -4401,7 +4403,6 @@ an [=attribution trigger=] |trigger|:
     1. Set |reports|[i]'s [=aggregatable attribution report/report ID=] to |verifications|[i]'s [=trigger verification/id=].
     1. Set |reports|[i]'s [=aggregatable attribution report/serialized private state token=] to |verifications|[i]'s [=trigger verification/token=].
 
-
 To <dfn>generate null attribution reports and assign private state tokens</dfn> given an [=attribution trigger=] |trigger|
 and an optional [=aggregatable attribution report=] <dfn for="generate null attribution reports and assign private state tokens"><var>report</var></dfn> defaulting to null:
 
@@ -4466,7 +4467,7 @@ of running the following steps:
 1. If |report| is an:
     <dl class="switch">
     : [=aggregatable attribution report=]
-    :: 
+    ::
         1. If the result of [=checking if attribution debugging can be enabled=] with
             |report|'s [=aggregatable attribution report/attribution debug info=] is true,
             return <strong>enabled</strong>.
@@ -4502,7 +4503,7 @@ of running the following steps:
 
     Note: The inclusion of "`report_id`" in the shared info is intended to allow the report recipient
     to perform deduplication and prevent double counting, in the event that the user agent retries
-    reports on failure. 
+    reports on failure.
 
     : "`reporting_origin`"
     :: |reportingOrigin|, [=serialization of an origin|serialized=]
@@ -4510,7 +4511,7 @@ of running the following steps:
     :: |report|'s [=aggregatable report/report time=] in seconds since the UNIX epoch, [=serialize an integer|serialized=]
     : "`version`"
     :: "`1.0`"
-    
+
     Note: The "`version`" value needs to be bumped if the <a href="https://github.com/privacysandbox/aggregation-service">aggregation service</a> upgrades.
 
 1. If |report|'s [=aggregatable report/debug mode=] is <strong>enabled</strong>,
@@ -4962,7 +4963,6 @@ an [=origin=] |contextOrigin|, and a [=boolean=] |fenced|:
         : [=verbose debug data/body=]
         :: |body|
     1. Run [=obtain and deliver a verbose debug report=] with « |data| », |origin|, and |fenced|.
-
 
 # Report Verification Algorithms # {#report-verification}
 
