@@ -2623,7 +2623,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
-        msg: 'must be in the range [1, 3]',
+        msg: 'attribution scopes size must be in the range [1, 3]',
       },
     ],
   },
