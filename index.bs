@@ -2890,6 +2890,15 @@ To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of
         and |report|'s [=event-level report/trigger time=] is greater than or equal to |now|:
         1. [=set/Append=] |report|'s [=event-level report/report ID=] to |deletedEventLevelReports|.
         1. [=set/Remove=] |report| from the [=event-level report cache=].
+
+    Note: The privacy concern on leaking browsing history of destinations
+    deactivated for unexpired destination limit from [=event-level reports=]
+    whose [=event-level report/trigger time=] is earlier than |now| is mitigated
+    by the presence of [=obtain a fake report|fake reports=]. [=Event-level reports=]
+    whose [=event-level report/trigger time=] is greater than or equal to |now|
+    must be deleted to avoid exposing whether an [=attribution source=] has
+    [=attribution source/randomized response=].
+
 1. Let |deletedAggregatableReports| be a new [=set=].
 1. [=set/iterate|For each=] [=aggregatable attribution report=] |report| of the [=aggregatable attribution report cache=]:
     1. If |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable attribution report/source identifier=]:
