@@ -788,7 +788,7 @@ function validateAttributionScopeFields(
       ctx,
       1,
       s.attributionScopeLimit,
-      `attribution_scope_limit must be great or equal to the number of attribution scopes ${s.attributionScopeLimit}`
+      `attribution_scope_limit must be greater than or equal to the number of attribution scopes ${s.attributionScopeLimit}`
     )
   })
 }

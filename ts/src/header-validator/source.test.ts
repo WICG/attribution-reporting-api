@@ -2623,7 +2623,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
-        msg: 'attribution_scope_limit must be great or equal to the number of attribution scopes 3',
+        msg: 'attribution_scope_limit must be greater than or equal to the number of attribution scopes 3',
       },
     ],
   },
@@ -2705,7 +2705,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
-        msg: 'attribution_scope_limit must be great or equal to the number of attribution scopes 1',
+        msg: 'attribution_scope_limit must be greater than or equal to the number of attribution scopes 1',
       },
     ],
   },
