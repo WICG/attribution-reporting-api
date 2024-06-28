@@ -2623,7 +2623,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
-        msg: 'attribution scopes size must be in the range [1, 3]',
+        msg: 'attribution_scope_limit must be great or equal to the number of attribution scopes 3',
       },
     ],
   },
@@ -2649,7 +2649,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
-        msg: 'must be set if max_event_states is set',
+        msg: 'must be set if non-default max_event_states value is set',
       },
     ],
   },
@@ -2705,7 +2705,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
-        msg: 'attribution scopes size must be in the range [1, 1]',
+        msg: 'attribution_scope_limit must be great or equal to the number of attribution scopes 1',
       },
     ],
   },
@@ -2751,7 +2751,6 @@ const testCases: TestCase[] = [
     name: 'attribution-scopes-too-many',
     json: `{
       "destination": "https://a.test",
-      "attribution_scope_limit": 1,
       "attribution_scopes": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21"]
     }`,
     expectedErrors: [

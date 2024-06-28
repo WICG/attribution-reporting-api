@@ -778,7 +778,7 @@ function validateAttributionScopeFields(
         return false
       }
       if (s.maxEventStates !== constants.defaultMaxEventStates) {
-        ctx.error('must be set if max_event_states is set')
+        ctx.error('must be set if non-default max_event_states value is set')
         return false
       }
       return true
@@ -788,7 +788,7 @@ function validateAttributionScopeFields(
       ctx,
       1,
       s.attributionScopeLimit,
-      `attribution scopes size must be in the range [1, ${s.attributionScopeLimit}]`
+      `attribution_scope_limit must be great or equal to the number of attribution scopes ${s.attributionScopeLimit}`
     )
   })
 }
