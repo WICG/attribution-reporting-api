@@ -2622,8 +2622,8 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['attribution_scope_limit'],
-        msg: 'attribution_scope_limit must be greater than or equal to the number of attribution scopes 3',
+        path: ['attribution_scopes'],
+        msg: 'length must be in the range [1, 3]',
       },
     ],
   },
@@ -2635,8 +2635,8 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['attribution_scope_limit'],
-        msg: 'must be set if attribution_scopes is set',
+        path: ['attribution_scopes'],
+        msg: 'length must be in the range [0, 0]',
       },
     ],
   },
@@ -2648,8 +2648,8 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['attribution_scope_limit'],
-        msg: 'must be set if non-default max_event_states value is set',
+        path: ['max_event_states'],
+        msg: 'non-default max_event_states when attribution_scope_limit is not set',
       },
     ],
   },
@@ -2704,8 +2704,8 @@ const testCases: TestCase[] = [
     }`,
     expectedErrors: [
       {
-        path: ['attribution_scope_limit'],
-        msg: 'attribution_scope_limit must be greater than or equal to the number of attribution scopes 1',
+        path: ['attribution_scopes'],
+        msg: 'length must be in the range [1, 1]',
       },
     ],
   },
@@ -2713,6 +2713,7 @@ const testCases: TestCase[] = [
     name: 'attribution-scope-not-string',
     json: `{
       "destination": "https://a.test",
+      "attribution_scope_limit": 2,
       "attribution_scopes": [1, 2]
     }`,
     expectedErrors: [
@@ -2751,12 +2752,13 @@ const testCases: TestCase[] = [
     name: 'attribution-scopes-too-many',
     json: `{
       "destination": "https://a.test",
+      "attribution_scope_limit": 21,
       "attribution_scopes": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21"]
     }`,
     expectedErrors: [
       {
         path: ['attribution_scopes'],
-        msg: 'length must be in the range [0, 20]',
+        msg: 'length must be in the range [1, 20]',
       },
     ],
   },

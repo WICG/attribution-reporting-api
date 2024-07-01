@@ -767,32 +767,6 @@ function channelCapacity(s: Source, ctx: SourceContext): void {
   }
 }
 
-function validateAttributionScopeFields(
-  s: Source,
-  ctx: SourceContext
-): boolean {
-  return ctx.scope('attribution_scope_limit', () => {
-    if (s.attributionScopeLimit === null) {
-      if (s.attributionScopes.size !== 0) {
-        ctx.error('must be set if attribution_scopes is set')
-        return false
-      }
-      if (s.maxEventStates !== constants.defaultMaxEventStates) {
-        ctx.error('must be set if non-default max_event_states value is set')
-        return false
-      }
-      return true
-    }
-    return isInRange(
-      s.attributionScopes.size,
-      ctx,
-      1,
-      s.attributionScopeLimit,
-      `attribution_scope_limit must be greater than or equal to the number of attribution scopes ${s.attributionScopeLimit}`
-    )
-  })
-}
-
 export enum SummaryWindowOperator {
   count = 'count',
   value_sum = 'value_sum',
@@ -1092,113 +1066,124 @@ export type Source = CommonDebug &
   }
 
 function source(j: Json, ctx: SourceContext): Maybe<Source> {
-  return object(j, ctx)
-    .flatMap((j) => {
-      const expiryVal = field(
-        'expiry',
-        withDefault(expiry, constants.validSourceExpiryRange[1])
-      )(j, ctx)
+  return (
+    object(j, ctx)
+      .flatMap((j) => {
+        const expiryVal = field(
+          'expiry',
+          withDefault(expiry, constants.validSourceExpiryRange[1])
+        )(j, ctx)
 
-      const eventReportWindowsVal = exclusive(
-        {
-          event_report_window: (j) => eventReportWindow(j, ctx, expiryVal),
-          event_report_windows: (j) => eventReportWindows(j, ctx, expiryVal),
-        },
-        expiryVal.map(defaultEventReportWindows, ctx)
-      )(j, ctx)
+        const eventReportWindowsVal = exclusive(
+          {
+            event_report_window: (j) => eventReportWindow(j, ctx, expiryVal),
+            event_report_windows: (j) => eventReportWindows(j, ctx, expiryVal),
+          },
+          expiryVal.map(defaultEventReportWindows, ctx)
+        )(j, ctx)
 
-      const maxEventLevelReportsVal = field(
-        'max_event_level_reports',
-        maxEventLevelReports
-      )(j, ctx)
+        const maxEventLevelReportsVal = field(
+          'max_event_level_reports',
+          maxEventLevelReports
+        )(j, ctx)
 
-      const defaultTriggerSpecsVal = defaultTriggerSpecs(
-        ctx,
-        eventReportWindowsVal,
-        maxEventLevelReportsVal
-      )
+        const defaultTriggerSpecsVal = defaultTriggerSpecs(
+          ctx,
+          eventReportWindowsVal,
+          maxEventLevelReportsVal
+        )
 
-      const triggerSpecsDeps = {
-        expiry: expiryVal,
-        eventReportWindows: eventReportWindowsVal,
-        maxEventLevelReports: maxEventLevelReportsVal,
-      }
+        const triggerSpecsDeps = {
+          expiry: expiryVal,
+          eventReportWindows: eventReportWindowsVal,
+          maxEventLevelReports: maxEventLevelReportsVal,
+        }
 
-      const triggerSpecsVal = exclusive(
-        {
-          trigger_data: (j) =>
-            triggerSpecsFromTriggerData(j, ctx, triggerSpecsDeps),
-          ...(ctx.parseFullFlex
-            ? {
-                trigger_specs: (j) => triggerSpecs(j, ctx, triggerSpecsDeps),
-              }
-            : {}),
-        },
-        defaultTriggerSpecsVal
-      )(j, ctx)
+        const triggerSpecsVal = exclusive(
+          {
+            trigger_data: (j) =>
+              triggerSpecsFromTriggerData(j, ctx, triggerSpecsDeps),
+            ...(ctx.parseFullFlex
+              ? {
+                  trigger_specs: (j) => triggerSpecs(j, ctx, triggerSpecsDeps),
+                }
+              : {}),
+          },
+          defaultTriggerSpecsVal
+        )(j, ctx)
 
-      return struct(j, ctx, {
-        aggregatableReportWindow: field('aggregatable_report_window', (j) =>
-          j === undefined ? expiryVal : singleReportWindow(j, ctx, expiryVal)
-        ),
-        aggregationKeys: field(
-          'aggregation_keys',
-          withDefault(aggregationKeys, new Map())
-        ),
-        destination: field('destination', required(destination)),
-        eventLevelEpsilon: field(
-          'event_level_epsilon',
-          withDefault(eventLevelEpsilon, ctx.vsv.maxSettableEventLevelEpsilon)
-        ),
-        expiry: () => expiryVal,
-        filterData: field('filter_data', withDefault(filterData, new Map())),
-        maxEventLevelReports: () => maxEventLevelReportsVal,
-        sourceEventId: field('source_event_id', withDefault(uint64, 0n)),
-        triggerSpecs: () => triggerSpecsVal,
-        aggregatableDebugReporting: field(
-          'aggregatable_debug_reporting',
-          withDefault(sourceAggregatableDebugReportingConfig, null)
-        ),
-
-        triggerDataMatching: field(
-          'trigger_data_matching',
-          withDefault(enumerated, TriggerDataMatching.modulus),
-          TriggerDataMatching
-        ),
-        destinationLimitPriority: field(
-          'destination_limit_priority',
-          withDefault(int64, 0n)
-        ),
-        attributionScopeLimit: field(
+        const attributionScopeLimitVal = field(
           'attribution_scope_limit',
           withDefault(positiveUint32, null)
-        ),
-        attributionScopes: field(
-          'attribution_scopes',
-          withDefault(
-            (j) =>
-              attributionScopes(
-                ctx,
-                j,
-                constants.maxAttributionScopesPerSource,
-                constants.maxLengthPerAttributionScope
-              ),
-            new Set<string>()
-          )
-        ),
-        maxEventStates: field(
-          'max_event_states',
-          withDefault(maxEventStates, constants.defaultMaxEventStates)
-        ),
+        )(j, ctx)
 
-        ...commonDebugFields,
-        ...priorityField,
+        return struct(j, ctx, {
+          aggregatableReportWindow: field('aggregatable_report_window', (j) =>
+            j === undefined ? expiryVal : singleReportWindow(j, ctx, expiryVal)
+          ),
+          aggregationKeys: field(
+            'aggregation_keys',
+            withDefault(aggregationKeys, new Map())
+          ),
+          destination: field('destination', required(destination)),
+          eventLevelEpsilon: field(
+            'event_level_epsilon',
+            withDefault(eventLevelEpsilon, ctx.vsv.maxSettableEventLevelEpsilon)
+          ),
+          expiry: () => expiryVal,
+          filterData: field('filter_data', withDefault(filterData, new Map())),
+          maxEventLevelReports: () => maxEventLevelReportsVal,
+          sourceEventId: field('source_event_id', withDefault(uint64, 0n)),
+          triggerSpecs: () => triggerSpecsVal,
+          aggregatableDebugReporting: field(
+            'aggregatable_debug_reporting',
+            withDefault(sourceAggregatableDebugReportingConfig, null)
+          ),
+
+          triggerDataMatching: field(
+            'trigger_data_matching',
+            withDefault(enumerated, TriggerDataMatching.modulus),
+            TriggerDataMatching
+          ),
+          destinationLimitPriority: field(
+            'destination_limit_priority',
+            withDefault(int64, 0n)
+          ),
+          attributionScopeLimit: () => attributionScopeLimitVal,
+          attributionScopes: field(
+            'attribution_scopes',
+            withDefault(
+              (j) =>
+                attributionScopes(
+                  ctx,
+                  j,
+                  attributionScopeLimitVal.value !== null ? 1 : 0,
+                  Math.min(
+                    constants.maxAttributionScopesPerSource,
+                    attributionScopeLimitVal.value || 0
+                  ),
+                  constants.maxLengthPerAttributionScope
+                ),
+              new Set<string>()
+            )
+          ),
+          maxEventStates: field(
+            'max_event_states',
+            withDefault(
+              (j) => maxEventStates(j, ctx, attributionScopeLimitVal),
+              constants.defaultMaxEventStates
+            )
+          ),
+
+          ...commonDebugFields,
+          ...priorityField,
+        })
       })
-    })
-    .filter(isTriggerDataMatchingValidForSpecs, ctx)
-    .filter(validateAttributionScopeFields, ctx)
-    .peek(channelCapacity, ctx)
-    .peek(warnInconsistentMaxEventLevelReportsAndTriggerSpecs, ctx)
+      .filter(isTriggerDataMatchingValidForSpecs, ctx)
+      // .filter(validateAttributionScopeFields, ctx)
+      .peek(channelCapacity, ctx)
+      .peek(warnInconsistentMaxEventLevelReportsAndTriggerSpecs, ctx)
+  )
 }
 
 function sourceKeys(j: Json, ctx: Context): Maybe<Set<string>> {
@@ -1400,15 +1385,32 @@ function positiveUint32(j: Json, ctx: Context): Maybe<number> {
     .filter(isInRange, ctx, 1, UINT32_MAX)
 }
 
-function maxEventStates(j: Json, ctx: SourceContext): Maybe<number> {
+function maxEventStates(
+  j: Json,
+  ctx: SourceContext,
+  attributionScopeLimit: Maybe<number | null>
+): Maybe<number> {
   return number(j, ctx)
     .filter(isInteger, ctx)
     .filter(isInRange, ctx, 1, ctx.vsv.maxTriggerStateCardinality)
+    .filter((n) => {
+      if (
+        attributionScopeLimit.value === null &&
+        n !== constants.defaultMaxEventStates
+      ) {
+        ctx.error(
+          'non-default max_event_states when attribution_scope_limit is not set'
+        )
+        return false
+      }
+      return true
+    })
 }
 
 function attributionScopes(
   ctx: RegistrationContext,
   j: Json,
+  minAttributionScopes: number,
   maxAttributionScopes: number,
   maxLengthPerAttributionScope: number
 ): Maybe<Set<string>> {
@@ -1427,6 +1429,7 @@ function attributionScopes(
     ctx,
     (j) => string(j, ctx).filter(attributionScopeStringLength),
     {
+      minLength: minAttributionScopes,
       maxLength: maxAttributionScopes,
     }
   )
@@ -1609,7 +1612,7 @@ function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
         attributionScopes: field(
           'attribution_scopes',
           withDefault(
-            (j) => attributionScopes(ctx, j, Infinity, Infinity),
+            (j) => attributionScopes(ctx, j, 0, Infinity, Infinity),
             new Set<string>()
           )
         ),
