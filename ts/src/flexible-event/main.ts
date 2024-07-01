@@ -7,6 +7,7 @@ import { validateSource } from '../header-validator/validate-json'
 import { SourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Config, PerTriggerDataConfig } from './privacy'
+import * as constants from '../constants'
 
 // Workaround for `parse` not handling top-level array types without `multiple`
 // `OptionDef` configuration.
@@ -25,6 +26,8 @@ function parseSourceType(str: string): SourceType {
 
 interface Arguments {
   max_event_level_reports: number
+  attribution_scope_limit: number
+  max_event_states: number
   epsilon: number
   source_type: SourceType
   windows?: Wrapped<number[]>
@@ -37,6 +40,16 @@ const options = parse<Arguments>({
     alias: 'm',
     type: Number,
     defaultValue: 20,
+  },
+  attribution_scope_limit: {
+    alias: 'a',
+    type: Number,
+    defaultValue: 1,
+  },
+  max_event_states: {
+    alias: 's',
+    type: Number,
+    defaultValue: 3,
   },
   epsilon: {
     alias: 'e',
@@ -90,6 +103,8 @@ if (options.json_file !== undefined) {
     (source) =>
       new Config(
         source.maxEventLevelReports,
+        source.attributionScopeLimit ?? 1,
+        source.maxEventStates ?? constants.defaultMaxEventStates,
         source.triggerSpecs.flatMap((spec) =>
           new Array<PerTriggerDataConfig>(spec.triggerData.size).fill(
             new PerTriggerDataConfig(
@@ -109,6 +124,8 @@ if (options.json_file !== undefined) {
   config = Maybe.some(
     new Config(
       options.max_event_level_reports,
+      options.attribution_scope_limit,
+      options.max_event_states,
       options.windows.value.map(
         (w: number, i: number) =>
           new PerTriggerDataConfig(w, options.buckets!.value[i]!)

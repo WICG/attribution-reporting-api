@@ -29,6 +29,8 @@ export class PerTriggerDataConfig {
 export class Config {
   constructor(
     readonly maxEventLevelReports: number,
+    readonly attributionScopeLimit: number,
+    readonly maxEventStates: number,
     readonly perTriggerDataConfigs: ReadonlyArray<PerTriggerDataConfig>
   ) {
     if (
@@ -90,7 +92,12 @@ export class Config {
 
   computeConfigData(epsilon: number, infoGainMax: number): ConfigData {
     const numStates = this.numFlexibleStates()
-    const infoGain = maxInformationGain(numStates, epsilon)
+    const infoGain = maxInformationGain(
+      numStates,
+      epsilon,
+      this.attributionScopeLimit,
+      this.maxEventStates
+    )
     const flipProb = flipProbabilityDp(numStates, epsilon)
 
     const data: ConfigData = { numStates, infoGain, flipProb }
@@ -98,6 +105,8 @@ export class Config {
     if (infoGain > infoGainMax) {
       const newEps = epsilonToBoundInfoGainAndDp(
         numStates,
+        this.attributionScopeLimit,
+        this.maxEventStates,
         infoGainMax,
         epsilon
       )
@@ -123,46 +132,72 @@ export function flipProbabilityDp(numStates: number, epsilon: number): number {
   return numStates / (numStates + Math.exp(epsilon) - 1)
 }
 
-/**
- * Computes the capacity of the q-ary symmetric channel.
- *
- * @param log2q - the logarithm to base 2 of the alphabet size.
- * @param flipProbability - the channel keeps the input the same with probability
- *   1 - flipProbability, and flips the input to one of the other q - 1
- *   symbols (uniformly) with the remaining probability of flipProbability.
- *
- * @returns - The capacity of the q-ary symmetric channel for given flipProbability.
- *   In general, the capacity is defined as the maximum, over all input
- *   distributions, of the mutual information between the input and output of
- *   the channel. In the special case of the q-ary symmetric channel, a
- *   closed-form expression is known, which we use here.
- */
-function capacityQarySymmetricChannel(
-  log2q: number,
-  flipProbability: number
+export function pickRateDp(numStates: number, epsilon: number): number {
+  return (numStates - 1) / (numStates + Math.exp(epsilon) - 1)
+}
+
+// Returns the pick rate for a source with attribution scope.
+export function fakeProbabilityDp(
+  numStates: number,
+  numUsedScopes: number,
+  numEventStates: number,
+  epsilon: number
 ): number {
   return (
-    log2q -
-    binaryEntropy(flipProbability) -
-    flipProbability * Math.log2(Math.pow(2, log2q) - 1)
+    1 -
+    (1 - pickRateDp(numStates, epsilon)) *
+      Math.pow(1 - pickRateDp(numEventStates, epsilon), numUsedScopes)
   )
 }
 
-export function maxInformationGain(numStates: number, epsilon: number): number {
-  const flipProb = flipProbabilityDp(numStates, epsilon)
-  if (numStates === 1 || flipProb === 1) {
+export function informationGain(
+  numStates: number,
+  numUsedScopes: number,
+  numEventStates: number,
+  epsilon: number
+): number {
+  const totalNumStates = numStates + numEventStates * numUsedScopes
+  if (totalNumStates <= 1n) {
     return 0
   }
-  return capacityQarySymmetricChannel(
-    Math.log2(numStates),
-    (flipProb * (numStates - 1)) / numStates
+  const log2Q = Math.log2(Number(totalNumStates))
+  const fakeProbability = fakeProbabilityDp(
+    numStates,
+    numUsedScopes,
+    numEventStates,
+    epsilon
   )
+  return (
+    log2Q -
+    binaryEntropy(fakeProbability) -
+    fakeProbability * Math.log2(totalNumStates - 1)
+  )
+}
+
+export function maxInformationGain(
+  numStates: number,
+  epsilon: number,
+  attributionScopeLimit: number,
+  maxEventStates: number
+): number {
+  let maxInfoGain = 0
+  for (let k = 0; k < attributionScopeLimit; ++k) {
+    for (let q2 = 1; q2 <= maxEventStates; ++q2) {
+      maxInfoGain = Math.max(
+        maxInfoGain,
+        informationGain(numStates, k, q2, epsilon)
+      )
+    }
+  }
+  return maxInfoGain
 }
 
 // Returns the effective epsilon needed to satisfy an information gain bound
 // given a number of output states in the q-ary symmetric channel.
 function epsilonToBoundInfoGainAndDp(
   numStates: number,
+  attributionScopeLimit: number,
+  maxEventStates: number,
   infoGainUpperBound: number,
   epsilonUpperBound: number,
   tolerance: number = 0.00001
@@ -173,7 +208,12 @@ function epsilonToBoundInfoGainAndDp(
 
   for (;;) {
     const epsilon = (epsHigh + epsLow) / 2
-    const infoGain = maxInformationGain(numStates, epsilon)
+    const infoGain = maxInformationGain(
+      numStates,
+      epsilon,
+      attributionScopeLimit,
+      maxEventStates
+    )
 
     if (infoGain > infoGainUpperBound) {
       epsHigh = epsilon

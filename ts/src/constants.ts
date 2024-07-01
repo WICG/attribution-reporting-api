@@ -19,6 +19,10 @@ export const maxLengthPerAggregationKeyIdentifier: number = 25
 
 export const maxLengthPerTriggerContextID: number = 64
 
+export const maxAttributionScopesPerSource: number = 20
+
+export const maxLengthPerAttributionScope: number = 50
+
 export const minReportWindow: number = 1 * SECONDS_PER_HOUR
 
 export const validSourceExpiryRange: Readonly<[min: number, max: number]> = [
@@ -96,3 +100,5 @@ export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'trigger-unknown-error',
   'unspecified',
 ]
+
+export const defaultMaxEventStates: number = 3
