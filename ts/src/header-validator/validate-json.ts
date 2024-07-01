@@ -1180,7 +1180,6 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
         })
       })
       .filter(isTriggerDataMatchingValidForSpecs, ctx)
-      // .filter(validateAttributionScopeFields, ctx)
       .peek(channelCapacity, ctx)
       .peek(warnInconsistentMaxEventLevelReportsAndTriggerSpecs, ctx)
   )
