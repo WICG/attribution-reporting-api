@@ -1637,10 +1637,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         path: ['attribution_scopes', 0],
         msg: 'must be a string',
       },
-      {
-        path: ['attribution_scopes', 1],
-        msg: 'must be a string',
-      },
     ],
   },
   {

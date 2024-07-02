@@ -2623,7 +2623,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scopes'],
-        msg: 'length must be in the range [1, 3]',
+        msg: 'must be non-empty if attribution_scope_limit is set',
       },
     ],
   },
@@ -2636,7 +2636,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scopes'],
-        msg: 'length must be in the range [0, 0]',
+        msg: 'must be empty if attribution_scope_limit is not set',
       },
     ],
   },
@@ -2649,7 +2649,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['max_event_states'],
-        msg: 'non-default max_event_states when attribution_scope_limit is not set',
+        msg: 'non-default if attribution_scope_limit is not set',
       },
     ],
   },
@@ -2705,7 +2705,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scopes'],
-        msg: 'length must be in the range [1, 1]',
+        msg: 'size must be less than or equal to attribution_scope_limit (1) if attribution_scope_limit is set',
       },
     ],
   },
@@ -2719,10 +2719,6 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scopes', 0],
-        msg: 'must be a string',
-      },
-      {
-        path: ['attribution_scopes', 1],
         msg: 'must be a string',
       },
     ],
@@ -2758,7 +2754,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['attribution_scopes'],
-        msg: 'length must be in the range [1, 20]',
+        msg: 'size must be less than or equal to max number of attribution scopes (20) if attribution_scope_limit is set',
       },
     ],
   },
