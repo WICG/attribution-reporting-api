@@ -1160,7 +1160,7 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
                   attributionScopeLimitVal.value !== null ? 1 : 0,
                   Math.min(
                     constants.maxAttributionScopesPerSource,
-                    attributionScopeLimitVal.value || 0
+                    attributionScopeLimitVal.value ?? 0
                   ),
                   constants.maxLengthPerAttributionScope
                 ),

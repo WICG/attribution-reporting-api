@@ -1631,7 +1631,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   // Attribution Scope
   {
     name: 'attribution-scope-not-string',
-    json: `{"attribution_scopes": [1, 2]}`,
+    json: `{"attribution_scopes": [1]}`,
     expectedErrors: [
       {
         path: ['attribution_scopes', 0],

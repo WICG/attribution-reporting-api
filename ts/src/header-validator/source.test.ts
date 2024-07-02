@@ -2714,7 +2714,7 @@ const testCases: TestCase[] = [
     json: `{
       "destination": "https://a.test",
       "attribution_scope_limit": 2,
-      "attribution_scopes": [1, 2]
+      "attribution_scopes": [1]
     }`,
     expectedErrors: [
       {
