@@ -35,7 +35,7 @@ Phase 2 (Full flexible event-level) could be used to do all of the capabilities 
 * Reduce the amount of total noise by decreasing the trigger data cardinality
 * Implemented [as described in the primary explainer](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#data-limits-and-noise).
 
-_Note: currently we do not plan to implement support for any additional flexible event-level features such as: [summary buckets](#reporting-trigger-value-buckets) and multiple trigger specs per source registration until we here additional feedback. Please share any additional feedback [here](https://github.com/WICG/attribution-reporting-api/issues/new)._
+_Note: currently we do not plan to implement support for any additional flexible event-level features such as: [summary buckets](#reporting-trigger-value-buckets) and multiple trigger specs per source registration until we hear additional feedback. Please share any additional feedback [here](https://github.com/WICG/attribution-reporting-api/issues/new)._
 
 ## Goals
 
