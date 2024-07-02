@@ -1392,7 +1392,9 @@ function maxEventStates(
         attributionScopeLimit.value === null &&
         n !== constants.defaultMaxEventStates
       ) {
-        ctx.error('non-default if attribution_scope_limit is not set')
+        ctx.error(
+          `non-default (${constants.defaultMaxEventStates}) if attribution_scope_limit is not set`
+        )
         return false
       }
       return true
