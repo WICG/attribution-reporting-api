@@ -76,11 +76,11 @@ In addition to the parameters that were added in Phase 1, we will add one additi
       "end_times": [<int>, ...],
     }
 
-    // Represents an operator that summarizes the triggers within a window
-    // count: number of triggers attributed within a window
-    // value_sum: sum of the value of triggers within a window
+    // Represents an operator that summarizes the triggers attributed to the source.
+    // count: number of triggers attributed
+    // value_sum: sum of the value of triggers
     // Defaults to "count"
-    "summary_window_operator": <one of "count" or "value_sum">,
+    "summary_operator": <one of "count" or "value_sum">,
 
     // Represents a bucketization of the integers from [0, MAX_UINT32], encoded as
     // a list of integers where new buckets begin (excluding 0 which is
@@ -150,7 +150,7 @@ Every trigger registration will match with at most one trigger spec and update i
 * For every trigger spec:
   * Evaluate the `event_trigger_data` on the spec to find a match, using the spec’s `event_reporting_window`
     * The top-level `event_reporting_windows` will act as a default value in case any trigger spec is the missing `event_report_windows` sub-field
-* The first matched spec is chosen for attribution, and we increment its summary value by `value` if the spec's `summary_window_operator` is `value_sum`, or by `1` if it is `count`, saturating in both cases at `MAX_UINT32`.
+* The first matched spec is chosen for attribution, and we increment its summary value by `value` if the spec's `summary_operator` is `value_sum`, or by `1` if it is `count`, saturating in both cases at `MAX_UINT32`.
 
 When the `event_report_window` for a spec completes, we will map its summary value to a bucket, and send an event-level report for every increment in the summary bucket caused by attributed trigger values. Reports will come with one extra field `trigger_summary_bucket`.
 
@@ -223,7 +223,7 @@ It is possible that there are multiple configurations that are equivalent, given
     "event_report_windows": {
       "end_times": [<30 days>]
     },
-    "summary_window_operator": "count",
+    "summary_operator": "count",
     "summary_buckets": [1]
   }],
   "max_event_level_reports": 1,
@@ -244,7 +244,7 @@ It is possible that there are multiple configurations that are equivalent, given
     "event_report_windows": {
       "end_times": [<2 days>, <7 days>, <30 days>]
     },
-    "summary_window_operator": "count",
+    "summary_operator": "count",
     "summary_buckets": [1, 2, 3]
   }],
   "max_event_level_reports": 3,
@@ -272,7 +272,7 @@ This example configuration supports a developer who wants to optimize for value 
     "event_report_windows": {
       "end_times": [604800, 1209600] // 7 days, 14 days represented in seconds
     },
-    "summary_window_operator": "value_sum",
+    "summary_operator": "value_sum",
     "summary_buckets": [5, 10, 100]
   }],
 }
@@ -333,13 +333,13 @@ This example shows how a developer can configure a source to get a count of trig
       "end_times": [604800] // 7 days represented in seconds
     },
     // This field could be omitted to save bandwidth since the default is "count"
-    "summary_window_operator": "count",
+    "summary_operator": "count",
     "summary_buckets": [1, 2, 3, 4]
   }],
 }
 ```
 
-Attributed triggers with `trigger_data` set to 0 are counted and capped at 4. The trigger value is ignored since `summary_window_operator` is set to `count`. Supposing 4 triggers are registered and attributed to the source, the reports would look like this:
+Attributed triggers with `trigger_data` set to 0 are counted and capped at 4. The trigger value is ignored since `summary_operator` is set to `count`. Supposing 4 triggers are registered and attributed to the source, the reports would look like this:
 
 ```jsonc
 // Report 1
@@ -379,7 +379,7 @@ This example configuration supports a developer who wants to learn whether at le
       "end_times": [86400, 172800, 259200, 432000, 604800, 864000]
     },
     // This field could be omitted to save bandwidth since the default is "count"
-    "summary_window_operator": "count",
+    "summary_operator": "count",
     "summary_buckets": [1]
   }],
 }

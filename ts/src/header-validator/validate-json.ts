@@ -759,7 +759,7 @@ function channelCapacity(s: Source, ctx: SourceContext): void {
   }
 }
 
-export enum SummaryWindowOperator {
+export enum SummaryOperator {
   count = 'count',
   value_sum = 'value_sum',
 }
@@ -767,7 +767,7 @@ export enum SummaryWindowOperator {
 export type TriggerSpec = {
   eventReportWindows: EventReportWindows
   summaryBuckets: number[]
-  summaryWindowOperator: SummaryWindowOperator
+  summaryOperator: SummaryOperator
   triggerData: Set<number>
 }
 
@@ -887,10 +887,10 @@ function triggerSpec(
       deps.maxEventLevelReports
     ),
 
-    summaryWindowOperator: field(
-      'summary_window_operator',
-      withDefault(enumerated, SummaryWindowOperator.count),
-      SummaryWindowOperator
+    summaryOperator: field(
+      'summary_operator',
+      withDefault(enumerated, SummaryOperator.count),
+      SummaryOperator
     ),
 
     triggerData: field('trigger_data', required(triggerDataSet)),
@@ -954,7 +954,7 @@ function triggerSpecsFromTriggerData(
         summaryBuckets: makeDefaultSummaryBuckets(
           deps.maxEventLevelReports.value
         ),
-        summaryWindowOperator: SummaryWindowOperator.count,
+        summaryOperator: SummaryOperator.count,
         triggerData: triggerData,
       },
     ]
@@ -974,7 +974,7 @@ function defaultTriggerSpecs(
           { length: maxEventLevelReports },
           (_, i) => i + 1
         ),
-        summaryWindowOperator: SummaryWindowOperator.count,
+        summaryOperator: SummaryOperator.count,
         triggerData: new Set(
           Array.from(
             {

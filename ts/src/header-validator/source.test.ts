@@ -5,7 +5,7 @@ import { Maybe } from './maybe'
 import { serializeSource } from './to-json'
 import {
   Source,
-  SummaryWindowOperator,
+  SummaryOperator,
   TriggerDataMatching,
   validateSource,
 } from './validate-json'
@@ -72,7 +72,7 @@ const testCases: TestCase[] = [
             endTimes: [3601],
           },
           summaryBuckets: [1, 2],
-          summaryWindowOperator: SummaryWindowOperator.count,
+          summaryOperator: SummaryOperator.count,
           triggerData: new Set([0, 1, 2, 3, 4, 5, 6, 7]),
         },
       ],
@@ -2357,35 +2357,35 @@ const testCases: TestCase[] = [
     ],
   },
   {
-    name: 'summary-window-operator-wrong-type',
+    name: 'summary-operator-wrong-type',
     json: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
-        "summary_window_operator": 4
+        "summary_operator": 4
       }]
     }`,
     parseFullFlex: true,
     expectedErrors: [
       {
-        path: ['trigger_specs', 0, 'summary_window_operator'],
+        path: ['trigger_specs', 0, 'summary_operator'],
         msg: 'must be a string',
       },
     ],
   },
   {
-    name: 'summary-window-operator-wrong-value',
+    name: 'summary-operator-wrong-value',
     json: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
-        "summary_window_operator": "VALUE_SUM"
+        "summary_operator": "VALUE_SUM"
       }]
     }`,
     parseFullFlex: true,
     expectedErrors: [
       {
-        path: ['trigger_specs', 0, 'summary_window_operator'],
+        path: ['trigger_specs', 0, 'summary_operator'],
         msg: 'must be one of the following (case-sensitive): count, value_sum',
       },
     ],
