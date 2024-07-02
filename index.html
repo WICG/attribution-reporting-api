@@ -5745,6 +5745,38 @@ If this assumption does not hold then <var>rateLimitRecord</var> might be null.<
     <li data-md>
      <p>Let <var>report</var> be the result of running <a data-link-type="dfn" href="#obtain-an-event-level-report" id="ref-for-obtain-an-event-level-report①">obtain an event-level report</a> with <var>sourceToAttribute</var>, <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time⑥">trigger time</a>, <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-debug-key" id="ref-for-attribution-trigger-debug-key③">debug key</a>, <var>matchedConfig</var>’s <a data-link-type="dfn" href="#event-level-trigger-configuration-priority" id="ref-for-event-level-trigger-configuration-priority①">priority</a>, and <var>specEntry</var>.</p>
     <li data-md>
+     <p>If <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-event-level-attributable" id="ref-for-attribution-source-event-level-attributable③">event-level attributable</a> value
+is false:</p>
+     <ol>
+      <li data-md>
+       <p>Return the <a data-link-type="dfn" href="#triggering-result" id="ref-for-triggering-result⑨">triggering result</a> ("<code><a data-link-type="dfn" href="#triggering-status-dropped" id="ref-for-triggering-status-dropped⑨">dropped</a></code>",
+ ("<code><a data-link-type="dfn" href="#trigger-debug-data-type-trigger-event-excessive-reports" id="ref-for-trigger-debug-data-type-trigger-event-excessive-reports①">trigger-event-excessive-reports</a></code>", <var>report</var>)).</p>
+     </ol>
+    <li data-md>
+     <p>If the result of running <a data-link-type="dfn" href="#maybe-replace-event-level-report" id="ref-for-maybe-replace-event-level-report">maybe replace event-level report</a> with <var>sourceToAttribute</var> and <var>report</var> is:</p>
+     <dl class="switch">
+      <dt data-md>"<code><a data-link-type="dfn" href="#event-level-report-replacement-result-add-new-report" id="ref-for-event-level-report-replacement-result-add-new-report②">add-new-report</a></code>"
+      <dd data-md>
+       <ol>
+        <li data-md>
+         <p>Do nothing.</p>
+       </ol>
+      <dt data-md>"<code><a data-link-type="dfn" href="#event-level-report-replacement-result-drop-new-report-none-to-replace" id="ref-for-event-level-report-replacement-result-drop-new-report-none-to-replace①">drop-new-report-none-to-replace</a></code>"
+      <dd data-md>
+       <ol>
+        <li data-md>
+         <p>Return the <a data-link-type="dfn" href="#triggering-result" id="ref-for-triggering-result①⓪">triggering result</a> ("<code><a data-link-type="dfn" href="#triggering-status-dropped" id="ref-for-triggering-status-dropped①⓪">dropped</a></code>",
+ ("<code><a data-link-type="dfn" href="#trigger-debug-data-type-trigger-event-excessive-reports" id="ref-for-trigger-debug-data-type-trigger-event-excessive-reports②">trigger-event-excessive-reports</a></code>", <var>report</var>)).</p>
+       </ol>
+      <dt data-md>"<code><a data-link-type="dfn" href="#event-level-report-replacement-result-drop-new-report-low-priority" id="ref-for-event-level-report-replacement-result-drop-new-report-low-priority①">drop-new-report-low-priority</a></code>"
+      <dd data-md>
+       <ol>
+        <li data-md>
+         <p>Return the <a data-link-type="dfn" href="#triggering-result" id="ref-for-triggering-result①①">triggering result</a> ("<code><a data-link-type="dfn" href="#triggering-status-dropped" id="ref-for-triggering-status-dropped①①">dropped</a></code>",
+ ("<code><a data-link-type="dfn" href="#trigger-debug-data-type-trigger-event-low-priority" id="ref-for-trigger-debug-data-type-trigger-event-low-priority①">trigger-event-low-priority</a></code>", <var>report</var>)).</p>
+       </ol>
+     </dl>
+    <li data-md>
      <p>Let <var>rateLimitRecord</var> be a new <a data-link-type="dfn" href="#attribution-rate-limit-record" id="ref-for-attribution-rate-limit-record①⑥">attribution rate-limit record</a> with the items:</p>
      <dl>
       <dt data-md><a data-link-type="dfn" href="#attribution-rate-limit-record-scope" id="ref-for-attribution-rate-limit-record-scope①⑤">scope</a>
@@ -5772,44 +5804,14 @@ If this assumption does not hold then <var>rateLimitRecord</var> might be null.<
     <li data-md>
      <p>If the result of running <a data-link-type="dfn" href="#check-if-attribution-should-be-blocked-by-rate-limits" id="ref-for-check-if-attribution-should-be-blocked-by-rate-limits">check if attribution should be blocked by rate limits</a> with <var>trigger</var>, <var>sourceToAttribute</var>, and <var>rateLimitRecord</var> is not null, return it.</p>
     <li data-md>
-     <p>If <var>sourceToAttribute</var>’s <a data-link-type="dfn" href="#attribution-source-event-level-attributable" id="ref-for-attribution-source-event-level-attributable③">event-level attributable</a> value
-is false:</p>
+     <p>Let <var>numMatchingReports</var> be the number of entries in the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑧">event-level report cache</a> whose <a data-link-type="dfn" href="#event-level-report-attribution-destinations" id="ref-for-event-level-report-attribution-destinations②">attribution destinations</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain①③">contains</a> <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-attribution-destination" id="ref-for-attribution-trigger-attribution-destination⑤">attribution destination</a>.</p>
+    <li data-md>
+     <p>If <var>numMatchingReports</var> is greater than or equal to the user agent’s <a data-link-type="dfn" href="#max-event-level-reports-per-attribution-destination" id="ref-for-max-event-level-reports-per-attribution-destination①">max event-level reports per attribution destination</a>:</p>
      <ol>
       <li data-md>
-       <p>Return the <a data-link-type="dfn" href="#triggering-result" id="ref-for-triggering-result⑨">triggering result</a> ("<code><a data-link-type="dfn" href="#triggering-status-dropped" id="ref-for-triggering-status-dropped⑨">dropped</a></code>",
- ("<code><a data-link-type="dfn" href="#trigger-debug-data-type-trigger-event-excessive-reports" id="ref-for-trigger-debug-data-type-trigger-event-excessive-reports①">trigger-event-excessive-reports</a></code>", <var>report</var>)).</p>
+       <p>Return the <a data-link-type="dfn" href="#triggering-result" id="ref-for-triggering-result①②">triggering result</a> ("<code><a data-link-type="dfn" href="#triggering-status-dropped" id="ref-for-triggering-status-dropped①②">dropped</a></code>",
+("<code><a data-link-type="dfn" href="#trigger-debug-data-type-trigger-event-storage-limit" id="ref-for-trigger-debug-data-type-trigger-event-storage-limit①">trigger-event-storage-limit</a></code>", null)).</p>
      </ol>
-    <li data-md>
-     <p>If the result of running <a data-link-type="dfn" href="#maybe-replace-event-level-report" id="ref-for-maybe-replace-event-level-report">maybe replace event-level report</a> with <var>sourceToAttribute</var> and <var>report</var> is:</p>
-     <dl class="switch">
-      <dt data-md>"<code><a data-link-type="dfn" href="#event-level-report-replacement-result-add-new-report" id="ref-for-event-level-report-replacement-result-add-new-report②">add-new-report</a></code>"
-      <dd data-md>
-       <ol>
-        <li data-md>
-         <p>Let <var>numMatchingReports</var> be the number of entries in the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache⑧">event-level report cache</a> whose <a data-link-type="dfn" href="#event-level-report-attribution-destinations" id="ref-for-event-level-report-attribution-destinations②">attribution destinations</a> <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-contain" id="ref-for-list-contain①③">contains</a> <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-attribution-destination" id="ref-for-attribution-trigger-attribution-destination⑤">attribution destination</a>.</p>
-        <li data-md>
-         <p>If <var>numMatchingReports</var> is greater than or equal to the user agent’s <a data-link-type="dfn" href="#max-event-level-reports-per-attribution-destination" id="ref-for-max-event-level-reports-per-attribution-destination①">max event-level reports per attribution destination</a>:</p>
-         <ol>
-          <li data-md>
-           <p>Return the <a data-link-type="dfn" href="#triggering-result" id="ref-for-triggering-result①⓪">triggering result</a> ("<code><a data-link-type="dfn" href="#triggering-status-dropped" id="ref-for-triggering-status-dropped①⓪">dropped</a></code>",
- ("<code><a data-link-type="dfn" href="#trigger-debug-data-type-trigger-event-storage-limit" id="ref-for-trigger-debug-data-type-trigger-event-storage-limit①">trigger-event-storage-limit</a></code>", null)).</p>
-         </ol>
-       </ol>
-      <dt data-md>"<code><a data-link-type="dfn" href="#event-level-report-replacement-result-drop-new-report-none-to-replace" id="ref-for-event-level-report-replacement-result-drop-new-report-none-to-replace①">drop-new-report-none-to-replace</a></code>"
-      <dd data-md>
-       <ol>
-        <li data-md>
-         <p>Return the <a data-link-type="dfn" href="#triggering-result" id="ref-for-triggering-result①①">triggering result</a> ("<code><a data-link-type="dfn" href="#triggering-status-dropped" id="ref-for-triggering-status-dropped①①">dropped</a></code>",
- ("<code><a data-link-type="dfn" href="#trigger-debug-data-type-trigger-event-excessive-reports" id="ref-for-trigger-debug-data-type-trigger-event-excessive-reports②">trigger-event-excessive-reports</a></code>", <var>report</var>)).</p>
-       </ol>
-      <dt data-md>"<code><a data-link-type="dfn" href="#event-level-report-replacement-result-drop-new-report-low-priority" id="ref-for-event-level-report-replacement-result-drop-new-report-low-priority①">drop-new-report-low-priority</a></code>"
-      <dd data-md>
-       <ol>
-        <li data-md>
-         <p>Return the <a data-link-type="dfn" href="#triggering-result" id="ref-for-triggering-result①②">triggering result</a> ("<code><a data-link-type="dfn" href="#triggering-status-dropped" id="ref-for-triggering-status-dropped①②">dropped</a></code>",
- ("<code><a data-link-type="dfn" href="#trigger-debug-data-type-trigger-event-low-priority" id="ref-for-trigger-debug-data-type-trigger-event-low-priority①">trigger-event-low-priority</a></code>", <var>report</var>)).</p>
-       </ol>
-     </dl>
     <li data-md>
      <p>Let <var>triggeringStatus</var> be "<code><a data-link-type="dfn" href="#triggering-status-attributed" id="ref-for-triggering-status-attributed">attributed</a></code>".</p>
     <li data-md>
