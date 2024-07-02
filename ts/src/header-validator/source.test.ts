@@ -210,13 +210,59 @@ const testCases: TestCase[] = [
     ],
   },
   {
-    name: 'destination-list-too-long',
+    name: 'destination-list-size-ok-after-dedup',
     json: `{"destination": [
       "https://a.test",
       "https://b.test/1",
       "https://b.test/2",
       "https://c.test/3"
     ]}`,
+    expectedWarnings: [
+      {
+        msg: 'URL components other than site (https://b.test) will be ignored',
+        path: ['destination', 1],
+      },
+      {
+        msg: 'URL components other than site (https://b.test) will be ignored',
+        path: ['destination', 2],
+      },
+      {
+        msg: 'duplicate value https://b.test',
+        path: ['destination', 2],
+      },
+      {
+        msg: 'URL components other than site (https://c.test) will be ignored',
+        path: ['destination', 3],
+      },
+    ],
+  },
+  {
+    name: 'destination-list-too-long',
+    json: `{"destination": [
+      "https://a.test",
+      "https://b.test/1",
+      "https://b.test/2",
+      "https://c.test/3",
+      "https://d.test"
+    ]}`,
+    expectedWarnings: [
+      {
+        msg: 'URL components other than site (https://b.test) will be ignored',
+        path: ['destination', 1],
+      },
+      {
+        msg: 'URL components other than site (https://b.test) will be ignored',
+        path: ['destination', 2],
+      },
+      {
+        msg: 'duplicate value https://b.test',
+        path: ['destination', 2],
+      },
+      {
+        msg: 'URL components other than site (https://c.test) will be ignored',
+        path: ['destination', 3],
+      },
+    ],
     expectedErrors: [
       {
         path: ['destination'],
@@ -374,11 +420,34 @@ const testCases: TestCase[] = [
     ],
   },
   {
+    name: 'filter-data-size-ok-after-dedup',
+    json: JSON.stringify({
+      destination: 'https://a.test',
+      filter_data: {
+        a: ['49', ...Array.from({ length: 50 }, (_, i) => `${i}`)],
+      },
+    }),
+    expectedWarnings: [
+      {
+        path: ['filter_data', 'a', 50],
+        msg: 'duplicate value 49',
+      },
+    ],
+  },
+  {
     name: 'filter-data-too-many-values',
     json: JSON.stringify({
       destination: 'https://a.test',
-      filter_data: { a: Array.from({ length: 51 }, () => '') },
+      filter_data: {
+        a: ['50', ...Array.from({ length: 51 }, (_, i) => `${i}`)],
+      },
     }),
+    expectedWarnings: [
+      {
+        path: ['filter_data', 'a', 51],
+        msg: 'duplicate value 50',
+      },
+    ],
     expectedErrors: [
       {
         path: ['filter_data', 'a'],
@@ -2136,7 +2205,7 @@ const testCases: TestCase[] = [
     name: 'trigger-data-too-many-within',
     json: JSON.stringify({
       destination: 'https://a.test',
-      trigger_data: Array.from({ length: 33 }, () => 0),
+      trigger_data: Array.from({ length: 33 }, (_, i) => i),
     }),
     expectedErrors: [
       {
