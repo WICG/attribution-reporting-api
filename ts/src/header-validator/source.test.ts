@@ -2649,7 +2649,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['max_event_states'],
-        msg: 'non-default (3) if attribution_scope_limit is not set',
+        msg: 'must be default (3) if attribution_scope_limit is not set',
       },
     ],
   },
