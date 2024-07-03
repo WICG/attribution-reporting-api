@@ -58,7 +58,7 @@ The following optional parameters will be added to the JSON in `Attribution-Repo
   // Example: default event source for event-level reports supports 1 attribution report, 1 reporting window,
   // and 1 bit of trigger data for a total of 3 event states.
   // This is used to calculate the information gain for event-level reports.
-  // Max event states must be integers > 0.
+  // Max event states must be positive integers.
   // Defaults to 3 if omitted.
   // The flexible event-level script linked in the Privacy Considerations section below can be used to
   // calculate number of states based on a configuration.
@@ -76,8 +76,7 @@ The following optional parameter will be added to the JSON in  `Attribution-Repo
   // Represents a list of attribution scopes for a particular trigger.
   // Triggers will only match sources whose attribution_scopes contains at least one of the trigger's
   // attribution_scopes, if specified.
-  // Attribution scope values must be strings. Each string has a maximum length of 50.
-  // Each list has a maximum length of 20.
+  // Attribution scope values must be strings.
   // Defaults to the empty list if omitted.
   "attribution_scopes": <list of strings>,
 }
