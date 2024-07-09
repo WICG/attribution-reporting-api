@@ -2654,6 +2654,42 @@ const testCases: TestCase[] = [
     ],
   },
   {
+    name: 'invalid-attribution-scope-limit-attribution-scopes',
+    json: `{
+      "destination": "https://a.test",
+      "attribution_scopes": ["1"],
+      "attribution_scope_limit": true
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scope_limit'],
+        msg: 'must be a number',
+      },
+      {
+        path: ['attribution_scopes'],
+        msg: 'cannot be fully validated without a valid attribution_scope_limit',
+      },
+    ],
+  },
+  {
+    name: 'invalid-attribution-scope-limit-amx-event-states',
+    json: `{
+      "destination": "https://a.test",
+      "max_event_states": 1,
+      "attribution_scope_limit": true
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scope_limit'],
+        msg: 'must be a number',
+      },
+      {
+        path: ['max_event_states'],
+        msg: 'cannot be fully validated without a valid attribution_scope_limit',
+      },
+    ],
+  },
+  {
     name: 'max-event-states-negative',
     json: `{
       "destination": "https://a.test",
