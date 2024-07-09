@@ -1151,24 +1151,13 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
         attributionScopeLimit: () => attributionScopeLimitVal,
         attributionScopes: field(
           'attribution_scopes',
-          withDefault(
-            (j) =>
-              attributionScopes(
-                ctx,
-                j,
-                constants.maxAttributionScopesPerSource,
-                constants.maxLengthPerAttributionScope,
-                attributionScopeLimitVal.value
-              ),
-            new Set<string>()
-          )
+          withDefault(attributionScopesForSource, new Set<string>()),
+          attributionScopeLimitVal
         ),
         maxEventStates: field(
           'max_event_states',
-          withDefault(
-            (j) => maxEventStates(j, ctx, attributionScopeLimitVal),
-            constants.defaultMaxEventStates
-          )
+          withDefault(maxEventStates, constants.defaultMaxEventStates),
+          attributionScopeLimitVal
         ),
 
         ...commonDebugFields,
@@ -1388,6 +1377,12 @@ function maxEventStates(
     .filter(isInteger, ctx)
     .filter(isInRange, ctx, 1, ctx.vsv.maxTriggerStateCardinality)
     .filter((n) => {
+      if (attributionScopeLimit.value === undefined) {
+        ctx.error(
+          'cannot be fully validated without a valid attribution_scope_limit'
+        )
+        return false
+      }
       if (
         attributionScopeLimit.value === null &&
         n !== constants.defaultMaxEventStates
@@ -1401,15 +1396,13 @@ function maxEventStates(
     })
 }
 
-function attributionScopes(
-  ctx: RegistrationContext,
+function attributionScopesForSource(
   j: Json,
-  maxAttributionScopes: number,
-  maxLengthPerAttributionScope: number,
-  attributionScopeLimit?: number | null
+  ctx: SourceContext,
+  attributionScopeLimit: Maybe<number | null>
 ): Maybe<Set<string>> {
   const attributionScopeStringLength = (s: string) => {
-    if (s.length > maxLengthPerAttributionScope) {
+    if (s.length > constants.maxLengthPerAttributionScope) {
       ctx.error(
         `exceeds max length per attribution scope (${s.length} > ${constants.maxLengthPerAttributionScope})`
       )
@@ -1421,10 +1414,13 @@ function attributionScopes(
   return set(j, ctx, (j) =>
     string(j, ctx).filter(attributionScopeStringLength)
   ).filter((scopes) => {
-    if (attributionScopeLimit === undefined) {
-      return true
+    if (attributionScopeLimit.value === undefined) {
+      ctx.error(
+        'cannot be fully validated without a valid attribution_scope_limit'
+      )
+      return false
     }
-    if (attributionScopeLimit === null) {
+    if (attributionScopeLimit.value === null) {
       if (scopes.size > 0) {
         ctx.error('must be empty if attribution_scope_limit is not set')
         return false
@@ -1435,10 +1431,13 @@ function attributionScopes(
       ctx.error('must be non-empty if attribution_scope_limit is set')
       return false
     }
-    const maxLength = Math.min(attributionScopeLimit, maxAttributionScopes)
+    const maxLength = Math.min(
+      attributionScopeLimit.value,
+      constants.maxAttributionScopesPerSource
+    )
     const errorMsg =
       'size must be less than or equal to ' +
-      (attributionScopeLimit < maxAttributionScopes
+      (attributionScopeLimit.value < constants.maxAttributionScopesPerSource
         ? 'attribution_scope_limit'
         : 'max number of attribution scopes') +
       ` (${maxLength}) if attribution_scope_limit is set`
@@ -1623,10 +1622,8 @@ function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
         ),
         attributionScopes: field(
           'attribution_scopes',
-          withDefault(
-            (j) => attributionScopes(ctx, j, Infinity, Infinity),
-            new Set<string>()
-          )
+          withDefault(set, new Set<string>()),
+          string
         ),
         ...aggregationCoordinatorOriginField,
         ...commonDebugFields,
