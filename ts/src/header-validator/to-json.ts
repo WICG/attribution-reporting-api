@@ -182,12 +182,28 @@ export type Source = CommonDebug &
     source_event_id: string
     trigger_data_matching: string
     aggregatable_debug_reporting?: SourceAggregatableDebugReportingConfig
-    attribution_scopes: string[]
+    attribution_scopes?: string[]
     attribution_scope_limit?: number
-    max_event_states: number
+    max_event_states?: number
   }
 
-export function serializeSource(s: parsed.Source, fullFlex: boolean): Source {
+export function serializeSource(
+  s: parsed.Source,
+  fullFlex: boolean,
+  scopes: boolean = false
+): Source {
+  const scopeFields = scopes
+    ? {
+        attribution_scopes: Array.from(s.attributionScopes),
+        ...ifNotNull(
+          'attribution_scope_limit',
+          s.attributionScopeLimit,
+          (v) => v
+        ),
+        max_event_states: s.maxEventStates,
+      }
+    : {}
+
   return {
     ...serializeCommonDebug(s),
     ...serializePriority(s),
@@ -220,9 +236,7 @@ export function serializeSource(s: parsed.Source, fullFlex: boolean): Source {
       s.aggregatableDebugReporting,
       (v) => serializeSourceAggregatableDebugReportingConfig(v)
     ),
-    attribution_scopes: Array.from(s.attributionScopes),
-    ...ifNotNull('attribution_scope_limit', s.attributionScopeLimit, (v) => v),
-    max_event_states: s.maxEventStates,
+    ...scopeFields,
   }
 }
 
@@ -353,13 +367,20 @@ export type Trigger = CommonDebug &
     event_trigger_data: EventTriggerDatum[]
     trigger_context_id?: string
     aggregatable_debug_reporting?: AggregatableDebugReportingConfig
-    attribution_scopes: string[]
+    attribution_scopes?: string[]
   }
 
 export function serializeTrigger(
   t: parsed.Trigger,
-  fullFlex: boolean
+  fullFlex: boolean,
+  scopes: boolean = false
 ): Trigger {
+  const scopeFields = scopes
+    ? {
+        attribution_scopes: Array.from(t.attributionScopes),
+      }
+    : {}
+
   return {
     ...serializeCommonDebug(t),
     ...serializeFilterPair(t),
@@ -396,6 +417,7 @@ export function serializeTrigger(
       t.aggregatableDebugReporting,
       (v) => serializeAggregatableDebugReportingConfig(v)
     ),
-    attribution_scopes: Array.from(t.attributionScopes),
+
+    ...scopeFields,
   }
 }

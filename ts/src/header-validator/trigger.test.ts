@@ -53,6 +53,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
       "attribution_scopes": ["1"]
     }`,
+    parseScopes: true,
     expected: Maybe.some({
       aggregatableDedupKeys: [
         {
@@ -1632,6 +1633,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'attribution-scope-not-string',
     json: `{"attribution_scopes": [1]}`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 0],
@@ -1641,6 +1643,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'attribution-scopes-empty-list',
+    parseScopes: true,
     json: `{
       "attribution_scopes": []
     }`,
@@ -1650,6 +1653,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     json: `{
       "attribution_scopes": 1
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes'],
@@ -1727,17 +1731,23 @@ testCases.forEach((tc) =>
     const result = validateTrigger(
       tc.json,
       { ...vsv.Chromium, ...tc.vsv },
-      tc.parseFullFlex ?? false
+      tc.parseFullFlex ?? false,
+      tc.parseScopes ?? false
     )
 
     if (result[1].value !== undefined) {
       const str = JSON.stringify(
-        serializeTrigger(result[1].value, tc.parseFullFlex ?? false)
+        serializeTrigger(
+          result[1].value,
+          tc.parseFullFlex ?? false,
+          tc.parseScopes ?? false
+        )
       )
       const [, reparsed] = validateTrigger(
         str,
         { ...vsv.Chromium, ...tc.vsv },
-        tc.parseFullFlex ?? false
+        tc.parseFullFlex ?? false,
+        tc.parseScopes ?? false
       )
       assert.deepEqual(reparsed, result[1], str)
     }
