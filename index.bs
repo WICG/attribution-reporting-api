@@ -1168,6 +1168,7 @@ Possible values are:
 <li>"<dfn><code>source-noised</code></dfn>"
 <li>"<dfn><code>source-reporting-origin-limit</code></dfn>"
 <li>"<dfn><code>source-reporting-origin-per-site-limit</code></dfn>"
+<li>"<dfn><code>source-scopes-channel-capacity-limit</code></dfn>"
 <li>"<dfn><code>source-storage-limit</code></dfn>"
 <li>"<dfn><code>source-success</code></dfn>"
 <li>"<dfn><code>source-trigger-state-cardinality-limit</code></dfn>"
@@ -1443,6 +1444,10 @@ many [=aggregatable attribution reports=] can be in the [=aggregatable attributi
 
 <dfn>Max event-level channel capacity per source</dfn> is a [=map=] that
 controls how many bits of information can be exposed associated with a single [=attribution source=].
+The keys are «[=source type/navigation=], [=source type/event=]». The values are non-negative doubles.
+
+<dfn>Max event-level attribution scopes channel capacity per source</dfn> is a [=map=] that
+controls how many bits of information can be exposed due to attribution scopes for a single [=attribution source=].
 The keys are «[=source type/navigation=], [=source type/event=]». The values are non-negative doubles.
 
 <dfn>Max aggregatable reports per source</dfn> is a [=tuple=] consisting of two
@@ -2341,30 +2346,30 @@ To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized respo
         with repetition.
 1. Return |possibleValues|.
 
-To <dfn>obtain a randomized source response pick rate</dfn> given a [=randomized response output configuration=] |config| and a double |epsilon|:
-
-1. Let |possibleValues| be the result of [=obtaining a set of possible trigger states=] with |config|.
-1. Let |numPossibleValues| be the [=set/size=] of |possibleValues|.
-1. Return |numPossibleValues| / (|numPossibleValues| - 1 + e<sup>|epsilon|</sup>).
+To <dfn>obtain a randomized source response pick rate</dfn> given a positive integer |states| and a double |epsilon|:
+1. Return |states| / (|states| - 1 + e<sup>|epsilon|</sup>).
 
 To <dfn>obtain a randomized source response</dfn> given a [=randomized response output configuration=] |config| and a double |epsilon|:
 
 1. Let |possibleValues| be the result of [=obtaining a set of possible trigger states=] with |config|.
-1. Let |pickRate| be the result of [=obtaining a randomized source response pick rate=] with |config| and |epsilon|.
+1. Let |pickRate| be the result of [=obtaining a randomized source response pick rate=] with |possibleValues|'s [=set/size=] and |epsilon|.
 1. Return the result of [=obtaining a randomized response=] with null, |possibleValues|, and
     |pickRate|.
 
 <h3 algorithm id="computing-channel-capacity">Computing channel capacity</h3>
 
-To <dfn>compute the channel capacity of a source</dfn> given a [=randomized response output configuration=] |config| and a double |epsilon|:
-1. Let |pickRate| be the [=obtain a randomized source response pick rate|randomized response pick rate=] with |config| and |epsilon|.
-1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] with |config|.
+To <dfn>compute the channel capacity of a source</dfn> given a positive integer |states| and a double |epsilon|:
 1. If |states| is 1, return 0.
 1. If |states| is greater than the user agent's [=max trigger-state cardinality=], return an error.
+1. Let |pickRate| be the [=obtain a randomized source response pick rate|randomized response pick rate=] with |states| and |epsilon|.
 1. Let |p| be |pickRate| * (|states| - 1) / |states|.
 1. Return log2(|states|) - h(|p|) - |p| * log2(|states| - 1) where h is the binary entropy function [[BIN-ENT]].
 
 Note: This algorithm computes the channel capacity [[CHAN]] of a q-ary symmetric channel [[Q-SC]].
+
+To <dfn>compute the scopes channel capacity of a source</dfn> given a positive integer |numTriggerStates|, a positive integer |attributionScopeLimit|, and a positive integer |maxEventStates|:
+1. Let |totalStates| be |numTriggerStates| + |maxEventStates| * (|attributionScopeLimit| - 1).
+1. Return log2(|totalStates|).
 
 <h3 algorithm id="parsing-source-registration">Parsing source-registration JSON</h3>
 
@@ -3082,29 +3087,33 @@ a [=boolean=] |isNoised|, and a [=boolean=] |destinationLimitReplaced|:
     : "<code>[=source debug data type/source-destination-limit=]</code>"
     :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations covered by unexpired sources=],
         [=serialize an integer|serialized=].
-    : "<code>[=source debug data type/source-destination-rate-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations per rate-limit window=][1],
-         [=serialize an integer|serialized=].
-    : "<code>[=source debug data type/source-destination-per-day-rate-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations per source reporting site per day=],
-         [=serialize an integer|serialized=].
-    : "<code>[=source debug data type/source-storage-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max pending sources per source origin=],
-        [=serialize an integer|serialized=].
-    : "<code>[=source debug data type/source-channel-capacity-limit=]</code>"
-    ::
-        1. Let |sourceType| be |source|'s [=attribution source/source type=].
-        1. [=map/Set=] |body|["`limit`"] to the user agent's [=max event-level channel capacity per source=][|sourceType|].
-    : "<code>[=source debug data type/source-trigger-state-cardinality-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max trigger-state cardinality=],
-        [=serialize an integer|serialized=].
-    : "<code>[=source debug data type/source-reporting-origin-per-site-limit=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to the user agent's [=max source reporting origins per source reporting site=],
-        [=serialize an integer|serialized=].
-    : "<code>[=source debug data type/source-max-event-states-limit=]</code>"
-    ::
-        1. [=Assert=]: |source|'s [=attribution source/attribution scopes=] is not null.
-        1. [=map/Set=] |body|["`limit`"] to |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=].
+        : "<code>[=source debug data type/source-destination-rate-limit=]</code>"
+        :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations per rate-limit window=][1],
+             [=serialize an integer|serialized=].
+        : "<code>[=source debug data type/source-destination-per-day-rate-limit=]</code>"
+        :: [=map/Set=] |body|["`limit`"] to the user agent's [=max destinations per source reporting site per day=],
+             [=serialize an integer|serialized=].
+        : "<code>[=source debug data type/source-storage-limit=]</code>"
+        :: [=map/Set=] |body|["`limit`"] to the user agent's [=max pending sources per source origin=],
+            [=serialize an integer|serialized=].
+        : "<code>[=source debug data type/source-channel-capacity-limit=]</code>"
+        ::
+            1. Let |sourceType| be |source|'s [=attribution source/source type=].
+            1. [=map/Set=] |body|["`limit`"] to the user agent's [=max event-level channel capacity per source=][|sourceType|].
+        : "<code>[=source debug data type/source-scopes-channel-capacity-limit=]</code>"
+        ::
+            1. Let |sourceType| be |source|'s [=attribution source/source type=].
+            1. [=map/Set=] |body|["`limit`"] to the user agent's [=max event-level attribution scopes channel capacity per source=][|sourceType|].
+        : "<code>[=source debug data type/source-trigger-state-cardinality-limit=]</code>"
+        :: [=map/Set=] |body|["`limit`"] to the user agent's [=max trigger-state cardinality=],
+            [=serialize an integer|serialized=].
+        : "<code>[=source debug data type/source-reporting-origin-per-site-limit=]</code>"
+        :: [=map/Set=] |body|["`limit`"] to the user agent's [=max source reporting origins per source reporting site=],
+            [=serialize an integer|serialized=].
+        : "<code>[=source debug data type/source-max-event-states-limit=]</code>"
+        ::
+            1. [=Assert=]: |source|'s [=attribution source/attribution scopes=] is not null.
+            1. [=map/Set=] |body|["`limit`"] to |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=].
 
     </dl>
 
@@ -3251,7 +3260,8 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     :: |source|'s [=trigger specs=]
 
 1. Let |epsilon| be |source|'s [=attribution source/event-level epsilon=].
-1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
+1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] obtained with |randomizedResponseConfig|.
+1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |states| and |epsilon|.
 1. If |channelCapacity| is an error:
     1. Run [=obtain and deliver debug reports on source registration=] with
         "<code>[=source debug data type/source-trigger-state-cardinality-limit=]</code>" and |source|.
@@ -3261,6 +3271,13 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     1. Run [=obtain and deliver debug reports on source registration=] with
         "<code>[=source debug data type/source-channel-capacity-limit=]</code>" and |source|.
     1. Return.
+1. If |source|'s [=attribution source/attribution scopes=] is not null:
+    1. Let |attributionScopes| be [=attribution source/attribution scopes=].
+    1. Let |scopesChannelCapacity| be the result of [=computing the scopes channel capacity of a source=] with |states|, |attributionScopes|'s [=attribution scopes/limit=], and |attributionScopes|'s [=attribution scopes/max event states=].
+    1. If |scopesChannelCapacity| is greater than [=max event-level attribution scopes channel capacity per source=][|sourceType|]:
+        1. Run [=obtain and deliver debug reports on source registration=] with
+            « "<code>[=source debug data type/source-scopes-channel-capacity-limit=]</code>" » and |source|.
+        1. Return.
 1. Set |source|'s [=attribution source/randomized response=] to the result of
     [=obtaining a randomized source response=] with |randomizedResponseConfig| and |epsilon|.
 1. Set |source|'s [=attribution source/randomized trigger rate=] to the result of

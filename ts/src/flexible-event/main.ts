@@ -4,9 +4,11 @@ import { readFileSync } from 'fs'
 import { Issue } from '../header-validator/context'
 import { Maybe } from '../header-validator/maybe'
 import { validateSource } from '../header-validator/validate-source'
+import { AttributionScopes } from '../header-validator/source'
 import { SourceType, parseSourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Config, PerTriggerDataConfig } from './privacy'
+import * as constants from '../constants'
 
 // Workaround for `parse` not handling top-level array types without `multiple`
 // `OptionDef` configuration.
@@ -18,6 +20,8 @@ function commaSeparatedInts(str: string): Wrapped<number[]> {
 
 interface Arguments {
   max_event_level_reports: number
+  attribution_scope_limit?: number
+  max_event_states: number
   epsilon: number
   source_type: SourceType
   windows?: Wrapped<number[]>
@@ -30,6 +34,16 @@ const options = parse<Arguments>({
     alias: 'm',
     type: Number,
     defaultValue: 20,
+  },
+  attribution_scope_limit: {
+    alias: 'a',
+    type: Number,
+    optional: true,
+  },
+  max_event_states: {
+    alias: 's',
+    type: Number,
+    defaultValue: constants.defaultMaxEventStates,
   },
   epsilon: {
     alias: 'e',
@@ -82,6 +96,7 @@ if (options.json_file !== undefined) {
     (source) =>
       new Config(
         source.maxEventLevelReports,
+        source.attributionScopes,
         source.triggerSpecs.flatMap((spec) =>
           new Array<PerTriggerDataConfig>(spec.triggerData.size).fill(
             new PerTriggerDataConfig(
@@ -98,9 +113,18 @@ if (options.json_file !== undefined) {
   if (options.windows.value.length !== options.buckets.value.length) {
     throw new Error('windows and buckets must have same length')
   }
+  const attributionScopes: AttributionScopes | null =
+    options.attribution_scope_limit === undefined
+      ? null
+      : {
+          limit: options.attribution_scope_limit,
+          values: new Set<string>(),
+          maxEventStates: options.max_event_states,
+        }
   config = Maybe.some(
     new Config(
       options.max_event_level_reports,
+      attributionScopes,
       options.windows.value.map(
         (w: number, i: number) =>
           new PerTriggerDataConfig(w, options.buckets!.value[i]!)

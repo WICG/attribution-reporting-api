@@ -325,6 +325,7 @@ function channelCapacity(s: Source, ctx: Context): void {
 
   const config = new privacy.Config(
     s.maxEventLevelReports,
+    s.attributionScopes,
     perTriggerDataConfigs
   )
 
@@ -353,9 +354,7 @@ function channelCapacity(s: Source, ctx: Context): void {
 
   const maxInfoGain =
     ctx.opts.vsv.maxEventLevelChannelCapacityPerSource[ctx.opts.sourceType]
-  const infoGainMsg = `information gain${
-    s.attributionScopes !== null ? ' for attribution scope' : ''
-  }: ${out.infoGain.toFixed(2)}`
+  const infoGainMsg = `information gain: ${out.infoGain.toFixed(2)}`
 
   if (out.infoGain > maxInfoGain) {
     ctx.error(
@@ -365,6 +364,24 @@ function channelCapacity(s: Source, ctx: Context): void {
     )
   } else if (ctx.opts.noteInfoGain) {
     ctx.note(infoGainMsg)
+  }
+
+  if (out.attributionScopesInfoGain !== undefined) {
+    const attributionScopesInfoGainMsg = `information gain for attribution scope: ${out.attributionScopesInfoGain.toFixed(2)}`
+    const maxAttributionScopeInfoGain =
+      ctx.opts.vsv.maxEventLevelAttributionScopesChannelCapacityPerSource[
+        ctx.opts.sourceType
+      ]
+
+    if (out.attributionScopesInfoGain > maxAttributionScopeInfoGain) {
+      ctx.error(
+        `${attributionScopesInfoGainMsg} exceeds max event-level attribution scope information gain per ${
+          ctx.opts.sourceType
+        } source (${maxAttributionScopeInfoGain.toFixed(2)})`
+      )
+    } else if (ctx.opts.noteInfoGain) {
+      ctx.note(attributionScopesInfoGainMsg)
+    }
   }
 
   if (ctx.opts.noteInfoGain) {

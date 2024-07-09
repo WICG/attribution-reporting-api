@@ -81,6 +81,13 @@ const infoGainTests = [
     epsilon: 14,
     expected: 0,
   },
+  {
+    numStates: 2925,
+    epsilon: 14,
+    attributionScopeLimit: 101,
+    maxEventStates: 10,
+    expected: 11.461727965384876,
+  },
 ]
 
 void test('maxInformationGain', async (t) => {
@@ -117,6 +124,31 @@ function defaultConfig(sourceType: SourceType): Config {
     constants.defaultEventLevelAttributionsPerSource[sourceType]
   return new Config(
     /*maxEventLevelReports=*/ defaultMaxReports,
+    /*attributionScopes=*/ null,
+    new Array(Number(constants.defaultTriggerDataCardinality[sourceType])).fill(
+      new PerTriggerDataConfig(
+        /*numWindows=*/
+        constants.defaultEarlyEventLevelReportWindows[sourceType].length + 1,
+        /*numSummaryBuckets=*/ defaultMaxReports
+      )
+    )
+  )
+}
+
+function scopeConfig(
+  sourceType: SourceType,
+  attributionScopeLimit: number,
+  maxEventStates: number
+): Config {
+  const defaultMaxReports =
+    constants.defaultEventLevelAttributionsPerSource[sourceType]
+  return new Config(
+    /*maxEventLevelReports=*/ defaultMaxReports,
+    {
+      limit: attributionScopeLimit,
+      values: new Set<string>(),
+      maxEventStates: maxEventStates,
+    },
     new Array(Number(constants.defaultTriggerDataCardinality[sourceType])).fill(
       new PerTriggerDataConfig(
         /*numWindows=*/
@@ -151,6 +183,38 @@ void test('computeConfigData', async (t) => {
         vsv.Chromium.maxEventLevelChannelCapacityPerSource[SourceType.event]
       ),
       {
+        numStates: 3,
+        infoGain: 1.584926511508231,
+        flipProb: 0.000002494582008677539,
+      }
+    )
+  })
+
+  await t.test('attribution-scope-navigation', () => {
+    assert.deepStrictEqual(
+      scopeConfig(SourceType.navigation, 3, 4).computeConfigData(
+        14,
+        vsv.Chromium.maxEventLevelChannelCapacityPerSource[
+          SourceType.navigation
+        ]
+      ),
+      {
+        attributionScopesInfoGain: 11.518161355756956,
+        numStates: 2925,
+        infoGain: 11.461727965384876,
+        flipProb: 0.0024263221679834087,
+      }
+    )
+  })
+
+  await t.test('attribution-scope-event', () => {
+    assert.deepStrictEqual(
+      scopeConfig(SourceType.event, 3, 4).computeConfigData(
+        14,
+        vsv.Chromium.maxEventLevelChannelCapacityPerSource[SourceType.event]
+      ),
+      {
+        attributionScopesInfoGain: 3.4594316186372973,
         numStates: 3,
         infoGain: 1.584926511508231,
         flipProb: 0.000002494582008677539,
