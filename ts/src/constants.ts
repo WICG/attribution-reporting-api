@@ -66,6 +66,7 @@ export const sourceAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'source-destination-global-rate-limit',
   'source-destination-limit',
   'source-destination-rate-limit',
+  'source-max-event-states-limit',
   'source-noised',
   'source-reporting-origin-limit',
   'source-reporting-origin-per-site-limit',

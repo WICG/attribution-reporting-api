@@ -49,6 +49,11 @@ The source was rejected due to the [destination limit][].
 
 Additional fields: `limit`
 
+#### `source-max-event-states-limit`
+
+A source is rejected due to [max event states][].
+
+Additional fields: `limit`
 #### `source-noised`
 
 The source was successfully registered, but it will not be attributable by any
@@ -136,12 +141,12 @@ Additionally:
   will also contain a string-typed `limit` field.
 * If the trigger was attributed to a source, then the `body` will also contain
   the following fields:
-   * `source_event_id`: The source registration's `source_event_id`.
-   * `source_site`: The top-level site on which the source registration
-      occurred.
-   * `source_debug_key`: The source registration's `debug_key`, but omitted if
-     the source registration did not contain a valid `debug_key` or
-     [cookie-based debugging][] was prohibited.
+  * `source_event_id`: The source registration's `source_event_id`.
+  * `source_site`: The top-level site on which the source registration
+    occurred.
+  * `source_debug_key`: The source registration's `debug_key`, but omitted if
+    the source registration did not contain a valid `debug_key` or
+    [cookie-based debugging][] was prohibited.
 
 #### `trigger-no-matching-source`
 
@@ -268,6 +273,7 @@ The trigger was rejected due to an internal error.
 [insufficient budget]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#contribution-bounding-and-budgeting
 [max aggregatable reports]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#hide-the-true-number-of-attribution-reports
 [max attributions rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits
+[max event states]: https://wicg.github.io/attribution-reporting-api/#attribution-scopes-max-event-states
 [noise]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#data-limits-and-noise
 [reporting origins per source and reporting site limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits
 [reporting origins per source and reporting site rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits
