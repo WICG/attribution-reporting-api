@@ -9,6 +9,7 @@ export type TestCase<T> = testutil.TestCase & {
   json: string
   vsv?: Readonly<Partial<vsv.VendorSpecificValues>>
   parseFullFlex?: boolean
+  parseScopes?: boolean
   expected?: Maybe<T>
 }
 

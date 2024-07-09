@@ -42,7 +42,8 @@ class RegistrationContext extends GenericContext {
   constructor(
     readonly vsv: Readonly<VendorSpecificValues>,
     parseFullFlex: boolean,
-    readonly aggregatableDebugTypes: Readonly<[string, ...string[]]>
+    readonly aggregatableDebugTypes: Readonly<[string, ...string[]]>,
+    readonly parseScopes: boolean
   ) {
     super(parseFullFlex)
   }
@@ -57,9 +58,15 @@ class SourceContext extends RegistrationContext {
     vsv: VendorSpecificValues,
     parseFullFlex: boolean,
     readonly sourceType: SourceType,
-    readonly noteInfoGain: boolean
+    readonly noteInfoGain: boolean,
+    parseScopes: boolean
   ) {
-    super(vsv, parseFullFlex, constants.sourceAggregatableDebugTypes)
+    super(
+      vsv,
+      parseFullFlex,
+      constants.sourceAggregatableDebugTypes,
+      parseScopes
+    )
   }
 }
 
@@ -1111,10 +1118,12 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
         defaultTriggerSpecsVal
       )(j, ctx)
 
-      const attributionScopeLimitVal = field(
-        'attribution_scope_limit',
-        withDefault(positiveUint32, null)
-      )(j, ctx)
+      const attributionScopeLimitVal = ctx.parseScopes
+        ? field('attribution_scope_limit', withDefault(positiveUint32, null))(
+            j,
+            ctx
+          )
+        : some(null)
 
       return struct(j, ctx, {
         aggregatableReportWindow: field('aggregatable_report_window', (j) =>
@@ -1149,16 +1158,20 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
           withDefault(int64, 0n)
         ),
         attributionScopeLimit: () => attributionScopeLimitVal,
-        attributionScopes: field(
-          'attribution_scopes',
-          withDefault(attributionScopesForSource, new Set<string>()),
-          attributionScopeLimitVal
-        ),
-        maxEventStates: field(
-          'max_event_states',
-          withDefault(maxEventStates, constants.defaultMaxEventStates),
-          attributionScopeLimitVal
-        ),
+        attributionScopes: ctx.parseScopes
+          ? field(
+              'attribution_scopes',
+              withDefault(attributionScopesForSource, new Set<string>()),
+              attributionScopeLimitVal
+            )
+          : () => some(new Set<string>()),
+        maxEventStates: ctx.parseScopes
+          ? field(
+              'max_event_states',
+              withDefault(maxEventStates, constants.defaultMaxEventStates),
+              attributionScopeLimitVal
+            )
+          : () => some(constants.defaultMaxEventStates),
 
         ...commonDebugFields,
         ...priorityField,
@@ -1620,11 +1633,13 @@ function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
           withDefault(struct, null),
           aggregatableDebugReportingConfig
         ),
-        attributionScopes: field(
-          'attribution_scopes',
-          withDefault(set, new Set<string>()),
-          string
-        ),
+        attributionScopes: ctx.parseScopes
+          ? field(
+              'attribution_scopes',
+              withDefault(set, new Set<string>()),
+              string
+            )
+          : () => some(new Set<string>()),
         ...aggregationCoordinatorOriginField,
         ...commonDebugFields,
         ...filterFields,
@@ -1655,10 +1670,17 @@ export function validateSource(
   vsv: Readonly<VendorSpecificValues>,
   sourceType: SourceType,
   parseFullFlex: boolean = false,
-  noteInfoGain: boolean = false
+  noteInfoGain: boolean = false,
+  parseScopes: boolean = false
 ): [ValidationResult, Maybe<Source>] {
   return validateJSON(
-    new SourceContext(vsv, parseFullFlex, sourceType, noteInfoGain),
+    new SourceContext(
+      vsv,
+      parseFullFlex,
+      sourceType,
+      noteInfoGain,
+      parseScopes
+    ),
     json,
     source
   )
@@ -1667,13 +1689,15 @@ export function validateSource(
 export function validateTrigger(
   json: string,
   vsv: Readonly<VendorSpecificValues>,
-  parseFullFlex: boolean = false
+  parseFullFlex: boolean = false,
+  parseScopes: boolean = false
 ): [ValidationResult, Maybe<Trigger>] {
   return validateJSON(
     new RegistrationContext(
       vsv,
       parseFullFlex,
-      constants.triggerAggregatableDebugTypes
+      constants.triggerAggregatableDebugTypes,
+      parseScopes
     ),
     json,
     trigger

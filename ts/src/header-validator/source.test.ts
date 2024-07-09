@@ -55,6 +55,7 @@ const testCases: TestCase[] = [
       "max_event_states": 4
     }`,
     sourceType: SourceType.navigation,
+    parseScopes: true,
     expected: Maybe.some({
       aggregatableReportWindow: 3601,
       aggregationKeys: new Map([['a', 15n]]),
@@ -104,11 +105,21 @@ const testCases: TestCase[] = [
     name: 'unknown-field',
     json: `{
       "destination": "https://a.test",
-      "x": []
+      "attribution_scopes": false,
+      "attribution_scope_limit": false,
+      "max_event_states": false
     }`,
     expectedWarnings: [
       {
-        path: ['x'],
+        path: ['attribution_scopes'],
+        msg: 'unknown field',
+      },
+      {
+        path: ['attribution_scope_limit'],
+        msg: 'unknown field',
+      },
+      {
+        path: ['max_event_states'],
         msg: 'unknown field',
       },
     ],
@@ -1388,6 +1399,7 @@ const testCases: TestCase[] = [
       maxSettableEventLevelEpsilon: 14,
       maxTriggerStateCardinality: 2,
     },
+    parseScopes: true,
     expectedErrors: [
       {
         path: [],
@@ -2567,6 +2579,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "attribution_scope_limit": -1
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
@@ -2580,6 +2593,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "attribution_scope_limit": 0
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
@@ -2593,6 +2607,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "attribution_scope_limit": 1.5
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
@@ -2606,6 +2621,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "attribution_scope_limit": 4294967296
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
@@ -2620,6 +2636,7 @@ const testCases: TestCase[] = [
       "attribution_scope_limit": 3,
       "attribution_scopes": []
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes'],
@@ -2633,6 +2650,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "attribution_scopes": ["1", "2"]
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes'],
@@ -2646,6 +2664,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "max_event_states": 5
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['max_event_states'],
@@ -2660,6 +2679,7 @@ const testCases: TestCase[] = [
       "attribution_scopes": ["1"],
       "attribution_scope_limit": true
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
@@ -2678,6 +2698,7 @@ const testCases: TestCase[] = [
       "max_event_states": 1,
       "attribution_scope_limit": true
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scope_limit'],
@@ -2696,6 +2717,7 @@ const testCases: TestCase[] = [
       "attribution_scope_limit": 1,
       "max_event_states": -1
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['max_event_states'],
@@ -2710,6 +2732,7 @@ const testCases: TestCase[] = [
       "attribution_scope_limit": 1,
       "max_event_states": 0
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['max_event_states'],
@@ -2724,6 +2747,7 @@ const testCases: TestCase[] = [
       "attribution_scope_limit": 1,
       "max_event_states": 1.5
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['max_event_states'],
@@ -2738,6 +2762,7 @@ const testCases: TestCase[] = [
       "attribution_scope_limit": 1,
       "attribution_scopes": ["1", "2"]
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes'],
@@ -2752,6 +2777,7 @@ const testCases: TestCase[] = [
       "attribution_scope_limit": 2,
       "attribution_scopes": [1]
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 0],
@@ -2765,6 +2791,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "attribution_scopes": []
     }`,
+    parseScopes: true,
   },
   {
     name: 'attribution-scopes-not-list',
@@ -2773,6 +2800,7 @@ const testCases: TestCase[] = [
       "attribution_scope_limit": 1,
       "attribution_scopes": 1
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         msg: 'must be a list',
@@ -2787,6 +2815,7 @@ const testCases: TestCase[] = [
       "attribution_scope_limit": 21,
       "attribution_scopes": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21"]
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes'],
@@ -2801,6 +2830,7 @@ const testCases: TestCase[] = [
       "attribution_scope_limit": 1,
       "attribution_scopes": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]
     }`,
+    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 0],
@@ -2817,19 +2847,25 @@ testCases.forEach((tc) =>
       { ...vsv.Chromium, ...tc.vsv },
       tc.sourceType ?? SourceType.navigation,
       tc.parseFullFlex ?? false,
-      tc.noteInfoGain ?? false
+      tc.noteInfoGain ?? false,
+      tc.parseScopes ?? false
     )
 
     if (result[1].value !== undefined) {
       const str = JSON.stringify(
-        serializeSource(result[1].value, tc.parseFullFlex ?? false)
+        serializeSource(
+          result[1].value,
+          tc.parseFullFlex ?? false,
+          tc.parseScopes ?? false
+        )
       )
       const [, reparsed] = validateSource(
         str,
         { ...vsv.Chromium, ...tc.vsv },
         tc.sourceType ?? SourceType.navigation,
         tc.parseFullFlex ?? false,
-        tc.noteInfoGain ?? false
+        tc.noteInfoGain ?? false,
+        tc.parseScopes ?? false
       )
       assert.deepEqual(reparsed, result[1], str)
     }
