@@ -50,7 +50,8 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           "key_piece": "0x5",
           "value": 123
         }]
-      }
+      },
+      "attribution_scopes": ["1"]
     }`,
     expected: Maybe.some({
       aggregatableDedupKeys: [
@@ -150,6 +151,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           map: new Map([['g', new Set()]]),
         },
       ],
+      attributionScopes: new Set('1'),
     }),
   },
   {
@@ -1622,6 +1624,36 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['aggregatable_debug_reporting', 'debug_data'],
         msg: 'duplicate type: unspecified',
+      },
+    ],
+  },
+
+  // Attribution Scope
+  {
+    name: 'attribution-scope-not-string',
+    json: `{"attribution_scopes": [1]}`,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 0],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-empty-list',
+    json: `{
+      "attribution_scopes": []
+    }`,
+  },
+  {
+    name: 'attribution-scopes-not-list',
+    json: `{
+      "attribution_scopes": 1
+    }`,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes'],
+        msg: 'must be a list',
       },
     ],
   },
