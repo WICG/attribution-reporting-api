@@ -45,25 +45,14 @@ spec: webdriver; urlPrefix: https://w3c.github.io/webdriver/
         text: error code; url: dfn-error-code
 spec: uuid; type: dfn; urlPrefix: https://wicg.github.io/uuid/
     text: generate a random UUID; url: #dfn-generate-a-random-uuid
-spec: private-state-token-api; type: dfn; urlPrefix: https://wicg.github.io/trust-token-api/
-    text: look up the key commitments; url: #look-up-the-key-commitments
-    text: generate masked tokens; url: #generate-masked-tokens
-    text: unmask tokens; url: #unmask-tokens
-    text: sec-private-state-token-crypto-version; url: #sec-private-state-token-crypto-version
 spec: structured header; type: dfn; urlPrefix: https://httpwg.org/specs/rfc8941;
     text: structured header; url: #introduction
     for: structured header
         text: define new structured fields; url: #specify
         text: dictionary; url: #dictionary
         text: item; url: #item
-        text: list; url: #list
         text: parameter; url: #param
-        text: parse a list; url: #parse-list
-        text: parse a string; url: #parse-string
         text: parse structured fields; url: #text-parse
-        text: serialize a list; url: #ser-list
-        text: serialize a string; url: #ser-string
-        text: string; url: #string
         text: token; url: #token
 spec: infra; type: dfn; urlPrefix: https://infra.spec.whatwg.org/
     text: starts with; url: #string-starts-with
@@ -361,9 +350,6 @@ A [=request=] has an associated
 <dfn export for=request>Attribution Reporting eligibility</dfn> (an [=eligibility=]).
 Unless otherwise stated it is "<code>[=eligibility/unset=]</code>".
 
-A [=request=] has an associated
-<dfn for=request>trigger verification metadata</dfn> which is null or a [=trigger verification metadata=].
-
 To <dfn>get an eligibility from {{AttributionReportingRequestOptions}}</dfn>
 given an optional {{AttributionReportingRequestOptions}} |options|:
 
@@ -444,8 +430,7 @@ recipient after the header has been parsed as a structured dictionary:
 Attribution-Reporting-Support: os=web
 </pre>
 
-To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|
-and an [=origin=] |contextOrigin|:
+To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|:
 
 1. Let |headers| be |request|'s [=request/header list=].
 1. Let |eligibility| be |request|'s [=request/Attribution Reporting eligibility=].
@@ -465,8 +450,7 @@ and an [=origin=] |contextOrigin|:
     :: [=list/Append=] "<code>[=eligible key/navigation-source=]</code>" to
         |keys|.
     : "<code>[=eligibility/trigger=]</code>"
-    :: 1. [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
-    :: 1. [=Set trigger verification request headers=] with |request| and |contextOrigin|.
+    :: [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
     : "<code>[=eligibility/event-source-or-trigger=]</code>"
     :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
         "<code>[=eligible key/trigger=]</code>" to |keys|.
@@ -480,15 +464,13 @@ and an [=origin=] |contextOrigin|:
 
 Modify [=fetch=] as follows:
 
-Add a [=Document=] parameter called |document|.
-
 After the step
 
 > If |request|'s [=request/header list=] does not contain `Accept`...
 
 add the step
 
-1. [=Set Attribution Reporting headers=] with |request| and |document|'s [=node/context origin=].
+1. [=Set Attribution Reporting headers=] with |request|.
 
 Modify {{Request/constructor(input, init)}} as follows:
 
@@ -975,8 +957,6 @@ An attribution trigger is a [=struct=] with the following items:
 :: A [=list=] of [=aggregatable values configuration=].
 : <dfn>aggregatable dedup keys</dfn>
 :: A [=list=] of [=aggregatable dedup key=].
-: <dfn>verifications</dfn>
-:: A [=list=] of [=trigger verification=].
 : <dfn>debug reporting enabled</dfn>
 :: A [=boolean=].
 : <dfn>aggregation coordinator</dfn>
@@ -1077,8 +1057,6 @@ An <dfn>aggregatable attribution report</dfn> is an [=aggregatable report=] with
 <dl dfn-for="aggregatable attribution report">
 : <dfn>source time</dfn>
 :: A [=moment=].
-: <dfn>serialized private state token</dfn>
-:: A [=serialized private state token=].
 : <dfn>source registration time configuration</dfn>
 :: An [=aggregatable source registration time configuration=].
 : <dfn>is null report</dfn> (default false)
@@ -1233,34 +1211,6 @@ A verbose debug report is a [=struct=] with the following items:
 :: A [=list=] of [=verbose debug data=].
 : <dfn>reporting origin</dfn>
 :: A [=suitable origin=].
-
-</dl>
-
-<h3 dfn-type=dfn>Serialized private state token</h3>
-
-A serialized private state token is a [=forgiving-base64 encoding=] of a [=byte sequence=].
-
-<h3 dfn-type=dfn>Trigger verification</h3>
-
-A trigger verification is a [=struct=] with the following items:
-
-<dl dfn-for="trigger verification">
-: <dfn>token</dfn>
-:: A [=serialized private state token=].
-: <dfn>id</dfn>
-:: The result of [=generating a random UUID=] over which the [=trigger verification/token=] is signed.
-
-</dl>
-
-<h3 dfn-type=dfn>Trigger verification metadata</h3>
-
-A trigger verification metadata is a [=struct=] with the following items:
-
-<dl dfn-for="trigger verification metadata">
-: <dfn>pretokens</dfn>
-:: A [=byte sequence=].
-: <dfn>IDs</dfn>
-:: A [=list=] of [=string=] generated using [=generating a random UUID=].
 
 </dl>
 
@@ -1533,10 +1483,6 @@ this is 0.
 
 <dfn>Default aggregation coordinator</dfn> is the [=aggregation coordinator=] that controls how to
 obtain the public key for encrypting an [=aggregatable report=] by default.
-
-<dfn>Verification tokens per trigger</dfn> is a positive integer that controls the number of
-encoded masked messages sent for signature when [=set trigger verification request headers|initiating trigger verification=]
-and the maximum number of [=serialized private state tokens=] that can be attached to an [=attribution trigger=].
 
 # General Algorithms # {#general-algorithms}
 
@@ -2003,8 +1949,8 @@ a {{Document}} |document|, and a [=referrer policy=] |referrerPolicy|:
     :   [=request/referrer policy=]
     ::  |referrerPolicy|
 1. [=Fetch=] |request| with [=fetch/processResponse=] being
-    [=process an attributionsrc response=] with |contextOrigin|, |eligibility|, |fenced|,
-    and |request|'s [=request/trigger verification metadata=].
+    [=process an attributionsrc response=] with |contextOrigin|, |eligibility|,
+    and |fenced|.
 
 Issue: Audit other properties on |request| and set them properly.
 
@@ -2035,12 +1981,11 @@ and a [=referrer policy=] |referrerPolicy|:
 Issue: Consider allowing the user agent to limit the size of |tokens|.
 
 To <dfn>process an attributionsrc response</dfn> given a [=suitable origin=] |contextOrigin|,
-an [=eligibility=] |eligibility|, a [=boolean=] |fenced|, a possibly null [=trigger verification metadata=]
-|triggerVerificationMetadata|, and a [=response=] |response|:
+an [=eligibility=] |eligibility|, a [=boolean=] |fenced|, and a [=response=] |response|:
 
 1. [=Validate a background attributionsrc eligibility|Validate=] |eligibility|.
 1. Run [=process an attribution eligible response=] with |contextOrigin|,
-    |eligibility|, |fenced|, |triggerVerificationMetadata|, and |response|.
+    |eligibility|, |fenced|, and |response|.
 
 To <dfn>get the registration platform</dfn> given a [=header value=] or null |webHeader|,
 a [=header value=] or null |osHeader|, and a [=registrar=] or null |preferredPlatform|:
@@ -2115,7 +2060,6 @@ or null |osSourceHeader|, a [=registration info=] |registrationInfo|, and a
 
 To <dfn>process an attribution trigger response</dfn> given a [=suitable origin=]
 |contextOrigin|, a [=suitable origin=] |reportingOrigin|, a [=response=] |response|,
-a possibly null [=trigger verification metadata=] |triggerVerificationMetadata|,
 a [=header value=] or null |webTriggerHeader|, a [=header value=] or null
 |osTriggerHeader|, a [=registration info=] |registrationInfo|, and a [=boolean=]
 |fenced|:
@@ -2131,12 +2075,9 @@ a [=header value=] or null |webTriggerHeader|, a [=header value=] or null
     ::
         1. Let |destinationSite| be the result of [=obtaining a site=] from
             |contextOrigin|.
-        1. Let |triggerVerifications| be the result of [=receiving trigger verification tokens=]
-            with |response|'s [=response/URL=]'s [=url/origin=], |response|'s [=response/header list=],
-            and |triggerVerificationMetadata|.
         1. Let |trigger| be the result of running
             [=create an attribution trigger=] with |webTriggerHeader|
-            |destinationSite|, |reportingOrigin|, |triggerVerifications|, [=current wall time=], and |fenced|.
+            |destinationSite|, |reportingOrigin|, [=current wall time=], and |fenced|.
         1. If |trigger| is null:
             1. If |reportHeaderErrors| is true, run [=obtain and deliver debug reports on registration header errors=]
                 with "`Attribution-Reporting-Register-Trigger`",
@@ -2161,7 +2102,7 @@ a [=header value=] or null |webTriggerHeader|, a [=header value=] or null
 
 To <dfn export>process an attribution eligible response</dfn> given a [=suitable origin=]
 |contextOrigin|, an [=eligibility=] |eligibility|, a [=boolean=] |fenced|,
-a possibly null [=trigger verification metadata=] |triggerVerificationMetadata|, and a [=response=] |response|:
+and a [=response=] |response|:
 
 1. The user-agent MAY ignore the response; if so, return.
 
@@ -2223,7 +2164,7 @@ a possibly null [=trigger verification metadata=] |triggerVerificationMetadata|,
                 |sourceHeader|, |osSourceHeader|, |registrationInfo|, and |fenced|.
         1. If |hasTriggerRegistration| is true:
             1. Run [=process an attribution trigger response=]
-                with |contextOrigin|, |reportingOrigin|, |response|, |triggerVerificationMetadata|, |triggerHeader|,
+                with |contextOrigin|, |reportingOrigin|, |response|, |triggerHeader|,
                 |osTriggerHeader|, |registrationInfo|, and |fenced|.
 
     </dl>
@@ -3590,7 +3531,7 @@ To <dfn>parse attribution scopes for trigger</dfn> from a [=map=] |map|:
 1. Return |result|.
 
 To <dfn noexport>create an attribution trigger</dfn> given a [=byte sequence=]
-|json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|, a [=list=] of [=trigger verification=] |triggerVerifications|,
+|json|, a [=site=] |destination|, a [=suitable origin=] |reportingOrigin|,
 a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
 
 1. Let |value| be the result of running
@@ -3667,8 +3608,6 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
     :: |aggregatableValuesConfigurations|
     : [=attribution trigger/aggregatable dedup keys=]
     :: |aggregatableDedupKeys|
-    : [=attribution trigger/verifications=]
-    :: |triggerVerifications|
     : [=attribution trigger/debug reporting enabled=]
     :: |debugReportingEnabled|
     : [=attribution trigger/aggregation coordinator=]
@@ -4156,7 +4095,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
     |report|'s [=aggregatable attribution report/required aggregatable budget=].
 1. If |matchedDedupKey| is not null, [=list/append=] it to |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=].
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
-1. Run [=generate null attribution reports and assign private state tokens=] with |trigger| and |report|.
+1. Run [=generate null attribution reports=] with |trigger| and |report|.
 1. If the result of [=checking if attribution debugging can be enabled=]
     with |report|'s [=aggregatable attribution report/attribution debug info=] is true,
     [=queue a task=] to [=attempt to deliver a debug report=] with |report|.
@@ -4255,8 +4194,8 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     1. Run [=obtain and deliver debug reports on trigger registration=] with
         « ("<code>[=trigger debug data type/trigger-no-matching-source=]</code>", null) »,
         |trigger|, and [=obtain and deliver debug reports on trigger registration/sourceToAttribute=] set to null.
-    1. If |hasAggregatableData| is true, then run [=generate null attribution reports and assign private state tokens=]
-        with |trigger| and [=generate null attribution reports and assign private state tokens/report=] set to null.
+    1. If |hasAggregatableData| is true, then run [=generate null attribution reports=]
+        with |trigger| and [=generate null attribution reports/report=] set to null.
     1. Return.
 1. Let |sourceToAttribute| be |matchingSources|[0].
 1. If the result of running
@@ -4267,8 +4206,8 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     1. Run [=obtain and deliver debug reports on trigger registration=] with
         « ("<code>[=trigger debug data type/trigger-no-matching-filter-data=]</code>", null) »,
         |trigger|, and |sourceToAttribute|.
-    1. If |hasAggregatableData| is true, then run [=generate null attribution reports and assign private state tokens=]
-        with |trigger| and [=generate null attribution reports and assign private state tokens/report=] set to null.
+    1. If |hasAggregatableData| is true, then run [=generate null attribution reports=]
+        with |trigger| and [=generate null attribution reports/report=] set to null.
     1. Return.
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
 1. [=list/iterate|For each=] |item| of |matchingSources|:
@@ -4285,8 +4224,8 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
 1. Run [=obtain and deliver debug reports on trigger registration=] with |debugDataSet|,
     |trigger|, and |sourceToAttribute|.
 1. If |hasAggregatableData| and |aggregatableResult|'s [=triggering result/status=] is "<code>[=triggering status/dropped=]</code>",
-    run [=generate null attribution reports and assign private state tokens=] with |trigger| and
-    [=generate null attribution reports and assign private state tokens/report=] set to null.
+    run [=generate null attribution reports=] with |trigger| and
+    [=generate null attribution reports/report=] set to null.
 1. [=list/Remove=] all [=attribution rate-limit records=] |entry| from the [=attribution rate-limit cache=] if the result of running
     [=can attribution rate-limit record be removed=] with |entry| and |trigger|'s [=attribution trigger/trigger time=] is true.
 
@@ -4388,8 +4327,6 @@ an [=attribution trigger=] |trigger|:
     :: (|source|'s [=attribution source/debug key=], |trigger|'s [=attribution trigger/debug key=]).
     : [=aggregatable attribution report/contributions=]
     :: The result of running [=create aggregatable contributions=] with |source| and |trigger|.
-    : [=aggregatable attribution report/serialized private state token=]
-    :: null.
     : [=aggregatable attribution report/aggregation coordinator=]
     :: |trigger|'s [=attribution trigger/aggregation coordinator=].
     : [=aggregatable attribution report/source registration time configuration=]
@@ -4423,8 +4360,6 @@ To <dfn>obtain a null attribution report</dfn> given an [=attribution trigger=] 
     :: (null, |trigger|'s [=attribution trigger/debug key=])
     : [=aggregatable attribution report/contributions=]
     :: «»
-    : [=aggregatable attribution report/serialized private state token=]
-    :: null
     : [=aggregatable attribution report/aggregation coordinator=]
     :: |trigger|'s [=attribution trigger/aggregation coordinator=]
     : [=aggregatable attribution report/source registration time configuration=]
@@ -4447,7 +4382,8 @@ To <dfn>determine if a randomized null attribution report is generated</dfn> giv
 1. If |r| is less than |randomPickRate|, return true.
 1. Otherwise, return false.
 
-To <dfn>generate null attribution reports</dfn> given an [=attribution trigger=] |trigger| and an optional [=aggregatable attribution report=] |report| defaulting to null:
+To <dfn>generate null attribution reports</dfn> given an [=attribution trigger=] |trigger| and an optional [=aggregatable attribution report=]
+<dfn for="generate null attribution reports"><var>report</var></dfn> defaulting to null:
 
 1. Let |nullReports| be a new [=list=].
 1. If |trigger|'s [=attribution trigger/aggregatable source registration time configuration=] is "<code>[=aggregatable source registration time configuration/exclude=]</code>":
@@ -4479,28 +4415,6 @@ To <dfn>generate null attribution reports</dfn> given an [=attribution trigger=]
 
 To <dfn>shuffle a [=list=]</dfn> |list|, reorder |list|'s elements such that each possible permutation has equal
 probability of appearance.
-
-To <dfn>assign private state tokens</dfn> given a [=list=] of [=aggregatable attribution reports=] |reports| and
-an [=attribution trigger=] |trigger|:
-
-1. If |reports| [=list/is empty=], return.
-1. Let |verifications| be |trigger|'s [=attribution trigger/verifications=].
-1. If |verifications| [=list/is empty=], return.
-1. If [=automation local testing mode=] is false:
-    1. [=shuffle a list|Shuffle=] |reports|.
-    1. [=shuffle a list|Shuffle=] |verifications|.
-1. Let |n| be the minimum of |reports|'s [=list/size=] and |verifications|'s [=list/size=].
-1. [=set/iterate|For each=] integer |i| of [=the exclusive range|the range=] 0 to |n|, exclusive:
-    1. Set |reports|[i]'s [=aggregatable attribution report/report ID=] to |verifications|[i]'s [=trigger verification/id=].
-    1. Set |reports|[i]'s [=aggregatable attribution report/serialized private state token=] to |verifications|[i]'s [=trigger verification/token=].
-
-To <dfn>generate null attribution reports and assign private state tokens</dfn> given an [=attribution trigger=] |trigger|
-and an optional [=aggregatable attribution report=] <dfn for="generate null attribution reports and assign private state tokens"><var>report</var></dfn> defaulting to null:
-
-1. Let |reports| be the result of [=generating null attribution reports=] with |trigger| and |report|.
-1. If |report| is not null:
-    1. [=list/Append=] |report| to |reports|.
-1. Run [=assign private state tokens=] with |reports| and |trigger|.
 
 <h3 id="deferring-trigger-attribution">Deferring trigger attribution</h3>
 
@@ -4857,13 +4771,10 @@ To <dfn>generate an aggregatable debug report URL</dfn> given an [=aggregatable 
 
 <h3 id="create-report-request">Creating a report request</h3>
 
-To <dfn>create a report request</dfn> given a [=URL=] |url|, a [=byte sequence=] |body|,
-and a [=header list=] |newHeaders| (defaults to an empty [=list=]):
+To <dfn>create a report request</dfn> given a [=URL=] |url| and a [=byte sequence=] |body|:
 
 1. Let |headers| be a new [=header list=] containing a [=header=] named
     "`Content-Type`" whose value is "`application/json`".
-1. [=list/iterate|For each=] |header| in |newHeaders|:
-    1. [=header list/Append=] |header| to |headers|.
 1. Let |request| be a new [=request=] with the following properties:
     :   [=request/method=]
     ::  "`POST`"
@@ -4895,17 +4806,6 @@ and a [=header list=] |newHeaders| (defaults to an empty [=list=]):
     ::  "`no-store`"
 1. Return |request|.
 
-<h3 id="get-report-headers">Get report request headers</h3>
-
-To <dfn>generate attribution report headers</dfn> given an [=attribution report=] |report|:
-
-1. Let |newHeaders| be a new [=header list=].
-1. If |report| is an [=aggregatable attribution report=]:
-    1. If |report|'s [=aggregatable attribution report/serialized private state token=] is not null,
-        [=header list/append=] a new [=header=] named "`Sec-Attribution-Reporting-Private-State-Token`" to |newHeaders|
-        whose value is |report|'s [=aggregatable attribution report/serialized private state token=].
-1. Return |newHeaders|.
-
 <h3 id="issue-report-request">Issuing a report request</h3>
 
 This algorithm constructs a [=request=] and attempts to deliver it to a [=suitable origin=].
@@ -4918,8 +4818,7 @@ To <dfn>attempt to deliver a report</dfn> given an [=attribution report=] |repor
 1. Let |url| be the result of executing [=generate an attribution report URL=] on |report|.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
 1. If |data| is an error, return.
-1. Let |headers| be the result of executing [=generate attribution report headers=].
-1. Let |request| be the result of executing [=create a report request=] on |url|, |data|, and |headers|.
+1. Let |request| be the result of executing [=create a report request=] on |url| and |data|.
 1. [=Queue a task=] to [=fetch=] |request|.
 
 Issue(220): This fetch should use a network partition key for an opaque origin.
@@ -4937,8 +4836,7 @@ To <dfn>attempt to deliver a debug report</dfn> given an [=attribution report=] 
     [=generate an attribution report URL/isDebugReport=] set to true.
 1. Let |data| be the result of executing [=serialize an attribution report=] on |report|.
 1. If |data| is an error, return.
-1. Let |headers| be the result of executing [=generate attribution report headers=].
-1. Let |request| be the result of executing [=create a report request=] on |url|, |data|, and |headers|.
+1. Let |request| be the result of executing [=create a report request=] on |url| and |data|.
 1. [=Fetch=] |request|.
 
 <h3 id="issue-verbose-debug-report-request">Issuing a verbose debug request</h3>
@@ -5054,86 +4952,6 @@ an [=origin=] |contextOrigin|, and a [=boolean=] |fenced|:
         : [=verbose debug data/body=]
         :: |body|
     1. Run [=obtain and deliver a verbose debug report=] with « |data| », |origin|, and |fenced|.
-
-# Report Verification Algorithms # {#report-verification}
-
-"<dfn><code>Sec-Attribution-Reporting-Private-State-Token</code></dfn>" is a [=structured header=] used
-to orchestrate report verification.
-
-* When [=setting trigger verification request headers=], the field is a collection of unsigned masked tokens formatted as a [=structured header/list=] of [=structured header/string=].
-* When [=receiving trigger verification tokens=], the field is a collection of signed masked tokens formatted as a [=structured header/list=] of [=structured header/string=].
-* When [=generating attribution report headers=], the header field is a single signed unmasked token formatted as a [=structured header/string=].
-
-<h3 id="initiate-trigger-verification">Initiate trigger verification</h3>
-
-To <dfn noexport>set trigger verification request headers</dfn> given a [=request=] |request|
-and a [=suitable origin=] |destination|:
-
-1. Let |issuer| be |request|'s [=request/URL=]'s [=url/origin=].
-1. If |issuer| is not [=check if an origin is suitable|suitable=], return.
-1. Let (|issuerKeys|, |pretokens|, |cryptoProtocolVersion|) be the result of [=looking up the key commitments=] for |issuer|.
-1. If |issuerKeys| is null, return.
-1. Let |ids| be a new [=list=].
-1. Let |base64EncodedMaskedMessages| be a new [=list=].
-1. While |ids|'s [=list/size=] is less than [=verification tokens per trigger=]:
-    1. Let |id| be the result of [=generating a random UUID=].
-    1. [=list/Append=] |id| to |ids|.
-    1. Let |message| be the [=string/concatenate|concatenation=] of |id| and |destination|.
-    1. Let |maskedMessage| be the result of [=generating masked tokens=] with |issuerKeys| and |message|.
-    1. Let |base64EncodedMaskedMessage| be the [=forgiving-base64 encoding=] of |maskedMessage|.
-    1. Let |fieldValue| be the result of [=structured header/serializing a string=] with |base64EncodedMaskedMessage|.
-    1. [=list/Append=] |fieldValue| to |base64EncodedMaskedMessages|.
-1. Let |request|'s [=request/trigger verification metadata=] be a [=trigger verification metadata=] with the items:
-    : [=trigger verification metadata/pretokens=]
-    :: |pretokens|
-    : [=trigger verification metadata/IDs=]
-    :: |ids|
-1. [=header list/Set a structured field value=] given
-    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", |base64EncodedMaskedMessages|)
-    in |request|'s [=request/header list=].
-1. [=header list/Set a structured field value=] given
-    ("<code>[=Sec-Private-State-Token-Crypto-Version=]</code>", |cryptoProtocolVersion|)
-    in |request|'s [=request/header list=].
-
-Issue: Link to a generating masked tokens algorithm that receives messages.
-
-<h3 id="handle-trigger-verification">Handle trigger verification</h3>
-
-To <dfn noexport>receive trigger verification tokens</dfn> given an
-[=url/origin=] |issuer|, a [=header list=], |headers|, and a
-possibly null [=trigger verification metadata=] |metadata|:
-
-1. If |metadata| is null, return a new [=list=].
-1. If |metadata|'s [=trigger verification metadata/IDs=]'s [=list/size=] is not equal to [=verification tokens per trigger=], return a new [=list=].
-1. Let |pretokens| be |metadata|'s [=trigger verification metadata/pretokens=].
-1. Let |issuerKeys| be the result of [=looking up the key commitments=] for |issuer|.
-1. If |issuerKeys| is null, return a new [=list=].
-1. Let |fieldValue| be the result of [=header list/getting a structured field value=] given
-    ("<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>", "`list`") from |response|'s [=response/header list=].
-1. Let |base64EncodedMaskedTokens| be the result of [=structured header/parsing a list=] with |fieldValue|.
-1. [=header list/delete|Delete=] "<code>[=Sec-Attribution-Reporting-Private-State-Token=]</code>" from |response|'s [=response/header list=].
-1. If |base64EncodedMaskedTokens|'s [=list/size=] is greater than |metadata|'s [=trigger verification metadata/IDs=]'s [=list/size=], return a new [=list=].
-1. Let |base64EncodedPrivateStateTokens| be a new [=list=].
-1. [=list/iterate|For each=] |base64EncodedMaskedToken| of |base64EncodedMaskedTokens|:
-    1. Let |base64EncodedMaskedTokenValue| be the result of [=structured header/parsing a string=] with |base64EncodedMaskedToken|.
-    1. Let |maskedToken| be the [=forgiving-base64 decoding=] of |base64EncodedMaskedTokenValue|.
-    1. Let |token| be the result of [=unmasking tokens=] given |issuerKeys|, |pretokens|, and |maskedToken|.
-    1. If |token| is null, return a new [=list=].
-    1. Let |privateStateToken| be the result of running a cryptographic redemption procedure with |token|.
-    1. If |privateStateToken| is null, return a new [=list=].
-    1. Let |base64EncodedPrivateStateToken| be the [=forgiving-base64 encoding=] of |privateStateToken|.
-    1. [=list/Append=] |base64EncodedPrivateStateToken| to |base64EncodedPrivateStateTokens|.
-1. Let |triggerVerifications| be a new [=list=].
-1. [=set/iterate|For each=] integer |i| of |base64EncodedPrivateStateTokens|'s [=list/get the indices|indices=]:
-    1. Let |triggerVerification| be a [=trigger verification=] with the items:
-        : [=trigger verification/token=]
-        :: |base64EncodedPrivateStateTokens|[i]
-        : [=trigger verification/id=]
-        :: |metadata|'s [=trigger verification metadata/IDs=][i]
-    1. [=list/Append=] |triggerVerification| to |triggerVerifications|.
-1. Return |triggerVerifications|.
-
-Issue: Specify the cryptographic redemption procedure.
 
 # User-Agent Automation # {#automation}
 
