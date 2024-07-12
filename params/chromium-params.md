@@ -13,11 +13,11 @@ Chromium's implementation assigns the following values:
 | [Randomized null attribution report rate including source registration time][] | [0.008][randomized null attribution report rate including source registration time value] |
 | [Max event-level reports per attribution destination][] | [1024][max event-level reports per attribution destination value] |
 | [Max aggregatable attribution reports per attribution destination][] | [1024][max aggregatable attribution reports per attribution destination value] |
-| [Max aggregatable reports per source][] | [20][max aggregatable attribution reports per source value] attribution reports, 5 debug reports|
+| [Max aggregatable reports per source][] | [20][max aggregatable attribution reports per source value] attribution reports, [5][max aggregatable debug reports per source value] debug reports |
 | [Max destinations covered by unexpired sources][] | [100][max destinations covered by unexpired sources value] |
 | [Destination rate-limit window][] | [1 minute][destination rate-limit window value]
 | [Max destinations per rate-limit window][] | [50][max destinations per rate-limit window per reporting site] per reporting site, [200][max destinations per rate-limit window total] total
-| [Max destinations per reporting site per day][] | [100]
+| [Max destinations per reporting site per day][] | [100][max destinations per reporting site per day value] |
 | [Max source reporting origins per rate-limit window][] | [100][max source reporting origins per rate-limit window value] |
 | [Max source reporting origins per source reporting site][] | [1][max source reporting origins per source reporting site value]
 | [Origin rate-limit window][] | [1 day][origin rate-limit window value]
@@ -42,6 +42,7 @@ Chromium's implementation assigns the following values:
 [max aggregatable attribution reports per attribution destination value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=90;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Max aggregatable reports per source]: https://wicg.github.io/attribution-reporting-api/#max-aggregatable-reports-per-source
 [max aggregatable attribution reports per source value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=111;drc=3733a639d724a4353463a872605119d11a1e4d37
+[max aggregatable debug reports per source value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=141;drc=6b1b7d2e42fd92bbccba2026d97ae9e9b9b6e777
 [Max destinations covered by unexpired sources]: https://wicg.github.io/attribution-reporting-api/#max-destinations-covered-by-unexpired-sources
 [max destinations covered by unexpired sources value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=127;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Destination rate-limit window]: https://wicg.github.io/attribution-reporting-api/#destination-rate-limit-window
@@ -50,6 +51,7 @@ Chromium's implementation assigns the following values:
 [Max destinations per rate-limit window per reporting site]: https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:content/browser/attribution_reporting/destination_throttler.h;l=29;drc=1890f3f74c8100eb1a3e945d34d6fd576d2a9061
 [Max destinations per rate-limit window total]: https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:content/browser/attribution_reporting/destination_throttler.h;l=28;drc=1890f3f74c8100eb1a3e945d34d6fd576d2a9061
 [Max destinations per reporting site per day]: https://wicg.github.io/attribution-reporting-api/#max-destinations-per-reporting-site-per-day
+[max destinations per reporting site per day value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=123;drc=6b1b7d2e42fd92bbccba2026d97ae9e9b9b6e777
 [Max source reporting origins per rate-limit window]: https://wicg.github.io/attribution-reporting-api/#max-source-reporting-origins-per-rate-limit-window
 [max source reporting origins per rate-limit window value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=28;drc=3733a639d724a4353463a872605119d11a1e4d37
 [Max source reporting origins per source reporting site]: https://wicg.github.io/attribution-reporting-api/#max-source-reporting-origins-per-source-reporting-site
