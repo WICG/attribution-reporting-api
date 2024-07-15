@@ -18,5 +18,5 @@ export const Chromium: Readonly<VendorSpecificValues> = {
     [SourceType.navigation]: 11.5,
   },
   maxSettableEventLevelEpsilon: 14,
-  maxTriggerStateCardinality: Infinity,
+  maxTriggerStateCardinality: 2 ** 32 - 1,
 }
