@@ -2721,7 +2721,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['max_event_states'],
-        msg: 'must be in the range [1, Infinity]',
+        msg: 'must be in the range [1, 4294967295]',
       },
     ],
   },
@@ -2736,7 +2736,7 @@ const testCases: TestCase[] = [
     expectedErrors: [
       {
         path: ['max_event_states'],
-        msg: 'must be in the range [1, Infinity]',
+        msg: 'must be in the range [1, 4294967295]',
       },
     ],
   },
