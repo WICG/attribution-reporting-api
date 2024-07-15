@@ -1,4 +1,4 @@
-import { SourceType } from '../source-type'
+import { SourceType, parseSourceType } from '../source-type'
 import { ValidationResult } from './context'
 import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
@@ -26,11 +26,7 @@ const effective = document.querySelector('#effective')!
 const flexCheckbox = form.elements.namedItem('flex') as HTMLInputElement
 
 function sourceType(): SourceType {
-  const v = sourceTypeRadios.value
-  if (v in SourceType) {
-    return v as SourceType
-  }
-  throw new TypeError()
+  return parseSourceType(sourceTypeRadios.value)
 }
 
 function transformResult<T>(

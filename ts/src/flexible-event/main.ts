@@ -4,7 +4,7 @@ import { readFileSync } from 'fs'
 import { Issue } from '../header-validator/context'
 import { Maybe } from '../header-validator/maybe'
 import { validateSource } from '../header-validator/validate-json'
-import { SourceType } from '../source-type'
+import { SourceType, parseSourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Config, PerTriggerDataConfig } from './privacy'
 
@@ -14,13 +14,6 @@ type Wrapped<T> = { value: T }
 
 function commaSeparatedInts(str: string): Wrapped<number[]> {
   return { value: str.split(',').map((v) => Number(v)) }
-}
-
-function parseSourceType(str: string): SourceType {
-  if (!(str in SourceType)) {
-    throw new Error('unknown source type')
-  }
-  return str as SourceType
 }
 
 interface Arguments {
