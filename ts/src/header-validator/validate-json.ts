@@ -359,11 +359,9 @@ function set<T extends number | string, C extends Context = Context>(
   f: CtxFunc<C, Json, Maybe<T>>,
   opts?: SetOpts
 ): Maybe<Set<T>> {
-  // TODO(https://github.com/WICG/attribution-reporting-api/issues/1321): Size
-  // checks should be performed on the resulting set, not on the list.
   return list(j, ctx)
-    .filter((js) => isLengthValid(js.length, ctx, opts))
     .flatMap((js) => validate.set(js.entries(), ctx, f, opts?.requireDistinct))
+    .filter((set) => isLengthValid(set.size, ctx, opts))
 }
 
 type ArrayOpts = LengthOpts & {
