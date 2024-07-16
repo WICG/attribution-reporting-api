@@ -23,13 +23,13 @@ validator: $(OUT_DIR)/validate-headers.html $(OUT_DIR)/validate-headers.js $(OUT
 $(OUT_DIR)/validate-headers.html: ts/src/header-validator/index.html $(OUT_DIR)
 	@ cp $< $@
 
-$(OUT_DIR)/validate-headers.js: ts/dist/header-validator/main.js $(OUT_DIR)
+$(OUT_DIR)/validate-headers.js: ts/dist/header-validator/index.js $(OUT_DIR)
 	@ cp $< $@
 
 $(OUT_DIR):
 	@ mkdir -p $@
 
-ts/dist/header-validator/main.js ts/dist/header-validator/filters-main.js: ts/package.json ts/tsconfig.json ts/webpack.config.js ts/src/*.ts ts/src/*/*.ts
+ts/dist/header-validator/index.js ts/dist/header-validator/filters-main.js: ts/package.json ts/tsconfig.json ts/webpack.config.js ts/src/*.ts ts/src/*/*.ts
 	@ npm ci --prefix ./ts
 	@ npm run pack --prefix ./ts
 
