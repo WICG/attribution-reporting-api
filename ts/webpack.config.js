@@ -2,7 +2,7 @@ const path = require('path')
 
 module.exports = {
   entry: {
-    main: './src/header-validator/index.ts',
+    index: './src/header-validator/index.ts',
     'filters-main': './src/header-validator/filters-index.ts',
   },
   module: {
