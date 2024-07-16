@@ -2911,31 +2911,19 @@ const testCases: TestCase[] = [
 
 testCases.forEach((tc) =>
   jsontest.run(tc, () => {
-    const result = validateSource(
-      tc.json,
-      { ...vsv.Chromium, ...tc.vsv },
-      tc.sourceType ?? SourceType.navigation,
-      tc.parseFullFlex ?? false,
-      tc.noteInfoGain ?? false,
-      tc.parseScopes ?? false
-    )
+    const opts = {
+      vsv: { ...vsv.Chromium, ...tc.vsv },
+      sourceType: tc.sourceType ?? SourceType.navigation,
+      fullFlex: tc.parseFullFlex,
+      noteInfoGain: tc.noteInfoGain,
+      scopes: tc.parseScopes,
+    }
+
+    const result = validateSource(tc.json, opts)
 
     if (result[1].value !== undefined) {
-      const str = JSON.stringify(
-        serializeSource(
-          result[1].value,
-          tc.parseFullFlex ?? false,
-          tc.parseScopes ?? false
-        )
-      )
-      const [, reparsed] = validateSource(
-        str,
-        { ...vsv.Chromium, ...tc.vsv },
-        tc.sourceType ?? SourceType.navigation,
-        tc.parseFullFlex ?? false,
-        tc.noteInfoGain ?? false,
-        tc.parseScopes ?? false
-      )
+      const str = serializeSource(result[1].value, opts)
+      const [, reparsed] = validateSource(str, opts)
       assert.deepEqual(reparsed, result[1], str)
     }
 

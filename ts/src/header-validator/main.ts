@@ -1,11 +1,8 @@
 import { parse } from 'ts-command-line-args'
 import { readFileSync } from 'fs'
 
-import { Maybe } from './maybe'
-import { ValidationResult } from './context'
-import { validateSource, validateTrigger } from './validate-json'
+import * as validator from './validator'
 import { SourceType, parseSourceType } from '../source-type'
-import { serializeSource, serializeTrigger } from './to-json'
 import * as vsv from '../vendor-specific-values'
 
 interface Arguments {
@@ -90,38 +87,27 @@ if (options.file !== undefined) {
   })
 }
 
-function mapResult<T, U>(
-  [result, value]: [ValidationResult, Maybe<T>],
-  f: (value: T) => U
-): [ValidationResult, Maybe<U>] {
-  return [result, value.map(f)]
-}
-
-const [result, value] =
+const out = validator.validate<unknown>(
+  options.input!,
   options.sourceType === undefined
-    ? mapResult(
-        validateTrigger(options.input!, vsv.Chromium, options.fullFlex),
-        (value) => serializeTrigger(value, options.fullFlex)
-      )
-    : mapResult(
-        validateSource(
-          options.input!,
-          vsv.Chromium,
-          options.sourceType,
-          options.fullFlex
-        ),
-        (value) => serializeSource(value, options.fullFlex)
-      )
+    ? validator.trigger({
+        vsv: vsv.Chromium,
+        fullFlex: options.fullFlex,
+      })
+    : validator.source({
+        vsv: vsv.Chromium,
+        fullFlex: options.fullFlex,
+        sourceType: options.sourceType,
+      })
+)
 
 if (!options.silent) {
-  const out: ValidationResult & { value?: object } = result
-  value.peek((value) => (out.value = value))
   console.log(JSON.stringify(out, /*replacer=*/ null, '  '))
 }
 
 if (
-  result.errors.length > 0 ||
-  (options.failOnWarnings && result.warnings.length > 0)
+  out.errors.length > 0 ||
+  (options.failOnWarnings && out.warnings.length > 0)
 ) {
   process.exit(1)
 }

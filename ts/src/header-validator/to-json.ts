@@ -16,7 +16,7 @@ function ifNotNull<K extends string, U, V>(
   return obj
 }
 
-export type CommonDebug = {
+type CommonDebug = {
   debug_key?: string
   debug_reporting: boolean
 }
@@ -28,7 +28,7 @@ function serializeCommonDebug(c: parsed.CommonDebug): CommonDebug {
   }
 }
 
-export type Priority = {
+type Priority = {
   priority: string
 }
 
@@ -36,7 +36,7 @@ function serializePriority(p: parsed.Priority): Priority {
   return { priority: p.priority.toString() }
 }
 
-export type KeyPiece = {
+type KeyPiece = {
   key_piece: string
 }
 
@@ -44,7 +44,7 @@ function serializeKeyPiece(p: parsed.KeyPiece): KeyPiece {
   return { key_piece: `0x${p.keyPiece.toString(16)}` }
 }
 
-export type AggregatableDebugReportingData = KeyPiece & {
+type AggregatableDebugReportingData = KeyPiece & {
   types: string[]
   value: number
 }
@@ -60,7 +60,7 @@ function serializeAggregatableDebugReportingData(
   }
 }
 
-export type AggregatableDebugReportingConfig = KeyPiece & {
+type AggregatableDebugReportingConfig = KeyPiece & {
   aggregation_coordinator_origin: string
   debug_data: AggregatableDebugReportingData[]
 }
@@ -79,7 +79,7 @@ function serializeAggregatableDebugReportingConfig(
   }
 }
 
-export type EventReportWindows = {
+type EventReportWindows = {
   event_report_windows: { start_time: number; end_times: number[] }
 }
 
@@ -94,7 +94,7 @@ function serializeEventReportWindows(
   }
 }
 
-export type TriggerData = {
+type TriggerData = {
   trigger_data: number[]
 }
 
@@ -102,7 +102,7 @@ function serializeTriggerData(d: Set<number>): TriggerData {
   return { trigger_data: Array.from(d) }
 }
 
-export type TriggerSpec = EventReportWindows &
+type TriggerSpec = EventReportWindows &
   TriggerData & {
     summary_buckets: number[]
     summary_operator: string
@@ -118,7 +118,7 @@ function serializeTriggerSpec(ts: parsed.TriggerSpec): TriggerSpec {
   }
 }
 
-export type SourceAggregatableDebugReportingConfig =
+type SourceAggregatableDebugReportingConfig =
   AggregatableDebugReportingConfig & {
     budget: number
   }
@@ -133,12 +133,12 @@ function serializeSourceAggregatableDebugReportingConfig(
   }
 }
 
-export type NotFullFlexSource = Partial<EventReportWindows> & {
+type NotFullFlexSource = Partial<EventReportWindows> & {
   trigger_data: number[]
   trigger_specs?: never
 }
 
-export type FullFlexSource = {
+type FullFlexSource = {
   event_report_windows?: never
   trigger_data?: never
   trigger_specs: TriggerSpec[]
@@ -168,7 +168,7 @@ function serializeFlexSource(
   throw new TypeError()
 }
 
-export type Source = CommonDebug &
+type Source = CommonDebug &
   Priority &
   (NotFullFlexSource | FullFlexSource) & {
     aggregation_keys: { [key: string]: string }
@@ -187,12 +187,16 @@ export type Source = CommonDebug &
     max_event_states?: number
   }
 
+export interface Options {
+  fullFlex?: boolean | undefined
+  scopes?: boolean | undefined
+}
+
 export function serializeSource(
   s: parsed.Source,
-  fullFlex: boolean,
-  scopes: boolean = false
-): Source {
-  const scopeFields = scopes
+  opts: Readonly<Options>
+): string {
+  const scopeFields = opts.scopes
     ? {
         attribution_scopes: Array.from(s.attributionScopes),
         ...ifNotNull(
@@ -204,10 +208,10 @@ export function serializeSource(
       }
     : {}
 
-  return {
+  const source: Source = {
     ...serializeCommonDebug(s),
     ...serializePriority(s),
-    ...serializeFlexSource(s, fullFlex),
+    ...serializeFlexSource(s, opts.fullFlex ?? false),
 
     aggregation_keys: Object.fromEntries(
       Array.from(s.aggregationKeys.entries(), ([key, val]) => [
@@ -238,9 +242,11 @@ export function serializeSource(
     ),
     ...scopeFields,
   }
+
+  return stringify(source)
 }
 
-export type FilterConfig = {
+type FilterConfig = {
   [key: string]: number | string[]
 }
 
@@ -256,7 +262,7 @@ function serializeFilterConfig(fc: parsed.FilterConfig): FilterConfig {
   return obj
 }
 
-export type FilterPair = {
+type FilterPair = {
   filters: FilterConfig[]
   not_filters: FilterConfig[]
 }
@@ -268,7 +274,7 @@ function serializeFilterPair(fp: parsed.FilterPair): FilterPair {
   }
 }
 
-export type DedupKey = {
+type DedupKey = {
   deduplication_key?: string
 }
 
@@ -276,7 +282,7 @@ function serializeDedupKey(fp: parsed.DedupKey): DedupKey {
   return ifNotNull('deduplication_key', fp.dedupKey, (v) => v.toString())
 }
 
-export type EventTriggerDatum = FilterPair &
+type EventTriggerDatum = FilterPair &
   Priority &
   DedupKey & {
     trigger_data: string
@@ -302,7 +308,7 @@ function serializeEventTriggerDatum(
   return obj
 }
 
-export type AggregatableDedupKey = FilterPair & DedupKey
+type AggregatableDedupKey = FilterPair & DedupKey
 
 function serializeAggregatableDedupKey(
   d: parsed.AggregatableDedupKey
@@ -313,7 +319,7 @@ function serializeAggregatableDedupKey(
   }
 }
 
-export type AggregatableTriggerDatum = FilterPair &
+type AggregatableTriggerDatum = FilterPair &
   KeyPiece & {
     source_keys: string[]
   }
@@ -329,14 +335,14 @@ function serializeAggregatableTriggerDatum(
   }
 }
 
-export type AggregatableValues = {
+type AggregatableValues = {
   [key: string]: {
     value: number
     filtering_id: string
   }
 }
 
-export type AggregatableValuesConfiguration = FilterPair & {
+type AggregatableValuesConfiguration = FilterPair & {
   values: AggregatableValues
 }
 
@@ -356,7 +362,7 @@ function serializeAggregatableValuesConfiguration(
   }
 }
 
-export type Trigger = CommonDebug &
+type Trigger = CommonDebug &
   FilterPair & {
     aggregatable_deduplication_keys: AggregatableDedupKey[]
     aggregatable_source_registration_time: string
@@ -372,16 +378,15 @@ export type Trigger = CommonDebug &
 
 export function serializeTrigger(
   t: parsed.Trigger,
-  fullFlex: boolean,
-  scopes: boolean = false
-): Trigger {
-  const scopeFields = scopes
+  opts: Readonly<Options>
+): string {
+  const scopeFields = opts.scopes
     ? {
         attribution_scopes: Array.from(t.attributionScopes),
       }
     : {}
 
-  return {
+  const trigger: Trigger = {
     ...serializeCommonDebug(t),
     ...serializeFilterPair(t),
 
@@ -407,7 +412,7 @@ export function serializeTrigger(
     aggregation_coordinator_origin: t.aggregationCoordinatorOrigin,
 
     event_trigger_data: Array.from(t.eventTriggerData, (d) =>
-      serializeEventTriggerDatum(d, fullFlex)
+      serializeEventTriggerDatum(d, opts.fullFlex ?? false)
     ),
 
     ...ifNotNull('trigger_context_id', t.triggerContextID, (v) => v),
@@ -420,4 +425,10 @@ export function serializeTrigger(
 
     ...scopeFields,
   }
+
+  return stringify(trigger)
+}
+
+function stringify(v: object): string {
+  return JSON.stringify(v, /*replacer=*/ null, '  ')
 }

@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert'
 import * as testutil from './util.test'
 import { Maybe } from './maybe'
-import { Eligible, validateEligible } from './validate-eligible'
+import { Eligible, validate } from './validate-eligible'
 
 type TestCase = testutil.TestCase & {
   input: string
@@ -114,7 +114,7 @@ const tests: TestCase[] = [
 
 tests.forEach((tc) =>
   testutil.run(tc, /*name=*/ tc.input, () => {
-    const [validationResult, value] = validateEligible(tc.input)
+    const [validationResult, value] = validate(tc.input)
     if (tc.expected !== undefined) {
       assert.deepEqual(value, tc.expected)
     }

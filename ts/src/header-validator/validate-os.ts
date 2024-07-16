@@ -1,6 +1,6 @@
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
-import * as validate from './validate'
+import { ItemErrorAction, array } from './validate'
 import { param } from './validate-structured'
 import {
   InnerList,
@@ -43,9 +43,7 @@ function parseItem(member: InnerList | Item, ctx: Context): Maybe<OsItem> {
   })
 }
 
-export function validateOsRegistration(
-  str: string
-): [ValidationResult, Maybe<OsItem[]>] {
+export function validate(str: string): [ValidationResult, Maybe<OsItem[]>] {
   const ctx = new Context()
 
   let list
@@ -56,16 +54,11 @@ export function validateOsRegistration(
     return [ctx.finish(msg), Maybe.None]
   }
 
-  const items = validate.array(
-    list.entries(),
-    ctx,
-    parseItem,
-    validate.ItemErrorAction.ignore
-  )
+  const items = array(list.entries(), ctx, parseItem, ItemErrorAction.ignore)
   return [ctx.finish(), items]
 }
 
-export function serializeOsRegistration(items: OsItem[]): string {
+export function serialize(items: OsItem[]): string {
   const list: List = []
   for (const item of items) {
     list.push([

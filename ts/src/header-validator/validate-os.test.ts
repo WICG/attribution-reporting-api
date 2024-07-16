@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert'
 import * as testutil from './util.test'
 import { Maybe } from './maybe'
-import { OsItem, validateOsRegistration } from './validate-os'
+import { OsItem, validate } from './validate-os'
 
 type TestCase = testutil.TestCase & {
   input: string
@@ -133,7 +133,7 @@ const tests: TestCase[] = [
 
 tests.forEach((tc) =>
   testutil.run(tc, /*name=*/ tc.input, () => {
-    const [validationResult, value] = validateOsRegistration(tc.input)
+    const [validationResult, value] = validate(tc.input)
     if (tc.expected !== undefined) {
       assert.deepEqual(value, tc.expected)
     }
