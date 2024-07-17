@@ -32,43 +32,40 @@ const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const UINT32_MAX: number = 2 ** 32 - 1
 
-class GenericContext extends Context {
-  constructor(readonly parseFullFlex: boolean) {
+class GenericContext<
+  Opts extends GenericOptions = GenericOptions,
+> extends Context {
+  constructor(readonly opts: Readonly<Opts>) {
     super()
   }
 }
 
-class RegistrationContext extends GenericContext {
-  constructor(
-    readonly vsv: Readonly<VendorSpecificValues>,
-    parseFullFlex: boolean,
-    readonly aggregatableDebugTypes: Readonly<[string, ...string[]]>,
-    readonly parseScopes: boolean
-  ) {
-    super(parseFullFlex)
-  }
+export interface GenericOptions {
+  fullFlex?: boolean | undefined
+}
 
-  isDebugTypeSupported(s: string): boolean {
-    return this.aggregatableDebugTypes.includes(s)
+export interface RegistrationOptions extends GenericOptions {
+  vsv: VendorSpecificValues
+  scopes?: boolean | undefined
+}
+
+export interface SourceOptions extends RegistrationOptions {
+  sourceType: SourceType
+  noteInfoGain?: boolean | undefined
+}
+
+class RegistrationContext<
+  Opts extends RegistrationOptions = RegistrationOptions,
+> extends GenericContext<Opts> {
+  constructor(
+    opts: Readonly<Opts>,
+    readonly aggregatableDebugTypes: Readonly<[string, ...string[]]>
+  ) {
+    super(opts)
   }
 }
 
-class SourceContext extends RegistrationContext {
-  constructor(
-    vsv: VendorSpecificValues,
-    parseFullFlex: boolean,
-    readonly sourceType: SourceType,
-    readonly noteInfoGain: boolean,
-    parseScopes: boolean
-  ) {
-    super(
-      vsv,
-      parseFullFlex,
-      constants.sourceAggregatableDebugTypes,
-      parseScopes
-    )
-  }
-}
+type SourceContext = RegistrationContext<SourceOptions>
 
 const {
   exclusive,
@@ -244,7 +241,9 @@ function maxEventLevelReports(
   ctx: SourceContext
 ): Maybe<number> {
   return j === undefined
-    ? some(constants.defaultEventLevelAttributionsPerSource[ctx.sourceType])
+    ? some(
+        constants.defaultEventLevelAttributionsPerSource[ctx.opts.sourceType]
+      )
     : number(j, ctx)
         .filter(isInteger, ctx)
         .filter(
@@ -521,7 +520,7 @@ function aggregatableDebugType(
   ctx: RegistrationContext
 ): Maybe<string> {
   return string(j, ctx).peek((s) => {
-    if (!ctx.isDebugTypeSupported(s)) {
+    if (!ctx.aggregatableDebugTypes.includes(s)) {
       ctx.warning('unknown type')
     }
   })
@@ -654,7 +653,7 @@ function expiry(j: Json, ctx: SourceContext): Maybe<number> {
     .map(clamp, ctx, ...constants.validSourceExpiryRange)
     .map(Number) // guaranteed to fit based on the clamping
     .map((n) => {
-      switch (ctx.sourceType) {
+      switch (ctx.opts.sourceType) {
         case SourceType.event: {
           const r = roundAwayFromZeroToNearestDay(n)
           if (n !== r) {
@@ -691,7 +690,7 @@ function defaultEventReportWindows(
   ctx: SourceContext
 ): EventReportWindows {
   const endTimes = constants.defaultEarlyEventLevelReportWindows[
-    ctx.sourceType
+    ctx.opts.sourceType
   ].filter((e) => e < end)
   endTimes.push(end)
   return { startTime: 0, endTimes }
@@ -710,7 +709,7 @@ function eventLevelEpsilon(j: Json, ctx: SourceContext): Maybe<number> {
     isInRange,
     ctx,
     0,
-    ctx.vsv.maxSettableEventLevelEpsilon
+    ctx.opts.vsv.maxSettableEventLevelEpsilon
   )
 }
 
@@ -733,10 +732,10 @@ function channelCapacity(s: Source, ctx: SourceContext): void {
 
   const out = config.computeConfigData(
     s.eventLevelEpsilon,
-    ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
+    ctx.opts.vsv.maxEventLevelChannelCapacityPerSource[ctx.opts.sourceType]
   )
 
-  const maxTriggerStates = ctx.vsv.maxTriggerStateCardinality
+  const maxTriggerStates = ctx.opts.vsv.maxTriggerStateCardinality
 
   if (out.numStates > maxTriggerStates) {
     ctx.error(
@@ -744,14 +743,17 @@ function channelCapacity(s: Source, ctx: SourceContext): void {
     )
   }
 
-  if (ctx.sourceType === SourceType.event && out.numStates > s.maxEventStates) {
+  if (
+    ctx.opts.sourceType === SourceType.event &&
+    out.numStates > s.maxEventStates
+  ) {
     ctx.error(
       `${numStatesWords} (${out.numStates}) exceeds max event states (${s.maxEventStates})`
     )
   }
 
   const maxInfoGain =
-    ctx.vsv.maxEventLevelChannelCapacityPerSource[ctx.sourceType]
+    ctx.opts.vsv.maxEventLevelChannelCapacityPerSource[ctx.opts.sourceType]
   const infoGainMsg = `information gain${
     s.attributionScopeLimit !== null ? ' for attribution scope' : ''
   }: ${out.infoGain.toFixed(2)}`
@@ -759,14 +761,14 @@ function channelCapacity(s: Source, ctx: SourceContext): void {
   if (out.infoGain > maxInfoGain) {
     ctx.error(
       `${infoGainMsg} exceeds max event-level channel capacity per ${
-        ctx.sourceType
+        ctx.opts.sourceType
       } source (${maxInfoGain.toFixed(2)})`
     )
-  } else if (ctx.noteInfoGain) {
+  } else if (ctx.opts.noteInfoGain) {
     ctx.note(infoGainMsg)
   }
 
-  if (ctx.noteInfoGain) {
+  if (ctx.opts.noteInfoGain) {
     ctx.note(`${numStatesWords}: ${out.numStates}`)
     ctx.note(`randomized trigger rate: ${out.flipProb.toFixed(7)}`)
   }
@@ -992,7 +994,7 @@ function defaultTriggerSpecs(
           Array.from(
             {
               length: Number(
-                constants.defaultTriggerDataCardinality[ctx.sourceType]
+                constants.defaultTriggerDataCardinality[ctx.opts.sourceType]
               ),
             },
             (_, i) => i
@@ -1107,7 +1109,7 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
         {
           trigger_data: (j) =>
             triggerSpecsFromTriggerData(j, ctx, triggerSpecsDeps),
-          ...(ctx.parseFullFlex
+          ...(ctx.opts.fullFlex
             ? {
                 trigger_specs: (j) => triggerSpecs(j, ctx, triggerSpecsDeps),
               }
@@ -1116,7 +1118,7 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
         defaultTriggerSpecsVal
       )(j, ctx)
 
-      const attributionScopeLimitVal = ctx.parseScopes
+      const attributionScopeLimitVal = ctx.opts.scopes
         ? field('attribution_scope_limit', withDefault(positiveUint32, null))(
             j,
             ctx
@@ -1134,7 +1136,10 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
         destination: field('destination', required(destination)),
         eventLevelEpsilon: field(
           'event_level_epsilon',
-          withDefault(eventLevelEpsilon, ctx.vsv.maxSettableEventLevelEpsilon)
+          withDefault(
+            eventLevelEpsilon,
+            ctx.opts.vsv.maxSettableEventLevelEpsilon
+          )
         ),
         expiry: () => expiryVal,
         filterData: field('filter_data', withDefault(filterData, new Map())),
@@ -1156,14 +1161,14 @@ function source(j: Json, ctx: SourceContext): Maybe<Source> {
           withDefault(int64, 0n)
         ),
         attributionScopeLimit: () => attributionScopeLimitVal,
-        attributionScopes: ctx.parseScopes
+        attributionScopes: ctx.opts.scopes
           ? field(
               'attribution_scopes',
               withDefault(attributionScopesForSource, new Set<string>()),
               attributionScopeLimitVal
             )
           : () => some(new Set<string>()),
-        maxEventStates: ctx.parseScopes
+        maxEventStates: ctx.opts.scopes
           ? field(
               'max_event_states',
               withDefault(maxEventStates, constants.defaultMaxEventStates),
@@ -1362,7 +1367,7 @@ function eventTriggerData(
     struct(j, ctx, {
       triggerData: field('trigger_data', withDefault(uint64, 0n)),
 
-      value: ctx.parseFullFlex
+      value: ctx.opts.fullFlex
         ? field('value', withDefault(eventTriggerValue, 1))
         : () => some(1),
 
@@ -1386,7 +1391,7 @@ function maxEventStates(
 ): Maybe<number> {
   return number(j, ctx)
     .filter(isInteger, ctx)
-    .filter(isInRange, ctx, 1, ctx.vsv.maxTriggerStateCardinality)
+    .filter(isInRange, ctx, 1, ctx.opts.vsv.maxTriggerStateCardinality)
     .filter((n) => {
       if (attributionScopeLimit.value === undefined) {
         ctx.error(
@@ -1555,12 +1560,13 @@ function aggregationCoordinatorOrigin(
   ctx: RegistrationContext
 ): Maybe<string> {
   return j === undefined
-    ? some(ctx.vsv.aggregationCoordinatorOrigins[0])
+    ? some(ctx.opts.vsv.aggregationCoordinatorOrigins[0])
     : string(j, ctx)
         .flatMap(suitableOrigin, ctx)
         .filter((s) => {
-          if (!ctx.vsv.aggregationCoordinatorOrigins.includes(s)) {
-            const allowed = ctx.vsv.aggregationCoordinatorOrigins.join(', ')
+          if (!ctx.opts.vsv.aggregationCoordinatorOrigins.includes(s)) {
+            const allowed =
+              ctx.opts.vsv.aggregationCoordinatorOrigins.join(', ')
             ctx.error(`must be one of the following: ${allowed}`)
             return false
           }
@@ -1631,7 +1637,7 @@ function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
           withDefault(struct, null),
           aggregatableDebugReportingConfig
         ),
-        attributionScopes: ctx.parseScopes
+        attributionScopes: ctx.opts.scopes
           ? field(
               'attribution_scopes',
               withDefault(set, new Set<string>()),
@@ -1665,20 +1671,10 @@ export function validateJSON<T, C extends Context = Context>(
 
 export function validateSource(
   json: string,
-  vsv: Readonly<VendorSpecificValues>,
-  sourceType: SourceType,
-  parseFullFlex: boolean = false,
-  noteInfoGain: boolean = false,
-  parseScopes: boolean = false
+  opts: Readonly<SourceOptions>
 ): [ValidationResult, Maybe<Source>] {
   return validateJSON(
-    new SourceContext(
-      vsv,
-      parseFullFlex,
-      sourceType,
-      noteInfoGain,
-      parseScopes
-    ),
+    new RegistrationContext(opts, constants.sourceAggregatableDebugTypes),
     json,
     source
   )
@@ -1686,17 +1682,10 @@ export function validateSource(
 
 export function validateTrigger(
   json: string,
-  vsv: Readonly<VendorSpecificValues>,
-  parseFullFlex: boolean = false,
-  parseScopes: boolean = false
+  opts: Readonly<RegistrationOptions>
 ): [ValidationResult, Maybe<Trigger>] {
   return validateJSON(
-    new RegistrationContext(
-      vsv,
-      parseFullFlex,
-      constants.triggerAggregatableDebugTypes,
-      parseScopes
-    ),
+    new RegistrationContext(opts, constants.triggerAggregatableDebugTypes),
     json,
     trigger
   )
@@ -1805,7 +1794,7 @@ function eventLevelReport(
     // TODO: Flex can issue multiple trigger debug keys.
     triggerDebugKey: field('trigger_debug_key', withDefault(uint64, null)),
 
-    triggerSummaryBucket: ctx.parseFullFlex
+    triggerSummaryBucket: ctx.opts.fullFlex
       ? field('trigger_summary_bucket', required(triggerSummaryBucket))
       : () => some(null),
   })
@@ -1813,7 +1802,7 @@ function eventLevelReport(
 
 export function validateEventLevelReport(
   json: string,
-  parseFullFlex: boolean = false
+  fullFlex: boolean = false
 ): [ValidationResult, Maybe<EventLevelReport>] {
-  return validateJSON(new GenericContext(parseFullFlex), json, eventLevelReport)
+  return validateJSON(new GenericContext({ fullFlex }), json, eventLevelReport)
 }

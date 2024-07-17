@@ -1,13 +1,10 @@
 import { SourceType, parseSourceType } from '../source-type'
-import { ValidationResult } from './context'
 import * as vsv from '../vendor-specific-values'
-import { Maybe } from './maybe'
 import { makeLi } from './issue-utils'
-import { validateSource, validateTrigger } from './validate-json'
-import { serializeEligible, validateEligible } from './validate-eligible'
-import { serializeOsRegistration, validateOsRegistration } from './validate-os'
-import { serializeInfo, validateInfo } from './validate-info'
-import { serializeSource, serializeTrigger } from './to-json'
+import * as eligible from './validate-eligible'
+import * as info from './validate-info'
+import * as os from './validate-os'
+import * as validator from './validator'
 
 const form = document.querySelector<HTMLFormElement>('form')!
 const input = form.querySelector<HTMLTextAreaElement>('textarea')!
@@ -29,83 +26,62 @@ function sourceType(): SourceType {
   return parseSourceType(sourceTypeRadios.value)
 }
 
-function transformResult<T>(
-  r: [ValidationResult, Maybe<T>],
-  f: (v: T) => string
-): [ValidationResult, Maybe<string>] {
-  return [r[0], r[1].map(f)]
-}
-
 function validate(): void {
   sourceTypeFieldset.disabled = true
   flexCheckbox.disabled = true
 
-  let result
+  let v: validator.Validator<unknown>
+
   switch (headerRadios.value) {
     case 'source':
       sourceTypeFieldset.disabled = false
       flexCheckbox.disabled = false
-      result = transformResult(
-        validateSource(
-          input.value,
-          vsv.Chromium,
-          sourceType(),
-          flexCheckbox.checked,
-          /*noteInfoGain=*/ true
-        ),
-        (source) =>
-          JSON.stringify(
-            serializeSource(source, flexCheckbox.checked),
-            /*replacer=*/ null,
-            '  '
-          )
-      )
+      v = validator.source({
+        vsv: vsv.Chromium,
+        sourceType: sourceType(),
+        fullFlex: flexCheckbox.checked,
+        noteInfoGain: true,
+      })
       break
     case 'trigger':
       flexCheckbox.disabled = false
-      result = transformResult(
-        validateTrigger(input.value, vsv.Chromium, flexCheckbox.checked),
-        (trigger) =>
-          JSON.stringify(
-            serializeTrigger(trigger, flexCheckbox.checked),
-            /*replacer=*/ null,
-            '  '
-          )
-      )
+      v = validator.trigger({
+        vsv: vsv.Chromium,
+        fullFlex: flexCheckbox.checked,
+      })
       break
     case 'os-source':
     case 'os-trigger':
-      result = transformResult(
-        validateOsRegistration(input.value),
-        serializeOsRegistration
-      )
+      v = os
       break
     case 'eligible':
-      result = transformResult(validateEligible(input.value), serializeEligible)
+      v = eligible
       break
     case 'info':
-      result = transformResult(validateInfo(input.value), serializeInfo)
+      v = info
       break
     default:
       return
   }
 
+  const result = validator.validate(input.value, v)
+
   const successEl = document.createElement('div')
-  if (result[0].errors.length === 0 && result[0].warnings.length === 0) {
+  if (result.errors.length === 0 && result.warnings.length === 0) {
     successEl.textContent = 'The header is valid.'
   } else {
     successEl.textContent = ''
   }
   successDiv.replaceChildren(successEl)
 
-  errorList.replaceChildren(...result[0].errors.map(makeLi))
-  warningList.replaceChildren(...result[0].warnings.map(makeLi))
-  noteList.replaceChildren(...result[0].notes.map(makeLi))
+  errorList.replaceChildren(...result.errors.map(makeLi))
+  warningList.replaceChildren(...result.warnings.map(makeLi))
+  noteList.replaceChildren(...result.notes.map(makeLi))
 
-  if (result[1].value === undefined) {
+  if (result.value === undefined) {
     effective.replaceChildren()
   } else {
-    effective.textContent = result[1].value
+    effective.textContent = result.value
   }
 }
 

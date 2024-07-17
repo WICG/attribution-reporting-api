@@ -1728,27 +1728,17 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
 testCases.forEach((tc) =>
   jsontest.run(tc, () => {
-    const result = validateTrigger(
-      tc.json,
-      { ...vsv.Chromium, ...tc.vsv },
-      tc.parseFullFlex ?? false,
-      tc.parseScopes ?? false
-    )
+    const opts = {
+      vsv: { ...vsv.Chromium, ...tc.vsv },
+      fullFlex: tc.parseFullFlex,
+      scopes: tc.parseScopes,
+    }
+
+    const result = validateTrigger(tc.json, opts)
 
     if (result[1].value !== undefined) {
-      const str = JSON.stringify(
-        serializeTrigger(
-          result[1].value,
-          tc.parseFullFlex ?? false,
-          tc.parseScopes ?? false
-        )
-      )
-      const [, reparsed] = validateTrigger(
-        str,
-        { ...vsv.Chromium, ...tc.vsv },
-        tc.parseFullFlex ?? false,
-        tc.parseScopes ?? false
-      )
+      const str = serializeTrigger(result[1].value, opts)
+      const [, reparsed] = validateTrigger(str, opts)
       assert.deepEqual(reparsed, result[1], str)
     }
 

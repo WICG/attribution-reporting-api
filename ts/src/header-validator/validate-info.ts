@@ -1,6 +1,6 @@
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
-import * as validate from './validate'
+import { enumerated } from './validate'
 import { field, struct, validateDictionary } from './validate-structured'
 import {
   Dictionary,
@@ -31,13 +31,11 @@ function preferredPlatform(
     ctx.error('must be a token')
     return Maybe.None
   }
-  return validate
-    .enumerated(v[0].toString(), ctx, PreferredPlatform)
-    .peek(() => {
-      if (v[1].size !== 0) {
-        ctx.warning('ignoring parameters')
-      }
-    })
+  return enumerated(v[0].toString(), ctx, PreferredPlatform).peek(() => {
+    if (v[1].size !== 0) {
+      ctx.warning('ignoring parameters')
+    }
+  })
 }
 
 function reportHeaderErrors(
@@ -57,7 +55,7 @@ function reportHeaderErrors(
   return Maybe.some(v[0])
 }
 
-export function validateInfo(str: string): [ValidationResult, Maybe<Info>] {
+export function validate(str: string): [ValidationResult, Maybe<Info>] {
   return validateDictionary(str, new Context(), (d, ctx) =>
     struct(d, ctx, {
       preferredPlatform: field('preferred-platform', preferredPlatform),
@@ -66,7 +64,7 @@ export function validateInfo(str: string): [ValidationResult, Maybe<Info>] {
   )
 }
 
-export function serializeInfo(info: Info): string {
+export function serialize(info: Info): string {
   const map: Dictionary = new Map()
   if (info.preferredPlatform !== null) {
     map.set('preferred-platform', [info.preferredPlatform, new Map()])

@@ -67,12 +67,11 @@ function logIssue(prefix: string, i: Issue): void {
 let config: Maybe<Config> = Maybe.None
 if (options.json_file !== undefined) {
   const json = readFileSync(options.json_file, { encoding: 'utf8' })
-  const [{ errors, warnings }, source] = validateSource(
-    json,
-    vsv.Chromium,
-    options.source_type,
-    /*parseFullFlex=*/ true
-  )
+  const [{ errors, warnings }, source] = validateSource(json, {
+    vsv: vsv.Chromium,
+    sourceType: options.source_type,
+    fullFlex: true,
+  })
   warnings.forEach((i) => logIssue('W', i))
   if (errors.length > 0) {
     errors.forEach((i) => logIssue('E', i))

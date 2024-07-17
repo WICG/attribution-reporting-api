@@ -37,9 +37,7 @@ function presence(
   return Maybe.some(true)
 }
 
-export function validateEligible(
-  str: string
-): [ValidationResult, Maybe<Eligible>] {
+export function validate(str: string): [ValidationResult, Maybe<Eligible>] {
   return validateDictionary(str, new Context(), (d, ctx) =>
     struct(d, ctx, {
       navigationSource: field(navigationSourceKey, presence),
@@ -57,7 +55,7 @@ export function validateEligible(
   )
 }
 
-export function serializeEligible(e: Eligible): string {
+export function serialize(e: Eligible): string {
   const map: Dictionary = new Map()
   if (e.navigationSource) {
     map.set(navigationSourceKey, [true, new Map()])
