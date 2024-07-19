@@ -213,9 +213,14 @@ One alternative that was considered was instead of using `attribution_scopes` th
 
 ### Impact on flexible event-level reporting
 
-The use of `attribution_scopes` will have some impact on the amount of utility that can be extracted from the [Flexible Event-Level](https://github.com/WICG/attribution-reporting-api/blob/main/flexible_event_config.md) reporting proposal. In order to preserve the current privacy levels, the information gain limit that is used to verify acceptable flexible event-level configurations will now include the `attribution_scope_limit` and `max_event_states` values as part of the calculation. In other words, the additional information gain from the `attribution_scope_limit` and `max_event_states` that are chosen will be subtracted from the flexible event-level information gain limit and then used to identify whether the flexible event-level configuration is within the current privacy levels.
+The use of `attribution_scopes` will have some impact on the amount of utility that can be extracted from the Flexible Event-Level reporting proposal. Flexible event-level configurations that do not use `attribution_scopes` will continue to be verified against an [information gain limit](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
 
-TODO: Update [script](https://github.com/WICG/attribution-reporting-api/tree/main/ts) to allow for testing different configurations that include `attribution_scope_limit`
+
+Flexible event-level configurations that use `attribution_scopes` will be verified against two separate limits:
+  * The base flexible event-level configuration will continue to be verified against the current information gain limit.
+  * The second check will take into account the `attribution_scope_limit` and `max_event_states` values, in addition to the flexible event-level configuration, as part of the information gain calculation and be verified against a separate [information gain limit](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
+
+TODO: Update script to allow for testing different configurations that include attribution_scope_limit
 
 Note that the `attribution_scope_limit` does not have any impact on the privacy mechanisms used in Aggregatable Reports.
 
