@@ -325,8 +325,7 @@ function suitableScope(
   s: string,
   ctx: Context,
   label: string,
-  scope: (url: URL) => string,
-  rejectExtraComponents: boolean
+  scope: (url: URL) => string
 ): Maybe<string> {
   let url
   try {
@@ -349,12 +348,6 @@ function suitableScope(
 
   const scoped = scope(url)
   if (url.toString() !== new URL(scoped).toString()) {
-    if (rejectExtraComponents) {
-      ctx.error(
-        `must not contain URL components other than ${label} (${scoped})`
-      )
-      return Maybe.None
-    }
     ctx.warning(
       `URL components other than ${label} (${scoped}) will be ignored`
     )
@@ -362,24 +355,15 @@ function suitableScope(
   return Maybe.some(scoped)
 }
 
-export function suitableOrigin(
-  s: string,
-  ctx: Context,
-  rejectExtraComponents: boolean = false
-): Maybe<string> {
-  return suitableScope(s, ctx, 'origin', (u) => u.origin, rejectExtraComponents)
+export function suitableOrigin(s: string, ctx: Context): Maybe<string> {
+  return suitableScope(s, ctx, 'origin', (u) => u.origin)
 }
 
-export function suitableSite(
-  s: string,
-  ctx: Context,
-  rejectExtraComponents: boolean = false
-): Maybe<string> {
+export function suitableSite(s: string, ctx: Context): Maybe<string> {
   return suitableScope(
     s,
     ctx,
     'site',
-    (u) => `${u.protocol}//${psl.get(u.hostname)}`,
-    rejectExtraComponents
+    (u) => `${u.protocol}//${psl.get(u.hostname)}`
   )
 }
