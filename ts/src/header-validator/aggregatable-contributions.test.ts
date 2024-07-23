@@ -2,12 +2,11 @@ import { strict as assert } from 'assert'
 import test from 'node:test'
 import { SourceType } from '../source-type'
 import { createAggregatableContributions } from './aggregatable-contributions'
+import { AggregationKeys, FilterData } from './source'
 import {
   AggregatableTriggerDatum,
   AggregatableValuesConfiguration,
-  AggregationKeys,
-  FilterData,
-} from './validate-json'
+} from './trigger'
 
 const sourceTime = 1
 const triggerTime = sourceTime + 5

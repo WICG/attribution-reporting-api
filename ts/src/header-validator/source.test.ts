@@ -2,13 +2,9 @@ import { strict as assert } from 'assert'
 import { SourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
+import { Source, SummaryOperator, TriggerDataMatching } from './source'
 import { serializeSource } from './to-json'
-import {
-  Source,
-  SummaryOperator,
-  TriggerDataMatching,
-  validateSource,
-} from './validate-json'
+import { validateSource } from './validate-json'
 import * as jsontest from './validate-json.test'
 
 type TestCase = jsontest.TestCase<Source> & {

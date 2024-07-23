@@ -2,11 +2,8 @@ import { strict as assert } from 'assert'
 import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
 import { serializeTrigger } from './to-json'
-import {
-  AggregatableSourceRegistrationTime,
-  Trigger,
-  validateTrigger,
-} from './validate-json'
+import { AggregatableSourceRegistrationTime, Trigger } from './trigger'
+import { validateTrigger } from './validate-json'
 import * as jsontest from './validate-json.test'
 
 const testCases: jsontest.TestCase<Trigger>[] = [

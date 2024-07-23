@@ -1,5 +1,6 @@
 import { SourceType } from '../source-type'
-import { FilterData, FilterConfig, FilterPair } from './validate-json'
+import { FilterData } from './source'
+import { FilterConfig, FilterPair } from './trigger'
 
 // https://wicg.github.io/attribution-reporting-api/#does-filter-data-match
 function matchFilterValues(a: Set<string>, b: Set<string>): boolean {

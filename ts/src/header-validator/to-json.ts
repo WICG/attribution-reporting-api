@@ -1,4 +1,6 @@
-import * as parsed from './validate-json'
+import * as reg from './reg'
+import * as source from './source'
+import * as trigger from './trigger'
 
 type MaybeHasField<K extends string, V> = {
   [key in K]?: V
@@ -21,7 +23,7 @@ type CommonDebug = {
   debug_reporting: boolean
 }
 
-function serializeCommonDebug(c: parsed.CommonDebug): CommonDebug {
+function serializeCommonDebug(c: reg.CommonDebug): CommonDebug {
   return {
     ...ifNotNull('debug_key', c.debugKey, (v) => v.toString()),
     debug_reporting: c.debugReporting,
@@ -32,7 +34,7 @@ type Priority = {
   priority: string
 }
 
-function serializePriority(p: parsed.Priority): Priority {
+function serializePriority(p: reg.Priority): Priority {
   return { priority: p.priority.toString() }
 }
 
@@ -40,7 +42,7 @@ type KeyPiece = {
   key_piece: string
 }
 
-function serializeKeyPiece(p: parsed.KeyPiece): KeyPiece {
+function serializeKeyPiece(p: reg.KeyPiece): KeyPiece {
   return { key_piece: `0x${p.keyPiece.toString(16)}` }
 }
 
@@ -50,7 +52,7 @@ type AggregatableDebugReportingData = KeyPiece & {
 }
 
 function serializeAggregatableDebugReportingData(
-  d: parsed.AggregatableDebugReportingData
+  d: reg.AggregatableDebugReportingData
 ): AggregatableDebugReportingData {
   return {
     ...serializeKeyPiece(d),
@@ -66,7 +68,7 @@ type AggregatableDebugReportingConfig = KeyPiece & {
 }
 
 function serializeAggregatableDebugReportingConfig(
-  d: parsed.AggregatableDebugReportingConfig
+  d: reg.AggregatableDebugReportingConfig
 ): AggregatableDebugReportingConfig {
   return {
     ...serializeKeyPiece(d),
@@ -84,7 +86,7 @@ type EventReportWindows = {
 }
 
 function serializeEventReportWindows(
-  e: parsed.EventReportWindows
+  e: source.EventReportWindows
 ): EventReportWindows {
   return {
     event_report_windows: {
@@ -108,7 +110,7 @@ type TriggerSpec = EventReportWindows &
     summary_operator: string
   }
 
-function serializeTriggerSpec(ts: parsed.TriggerSpec): TriggerSpec {
+function serializeTriggerSpec(ts: source.TriggerSpec): TriggerSpec {
   return {
     ...serializeEventReportWindows(ts.eventReportWindows),
     ...serializeTriggerData(ts.triggerData),
@@ -124,7 +126,7 @@ type SourceAggregatableDebugReportingConfig =
   }
 
 function serializeSourceAggregatableDebugReportingConfig(
-  d: parsed.SourceAggregatableDebugReportingConfig
+  d: source.SourceAggregatableDebugReportingConfig
 ): SourceAggregatableDebugReportingConfig {
   return {
     ...serializeAggregatableDebugReportingConfig(d),
@@ -145,7 +147,7 @@ type FullFlexSource = {
 }
 
 function serializeFlexSource(
-  s: parsed.Source,
+  s: source.Source,
   fullFlex: boolean
 ): NotFullFlexSource | FullFlexSource {
   if (fullFlex) {
@@ -193,7 +195,7 @@ export interface Options {
 }
 
 export function serializeSource(
-  s: parsed.Source,
+  s: source.Source,
   opts: Readonly<Options>
 ): string {
   const scopeFields = opts.scopes
@@ -250,7 +252,7 @@ type FilterConfig = {
   [key: string]: number | string[]
 }
 
-function serializeFilterConfig(fc: parsed.FilterConfig): FilterConfig {
+function serializeFilterConfig(fc: trigger.FilterConfig): FilterConfig {
   const obj: FilterConfig = Object.fromEntries(
     Array.from(fc.map.entries(), ([key, vals]) => [key, Array.from(vals)])
   )
@@ -267,7 +269,7 @@ type FilterPair = {
   not_filters: FilterConfig[]
 }
 
-function serializeFilterPair(fp: parsed.FilterPair): FilterPair {
+function serializeFilterPair(fp: trigger.FilterPair): FilterPair {
   return {
     filters: Array.from(fp.positive, serializeFilterConfig),
     not_filters: Array.from(fp.negative, serializeFilterConfig),
@@ -278,7 +280,7 @@ type DedupKey = {
   deduplication_key?: string
 }
 
-function serializeDedupKey(fp: parsed.DedupKey): DedupKey {
+function serializeDedupKey(fp: trigger.DedupKey): DedupKey {
   return ifNotNull('deduplication_key', fp.dedupKey, (v) => v.toString())
 }
 
@@ -290,7 +292,7 @@ type EventTriggerDatum = FilterPair &
   }
 
 function serializeEventTriggerDatum(
-  d: parsed.EventTriggerDatum,
+  d: trigger.EventTriggerDatum,
   fullFlex: boolean
 ): EventTriggerDatum {
   const obj: EventTriggerDatum = {
@@ -311,7 +313,7 @@ function serializeEventTriggerDatum(
 type AggregatableDedupKey = FilterPair & DedupKey
 
 function serializeAggregatableDedupKey(
-  d: parsed.AggregatableDedupKey
+  d: trigger.AggregatableDedupKey
 ): AggregatableDedupKey {
   return {
     ...serializeFilterPair(d),
@@ -325,7 +327,7 @@ type AggregatableTriggerDatum = FilterPair &
   }
 
 function serializeAggregatableTriggerDatum(
-  d: parsed.AggregatableTriggerDatum
+  d: trigger.AggregatableTriggerDatum
 ): AggregatableTriggerDatum {
   return {
     ...serializeFilterPair(d),
@@ -347,7 +349,7 @@ type AggregatableValuesConfiguration = FilterPair & {
 }
 
 function serializeAggregatableValuesConfiguration(
-  c: parsed.AggregatableValuesConfiguration
+  c: trigger.AggregatableValuesConfiguration
 ): AggregatableValuesConfiguration {
   const values: AggregatableValues = {}
   for (const [key, value] of c.values.entries()) {
@@ -377,7 +379,7 @@ type Trigger = CommonDebug &
   }
 
 export function serializeTrigger(
-  t: parsed.Trigger,
+  t: trigger.Trigger,
   opts: Readonly<Options>
 ): string {
   const scopeFields = opts.scopes

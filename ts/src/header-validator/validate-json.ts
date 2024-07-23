@@ -4,6 +4,37 @@ import { VendorSpecificValues } from '../vendor-specific-values'
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
 import {
+  AggregatableDebugReportingConfig,
+  AggregatableDebugReportingData,
+  AggregationCoordinatorOrigin,
+  CommonDebug,
+  KeyPiece,
+  Priority,
+} from './reg'
+import {
+  AggregationKeys,
+  EventReportWindows,
+  FilterData,
+  Source,
+  SourceAggregatableDebugReportingConfig,
+  SummaryOperator,
+  TriggerDataMatching,
+  TriggerSpec,
+} from './source'
+import {
+  AggregatableDedupKey,
+  AggregatableSourceRegistrationTime,
+  AggregatableTriggerDatum,
+  AggregatableValues,
+  AggregatableValuesConfiguration,
+  AggregatableValuesValue,
+  DedupKey,
+  EventTriggerDatum,
+  FilterConfig,
+  FilterPair,
+  Trigger,
+} from './trigger'
+import {
   CtxFunc,
   ItemErrorAction,
   LengthOpts,
@@ -316,11 +347,6 @@ function endTimes(
   })
 }
 
-export type EventReportWindows = {
-  startTime: number
-  endTimes: number[]
-}
-
 function eventReportWindows(
   j: Json,
   ctx: SourceContext,
@@ -411,8 +437,6 @@ function filterDataKeyValue(
   })
 }
 
-export type FilterData = Map<string, Set<string>>
-
 export function filterData(j: Json, ctx: Context): Maybe<FilterData> {
   return keyValues(
     j,
@@ -446,11 +470,6 @@ function filterKeyValue(
   return set(j, ctx, (j) => string(j, ctx).peek(peek))
 }
 
-export type FilterConfig = {
-  lookbackWindow: number | null
-  map: Map<string, Set<string>>
-}
-
 function filterConfig(j: Json, ctx: Context): Maybe<FilterConfig> {
   // `lookbackWindow` must come before `map` to ensure it is processed first.
   return struct(
@@ -474,11 +493,6 @@ function orFilters(j: Json, ctx: Context): Maybe<FilterConfig[]> {
   })
 }
 
-export type FilterPair = {
-  positive: FilterConfig[]
-  negative: FilterConfig[]
-}
-
 const filterFields: StructFields<FilterPair> = {
   positive: field('filters', withDefault(orFilters, [])),
   negative: field('not_filters', withDefault(orFilters, [])),
@@ -488,26 +502,13 @@ export function filterPair(j: Json, ctx: Context): Maybe<FilterPair> {
   return struct(j, ctx, filterFields)
 }
 
-export type CommonDebug = {
-  debugKey: bigint | null
-  debugReporting: boolean
-}
-
 const commonDebugFields: StructFields<CommonDebug> = {
   debugKey: field('debug_key', withDefault(uint64, null)),
   debugReporting: field('debug_reporting', withDefault(bool, false)),
 }
 
-export type DedupKey = {
-  dedupKey: bigint | null
-}
-
 const dedupKeyField: StructFields<DedupKey> = {
   dedupKey: field('deduplication_key', withDefault(uint64, null)),
-}
-
-export type Priority = {
-  priority: bigint
 }
 
 const priorityField: StructFields<Priority> = {
@@ -525,17 +526,8 @@ function aggregatableDebugType(
   })
 }
 
-export type KeyPiece = {
-  keyPiece: bigint
-}
-
 const keyPieceField: StructFields<KeyPiece> = {
   keyPiece: field('key_piece', required(hex128)),
-}
-
-export type AggregatableDebugReportingData = KeyPiece & {
-  types: Set<string>
-  value: number
 }
 
 function aggregatableDebugReportingData(
@@ -576,10 +568,6 @@ function aggregatableDebugReportingDataList(
   })
 }
 
-export type AggregationCoordinatorOrigin = {
-  aggregationCoordinatorOrigin: string
-}
-
 const aggregationCoordinatorOriginField: StructFields<
   AggregationCoordinatorOrigin,
   RegistrationContext
@@ -589,11 +577,6 @@ const aggregationCoordinatorOriginField: StructFields<
     aggregationCoordinatorOrigin
   ),
 }
-
-export type AggregatableDebugReportingConfig = KeyPiece &
-  AggregationCoordinatorOrigin & {
-    debugData: AggregatableDebugReportingData[]
-  }
 
 const aggregatableDebugReportingConfig: StructFields<
   AggregatableDebugReportingConfig,
@@ -772,23 +755,6 @@ function channelCapacity(s: Source, ctx: SourceContext): void {
     ctx.note(`randomized trigger rate: ${out.flipProb.toFixed(7)}`)
   }
 }
-
-export enum SummaryOperator {
-  count = 'count',
-  value_sum = 'value_sum',
-}
-
-export type TriggerSpec = {
-  eventReportWindows: EventReportWindows
-  summaryBuckets: number[]
-  summaryOperator: SummaryOperator
-  triggerData: Set<number>
-}
-
-export type SourceAggregatableDebugReportingConfig =
-  AggregatableDebugReportingConfig & {
-    budget: number
-  }
 
 function sourceAggregatableDebugReportingConfig(
   j: Json,
@@ -1004,11 +970,6 @@ function defaultTriggerSpecs(
   )
 }
 
-export enum TriggerDataMatching {
-  exact = 'exact',
-  modulus = 'modulus',
-}
-
 function isTriggerDataMatchingValidForSpecs(s: Source, ctx: Context): boolean {
   return ctx.scope('trigger_data_matching', () => {
     if (s.triggerDataMatching !== TriggerDataMatching.modulus) {
@@ -1047,29 +1008,6 @@ function warnInconsistentMaxEventLevelReportsAndTriggerSpecs(
     )
   }
 }
-
-export type AggregationKeys = Map<string, bigint>
-
-export type Source = CommonDebug &
-  Priority & {
-    aggregatableReportWindow: number
-    aggregationKeys: AggregationKeys
-    destination: Set<string>
-    expiry: number
-    filterData: FilterData
-    maxEventLevelReports: number
-    sourceEventId: bigint
-
-    triggerSpecs: TriggerSpec[]
-    triggerDataMatching: TriggerDataMatching
-
-    eventLevelEpsilon: number
-    aggregatableDebugReporting: SourceAggregatableDebugReportingConfig | null
-    destinationLimitPriority: bigint
-    attributionScopes: Set<string>
-    attributionScopeLimit: number | null
-    maxEventStates: number
-  }
 
 function source(j: Json, ctx: SourceContext): Maybe<Source> {
   return object(j, ctx)
@@ -1190,11 +1128,6 @@ function sourceKeys(j: Json, ctx: Context): Maybe<Set<string>> {
   )
 }
 
-export type AggregatableTriggerDatum = FilterPair &
-  KeyPiece & {
-    sourceKeys: Set<string>
-  }
-
 function aggregatableTriggerData(
   j: Json,
   ctx: RegistrationContext
@@ -1206,17 +1139,6 @@ function aggregatableTriggerData(
       ...keyPieceField,
     })
   )
-}
-
-export type AggregatableValuesValue = {
-  value: number
-  filteringId: bigint
-}
-
-export type AggregatableValues = Map<string, AggregatableValuesValue>
-
-export type AggregatableValuesConfiguration = FilterPair & {
-  values: AggregatableValues
 }
 
 function aggregatableKeyValueValue(j: Json, ctx: Context): Maybe<number> {
@@ -1339,13 +1261,6 @@ function aggregatableFilteringIdMaxBytes(
     })
 }
 
-export type EventTriggerDatum = FilterPair &
-  Priority &
-  DedupKey & {
-    triggerData: bigint
-    value: number
-  }
-
 function eventTriggerValue(j: Json, ctx: RegistrationContext): Maybe<number> {
   return number(j, ctx)
     .filter(isInteger, ctx)
@@ -1461,8 +1376,6 @@ function attributionScopesForSource(
   })
 }
 
-export type AggregatableDedupKey = FilterPair & DedupKey
-
 function aggregatableDedupKeys(
   j: Json,
   ctx: RegistrationContext
@@ -1477,11 +1390,6 @@ function aggregatableDedupKeys(
 
 function enumerated<T>(j: Json, ctx: Context, e: Record<string, T>): Maybe<T> {
   return string(j, ctx).flatMap(validate.enumerated, ctx, e)
-}
-
-export enum AggregatableSourceRegistrationTime {
-  exclude = 'exclude',
-  include = 'include',
 }
 
 function warnInconsistentAggregatableKeys(t: Trigger, ctx: Context): void {
@@ -1572,20 +1480,6 @@ function aggregationCoordinatorOrigin(
           return true
         })
 }
-
-export type Trigger = CommonDebug &
-  FilterPair &
-  AggregationCoordinatorOrigin & {
-    aggregatableDedupKeys: AggregatableDedupKey[]
-    aggregatableTriggerData: AggregatableTriggerDatum[]
-    aggregatableSourceRegistrationTime: AggregatableSourceRegistrationTime
-    aggregatableFilteringIdMaxBytes: number
-    aggregatableValuesConfigurations: AggregatableValuesConfiguration[]
-    eventTriggerData: EventTriggerDatum[]
-    triggerContextID: string | null
-    aggregatableDebugReporting: AggregatableDebugReportingConfig | null
-    attributionScopes: Set<string>
-  }
 
 function trigger(j: Json, ctx: RegistrationContext): Maybe<Trigger> {
   return object(j, ctx)

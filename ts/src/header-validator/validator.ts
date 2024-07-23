@@ -1,5 +1,7 @@
 import { ValidationResult } from './context'
 import { Maybe } from './maybe'
+import { Source } from './source'
+import { Trigger } from './trigger'
 import * as toJson from './to-json'
 import * as json from './validate-json'
 
@@ -8,9 +10,7 @@ export interface Validator<T> {
   serialize(value: T): string
 }
 
-export function source(
-  opts: Readonly<json.SourceOptions>
-): Validator<json.Source> {
+export function source(opts: Readonly<json.SourceOptions>): Validator<Source> {
   return {
     validate: (input) => json.validateSource(input, opts),
     serialize: (value) => toJson.serializeSource(value, opts),
@@ -19,7 +19,7 @@ export function source(
 
 export function trigger(
   opts: Readonly<json.RegistrationOptions>
-): Validator<json.Trigger> {
+): Validator<Trigger> {
   return {
     validate: (input) => json.validateTrigger(input, opts),
     serialize: (value) => toJson.serializeTrigger(value, opts),
