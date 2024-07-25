@@ -389,6 +389,12 @@ and its <dfn lt="eligible key">allowed keys</dfn> are:
 
 </dl>
 
+"<code><dfn>Attribution-Reporting-Support</dfn></code>" is a
+[=structured header/dictionary|Dictionary Structured Header=]
+set on a [=request=] that indicates which registrars, if
+any, the corresponding [=response=] can use. Its values are not specified and
+its allowed keys are the [=registrars=].
+
 To <dfn>obtain a dictionary structured header value</dfn> given a [=list=] of [=strings=] |keys| and
 a [=set=] of [=strings=] |allowedKeys|:
 
@@ -440,25 +446,30 @@ To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|:
     |headers|.
 1. If |eligibility| is "<code>[=eligibility/unset=]</code>", return.
 1. Let |keys| be a new [=list=].
-1. If |eligibility| is:
-    <dl class="switch">
-    : "<code>[=eligibility/empty=]</code>"
-    :: Do nothing.
-    : "<code>[=eligibility/event-source=]</code>"
-    :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" to |keys|.
-    : "<code>[=eligibility/navigation-source=]</code>"
-    :: [=list/Append=] "<code>[=eligible key/navigation-source=]</code>" to
-        |keys|.
-    : "<code>[=eligibility/trigger=]</code>"
-    :: [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
-    : "<code>[=eligibility/event-source-or-trigger=]</code>"
-    :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
-        "<code>[=eligible key/trigger=]</code>" to |keys|.
-1. Let |dict| be the result of [=obtaining a dictionary structured header value=] with
+1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
+1. If |supportedRegistrars| is not [=list/is empty|empty=]:
+    1. If |eligibility| is:
+        <dl class="switch">
+        : "<code>[=eligibility/empty=]</code>"
+        :: Do nothing.
+        : "<code>[=eligibility/event-source=]</code>"
+        :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" to |keys|.
+        : "<code>[=eligibility/navigation-source=]</code>"
+        :: [=list/Append=] "<code>[=eligible key/navigation-source=]</code>" to
+            |keys|.
+        : "<code>[=eligibility/trigger=]</code>"
+        :: [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
+        : "<code>[=eligibility/event-source-or-trigger=]</code>"
+        :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
+            "<code>[=eligible key/trigger=]</code>" to |keys|.
+1. Let |eligibleDict| be the result of [=obtaining a dictionary structured header value=] with
     |keys| and the [=set=] containing all the [=eligible keys=].
 1. [=header list/Set a structured field value=] given
-    ("<code>[=Attribution-Reporting-Eligible=]</code>", |dict|) in |headers|.
-1. [=Set an OS-support header=] in |headers|.
+    ("<code>[=Attribution-Reporting-Eligible=]</code>", |eligibleDict|) in |headers|.
+1. Let |supportDict| be the result of [=obtaining a dictionary structured header value=]
+    with |supportedRegistrars| and the [=set=] containing all the [=registrars=].
+1. [=header list/Set a structured field value=] given
+    ("<code>[=Attribution-Reporting-Support=]</code>", |supportDict|) in |headers|.
 
 <h3 id="monkeypatch-fetch">Fetch monkeypatches</h4>
 
@@ -1904,16 +1915,6 @@ An <dfn export>eligibility</dfn> is one of the following:
 : "<dfn><code>event-source-or-trigger</code></dfn>"
 :: An [=source type/event=] [=attribution source|source=] or a
     [=attribution trigger|trigger=] may be registered.
-
-</dl>
-
-A <dfn>registrar</dfn> is one of the following:
-
-<dl dfn-for="registrar">
-: "<dfn><code>web</code></dfn>"
-:: The user agent supports web registrations.
-: "<dfn><code>os</code></dfn>"
-:: The user agent supports OS registrations.
 
 </dl>
 
@@ -4902,7 +4903,17 @@ To <dfn noexport>get [=OS registrations=] from a header value</dfn> given a
 1. If |registrations| [=list/is empty=], return null.
 1. Return |registrations|.
 
-<h3 id="set-os-support-headers">Set OS-support header</h3>
+<h3 id="registrars-header">Registrars</h3>
+
+A <dfn>registrar</dfn> is one of the following:
+
+<dl dfn-for="registrar">
+: "<dfn><code>web</code></dfn>"
+:: The user agent supports web registrations.
+: "<dfn><code>os</code></dfn>"
+:: The user agent supports OS registrations.
+
+</dl>
 
 To <dfn export>get supported registrars</dfn>:
 
@@ -4912,21 +4923,6 @@ To <dfn export>get supported registrars</dfn>:
 1. If the user agent supports OS registrations, [=list/append=] "<code>[=registrar/os=]</code>"
     to |supportedRegistrars|.
 1. Return |supportedRegistrars|.
-
-"<code><dfn>Attribution-Reporting-Support</dfn></code>" is a
-[=structured header/dictionary|Dictionary Structured Header=]
-set on a [=request=] that indicates which registrars, if
-any, the corresponding [=response=] can use. Its values are not specified and
-its allowed keys are the [=registrars=].
-
-To <dfn noexport>set an OS-support header</dfn> given a [=header list=]
-|headers|:
-
-1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
-1. Let |dict| be the result of [=obtaining a dictionary structured header value=]
-    with |supportedRegistrars| and the [=set=] containing all the [=registrars=].
-1. [=header list/Set a structured field value=] given
-    ("<code>[=Attribution-Reporting-Support=]</code>", |dict|) in |headers|.
 
 <h3 id="deliver-os-registrations-debug-reports">Deliver OS registration debug reports</h3>
 
