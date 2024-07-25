@@ -2,7 +2,8 @@ import { strict as assert } from 'assert'
 import test from 'node:test'
 import { SourceType } from '../source-type'
 import * as filters from './filters'
-import { FilterData, FilterConfig } from './validate-json'
+import { FilterData } from './source'
+import { FilterConfig } from './trigger'
 
 type TestCase = {
   name: string
