@@ -1,14 +1,8 @@
-import { strict as assert } from 'assert'
 import * as testutil from './util.test'
 import { Maybe } from './maybe'
-import { Eligible, validate } from './validate-eligible'
+import * as eligible from './validate-eligible'
 
-type TestCase = testutil.TestCase & {
-  input: string
-  expected?: Maybe<Eligible>
-}
-
-const tests: TestCase[] = [
+const tests: testutil.TestCase<eligible.Eligible>[] = [
   // Valid
   {
     input: '',
@@ -112,12 +106,4 @@ const tests: TestCase[] = [
   },
 ]
 
-tests.forEach((tc) =>
-  testutil.run(tc, /*name=*/ tc.input, () => {
-    const [validationResult, value] = validate(tc.input)
-    if (tc.expected !== undefined) {
-      assert.deepEqual(value, tc.expected)
-    }
-    return validationResult
-  })
-)
+tests.forEach((tc) => testutil.run(tc, eligible))

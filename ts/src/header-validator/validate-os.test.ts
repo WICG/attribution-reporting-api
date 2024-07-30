@@ -1,14 +1,8 @@
-import { strict as assert } from 'assert'
 import * as testutil from './util.test'
 import { Maybe } from './maybe'
-import { OsItem, validate } from './validate-os'
+import * as os from './validate-os'
 
-type TestCase = testutil.TestCase & {
-  input: string
-  expected?: Maybe<OsItem[]>
-}
-
-const tests: TestCase[] = [
+const tests: testutil.TestCase<os.OsItem[]>[] = [
   // Valid
   { input: '"https://a.test/"' },
   { input: '"http://localhost/"' },
@@ -131,12 +125,4 @@ const tests: TestCase[] = [
   },
 ]
 
-tests.forEach((tc) =>
-  testutil.run(tc, /*name=*/ tc.input, () => {
-    const [validationResult, value] = validate(tc.input)
-    if (tc.expected !== undefined) {
-      assert.deepEqual(value, tc.expected)
-    }
-    return validationResult
-  })
-)
+tests.forEach((tc) => testutil.run(tc, os))

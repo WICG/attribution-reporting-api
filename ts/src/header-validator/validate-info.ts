@@ -67,7 +67,10 @@ export function validate(str: string): [ValidationResult, Maybe<Info>] {
 export function serialize(info: Info): string {
   const map: Dictionary = new Map()
   if (info.preferredPlatform !== null) {
-    map.set('preferred-platform', [info.preferredPlatform, new Map()])
+    map.set('preferred-platform', [
+      new Token(info.preferredPlatform),
+      new Map(),
+    ])
   }
   map.set('report-header-errors', [info.reportHeaderErrors, new Map()])
   return serializeDictionary(map)
