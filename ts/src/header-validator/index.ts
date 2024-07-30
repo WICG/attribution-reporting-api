@@ -4,6 +4,8 @@ import { makeLi } from './issue-utils'
 import * as eligible from './validate-eligible'
 import * as info from './validate-info'
 import * as os from './validate-os'
+import * as source from './validate-source'
+import * as trigger from './validate-trigger'
 import * as validator from './validator'
 
 const form = document.querySelector<HTMLFormElement>('form')!
@@ -39,7 +41,7 @@ function validate(): void {
       sourceTypeFieldset.disabled = false
       flexCheckbox.disabled = false
       scopesCheckbox.disabled = false
-      v = validator.source({
+      v = source.validator({
         vsv: vsv.Chromium,
         sourceType: sourceType(),
         fullFlex: flexCheckbox.checked,
@@ -50,7 +52,7 @@ function validate(): void {
     case 'trigger':
       flexCheckbox.disabled = false
       scopesCheckbox.disabled = false
-      v = validator.trigger({
+      v = trigger.validator({
         vsv: vsv.Chromium,
         fullFlex: flexCheckbox.checked,
         scopes: scopesCheckbox.checked,

@@ -1,7 +1,9 @@
 import { parse } from 'ts-command-line-args'
 import { readFileSync } from 'fs'
 
-import * as validator from './validator'
+import { validate } from './validator'
+import * as source from './validate-source'
+import * as trigger from './validate-trigger'
 import { SourceType, parseSourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 
@@ -92,15 +94,15 @@ if (options.file !== undefined) {
   })
 }
 
-const out = validator.validate<unknown>(
+const out = validate<unknown>(
   options.input!,
   options.sourceType === undefined
-    ? validator.trigger({
+    ? trigger.validator({
         vsv: vsv.Chromium,
         fullFlex: options.fullFlex,
         scopes: options.scopes,
       })
-    : validator.source({
+    : source.validator({
         vsv: vsv.Chromium,
         fullFlex: options.fullFlex,
         sourceType: options.sourceType,

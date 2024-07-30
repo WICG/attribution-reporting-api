@@ -3,7 +3,7 @@ import { readFileSync } from 'fs'
 
 import { Issue } from '../header-validator/context'
 import { Maybe } from '../header-validator/maybe'
-import { validateSource } from '../header-validator/validate-json'
+import { validateSource } from '../header-validator/validate-source'
 import { SourceType, parseSourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Config, PerTriggerDataConfig } from './privacy'
