@@ -62,20 +62,9 @@ const hex128Regex = /^0[xX][0-9A-Fa-f]{1,32}$/
 
 const UINT32_MAX: number = 2 ** 32 - 1
 
-class GenericContext<
-  Opts extends GenericOptions = GenericOptions,
-> extends Context {
-  constructor(readonly opts: Readonly<Opts>) {
-    super()
-  }
-}
-
-export interface GenericOptions {
-  fullFlex?: boolean | undefined
-}
-
-export interface RegistrationOptions extends GenericOptions {
+export interface RegistrationOptions {
   vsv: VendorSpecificValues
+  fullFlex?: boolean | undefined
   scopes?: boolean | undefined
 }
 
@@ -86,12 +75,12 @@ export interface SourceOptions extends RegistrationOptions {
 
 class RegistrationContext<
   Opts extends RegistrationOptions = RegistrationOptions,
-> extends GenericContext<Opts> {
+> extends Context {
   constructor(
-    opts: Readonly<Opts>,
+    readonly opts: Readonly<Opts>,
     readonly aggregatableDebugTypes: Readonly<[string, ...string[]]>
   ) {
-    super(opts)
+    super()
   }
 }
 
