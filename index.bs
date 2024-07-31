@@ -446,22 +446,22 @@ To <dfn>set Attribution Reporting headers</dfn> given a [=request=] |request|:
     |headers|.
 1. If |eligibility| is "<code>[=eligibility/unset=]</code>", return.
 1. Let |keys| be a new [=list=].
+1. If |eligibility| is:
+    <dl class="switch">
+    : "<code>[=eligibility/empty=]</code>"
+    :: Do nothing.
+    : "<code>[=eligibility/event-source=]</code>"
+    :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" to |keys|.
+    : "<code>[=eligibility/navigation-source=]</code>"
+    :: [=list/Append=] "<code>[=eligible key/navigation-source=]</code>" to
+        |keys|.
+    : "<code>[=eligibility/trigger=]</code>"
+    :: [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
+    : "<code>[=eligibility/event-source-or-trigger=]</code>"
+    :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
+        "<code>[=eligible key/trigger=]</code>" to |keys|.
 1. Let |supportedRegistrars| be the result of [=getting supported registrars=].
-1. If |supportedRegistrars| is not [=list/is empty|empty=]:
-    1. If |eligibility| is:
-        <dl class="switch">
-        : "<code>[=eligibility/empty=]</code>"
-        :: Do nothing.
-        : "<code>[=eligibility/event-source=]</code>"
-        :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" to |keys|.
-        : "<code>[=eligibility/navigation-source=]</code>"
-        :: [=list/Append=] "<code>[=eligible key/navigation-source=]</code>" to
-            |keys|.
-        : "<code>[=eligibility/trigger=]</code>"
-        :: [=list/Append=] "<code>[=eligible key/trigger=]</code>" to |keys|.
-        : "<code>[=eligibility/event-source-or-trigger=]</code>"
-        :: [=list/Append=] "<code>[=eligible key/event-source=]</code>" and
-            "<code>[=eligible key/trigger=]</code>" to |keys|.
+1. If |supportedRegistrars| [=list/is empty=], [=list/empty|clear=] |keys|.
 1. Let |eligibleDict| be the result of [=obtaining a dictionary structured header value=] with
     |keys| and the [=set=] containing all the [=eligible keys=].
 1. [=header list/Set a structured field value=] given
