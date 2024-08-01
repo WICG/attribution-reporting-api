@@ -4,7 +4,7 @@ import { Maybe } from './maybe'
 import { Source, SummaryOperator, TriggerDataMatching } from './source'
 import * as testutil from './util.test'
 import * as jsontest from './validate-json.test'
-import * as validator from './validator'
+import * as source from './validate-source'
 
 type TestCase = jsontest.TestCase<Source> & {
   sourceType?: SourceType
@@ -2907,7 +2907,7 @@ const testCases: TestCase[] = [
 testCases.forEach((tc) =>
   testutil.run(
     tc,
-    validator.source({
+    source.validator({
       vsv: { ...vsv.Chromium, ...tc.vsv },
       sourceType: tc.sourceType ?? SourceType.navigation,
       fullFlex: tc.parseFullFlex,

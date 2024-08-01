@@ -3,7 +3,7 @@ import { Maybe } from './maybe'
 import { AggregatableSourceRegistrationTime, Trigger } from './trigger'
 import * as testutil from './util.test'
 import * as jsontest from './validate-json.test'
-import * as validator from './validator'
+import * as trigger from './validate-trigger'
 
 const testCases: jsontest.TestCase<Trigger>[] = [
   // no errors or warnings
@@ -1725,7 +1725,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 testCases.forEach((tc) =>
   testutil.run(
     tc,
-    validator.trigger({
+    trigger.validator({
       vsv: { ...vsv.Chromium, ...tc.vsv },
       fullFlex: tc.parseFullFlex,
       scopes: tc.parseScopes,
