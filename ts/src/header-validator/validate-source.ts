@@ -341,6 +341,7 @@ function channelCapacity(s: Source, ctx: Context): void {
   }
 
   if (
+    s.attributionScopeLimit !== null &&
     ctx.opts.sourceType === SourceType.event &&
     out.numStates > s.maxEventStates
   ) {
