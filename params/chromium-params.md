@@ -29,6 +29,7 @@ Chromium's implementation assigns the following values:
 | [Max unique attribution scope sets per navigation][] | [1][max unique attribution scope sets per navigation value] |
 | [Max trigger-state cardinality][] | [4,294,967,295 (max unsigned 32-bit integer)][max trigger-state cardinality value] |
 | [Max event-level channel capacity for navigation sources with attribution scopes][] | [11.55 bits][max event-level channel capacity for navigations with attribution scopes value] |
+| [Max event-level channel capacity for event sources with attribution scopes][] | [6.5 bits][max event-level channel capacity for events with attribution scopes value] |
 
 [Max pending sources per source origin]: https://wicg.github.io/attribution-reporting-api/#max-pending-sources-per-source-origin
 [max pending sources per source origin value]: https://source.chromium.org/chromium/chromium/src/+/main:content/browser/attribution_reporting/attribution_config.h;l=151;drc=3be0e68c5ed56aba7c321cbaea22558eee61fc50
@@ -76,3 +77,5 @@ Chromium's implementation assigns the following values:
 [max trigger-state cardinality value]: https://source.chromium.org/chromium/chromium/src/+/main:components/attribution_reporting/privacy_math.cc;l=38;drc=df665a7a68d680481ecf2e9e6a4298ac81d65e29
 [Max event-level channel capacity for navigation sources with attribution scopes]: .
 [max event-level channel capacity for navigations with attribution scopes value]: .
+[Max event-level channel capacity for event sources with attribution scopes]: .
+[max event-level channel capacity for events with attribution scopes value]: .
