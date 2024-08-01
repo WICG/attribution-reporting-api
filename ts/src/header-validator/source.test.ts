@@ -1447,7 +1447,7 @@ const testCases: TestCase[] = [
     },
   },
   {
-    name: 'trigger-state-cardinality-invalid',
+    name: 'trigger-state-cardinality-invalid-scopes',
     input: `{
       "destination": "https://a.test",
       "attribution_scope_limit": 3,
@@ -1472,6 +1472,52 @@ const testCases: TestCase[] = [
       {
         path: [],
         msg: 'number of possible output states (3) exceeds max event states (2)',
+      },
+    ],
+  },
+  {
+    name: 'trigger-state-cardinality-invalid-no-scopes-but-scopes-enabled',
+    input: `{
+      "destination": "https://a.test",
+      "max_event_level_reports": 2
+    }`,
+    sourceType: SourceType.event,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: 0,
+      },
+      maxSettableEventLevelEpsilon: 14,
+      maxTriggerStateCardinality: 3,
+    },
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'number of possible output states (6) exceeds max cardinality (3)',
+      },
+    ],
+  },
+  {
+    name: 'trigger-state-cardinality-invalid-no-scopes-and-scopes-disabled',
+    input: `{
+      "destination": "https://a.test",
+      "max_event_level_reports": 2
+    }`,
+    sourceType: SourceType.event,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: 0,
+      },
+      maxSettableEventLevelEpsilon: 14,
+      maxTriggerStateCardinality: 3,
+    },
+    parseScopes: false,
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'number of possible output states (6) exceeds max cardinality (3)',
       },
     ],
   },
