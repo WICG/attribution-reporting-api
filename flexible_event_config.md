@@ -15,7 +15,7 @@ _Note: This document describes possible new functionality in the Attribution Rep
   - [Equivalent navigation sources](#equivalent-navigation-sources)
 - [Additional Examples](#additional-examples)
   - [Binary with more frequent reporting](#binary-with-more-frequent-reporting)
-  - [Varying `trigger_specs` from source to source](#varying-trigger_specs-from-source-to-source)
+- [Attribution rate limit](#attribution-rate-limit)
 - [Privacy considerations](#privacy-considerations)
 - [Ideas for future iteration](#ideas-for-future-iteration)
   - [Summary Buckets and Multiple Trigger Specs](#summary-buckets-and-multiple-trigger-specs)
@@ -50,41 +50,31 @@ In general, the approach here is to more flexibly encode the output of the API f
 
 ### API changes
 
-In addition to the parameters that were added in Phase 1, we will add one additional optional parameter to the JSON in `Attribution-Reporting-Register-Source`: `trigger_specs`
+In addition to the parameters that were added in Phase 1 to the JSON in `Attribution-Reporting-Register-Source`, sources can now be configured to allow non-default `trigger_data` (values and/or
+cardinality):
 
 ```jsonc
 {
-  // A trigger spec is a set of matching criteria, along with a scheme to
-  // generate bucketized output based on accumulated values across multiple
-  // triggers within the specified event_report_window.
-  // There will be a limit on the number of specs possible to define for a source.
-  // MAX_UINT32 is 2^32 - 1 (4294967295).
-  "trigger_specs": [{
-    // This spec will only apply to registrations that set one of the given
-    // trigger data values (integers in the range [0, MAX_UINT32]) in the list.
-    // trigger_data will still appear in the event-level report.
-    // Entries in trigger_data must be distinct, and the sets of all trigger_data fields within trigger_specs must be disjoint.
-    "trigger_data": [<int>, ...],
+  ...
 
-    // Represents a series of time windows, starting at start_time offset from the source registration time.
-    // Reports for this spec will be delivered after the end of each window.
-    // Time is encoded as seconds after source registration.
-    // end_times must consist of strictly increasing positive integers.
-    // If event_report_windows
-    // is omitted, will use the "event_report_window" or "event_report_windows" field specified at the global level for the
-    // source (or the default windows if none are specified).
-    // Start time is inclusive, End time is exclusive.
-    "event_report_windows": {
-      "start_time": <int>, // optional, defaults to 0
-      "end_times": [<int>, ...],
-    }
-
-   }
-],
-
-  // See description in
-  // https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#data-limits-and-noise
+  // Specifies how the 64-bit unsigned trigger_data from the trigger is matched
+  // against the source's trigger_data, which is 32-bit. Defaults to "modulus".
+  //
+  // If "exact", the trigger_data must exactly match a value contained in the
+  // source's trigger_data; if there is no such match, no event-level
+  // attribution takes place.
+  //
+  // If "modulus", the source's trigger_data must form a contiguous sequence of
+  // integers starting at 0. The trigger's trigger_data is taken modulus the
+  // cardinality of this sequence and then matched against the trigger data.
+  // See below for an example. It is an error to use "modulus" if the trigger
+  // data does not form such a sequence.
   "trigger_data_matching": <one of "exact" or "modulus">,
+
+  // Size must be in the range [0, 32], inclusive.
+  // If omitted, defaults to [0, 1, 2, 3, 4, 5, 6, 7] for navigation sources and
+  // [0, 1] for event sources.
+  "trigger_data": [<32-bit unsigned integer>, ...],
 
   // See description in
   // https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-varying-frequency-and-number-of-reports
@@ -99,13 +89,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
 }
 ```
 
-This configuration fully specifies the output space of the event-level reports, per source registration. For every trigger spec, we fully specify:
-* A set of matching criteria:
-  * Which specific trigger data this spec applies to. This source is eligible to be matched only with triggers that have one of the specified `trigger_data` values in the `trigger_specs` according to the `trigger_data_matching` field. In other words, if the trigger would have matched this source but its `trigger_data` is not one of the values in the source's configuration, the trigger is ignored.
-  * When a specific trigger matches this spec (via `event_report_windows`).
-Note that the trigger could still be matched with a source for aggregatable reports despite failing the above two match criteria.
-
-Note that these matching criteria take place _after_ attributing a trigger to a particular source i.e. after step 5 [here](https://wicg.github.io/attribution-reporting-api/#trigger-attribution). If `trigger_specs` are specified for a source and no matching spec is found after attribution, the trigger will be ignored.
+This configuration fully specifies the output space of the event-level reports, per source registration.
 
 
 ### Trigger-data modulus matching example
@@ -115,42 +99,22 @@ Given a source with the following registration:
 ```jsonc
 {
   "trigger_data_matching": "modulus",
-  "trigger_specs": [
-    // Spec A
-    {
-      "trigger_data": [0, 3, 5],
-      ...
-    },
-    // Spec B
-    {
-      "trigger_data": [1, 2],
-      ...
-    },
-    // Spec C
-    {
-      "trigger_data": [4],
-      ...
-    },
-  ]
+
+  "trigger_data": [0, 1, 2, 3, 4 5],
+
+  ...
 }
 ```
 
 The trigger-data cardinality is 6, so all triggers' `trigger_data` will be taken
-modulus 6 before determining the matching `trigger_spec`:
+modulus 6 before determining the matching source:
 
-- `{"trigger_data": "0"}` will match Spec A because `0 % 6 = 0`
-- `{"trigger_data": "1"}` will match Spec B because `1 % 6 = 1`
-- `{"trigger_data": "2"}` will match Spec B because `2 % 6 = 2`
-- `{"trigger_data": "3"}` will match Spec A because `3 % 6 = 3`
-- `{"trigger_data": "4"}` will match Spec C because `4 % 6 = 4`
-- `{"trigger_data": "5"}` will match Spec A because `5 % 6 = 5`
+- `{"trigger_data": "0"}` will match the source because `0 % 6 = 0`
+- `{"trigger_data": "1"}` will match the source because `1 % 6 = 1`
+- `{"trigger_data": "2"}` will the source because `2 % 6 = 2`
 - `{"trigger_data": "6"}` will match Spec A because `6 % 6 = 0`
-- `{"trigger_data": "7"}` will match Spec B because `7 % 6 = 1`
-- `{"trigger_data": "8"}` will match Spec B because `8 % 6 = 2`
-- `{"trigger_data": "9"}` will match Spec A because `9 % 6 = 3`
 - `{"trigger_data": "10"}` will match Spec C because `10 % 6 = 4`
 - `{"trigger_data": "11"}` will match Spec A because `11 % 6 = 5`
-- ...
 
 ## Configurations that are equivalent to the current version
 
@@ -165,12 +129,10 @@ It is possible that there are multiple configurations that are equivalent, given
 // Here we list them explicitly just for clarity.
 {
   "trigger_data_matching": "modulus",
-  "trigger_specs": [{
-    "trigger_data": [0, 1],
-    "event_report_windows": {
-      "end_times": [<30 days>]
-    }
-  }],
+  "trigger_data": [0, 1],
+  "event_report_windows": {
+    "end_times": [<30 days>]
+  },
   "max_event_level_reports": 1,
   ...
   "expiry": <30 days> // expiry must be greater than or equal to the last element of the end_times
@@ -184,12 +146,10 @@ It is possible that there are multiple configurations that are equivalent, given
 // Here we list them explicitly just for clarity.
 {
   "trigger_data_matching": "modulus",
-  "trigger_specs": [{
-    "trigger_data": [0, 1, 2, 3, 4, 5, 6, 7],
-    "event_report_windows": {
-      "end_times": [<2 days>, <7 days>, <30 days>]
-    }
-  }],
+  "trigger_data": [0, 1, 2, 3, 4, 5, 6, 7],
+  "event_report_windows": {
+    "end_times": [<2 days>, <7 days>, <30 days>]
+  },
   "max_event_level_reports": 3,
   ...
   "expiry": <30 days> // expiry must be greater than or equal to the last element of the end_times
@@ -206,56 +166,13 @@ This example configuration supports a developer who wants to learn whether at le
 {
   "max_event_level_reports": 1,
   "trigger_data_matching": "exact",
-  "trigger_specs": [{
-    "trigger_data": [0],
-    "event_report_windows": {
-      // 1 day, 2 days, 3 days, 5 days, 7 days, 10 days represented in seconds
-      "end_times": [86400, 172800, 259200, 432000, 604800, 864000]
-    }
-  }],
+  "trigger_data": [0],
+  "event_report_windows": {
+    // 1 day, 2 days, 3 days, 5 days, 7 days, 10 days represented in seconds
+    "end_times": [86400, 172800, 259200, 432000, 604800, 864000]
+  },
 }
 ```
-
-### Varying `trigger_specs` from source to source
-
-Note that the `trigger_specs` registration can differ from source to source.
-This example has two configurations, one that specifies that only triggers with
-`trigger_data` 0-3 are eligible for attribution and another that specifies that
-only triggers with `trigger_data` 4-7 are eligible. The user can configure half
-their sources with the former and half their sources with the later. Doing so
-will result in the noise added to the report being approximately 15% of the
-noise of the default configuration for navigation sources. However, assuming no
-other changes, it may result in a greater number of unattributed triggers: If a
-trigger is attributed to a source with no matching `trigger_data`, the trigger
-is dropped.
-
-```jsonc
-{
-  "trigger_data_matching": "exact",
-  "trigger_specs": [{
-    "trigger_data": [0, 1, 2, 3],
-    "event_report_windows": {
-      "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
-    }
-  }],
-  "max_event_level_reports": 3
-}
-```
-
-```jsonc
-{
-  "trigger_data_matching": "exact",
-  "trigger_specs": [{
-    "trigger_data": [4, 5, 6, 7],
-    "event_report_windows": {
-      "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
-    }
-  }],
-  "max_event_level_reports": 3
-}
-```
-
-We encourage developers to suggest different use cases they may have for this API extension, and we will update this explainer with sample configurations for those use cases.
 
 ## Attribution Rate Limit
 
@@ -290,16 +207,31 @@ Be mindful that using extreme values here may result in a large amount of noise,
 
 ### Summary Buckets and Multiple Trigger Specs
 
-The trigger registration could also support two additional fields: `summary_operator` and `summary_bucket` that would allow summarizing report values and trading off noise with data granularity.
-
-Additionally, each source registration could support multiple trigger specs per registration.
+The trigger registration could also support three additional fields: `trigger_specs`, `summary_operator` and `summary_bucket` that would allow each source regisration supporting multiple trigger specs per registration and the ability to summarize report values and trade off noise with data granularity.
 
 
 ```jsonc
 {
+  // A trigger spec is a set of matching criteria, along with a scheme to
+  // generate bucketized output based on accumulated values across multiple
+  // triggers within the specified event_report_window.
+  // There will be a limit on the number of specs possible to define for a source.
+  // MAX_UINT32 is 2^32 - 1 (4294967295).
   "trigger_specs": [{
+    // This spec will only apply to registrations that set one of the given
+    // trigger data values (integers in the range [0, MAX_UINT32]) in the list.
+    // trigger_data will still appear in the event-level report.
+    // Entries in trigger_data must be distinct, and the sets of all trigger_data fields within trigger_specs must be disjoint.
     "trigger_data": [<int>, ...],
 
+    // Represents a series of time windows, starting at start_time offset from the source registration time.
+    // Reports for this spec will be delivered after the end of each window.
+    // Time is encoded as seconds after source registration.
+    // end_times must consist of strictly increasing positive integers.
+    // If event_report_windows
+    // is omitted, will use the "event_report_window" or "event_report_windows" field specified at the global level for the
+    // source (or the default windows if none are specified).
+    // Start time is inclusive, End time is exclusive.
     "event_report_windows": {
       "start_time": <int>, // optional, defaults to 0
       "end_times": [<int>, ...],
@@ -332,10 +264,16 @@ Additionally, each source registration could support multiple trigger specs per 
     // Next trigger_spec
   }, ...],
 
+  // See description in
+  // https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#data-limits-and-noise
   "trigger_data_matching": <one of "exact" or "modulus">,
 
+  // See description in
+  // https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-varying-frequency-and-number-of-reports
   "max_event_level_reports": <int>,
 
+  // See description in
+  // https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-varying-frequency-and-number-of-reports
   "event_report_windows": {
     "start_time": <int>,
     "end_times": [<int>, ...]
@@ -343,8 +281,14 @@ Additionally, each source registration could support multiple trigger specs per 
 }
 ```
 
-With these additional fields, for each trigger spec we additional specify:
+With these additional fields, for every trigger spec, we fully specify:
+* A set of matching criteria:
+  * Which specific trigger data this spec applies to. This source is eligible to be matched only with triggers that have one of the specified `trigger_data` values in the `trigger_specs` according to the `trigger_data_matching` field. In other words, if the trigger would have matched this source but its `trigger_data` is not one of the values in the source's configuration, the trigger is ignored.
+  * When a specific trigger matches this spec (via `event_report_windows`).
+Note that the trigger could still be matched with a source for aggregatable reports despite failing the above two match criteria.
 * A specific algorithm for summarizing and bucketizing all the triggers within an attribution window. This allows triggers to specify a `value` parameter that gets summed up for a particular spec, but reported as a bucketized value
+
+Note that these matching criteria take place _after_ attributing a trigger to a particular source i.e. after step 5 [here](https://wicg.github.io/attribution-reporting-api/#trigger-attribution). If `trigger_specs` are specified for a source and no matching spec is found after attribution, the trigger will be ignored.
 
 Triggers will also support adding an optional `value` parameter in the dictionaries within `event_trigger_data`.
 
