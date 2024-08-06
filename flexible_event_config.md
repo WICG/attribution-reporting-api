@@ -15,13 +15,13 @@ _Note: This document describes possible new functionality in the Attribution Rep
   - [Equivalent navigation sources](#equivalent-navigation-sources)
 - [Additional Examples](#additional-examples)
   - [Binary with more frequent reporting](#binary-with-more-frequent-reporting)
-- [Attribution rate limit](#attribution-rate-limit)
 - [Privacy considerations](#privacy-considerations)
 - [Ideas for future iteration](#ideas-for-future-iteration)
   - [Summary Buckets and Multiple Trigger Specs](#summary-buckets-and-multiple-trigger-specs)
   - [Custom configurations: Examples](#custom-configurations-examples)
     - [Reporting trigger value buckets](#reporting-trigger-value-buckets)
     - [Reporting trigger counts](#reporting-trigger-counts)
+  - [Attribution rate limit considerations](#attribution-rate-limit-considerations)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -172,16 +172,6 @@ This example configuration supports a developer who wants to learn whether at le
   },
 }
 ```
-
-## Attribution Rate Limit
-
-Attribution rate-limit behavior will be based on the number of reports generated
-rather than the number of triggers that lead to report generation. For example:
-The first report in the
-["Reporting trigger value buckets"](#reporting-trigger-value-buckets) example
-will be counted as 1 contribution towards the
-[max attribution per rate-limit window](https://wicg.github.io/attribution-reporting-api/#max-attributions-per-rate-limit-window)
-limit despite it being the result of contributions from 3 triggers.
 
 ## Privacy considerations
 
@@ -388,7 +378,7 @@ The values are summed to 8 + 50 + 45 = 103. This yields the following reports at
 }
 ```
 
-### Reporting trigger counts
+#### Reporting trigger counts
 
 This example shows how a developer can configure a source to get a count of triggers up to 4.
 
@@ -432,5 +422,15 @@ Attributed triggers with `trigger_data` set to 0 are counted and capped at 4. Th
   "trigger_summary_bucket": [4, MAX_UINT32]
 }
 ```
+
+### Attribution Rate Limit Considerations
+
+Attribution rate-limit behavior will be based on the number of reports generated
+rather than the number of triggers that lead to report generation. For example:
+The first report in the
+["Reporting trigger value buckets"](#reporting-trigger-value-buckets) example
+will be counted as 1 contribution towards the
+[max attribution per rate-limit window](https://wicg.github.io/attribution-reporting-api/#max-attributions-per-rate-limit-window)
+limit despite it being the result of contributions from 3 triggers.
 
 _Note: currently we do not plan to implement support for any additional flexible event-level features, such as `summary_buckets` and multiple trigger specs per source registration, until we hear additional feedback. Please share any additional feedback [here](https://github.com/WICG/attribution-reporting-api/issues/new)._
