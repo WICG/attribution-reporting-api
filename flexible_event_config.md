@@ -91,7 +91,6 @@ cardinality):
 
 This configuration fully specifies the output space of the event-level reports, per source registration.
 
-
 ### Trigger-data modulus matching example
 
 Given a source with the following registration:
@@ -100,7 +99,7 @@ Given a source with the following registration:
 {
   "trigger_data_matching": "modulus",
 
-  "trigger_data": [0, 1, 2, 3, 4 5],
+  "trigger_data": [0, 1, 2, 3, 4, 5],
 
   ...
 }
@@ -160,7 +159,7 @@ It is possible that there are multiple configurations that are equivalent, given
 
 ### Binary with more frequent reporting
 
-This example configuration supports a developer who wants to learn whether at least one conversion occurred in the first 10 days (regardless of value), but wants to receive reports at more frequent intervals than the default. Again, in this example any trigger that sets `trigger_data` to a value other than 0 is ineligible for attribution. This is why we refer to this use case as _binary_.
+This example configuration supports a developer who wants to learn whether at least one attribution occurred in the first 10 days (regardless of value), but wants to receive reports at more frequent intervals than the default. Again, in this example any trigger that sets `trigger_data` to a value other than 0 is ineligible for attribution. This is why we refer to this use case as _binary_.
 
 ```jsonc
 {
@@ -207,7 +206,7 @@ Be mindful that using extreme values here may result in a large amount of noise,
 
 ### Summary Buckets and Multiple Trigger Specs
 
-The trigger registration could also support three additional fields: `trigger_specs`, `summary_operator` and `summary_bucket` that would allow each source regisration supporting multiple trigger specs per registration and the ability to summarize report values and trade off noise with data granularity.
+The trigger registration could also support three additional fields: `trigger_specs`, `summary_operator`, and `summary_bucket` that would allow each source regisration supporting multiple trigger specs per registration and the ability to summarize report values and trade off noise with data granularity.
 
 
 ```jsonc
@@ -304,7 +303,6 @@ Triggers will also support adding an optional `value` parameter in the dictionar
   ]
 }
 ```
-
 
 Every trigger registration will match with at most one trigger spec and update its associated summary value. At a high level, at trigger time we will:
 
@@ -435,4 +433,4 @@ Attributed triggers with `trigger_data` set to 0 are counted and capped at 4. Th
 }
 ```
 
-_Note: currently we do not plan to implement support for any additional flexible event-level features such as: `summary_buckets` and multiple trigger specs per source registration until we hear additional feedback. Please share any additional feedback [here](https://github.com/WICG/attribution-reporting-api/issues/new)._
+_Note: currently we do not plan to implement support for any additional flexible event-level features, such as `summary_buckets` and multiple trigger specs per source registration, until we hear additional feedback. Please share any additional feedback [here](https://github.com/WICG/attribution-reporting-api/issues/new)._
