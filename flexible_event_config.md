@@ -13,12 +13,15 @@ _Note: This document describes possible new functionality in the Attribution Rep
 - [Configurations that are equivalent to the current version](#configurations-that-are-equivalent-to-the-current-version)
   - [Equivalent event sources](#equivalent-event-sources)
   - [Equivalent navigation sources](#equivalent-navigation-sources)
+- [Additional Examples](#additional-examples)
+  - [Binary with more frequent reporting](#binary-with-more-frequent-reporting)
+- [Privacy considerations](#privacy-considerations)
+- [Ideas for future iteration](#ideas-for-future-iteration)
+  - [Summary Buckets and Multiple Trigger Specs](#summary-buckets-and-multiple-trigger-specs)
   - [Custom configurations: Examples](#custom-configurations-examples)
     - [Reporting trigger value buckets](#reporting-trigger-value-buckets)
-  - [Reporting trigger counts](#reporting-trigger-counts)
-    - [Binary with more frequent reporting](#binary-with-more-frequent-reporting)
-  - [Varying `trigger_specs` from source to source](#varying-trigger_specs-from-source-to-source)
-- [Privacy considerations](#privacy-considerations)
+    - [Reporting trigger counts](#reporting-trigger-counts)
+  - [Attribution rate limit considerations](#attribution-rate-limit-considerations)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -29,10 +32,10 @@ This proposal is broken into two separate feature sets:
   * This lite version provides a subset of the full feature and can be used independently of Phase 2.
   * Implemented [as described in the primary explainer](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-varying-frequency-and-number-of-reports).
 * __Phase 2: Full version of flexible event-level configuration__
-
-Phase 2 (Full flexible event-level) could be used to do all of the capabilities in Phase 1 and:
-* Vary the trigger data cardinality in a report
-* Reduce the amount of total noise by decreasing the trigger data cardinality
+  * This full version provides all of the capabilities in Phase 1 and:
+    * Vary the trigger data cardinality in a report
+    * Reduce the amount of total noise by decreasing the trigger data cardinality
+    * Implemented [as described in the primary explainer](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#data-limits-and-noise).
 
 ## Goals
 
@@ -47,7 +50,154 @@ In general, the approach here is to more flexibly encode the output of the API f
 
 ### API changes
 
-In addition to the parameters that were added in Phase 1, we will add one additional optional parameter to the JSON in `Attribution-Reporting-Register-Source`: `trigger_specs`
+In addition to the parameters that were added in Phase 1 to the JSON in `Attribution-Reporting-Register-Source`, sources can now be configured to allow non-default `trigger_data` (values and/or
+cardinality):
+
+```jsonc
+{
+  ...
+
+  // Specifies how the 64-bit unsigned trigger_data from the trigger is matched
+  // against the source's trigger_data, which is 32-bit. Defaults to "modulus".
+  //
+  // If "exact", the trigger_data must exactly match a value contained in the
+  // source's trigger_data; if there is no such match, no event-level
+  // attribution takes place.
+  //
+  // If "modulus", the source's trigger_data must form a contiguous sequence of
+  // integers starting at 0. The trigger's trigger_data is taken modulus the
+  // cardinality of this sequence and then matched against the trigger data.
+  // See below for an example. It is an error to use "modulus" if the trigger
+  // data does not form such a sequence.
+  "trigger_data_matching": <one of "exact" or "modulus">,
+
+  // Size must be in the range [0, 32], inclusive.
+  // If omitted, defaults to [0, 1, 2, 3, 4, 5, 6, 7] for navigation sources and
+  // [0, 1] for event sources.
+  "trigger_data": [<32-bit unsigned integer>, ...],
+
+  // See description in
+  // https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-varying-frequency-and-number-of-reports
+  "max_event_level_reports": <int>,
+
+  // See description in
+  // https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-varying-frequency-and-number-of-reports
+  "event_report_windows": {
+    "start_time": <int>,
+    "end_times": [<int>, ...]
+  }
+}
+```
+
+This configuration fully specifies the output space of the event-level reports, per source registration.
+
+### Trigger-data modulus matching example
+
+Given a source with the following registration:
+
+```jsonc
+{
+  "trigger_data_matching": "modulus",
+
+  "trigger_data": [0, 1, 2, 3, 4, 5],
+
+  ...
+}
+```
+
+The trigger-data cardinality is 6, so all triggers' `trigger_data` will be taken
+modulus 6 before determining the matching source:
+
+- `{"trigger_data": "0"}` will match the source because `0 % 6 = 0`
+- `{"trigger_data": "1"}` will match the source because `1 % 6 = 1`
+- `{"trigger_data": "2"}` will the source because `2 % 6 = 2`
+- `{"trigger_data": "6"}` will match Spec A because `6 % 6 = 0`
+- `{"trigger_data": "10"}` will match Spec C because `10 % 6 = 4`
+- `{"trigger_data": "11"}` will match Spec A because `11 % 6 = 5`
+
+## Configurations that are equivalent to the current version
+
+The following are equivalent configurations for the API's current event and navigation sources, respectively. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
+
+It is possible that there are multiple configurations that are equivalent, given that some parameters can be set as default or omitted.
+
+### Equivalent event sources
+
+```jsonc
+// Note: most of the fields here are not required to be explicitly listed.
+// Here we list them explicitly just for clarity.
+{
+  "trigger_data_matching": "modulus",
+  "trigger_data": [0, 1],
+  "event_report_windows": {
+    "end_times": [<30 days>]
+  },
+  "max_event_level_reports": 1,
+  ...
+  "expiry": <30 days> // expiry must be greater than or equal to the last element of the end_times
+}
+```
+
+### Equivalent navigation sources
+
+```jsonc
+// Note: most of the fields here are not required to be explicitly listed.
+// Here we list them explicitly just for clarity.
+{
+  "trigger_data_matching": "modulus",
+  "trigger_data": [0, 1, 2, 3, 4, 5, 6, 7],
+  "event_report_windows": {
+    "end_times": [<2 days>, <7 days>, <30 days>]
+  },
+  "max_event_level_reports": 3,
+  ...
+  "expiry": <30 days> // expiry must be greater than or equal to the last element of the end_times
+}
+```
+
+## Additional Examples
+
+### Binary with more frequent reporting
+
+This example configuration supports a developer who wants to learn whether at least one attribution occurred in the first 10 days (regardless of value), but wants to receive reports at more frequent intervals than the default. Again, in this example any trigger that sets `trigger_data` to a value other than 0 is ineligible for attribution. This is why we refer to this use case as _binary_.
+
+```jsonc
+{
+  "max_event_level_reports": 1,
+  "trigger_data_matching": "exact",
+  "trigger_data": [0],
+  "event_report_windows": {
+    // 1 day, 2 days, 3 days, 5 days, 7 days, 10 days represented in seconds
+    "end_times": [86400, 172800, 259200, 432000, 604800, 864000]
+  },
+}
+```
+
+## Privacy considerations
+
+We will publish an [algorithm](https://github.com/WICG/attribution-reporting-api/tree/main/ts#flexible-event) which computes the number of output states for a given source registration. From this we will be able to:
+
+* Compute a randomized response algorithm across the entire output space
+* Set the noise level to satisfy a certain epsilon level via a randomized response mechanism
+* Verify that the privacy parameters (like information gain) are within a given threshold, and fail registration if they are not
+
+With these pieces we can ensure that these extensions do not exceed certain privacy parameters. Additionally, it allows callers to fine-tune the noise added to the API e.g. by specifying different kinds of output domains. For example, navigation sources that only need 1 bit of trigger data and 1 reporting window can use the same noise level as event sources.
+
+Beyond setting noise levels, we will have some parameter limits to avoid large computation costs and avoid configurations with too many output states (where noise will increase considerably). Here is an example set of restrictions (feedback always welcome):
+
+* Maximum of 20 total reports, globally and per `trigger_data`
+* Maximum of 5 possible reporting windows per `trigger_data`
+* Maximum of 32 trigger data cardinality (not applicable for Phase 1: Lite Flexible Event-Level)
+
+Be mindful that using extreme values here may result in a large amount of noise, or failure to register if privacy levels ([information gain](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md)) are exceeded. The [flexible-event script](https://github.com/WICG/attribution-reporting-api/tree/main/ts#flexible-event) can be used to analyze different configurations that fall within the privacy levels.
+
+
+## Ideas for future iteration
+
+### Summary Buckets and Multiple Trigger Specs
+
+The trigger registration could also support three additional fields: `trigger_specs`, `summary_operator`, and `summary_bucket` that would allow each source regisration supporting multiple trigger specs per registration and the ability to summarize report values and trade off noise with data granularity.
+
 
 ```jsonc
 {
@@ -120,7 +270,7 @@ In addition to the parameters that were added in Phase 1, we will add one additi
 }
 ```
 
-This configuration fully specifies the output space of the event-level reports, per source registration. For every trigger spec, we fully specify:
+With these additional fields, for every trigger spec, we fully specify:
 * A set of matching criteria:
   * Which specific trigger data this spec applies to. This source is eligible to be matched only with triggers that have one of the specified `trigger_data` values in the `trigger_specs` according to the `trigger_data_matching` field. In other words, if the trigger would have matched this source but its `trigger_data` is not one of the values in the source's configuration, the trigger is ignored.
   * When a specific trigger matches this spec (via `event_report_windows`).
@@ -161,97 +311,6 @@ When the `event_report_window` for a spec completes, we will map its summary val
 }
 ```
 
-### Trigger-data modulus matching example
-
-Given a source with the following registration:
-
-```jsonc
-{
-  "trigger_data_matching": "modulus",
-  "trigger_specs": [
-    // Spec A
-    {
-      "trigger_data": [0, 3, 5],
-      ...
-    },
-    // Spec B
-    {
-      "trigger_data": [1, 2],
-      ...
-    },
-    // Spec C
-    {
-      "trigger_data": [4],
-      ...
-    },
-  ]
-}
-```
-
-The trigger-data cardinality is 6, so all triggers' `trigger_data` will be taken
-modulus 6 before determining the matching `trigger_spec`:
-
-- `{"trigger_data": "0"}` will match Spec A because `0 % 6 = 0`
-- `{"trigger_data": "1"}` will match Spec B because `1 % 6 = 1`
-- `{"trigger_data": "2"}` will match Spec B because `2 % 6 = 2`
-- `{"trigger_data": "3"}` will match Spec A because `3 % 6 = 3`
-- `{"trigger_data": "4"}` will match Spec C because `4 % 6 = 4`
-- `{"trigger_data": "5"}` will match Spec A because `5 % 6 = 5`
-- `{"trigger_data": "6"}` will match Spec A because `6 % 6 = 0`
-- `{"trigger_data": "7"}` will match Spec B because `7 % 6 = 1`
-- `{"trigger_data": "8"}` will match Spec B because `8 % 6 = 2`
-- `{"trigger_data": "9"}` will match Spec A because `9 % 6 = 3`
-- `{"trigger_data": "10"}` will match Spec C because `10 % 6 = 4`
-- `{"trigger_data": "11"}` will match Spec A because `11 % 6 = 5`
-- ...
-
-## Configurations that are equivalent to the current version
-
-The following are equivalent configurations for the API's current event and navigation sources, respectively. Especially for navigation sources, this illustrates why the noise levels are so high relative to event sources to maintain the same epsilon values: navigation sources have a much larger output space.
-
-It is possible that there are multiple configurations that are equivalent, given that some parameters can be set as default or omitted.
-
-### Equivalent event sources
-
-```jsonc
-// Note: most of the fields here are not required to be explicitly listed.
-// Here we list them explicitly just for clarity.
-{
-  "trigger_data_matching": "modulus",
-  "trigger_specs": [{
-    "trigger_data": [0, 1],
-    "event_report_windows": {
-      "end_times": [<30 days>]
-    },
-    "summary_operator": "count",
-    "summary_buckets": [1]
-  }],
-  "max_event_level_reports": 1,
-  ...
-  "expiry": <30 days> // expiry must be greater than or equal to the last element of the end_times
-}
-```
-
-### Equivalent navigation sources
-
-```jsonc
-// Note: most of the fields here are not required to be explicitly listed.
-// Here we list them explicitly just for clarity.
-{
-  "trigger_data_matching": "modulus",
-  "trigger_specs": [{
-    "trigger_data": [0, 1, 2, 3, 4, 5, 6, 7],
-    "event_report_windows": {
-      "end_times": [<2 days>, <7 days>, <30 days>]
-    },
-    "summary_operator": "count",
-    "summary_buckets": [1, 2, 3]
-  }],
-  "max_event_level_reports": 3,
-  ...
-  "expiry": <30 days> // expiry must be greater than or equal to the last element of the end_times
-}
-```
 
 ### Custom configurations: Examples
 
@@ -319,7 +378,7 @@ The values are summed to 8 + 50 + 45 = 103. This yields the following reports at
 }
 ```
 
-### Reporting trigger counts
+#### Reporting trigger counts
 
 This example shows how a developer can configure a source to get a count of triggers up to 4.
 
@@ -364,69 +423,7 @@ Attributed triggers with `trigger_data` set to 0 are counted and capped at 4. Th
 }
 ```
 
-#### Binary with more frequent reporting
-
-This example configuration supports a developer who wants to learn whether at least one conversion occurred in the first 10 days (regardless of value), but wants to receive reports at more frequent intervals than the default. Again, in this example any trigger that sets `trigger_data` to a value other than 0 is ineligible for attribution. This is why we refer to this use case as _binary_.
-
-```jsonc
-{
-  "max_event_level_reports": 1,
-  "trigger_data_matching": "exact",
-  "trigger_specs": [{
-    "trigger_data": [0],
-    "event_report_windows": {
-      // 1 day, 2 days, 3 days, 5 days, 7 days, 10 days represented in seconds
-      "end_times": [86400, 172800, 259200, 432000, 604800, 864000]
-    },
-    // This field could be omitted to save bandwidth since the default is "count"
-    "summary_operator": "count",
-    "summary_buckets": [1]
-  }],
-}
-```
-
-### Varying `trigger_specs` from source to source
-
-Note that the `trigger_specs` registration can differ from source to source.
-This example has two configurations, one that specifies that only triggers with
-`trigger_data` 0-3 are eligible for attribution and another that specifies that
-only triggers with `trigger_data` 4-7 are eligible. The user can configure half
-their sources with the former and half their sources with the later. Doing so
-will result in the noise added to the report being approximately 15% of the
-noise of the default configuration for navigation sources. However, assuming no
-other changes, it may result in a greater number of unattributed triggers: If a
-trigger is attributed to a source with no matching `trigger_data`, the trigger
-is dropped.
-
-```jsonc
-{
-  "trigger_data_matching": "exact",
-  "trigger_specs": [{
-    "trigger_data": [0, 1, 2, 3],
-    "event_report_windows": {
-      "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
-    }
-  }],
-  "max_event_level_reports": 3
-}
-```
-
-```jsonc
-{
-  "trigger_data_matching": "exact",
-  "trigger_specs": [{
-    "trigger_data": [4, 5, 6, 7],
-    "event_report_windows": {
-      "end_times": [172800, 604800, 2592000] // 2 days, 7 days, 30 days represented in seconds
-    }
-  }],
-  "max_event_level_reports": 3
-}
-```
-
-We encourage developers to suggest different use cases they may have for this API extension, and we will update this explainer with sample configurations for those use cases.
-
-## Attribution Rate Limit
+### Attribution Rate Limit Considerations
 
 Attribution rate-limit behavior will be based on the number of reports generated
 rather than the number of triggers that lead to report generation. For example:
@@ -436,20 +433,4 @@ will be counted as 1 contribution towards the
 [max attribution per rate-limit window](https://wicg.github.io/attribution-reporting-api/#max-attributions-per-rate-limit-window)
 limit despite it being the result of contributions from 3 triggers.
 
-## Privacy considerations
-
-We will publish an [algorithm](https://github.com/WICG/attribution-reporting-api/tree/main/ts#flexible-event) which computes the number of output states for a given source registration. From this we will be able to:
-
-* Compute a randomized response algorithm across the entire output space
-* Set the noise level to satisfy a certain epsilon level via a randomized response mechanism
-* Verify that the privacy parameters (like information gain) are within a given threshold, and fail registration if they are not
-
-With these pieces we can ensure that these extensions do not exceed certain privacy parameters. Additionally, it allows callers to fine-tune the noise added to the API e.g. by specifying different kinds of output domains. For example, navigation sources that only need 1 bit of trigger data and 1 reporting window can use the same noise level as event sources.
-
-Beyond setting noise levels, we will have some parameter limits to avoid large computation costs and avoid configurations with too many output states (where noise will increase considerably). Here is an example set of restrictions (feedback always welcome):
-
-* Maximum of 20 total reports, globally and per `trigger_data`
-* Maximum of 5 possible reporting windows per `trigger_data`
-* Maximum of 32 trigger data cardinality (not applicable for Phase 1: Lite Flexible Event-Level)
-
-Be mindful that using extreme values here may result in a large amount of noise, or failure to register if privacy levels ([information gain](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md)) are exceeded. The [flexible-event script](https://github.com/WICG/attribution-reporting-api/tree/main/ts#flexible-event) can be used to analyze different configurations that fall within the privacy levels.
+_Note: currently we do not plan to implement support for any additional flexible event-level features, such as `summary_buckets` and multiple trigger specs per source registration, until we hear additional feedback. Please share any additional feedback [here](https://github.com/WICG/attribution-reporting-api/issues/new)._
