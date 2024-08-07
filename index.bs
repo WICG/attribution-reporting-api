@@ -4439,24 +4439,31 @@ The user agent MUST periodically run [=queue reports for delivery=] on the
 To <dfn>queue reports for delivery</dfn> given a [=set=] of
 [=attribution reports=] |cache|, run the following steps:
 
+1. Let |reportsToSend| be a new [=list=].
 1. [=set/iterate|For each=] |report| of |cache|:
   1. If |report|'s [=attribution report/report time=] is greater than the
       [=current wall time=], [=iteration/continue=].
   1. [=set/Remove=] |report| from |cache|.
 
-      Note: In order to support sending, waiting, and retries across various
-       forms of interruption, including shutdown, the user agent may need to
-       persist reports that are in the process of being sent in some other
-       storage.
-  1. Run the following steps [=in parallel=]:
-      1. Wait an [=implementation-defined=] random non-negative [=duration=].
+    Note: In order to support sending, waiting, and retries across various
+     forms of interruption, including shutdown, the user agent may need to
+     persist reports that are in the process of being sent in some other
+     storage.
+  1. [=List/append=] |report| to |reportsToSend|.
+1. [=shuffle a list|Shuffle=] |reportsToSend|.
 
-          Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
-           closed. Adding random delay prevents temporal joining of reports from different [=attribution source/source origin=]s.
-      1. Optionally, wait a further [=implementation-defined=] [=duration=].
+  Note: Shuffling ensures [=event-level reports=] for the same source with the same [=attribution report/report time=] are never sent in the order they were created.
+    This results in less information gained from a single [=attribution source=].
+1. [=set/iterate|For each=] |report| of |reportsToSend|, run the following steps [=in parallel=]:
+    1. Wait an [=implementation-defined=] random non-negative [=duration=].
 
-          Note: This is intended to allow user agents to optimize device resource usage.
-      1. Run [=attempt to deliver a report=] with |report|.
+        Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
+         closed. Adding random delay prevents prevents [=event-level report/event ID=]s from different
+         [=attribution source/source origin=]s being joined based on the time they were received.
+    1. Optionally, wait a further [=implementation-defined=] [=duration=].
+
+      Note: This is intended to allow user agents to optimize device resource usage.
+    1. Run [=attempt to deliver a report=] with |report|.
 
 <h3 id="encode-integer">Encode an unsigned k-bit integer</h3>
 
