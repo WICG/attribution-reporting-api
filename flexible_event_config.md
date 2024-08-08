@@ -91,7 +91,7 @@ cardinality):
 
 This configuration fully specifies the output space of the event-level reports, per source registration.
 
-### Trigger-data modulus example
+### Trigger-data modulus matching example
 
 Given a source with the following registration:
 
