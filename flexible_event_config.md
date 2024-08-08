@@ -106,14 +106,15 @@ Given a source with the following registration:
 ```
 
 The trigger-data cardinality is 6, so all triggers' `trigger_data` will be taken
-modulus 6 before determining the matching source:
+modulus 6 to produce the `trigger_data` that shows up in the generated
+event-level report:
 
-- `{"trigger_data": "0"}` will match the source because `0 % 6 = 0`
-- `{"trigger_data": "1"}` will match the source because `1 % 6 = 1`
-- `{"trigger_data": "2"}` will the source because `2 % 6 = 2`
-- `{"trigger_data": "6"}` will match Spec A because `6 % 6 = 0`
-- `{"trigger_data": "10"}` will match Spec C because `10 % 6 = 4`
-- `{"trigger_data": "11"}` will match Spec A because `11 % 6 = 5`
+- `{"trigger_data": "0"}` will become `0 % 6 = 0`
+- `{"trigger_data": "1"}` will become `1 % 6 = 1`
+- `{"trigger_data": "2"}` will become `2 % 6 = 2`
+- `{"trigger_data": "6"}` will become `6 % 6 = 0`
+- `{"trigger_data": "10"}` will become `10 % 6 = 4`
+- `{"trigger_data": "11"}` will become `11 % 6 = 5`
 
 ## Configurations that are equivalent to the current version
 
