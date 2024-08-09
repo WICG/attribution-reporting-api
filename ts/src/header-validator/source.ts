@@ -31,6 +31,12 @@ export enum TriggerDataMatching {
   modulus = 'modulus',
 }
 
+export type AttributionScopeData = {
+  attributionScopeLimit: number
+  attributionScopes: Set<string>
+  maxEventStates: number
+}
+
 export type Source = reg.CommonDebug &
   reg.Priority & {
     aggregatableReportWindow: number
@@ -47,7 +53,5 @@ export type Source = reg.CommonDebug &
     eventLevelEpsilon: number
     aggregatableDebugReporting: SourceAggregatableDebugReportingConfig | null
     destinationLimitPriority: bigint
-    attributionScopes: Set<string>
-    attributionScopeLimit: number | null
-    maxEventStates: number
+    attributionScopeData: AttributionScopeData | null
   }

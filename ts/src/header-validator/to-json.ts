@@ -135,6 +135,22 @@ function serializeSourceAggregatableDebugReportingConfig(
   }
 }
 
+type AttributionScopeData = {
+  attribution_scope_limit: number
+  attribution_scopes: string[]
+  max_event_states: number
+}
+
+function serializeAttributionScopeData(
+  a: source.AttributionScopeData
+): AttributionScopeData {
+  return {
+    attribution_scope_limit: a.attributionScopeLimit,
+    attribution_scopes: Array.from(a.attributionScopes),
+    max_event_states: a.maxEventStates,
+  }
+}
+
 type NotFullFlexSource = Partial<EventReportWindows> & {
   trigger_data: number[]
   trigger_specs?: never
@@ -184,9 +200,7 @@ type Source = CommonDebug &
     source_event_id: string
     trigger_data_matching: string
     aggregatable_debug_reporting?: SourceAggregatableDebugReportingConfig
-    attribution_scopes?: string[]
-    attribution_scope_limit?: number
-    max_event_states?: number
+    attribution_scope_data?: AttributionScopeData
   }
 
 export interface Options {
@@ -199,17 +213,10 @@ export function serializeSource(
   opts: Readonly<Options>
 ): string {
   const scopeFields = opts.scopes
-    ? {
-        attribution_scopes: Array.from(s.attributionScopes),
-        ...ifNotNull(
-          'attribution_scope_limit',
-          s.attributionScopeLimit,
-          (v) => v
-        ),
-        max_event_states: s.maxEventStates,
-      }
+    ? ifNotNull('attribution_scope_data', s.attributionScopeData, (v) =>
+        serializeAttributionScopeData(v)
+      )
     : {}
-
   const source: Source = {
     ...serializeCommonDebug(s),
     ...serializePriority(s),
