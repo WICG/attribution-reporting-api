@@ -31,7 +31,7 @@ In general, the approach here is to allow API callers to specify a list of strin
 
 ### API changes
 
-The following optional parameter will be added to the JSON in `Attribution-Reporting-Register-Source` during source registration: `attribution_scopes`, which contains required parameters `values`, `limit`, and optional parameter `max_event_states`:
+The following optional parameter will be added to the JSON in `Attribution-Reporting-Register-Source` during source registration: `attribution_scopes`, which contains required parameters `values`, `limit`, and an optional parameter `max_event_states`:
 
 ```jsonc
 {
@@ -89,7 +89,7 @@ If there are multiple sources whose `attribution_scopes/values` contains at leas
 
 If the trigger registration's `attribution_scopes` is empty, then all sources are considered for attribution.
 
-Once a `attribution scopes/limit` is set, the last K values (where K = `attribution scopes/limit`) of `attribution_scopes/values` will be considered the final set of `attribution_scopes` values and any source with additional `attribution_scopes/values` will be treated as if the attribution scopes were empty.
+Once a `attribution scopes/limit` is set, the last K values (where K = `attribution scopes/limit`) of `attribution_scopes/values` will be considered the final set of attribution scopes values and any source with additional values will be treated as if the attribution scopes were not set.
 
 If a source registration is specified with a configuration that has a higher number of event states than the most recent `max_event_states` for the same reporting origin, then the source will be rejected and the registration will fail. Additionally, if the `max_event_states` field is changed in a future source registration, then all other previous pending source registrations with a different `max_event_states` will be ignored in subsequent attribution report generation flows, but will still count towards rate limits. 
 
@@ -162,11 +162,11 @@ The user then converts at a later time on the destination site by purchasing a p
 // trigger registration 1 for advertiser1 at t=4
 {
   ..., // existing fields
-   "attribution_scopes": ["advertiser1"]
+  "attribution_scopes": ["advertiser1"]
 }
 ```
 
-The API automatically performs attribution between any sources that have `attribution_scopes/values` that are not disjoint with the trigger `attribution_scopes`. Any sources that do not have an `attribution_scopes` that matches at least one of the trigger registration `attribution_scopes` are deleted (assuming the source that is chosen passes the top-level filter check; if it does not then no sources are deleted). In this example, the API caller would receive an attribution report attributing the trigger registration to advertiser1’s second source registration.
+The API automatically performs attribution between any sources that have `attribution_scopes/values` that are not disjoint with the trigger `attribution_scopes`. Any sources that do not have an `attribution_scopes/values` that matches at least one of the trigger registration `attribution_scopes` are deleted (assuming the source that is chosen passes the top-level filter check; if it does not then no sources are deleted). In this example, the API caller would receive an attribution report attributing the trigger registration to advertiser1’s second source registration.
 
 ### Example 2: multiple attribution scope values per source and trigger
 
