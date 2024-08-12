@@ -45,9 +45,9 @@ const testCases: TestCase[] = [
           "value": 123
         } ]
       },
-      "attribution_scope_data": {
-        "attribution_scope_limit": 3,
-        "attribution_scopes": ["1"],
+      "attribution_scopes": {
+        "limit": 3,
+        "values": ["1"],
         "max_event_states": 4
       }
     }`,
@@ -91,9 +91,9 @@ const testCases: TestCase[] = [
         aggregationCoordinatorOrigin:
           'https://publickeyservice.msmt.aws.privacysandboxservices.com',
       },
-      attributionScopeData: {
-        attributionScopeLimit: 3,
-        attributionScopes: new Set<string>('1'),
+      attributionScopes: {
+        limit: 3,
+        values: new Set<string>('1'),
         maxEventStates: 4,
       },
     }),
@@ -104,15 +104,15 @@ const testCases: TestCase[] = [
     name: 'unknown-field',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scopes": false,
-        "attribution_scope_limit": false,
+      "attribution_scopes": {
+        "values": false,
+        "limit": false,
         "max_event_states": false
       }
     }`,
     expectedWarnings: [
       {
-        path: ['attribution_scope_data'],
+        path: ['attribution_scopes'],
         msg: 'unknown field',
       },
     ],
@@ -1448,9 +1448,9 @@ const testCases: TestCase[] = [
     name: 'trigger-state-cardinality-invalid-scopes',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 3,
-        "attribution_scopes": ["1"],
+      "attribution_scopes": {
+        "limit": 3,
+        "values": ["1"],
         "max_event_states": 2
       }
     }`,
@@ -2687,20 +2687,20 @@ const testCases: TestCase[] = [
     name: 'attribution-scope-limit-negative',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": -1,
-        "attribution_scopes": ["1"]
+      "attribution_scopes": {
+        "limit": -1,
+        "values": ["1"]
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'attribution_scope_limit'],
+        path: ['attribution_scopes', 'limit'],
         msg: 'must be in the range [1, 4294967295]',
       },
       {
-        path: ['attribution_scope_data', 'attribution_scopes'],
-        msg: 'cannot be fully validated without a valid attribution_scope_limit',
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
       },
     ],
   },
@@ -2708,20 +2708,20 @@ const testCases: TestCase[] = [
     name: 'attribution-scope-limit-zero',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 0,
-        "attribution_scopes": ["1"]
+      "attribution_scopes": {
+        "limit": 0,
+        "values": ["1"]
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'attribution_scope_limit'],
+        path: ['attribution_scopes', 'limit'],
         msg: 'must be in the range [1, 4294967295]',
       },
       {
-        path: ['attribution_scope_data', 'attribution_scopes'],
-        msg: 'cannot be fully validated without a valid attribution_scope_limit',
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
       },
     ],
   },
@@ -2729,20 +2729,20 @@ const testCases: TestCase[] = [
     name: 'attribution-scope-limit-not-integer',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 1.5,
-        "attribution_scopes": ["1"]
+      "attribution_scopes": {
+        "limit": 1.5,
+        "values": ["1"]
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'attribution_scope_limit'],
+        path: ['attribution_scopes', 'limit'],
         msg: 'must be an integer',
       },
       {
-        path: ['attribution_scope_data', 'attribution_scopes'],
-        msg: 'cannot be fully validated without a valid attribution_scope_limit',
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
       },
     ],
   },
@@ -2750,20 +2750,20 @@ const testCases: TestCase[] = [
     name: 'attribution-scope-limit-exceeds-max',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 4294967296,
-        "attribution_scopes": ["1"]
+      "attribution_scopes": {
+        "limit": 4294967296,
+        "values": ["1"]
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'attribution_scope_limit'],
+        path: ['attribution_scopes', 'limit'],
         msg: 'must be in the range [1, 4294967295]',
       },
       {
-        path: ['attribution_scope_data', 'attribution_scopes'],
-        msg: 'cannot be fully validated without a valid attribution_scope_limit',
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
       },
     ],
   },
@@ -2771,16 +2771,16 @@ const testCases: TestCase[] = [
     name: 'empty-attribution-scopes-with-limit',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 3,
-        "attribution_scopes": []
+      "attribution_scopes": {
+        "limit": 3,
+        "values": []
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'attribution_scopes'],
-        msg: 'must be non-empty if attribution_scope_limit is set',
+        path: ['attribution_scopes', 'values'],
+        msg: 'must be non-empty if limit is set',
       },
     ],
   },
@@ -2788,19 +2788,19 @@ const testCases: TestCase[] = [
     name: 'missing-attribution-scope-limit',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scopes": ["1", "2"]
+      "attribution_scopes": {
+        "values": ["1", "2"]
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'attribution_scope_limit'],
+        path: ['attribution_scopes', 'limit'],
         msg: 'required',
       },
       {
-        path: ['attribution_scope_data', 'attribution_scopes'],
-        msg: 'cannot be fully validated without a valid attribution_scope_limit',
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
       },
     ],
   },
@@ -2808,20 +2808,20 @@ const testCases: TestCase[] = [
     name: 'invalid-attribution-scope-limit-not-an-integer',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scopes": ["1"],
-        "attribution_scope_limit": true
+      "attribution_scopes": {
+        "values": ["1"],
+        "limit": true
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'attribution_scope_limit'],
+        path: ['attribution_scopes', 'limit'],
         msg: 'must be a number',
       },
       {
-        path: ['attribution_scope_data', 'attribution_scopes'],
-        msg: 'cannot be fully validated without a valid attribution_scope_limit',
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
       },
     ],
   },
@@ -2829,16 +2829,16 @@ const testCases: TestCase[] = [
     name: 'max-event-states-negative',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 1,
-        "attribution_scopes": ["1"],
+      "attribution_scopes": {
+        "limit": 1,
+        "values": ["1"],
         "max_event_states": -1
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'max_event_states'],
+        path: ['attribution_scopes', 'max_event_states'],
         msg: 'must be in the range [1, 4294967295]',
       },
     ],
@@ -2847,16 +2847,16 @@ const testCases: TestCase[] = [
     name: 'max-event-states-zero',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 1,
-        "attribution_scopes": ["1"],
+      "attribution_scopes": {
+        "limit": 1,
+        "values": ["1"],
         "max_event_states": 0
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'max_event_states'],
+        path: ['attribution_scopes', 'max_event_states'],
         msg: 'must be in the range [1, 4294967295]',
       },
     ],
@@ -2865,16 +2865,16 @@ const testCases: TestCase[] = [
     name: 'max-event-states-not-integer',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 1,
-        "attribution_scopes": ["1"],
+      "attribution_scopes": {
+        "limit": 1,
+        "values": ["1"],
         "max_event_states": 1.5
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'max_event_states'],
+        path: ['attribution_scopes', 'max_event_states'],
         msg: 'must be an integer',
       },
     ],
@@ -2883,16 +2883,16 @@ const testCases: TestCase[] = [
     name: 'attribution-scopes-size-exceeds-attribution-scope-limit',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 1,
-        "attribution_scopes": ["1", "2"]
+      "attribution_scopes": {
+        "limit": 1,
+        "values": ["1", "2"]
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'attribution_scopes'],
-        msg: 'size must be less than or equal to attribution_scope_limit (1) if attribution_scope_limit is set',
+        path: ['attribution_scopes', 'values'],
+        msg: 'size must be less than or equal to limit (1) if limit is set',
       },
     ],
   },
@@ -2900,16 +2900,16 @@ const testCases: TestCase[] = [
     name: 'attribution-scope-not-string',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 2,
-        "attribution_scopes": [1]
+      "attribution_scopes": {
+        "limit": 2,
+        "values": [1]
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
         msg: 'must be a string',
-        path: ['attribution_scope_data', 'attribution_scopes', 0],
+        path: ['attribution_scopes', 'values', 0],
       },
     ],
   },
@@ -2917,16 +2917,16 @@ const testCases: TestCase[] = [
     name: 'attribution-scopes-empty-list',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 1,
-        "attribution_scopes": []
+      "attribution_scopes": {
+        "limit": 1,
+        "values": []
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        msg: 'must be non-empty if attribution_scope_limit is set',
-        path: ['attribution_scope_data', 'attribution_scopes'],
+        msg: 'must be non-empty if limit is set',
+        path: ['attribution_scopes', 'values'],
       },
     ],
   },
@@ -2934,16 +2934,16 @@ const testCases: TestCase[] = [
     name: 'attribution-scopes-not-list',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 1,
-        "attribution_scopes": 1
+      "attribution_scopes": {
+        "limit": 1,
+        "values": 1
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
         msg: 'must be a list',
-        path: ['attribution_scope_data', 'attribution_scopes'],
+        path: ['attribution_scopes', 'values'],
       },
     ],
   },
@@ -2951,16 +2951,16 @@ const testCases: TestCase[] = [
     name: 'attribution-scopes-too-many',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 21,
-        "attribution_scopes": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21"]
+      "attribution_scopes": {
+        "limit": 21,
+        "values": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21"]
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'attribution_scopes'],
-        msg: 'size must be less than or equal to max number of attribution scopes (20) if attribution_scope_limit is set',
+        path: ['attribution_scopes', 'values'],
+        msg: 'size must be less than or equal to max number of attribution scopes (20) if limit is set',
       },
     ],
   },
@@ -2968,15 +2968,15 @@ const testCases: TestCase[] = [
     name: 'attribution-scopes-too-long',
     input: `{
       "destination": "https://a.test",
-      "attribution_scope_data": {
-        "attribution_scope_limit": 1,
-        "attribution_scopes": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]
+      "attribution_scopes": {
+        "limit": 1,
+        "values": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]
       }
     }`,
     parseScopes: true,
     expectedErrors: [
       {
-        path: ['attribution_scope_data', 'attribution_scopes', 0],
+        path: ['attribution_scopes', 'values', 0],
         msg: 'exceeds max length per attribution scope (51 > 50)',
       },
     ],

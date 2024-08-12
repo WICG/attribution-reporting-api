@@ -135,18 +135,18 @@ function serializeSourceAggregatableDebugReportingConfig(
   }
 }
 
-type AttributionScopeData = {
-  attribution_scope_limit: number
-  attribution_scopes: string[]
+type AttributionScopes = {
+  limit: number
+  values: string[]
   max_event_states: number
 }
 
-function serializeAttributionScopeData(
-  a: source.AttributionScopeData
-): AttributionScopeData {
+function serializeAttributionScopes(
+  a: source.AttributionScopes
+): AttributionScopes {
   return {
-    attribution_scope_limit: a.attributionScopeLimit,
-    attribution_scopes: Array.from(a.attributionScopes),
+    limit: a.limit,
+    values: Array.from(a.values),
     max_event_states: a.maxEventStates,
   }
 }
@@ -200,7 +200,7 @@ type Source = CommonDebug &
     source_event_id: string
     trigger_data_matching: string
     aggregatable_debug_reporting?: SourceAggregatableDebugReportingConfig
-    attribution_scope_data?: AttributionScopeData
+    attribution_scope_data?: AttributionScopes
   }
 
 export interface Options {
@@ -213,8 +213,8 @@ export function serializeSource(
   opts: Readonly<Options>
 ): string {
   const scopeFields = opts.scopes
-    ? ifNotNull('attribution_scope_data', s.attributionScopeData, (v) =>
-        serializeAttributionScopeData(v)
+    ? ifNotNull('attribution_scopes', s.attributionScopes, (v) =>
+        serializeAttributionScopes(v)
       )
     : {}
   const source: Source = {

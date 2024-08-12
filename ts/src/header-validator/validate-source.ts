@@ -4,7 +4,7 @@ import * as context from './context'
 import { Maybe } from './maybe'
 import {
   AggregationKeys,
-  AttributionScopeData,
+  AttributionScopes,
   EventReportWindows,
   FilterData,
   Source,
@@ -342,19 +342,19 @@ function channelCapacity(s: Source, ctx: Context): void {
   }
 
   if (
-    s.attributionScopeData !== null &&
+    s.attributionScopes !== null &&
     ctx.opts.sourceType === SourceType.event &&
-    out.numStates > s.attributionScopeData.maxEventStates
+    out.numStates > s.attributionScopes.maxEventStates
   ) {
     ctx.error(
-      `${numStatesWords} (${out.numStates}) exceeds max event states (${s.attributionScopeData.maxEventStates})`
+      `${numStatesWords} (${out.numStates}) exceeds max event states (${s.attributionScopes.maxEventStates})`
     )
   }
 
   const maxInfoGain =
     ctx.opts.vsv.maxEventLevelChannelCapacityPerSource[ctx.opts.sourceType]
   const infoGainMsg = `information gain${
-    s.attributionScopeData !== null ? ' for attribution scope' : ''
+    s.attributionScopes !== null ? ' for attribution scope' : ''
   }: ${out.infoGain.toFixed(2)}`
 
   if (out.infoGain > maxInfoGain) {
@@ -707,11 +707,8 @@ function source(j: Json, ctx: Context): Maybe<Source> {
           'destination_limit_priority',
           withDefault(int64, 0n)
         ),
-        attributionScopeData: ctx.opts.scopes
-          ? field(
-              'attribution_scope_data',
-              withDefault(attributionScopeData, null)
-            )
+        attributionScopes: ctx.opts.scopes
+          ? field('attribution_scopes', withDefault(attributionScopes, null))
           : () => Maybe.some(null),
 
         ...commonDebugFields,
@@ -749,12 +746,12 @@ function attributionScopesForSource(
   ).filter((scopes) => {
     if (attributionScopeLimit.value === undefined) {
       ctx.error(
-        'cannot be fully validated without a valid attribution_scope_limit'
+        'cannot be fully validated without a valid limit'
       )
       return false
     }
     if (scopes.size === 0) {
-      ctx.error('must be non-empty if attribution_scope_limit is set')
+      ctx.error('must be non-empty if limit is set')
       return false
     }
     const maxLength = Math.min(
@@ -764,30 +761,20 @@ function attributionScopesForSource(
     const errorMsg =
       'size must be less than or equal to ' +
       (attributionScopeLimit.value < constants.maxAttributionScopesPerSource
-        ? 'attribution_scope_limit'
+        ? 'limit'
         : 'max number of attribution scopes') +
-      ` (${maxLength}) if attribution_scope_limit is set`
+      ` (${maxLength}) if limit is set`
 
     return isInRange(scopes.size, ctx, 1, maxLength, errorMsg)
   })
 }
 
-function attributionScopeData(
-  j: Json,
-  ctx: Context
-): Maybe<AttributionScopeData> {
+function attributionScopes(j: Json, ctx: Context): Maybe<AttributionScopes> {
   return object(j, ctx).flatMap((j) => {
-    const attributionScopeLimitVal = field(
-      'attribution_scope_limit',
-      required(positiveUint32)
-    )(j, ctx)
+    const limitVal = field('limit', required(positiveUint32))(j, ctx)
     return struct(j, ctx, {
-      attributionScopeLimit: () => attributionScopeLimitVal,
-      attributionScopes: field(
-        'attribution_scopes',
-        required(attributionScopesForSource),
-        attributionScopeLimitVal
-      ),
+      limit: () => limitVal,
+      values: field('values', required(attributionScopesForSource), limitVal),
       maxEventStates: field(
         'max_event_states',
         withDefault(maxEventStates, constants.defaultMaxEventStates)
