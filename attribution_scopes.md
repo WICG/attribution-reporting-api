@@ -240,7 +240,6 @@ TODO: Update script to allow for testing different configurations that include `
 Note that the `attribution scopes/limit` does not have any impact on the privacy mechanisms used in Aggregatable Reports.
 
 ### Additional Privacy Limits
-s
 It is possible for an adversary to register multiple navigation sources during source registration, and use these multiple sources, each with a different attribution scopes value, to gain additional information about a user based on which attribution scope is chosen. To prevent this abuse the number of unique attribution scope sets per reporting origin per navigation needs to be limited.
 
 TODO: update [parameters](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md) table with new rate limit
