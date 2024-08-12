@@ -745,9 +745,7 @@ function attributionScopesForSource(
     string(j, ctx).filter(attributionScopeStringLength)
   ).filter((scopes) => {
     if (attributionScopeLimit.value === undefined) {
-      ctx.error(
-        'cannot be fully validated without a valid limit'
-      )
+      ctx.error('cannot be fully validated without a valid limit')
       return false
     }
     if (scopes.size === 0) {
