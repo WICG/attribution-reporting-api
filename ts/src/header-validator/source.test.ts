@@ -2684,6 +2684,20 @@ const testCases: TestCase[] = [
 
   // Attribution Scope
   {
+    name: 'attribution-scopes-not-a-dictionary',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": ["1"]
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes'],
+        msg: 'must be an object',
+      },
+    ],
+  },
+  {
     name: 'attribution-scope-limit-negative',
     input: `{
       "destination": "https://a.test",
@@ -2801,6 +2815,22 @@ const testCases: TestCase[] = [
       {
         path: ['attribution_scopes', 'values'],
         msg: 'cannot be fully validated without a valid limit',
+      },
+    ],
+  },
+  {
+    name: 'missing-attribution-scope-values',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 3
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'values'],
+        msg: 'required',
       },
     ],
   },
