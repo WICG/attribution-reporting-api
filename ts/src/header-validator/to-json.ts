@@ -200,7 +200,7 @@ type Source = CommonDebug &
     source_event_id: string
     trigger_data_matching: string
     aggregatable_debug_reporting?: SourceAggregatableDebugReportingConfig
-    attribution_scope_data?: AttributionScopes
+    attribution_scopes?: AttributionScopes
   }
 
 export interface Options {

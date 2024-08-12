@@ -38,7 +38,7 @@ The following optional parameters will be added to the JSON in `Attribution-Repo
   ..., // existing fields
 
   // Optional
-  "attribution_scopes" {
+  "attribution_scopes": {
     // Required
     // Represents the total number of distinct scopes allowed per destination for the source reporting origin.
     // This is used to calculate the information gain for event-level reports.
@@ -90,7 +90,7 @@ If there are multiple sources whose `attribution_scopes/values` contains at leas
 
 If the trigger registration's `attribution_scopes` is empty, then all sources are considered for attribution.
 
-Once an `limit` is set, the last K values (where K = `limit`) of `attribution_scopes` will be considered the final set of `attribution_scopes` values and any source with additional `attribution_scopes` values will be treated as if the attribution scopes were empty.
+Once a `limit` is set, the last K values (where K = `limit`) of `attribution_scopes` will be considered the final set of `attribution_scopes` values and any source with additional `attribution_scopes` values will be treated as if the attribution scopes were empty.
 
 If a source registration is specified with a configuration that has a higher number of event states than the most recent `max_event_states` for the same reporting origin, then the source will be rejected and the registration will fail. Additionally, if the `max_event_states` field is changed in a future source registration, then all other previous pending source registrations with a different `max_event_states` will be ignored in subsequent attribution report generation flows, but will still count towards rate limits. 
 
@@ -114,7 +114,7 @@ This example shows an API caller that manages 3 advertisers that all sell produc
 // source registration 1 for advertiser1 at t=0
 {
   ..., // existing fields
-  "attribution_scopes" {
+  "attribution_scopes": {
     "limit": 3,
     "values": ["advertiser1"],
     "max_event_states": 3
@@ -126,7 +126,7 @@ This example shows an API caller that manages 3 advertisers that all sell produc
 // source registration 2 for advertiser1 at t=1
 {
   ..., // existing fields
-  "attribution_scopes" {
+  "attribution_scopes": {
     "limit": 3,
     "values": ["advertiser1"],
     "max_event_states": 3
@@ -138,7 +138,7 @@ This example shows an API caller that manages 3 advertisers that all sell produc
 // source registration 3 for advertiser2 at t=2
 {
   ..., // existing fields
-  "attribution_scopes" {
+  "attribution_scopes": {
     "limit": 3,
     "values": ["advertiser2"],
     "max_event_states": 3
@@ -149,7 +149,7 @@ This example shows an API caller that manages 3 advertisers that all sell produc
 // source registration 4 for advertiser3 at t=3
 {
   ..., // existing fields
-  "attribution_scopes" {
+  "attribution_scopes": {
     "limit": 3,
     "values": ["advertiser3"],
     "max_event_states": 3
@@ -163,7 +163,7 @@ The user then converts at a later time on the destination site by purchasing a p
 // trigger registration 1 for advertiser1 at t=4
 {
   ..., // existing fields
-  "attribution_scopes" {
+  "attribution_scopes": {
     "values": ["advertiser1"]
   }
 }
@@ -179,7 +179,7 @@ This example shows an API caller that manages an ad banner that contains multipl
 // source registration 1 for campaign promoting products 1, 2, and 3 at t=0
 {
   ..., // existing fields
-  "attribution_scopes" {
+  "attribution_scopes": {
     "limit": 4,
     "values": ["product1", "product2", "product3"],
     "max_event_states": 3
@@ -191,7 +191,7 @@ This example shows an API caller that manages an ad banner that contains multipl
 // source registration 2 for campaign promoting only product 2 at t=1
 {
   ..., // existing fields
-  "attribution_scopes" {
+  "attribution_scopes": {
     "limit": 4,
     "values": ["product2"],
     "max_event_states": 3
@@ -203,7 +203,7 @@ This example shows an API caller that manages an ad banner that contains multipl
 // source registration 3 for campaign promoting only product 4 at t=2
 {
   ..., // existing fields
-  "attribution_scopes" {
+  "attribution_scopes": {
     "limit": 4,
     "values": ["product4"],
     "max_event_states": 3
@@ -217,7 +217,7 @@ The user then converts at a later time on the destination site and makes a purch
 // trigger registration 1 for product related to products 2 and 3 at t=3
 {
   ..., // existing fields
-  "attribution_scopes" {
+  "attribution_scopes": {
     "values": ["product2", "product3"]
   }
 }
