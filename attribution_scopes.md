@@ -89,15 +89,15 @@ If there are multiple sources whose `attribution_scopes/values` contains at leas
 
 If the trigger registration's `attribution_scopes` is empty, then all sources are considered for attribution.
 
-Once a `limit` is set, the last K values (where K = `limit`) of `attribution_scopes` will be considered the final set of `attribution_scopes` values and any source with additional `attribution_scopes` values will be treated as if the attribution scopes were empty.
+Once a `attribution scopes/limit` is set, the last K values (where K = `attribution scopes/limit`) of `attribution_scopes/values` will be considered the final set of `attribution_scopes` values and any source with additional `attribution_scopes/values` will be treated as if the attribution scopes were empty.
 
 If a source registration is specified with a configuration that has a higher number of event states than the most recent `max_event_states` for the same reporting origin, then the source will be rejected and the registration will fail. Additionally, if the `max_event_states` field is changed in a future source registration, then all other previous pending source registrations with a different `max_event_states` will be ignored in subsequent attribution report generation flows, but will still count towards rate limits. 
 
 ### Updating attribution scope values
 
-An API caller may want to update the value of `limit` for certain registrations or at a certain time. For example, when an advertiser starts a new campaign the API caller may want to increase the value of `limit` to account for this new campaign.
+An API caller may want to update the value of `attribution scopes/limit` for certain registrations or at a certain time. For example, when an advertiser starts a new campaign the API caller may want to increase the value of `attribution scopes/limit` to account for this new campaign.
 
-The `limit` value can be updated during source registration at any time. However, any pending sources (previously registered) that have been specified with an `limit` less than the current source registration’s `limit` will be deleted.
+The `attribution scopes/limit` value can be updated during source registration at any time. However, any pending sources (previously registered) that have been specified with an `attribution scopes/limit` less than the current source registration’s `attribution scopes/limit` will be deleted.
 
 ### Deletion logic
 
@@ -107,7 +107,7 @@ If the current trigger passes the top-level filter check during the attribution 
 
 ### Example 1: distinct attribution scopes
 
-This example shows an API caller that manages 3 advertisers that all sell products on the same destination site (scheme + eTLD+1). In this example the API caller uses an `limit` of 3 and tracks each advertiser with a distinct `attribution_scopes` value. Additionally, the user browsing the web sees 4 different ads from these advertisers and each one has a source registration associated:
+This example shows an API caller that manages 3 advertisers that all sell products on the same destination site (scheme + eTLD+1). In this example the API caller uses an `attribution scopes/limit` of 3 and tracks each advertiser with a distinct `attribution_scopes/values` value. Additionally, the user browsing the web sees 4 different ads from these advertisers and each one has a source registration associated:
 
 ```jsonc
 // source registration 1 for advertiser1 at t=0
@@ -162,9 +162,7 @@ The user then converts at a later time on the destination site by purchasing a p
 // trigger registration 1 for advertiser1 at t=4
 {
   ..., // existing fields
-  "attribution_scopes": {
-    "values": ["advertiser1"]
-  }
+   "attribution_scopes": ["advertiser1"]
 }
 ```
 
@@ -237,11 +235,11 @@ The use of `attribution_scopes` will have some impact on the amount of utility t
 
 Flexible event-level configurations that use `attribution_scopes` will be verified against two separate limits:
   * The base flexible event-level configuration will continue to be verified against the current information gain limit.
-  * The second check will take into account the `limit` and `max_event_states` values, in addition to the flexible event-level configuration, as part of the information gain calculation and be verified against a separate [information gain limit](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
+  * The second check will take into account the `attribution scopes/limit` and `attribution scopes/max_event_states` values, in addition to the flexible event-level configuration, as part of the information gain calculation and be verified against a separate [information gain limit](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md).
 
-TODO: Update script to allow for testing different configurations that include `limit`
+TODO: Update script to allow for testing different configurations that include `attribution scopes/limit`
 
-Note that the `limit` does not have any impact on the privacy mechanisms used in Aggregatable Reports.
+Note that the `attribution scopes/limit` does not have any impact on the privacy mechanisms used in Aggregatable Reports.
 
 ### Additional Privacy Limits
 

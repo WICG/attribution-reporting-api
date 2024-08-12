@@ -2683,8 +2683,8 @@ To <dfn>parse attribution scopes</dfn> from a [=map=] |map|:
 1. Return |attributionScopes|.
 
 To <dfn>parse max event states</dfn> from a [=map=] |map|:
-1. Let |maxEventStates| be [=default max event states=].
-1. If |map|["<code>[=source-registration JSON key/max_event_states=]</code>"] [=map/exists=], set |maxEventStates| to |map|["<code>[=source-registration JSON key/max_event_states=]</code>"].
+1. If |map|["<code>[=source-registration JSON key/max_event_states=]</code>"] does not [=map/exist=], return [=default max event states=].
+1. Let |maxEventStates| be |map|["<code>[=source-registration JSON key/max_event_states=]</code>"].
 1. If |maxEventStates| is not an integer or is less than or equal to 0, return an error.
 1. If |maxEventStates| is greater than the user agent's [=max trigger-state cardinality=], return an error.
 1. Return |maxEventStates|.
@@ -2694,11 +2694,11 @@ To <dfn>parse attribution scope values for source</dfn> from a [=map=] |map| and
 1. Let |result| be a new [=set=].
 1. Let |values| be |map|["<code>[=source-registration JSON key/values=]</code>"].
 1. If |values| is not a [=list=], return an error.
+1. If |values| [=set/is empty=], return an error.
 1. [=list/iterate|For each=] |value| of |values|:
     1. If |value| is not a [=string=], return an error.
     1. If |value|'s [=string/length=] is greater than [=max length of attribution scope for source=], return an error.
     1. [=set/Append=] |value| to |result|.
-1. If |result| [=set/is empty=], return an error.
 1. If |result|'s [=set/size=] is greater than |limit| or [=max attribution scopes per source=], return an error.
 1. Return |result|.
 
