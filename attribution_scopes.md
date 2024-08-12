@@ -31,7 +31,7 @@ In general, the approach here is to allow API callers to specify a list of strin
 
 ### API changes
 
-The following optional parameters will be added to the JSON in `Attribution-Reporting-Register-Source` during source registration: `attribution_scopes`, `values`, `limit`, and `max_event_states`:
+The following optional parameter will be added to the JSON in `Attribution-Reporting-Register-Source` during source registration: `attribution_scopes`, which contains required parameters `values`, `limit`, and optional parameter `max_event_states`:
 
 ```jsonc
 {
@@ -42,8 +42,7 @@ The following optional parameters will be added to the JSON in `Attribution-Repo
     // Required
     // Represents the total number of distinct scopes allowed per destination for the source reporting origin.
     // This is used to calculate the information gain for event-level reports.
-    // Attribution scope limit values must be positive integers.  
-    // Defaults to null if omitted.
+    // Attribution scope limit values must be positive integers.
     "limit": <int>,
   
     // Required
