@@ -3182,7 +3182,7 @@ To <dfn>find sources with common destinations and reporting origin</dfn> given a
 
 To <dfn>check if source has incompatible attribution scope fields</dfn> given an [=attribution source=] |source| and an [=attribution source=] |pendingSource|:
 1. If |pendingSource|'s [=attribution source/attribution scopes=] is null:
-    1. Return true if |source|'s [=attribution source/attribution scopes=] is null, false otherwise.
+    1. Return false if |source|'s [=attribution source/attribution scopes=] is null, true otherwise.
 1. If |source|'s [=attribution source/attribution scopes=] is null, return true.
 1. If |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=] is not equal to |pendingSource|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=], return true.
 1. If |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/limit=] is less than |pendingSource|'s [=attribution source/attribution scopes=]'s [=attribution scopes/limit=], return true.
@@ -3248,6 +3248,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     : [=randomized response output configuration/trigger specs=]
     :: |source|'s [=trigger specs=]
 
+1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] obtained with |randomizedResponseConfig|.
 1. Let |epsilon| be |source|'s [=attribution source/event-level epsilon=].
 1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
 1. If |channelCapacity| is an error:
@@ -3266,7 +3267,6 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. Set |source|'s [=attribution source/number of event-level reports=] to 0 if
     |source|'s [=attribution source/randomized response=] is null,
     [=attribution source/randomized response=]'s [=list/size=] otherwise.
-1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] obtained with |randomizedResponseConfig|.
 1. If |sourceType| is "<code>[=source type/event=]</code>" and |states| is greater than |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=]:
     1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-max-event-states-limit=]</code>" and |source|.
     1. Return.
