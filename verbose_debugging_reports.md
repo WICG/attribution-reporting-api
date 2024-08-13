@@ -142,12 +142,12 @@ Additionally:
   will also contain a string-typed `limit` field.
 * If the trigger was attributed to a source, then the `body` will also contain
   the following fields:
-  * `source_event_id`: The source registration's `source_event_id`.
-  * `source_site`: The top-level site on which the source registration
-    occurred.
-  * `source_debug_key`: The source registration's `debug_key`, but omitted if
-    the source registration did not contain a valid `debug_key` or
-    [cookie-based debugging][] was prohibited.
+   * `source_event_id`: The source registration's `source_event_id`.
+   * `source_site`: The top-level site on which the source registration
+     occurred.
+   * `source_debug_key`: The source registration's `debug_key`, but omitted if
+     the source registration did not contain a valid `debug_key` or
+     [cookie-based debugging][] was prohibited.
 
 #### `trigger-no-matching-source`
 
@@ -261,16 +261,17 @@ The trigger was rejected due to an internal error.
 [aggregatable storage limit]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#storage-limits
 [aggregatable trigger algorithm]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#attribution-trigger-registration
 [attributed reporting origin limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits
+[attribution scope channel-capacity limit]: https://wicg.github.io/attribution-reporting-api/#max-event-level-attribution-scope-channel-capacity-per-source
 [attribution source registrations]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#registering-attribution-sources
 [attribution trigger registrations]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#triggering-attribution
 [channel-capacity limit]: https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source
-[attribution scope channel-capacity limit]: https://wicg.github.io/attribution-reporting-api/#max-event-level-attribution-scope-channel-capacity-per-source
 [cookie-based debugging]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-transitional-debugging-reports
 [destination limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources
 [destinations per source and reporting site per day rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources
 [destinations per source and reporting site rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-per-source-site
 [destinations per source site rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-per-source-site
 [event-level report body]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#attribution-reports
+[event states limit]: https://wicg.github.io/attribution-reporting-api/#attribution-scopes-max-event-states
 [filter data]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters
 [insufficient budget]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#contribution-bounding-and-budgeting
 [max aggregatable reports]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#hide-the-true-number-of-attribution-reports
