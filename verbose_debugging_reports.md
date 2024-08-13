@@ -49,6 +49,12 @@ The source was rejected due to the [destination limit][].
 
 Additional fields: `limit`
 
+#### `source-max-event-states-limit`
+
+A source is rejected due to the [event state limit][].
+
+Additional fields: `limit`
+
 #### `source-noised`
 
 The source was successfully registered, but it will not be attributable by any
@@ -264,6 +270,7 @@ The trigger was rejected due to an internal error.
 [destinations per source and reporting site rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-per-source-site
 [destinations per source site rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-per-source-site
 [event-level report body]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#attribution-reports
+[event states limit]: https://wicg.github.io/attribution-reporting-api/#attribution-scopes-max-event-states
 [filter data]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters
 [insufficient budget]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#contribution-bounding-and-budgeting
 [max aggregatable reports]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#hide-the-true-number-of-attribution-reports
