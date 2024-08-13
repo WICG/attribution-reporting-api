@@ -3259,9 +3259,9 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     :: |source|'s [=trigger specs=]
 
 1. Let |epsilon| be |source|'s [=attribution source/event-level epsilon=].
-1. Let |possibleValues| be the result of [=obtaining a set of possible trigger states=] with |randomizedResponseConfig|.
-1. Let |states| be |possibleValues|'s [=set/size=].
-1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |states| and |epsilon|.
+1. Let |possibleTriggerStates| be the result of [=obtaining a set of possible trigger states=] with |randomizedResponseConfig|.
+1. Let |numPossibleTriggerStates| be |possibleTriggerStates|'s [=set/size=].
+1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |numPossibleTriggerStates| and |epsilon|.
 1. If |channelCapacity| is an error:
     1. Run [=obtain and deliver debug reports on source registration=] with
         "<code>[=source debug data type/source-trigger-state-cardinality-limit=]</code>" and |source|.
@@ -3273,18 +3273,18 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     1. Return.
 1. If |source|'s [=attribution source/attribution scopes=] is not null:
     1. Let |attributionScopes| be [=attribution source/attribution scopes=].
-    1. If |sourceType| is "<code>[=source type/event=]</code>" and |states| is greater than |attributionScopes|'s [=attribution scopes/max event states=]:
+    1. If |sourceType| is "<code>[=source type/event=]</code>" and |numPossibleTriggerStates| is greater than |attributionScopes|'s [=attribution scopes/max event states=]:
         1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-max-event-states-limit=]</code>" and |source|.
         1. Return.
-    1. Let |scopesChannelCapacity| be the result of [=computing the scopes channel capacity of a source=] with |states|, |attributionScopes|'s [=attribution scopes/limit=], and |attributionScopes|'s [=attribution scopes/max event states=].
+    1. Let |scopesChannelCapacity| be the result of [=computing the scopes channel capacity of a source=] with |numPossibleTriggerStates|, |attributionScopes|'s [=attribution scopes/limit=], and |attributionScopes|'s [=attribution scopes/max event states=].
     1. If |scopesChannelCapacity| is greater than [=max event-level attribution scopes channel capacity per source=][|sourceType|]:
         1. Run [=obtain and deliver debug reports on source registration=] with
             « "<code>[=source debug data type/source-scopes-channel-capacity-limit=]</code>" » and |source|.
         1. Return.
 1. Set |source|'s [=attribution source/randomized response=] to the result of
-    [=obtaining a randomized source response=] with |possibleValues| and |epsilon|.
+    [=obtaining a randomized source response=] with |possibleTriggerStates| and |epsilon|.
 1. Set |source|'s [=attribution source/randomized trigger rate=] to the result of
-    [=obtaining a randomized source response pick rate=] with |states| and |epsilon|.
+    [=obtaining a randomized source response pick rate=] with |numPossibleTriggerStates| and |epsilon|.
 1. Set |source|'s [=attribution source/number of event-level reports=] to 0 if
     |source|'s [=attribution source/randomized response=] is null,
     [=attribution source/randomized response=]'s [=list/size=] otherwise.

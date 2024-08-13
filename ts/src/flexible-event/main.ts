@@ -114,6 +114,14 @@ if (options.json_file !== undefined) {
   if (options.windows.value.length !== options.buckets.value.length) {
     throw new Error('windows and buckets must have same length')
   }
+  if (
+    (options.attribution_scope_limit === undefined) !==
+    (options.max_event_states === undefined)
+  ) {
+    throw new Error(
+      'attribution_scope_limit and max_event_states must be set / unset at the same time'
+    )
+  }
   const attributionScopes: AttributionScopes | null =
     options.attribution_scope_limit === undefined ||
     options.max_event_states === undefined
