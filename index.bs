@@ -2349,10 +2349,10 @@ To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized respo
 To <dfn>obtain a randomized source response pick rate</dfn> given a positive integer |states| and a double |epsilon|:
 1. Return |states| / (|states| - 1 + e<sup>|epsilon|</sup>).
 
-To <dfn>obtain a randomized source response</dfn> given a [=randomized response output configuration=] |config| and a double |epsilon|:
+To <dfn>obtain a randomized source response</dfn> given a positive integer |states| and a [=randomized response output configuration=] |config| and a double |epsilon|:
 
 1. Let |possibleValues| be the result of [=obtaining a set of possible trigger states=] with |config|.
-1. Let |pickRate| be the result of [=obtaining a randomized source response pick rate=] with |possibleValues|'s [=set/size=] and |epsilon|.
+1. Let |pickRate| be the result of [=obtaining a randomized source response pick rate=] with |states| and |epsilon|.
 1. Return the result of [=obtaining a randomized response=] with null, |possibleValues|, and
     |pickRate|.
 
@@ -3274,21 +3274,21 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     1. Return.
 1. If |source|'s [=attribution source/attribution scopes=] is not null:
     1. Let |attributionScopes| be [=attribution source/attribution scopes=].
+    1. If |sourceType| is "<code>[=source type/event=]</code>" and |states| is greater than |attributionScopes|'s [=attribution scopes/max event states=]:
+        1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-max-event-states-limit=]</code>" and |source|.
+        1. Return.
     1. Let |scopesChannelCapacity| be the result of [=computing the scopes channel capacity of a source=] with |states|, |attributionScopes|'s [=attribution scopes/limit=], and |attributionScopes|'s [=attribution scopes/max event states=].
     1. If |scopesChannelCapacity| is greater than [=max event-level attribution scopes channel capacity per source=][|sourceType|]:
         1. Run [=obtain and deliver debug reports on source registration=] with
             « "<code>[=source debug data type/source-scopes-channel-capacity-limit=]</code>" » and |source|.
         1. Return.
 1. Set |source|'s [=attribution source/randomized response=] to the result of
-    [=obtaining a randomized source response=] with |randomizedResponseConfig| and |epsilon|.
+    [=obtaining a randomized source response=] with |states|, |randomizedResponseConfig| and |epsilon|.
 1. Set |source|'s [=attribution source/randomized trigger rate=] to the result of
     [=obtaining a randomized source response pick rate=] with |randomizedResponseConfig| and |epsilon|.
 1. Set |source|'s [=attribution source/number of event-level reports=] to 0 if
     |source|'s [=attribution source/randomized response=] is null,
     [=attribution source/randomized response=]'s [=list/size=] otherwise.
-1. If |source|'s [=attribution source/attribution scopes=] is not null and |sourceType| is "<code>[=source type/event=]</code>" and |states| is greater than |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=]:
-    1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-max-event-states-limit=]</code>" and |source|.
-    1. Return.
 1. Let |pendingSourcesForSourceOrigin| be the [=set=] of all
     [=attribution sources=] |pendingSource| of the [=attribution source cache=] where |pendingSource|'s
     [=attribution source/source origin=] and |source|'s
