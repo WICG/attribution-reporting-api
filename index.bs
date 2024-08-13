@@ -2349,10 +2349,8 @@ To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized respo
 To <dfn>obtain a randomized source response pick rate</dfn> given a positive integer |states| and a double |epsilon|:
 1. Return |states| / (|states| - 1 + e<sup>|epsilon|</sup>).
 
-To <dfn>obtain a randomized source response</dfn> given a positive integer |states| and a [=randomized response output configuration=] |config| and a double |epsilon|:
-
-1. Let |possibleValues| be the result of [=obtaining a set of possible trigger states=] with |config|.
-1. Let |pickRate| be the result of [=obtaining a randomized source response pick rate=] with |states| and |epsilon|.
+To <dfn>obtain a randomized source response</dfn> given a [=set=] of possible trigger states |possibleValues| and a double |epsilon|:
+1. Let |pickRate| be the result of [=obtaining a randomized source response pick rate=] with |possibleValues|'s [=set/size=] and |epsilon|.
 1. Return the result of [=obtaining a randomized response=] with null, |possibleValues|, and
     |pickRate|.
 
@@ -3261,7 +3259,8 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     :: |source|'s [=trigger specs=]
 
 1. Let |epsilon| be |source|'s [=attribution source/event-level epsilon=].
-1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] obtained with |randomizedResponseConfig|.
+1. Let |possibleValues| be the result of [=obtaining a set of possible trigger states=] with |randomizedResponseConfig|.
+1. Let |states| be |possibleValues|'s [=set/size=].
 1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |states| and |epsilon|.
 1. If |channelCapacity| is an error:
     1. Run [=obtain and deliver debug reports on source registration=] with
@@ -3283,9 +3282,9 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
             « "<code>[=source debug data type/source-scopes-channel-capacity-limit=]</code>" » and |source|.
         1. Return.
 1. Set |source|'s [=attribution source/randomized response=] to the result of
-    [=obtaining a randomized source response=] with |states|, |randomizedResponseConfig| and |epsilon|.
+    [=obtaining a randomized source response=] with |possibleValues| and |epsilon|.
 1. Set |source|'s [=attribution source/randomized trigger rate=] to the result of
-    [=obtaining a randomized source response pick rate=] with |randomizedResponseConfig| and |epsilon|.
+    [=obtaining a randomized source response pick rate=] with |states| and |epsilon|.
 1. Set |source|'s [=attribution source/number of event-level reports=] to 0 if
     |source|'s [=attribution source/randomized response=] is null,
     [=attribution source/randomized response=]'s [=list/size=] otherwise.

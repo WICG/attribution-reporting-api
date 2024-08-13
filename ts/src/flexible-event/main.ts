@@ -21,7 +21,7 @@ function commaSeparatedInts(str: string): Wrapped<number[]> {
 interface Arguments {
   max_event_level_reports: number
   attribution_scope_limit?: number
-  max_event_states: number
+  max_event_states?: number
   epsilon: number
   source_type: SourceType
   windows?: Wrapped<number[]>
@@ -44,6 +44,7 @@ const options = parse<Arguments>({
     alias: 's',
     type: Number,
     defaultValue: constants.defaultMaxEventStates,
+    optional: true,
   },
   epsilon: {
     alias: 'e',
@@ -114,7 +115,8 @@ if (options.json_file !== undefined) {
     throw new Error('windows and buckets must have same length')
   }
   const attributionScopes: AttributionScopes | null =
-    options.attribution_scope_limit === undefined
+    options.attribution_scope_limit === undefined ||
+    options.max_event_states === undefined
       ? null
       : {
           limit: options.attribution_scope_limit,
