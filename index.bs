@@ -3180,13 +3180,13 @@ To <dfn>find sources with common destinations and reporting origin</dfn> given a
     1. [=list/Append=] |source| to |matchingSources|.
 1. Return |matchingSources|.
 
-To <dfn>check if source has incompatible attribution scope fields</dfn> given an [=attribution source=] |source| and an [=attribution source=] |pendingSource|:
+To <dfn>check if source has compatible attribution scope fields</dfn> given an [=attribution source=] |source| and an [=attribution source=] |pendingSource|:
 1. If |pendingSource|'s [=attribution source/attribution scopes=] is null:
-    1. Return false if |source|'s [=attribution source/attribution scopes=] is null, true otherwise.
-1. If |source|'s [=attribution source/attribution scopes=] is null, return true.
-1. If |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=] is not equal to |pendingSource|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=], return true.
-1. If |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/limit=] is less than |pendingSource|'s [=attribution source/attribution scopes=]'s [=attribution scopes/limit=], return true.
-1. Return false.
+    1. Return true if |source|'s [=attribution source/attribution scopes=] is null, false otherwise.
+1. If |source|'s [=attribution source/attribution scopes=] is null, return false.
+1. If |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=] is not equal to |pendingSource|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=], return false.
+1. If |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/limit=] is less than |pendingSource|'s [=attribution source/attribution scopes=]'s [=attribution scopes/limit=], return false.
+1. Return true.
 
 To <dfn>remove associated event-level reports and rate-limit records</dfn> given an [=attribution source/source identifier=] |sourceId| and a [=moment=] |minTriggerTime|:
 1. [=set/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
@@ -3230,7 +3230,7 @@ To <dfn>remove sources with unselected attribution scopes</dfn> given an [=attri
 To <dfn>remove or update sources with incompatible attribution scope fields</dfn> given an [=attribution source=] |pendingSource|:
 1. Let |matchingSources| be the result of running [=find sources with common destinations and reporting origin=] with |pendingSource|.
 1. [=list/iterate|For each=] |source| of |matchingSources|:
-    1. If the result of running [=check if source has incompatible attribution scope fields=] with |source| and |pendingSource| is false, [=iteration/continue=].
+    1. If the result of running [=check if source has compatible attribution scope fields=] with |source| and |pendingSource| is true, [=iteration/continue=].
     1. If |pendingSource|'s [=attribution source/attribution scopes=] is null:
         1. Set |source|'s [=attribution source/attribution scopes=] to null.
     1. Otherwise:
@@ -3248,7 +3248,6 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     : [=randomized response output configuration/trigger specs=]
     :: |source|'s [=trigger specs=]
 
-1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] obtained with |randomizedResponseConfig|.
 1. Let |epsilon| be |source|'s [=attribution source/event-level epsilon=].
 1. Let |channelCapacity| be the result of [=computing the channel capacity of a source=] with |randomizedResponseConfig| and |epsilon|.
 1. If |channelCapacity| is an error:
@@ -3267,6 +3266,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. Set |source|'s [=attribution source/number of event-level reports=] to 0 if
     |source|'s [=attribution source/randomized response=] is null,
     [=attribution source/randomized response=]'s [=list/size=] otherwise.
+1. Let |states| be the [=obtain a set of possible trigger states|number of possible trigger states=] obtained with |randomizedResponseConfig|.
 1. If |sourceType| is "<code>[=source type/event=]</code>" and |states| is greater than |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=]:
     1. Run [=obtain and deliver debug reports on source registration=] with "<code>[=source debug data type/source-max-event-states-limit=]</code>" and |source|.
     1. Return.
