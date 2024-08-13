@@ -49,6 +49,12 @@ The source was rejected due to the [destination limit][].
 
 Additional fields: `limit`
 
+#### `source-max-event-states-limit`
+
+A source is rejected due to the [event state limit][].
+
+Additional fields: `limit`
+
 #### `source-noised`
 
 The source was successfully registered, but it will not be attributable by any
@@ -144,7 +150,7 @@ Additionally:
   the following fields:
    * `source_event_id`: The source registration's `source_event_id`.
    * `source_site`: The top-level site on which the source registration
-     occurred.
+      occurred.
    * `source_debug_key`: The source registration's `debug_key`, but omitted if
      the source registration did not contain a valid `debug_key` or
      [cookie-based debugging][] was prohibited.
