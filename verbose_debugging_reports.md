@@ -144,7 +144,7 @@ Additionally:
   the following fields:
    * `source_event_id`: The source registration's `source_event_id`.
    * `source_site`: The top-level site on which the source registration
-     occurred.
+      occurred.
    * `source_debug_key`: The source registration's `debug_key`, but omitted if
      the source registration did not contain a valid `debug_key` or
      [cookie-based debugging][] was prohibited.
