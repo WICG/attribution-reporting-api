@@ -142,12 +142,12 @@ Additionally:
   will also contain a string-typed `limit` field.
 * If the trigger was attributed to a source, then the `body` will also contain
   the following fields:
-  * `source_event_id`: The source registration's `source_event_id`.
-  * `source_site`: The top-level site on which the source registration
-    occurred.
-  * `source_debug_key`: The source registration's `debug_key`, but omitted if
-    the source registration did not contain a valid `debug_key` or
-    [cookie-based debugging][] was prohibited.
+   * `source_event_id`: The source registration's `source_event_id`.
+   * `source_site`: The top-level site on which the source registration
+     occurred.
+   * `source_debug_key`: The source registration's `debug_key`, but omitted if
+     the source registration did not contain a valid `debug_key` or
+     [cookie-based debugging][] was prohibited.
 
 #### `trigger-no-matching-source`
 
