@@ -57,9 +57,6 @@ subsequent trigger because [noise][] has been applied.
 The `body` may also include a `source_destination_limit` field if the
 [destination limit][] was exceeded.
 
-Issue: It is unclear where in the [specification][] the
-`source_destination_limit` field is added.
-
 #### `source-storage-limit`
 
 The source was rejected due to a [storage limit][].
