@@ -51,9 +51,10 @@ Additional fields: `limit`
 
 #### `source-max-event-states-limit`
 
-A source is rejected due to [max event states][].
+A source is rejected due to the [event state limit][].
 
 Additional fields: `limit`
+
 #### `source-noised`
 
 The source was successfully registered, but it will not be attributable by any
