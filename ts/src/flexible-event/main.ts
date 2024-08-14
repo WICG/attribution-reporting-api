@@ -8,7 +8,6 @@ import { AttributionScopes } from '../header-validator/source'
 import { SourceType, parseSourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Config, PerTriggerDataConfig } from './privacy'
-import * as constants from '../constants'
 
 // Workaround for `parse` not handling top-level array types without `multiple`
 // `OptionDef` configuration.
@@ -43,7 +42,6 @@ const options = parse<Arguments>({
   max_event_states: {
     alias: 's',
     type: Number,
-    defaultValue: constants.defaultMaxEventStates,
     optional: true,
   },
   epsilon: {
