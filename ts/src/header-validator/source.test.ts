@@ -3011,6 +3011,88 @@ const testCases: TestCase[] = [
       },
     ],
   },
+  {
+    name: 'channel-capacity-attribution-scope-event',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 11,
+        "values": ["1"],
+        "max_event_states": 15
+      }
+    }`,
+    sourceType: SourceType.event,
+    noteInfoGain: true,
+    vsv: {
+      maxEventLevelAttributionScopesChannelCapacityPerSource: {
+        [SourceType.event]: 6.5,
+        [SourceType.navigation]: 11.55,
+      },
+      maxSettableEventLevelEpsilon: 14,
+    },
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'information gain for attribution scope: 7.26 exceeds max event-level attribution scope information gain per event source (6.50)',
+      },
+    ],
+    expectedNotes: [
+      {
+        msg: 'information gain: 1.58',
+        path: [],
+      },
+      {
+        path: [],
+        msg: 'number of possible output states: 3',
+      },
+      {
+        path: [],
+        msg: 'randomized trigger rate: 0.0000025',
+      },
+    ],
+  },
+  {
+    name: 'channel-capacity-attribution-scope-navigation',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 21,
+        "values": ["1"],
+        "max_event_states": 20
+      }
+    }`,
+    sourceType: SourceType.navigation,
+    noteInfoGain: true,
+    vsv: {
+      maxEventLevelAttributionScopesChannelCapacityPerSource: {
+        [SourceType.event]: 6.5,
+        [SourceType.navigation]: 11.55,
+      },
+      maxSettableEventLevelEpsilon: 14,
+    },
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'information gain for attribution scope: 11.70 exceeds max event-level attribution scope information gain per navigation source (11.55)',
+      },
+    ],
+    expectedNotes: [
+      {
+        msg: 'information gain: 11.46',
+        path: [],
+      },
+      {
+        path: [],
+        msg: 'number of possible output states: 2925',
+      },
+      {
+        path: [],
+        msg: 'randomized trigger rate: 0.0024263',
+      },
+    ],
+  },
 ]
 
 testCases.forEach((tc) =>

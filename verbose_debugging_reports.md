@@ -108,6 +108,12 @@ The source was rejected due to the [channel-capacity limit][].
 
 Additional fields: `limit`
 
+#### `source-scopes-channel-capacity-limit`
+
+The source was rejected due to the [attribution scope channel-capacity limit][].
+
+Additional fields: `limit`
+
 #### `source-trigger-state-cardinality-limit`
 
 The source was rejected due to the [trigger-state cardinality limit][].
@@ -261,6 +267,7 @@ The trigger was rejected due to an internal error.
 [aggregatable storage limit]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#storage-limits
 [aggregatable trigger algorithm]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#attribution-trigger-registration
 [attributed reporting origin limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-origin-limits
+[attribution scope channel-capacity limit]: https://wicg.github.io/attribution-reporting-api/#max-event-level-attribution-scope-channel-capacity-per-source
 [attribution source registrations]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#registering-attribution-sources
 [attribution trigger registrations]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#triggering-attribution
 [channel-capacity limit]: https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source

@@ -1,4 +1,5 @@
 import memoize from 'memoizee'
+import { AttributionScopes } from '../header-validator/source'
 
 export type ExcessiveInfoGainData = {
   newEps: number
@@ -10,6 +11,7 @@ export type ConfigData = {
   infoGain: number
   flipProb: number
   excessive?: ExcessiveInfoGainData
+  attributionScopesInfoGain?: number
 }
 
 export class PerTriggerDataConfig {
@@ -29,6 +31,7 @@ export class PerTriggerDataConfig {
 export class Config {
   constructor(
     readonly maxEventLevelReports: number,
+    readonly attributionScopes: AttributionScopes | null,
     readonly perTriggerDataConfigs: ReadonlyArray<PerTriggerDataConfig>
   ) {
     if (
@@ -93,7 +96,19 @@ export class Config {
     const infoGain = maxInformationGain(numStates, epsilon)
     const flipProb = flipProbabilityDp(numStates, epsilon)
 
-    const data: ConfigData = { numStates, infoGain, flipProb }
+    const data: ConfigData = {
+      numStates,
+      infoGain,
+      flipProb,
+    }
+
+    if (this.attributionScopes !== null) {
+      data.attributionScopesInfoGain = attributionScopesInformationGain(
+        numStates,
+        this.attributionScopes.limit,
+        this.attributionScopes.maxEventStates
+      )
+    }
 
     if (infoGain > infoGainMax) {
       const newEps = epsilonToBoundInfoGainAndDp(
@@ -146,6 +161,14 @@ function capacityQarySymmetricChannel(
     binaryEntropy(flipProbability) -
     flipProbability * Math.log2(Math.pow(2, log2q) - 1)
   )
+}
+
+function attributionScopesInformationGain(
+  numStates: number,
+  attributionScopeLimit: number,
+  maxEventStates: number
+): number {
+  return Math.log2(numStates + maxEventStates * (attributionScopeLimit - 1))
 }
 
 export function maxInformationGain(numStates: number, epsilon: number): number {

@@ -70,6 +70,7 @@ export const sourceAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'source-noised',
   'source-reporting-origin-limit',
   'source-reporting-origin-per-site-limit',
+  'source-scopes-channel-capacity-limit',
   'source-storage-limit',
   'source-success',
   'source-trigger-state-cardinality-limit',
