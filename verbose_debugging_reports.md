@@ -110,7 +110,7 @@ Additional fields: `limit`
 
 #### `source-scopes-channel-capacity-limit`
 
-A source is rejected due to the [attribution scope channel-capacity limit][].
+The source was rejected due to the [attribution scope channel-capacity limit][].
 
 Additional fields: `limit`
 
