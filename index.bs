@@ -1091,7 +1091,7 @@ An <dfn>aggregatable attribution report</dfn> is an [=aggregatable report=] with
 : <dfn>attribution debug info</dfn>
 :: An [=attribution debug info=].
 : <dfn>source identifier</dfn>
-:: A [=string=].
+:: Null or a [=string=].
 
 </dl>
 
@@ -2926,7 +2926,7 @@ To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of
 
 1. Let |deletedAggregatableReports| be a new [=set=].
 1. [=set/iterate|For each=] [=aggregatable attribution report=] |report| of the [=aggregatable attribution report cache=]:
-    1. If |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable attribution report/source identifier=]:
+    1. If |report|'s [=aggregatable attribution report/source identifier=] is not null and |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable attribution report/source identifier=]:
         1. [=set/Append=] |report|'s [=aggregatable attribution report/report ID=] to |deletedAggregatableReports|.
         1. [=set/Remove=] |report| from the [=aggregatable attribution report cache=].
 1. [=set/iterate|For each=] [=attribution rate-limit record=] |record| of the [=attribution rate-limit cache=]:
@@ -4453,6 +4453,8 @@ To <dfn>obtain a null attribution report</dfn> given an [=attribution trigger=] 
     :: |trigger|'s [=attribution trigger/trigger context ID=]
     : [=aggregatable attribution report/filtering ID max bytes=]
     :: |trigger|'s [=attribution trigger/aggregatable filtering ID max bytes=]
+    : [=aggregatable attribution report/source identifier=]
+    :: Null
 1. Return |report|.
 
 To <dfn>obtain rounded source time</dfn> given a [=moment=] |sourceTime|, return |sourceTime| in seconds
