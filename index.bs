@@ -4260,6 +4260,14 @@ To <dfn>check if an [=attribution source=] and [=attribution trigger=] have matc
 
 To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
 
+An [=attribution source=] |a| <dfn for="attribution source">is higher-priority than</dfn> an [=attribution source=] |b|
+if the following steps return true:
+
+1. |a|'s [=attribution source/priority=] is greater than |b|'s [=attribution source/priority=], return true.
+1. |a|'s [=attribution source/priority=] is less than |b|'s [=attribution source/priority=], return false.
+1. If |a|'s [=attribution source/source time=] is greater than |b|'s [=attribution source/source time=], return true.
+1. Return false.
+
 1. Let |matchingSources| be a new [=list=].
 1. [=set/iterate|For each=] |source| of the [=attribution source cache=]:
     1. If |source|'s [=attribution source/attribution destinations=] does not [=set/contains|contain=] |trigger|'s [=attribution trigger/attribution destination=], [=iteration/continue=].
@@ -4267,11 +4275,6 @@ To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
     1. If |source|'s [=attribution source/expiry time=] is less than or equal to |trigger|'s [=attribution trigger/trigger time=], [=iteration/continue=].
     1. [=list/Append=] |source| to |matchingSources|.
 1. Let |sourceToAttribute| be null.
-1. An [=attribution source=] |a| <dfn for="attribution source">is higher-priority than</dfn> an [=attribution source=] |b|
-    if any of the following are true:
-      * |a|'s [=attribution source/priority=] is greater than |b|'s [=attribution source/priority=].
-      * |a|'s [=attribution source/priority=] is equal to |b|'s [=attribution source/priority=] and |a|'s
-         [=attribution source/source time=] is greater than |b|'s [=attribution source/source time=].
 1. [=list/iterate|For each=] |source| of |matchingSources|:
     1. If the result of [=checking if an attribution source and attribution trigger have matching attribution scopes=]
         with |source| and |trigger| is false, [=iteration/continue=].
@@ -4298,8 +4301,7 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     with |trigger|.
 1. If |trigger|'s [=attribution trigger/event-level trigger configurations=]
     [=set/is empty=] and |hasAggregatableData| is false, return.
-1. Let |matchingSourcesResult| be the result of running [=find matching sources=] with |trigger|.
-1. Let |sourceToAttribute| be |matchingSourcesResult|[0].
+1. Let (|sourcesToAttribute, |matchingSources|) be the result of running [=find matching sources=] with |trigger|.
 1. If |sourceToAttribute| is null:
     1. Run [=obtain and deliver debug reports on trigger registration=] with
         « ("<code>[=trigger debug data type/trigger-no-matching-source=]</code>", null) »,
@@ -4318,7 +4320,7 @@ To <dfn noexport>trigger attribution</dfn> given an [=attribution trigger=] |tri
     1. If |hasAggregatableData| is true, then run [=generate null attribution reports=]
         with |trigger| and [=generate null attribution reports/report=] set to null.
     1. Return.
-1. [=list/iterate|For each=] |item| of |matchingSourcesResult|[1]:
+1. [=list/iterate|For each=] |item| of |matchingSources|:
     1. [=set/Remove=] |item| from the [=attribution source cache=].
 1. Let |eventLevelResult| be the result of running [=trigger event-level attribution=]
     with |trigger| and |sourceToAttribute|.
