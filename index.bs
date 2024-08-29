@@ -2224,12 +2224,14 @@ To <dfn>check if attribution debugging can be enabled</dfn> given an [=attributi
 To <dfn>serialize an attribution debug info</dfn> given a [=map=] |data| and an
 [=attribution debug info=] |debugInfo|:
 
-1. If |debugInfo|'s [=attribution debug info/source debug key=] is not null, [=map/set=]
-    |data|["`source_debug_key`"] to |debugInfo|'s [=attribution debug info/source debug key=],
+1. If the result of [=checking if attribution debugging can be enabled=] with |debugInfo| is false, return.
+1. [=map/Set=] |data|["`source_debug_key`"] to |debugInfo|'s [=attribution debug info/source debug key=],
     [=serialize an integer|serialized=].
-1. If |debugInfo|'s [=attribution debug info/trigger debug key=] is not null, [=map/set=]
-    |data|["`trigger_debug_key`"] to |report|'s [=attribution debug info/trigger debug key=],
+1. [=map/Set=] |data|["`trigger_debug_key`"] to |report|'s [=attribution debug info/trigger debug key=],
     [=serialize an integer|serialized=].
+
+Note: We require both source and trigger debug keys to be present to avoid
+a privacy leak from one-sided third-party cookie access.
 
 <h3 id="obtaining-and-delivering-aggregatable-debug-report">Obtaining and delivering an aggregatable debug report</h3>
 
