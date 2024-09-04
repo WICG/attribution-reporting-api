@@ -1252,7 +1252,7 @@ A <dfn>triggering status</dfn> is one of the following:
 Note: "<code>[=triggering status/noised=]</code>" only applies for [=triggering event-level attribution=] when it is attributed
 successfully but dropped as the noise was applied to the source.
 
-A <dfn>trigger debug data</dfn> is [=tuple=] with the following items:
+A <dfn>trigger debug data</dfn> is a [=tuple=] with the following items:
 
 <dl dfn-for="trigger debug data">
 : <dfn>data type</dfn>
@@ -2791,12 +2791,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |aggregatableDebugBudget| be 0.
 1. Let |aggregatableDebugReportingConfig| be a new [=aggregatable debug reporting config=].
 1. If |value|["<code>[=source-registration JSON key/aggregatable_debug_reporting=]</code>"] [=map/exists=]:
-    1. Let |aggregatableDebugReportingResult| be the result of running
+    1. Set (|aggregatableDebugBudget|, |aggregatableDebugReportingConfig|) to the result of running
         [=parse a source aggregatable debug reporting config=] with
         |value|["<code>[=source-registration JSON key/aggregatable_debug_reporting=]</code>"],
         |aggregatableDebugBudget|, and |aggregatableDebugReportingConfig|.
-    1. Set |aggregatableDebugBudget| to |aggregatableDebugReportingResult|[0].
-    1. Set |aggregatableDebugReportingConfig| to |aggregatableDebugReportingResult|[1].
 1. Let |aggregatableAttributionBudget| be [=allowed aggregatable budget per source=] - |aggregatableDebugBudget|.
 1. If [=automation local testing mode=] is true, set |epsilon| to `∞`.
 1. Let |source| be a new [=attribution source=] struct whose items are:
@@ -4250,8 +4248,6 @@ To <dfn>check if an [=attribution source=] and [=attribution trigger=] have matc
 1. If |trigger|'s [=attribution trigger/attribution scopes=] [=set/is empty=], return true.
 1. Return whether the [=set/intersection=] of |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/values=] and |trigger|'s [=attribution trigger/attribution scopes=] is not [=set/is empty|empty=].
 
-To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
-
 An [=attribution source=] |a| <dfn for="attribution source">is higher-priority than</dfn> an [=attribution source=] |b|
 if the following steps return true:
 
@@ -4259,6 +4255,8 @@ if the following steps return true:
 1. |a|'s [=attribution source/priority=] is less than |b|'s [=attribution source/priority=], return false.
 1. If |a|'s [=attribution source/source time=] is greater than |b|'s [=attribution source/source time=], return true.
 1. Return false.
+
+To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
 
 1. Let |matchingSources| be a new [=list=].
 1. [=set/iterate|For each=] |source| of the [=attribution source cache=]:
@@ -4274,7 +4272,7 @@ if the following steps return true:
         |sourceToAttribute|, set |sourceToAttribute| to |source|.
 1. If |sourceToAttribute| is null, return the tuple (null, an [=list/is empty|empty=] [=list=]).
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
-1. Return the tuple (|sourceToAttribute|, |matchingSources|).
+1. Return the [=tuple=] (|sourceToAttribute|, |matchingSources|).
 
 Note: We deliberately return all matching sources for deletion even if they don't have
 [=check if an attribution source and attribution trigger have matching attribution scopes|matching attribution scopes with the attribution trigger=]
