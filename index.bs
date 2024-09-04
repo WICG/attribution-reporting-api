@@ -3180,14 +3180,6 @@ To <dfn>find sources with common destinations and reporting origin</dfn> given a
     1. [=list/Append=] |source| to |matchingSources|.
 1. Return |matchingSources|.
 
-To <dfn>check if existing scopes are compatible with pending scopes</dfn> given an [=attribution scopes=] or null |existing| and an [=attribution scopes=] or null |pending|:
-1. If |pending| is null:
-    1. Return true if |existing| is null, false otherwise.
-1. If |existing| is null, return false.
-1. If |existing|'s [=attribution scopes/max event states=] is not equal to |pending|'s [=attribution scopes/max event states=], return false.
-1. If |existing|'s [=attribution scopes/limit=] is less than |pending|'s [=attribution scopes/limit=], return false.
-1. Return true.
-
 To <dfn>remove associated event-level reports and rate-limit records</dfn> given an [=attribution source/source identifier=] |sourceId| and a [=moment=] |minTriggerTime|:
 1. [=set/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
     1. If |report|'s [=event-level report/source identifier=] is not equal to |sourceId|, [=iteration/continue=].
@@ -3225,15 +3217,20 @@ To <dfn>remove sources with unselected attribution scopes</dfn> given an [=attri
 1. [=set/iterate|For each=] |destination| in |pendingSource|'s [=attribution source/attribution destinations=]:
     1. [=Remove sources with unselected attribution scopes for destination=] with |destination| and |pendingSource|.
 
-To <dfn>remove or update sources with incompatible attribution scope fields</dfn> given an [=attribution source=] |pendingSource|:
+To <dfn>remove or update sources for attribution scopes</dfn> given an [=attribution source=] |pendingSource|:
+1. Let |pendingScopes| be |pendingSource|'s [=attribution source/attribution scopes=].
 1. Let |matchingSources| be the result of running [=find sources with common destinations and reporting origin=] with |pendingSource|.
 1. [=list/iterate|For each=] |source| of |matchingSources|:
-    1. If the result of running [=check if existing scopes are compatible with pending scopes=] with |source|'s [=attribution source/attribution scopes=] and |pendingSource|'s [=attribution source/attribution scopes=] is true, [=iteration/continue=].
-    1. If |pendingSource|'s [=attribution source/attribution scopes=] is null:
-        1. Set |source|'s [=attribution source/attribution scopes=] to null.
+    1. Let |existingScopes| be |source|'s [=attribution source/attribution scopes=].
+    1. If |pendingScopes| is null:
+        1. Set |source|'s [=attribution source/attribution scopes=] to null if
+            |pendingScopes| is not null.
     1. Otherwise:
-        1. [=Remove associated event-level reports and rate-limit records=] with |source|'s [=attribution source/source identifier=] and |pendingSource|'s [=attribution source/source time=].
-        1. [=set/Remove=] |source| from the [=attribution source cache=].
+        1. If |existingScopes| is null or |existingScopes|'s [=attribution scopes/max event states=]
+            is not equal to |pendingScopes|'s [=attribution scopes/max event states=] or
+            |existingScopes|'s [=attribution scopes/limit=] is less than |pendingScopes|'s [=attribution scopes/limit=]:
+            1. [=Remove associated event-level reports and rate-limit records=] with |source|'s [=attribution source/source identifier=] and |pendingSource|'s [=attribution source/source time=].
+            1. [=set/Remove=] |source| from the [=attribution source cache=].
 1. [=Remove sources with unselected attribution scopes=] with |pendingSource|.
 
 To <dfn>process an attribution source</dfn> given an [=attribution source=] |source|:
@@ -3304,7 +3301,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 1. Let |destinationLimitReplaced| be true if |sourcesToDeleteForDestinationLimit| is not [=set/is empty|empty],
     otherwise false.
 1. Run [=delete sources for unexpired destination limit=] with |sourcesToDeleteForDestinationLimit| and |source|'s [=attribution source/source time=].
-1. [=Remove or update sources with incompatible attribution scope fields=] with |source|.
+1. [=Remove or update sources for attribution scopes=] with |source|.
 1. Let |isNoised| be true if |source|'s [=attribution source/randomized response=]
     is not null, otherwise false.
 1. If |destinationRateLimitResult| is "<code>[=destination rate-limit result/hit global limit=]</code>":
