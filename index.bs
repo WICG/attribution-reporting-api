@@ -3180,12 +3180,12 @@ To <dfn>find sources with common destinations and reporting origin</dfn> given a
     1. [=list/Append=] |source| to |matchingSources|.
 1. Return |matchingSources|.
 
-To <dfn>check if source has compatible attribution scope fields</dfn> given an [=attribution source=] |source| and an [=attribution source=] |pendingSource|:
-1. If |pendingSource|'s [=attribution source/attribution scopes=] is null:
-    1. Return true if |source|'s [=attribution source/attribution scopes=] is null, false otherwise.
-1. If |source|'s [=attribution source/attribution scopes=] is null, return false.
-1. If |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=] is not equal to |pendingSource|'s [=attribution source/attribution scopes=]'s [=attribution scopes/max event states=], return false.
-1. If |source|'s [=attribution source/attribution scopes=]'s [=attribution scopes/limit=] is less than |pendingSource|'s [=attribution source/attribution scopes=]'s [=attribution scopes/limit=], return false.
+To <dfn>check if existing scopes are compatible with pending scopes</dfn> given an [=attribution scopes=] or null |existing| and an [=attribution scopes=] or null |pending|:
+1. If |pending| is null:
+    1. Return true if |existing| is null, false otherwise.
+1. If |existing| is null, return false.
+1. If |existing|'s [=attribution scopes/max event states=] is not equal to |pending|'s [=attribution scopes/max event states=], return false.
+1. If |existing|'s [=attribution scopes/limit=] is less than |pending|'s [=attribution scopes/limit=], return false.
 1. Return true.
 
 To <dfn>remove associated event-level reports and rate-limit records</dfn> given an [=attribution source/source identifier=] |sourceId| and a [=moment=] |minTriggerTime|:
@@ -3230,7 +3230,7 @@ To <dfn>remove sources with unselected attribution scopes</dfn> given an [=attri
 To <dfn>remove or update sources with incompatible attribution scope fields</dfn> given an [=attribution source=] |pendingSource|:
 1. Let |matchingSources| be the result of running [=find sources with common destinations and reporting origin=] with |pendingSource|.
 1. [=list/iterate|For each=] |source| of |matchingSources|:
-    1. If the result of running [=check if source has compatible attribution scope fields=] with |source| and |pendingSource| is true, [=iteration/continue=].
+    1. If the result of running [=check if existing scopes are compatible with pending scopes=] with |source|'s [=attribution source/attribution scopes=] and |pendingSource|'s [=attribution source/attribution scopes=] is true, [=iteration/continue=].
     1. If |pendingSource|'s [=attribution source/attribution scopes=] is null:
         1. Set |source|'s [=attribution source/attribution scopes=] to null.
     1. Otherwise:
