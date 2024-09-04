@@ -314,7 +314,7 @@ Add the following item to [=navigation params=]:
 Modify [=navigate=] as follows:
 
 Add an optional boolean parameter called <dfn for="navigate">
-<var>navigationSourceEligible</var></dfn>, defaulting to false.
+<var>navigationSourceEligible</var></dfn> (default false).
 
 In the step
 
@@ -354,9 +354,8 @@ A [=request=] has an associated
 Unless otherwise stated it is "<code>[=eligibility/unset=]</code>".
 
 To <dfn>get an eligibility from {{AttributionReportingRequestOptions}}</dfn>
-given an optional {{AttributionReportingRequestOptions}} |options|:
+given an {{AttributionReportingRequestOptions}} |options|:
 
-1. If |options| is null, return "<code>[=eligibility/unset=]</code>".
 1. Let |eventSourceEligible| be |options|'s
     {{AttributionReportingRequestOptions/eventSourceEligible}}.
 1. Let |triggerEligible| be |options|'s
@@ -3882,9 +3881,8 @@ To <dfn>check if an [=attribution source=] can create [=aggregatable contributio
 
 To <dfn>obtain verbose debug data body on trigger registration</dfn> given a
 [=trigger debug data type=] |dataType|, an [=attribution trigger=] |trigger|,
-an optional [=attribution source=] <dfn for="obtain verbose debug data body on trigger registration">
-<var>sourceToAttribute</var></dfn>, and an optional [=attribution report=]
-<dfn for="obtain verbose debug data body on trigger registration"><var>report</var></dfn>:
+a possibly null [=attribution source=] |sourceToAttribute|, and a possibly null
+[=attribution report=] |report|:
 
 1. Let |body| be a new [=map=].
 1. If |dataType| is:
@@ -3928,9 +3926,8 @@ an optional [=attribution source=] <dfn for="obtain verbose debug data body on t
 1. Return |body|.
 
 To <dfn>obtain verbose debug data on trigger registration</dfn> given a [=trigger debug data type=] |dataType|,
-an [=attribution trigger=] |trigger|, an optional [=attribution source=]
-<dfn for="obtain verbose debug data on trigger registration"><var>sourceToAttribute</var></dfn>,
-and an optional [=attribution report=] <dfn for="obtain verbose debug data on trigger registration"><var>report</var></dfn>:
+an [=attribution trigger=] |trigger|, a possibly null [=attribution source=]
+|sourceToAttribute|, and a possibly null [=attribution report=] |report|:
 
 1. If |trigger|'s [=attribution trigger/debug reporting enabled=] is false, return null.
 1. If the result of running [=check if cookie-based debugging is allowed=] with |trigger|'s
@@ -4192,7 +4189,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 
 To <dfn>obtain and deliver a verbose debug report on trigger registration</dfn>
 given a [=set=] of [=trigger debug data=] |dataSet|, an [=attribution trigger=] |trigger|,
-and an optional [=attribution source=] |sourceToAttribute|:
+and a possibly null [=attribution source=] |sourceToAttribute|:
 
 1. Let |debugDataList| be a new [=list=].
 1. [=set/iterate|For each=] |data| of |dataSet|:
@@ -4206,7 +4203,7 @@ and an optional [=attribution source=] |sourceToAttribute|:
 
 To <dfn>obtain and deliver an aggregatable debug report on trigger registration</dfn>
 given a [=set=] of [=trigger debug data=] |dataSet|, an [=attribution trigger=] |trigger|,
-and an optional [=attribution source=] |sourceToAttribute|:
+and a possibly null [=attribution source=] |sourceToAttribute|:
 
 1. If |trigger|'s [=attribution trigger/fenced=] is true, return.
 1. Let |config| be |trigger|'s [=attribution trigger/aggregatable debug reporting config=].
@@ -4240,7 +4237,7 @@ and an optional [=attribution source=] |sourceToAttribute|:
 
 To <dfn>obtain and deliver debug reports on trigger registration</dfn>
 given a [=set=] of [=trigger debug data=] |dataSet|, an [=attribution trigger=] |trigger|,
-and an optional [=attribution source=]
+and a possibly null [=attribution source=]
 <dfn for="obtain and deliver debug reports on trigger registration"><var>sourceToAttribute</var></dfn>:
 
 1. Run [=obtain and deliver a verbose debug report on trigger registration=]
@@ -4369,7 +4366,7 @@ To <dfn>obtain an aggregatable attribution report delivery time</dfn> given an [
 <h3 algorithm id="obtaining-an-event-level-report">Obtaining an event-level report</h3>
 
 To <dfn>obtain an event-level report</dfn> given an [=attribution source=] |source|,
-a [=moment=] |triggerTime|, an optional non-negative 64-bit integer
+a [=moment=] |triggerTime|, a possibly null non-negative 64-bit integer
 <dfn for="obtain an event-level report"><var>triggerDebugKey</var></dfn>,
 a 64-bit integer priority |priority|, and a [=trigger spec map=] [=map/entry=]
 |specEntry|:
@@ -4489,8 +4486,8 @@ To <dfn>determine if a randomized null attribution report is generated</dfn> giv
 1. If |r| is less than |randomPickRate|, return true.
 1. Otherwise, return false.
 
-To <dfn>generate null attribution reports</dfn> given an [=attribution trigger=] |trigger| and an optional [=aggregatable attribution report=]
-<dfn for="generate null attribution reports"><var>report</var></dfn> defaulting to null:
+To <dfn>generate null attribution reports</dfn> given an [=attribution trigger=] |trigger| and a possibly null [=aggregatable attribution report=]
+<dfn for="generate null attribution reports"><var>report</var></dfn>:
 
 1. Let |nullReports| be a new [=list=].
 1. If |trigger|'s [=attribution trigger/aggregatable source registration time configuration=] is "<code>[=aggregatable source registration time configuration/exclude=]</code>":
