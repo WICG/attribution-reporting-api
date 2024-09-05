@@ -101,7 +101,7 @@ The `attribution_scope_limit` value can be updated during source registration at
 
 ### Deletion logic
 
-If the current trigger passes the top-level filter check during the attribution process, then all other eligible sources considered for attribution (across all `attribution_scopes` and including eligible sources that do not use the `attribution_scopes` feature) will be deleted.
+If the current trigger passes the top-level filter check during the attribution process, then all other eligible sources considered for attribution (across all `attribution_scopes` and including eligible sources that do not use the `attribution_scopes` feature) will be deleted. This deletion logic is necessary in order to prevent an attack vector where an API caller could abuse the API to receive multiple reports for a single user action, which would be possible if the API only deleted the specific source that gets attributed and none of the other eligible sources.
 
 ## Attribution Scope Examples
 
