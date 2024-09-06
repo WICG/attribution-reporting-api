@@ -222,7 +222,7 @@ In this example the API will start by finding any sources that have an `attribut
 
 ## Alternatives Considered
 
-One alternative that was considered was instead of using `attribution_scopes` the API would perform attribution matching on a finer granularity than site (e.g. origin or path). This approach would allow the rest of the API logic to continue working as it does currently. However, the `attribution_scopes` proposal gives users additional flexibility in case their URL structures do not match their logical scope structures. , matching on finer granularity than site may open additional potential attack vectors and would require additional rate limits.
+One alternative that was considered was instead of using `attribution_scopes` the API would perform attribution matching on a finer granularity than site (e.g. origin or path). This approach would allow the rest of the API logic to continue working as it does currently. However, the `attribution_scopes` proposal gives users additional flexibility in case their URL structures do not match their logical scope structures. Matching on finer granularity than site may open additional potential attack vectors and would require additional rate limits.
 
 ## Privacy Considerations
 
