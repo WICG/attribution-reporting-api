@@ -89,11 +89,9 @@ If there are multiple sources whose `attribution_scopes/values` contains at leas
 
 If the trigger registration's `attribution_scopes` is empty, then all sources are considered for attribution.
 
+Once a `attribution scopes/limit` is set, the last K values (where K = `attribution scopes/limit`) of `attribution_scopes/values` will be considered the final set of attribution scopes values and any source with additional values will be deleted. Additionally, when a new source uses the `attribution_scopes` feature, then all previous source registrations that do no use the feature will be deleted. Similarly, if a new source does not use the `attribution_scopes` feature, then all previous pending sources registrations will be treated as if they have empty `attribution_scopes` fields.
 
-Once a `attribution scopes/limit` is set, the last K values (where K = `attribution scopes/limit`) of `attribution_scopes/values` will be considered the final set of attribution scopes values and any source with additional values will be treated as if the attribution scopes were not set.
-
-
-For sources that use the `attribution_scopes` feature, if the source registration is specified with a configuration that has a higher number of event states than the most recent `max_event_states` for the same reporting origin, then the source will be rejected and the registration will fail. Additionally, if the `max_event_states` field is changed in a future source registration, then all other previous pending source registrations that use the `attribution_scopes` feature with a different `max_event_states` will be ignored in subsequent attribution report generation flows, but will still count towards rate limits. 
+For sources that use the `attribution_scopes` feature, if the source registration is specified with a configuration that has a higher number of event states than the most recent `max_event_states` for the same reporting origin, then the source will be rejected and the registration will fail. , if the `max_event_states` field is changed in a future source registration, then all other previous pending source registrations that use the `attribution_scopes` feature with a different `max_event_states` will be ignored in subsequent attribution report generation flows, but will still count towards rate limits. 
 
 ### Updating attribution scope values
 
@@ -224,7 +222,7 @@ In this example the API will start by finding any sources that have an `attribut
 
 ## Alternatives Considered
 
-One alternative that was considered was instead of using `attribution_scopes` the API would perform attribution matching on a finer granularity than site (e.g. origin or path). This approach would allow the rest of the API logic to continue working as it does currently. However, the `attribution_scopes` proposal gives users additional flexibility in case their URL structures do not match their logical scope structures. Additionally, matching on finer granularity than site may open additional potential attack vectors and would require additional rate limits.
+One alternative that was considered was instead of using `attribution_scopes` the API would perform attribution matching on a finer granularity than site (e.g. origin or path). This approach would allow the rest of the API logic to continue working as it does currently. However, the `attribution_scopes` proposal gives users additional flexibility in case their URL structures do not match their logical scope structures. , matching on finer granularity than site may open additional potential attack vectors and would require additional rate limits.
 
 ## Privacy Considerations
 
