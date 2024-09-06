@@ -4,6 +4,10 @@ export type VendorSpecificValues = {
   // The first value is the default if a trigger doesn't specify one.
   aggregationCoordinatorOrigins: [string, ...string[]]
   maxEventLevelChannelCapacityPerSource: Record<SourceType, number>
+  maxEventLevelAttributionScopesChannelCapacityPerSource: Record<
+    SourceType,
+    number
+  >
   maxSettableEventLevelEpsilon: number
   maxTriggerStateCardinality: number
 }
@@ -17,6 +21,10 @@ export const Chromium: Readonly<VendorSpecificValues> = {
     [SourceType.event]: 6.5,
     [SourceType.navigation]: 11.5,
   },
+  maxEventLevelAttributionScopesChannelCapacityPerSource: {
+    [SourceType.event]: 6.5,
+    [SourceType.navigation]: 11.55,
+  },
   maxSettableEventLevelEpsilon: 14,
-  maxTriggerStateCardinality: Infinity,
+  maxTriggerStateCardinality: 2 ** 32 - 1,
 }

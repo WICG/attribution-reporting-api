@@ -1,21 +1,15 @@
-import { strict as assert } from 'assert'
 import * as testutil from './util.test'
 import { Maybe } from './maybe'
-import { Info, PreferredPlatform, validateInfo } from './validate-info'
+import * as info from './validate-info'
 
-type TestCase = testutil.TestCase & {
-  input: string
-  expected?: Maybe<Info>
-}
-
-const tests: TestCase[] = [
+const tests: testutil.TestCase<info.Info>[] = [
   {
     input: 'preferred-platform=os',
   },
   {
     input: 'preferred-platform=web',
     expected: Maybe.some({
-      preferredPlatform: PreferredPlatform.web,
+      preferredPlatform: info.PreferredPlatform.web,
       reportHeaderErrors: false,
     }),
   },
@@ -32,7 +26,7 @@ const tests: TestCase[] = [
   {
     input: 'preferred-platform=os,report-header-errors=?0',
     expected: Maybe.some({
-      preferredPlatform: PreferredPlatform.os,
+      preferredPlatform: info.PreferredPlatform.os,
       reportHeaderErrors: false,
     }),
   },
@@ -108,12 +102,4 @@ const tests: TestCase[] = [
   },
 ]
 
-tests.forEach((tc) =>
-  testutil.run(tc, /*name=*/ tc.input, () => {
-    const [validationResult, value] = validateInfo(tc.input)
-    if (tc.expected !== undefined) {
-      assert.deepEqual(value, tc.expected)
-    }
-    return validationResult
-  })
-)
+tests.forEach((tc) => testutil.run(tc, info))

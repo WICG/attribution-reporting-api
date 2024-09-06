@@ -18,7 +18,14 @@ export type Eligible = {
   trigger: boolean
 }
 
-function presence(ctx: Context, v: Item | InnerList): Maybe<boolean> {
+function presence(
+  v: Item | InnerList | undefined,
+  ctx: Context
+): Maybe<boolean> {
+  if (v === undefined) {
+    return Maybe.some(false)
+  }
+
   if (v[0] !== true) {
     ctx.warning('ignoring dictionary value')
   }
@@ -30,14 +37,12 @@ function presence(ctx: Context, v: Item | InnerList): Maybe<boolean> {
   return Maybe.some(true)
 }
 
-export function validateEligible(
-  str: string
-): [ValidationResult, Maybe<Eligible>] {
-  return validateDictionary(new Context(), str, (ctx, d) =>
-    struct(ctx, d, {
-      navigationSource: field(navigationSourceKey, presence, false),
-      eventSource: field(eventSourceKey, presence, false),
-      trigger: field(triggerKey, presence, false),
+export function validate(str: string): [ValidationResult, Maybe<Eligible>] {
+  return validateDictionary(str, new Context(), (d, ctx) =>
+    struct(d, ctx, {
+      navigationSource: field(navigationSourceKey, presence),
+      eventSource: field(eventSourceKey, presence),
+      trigger: field(triggerKey, presence),
     }).filter((v) => {
       if (v.navigationSource && (v.eventSource || v.trigger)) {
         ctx.error(
@@ -50,7 +55,7 @@ export function validateEligible(
   )
 }
 
-export function serializeEligible(e: Eligible): string {
+export function serialize(e: Eligible): string {
   const map: Dictionary = new Map()
   if (e.navigationSource) {
     map.set(navigationSourceKey, [true, new Map()])

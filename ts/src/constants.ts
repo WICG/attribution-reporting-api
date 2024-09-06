@@ -19,6 +19,10 @@ export const maxLengthPerAggregationKeyIdentifier: number = 25
 
 export const maxLengthPerTriggerContextID: number = 64
 
+export const maxAttributionScopesPerSource: number = 20
+
+export const maxLengthPerAttributionScope: number = 50
+
 export const minReportWindow: number = 1 * SECONDS_PER_HOUR
 
 export const validSourceExpiryRange: Readonly<[min: number, max: number]> = [
@@ -51,14 +55,22 @@ export const defaultTriggerDataCardinality: Readonly<
   [SourceType.navigation]: 8n,
 }
 
+export const defaultAggregatableFilteringIdMaxBytes: number = 1
+
+export const maxAggregatableFilteringIdMaxBytesValue: number = 8
+
+export const defaultFilteringIdValue: bigint = 0n
+
 export const sourceAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'source-channel-capacity-limit',
   'source-destination-global-rate-limit',
   'source-destination-limit',
   'source-destination-rate-limit',
+  'source-max-event-states-limit',
   'source-noised',
   'source-reporting-origin-limit',
   'source-reporting-origin-per-site-limit',
+  'source-scopes-channel-capacity-limit',
   'source-storage-limit',
   'source-success',
   'source-trigger-state-cardinality-limit',
@@ -90,3 +102,5 @@ export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'trigger-unknown-error',
   'unspecified',
 ]
+
+export const defaultMaxEventStates: number = 3

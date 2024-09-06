@@ -24,6 +24,12 @@ On responses:
 - `Attribution-Reporting-Register-Source`
 - `Attribution-Reporting-Register-Trigger`
 
+Sources and triggers can also be validated from the command-line:
+
+```sh
+npm run header -- --help
+```
+
 ## Flexible Event
 
 Examples:

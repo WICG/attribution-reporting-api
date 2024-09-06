@@ -29,9 +29,9 @@ export const param = validate.make<Parameters, BareItem>(
   /*warnUnknownMsg=*/ 'unknown parameter'
 )
 
-export function validateDictionary<T extends Object, C extends Context>(
-  ctx: C,
+export function validateDictionary<T, C extends Context>(
   str: string,
+  ctx: C,
   f: CtxFunc<C, Dictionary, Maybe<T>>
 ): [ValidationResult, Maybe<T>] {
   let d
@@ -42,6 +42,6 @@ export function validateDictionary<T extends Object, C extends Context>(
     return [ctx.finish(msg), Maybe.None]
   }
 
-  const v = f(ctx, d)
+  const v = f(d, ctx)
   return [ctx.finish(), v]
 }

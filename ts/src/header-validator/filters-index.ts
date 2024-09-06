@@ -2,9 +2,11 @@ import { SourceType } from '../source-type'
 import { Context } from './context'
 import * as filters from './filters'
 import { makeLi } from './issue-utils'
-import { validateJSON, filterPair, filterData } from './validate-json'
+import { validateJSON } from './validate-json'
+import { filterData } from './validate-source'
+import { filterPair } from './validate-trigger'
 
-const form = document.querySelector('form')! as HTMLFormElement
+const form = document.querySelector<HTMLFormElement>('form')!
 const sourceAgeInput = form.elements.namedItem(
   'source-age'
 )! as HTMLInputElement
@@ -19,7 +21,7 @@ const sourceErrorList = document.querySelector('#source-errors')!
 const sourceWarningList = document.querySelector('#source-warnings')!
 const triggerErrorList = document.querySelector('#trigger-errors')!
 const triggerWarningList = document.querySelector('#trigger-warnings')!
-const matchesSpan = document.querySelector('#matches')! as HTMLElement
+const matchesSpan = document.querySelector<HTMLElement>('#matches')!
 
 function sourceType(): SourceType {
   const v = sourceTypeRadios.value

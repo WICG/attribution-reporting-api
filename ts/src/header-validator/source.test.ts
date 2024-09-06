@@ -1,15 +1,10 @@
-import { strict as assert } from 'assert'
 import { SourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
-import { serializeSource } from './to-json'
-import {
-  Source,
-  SummaryWindowOperator,
-  TriggerDataMatching,
-  validateSource,
-} from './validate-json'
+import { Source, SummaryOperator, TriggerDataMatching } from './source'
+import * as testutil from './util.test'
 import * as jsontest from './validate-json.test'
+import * as source from './validate-source'
 
 type TestCase = jsontest.TestCase<Source> & {
   sourceType?: SourceType
@@ -20,20 +15,21 @@ const testCases: TestCase[] = [
   // no errors or warnings
   {
     name: 'required-fields-only',
-    json: `{"destination": "https://a.test"}`,
+    input: `{"destination": "https://a.test"}`,
   },
   {
     name: 'multi-destination',
-    json: `{"destination": ["https://a.test", "https://b.test"]}`,
+    input: `{"destination": ["https://a.test", "https://b.test"]}`,
   },
   {
     name: 'all-fields',
-    json: `{
+    input: `{
       "aggregatable_report_window": "3601",
       "aggregation_keys": {"a": "0xf"},
       "debug_key": "1",
       "debug_reporting": true,
       "destination": "https://a.test",
+      "destination_limit_priority": "1",
       "event_report_window": "3601",
       "expiry": "86400",
       "filter_data": {"b": ["c"]},
@@ -48,15 +44,22 @@ const testCases: TestCase[] = [
           "types": ["source-success"],
           "value": 123
         } ]
+      },
+      "attribution_scopes": {
+        "limit": 3,
+        "values": ["1"],
+        "max_event_states": 4
       }
     }`,
     sourceType: SourceType.navigation,
+    parseScopes: true,
     expected: Maybe.some({
       aggregatableReportWindow: 3601,
       aggregationKeys: new Map([['a', 15n]]),
       debugKey: 1n,
       debugReporting: true,
       destination: new Set(['https://a.test']),
+      destinationLimitPriority: 1n,
       eventLevelEpsilon: 14,
       expiry: 86400,
       filterData: new Map([['b', new Set(['c'])]]),
@@ -70,7 +73,7 @@ const testCases: TestCase[] = [
             endTimes: [3601],
           },
           summaryBuckets: [1, 2],
-          summaryWindowOperator: SummaryWindowOperator.count,
+          summaryOperator: SummaryOperator.count,
           triggerData: new Set([0, 1, 2, 3, 4, 5, 6, 7]),
         },
       ],
@@ -88,26 +91,35 @@ const testCases: TestCase[] = [
         aggregationCoordinatorOrigin:
           'https://publickeyservice.msmt.aws.privacysandboxservices.com',
       },
+      attributionScopes: {
+        limit: 3,
+        values: new Set<string>('1'),
+        maxEventStates: 4,
+      },
     }),
   },
 
   // warnings
   {
     name: 'unknown-field',
-    json: `{
+    input: `{
       "destination": "https://a.test",
-      "x": []
+      "attribution_scopes": {
+        "values": false,
+        "limit": false,
+        "max_event_states": false
+      }
     }`,
     expectedWarnings: [
       {
-        path: ['x'],
+        path: ['attribution_scopes'],
         msg: 'unknown field',
       },
     ],
   },
   {
     name: 'destination-url-components',
-    json: `{"destination": ["https://a.test/b?c=d#e", "https://x.y.test", "https://sub.a.test/z"]}`,
+    input: `{"destination": ["https://a.test/b?c=d#e", "https://x.Y.test", "https://sub.A.test/z"]}`,
     expectedWarnings: [
       {
         path: ['destination', 0],
@@ -131,13 +143,13 @@ const testCases: TestCase[] = [
   // errors
   {
     name: 'invalid-json',
-    json: ``,
+    input: ``,
     expectedErrors: [{ msg: 'SyntaxError: Unexpected end of JSON input' }],
     expected: Maybe.None,
   },
   {
     name: 'wrong-root-type',
-    json: `1`,
+    input: `1`,
     expectedErrors: [
       {
         path: [],
@@ -148,7 +160,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'wrong-root-type-null',
-    json: `null`,
+    input: `null`,
     expectedErrors: [
       {
         path: [],
@@ -159,7 +171,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'destination-missing',
-    json: `{}`,
+    input: `{}`,
     expectedErrors: [
       {
         path: ['destination'],
@@ -169,7 +181,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'destination-wrong-type',
-    json: `{"destination": 1}`,
+    input: `{"destination": 1}`,
     expectedErrors: [
       {
         path: ['destination'],
@@ -179,7 +191,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'destination-not-url',
-    json: `{"destination": "a.test"}`,
+    input: `{"destination": "a.test"}`,
     expectedErrors: [
       {
         path: ['destination'],
@@ -189,7 +201,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'destination-untrustworthy',
-    json: `{"destination": "http://a.test"}`,
+    input: `{"destination": "http://a.test"}`,
     expectedErrors: [
       {
         path: ['destination'],
@@ -197,10 +209,81 @@ const testCases: TestCase[] = [
       },
     ],
   },
+  {
+    name: 'destination-list-empty',
+    input: `{"destination": []}`,
+    expectedErrors: [
+      {
+        path: ['destination'],
+        msg: 'length must be in the range [1, 3]',
+      },
+    ],
+  },
+  {
+    name: 'destination-list-size-ok-after-dedup',
+    input: `{"destination": [
+      "https://a.test",
+      "https://b.test/1",
+      "https://b.test/2",
+      "https://c.test/3"
+    ]}`,
+    expectedWarnings: [
+      {
+        msg: 'URL components other than site (https://b.test) will be ignored',
+        path: ['destination', 1],
+      },
+      {
+        msg: 'URL components other than site (https://b.test) will be ignored',
+        path: ['destination', 2],
+      },
+      {
+        msg: 'duplicate value https://b.test',
+        path: ['destination', 2],
+      },
+      {
+        msg: 'URL components other than site (https://c.test) will be ignored',
+        path: ['destination', 3],
+      },
+    ],
+  },
+  {
+    name: 'destination-list-too-long',
+    input: `{"destination": [
+      "https://a.test",
+      "https://b.test/1",
+      "https://b.test/2",
+      "https://c.test/3",
+      "https://d.test"
+    ]}`,
+    expectedWarnings: [
+      {
+        msg: 'URL components other than site (https://b.test) will be ignored',
+        path: ['destination', 1],
+      },
+      {
+        msg: 'URL components other than site (https://b.test) will be ignored',
+        path: ['destination', 2],
+      },
+      {
+        msg: 'duplicate value https://b.test',
+        path: ['destination', 2],
+      },
+      {
+        msg: 'URL components other than site (https://c.test) will be ignored',
+        path: ['destination', 3],
+      },
+    ],
+    expectedErrors: [
+      {
+        path: ['destination'],
+        msg: 'length must be in the range [1, 3]',
+      },
+    ],
+  },
 
   {
     name: 'filter-data-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "filter_data": 1
     }`,
@@ -213,7 +296,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'filter-data-wrong-type-null',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "filter_data": null
     }`,
@@ -226,7 +309,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'filter-data-values-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "filter_data": {"a": "b"}
     }`,
@@ -239,7 +322,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'filter-data-value-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "filter_data": {"a": [1]}
     }`,
@@ -252,7 +335,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'filter-data-source-type-key',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "filter_data": {"source_type": []}
     }`,
@@ -265,7 +348,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'filter-data-lookback-window-key',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "filter_data": {"_lookback_window": []}
     }`,
@@ -278,7 +361,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'filter-data-reserved-key',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "filter_data": {"_some_key": []}
     }`,
@@ -291,7 +374,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'filter-data-duplicate-value',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "filter_data": {
         "a": ["x", "y", "x"],
@@ -307,7 +390,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'filter-data-key-too-long',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "filter_data": {"aaaaaaaaaaaaaaaaaaaaaaaaaa": ["x"]}
     }`,
@@ -320,7 +403,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'filter-data-value-too-long',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "filter_data": {"a": ["xxxxxxxxxxxxxxxxxxxxxxxxxx"]}
     }`,
@@ -333,7 +416,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'filter-data-too-many-keys',
-    json: JSON.stringify({
+    input: JSON.stringify({
       destination: 'https://a.test',
       filter_data: Object.fromEntries(
         Array.from({ length: 51 }, (_, i) => [`k${i}`, []])
@@ -347,11 +430,34 @@ const testCases: TestCase[] = [
     ],
   },
   {
-    name: 'filter-data-too-many-values',
-    json: JSON.stringify({
+    name: 'filter-data-size-ok-after-dedup',
+    input: JSON.stringify({
       destination: 'https://a.test',
-      filter_data: { a: Array.from({ length: 51 }, (_, i) => [`${i}`, []]) },
+      filter_data: {
+        a: ['49', ...Array.from({ length: 50 }, (_, i) => `${i}`)],
+      },
     }),
+    expectedWarnings: [
+      {
+        path: ['filter_data', 'a', 50],
+        msg: 'duplicate value 49',
+      },
+    ],
+  },
+  {
+    name: 'filter-data-too-many-values',
+    input: JSON.stringify({
+      destination: 'https://a.test',
+      filter_data: {
+        a: ['50', ...Array.from({ length: 51 }, (_, i) => `${i}`)],
+      },
+    }),
+    expectedWarnings: [
+      {
+        path: ['filter_data', 'a', 51],
+        msg: 'duplicate value 50',
+      },
+    ],
     expectedErrors: [
       {
         path: ['filter_data', 'a'],
@@ -362,7 +468,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'aggregation-keys-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregation_keys": 1
     }`,
@@ -375,7 +481,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregation-keys-value-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregation_keys": {"a": 1}
     }`,
@@ -388,7 +494,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregation-keys-value-wrong-format',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregation_keys": {"a": "3"}
     }`,
@@ -401,7 +507,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregation-keys-too-many',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregation_keys": {
         "1": "0x1",
@@ -436,7 +542,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregation-keys-key-too-long',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregation_keys": {
         "aaaaaaaaaaaaaaaaaaaaaaaaaa": "0x1"
@@ -451,7 +557,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregation-keys-key-too-long-non-ascii',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregation_keys": {
         "aaaaaaaaaaaaaaaaaaaaaaaaa\u03A9": "0x1"
@@ -466,7 +572,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregation-keys-too-many-keys',
-    json: JSON.stringify({
+    input: JSON.stringify({
       destination: 'https://a.test',
       aggregation_keys: Object.fromEntries(
         Array.from({ length: 21 }, (_, i) => [`k${i}`, '0x1'])
@@ -482,7 +588,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'source-event-id-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "source_event_id": 1
     }`,
@@ -495,7 +601,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'source-event-id-wrong-format',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "source_event_id": "-1"
     }`,
@@ -509,7 +615,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'debug-key-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "debug_key": 1
     }`,
@@ -522,7 +628,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'debug-key-wrong-format',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "debug_key": "-1"
     }`,
@@ -536,7 +642,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'priority-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "priority": 1
     }`,
@@ -549,7 +655,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'priority-wrong-format',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "priority": "x"
     }`,
@@ -563,14 +669,14 @@ const testCases: TestCase[] = [
 
   {
     name: 'aggregatable-report-window-integer',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_report_window": 3601
     }`,
   },
   {
     name: 'aggregatable-report-window-clamp-min',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_report_window": 3599
     }`,
@@ -583,7 +689,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-report-window-clamp-max',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": 259200,
       "aggregatable_report_window": 259201
@@ -597,7 +703,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-report-window-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_report_window": false
     }`,
@@ -610,7 +716,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-report-window-wrong-format',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_report_window": "x"
     }`,
@@ -623,7 +729,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-report-window-wrong-sign',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_report_window": "-1"
     }`,
@@ -636,7 +742,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-report-window-integer-wrong-sign',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_report_window": -1
     }`,
@@ -649,7 +755,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-report-window-invalid-expiry',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": -1,
       "aggregatable_report_window": 3601
@@ -668,14 +774,14 @@ const testCases: TestCase[] = [
 
   {
     name: 'event-report-window-integer',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_window": 3601
     }`,
   },
   {
     name: 'event-report-window-clamp-min',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_window": 3599
     }`,
@@ -688,7 +794,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-report-window-clamp-max',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": 259200,
       "event_report_window": 259201
@@ -702,7 +808,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-report-window-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_window": false
     }`,
@@ -715,7 +821,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-report-window-wrong-format',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_window": "x"
     }`,
@@ -728,7 +834,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-report-window-wrong-sign',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_window": "-1"
     }`,
@@ -741,7 +847,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-report-window-integer-wrong-sign',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_window": -1
     }`,
@@ -754,14 +860,14 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-integer',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": 86400
     }`,
   },
   {
     name: 'expiry-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": false
     }`,
@@ -774,7 +880,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-wrong-format',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": "x"
     }`,
@@ -787,7 +893,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-wrong-sign',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": "-1"
     }`,
@@ -800,7 +906,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-integer-wrong-sign',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": -1
     }`,
@@ -813,7 +919,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-integer-clamp-min',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": 1
     }`,
@@ -826,7 +932,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-integer-clamp-max',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": 2592001
     }`,
@@ -839,7 +945,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-string-clamp-min',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": "1"
     }`,
@@ -852,7 +958,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-string-clamp-max',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": "2592001"
     }`,
@@ -865,7 +971,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-string-rounding-<-half-day',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": "129599"
     }`,
@@ -879,7 +985,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-string-rounding-=-half-day',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": "129600"
     }`,
@@ -893,7 +999,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-string-rounding->-half-day',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": "129601"
     }`,
@@ -907,7 +1013,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-integer-rounding-<-half-day',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": 129599
     }`,
@@ -921,7 +1027,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-integer-rounding-=-half-day',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": 129600
     }`,
@@ -935,7 +1041,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-integer-rounding->-half-day',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": 129601
     }`,
@@ -949,7 +1055,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'expiry-integer-no-rounding-navigation-source',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": 129601
     }`,
@@ -958,7 +1064,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'debug-reporting-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "debug_reporting": "true"
     }`,
@@ -972,7 +1078,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'max-event-level-reports-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "max_event_level_reports": "2"
     }`,
@@ -985,7 +1091,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'max-event-level-reports-exceed-max',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "max_event_level_reports": 21
     }`,
@@ -998,7 +1104,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-and-window',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_window": "3601",
       "event_report_windows": {
@@ -1014,7 +1120,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-no-end-times',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
       }
@@ -1028,7 +1134,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-empty-end-times',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
         "end_times": []
@@ -1043,7 +1149,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-excessive-end-times',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
         "end_times": [3601,3602,3603,3604,3605,3606]
@@ -1058,7 +1164,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-start-time',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": 10,
@@ -1068,7 +1174,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-start-time-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": "10",
@@ -1088,7 +1194,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-start-time-not-integer',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": 10.5,
@@ -1108,7 +1214,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-start-time-negative',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": -1,
@@ -1128,7 +1234,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-start-time-after-expiry',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": 259200,
       "event_report_windows": {
@@ -1148,7 +1254,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-end-time-<-start-time',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": 3601,
@@ -1164,7 +1270,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-end-time-=-start-time',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
         "start_time": 3601,
@@ -1180,7 +1286,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-end-times-=',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
         "end_times": [3601, 3601, 3602]
@@ -1195,7 +1301,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-end-times-<',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
         "end_times": [3602, 3601, 3603]
@@ -1210,7 +1316,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-end-times-clamp-min',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_report_windows": {
         "end_times": [3599]
@@ -1225,7 +1331,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-report-windows-end-times-clamp-max',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "expiry": 259200,
       "event_report_windows": {
@@ -1239,10 +1345,36 @@ const testCases: TestCase[] = [
       },
     ],
   },
+  {
+    name: 'destination-limit-priority-wrong-type',
+    input: `{
+      "destination": "https://a.test",
+      "destination_limit_priority": 1
+    }`,
+    expectedErrors: [
+      {
+        path: ['destination_limit_priority'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'destination-limit-priority-wrong-format',
+    input: `{
+      "destination": "https://a.test",
+      "destination_limit_priority": "x"
+    }`,
+    expectedErrors: [
+      {
+        path: ['destination_limit_priority'],
+        msg: 'string must represent an integer (must match /^-?[0-9]+$/)',
+      },
+    ],
+  },
 
   {
     name: 'channel-capacity-default-event',
-    json: `{"destination": "https://a.test"}`,
+    input: `{"destination": "https://a.test"}`,
     sourceType: SourceType.event,
     noteInfoGain: true,
     vsv: {
@@ -1271,7 +1403,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'channel-capacity-default-navigation',
-    json: `{"destination": "https://a.test"}`,
+    input: `{"destination": "https://a.test"}`,
     sourceType: SourceType.navigation,
     noteInfoGain: true,
     vsv: {
@@ -1301,7 +1433,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'trigger-state-cardinality-valid',
-    json: `{"destination": "https://a.test"}`,
+    input: `{"destination": "https://a.test"}`,
     sourceType: SourceType.event,
     vsv: {
       maxEventLevelChannelCapacityPerSource: {
@@ -1313,8 +1445,15 @@ const testCases: TestCase[] = [
     },
   },
   {
-    name: 'trigger-state-cardinality-invalid',
-    json: `{"destination": "https://a.test"}`,
+    name: 'trigger-state-cardinality-invalid-scopes',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 3,
+        "values": ["1"],
+        "max_event_states": 2
+      }
+    }`,
     sourceType: SourceType.event,
     vsv: {
       maxEventLevelChannelCapacityPerSource: {
@@ -1324,24 +1463,75 @@ const testCases: TestCase[] = [
       maxSettableEventLevelEpsilon: 14,
       maxTriggerStateCardinality: 2,
     },
+    parseScopes: true,
     expectedErrors: [
       {
         path: [],
         msg: 'number of possible output states (3) exceeds max cardinality (2)',
+      },
+      {
+        path: [],
+        msg: 'number of possible output states (3) exceeds max event states (2)',
+      },
+    ],
+  },
+  {
+    name: 'trigger-state-cardinality-invalid-no-scopes-but-scopes-enabled',
+    input: `{
+      "destination": "https://a.test",
+      "max_event_level_reports": 2
+    }`,
+    sourceType: SourceType.event,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: 0,
+      },
+      maxSettableEventLevelEpsilon: 14,
+      maxTriggerStateCardinality: 3,
+    },
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'number of possible output states (6) exceeds max cardinality (3)',
+      },
+    ],
+  },
+  {
+    name: 'trigger-state-cardinality-invalid-no-scopes-and-scopes-disabled',
+    input: `{
+      "destination": "https://a.test",
+      "max_event_level_reports": 2
+    }`,
+    sourceType: SourceType.event,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: 0,
+      },
+      maxSettableEventLevelEpsilon: 14,
+      maxTriggerStateCardinality: 3,
+    },
+    parseScopes: false,
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'number of possible output states (6) exceeds max cardinality (3)',
       },
     ],
   },
 
   {
     name: 'event-level-epsilon-valid',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_level_epsilon": 13.5
     }`,
   },
   {
     name: 'event-level-epsilon-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_level_epsilon": "1"
     }`,
@@ -1354,7 +1544,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-epsilon-negative',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_level_epsilon": -1
     }`,
@@ -1367,7 +1557,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'event-level-epsilon-above-max',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "event_level_epsilon": 14.1
     }`,
@@ -1381,7 +1571,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'aggregatable-debug-reporting-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": 1
     }`,
@@ -1394,7 +1584,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-empty',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {}
     }`,
@@ -1411,7 +1601,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-budget-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": "1",
@@ -1427,7 +1617,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-budget-below-min',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 0,
@@ -1443,7 +1633,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-budget-above-max',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 65537,
@@ -1459,7 +1649,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-key-piece-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1475,7 +1665,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-key-piece-wrong-format',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1491,7 +1681,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-aggregation-coordinator-origin-wrong-format',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1511,7 +1701,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-aggregation-coordinator-origin-not-url',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1531,7 +1721,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-aggregation-coordinator-origin-untrustworthy',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1551,7 +1741,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1568,7 +1758,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1585,7 +1775,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-empty',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1610,7 +1800,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-key-piece-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1631,7 +1821,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-key-piece-wrong-format',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1652,7 +1842,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-value-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1673,7 +1863,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-value-below-min',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 789,
@@ -1694,7 +1884,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-value-above-max',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 789,
@@ -1715,7 +1905,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-value-above-budget',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 789,
@@ -1736,7 +1926,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1757,7 +1947,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-empty',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1778,7 +1968,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-elem-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1799,7 +1989,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-elem-unknown-duplicate',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1830,7 +2020,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-elem-unknown-duplicate-across',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1865,7 +2055,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-elem-duplicate',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1886,7 +2076,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-elem-duplicate-across',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {
         "budget": 123,
@@ -1915,7 +2105,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'trigger-specs-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": {}
     }`,
@@ -1929,7 +2119,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-specs-too-long',
-    json: JSON.stringify({
+    input: JSON.stringify({
       destination: 'https://a.test',
       trigger_specs: Array(33)
         .fill(null)
@@ -1945,7 +2135,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-specs-value-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [false]
     }`,
@@ -1959,7 +2149,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'top-level-trigger-data-and-trigger-specs',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data": [],
       "trigger_specs": []
@@ -1974,7 +2164,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'top-level-trigger-data-and-trigger-specs-ignored',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "max_event_level_reports": 0,
       "trigger_data": [],
@@ -1989,7 +2179,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-missing',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{}]
     }`,
@@ -2003,7 +2193,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data": 1
     }`,
@@ -2016,7 +2206,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-value-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data": ["1"]
     }`,
@@ -2029,7 +2219,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-value-not-integer',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data": [1.5]
     }`,
@@ -2042,7 +2232,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-value-negative',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data": [-1]
     }`,
@@ -2055,7 +2245,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-value-exceeds-max',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data": [4294967296]
     }`,
@@ -2068,7 +2258,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-duplicated-within',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data": [1, 2, 1]
     }`,
@@ -2080,8 +2270,21 @@ const testCases: TestCase[] = [
     ],
   },
   {
+    name: 'trigger-data-too-many-within',
+    input: JSON.stringify({
+      destination: 'https://a.test',
+      trigger_data: Array.from({ length: 33 }, (_, i) => i),
+    }),
+    expectedErrors: [
+      {
+        path: ['trigger_data'],
+        msg: 'length must be in the range [0, 32]',
+      },
+    ],
+  },
+  {
     name: 'trigger-data-duplicated-across',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [
         { "trigger_data": [1, 2] },
@@ -2098,7 +2301,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-spec-trigger-data-empty',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{"trigger_data": []}]
     }`,
@@ -2112,7 +2315,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-too-many-across',
-    json: JSON.stringify({
+    input: JSON.stringify({
       destination: 'https://a.test',
       trigger_specs: [
         { trigger_data: [0] },
@@ -2133,7 +2336,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'summary-buckets-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
@@ -2150,7 +2353,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'summary-buckets-empty',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
@@ -2167,7 +2370,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'summary-buckets-too-long',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "max_event_level_reports": 4,
       "trigger_specs": [{
@@ -2185,7 +2388,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'summary-buckets-cannot-validate-length',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "max_event_level_reports": null,
       "trigger_specs": [{
@@ -2207,7 +2410,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'summary-buckets-value-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
@@ -2224,7 +2427,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'summary-buckets-value-not-integer',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
@@ -2241,7 +2444,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'summary-buckets-value-non-positive',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
@@ -2258,7 +2461,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'summary-buckets-non-increasing',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
@@ -2275,7 +2478,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'summary-buckets-value-exceeds-max',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
@@ -2291,35 +2494,35 @@ const testCases: TestCase[] = [
     ],
   },
   {
-    name: 'summary-window-operator-wrong-type',
-    json: `{
+    name: 'summary-operator-wrong-type',
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
-        "summary_window_operator": 4
+        "summary_operator": 4
       }]
     }`,
     parseFullFlex: true,
     expectedErrors: [
       {
-        path: ['trigger_specs', 0, 'summary_window_operator'],
+        path: ['trigger_specs', 0, 'summary_operator'],
         msg: 'must be a string',
       },
     ],
   },
   {
-    name: 'summary-window-operator-wrong-value',
-    json: `{
+    name: 'summary-operator-wrong-value',
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
-        "summary_window_operator": "VALUE_SUM"
+        "summary_operator": "VALUE_SUM"
       }]
     }`,
     parseFullFlex: true,
     expectedErrors: [
       {
-        path: ['trigger_specs', 0, 'summary_window_operator'],
+        path: ['trigger_specs', 0, 'summary_operator'],
         msg: 'must be one of the following (case-sensitive): count, value_sum',
       },
     ],
@@ -2328,7 +2531,7 @@ const testCases: TestCase[] = [
     // The parser is shared with top-level event_report_windows, so just test
     // basic support here.
     name: 'spec-event-windows-basic',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_specs": [{
         "trigger_data": [3],
@@ -2345,7 +2548,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-matching-wrong-type',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data_matching": 3
     }`,
@@ -2358,7 +2561,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-matching-wrong-value',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data_matching": "EXACT"
     }`,
@@ -2371,7 +2574,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-matching-modulus-trigger-data-start-not-0',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data_matching": "modulus",
       "trigger_data": [1]
@@ -2385,7 +2588,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-matching-modulus-trigger-data-not-contiguous-across',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data_matching": "modulus",
       "trigger_specs": [
@@ -2403,7 +2606,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-matching-modulus-trigger-data-not-contiguous-within',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data_matching": "modulus",
       "trigger_data": [0, 1, 3]
@@ -2417,7 +2620,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-matching-defaulted-modulus-trigger-data-not-contiguous-within',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data": [0, 1, 3]
     }`,
@@ -2430,7 +2633,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-matching-modulus-valid-across',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data_matching": "modulus",
       "trigger_specs": [
@@ -2443,7 +2646,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'trigger-data-matching-modulus-valid-within',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "trigger_data_matching": "modulus",
       "trigger_data": [1, 0, 2, 3]
@@ -2452,7 +2655,7 @@ const testCases: TestCase[] = [
 
   {
     name: 'no-reports-but-specs',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "max_event_level_reports": 0,
       "trigger_data": [0]
@@ -2466,7 +2669,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'reports-but-no-specs',
-    json: `{
+    input: `{
       "destination": "https://a.test",
       "max_event_level_reports": 1,
       "trigger_data": []
@@ -2478,32 +2681,429 @@ const testCases: TestCase[] = [
       },
     ],
   },
+
+  // Attribution Scope
+  {
+    name: 'attribution-scopes-not-a-dictionary',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": ["1"]
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes'],
+        msg: 'must be an object',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scope-limit-negative',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": -1,
+        "values": ["1"]
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'limit'],
+        msg: 'must be in the range [1, 4294967295]',
+      },
+      {
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scope-limit-zero',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 0,
+        "values": ["1"]
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'limit'],
+        msg: 'must be in the range [1, 4294967295]',
+      },
+      {
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scope-limit-not-integer',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 1.5,
+        "values": ["1"]
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'limit'],
+        msg: 'must be an integer',
+      },
+      {
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scope-limit-exceeds-max',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 4294967296,
+        "values": ["1"]
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'limit'],
+        msg: 'must be in the range [1, 4294967295]',
+      },
+      {
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
+      },
+    ],
+  },
+  {
+    name: 'empty-attribution-scopes-with-limit',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 3,
+        "values": []
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'values'],
+        msg: 'must be non-empty if limit is set',
+      },
+    ],
+  },
+  {
+    name: 'missing-attribution-scope-limit',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "values": ["1", "2"]
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'limit'],
+        msg: 'required',
+      },
+      {
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
+      },
+    ],
+  },
+  {
+    name: 'missing-attribution-scope-values',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 3
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'values'],
+        msg: 'required',
+      },
+    ],
+  },
+  {
+    name: 'invalid-attribution-scope-limit-not-an-integer',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "values": ["1"],
+        "limit": true
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'limit'],
+        msg: 'must be a number',
+      },
+      {
+        path: ['attribution_scopes', 'values'],
+        msg: 'cannot be fully validated without a valid limit',
+      },
+    ],
+  },
+  {
+    name: 'max-event-states-negative',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 1,
+        "values": ["1"],
+        "max_event_states": -1
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'max_event_states'],
+        msg: 'must be in the range [1, 4294967295]',
+      },
+    ],
+  },
+  {
+    name: 'max-event-states-zero',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 1,
+        "values": ["1"],
+        "max_event_states": 0
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'max_event_states'],
+        msg: 'must be in the range [1, 4294967295]',
+      },
+    ],
+  },
+  {
+    name: 'max-event-states-not-integer',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 1,
+        "values": ["1"],
+        "max_event_states": 1.5
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'max_event_states'],
+        msg: 'must be an integer',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-size-exceeds-attribution-scope-limit',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 1,
+        "values": ["1", "2"]
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'values'],
+        msg: 'size must be less than or equal to limit (1) if limit is set',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scope-not-string',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 2,
+        "values": [1]
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        msg: 'must be a string',
+        path: ['attribution_scopes', 'values', 0],
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-empty-list',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 1,
+        "values": []
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        msg: 'must be non-empty if limit is set',
+        path: ['attribution_scopes', 'values'],
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-not-list',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 1,
+        "values": 1
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        msg: 'must be a list',
+        path: ['attribution_scopes', 'values'],
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-too-many',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 21,
+        "values": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21"]
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'values'],
+        msg: 'size must be less than or equal to max number of attribution scopes (20) if limit is set',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-too-long',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 1,
+        "values": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]
+      }
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 'values', 0],
+        msg: 'exceeds max length per attribution scope (51 > 50)',
+      },
+    ],
+  },
+  {
+    name: 'channel-capacity-attribution-scope-event',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 11,
+        "values": ["1"],
+        "max_event_states": 15
+      }
+    }`,
+    sourceType: SourceType.event,
+    noteInfoGain: true,
+    vsv: {
+      maxEventLevelAttributionScopesChannelCapacityPerSource: {
+        [SourceType.event]: 6.5,
+        [SourceType.navigation]: 11.55,
+      },
+      maxSettableEventLevelEpsilon: 14,
+    },
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'information gain for attribution scope: 7.26 exceeds max event-level attribution scope information gain per event source (6.50)',
+      },
+    ],
+    expectedNotes: [
+      {
+        msg: 'information gain: 1.58',
+        path: [],
+      },
+      {
+        path: [],
+        msg: 'number of possible output states: 3',
+      },
+      {
+        path: [],
+        msg: 'randomized trigger rate: 0.0000025',
+      },
+    ],
+  },
+  {
+    name: 'channel-capacity-attribution-scope-navigation',
+    input: `{
+      "destination": "https://a.test",
+      "attribution_scopes": {
+        "limit": 21,
+        "values": ["1"],
+        "max_event_states": 20
+      }
+    }`,
+    sourceType: SourceType.navigation,
+    noteInfoGain: true,
+    vsv: {
+      maxEventLevelAttributionScopesChannelCapacityPerSource: {
+        [SourceType.event]: 6.5,
+        [SourceType.navigation]: 11.55,
+      },
+      maxSettableEventLevelEpsilon: 14,
+    },
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: [],
+        msg: 'information gain for attribution scope: 11.70 exceeds max event-level attribution scope information gain per navigation source (11.55)',
+      },
+    ],
+    expectedNotes: [
+      {
+        msg: 'information gain: 11.46',
+        path: [],
+      },
+      {
+        path: [],
+        msg: 'number of possible output states: 2925',
+      },
+      {
+        path: [],
+        msg: 'randomized trigger rate: 0.0024263',
+      },
+    ],
+  },
 ]
 
 testCases.forEach((tc) =>
-  jsontest.run(tc, () => {
-    const result = validateSource(
-      tc.json,
-      { ...vsv.Chromium, ...tc.vsv },
-      tc.sourceType ?? SourceType.navigation,
-      tc.parseFullFlex ?? false,
-      tc.noteInfoGain ?? false
-    )
-
-    if (result[1].value !== undefined) {
-      const str = JSON.stringify(
-        serializeSource(result[1].value, tc.parseFullFlex ?? false)
-      )
-      const [_, reparsed] = validateSource(
-        str,
-        { ...vsv.Chromium, ...tc.vsv },
-        tc.sourceType ?? SourceType.navigation,
-        tc.parseFullFlex ?? false,
-        tc.noteInfoGain ?? false
-      )
-      assert.deepEqual(reparsed, result[1], str)
-    }
-
-    return result
-  })
+  testutil.run(
+    tc,
+    source.validator({
+      vsv: { ...vsv.Chromium, ...tc.vsv },
+      sourceType: tc.sourceType ?? SourceType.navigation,
+      fullFlex: tc.parseFullFlex,
+      noteInfoGain: tc.noteInfoGain,
+      scopes: tc.parseScopes,
+    })
+  )
 )

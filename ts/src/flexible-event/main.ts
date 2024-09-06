@@ -1,59 +1,75 @@
-const commandLineArgs = require('command-line-args')
+import { parse } from 'ts-command-line-args'
 import { readFileSync } from 'fs'
 
 import { Issue } from '../header-validator/context'
 import { Maybe } from '../header-validator/maybe'
-import { validateSource } from '../header-validator/validate-json'
-import { SourceType } from '../source-type'
+import { validateSource } from '../header-validator/validate-source'
+import { AttributionScopes } from '../header-validator/source'
+import { SourceType, parseSourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Config, PerTriggerDataConfig } from './privacy'
 
-function commaSeparatedInts(str: string): number[] {
-  return str.split(',').map((v) => Number(v))
+// Workaround for `parse` not handling top-level array types without `multiple`
+// `OptionDef` configuration.
+type Wrapped<T> = { value: T }
+
+function commaSeparatedInts(str: string): Wrapped<number[]> {
+  return { value: str.split(',').map((v) => Number(v)) }
 }
 
-function parseSourceType(str: string): SourceType {
-  if (!(str in SourceType)) {
-    throw 'unknown source type'
-  }
-  return str as SourceType
+interface Arguments {
+  max_event_level_reports: number
+  attribution_scope_limit?: number
+  max_event_states?: number
+  epsilon: number
+  source_type: SourceType
+  windows?: Wrapped<number[]>
+  buckets?: Wrapped<number[]>
+  json_file?: string
 }
 
-const optionDefs = [
-  {
-    name: 'max_event_level_reports',
+const options = parse<Arguments>({
+  max_event_level_reports: {
     alias: 'm',
     type: Number,
     defaultValue: 20,
   },
-  {
-    name: 'epsilon',
+  attribution_scope_limit: {
+    alias: 'a',
+    type: Number,
+    optional: true,
+  },
+  max_event_states: {
+    alias: 's',
+    type: Number,
+    optional: true,
+  },
+  epsilon: {
     alias: 'e',
     type: Number,
     defaultValue: 14,
   },
-  {
-    name: 'source_type',
+  source_type: {
     alias: 't',
     type: parseSourceType,
     defaultValue: SourceType.navigation,
   },
-  {
-    name: 'windows',
+  windows: {
     alias: 'w',
     type: commaSeparatedInts,
+    optional: true,
   },
-  {
-    name: 'buckets',
+  buckets: {
     alias: 'b',
     type: commaSeparatedInts,
+    optional: true,
   },
-  {
-    name: 'json_file',
+  json_file: {
     alias: 'f',
     type: String,
+    optional: true,
   },
-]
+})
 
 function logIssue(prefix: string, i: Issue): void {
   console.log(
@@ -61,17 +77,14 @@ function logIssue(prefix: string, i: Issue): void {
   )
 }
 
-const options = commandLineArgs(optionDefs)
-
 let config: Maybe<Config> = Maybe.None
-if ('json_file' in options) {
+if (options.json_file !== undefined) {
   const json = readFileSync(options.json_file, { encoding: 'utf8' })
-  const [{ errors, warnings }, source] = validateSource(
-    json,
-    vsv.Chromium,
-    options.source_type,
-    /*parseFullFlex=*/ true
-  )
+  const [{ errors, warnings }, source] = validateSource(json, {
+    vsv: vsv.Chromium,
+    sourceType: options.source_type,
+    fullFlex: true,
+  })
   warnings.forEach((i) => logIssue('W', i))
   if (errors.length > 0) {
     errors.forEach((i) => logIssue('E', i))
@@ -81,9 +94,10 @@ if ('json_file' in options) {
   config = source.map(
     (source) =>
       new Config(
-        source.maxEventLevelReports!,
+        source.maxEventLevelReports,
+        source.attributionScopes,
         source.triggerSpecs.flatMap((spec) =>
-          new Array(spec.triggerData.size).fill(
+          new Array<PerTriggerDataConfig>(spec.triggerData.size).fill(
             new PerTriggerDataConfig(
               spec.eventReportWindows.endTimes.length,
               spec.summaryBuckets.length
@@ -92,16 +106,36 @@ if ('json_file' in options) {
         )
       )
   )
+} else if (options.windows === undefined || options.buckets === undefined) {
+  throw new Error('windows and buckets must be specified if json_file is not')
 } else {
-  if (options.windows.length !== options.buckets.length) {
-    throw 'windows and buckets must have same length'
+  if (options.windows.value.length !== options.buckets.value.length) {
+    throw new Error('windows and buckets must have same length')
   }
+  if (
+    (options.attribution_scope_limit === undefined) !==
+    (options.max_event_states === undefined)
+  ) {
+    throw new Error(
+      'attribution_scope_limit and max_event_states must be set / unset at the same time'
+    )
+  }
+  const attributionScopes: AttributionScopes | null =
+    options.attribution_scope_limit === undefined ||
+    options.max_event_states === undefined
+      ? null
+      : {
+          limit: options.attribution_scope_limit,
+          values: new Set<string>(),
+          maxEventStates: options.max_event_states,
+        }
   config = Maybe.some(
     new Config(
       options.max_event_level_reports,
-      options.windows.map(
+      attributionScopes,
+      options.windows.value.map(
         (w: number, i: number) =>
-          new PerTriggerDataConfig(w, options.buckets[i])
+          new PerTriggerDataConfig(w, options.buckets!.value[i]!)
       )
     )
   )
@@ -109,9 +143,7 @@ if ('json_file' in options) {
 
 config.peek((config) => {
   const infoGainMax =
-    vsv.Chromium.maxEventLevelChannelCapacityPerSource[
-      options.source_type as SourceType
-    ]
+    vsv.Chromium.maxEventLevelChannelCapacityPerSource[options.source_type]
 
   const out = config.computeConfigData(options.epsilon, infoGainMax)
 

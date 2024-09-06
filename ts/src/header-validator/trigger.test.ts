@@ -1,23 +1,19 @@
-import { strict as assert } from 'assert'
 import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
-import { serializeTrigger } from './to-json'
-import {
-  AggregatableSourceRegistrationTime,
-  Trigger,
-  validateTrigger,
-} from './validate-json'
+import { AggregatableSourceRegistrationTime, Trigger } from './trigger'
+import * as testutil from './util.test'
 import * as jsontest from './validate-json.test'
+import * as trigger from './validate-trigger'
 
 const testCases: jsontest.TestCase<Trigger>[] = [
   // no errors or warnings
   {
     name: 'required-fields-only',
-    json: `{}`,
+    input: `{}`,
   },
   {
     name: 'all-fields',
-    json: `{
+    input: `{
       "aggregatable_deduplication_keys": [{
         "deduplication_key": "123",
         "filters": {"x": []},
@@ -28,9 +24,10 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "filters": {"a": ["b"]},
         "key_piece": "0x1",
         "not_filters": {"c": ["d"]},
-        "source_keys": ["x"]
+        "source_keys": ["x", "y"]
       }],
-      "aggregatable_values": {"x": 5},
+      "aggregatable_filtering_id_max_bytes": 1,
+      "aggregatable_values": {"x": 5,  "y": {"value": 10, "filtering_id": "25" }},
       "debug_key": "5",
       "debug_reporting": true,
       "event_trigger_data": [{
@@ -49,8 +46,10 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           "key_piece": "0x5",
           "value": 123
         }]
-      }
+      },
+      "attribution_scopes": ["1"]
     }`,
+    parseScopes: true,
     expected: Maybe.some({
       aggregatableDedupKeys: [
         {
@@ -101,12 +100,16 @@ const testCases: jsontest.TestCase<Trigger>[] = [
               map: new Map([['c', new Set(['d'])]]),
             },
           ],
-          sourceKeys: new Set(['x']),
+          sourceKeys: new Set(['x', 'y']),
         },
       ],
+      aggregatableFilteringIdMaxBytes: 1,
       aggregatableValuesConfigurations: [
         {
-          values: new Map([['x', 5]]),
+          values: new Map([
+            ['x', { value: 5, filteringId: 0n }],
+            ['y', { value: 10, filteringId: 25n }],
+          ]),
           positive: [],
           negative: [],
         },
@@ -145,11 +148,12 @@ const testCases: jsontest.TestCase<Trigger>[] = [
           map: new Map([['g', new Set()]]),
         },
       ],
+      attributionScopes: new Set('1'),
     }),
   },
   {
     name: 'aggregatable-values-list-with-filters',
-    json: `{
+    input: `{
       "aggregatable_values": [
         {
           "values": {},
@@ -165,8 +169,20 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     }`,
   },
   {
+    name: 'missing-optional-filtering-id',
+    input: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "source_keys": ["a"]
+      }],
+      "aggregatable_values": {
+        "a": { "value": 3 }
+      }
+    }`,
+  },
+  {
     name: 'or-filters',
-    json: `{
+    input: `{
       "aggregatable_trigger_data": [{
         "key_piece": "0x1",
         "filters": [{"g": []}, {"h": []}],
@@ -182,7 +198,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'empty-or-filters',
-    json: `{
+    input: `{
       "aggregatable_trigger_data": [{
         "key_piece": "0x1",
         "filters": [],
@@ -200,7 +216,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   // warnings
   {
     name: 'unknown-field',
-    json: `{
+    input: `{
       "event_trigger_data": [{"value": 3}],
       "x": true
     }`,
@@ -219,13 +235,13 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   // errors
   {
     name: 'invalid-json',
-    json: ``,
+    input: ``,
     expectedErrors: [{ msg: 'SyntaxError: Unexpected end of JSON input' }],
     expected: Maybe.None,
   },
   {
     name: 'wrong-root-type',
-    json: `1`,
+    input: `1`,
     expectedErrors: [
       {
         path: [],
@@ -237,7 +253,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'filters-wrong-type',
-    json: `{"filters": 1}`,
+    input: `{"filters": 1}`,
     expectedErrors: [
       {
         path: ['filters'],
@@ -247,7 +263,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'filters-values-wrong-type',
-    json: `{"filters": {"a": "b"}}`,
+    input: `{"filters": {"a": "b"}}`,
     expectedErrors: [
       {
         path: ['filters', 'a'],
@@ -257,7 +273,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'filters-value-wrong-type',
-    json: `{"filters": {"a": [1]}}`,
+    input: `{"filters": {"a": [1]}}`,
     expectedErrors: [
       {
         path: ['filters', 'a', 0],
@@ -267,7 +283,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'filters-lookback-window-wrong-type',
-    json: `{"filters": {"_lookback_window": []}}`,
+    input: `{"filters": {"_lookback_window": []}}`,
     expectedErrors: [
       {
         path: ['filters', '_lookback_window'],
@@ -277,7 +293,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'filters-lookback-window-negative',
-    json: `{"filters": {"_lookback_window": 0}}`,
+    input: `{"filters": {"_lookback_window": 0}}`,
     expectedErrors: [
       {
         path: ['filters', '_lookback_window'],
@@ -287,7 +303,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'filters-reserved-key',
-    json: `{"filters": {"_some_key": []}}`,
+    input: `{"filters": {"_some_key": []}}`,
     expectedErrors: [
       {
         path: ['filters', '_some_key'],
@@ -297,7 +313,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'filters-duplicate-value',
-    json: `{"filters": {
+    input: `{"filters": {
       "a": ["x", "y", "x"],
       "b": ["y"]
     }}`,
@@ -310,7 +326,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'filters-unknown-source-type',
-    json: `{"filters": {"source_type": ["EVENT", "event", "navigation"]}}`,
+    input: `{"filters": {"source_type": ["EVENT", "event", "navigation"]}}`,
     expectedWarnings: [
       {
         path: ['filters', 'source_type', 0],
@@ -321,7 +337,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'not-filters-wrong-type',
-    json: `{"not_filters": 1}`,
+    input: `{"not_filters": 1}`,
     expectedErrors: [
       {
         path: ['not_filters'],
@@ -331,7 +347,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'not-filters-values-wrong-type',
-    json: `{"not_filters": {"a": "b"}}`,
+    input: `{"not_filters": {"a": "b"}}`,
     expectedErrors: [
       {
         path: ['not_filters', 'a'],
@@ -341,7 +357,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'not-filters-value-wrong-type',
-    json: `{"not_filters": {"a": [1]}}`,
+    input: `{"not_filters": {"a": [1]}}`,
     expectedErrors: [
       {
         path: ['not_filters', 'a', 0],
@@ -351,7 +367,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'not-filters-reserved-key',
-    json: `{"not_filters": {"_some_key": []}}`,
+    input: `{"not_filters": {"_some_key": []}}`,
     expectedErrors: [
       {
         path: ['not_filters', '_some_key'],
@@ -362,7 +378,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'aggregatable-values-wrong-type',
-    json: `{"aggregatable_values": 1}`,
+    input: `{"aggregatable_values": 1}`,
     expectedErrors: [
       {
         path: ['aggregatable_values'],
@@ -372,17 +388,17 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-values-value-wrong-type',
-    json: `{"aggregatable_values": {"a": "1"}}`,
+    input: `{"aggregatable_values": {"a": "1"}}`,
     expectedErrors: [
       {
         path: ['aggregatable_values', 'a'],
-        msg: 'must be a number',
+        msg: 'must be a number or an object',
       },
     ],
   },
   {
     name: 'aggregatable-values-value-below-min',
-    json: `{"aggregatable_values": {"a": 0}}`,
+    input: `{"aggregatable_values": {"a": 0}}`,
     expectedErrors: [
       {
         path: ['aggregatable_values', 'a'],
@@ -392,7 +408,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-values-value-above-max',
-    json: `{"aggregatable_values": {"a": 65537}}`,
+    input: `{"aggregatable_values": {"a": 65537}}`,
     expectedErrors: [
       {
         path: ['aggregatable_values', 'a'],
@@ -402,7 +418,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-values-key-too-long',
-    json: `{"aggregatable_values": {"aaaaaaaaaaaaaaaaaaaaaaaaaa": 1}}`,
+    input: `{"aggregatable_values": {"aaaaaaaaaaaaaaaaaaaaaaaaaa": 1}}`,
     expectedErrors: [
       {
         path: ['aggregatable_values', 'aaaaaaaaaaaaaaaaaaaaaaaaaa'],
@@ -412,7 +428,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-values-list-values-field-missing',
-    json: `{
+    input: `{
       "aggregatable_values": [
         {
           "a": 1
@@ -434,7 +450,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-values-list-wrong-type',
-    json: `{
+    input: `{
       "aggregatable_values": [
         {
           "values": []
@@ -451,7 +467,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'inconsistent-aggregatable-keys',
-    json: `{
+    input: `{
       "aggregatable_trigger_data": [
         {
           "key_piece": "0x1",
@@ -485,7 +501,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'debug-reporting-wrong-type',
-    json: `{"debug_reporting": "true"}`,
+    input: `{"debug_reporting": "true"}`,
     expectedErrors: [
       {
         path: ['debug_reporting'],
@@ -496,7 +512,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'debug-key-wrong-type',
-    json: `{"debug_key": 1}`,
+    input: `{"debug_key": 1}`,
     expectedErrors: [
       {
         path: ['debug_key'],
@@ -506,7 +522,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'debug-key-wrong-format',
-    json: `{"debug_key": "-1"}`,
+    input: `{"debug_key": "-1"}`,
     expectedErrors: [
       {
         path: ['debug_key'],
@@ -517,7 +533,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'aggregatable-deduplication-keys-wrong-type',
-    json: `{"aggregatable_deduplication_keys": 1}`,
+    input: `{"aggregatable_deduplication_keys": 1}`,
     expectedErrors: [
       {
         path: ['aggregatable_deduplication_keys'],
@@ -527,7 +543,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-deduplication-keys-value-wrong-type',
-    json: `{"aggregatable_deduplication_keys": [1]}`,
+    input: `{"aggregatable_deduplication_keys": [1]}`,
     expectedErrors: [
       {
         path: ['aggregatable_deduplication_keys', 0],
@@ -537,7 +553,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-deduplication-key-wrong-type',
-    json: `{"aggregatable_deduplication_keys": [{
+    input: `{"aggregatable_deduplication_keys": [{
       "deduplication_key": 1
     }]}`,
     expectedErrors: [
@@ -549,7 +565,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-deduplication-key-wrong-format',
-    json: `{"aggregatable_deduplication_keys": [{
+    input: `{"aggregatable_deduplication_keys": [{
       "deduplication_key": "-1"
     }]}`,
     expectedErrors: [
@@ -561,7 +577,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-deduplication-key-or-filters',
-    json: `{"aggregatable_deduplication_keys": [{
+    input: `{"aggregatable_deduplication_keys": [{
       "filters": [],
       "not_filters": []
     }]}`,
@@ -569,7 +585,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'event-trigger-data-wrong-type',
-    json: `{"event_trigger_data": 1}`,
+    input: `{"event_trigger_data": 1}`,
     expectedErrors: [
       {
         path: ['event_trigger_data'],
@@ -579,7 +595,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'event-trigger-data-value-wrong-type',
-    json: `{"event_trigger_data": [1]}`,
+    input: `{"event_trigger_data": [1]}`,
     expectedErrors: [
       {
         path: ['event_trigger_data', 0],
@@ -589,7 +605,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'event-trigger-data-filters-wrong-type',
-    json: `{"event_trigger_data": [{"filters": 1}]}`,
+    input: `{"event_trigger_data": [{"filters": 1}]}`,
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'filters'],
@@ -599,7 +615,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'event-trigger-data-filters-values-wrong-type',
-    json: `{"event_trigger_data": [{"filters": {"a": "b"}}]}`,
+    input: `{"event_trigger_data": [{"filters": {"a": "b"}}]}`,
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'filters', 'a'],
@@ -609,7 +625,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'event-trigger-data-filters-value-wrong-type',
-    json: `{"event_trigger_data": [{"filters": {"a": [1]}}]}`,
+    input: `{"event_trigger_data": [{"filters": {"a": [1]}}]}`,
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'filters', 'a', 0],
@@ -619,7 +635,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'event-trigger-data-filters-reserved-key',
-    json: `{"event_trigger_data": [{
+    input: `{"event_trigger_data": [{
       "filters": {"_some_key": []}
     }]}`,
     expectedErrors: [
@@ -632,7 +648,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'event-trigger-data-not-filters-wrong-type',
-    json: `{"event_trigger_data": [{"not_filters": 1}]}`,
+    input: `{"event_trigger_data": [{"not_filters": 1}]}`,
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'not_filters'],
@@ -642,7 +658,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'event-trigger-data-not-filters-values-wrong-type',
-    json: `{"event_trigger_data": [{"not_filters": {"a": "b"}}]}`,
+    input: `{"event_trigger_data": [{"not_filters": {"a": "b"}}]}`,
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'not_filters', 'a'],
@@ -652,7 +668,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'event-trigger-data-not-filters-value-wrong-type',
-    json: `{"event_trigger_data": [{"not_filters": {"a": [1]}}]}`,
+    input: `{"event_trigger_data": [{"not_filters": {"a": [1]}}]}`,
     expectedErrors: [
       {
         path: ['event_trigger_data', 0, 'not_filters', 'a', 0],
@@ -662,7 +678,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'event-trigger-data-not-filters-reserved-key',
-    json: `{"event_trigger_data": [{
+    input: `{"event_trigger_data": [{
       "not_filters": {"_some_key": []}
     }]}`,
     expectedErrors: [
@@ -675,7 +691,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'aggregatable-trigger-data-wrong-type',
-    json: `{"aggregatable_trigger_data": 1}`,
+    input: `{"aggregatable_trigger_data": 1}`,
     expectedErrors: [
       {
         path: ['aggregatable_trigger_data'],
@@ -685,7 +701,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-trigger-data-value-wrong-type',
-    json: `{"aggregatable_trigger_data": [1]}`,
+    input: `{"aggregatable_trigger_data": [1]}`,
     expectedErrors: [
       {
         path: ['aggregatable_trigger_data', 0],
@@ -696,7 +712,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'trigger-data-wrong-type',
-    json: `{"event_trigger_data": [{
+    input: `{"event_trigger_data": [{
       "trigger_data": 1
     }]}`,
     expectedErrors: [
@@ -708,7 +724,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'trigger-data-wrong-format',
-    json: `{"event_trigger_data": [{
+    input: `{"event_trigger_data": [{
       "trigger_data": "-1"
     }]}`,
     expectedErrors: [
@@ -721,7 +737,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'priority-wrong-type',
-    json: `{"event_trigger_data": [{
+    input: `{"event_trigger_data": [{
       "priority": 1
     }]}`,
     expectedErrors: [
@@ -733,7 +749,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'priority-wrong-format',
-    json: `{"event_trigger_data": [{
+    input: `{"event_trigger_data": [{
       "priority": "a"
     }]}`,
     expectedErrors: [
@@ -746,7 +762,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'deduplication-key-wrong-type',
-    json: `{"event_trigger_data": [{
+    input: `{"event_trigger_data": [{
       "deduplication_key": 1
     }]}`,
     expectedErrors: [
@@ -758,7 +774,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'deduplication-key-wrong-format',
-    json: `{"event_trigger_data": [{
+    input: `{"event_trigger_data": [{
       "deduplication_key": "-1"
     }]}`,
     expectedErrors: [
@@ -771,7 +787,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'source-keys-wrong-type',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
       "source_keys": false
     }]}`,
@@ -784,7 +800,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'source-keys-value-wrong-type',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
       "source_keys": [false]
     }]}`,
@@ -797,7 +813,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'source-keys-duplicate-value',
-    json: `{
+    input: `{
       "aggregatable_trigger_data": [
         {
           "key_piece": "0x1",
@@ -822,7 +838,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'source-keys-key-too-long',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
       "source_keys": ["aaaaaaaaaaaaaaaaaaaaaaaaaa"]
     }]}`,
@@ -836,7 +852,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'key-piece-missing',
-    json: `{"aggregatable_trigger_data": [{}]}`,
+    input: `{"aggregatable_trigger_data": [{}]}`,
     expectedErrors: [
       {
         path: ['aggregatable_trigger_data', 0, 'key_piece'],
@@ -846,7 +862,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'key-piece-wrong-type',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": 1
     }]}`,
     expectedErrors: [
@@ -858,7 +874,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'key-piece-wrong-format',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "f"
     }]}`,
     expectedErrors: [
@@ -871,7 +887,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'aggregatable_trigger_data-filters-wrong-type',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
       "filters": 1
     }]}`,
@@ -884,7 +900,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable_trigger_data-filters-values-wrong-type',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
       "filters": {"a": "b"}
     }]}`,
@@ -897,7 +913,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable_trigger_data-filters-value-wrong-type',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
       "filters": {"a": [1]}
     }]}`,
@@ -910,7 +926,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable_trigger_data-filters-reserved-key',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
       "filters": {"_some_key": []}
     }]}`,
@@ -924,7 +940,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'aggregatable_trigger_data-not-filters-wrong-type',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
       "not_filters": 1
     }]}`,
@@ -937,7 +953,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable_trigger_data-not-filters-values-wrong-type',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
       "not_filters": {"a": "b"}
     }]}`,
@@ -950,7 +966,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable_trigger_data-not-filters-value-wrong-type',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
       "not_filters": {"a": [1]}
     }]}`,
@@ -963,7 +979,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable_trigger_data-not-filters-reserved-key',
-    json: `{"aggregatable_trigger_data": [{
+    input: `{"aggregatable_trigger_data": [{
       "key_piece": "0x1",
       "not_filters": {"_some_key": []}
     }]}`,
@@ -977,7 +993,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'aggregation-coordinator-origin-wrong-type',
-    json: `{"aggregation_coordinator_origin": 1}`,
+    input: `{"aggregation_coordinator_origin": 1}`,
     expectedErrors: [
       {
         path: ['aggregation_coordinator_origin'],
@@ -987,7 +1003,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregation-coordinator-origin-not-url',
-    json: `{"aggregation_coordinator_origin": "a.test"}`,
+    input: `{"aggregation_coordinator_origin": "a.test"}`,
     expectedErrors: [
       {
         path: ['aggregation_coordinator_origin'],
@@ -997,7 +1013,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregation-coordinator-origin-untrustworthy',
-    json: `{"aggregation_coordinator_origin": "http://a.test"}`,
+    input: `{"aggregation_coordinator_origin": "http://a.test"}`,
     expectedErrors: [
       {
         path: ['aggregation_coordinator_origin'],
@@ -1007,7 +1023,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregation-coordinator-origin-path-ignored',
-    json: `{"aggregation_coordinator_origin": "https://b.A.tEsT/x"}`,
+    input: `{"aggregation_coordinator_origin": "https://b.A.tEsT/x"}`,
     vsv: {
       aggregationCoordinatorOrigins: ['https://b.a.test'],
     },
@@ -1020,7 +1036,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregation-coordinator-origin-not-on-allowlist',
-    json: `{"aggregation_coordinator_origin": "https://c.a.test"}`,
+    input: `{"aggregation_coordinator_origin": "https://c.a.test"}`,
     vsv: {
       aggregationCoordinatorOrigins: ['https://d.a.test', 'https://b.a.test'],
     },
@@ -1034,7 +1050,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'aggregatable-source-registration-time-wrong-type',
-    json: `{"aggregatable_source_registration_time": 1}`,
+    input: `{"aggregatable_source_registration_time": 1}`,
     expectedErrors: [
       {
         path: ['aggregatable_source_registration_time'],
@@ -1044,7 +1060,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-source-registration-time-unknown-value',
-    json: `{"aggregatable_source_registration_time": "EXCLUDE"}`,
+    input: `{"aggregatable_source_registration_time": "EXCLUDE"}`,
     expectedErrors: [
       {
         path: ['aggregatable_source_registration_time'],
@@ -1055,7 +1071,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 
   {
     name: 'trigger-context-id-wrong-type',
-    json: `{"trigger_context_id": 1}`,
+    input: `{"trigger_context_id": 1}`,
     expectedErrors: [
       {
         path: ['trigger_context_id'],
@@ -1065,7 +1081,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'trigger-context-id-too-long',
-    json: `{"trigger_context_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+    input: `{"trigger_context_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
     expectedErrors: [
       {
         path: ['trigger_context_id'],
@@ -1075,7 +1091,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'trigger-context-id-invalid-aggregatable-source-registration-time',
-    json: `{"trigger_context_id": "a", "aggregatable_source_registration_time": 1}`,
+    input: `{"trigger_context_id": "a", "aggregatable_source_registration_time": 1}`,
     expectedErrors: [
       {
         path: ['aggregatable_source_registration_time'],
@@ -1089,7 +1105,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'trigger-context-id-prohibited-aggregatable-source-registration-time-include',
-    json: `{"aggregatable_source_registration_time": "include", "trigger_context_id": "123"}`,
+    input: `{"aggregatable_source_registration_time": "include", "trigger_context_id": "123"}`,
     expectedErrors: [
       {
         path: ['trigger_context_id'],
@@ -1097,10 +1113,105 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
     ],
   },
-
+  {
+    name: 'aggregatable_filtering_id_max_bytes-too-big',
+    input: `{
+      "aggregatable_filtering_id_max_bytes": 9
+    }`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_filtering_id_max_bytes'],
+        msg: 'must be in the range [1, 8]',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable_filtering_id_max_bytes-invalid-aggregatable-source-registration-time',
+    input: `{"aggregatable_filtering_id_max_bytes": 2, "aggregatable_source_registration_time": 1}`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_source_registration_time'],
+        msg: 'must be a string',
+      },
+      {
+        path: ['aggregatable_filtering_id_max_bytes'],
+        msg: 'cannot be fully validated without a valid aggregatable_source_registration_time',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable_filtering_id_max_bytes-prohibited-aggregatable-source-registration-time-include',
+    input: `{"aggregatable_filtering_id_max_bytes": 2, "aggregatable_source_registration_time": "include"}`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_filtering_id_max_bytes'],
+        msg: 'with a non-default value (higher than 1) is prohibited for aggregatable_source_registration_time include',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-values-with-too-big-filtering_id',
+    input: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "source_keys": ["x", "y"]
+      }],
+      "aggregatable_values": {"x": 5, "y": { "value": 10, "filtering_id": "256" }}
+  }`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_values', 'y', 'filtering_id'],
+        msg: 'must be in the range [0, 255]. It exceeds the default max size of 1 byte. To increase, specify the aggregatable_filtering_id_max_bytes property.',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-values-with-too-big-filtering_id-non-default-max',
+    input: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "source_keys": ["x", "y"]
+      }],
+      "aggregatable_filtering_id_max_bytes": 2,
+      "aggregatable_values": [
+        {"values": {"x": 5 }},
+        {"values": {"y": { "value": 10, "filtering_id": "65536" }}}
+      ]
+  }`,
+    expectedErrors: [
+      {
+        path: ['aggregatable_values', 1, 'values', 'y', 'filtering_id'],
+        msg: 'must be in the range [0, 65535]',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-values-with-invalid-filtering_id-non-default-max',
+    input: `{
+      "aggregatable_trigger_data": [{
+        "key_piece": "0x1",
+        "source_keys": ["x", "y"]
+      }],
+      "aggregatable_filtering_id_max_bytes": "2",
+      "aggregatable_values": [
+        {"values": {"x": 5 }},
+        {"values": {"y": { "value": 10, "filtering_id": "65536" }}}
+      ]
+  }`,
+    expectedErrors: [
+      {
+        msg: 'must be a number',
+        path: ['aggregatable_filtering_id_max_bytes'],
+      },
+      {
+        path: ['aggregatable_values', 1, 'values', 'y', 'filtering_id'],
+        msg: 'cannot be fully validated without a valid aggregatable_filtering_id_max_bytes',
+      },
+    ],
+  },
   {
     name: 'aggregatable-debug-reporting-wrong-type',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": 1
     }`,
     expectedErrors: [
@@ -1112,7 +1223,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-empty',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {}
     }`,
     expectedErrors: [
@@ -1124,7 +1235,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-key-piece-wrong-type',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": 1
       }
@@ -1138,7 +1249,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-key-piece-wrong-format',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "1"
       }
@@ -1152,7 +1263,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-aggregation-coordinator-origin-wrong-format',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "aggregation_coordinator_origin": 1
@@ -1170,7 +1281,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-aggregation-coordinator-origin-not-url',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "aggregation_coordinator_origin": "a.test"
@@ -1188,7 +1299,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-aggregation-coordinator-origin-untrustworthy',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "aggregation_coordinator_origin": "http://a.test"
@@ -1206,7 +1317,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-wrong-type',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": {}
@@ -1221,7 +1332,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-wrong-type',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [1]
@@ -1236,7 +1347,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-empty',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{}]
@@ -1259,7 +1370,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-key-piece-wrong-type',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1278,7 +1389,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-key-piece-wrong-format',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1297,7 +1408,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-value-wrong-type',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1316,7 +1427,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-value-below-min',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1335,7 +1446,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-value-above-max',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1354,7 +1465,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-wrong-type',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1373,7 +1484,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-empty',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1392,7 +1503,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-elem-wrong-type',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1411,7 +1522,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-elem-unknown-duplicate',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1440,7 +1551,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-elem-unknown-duplicate-across',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1473,7 +1584,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-elem-duplicate',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1492,7 +1603,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'aggregatable-debug-reporting-data-elem-types-elem-duplicate-across',
-    json: `{
+    input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
         "debug_data": [{
@@ -1514,11 +1625,44 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     ],
   },
 
+  // Attribution Scope
+  {
+    name: 'attribution-scope-not-string',
+    input: `{"attribution_scopes": [1]}`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes', 0],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'attribution-scopes-empty-list',
+    parseScopes: true,
+    input: `{
+      "attribution_scopes": []
+    }`,
+  },
+  {
+    name: 'attribution-scopes-not-list',
+    input: `{
+      "attribution_scopes": 1
+    }`,
+    parseScopes: true,
+    expectedErrors: [
+      {
+        path: ['attribution_scopes'],
+        msg: 'must be a list',
+      },
+    ],
+  },
+
   // Full Flex
 
   {
     name: 'value-wrong-type',
-    json: `{"event_trigger_data": [{"value":"1"}]}`,
+    input: `{"event_trigger_data": [{"value":"1"}]}`,
     parseFullFlex: true,
     expectedErrors: [
       {
@@ -1529,7 +1673,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'value-zero',
-    json: `{"event_trigger_data": [{"value":0}]}`,
+    input: `{"event_trigger_data": [{"value":0}]}`,
     parseFullFlex: true,
     expectedErrors: [
       {
@@ -1540,7 +1684,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'value-negative',
-    json: `{"event_trigger_data": [{"value":-1}]}`,
+    input: `{"event_trigger_data": [{"value":-1}]}`,
     parseFullFlex: true,
     expectedErrors: [
       {
@@ -1551,7 +1695,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'value-not-integer',
-    json: `{"event_trigger_data": [{"value":1.5}]}`,
+    input: `{"event_trigger_data": [{"value":1.5}]}`,
     parseFullFlex: true,
     expectedErrors: [
       {
@@ -1562,12 +1706,12 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'value-max',
-    json: `{"event_trigger_data": [{"value":4294967295}]}`,
+    input: `{"event_trigger_data": [{"value":4294967295}]}`,
     parseFullFlex: true,
   },
   {
     name: 'value-gt-max',
-    json: `{"event_trigger_data": [{"value":4294967296}]}`,
+    input: `{"event_trigger_data": [{"value":4294967296}]}`,
     parseFullFlex: true,
     expectedErrors: [
       {
@@ -1579,25 +1723,12 @@ const testCases: jsontest.TestCase<Trigger>[] = [
 ]
 
 testCases.forEach((tc) =>
-  jsontest.run(tc, () => {
-    const result = validateTrigger(
-      tc.json,
-      { ...vsv.Chromium, ...tc.vsv },
-      tc.parseFullFlex ?? false
-    )
-
-    if (result[1].value !== undefined) {
-      const str = JSON.stringify(
-        serializeTrigger(result[1].value, tc.parseFullFlex ?? false)
-      )
-      const [_, reparsed] = validateTrigger(
-        str,
-        { ...vsv.Chromium, ...tc.vsv },
-        tc.parseFullFlex ?? false
-      )
-      assert.deepEqual(reparsed, result[1], str)
-    }
-
-    return result
-  })
+  testutil.run(
+    tc,
+    trigger.validator({
+      vsv: { ...vsv.Chromium, ...tc.vsv },
+      fullFlex: tc.parseFullFlex,
+      scopes: tc.parseScopes,
+    })
+  )
 )

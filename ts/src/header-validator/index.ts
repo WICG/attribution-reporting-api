@@ -1,16 +1,15 @@
-import { SourceType } from '../source-type'
-import { ValidationResult } from './context'
+import { SourceType, parseSourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
-import { Maybe } from './maybe'
 import { makeLi } from './issue-utils'
-import { validateSource, validateTrigger } from './validate-json'
-import { serializeEligible, validateEligible } from './validate-eligible'
-import { serializeOsRegistration, validateOsRegistration } from './validate-os'
-import { serializeInfo, validateInfo } from './validate-info'
-import { serializeSource, serializeTrigger } from './to-json'
+import * as eligible from './validate-eligible'
+import * as info from './validate-info'
+import * as os from './validate-os'
+import * as source from './validate-source'
+import * as trigger from './validate-trigger'
+import * as validator from './validator'
 
-const form = document.querySelector('form')! as HTMLFormElement
-const input = form.querySelector('textarea')! as HTMLTextAreaElement
+const form = document.querySelector<HTMLFormElement>('form')!
+const input = form.querySelector<HTMLTextAreaElement>('textarea')!
 const headerRadios = form.elements.namedItem('header')! as RadioNodeList
 const sourceTypeRadios = form.elements.namedItem(
   'source-type'
@@ -19,104 +18,84 @@ const errorList = document.querySelector('#errors')!
 const warningList = document.querySelector('#warnings')!
 const noteList = document.querySelector('#notes')!
 const successDiv = document.querySelector('#success')!
-const sourceTypeFieldset = document.querySelector(
-  '#source-type'
-)! as HTMLFieldSetElement
+const sourceTypeFieldset =
+  document.querySelector<HTMLFieldSetElement>('#source-type')!
 const effective = document.querySelector('#effective')!
 
 const flexCheckbox = form.elements.namedItem('flex') as HTMLInputElement
+const scopesCheckbox = form.elements.namedItem('scopes') as HTMLInputElement
 
 function sourceType(): SourceType {
-  const v = sourceTypeRadios.value
-  if (v in SourceType) {
-    return v as SourceType
-  }
-  throw new TypeError()
-}
-
-function transformResult<T>(
-  r: [ValidationResult, Maybe<T>],
-  f: (v: T) => string
-): [ValidationResult, Maybe<string>] {
-  return [r[0], r[1].map(f)]
+  return parseSourceType(sourceTypeRadios.value)
 }
 
 function validate(): void {
   sourceTypeFieldset.disabled = true
   flexCheckbox.disabled = true
+  scopesCheckbox.disabled = true
 
-  let result
+  let v: validator.Validator<unknown>
+
   switch (headerRadios.value) {
     case 'source':
       sourceTypeFieldset.disabled = false
       flexCheckbox.disabled = false
-      result = transformResult(
-        validateSource(
-          input.value,
-          vsv.Chromium,
-          sourceType(),
-          flexCheckbox.checked,
-          /*noteInfoGain=*/ true
-        ),
-        (source) =>
-          JSON.stringify(
-            serializeSource(source, flexCheckbox.checked),
-            /*replacer=*/ null,
-            '  '
-          )
-      )
+      scopesCheckbox.disabled = false
+      v = source.validator({
+        vsv: vsv.Chromium,
+        sourceType: sourceType(),
+        fullFlex: flexCheckbox.checked,
+        scopes: scopesCheckbox.checked,
+        noteInfoGain: true,
+      })
       break
     case 'trigger':
       flexCheckbox.disabled = false
-      result = transformResult(
-        validateTrigger(input.value, vsv.Chromium, flexCheckbox.checked),
-        (trigger) =>
-          JSON.stringify(
-            serializeTrigger(trigger, flexCheckbox.checked),
-            /*replacer=*/ null,
-            '  '
-          )
-      )
+      scopesCheckbox.disabled = false
+      v = trigger.validator({
+        vsv: vsv.Chromium,
+        fullFlex: flexCheckbox.checked,
+        scopes: scopesCheckbox.checked,
+      })
       break
     case 'os-source':
     case 'os-trigger':
-      result = transformResult(
-        validateOsRegistration(input.value),
-        serializeOsRegistration
-      )
+      v = os
       break
     case 'eligible':
-      result = transformResult(validateEligible(input.value), serializeEligible)
+      v = eligible
       break
     case 'info':
-      result = transformResult(validateInfo(input.value), serializeInfo)
+      v = info
       break
     default:
       return
   }
 
+  const result = validator.validate(input.value, v)
+
   const successEl = document.createElement('div')
-  if (result[0].errors.length === 0 && result[0].warnings.length === 0) {
+  if (result.errors.length === 0 && result.warnings.length === 0) {
     successEl.textContent = 'The header is valid.'
   } else {
     successEl.textContent = ''
   }
   successDiv.replaceChildren(successEl)
 
-  errorList.replaceChildren(...result[0].errors.map(makeLi))
-  warningList.replaceChildren(...result[0].warnings.map(makeLi))
-  noteList.replaceChildren(...result[0].notes.map(makeLi))
+  errorList.replaceChildren(...result.errors.map(makeLi))
+  warningList.replaceChildren(...result.warnings.map(makeLi))
+  noteList.replaceChildren(...result.notes.map(makeLi))
 
-  if (result[1].value === undefined) {
+  if (result.value === undefined) {
     effective.replaceChildren()
   } else {
-    effective.textContent = result[1].value
+    effective.textContent = result.value
   }
 }
 
 form.addEventListener('input', validate)
 
-document.querySelector('#linkify')!.addEventListener('click', async () => {
+document.querySelector('#linkify')!.addEventListener('click', () => {
   const url = new URL(location.toString())
   url.search = ''
   url.searchParams.set('header', headerRadios.value)
@@ -127,8 +106,9 @@ document.querySelector('#linkify')!.addEventListener('click', async () => {
   }
 
   url.searchParams.set('flex', flexCheckbox.checked.toString())
+  url.searchParams.set('scopes', scopesCheckbox.checked.toString())
 
-  await navigator.clipboard.writeText(url.toString())
+  void navigator.clipboard.writeText(url.toString())
 })
 
 // Note: The `json` and `header` query params are relied on by DevTools as of
@@ -164,5 +144,6 @@ if (st !== null && st in SourceType) {
 sourceTypeRadios.value = st
 
 flexCheckbox.checked = params.get('flex') === 'true'
+scopesCheckbox.checked = params.get('scopes') === 'true'
 
 validate()

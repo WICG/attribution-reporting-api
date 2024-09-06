@@ -1,6 +1,6 @@
 import { Context, ValidationResult } from './context'
 import { Maybe } from './maybe'
-import * as validate from './validate'
+import { ItemErrorAction, array } from './validate'
 import { param } from './validate-structured'
 import {
   InnerList,
@@ -15,7 +15,7 @@ export type OsItem = {
   debugReporting: boolean
 }
 
-function parseItem(ctx: Context, member: InnerList | Item): Maybe<OsItem> {
+function parseItem(member: InnerList | Item, ctx: Context): Maybe<OsItem> {
   if (typeof member[0] !== 'string') {
     ctx.warning('ignored, must be a string')
     return Maybe.None
@@ -29,25 +29,21 @@ function parseItem(ctx: Context, member: InnerList | Item): Maybe<OsItem> {
     return Maybe.None
   }
 
-  return param.struct(ctx, member[1], {
+  return param.struct(member[1], ctx, {
     url: () => Maybe.some(url),
-    debugReporting: param.field(
-      'debug-reporting',
-      (ctx, value) => {
-        if (typeof value !== 'boolean') {
-          ctx.warning('ignored, must be a boolean')
-          value = false
-        }
-        return Maybe.some(value)
-      },
-      false
-    ),
+    debugReporting: param.field('debug-reporting', (value) => {
+      if (value === undefined) {
+        value = false
+      } else if (typeof value !== 'boolean') {
+        ctx.warning('ignored, must be a boolean')
+        value = false
+      }
+      return Maybe.some(value)
+    }),
   })
 }
 
-export function validateOsRegistration(
-  str: string
-): [ValidationResult, Maybe<OsItem[]>] {
+export function validate(str: string): [ValidationResult, Maybe<OsItem[]>] {
   const ctx = new Context()
 
   let list
@@ -58,16 +54,11 @@ export function validateOsRegistration(
     return [ctx.finish(msg), Maybe.None]
   }
 
-  const items = validate.array(
-    ctx,
-    list.entries(),
-    parseItem,
-    validate.ItemErrorAction.ignore
-  )
+  const items = array(list.entries(), ctx, parseItem, ItemErrorAction.ignore)
   return [ctx.finish(), items]
 }
 
-export function serializeOsRegistration(items: OsItem[]): string {
+export function serialize(items: OsItem[]): string {
   const list: List = []
   for (const item of items) {
     list.push([

@@ -1,4 +1,5 @@
 import memoize from 'memoizee'
+import { AttributionScopes } from '../header-validator/source'
 
 export type ExcessiveInfoGainData = {
   newEps: number
@@ -10,6 +11,7 @@ export type ConfigData = {
   infoGain: number
   flipProb: number
   excessive?: ExcessiveInfoGainData
+  attributionScopesInfoGain?: number
 }
 
 export class PerTriggerDataConfig {
@@ -18,10 +20,10 @@ export class PerTriggerDataConfig {
     readonly numSummaryBuckets: number
   ) {
     if (this.numWindows <= 0) {
-      throw 'numWindows must be > 0'
+      throw new Error('numWindows must be > 0')
     }
     if (this.numSummaryBuckets < 0) {
-      throw 'numSummaryBuckets must be >= 0'
+      throw new Error('numSummaryBuckets must be >= 0')
     }
   }
 }
@@ -29,13 +31,14 @@ export class PerTriggerDataConfig {
 export class Config {
   constructor(
     readonly maxEventLevelReports: number,
+    readonly attributionScopes: AttributionScopes | null,
     readonly perTriggerDataConfigs: ReadonlyArray<PerTriggerDataConfig>
   ) {
     if (
       this.maxEventLevelReports < 0 ||
       !Number.isInteger(this.maxEventLevelReports)
     ) {
-      throw 'maxEventLevelReports must be an integer >= 0'
+      throw new Error('maxEventLevelReports must be an integer >= 0')
     }
   }
 
@@ -93,7 +96,19 @@ export class Config {
     const infoGain = maxInformationGain(numStates, epsilon)
     const flipProb = flipProbabilityDp(numStates, epsilon)
 
-    const data: ConfigData = { numStates, infoGain, flipProb }
+    const data: ConfigData = {
+      numStates,
+      infoGain,
+      flipProb,
+    }
+
+    if (this.attributionScopes !== null) {
+      data.attributionScopesInfoGain = attributionScopesInformationGain(
+        numStates,
+        this.attributionScopes.limit,
+        this.attributionScopes.maxEventStates
+      )
+    }
 
     if (infoGain > infoGainMax) {
       const newEps = epsilonToBoundInfoGainAndDp(
@@ -148,6 +163,14 @@ function capacityQarySymmetricChannel(
   )
 }
 
+function attributionScopesInformationGain(
+  numStates: number,
+  attributionScopeLimit: number,
+  maxEventStates: number
+): number {
+  return Math.log2(numStates + maxEventStates * (attributionScopeLimit - 1))
+}
+
 export function maxInformationGain(numStates: number, epsilon: number): number {
   const flipProb = flipProbabilityDp(numStates, epsilon)
   if (numStates === 1 || flipProb === 1) {
@@ -171,7 +194,7 @@ function epsilonToBoundInfoGainAndDp(
   let epsLow = 0
   let epsHigh = epsilonUpperBound
 
-  while (true) {
+  for (;;) {
     const epsilon = (epsHigh + epsLow) / 2
     const infoGain = maxInformationGain(numStates, epsilon)
 

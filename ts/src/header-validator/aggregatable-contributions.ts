@@ -1,16 +1,16 @@
 import { SourceType } from '../source-type'
 import * as filters from './filters'
+import { AggregationKeys, FilterData } from './source'
 import {
   AggregatableTriggerDatum,
   AggregatableValues,
   AggregatableValuesConfiguration,
-  AggregationKeys,
-  FilterData,
-} from './validate-json'
+} from './trigger'
 
 export type AggregatableContribution = {
   key: bigint
   value: number
+  filteringId: bigint
 }
 
 // https://wicg.github.io/attribution-reporting-api/#create-aggregatable-contributions-from-aggregation-keys-and-aggregatable-values
@@ -24,7 +24,7 @@ function createAggregatableContributionsFromKeysAndValues(
     if (value === undefined) {
       continue
     }
-    contributions.push({ key, value })
+    contributions.push({ key, ...value })
   }
   return contributions
 }
