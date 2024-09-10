@@ -789,7 +789,7 @@ An attribution scopes is a [=struct=] with the following items:
 An attribution source is a [=struct=] with the following items:
 
 <dl dfn-for="attribution source">
-: <dfn>source identifier</dfn>
+: <dfn>internal ID</dfn>
 :: A [=string=].
 : <dfn>source origin</dfn>
 :: A [=suitable origin=].
@@ -1042,7 +1042,7 @@ An event-level report is an [=attribution report=] with the following additional
 :: A 64-bit integer.
 : <dfn>trigger time</dfn>
 :: A [=moment=].
-: <dfn>source identifier</dfn>
+: <dfn>source ID</dfn>
 :: A [=string=].
 : <dfn>attribution destinations</dfn>
 :: A [=set=] of [=sites=].
@@ -1092,7 +1092,7 @@ An <dfn>aggregatable attribution report</dfn> is an [=aggregatable report=] with
 :: A positive integer.
 : <dfn>attribution debug info</dfn>
 :: An [=attribution debug info=].
-: <dfn>source identifier</dfn>
+: <dfn>source ID</dfn>
 :: Null or a [=string=].
 
 </dl>
@@ -1127,7 +1127,7 @@ An <dfn>attribution rate-limit record</dfn> is a [=struct=] with the following i
 : <dfn>entity ID</dfn>
 :: Null for [=obtain a fake report|fake reports=] or an [=event-level report=]'s [=event-level report/internal ID=] or an
     [=aggregatable attribution report=]'s [=aggregatable attribution report/internal ID=] or an
-    [=attribution source=]'s [=attribution source/source identifier=].
+    [=attribution source=]'s [=attribution source/internal ID=].
 : <dfn>deactivated for unexpired destination limit</dfn> (default false)
 :: A [=boolean=].
 : <dfn>destination limit priority</dfn> (default null)
@@ -2803,7 +2803,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. If [=automation local testing mode=] is true, set |epsilon| to `∞`.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
-    : [=attribution source/source identifier=]
+    : [=attribution source/internal ID=]
     :: A new unique [=string=]
     : [=attribution source/source origin=]
     :: |sourceOrigin|
@@ -2911,15 +2911,15 @@ given an [=attribution source=] |source|, run the following steps:
 1. Return whether |destinations|'s [=set/size=] is greater than [=max destinations per source reporting site per day=].
 
 To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of
-[=attribution source/source identifiers=] |sourcesToDelete| and a [=moment=] |now|:
+[=attribution source/internal IDs=] |sourcesToDelete| and a [=moment=] |now|:
 
 1. If |sourcesToDelete| [=set/is empty=], return.
 1. [=set/iterate|For each=] [=attribution source=] |source| of the [=attribution source cache=]:
     1. [=set/Remove=] |source| from the [=attribution source cache=] if |sourcesToDelete|
-        [=set/contains=] |source|'s [=attribution source/source identifier=].
+        [=set/contains=] |source|'s [=attribution source/internal ID=].
 1. Let |deletedEventLevelReports| be a new [=set=].
 1. [=set/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
-    1. If |sourcesToDelete| [=set/contains=] |report|'s [=event-level report/source identifier=]
+    1. If |sourcesToDelete| [=set/contains=] |report|'s [=event-level report/source ID=]
         and |report|'s [=event-level report/trigger time=] is greater than or equal to |now|:
         1. [=set/Append=] |report|'s [=event-level report/internal ID=] to |deletedEventLevelReports|.
         1. [=set/Remove=] |report| from the [=event-level report cache=].
@@ -2933,7 +2933,7 @@ To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of
 
 1. Let |deletedAggregatableReports| be a new [=set=].
 1. [=set/iterate|For each=] [=aggregatable attribution report=] |report| of the [=aggregatable attribution report cache=]:
-    1. If |report|'s [=aggregatable attribution report/source identifier=] is not null and |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable attribution report/source identifier=]:
+    1. If |report|'s [=aggregatable attribution report/source ID=] is not null and |sourcesToDelete| [=set/contains=] |report|'s [=aggregatable attribution report/source ID=]:
         1. [=set/Append=] |report|'s [=aggregatable attribution report/internal ID=] to |deletedAggregatableReports|.
         1. [=set/Remove=] |report| from the [=aggregatable attribution report cache=].
 1. [=set/iterate|For each=] [=attribution rate-limit record=] |record| of the [=attribution rate-limit cache=]:
@@ -2960,7 +2960,7 @@ A <dfn>destination limit record</dfn> is a [=struct=] with the following items:
 :: A 64-bit integer.
 : <dfn>time</dfn>
 :: A [=moment=]
-: <dfn>source identifier</dfn>
+: <dfn>source ID</dfn>
 :: A [=string=].
 
 </dl>
@@ -2984,7 +2984,7 @@ To <dfn>get sources to delete for the unexpired destination limit</dfn> given an
         :: |record|'s [=attribution rate-limit record/destination limit priority=]
         : [=destination limit record/time=]
         :: |record|'s [=attribution rate-limit record/time=]
-        : [=destination limit record/source identifier=]
+        : [=destination limit record/source ID=]
         :: |record|'s [=attribution rate-limit record/entity ID=]
 
     1. [=list/Append=] |destinationRecord| to |destinationRecords|.
@@ -2997,8 +2997,8 @@ To <dfn>get sources to delete for the unexpired destination limit</dfn> given an
         :: |source|'s [=attribution source/destination limit priority=]
         : [=destination limit record/time=]
         :: |source|'s [=attribution source/source time=]
-        : [=destination limit record/source identifier=]
-        :: |record|'s [=attribution source/source identifier=]
+        : [=destination limit record/source ID=]
+        :: |record|'s [=attribution source/internal ID=]
 
     1. [=list/Append=] |destinationRecord| to |destinationRecords|.
 1. [=list/sort in descending order|Sort=] |destinationRecords| in descending order, with |a| less than |b| if the following steps return true:
@@ -3018,7 +3018,7 @@ To <dfn>get sources to delete for the unexpired destination limit</dfn> given an
     1. If |newDestinations|'s [=set/size=] is less than the user agent's [=max destinations covered by unexpired sources=],
         [=set/append=] |destination| to |newDestinations|.
     1. Otherwise, if |newDestinations| does not [=set/contain=] |destination|:
-        1. [=set/Append=] |record|'s [=destination limit record/source identifier=] to |sourcesToDelete|.
+        1. [=set/Append=] |record|'s [=destination limit record/source ID=] to |sourcesToDelete|.
 1. Return |sourcesToDelete|.
 
 To <dfn>check if an [=attribution source=] should be blocked by reporting-origin per site limit</dfn> given an [=attribution source=] |source|:
@@ -3181,9 +3181,9 @@ To <dfn>find sources with common destinations and reporting origin</dfn> given a
     1. [=list/Append=] |source| to |matchingSources|.
 1. Return |matchingSources|.
 
-To <dfn>remove associated event-level reports and rate-limit records</dfn> given a [=attribution source/source identifier=] |sourceId| and a [=moment=] |minTriggerTime|:
+To <dfn>remove associated event-level reports and rate-limit records</dfn> given a [=attribution source/internal ID=] |sourceId| and a [=moment=] |minTriggerTime|:
 1. [=set/iterate|For each=] [=event-level report=] |report| of the [=event-level report cache=]:
-    1. If |report|'s [=event-level report/source identifier=] is not equal to |sourceId|, [=iteration/continue=].
+    1. If |report|'s [=event-level report/source ID=] is not equal to |sourceId|, [=iteration/continue=].
     1. If |report|'s [=event-level report/trigger time=] is less than |minTriggerTime|, [=iteration/continue=].
     1. [=set/Remove=] |report| from the [=event-level report cache=].
     1. [=list/Remove=] all [=attribution rate-limit records=] |entry| from the [=attribution rate-limit cache=] where |entry|'s [=attribution rate-limit record/entity ID=] is equal to |report|'s [=event-level report/internal ID=].
@@ -3206,7 +3206,7 @@ To <dfn>remove sources with unselected attribution scopes for destination</dfn> 
     1. If |selectedScopes|'s [=set/size=] is less than |pendingSource|'s [=attribution source/attribution scopes=]'s [=attribution scopes/limit=], [=set/append=] |record|[0] to |selectedScopes|.
     1. Otherwise, if |selectedScopes| does not [=set/contain=] |record|[0], [=set/append=] |record|[1] to |sourcesToRemove|.
 1. [=set/iterate|For each=] |source| of the |sourcesToRemove|:
-    1. [=Remove associated event-level reports and rate-limit records=] with |source|'s [=attribution source/source identifier=] and |pendingSource|'s [=attribution source/source time=].
+    1. [=Remove associated event-level reports and rate-limit records=] with |source|'s [=attribution source/internal ID=] and |pendingSource|'s [=attribution source/source time=].
     1. [=set/Remove=] |source| from the [=attribution source cache=].
 
 To <dfn>remove sources with unselected attribution scopes</dfn> given an [=attribution source=] |pendingSource|:
@@ -3230,7 +3230,7 @@ To <dfn>remove or update sources for attribution scopes</dfn> given an [=attribu
         1. If |existingScopes| is null or |existingScopes|'s [=attribution scopes/max event states=]
             is not equal to |pendingScopes|'s [=attribution scopes/max event states=] or
             |existingScopes|'s [=attribution scopes/limit=] is less than |pendingScopes|'s [=attribution scopes/limit=]:
-            1. [=Remove associated event-level reports and rate-limit records=] with |source|'s [=attribution source/source identifier=] and |pendingSource|'s [=attribution source/source time=].
+            1. [=Remove associated event-level reports and rate-limit records=] with |source|'s [=attribution source/internal ID=] and |pendingSource|'s [=attribution source/source time=].
             1. [=set/Remove=] |source| from the [=attribution source cache=].
 1. [=Remove sources with unselected attribution scopes=] with |pendingSource|.
 
@@ -3295,7 +3295,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     1. Return.
 1. Let |sourcesToDeleteForDestinationLimit| be the result of running [=get sources to delete for the unexpired destination limit=]
     with |source|.
-1. If |sourcesToDeleteForDestinationLimit| [=set/contains=] |source|'s [=attribution source/source identifier=]:
+1. If |sourcesToDeleteForDestinationLimit| [=set/contains=] |source|'s [=attribution source/internal ID=]:
     1. Run [=obtain and deliver debug reports on source registration=] with
         "<code>[=source debug data type/source-destination-limit=]</code>" and |source|.
     1. Return.
@@ -3326,7 +3326,7 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
         : [=attribution rate-limit record/expiry time=]
         :: |source|'s [=attribution source/expiry time=]
         : [=attribution rate-limit record/entity ID=]
-        :: |source|'s [=attribution source/source identifier=]
+        :: |source|'s [=attribution source/internal ID=]
         : [=attribution rate-limit record/destination limit priority=]
         :: |source|'s [=attribution source/destination limit priority=]
     1. If the result of running [=should processing be blocked by reporting-origin limit=] with
@@ -3976,7 +3976,7 @@ To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
     |sourceToAttribute|'s [=attribution source/max number of event-level reports=].
 1. If |sourceToAttribute|'s [=attribution source/number of event-level reports=] is less than
     |sourceToAttribute|'s [=attribution source/max number of event-level reports=], return "<code>[=event-level-report-replacement result/add-new-report=]</code>".
-1. Let |matchingReports| be a new [=list=] whose elements are all the elements in the [=event-level report cache=] whose [=event-level report/report time=] and [=event-level report/source identifier=] are equal to |report|'s, [=list/sorted in ascending order=] using [=event-level report/is lower-priority than=].
+1. Let |matchingReports| be a new [=list=] whose elements are all the elements in the [=event-level report cache=] whose [=event-level report/report time=] and [=event-level report/source ID=] are equal to |report|'s, [=list/sorted in ascending order=] using [=event-level report/is lower-priority than=].
 1. If |matchingReports| [=list/is empty=]:
     1. Set |sourceToAttribute|'s [=attribution source/event-level attributable=] value to false.
     1. Return "<code>[=event-level-report-replacement result/drop-new-report-none-to-replace=]</code>".
@@ -4395,8 +4395,8 @@ a 64-bit integer priority |priority|, and a [=trigger spec map=] [=map/entry=]
     :: |priority|.
     : [=event-level report/trigger time=]
     :: |triggerTime|.
-    : [=event-level report/source identifier=]
-    :: |source|'s [=attribution source/source identifier=].
+    : [=event-level report/source ID=]
+    :: |source|'s [=attribution source/internal ID=].
     : [=event-level report/external ID=]
     :: The result of [=generating a random UUID=].
     : [=event-level report/internal ID=]
@@ -4443,8 +4443,8 @@ an [=attribution trigger=] |trigger|:
     :: |trigger|'s [=attribution trigger/trigger context ID=]
     : [=aggregatable attribution report/filtering ID max bytes=]
     :: |trigger|'s [=attribution trigger/aggregatable filtering ID max bytes=]
-    : [=aggregatable attribution report/source identifier=]
-    :: |source|'s [=attribution source/source identifier=].
+    : [=aggregatable attribution report/source ID=]
+    :: |source|'s [=attribution source/internal ID=].
 1. Return |report|.
 
 <h3 id="generating-randomized-null-attribution-reports">Generating randomized null attribution reports</h3>
@@ -4480,7 +4480,7 @@ To <dfn>obtain a null attribution report</dfn> given an [=attribution trigger=] 
     :: |trigger|'s [=attribution trigger/trigger context ID=]
     : [=aggregatable attribution report/filtering ID max bytes=]
     :: |trigger|'s [=attribution trigger/aggregatable filtering ID max bytes=]
-    : [=aggregatable attribution report/source identifier=]
+    : [=aggregatable attribution report/source ID=]
     :: Null
 1. Return |report|.
 
