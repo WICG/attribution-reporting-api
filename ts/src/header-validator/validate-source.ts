@@ -3,6 +3,7 @@ import { SourceType } from '../source-type'
 import * as context from './context'
 import { Maybe } from './maybe'
 import {
+  NamedBudgets,
   AggregationKeys,
   AttributionScopes,
   EventReportWindows,
@@ -235,6 +236,20 @@ function aggregationKeys(j: Json, ctx: Context): Maybe<AggregationKeys> {
     aggregationKey,
     constants.maxAggregationKeysPerSource
   )
+}
+
+function namedBudget([name, j]: [string, Json], ctx: Context): Maybe<number> {
+  if (name.length > constants.maxLengthPerBudgetName) {
+    ctx.error(
+      `name exceeds max length per budget name (${name.length} > ${constants.maxLengthPerBudgetName})`
+    )
+    return Maybe.None
+  }
+  return aggregatableKeyValueValue(j, ctx)
+}
+
+function namedBudgets(j: Json, ctx: Context): Maybe<NamedBudgets> {
+  return keyValues(j, ctx, namedBudget, constants.maxNamedBudgetsPerSource)
 }
 
 function roundAwayFromZeroToNearestDay(n: number): number {
@@ -728,6 +743,9 @@ function source(j: Json, ctx: Context): Maybe<Source> {
           'attribution_scopes',
           withDefault(attributionScopes, null)
         ),
+        namedBudgets: ctx.opts.namedBudgets
+          ? field('named_budgets', withDefault(namedBudgets, new Map()))
+          : () => Maybe.some(new Map()),
 
         ...commonDebugFields,
         ...priorityField,

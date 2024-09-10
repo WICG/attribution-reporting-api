@@ -49,9 +49,14 @@ const testCases: TestCase[] = [
         "limit": 3,
         "values": ["1"],
         "max_event_states": 4
+      },
+      "named_budgets": {
+        "1": 32768,
+        "2": 32769
       }
     }`,
     sourceType: SourceType.navigation,
+    parseNamedBudgets: true,
     expected: Maybe.some({
       aggregatableReportWindow: 3601,
       aggregationKeys: new Map([['a', 15n]]),
@@ -95,6 +100,10 @@ const testCases: TestCase[] = [
         values: new Set<string>('1'),
         maxEventStates: 4,
       },
+      namedBudgets: new Map([
+        ['1', 32768],
+        ['2', 32769],
+      ]),
     }),
   },
 
@@ -3065,6 +3074,150 @@ const testCases: TestCase[] = [
       },
     ],
   },
+
+  // Named budgets.
+  {
+    name: 'named-budgets-not-a-dictionary',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": ["1"]
+    }`,
+    sourceType: SourceType.navigation,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        msg: 'must be an object',
+        path: ['named_budgets'],
+      },
+    ],
+  },
+  {
+    name: 'budget-name-too-long',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "aaaaaaaaaaaaaaaaaaaaaaaaaa": 32768
+        }
+      }`,
+    sourceType: SourceType.navigation,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        msg: 'name exceeds max length per budget name (26 > 25)',
+        path: ['named_budgets', 'aaaaaaaaaaaaaaaaaaaaaaaaaa'],
+      },
+    ],
+  },
+  {
+    name: 'budget-name-empty',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "": 32768
+        }
+      }`,
+    sourceType: SourceType.navigation,
+    parseNamedBudgets: true,
+  },
+  {
+    name: 'named-budgets-too-many',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "1": 32768,
+          "2": 32768,
+          "3": 32768,
+          "4": 32768,
+          "5": 32768,
+          "6": 32768,
+          "7": 32768,
+          "8": 32768,
+          "9": 32768,
+          "10": 32768,
+          "11": 32768,
+          "12": 32768,
+          "13": 32768,
+          "14": 32768,
+          "15": 32768,
+          "16": 32768,
+          "17": 32768,
+          "18": 32768,
+          "19": 32768,
+          "20": 32768,
+          "21": 32768,
+          "22": 32768,
+          "23": 32768,
+          "24": 32768,
+          "25": 32768,
+          "26": 32768
+        }
+      }`,
+    sourceType: SourceType.navigation,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        msg: 'exceeds the maximum number of keys (25)',
+        path: ['named_budgets'],
+      },
+    ],
+  },
+  {
+    name: 'named-budget-non-positive',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "1": 32768,
+          "2": 0,
+          "3": -1
+        }
+      }`,
+    sourceType: SourceType.navigation,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        msg: 'must be in the range [1, 65536]',
+        path: ['named_budgets', '2'],
+      },
+      {
+        msg: 'must be in the range [1, 65536]',
+        path: ['named_budgets', '3'],
+      },
+    ],
+  },
+  {
+    name: 'named-budget-exceeds-max',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "1": 65537
+        }
+      }`,
+    sourceType: SourceType.navigation,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        msg: 'must be in the range [1, 65536]',
+        path: ['named_budgets', '1'],
+      },
+    ],
+  },
+  {
+    name: 'named-budget-not-integer',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "1": "1024"
+        }
+      }`,
+    sourceType: SourceType.navigation,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        msg: 'must be a number',
+        path: ['named_budgets', '1'],
+      },
+    ],
+  },
 ]
 
 testCases.forEach((tc) =>
@@ -3075,6 +3228,7 @@ testCases.forEach((tc) =>
       sourceType: tc.sourceType ?? SourceType.navigation,
       fullFlex: tc.parseFullFlex,
       noteInfoGain: tc.noteInfoGain,
+      namedBudgets: tc.parseNamedBudgets,
     })
   )
 )

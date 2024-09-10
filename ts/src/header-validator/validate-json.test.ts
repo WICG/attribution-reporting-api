@@ -4,4 +4,5 @@ import * as vsv from '../vendor-specific-values'
 export type TestCase<T> = testutil.TestCase<T> & {
   vsv?: Readonly<Partial<vsv.VendorSpecificValues>>
   parseFullFlex?: boolean
+  parseNamedBudgets?: boolean
 }

@@ -551,6 +551,56 @@ as when a trigger context ID is set.
 
 See [flexible_filtering.md](https://github.com/patcg-individual-drafts/private-aggregation-api/blob/main/flexible_filtering.md) for more details.
 
+### Optional: named budgets
+
+Named budgets is an optional feature that gives API callers the ability 
+to manage `L1` contribution budget distribution across different types of
+attributions, addressing common challenges such as:
+
+- Allocating the privacy budget between different types of attributions
+  (e.g., biddable vs. non-biddable).
+- Distributing the budget across multiple product categories to prevent any
+  single product category from consuming all available privacy budget.
+
+[Source registrations](#attribution-source-registration) will accept an optional
+field `named_budgets`, which is a dictionary used to set the
+maximum contribution for each named budget for this source.
+
+```jsonc
+{
+  ..., // existing fields
+  "named_budgets": {
+    "budgetName1": 32768,  // Max contribution budget for budgetName1.
+    "budgetName2": 32768   // Max contribution budget for budgetName2.
+  }
+}
+```
+
+[Trigger registrations](#attribution-trigger-registration) will accept an
+optional field `named_budgets`, which will be used to select the
+named budget for the generated aggregatable report.
+
+```jsonc
+{
+  ..., // existing fields
+  "named_budgets": [
+    {
+      "name": "budgetName1",
+      "filters": {"source_type": ["navigation"]}
+    }
+  ]
+}
+```
+
+The first named budget from the trigger that matches the source's filter data
+will be selected. If there is no budget name specified or no matching filters, the
+`L1` contribution budget will still be applied.
+
+When generating an aggregatable report, in addition to performing the 
+current `L1` budget limit check, the contributions for the report will
+be checked against the available budget in the selected budget name, if applicable.
+If the budget is insufficient, the aggregatable report will not be generated.
+
 ## Data processing through a Secure Aggregation Service
 
 The exact design of the service is not specified here. We expect to have more

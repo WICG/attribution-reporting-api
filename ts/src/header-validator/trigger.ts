@@ -39,6 +39,12 @@ export type EventTriggerDatum = FilterPair &
 
 export type AggregatableDedupKey = FilterPair & DedupKey
 
+export type BudgetName = {
+  name: string | null
+}
+
+export type NamedBudget = FilterPair & BudgetName
+
 export enum AggregatableSourceRegistrationTime {
   exclude = 'exclude',
   include = 'include',
@@ -48,6 +54,7 @@ export type Trigger = reg.CommonDebug &
   FilterPair &
   reg.AggregationCoordinatorOrigin & {
     aggregatableDedupKeys: AggregatableDedupKey[]
+    namedBudgets: NamedBudget[]
     aggregatableTriggerData: AggregatableTriggerDatum[]
     aggregatableSourceRegistrationTime: AggregatableSourceRegistrationTime
     aggregatableFilteringIdMaxBytes: number
