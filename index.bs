@@ -1754,7 +1754,7 @@ and an [=aggregatable debug reporting config=] |default|:
     1. Set |debugDataMap| to the result of running [=parse aggregatable debug reporting data=]
         with |map|["<code>[=aggregatable-debug-reporting JSON key/debug_data=]</code>"], |maxValue|,
         and |supportedTypes|.
-    1. If |debugDataMap| is null, return |default|.
+    1. If |debugDataMap| is an error, return |default|.
 1. Let |aggregationCoordinator| be [=default aggregation coordinator=].
 1. If |map|["<code>[=aggregatable-debug-reporting JSON key/aggregation_coordinator_origin=]</code>"]
     [=map/exists=]:
@@ -2065,7 +2065,7 @@ or null |osSourceHeader|, a [=registration info=] |registrationInfo|, and a
     ::
         1. Let |osSourceRegistrations| be the result of running
             [=get OS registrations from a header value=] with |osSourceHeader|.
-        1. If |osSourceRegistrations| is null:
+        1. If |osSourceRegistrations| is an error:
             1. If |reportHeaderErrors| is true, run [=obtain and deliver debug reports on registration header errors=]
                 with "`Attribution-Reporting-Register-OS-Source`",
                 |osSourceHeader|, |reportingOrigin|, |contextOrigin|, and |fenced|.
@@ -2107,7 +2107,7 @@ a [=header value=] or null |webTriggerHeader|, a [=header value=] or null
     ::
         1. Let |osTriggerRegistrations| be the result of running
             [=get OS registrations from a header value=] with |osTriggerHeader|.
-        1. If |osTriggerRegistrations| is null:
+        1. If |osTriggerRegistrations| is an error:
             1. If |reportHeaderErrors| is true, run [=obtain and deliver debug reports on registration header errors=]
                 with "`Attribution-Reporting-Register-OS-Trigger`",
                 |osTriggerHeader|, |reportingOrigin|, |contextOrigin|, and |fenced|.
@@ -4985,7 +4985,7 @@ To <dfn noexport>get [=OS registrations=] from a header value</dfn> given a
 1. Let |values| be the result of [=structured header/parsing structured fields=]
     with <var ignore>input_string</var> set to |header| and
     <var ignore>header_type</var> set to "`list`".
-1. If parsing failed, return null.
+1. If parsing failed, return an error.
 1. Let |registrations| be a new [=list=].
 1. [=list/iterate|For each=] |value| of |values|:
      1. If |value| is not a [=string=], [=iteration/continue=].
@@ -5001,7 +5001,7 @@ To <dfn noexport>get [=OS registrations=] from a header value</dfn> given a
          : [=OS registration/debug reporting enabled=]
          :: |debugReporting|
      1. [=list/Append=] |registration| to |registrations|.
-1. If |registrations| [=list/is empty=], return null.
+1. If |registrations| [=list/is empty=], return an error.
 1. Return |registrations|.
 
 <h3 id="registrars-header">Registrars</h3>
