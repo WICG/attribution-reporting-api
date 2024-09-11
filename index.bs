@@ -744,10 +744,10 @@ To <dfn>find a matching trigger spec</dfn> given an [=attribution source=]
     : "<code>[=trigger-data matching mode/exact=]</code>"
     :: Run the following steps:
         1. If |specs|[|triggerData|] [=map/exists=], return its [=map/entry=].
-        1. Return null.
+        1. Return an error.
     : "<code>[=trigger-data matching mode/modulus=]</code>"
     :: Run the following steps:
-        1. If |specs| [=map/is empty=], return null.
+        1. If |specs| [=map/is empty=], return an error.
         1. Let |keys| be |specs|'s [=map/get the keys|keys=].
         1. Let |index| be the remainder when dividing |triggerData| by |keys|'s
             [=set/size=].
@@ -1593,14 +1593,14 @@ To <dfn export>check if an origin is suitable</dfn> given an [=origin=] |origin|
 
 To <dfn>parse filter values</dfn> given a |value|:
 
-1. If |value| is not a [=map=], return null.
+1. If |value| is not a [=map=], return an error.
 1. Let |result| be a new [=filter map=].
 1. [=map/iterate|For each=] |filter| → |data| of |value|:
-    1. If |filter| [=starts with=] "`_`", return null.
-    1. If |data| is not a [=list=], return null.
+    1. If |filter| [=starts with=] "`_`", return an error.
+    1. If |data| is not a [=list=], return an error.
     1. Let |set| be a new [=set=].
     1. [=list/iterate|For each=] |d| of |data|:
-        1. If |d| is not a [=string=], return null.
+        1. If |d| is not a [=string=], return an error.
         1. [=set/Append=] |d| to |set|.
     1. [=map/Set=] |result|[|filter|] to |set|.
 1. Return |result|.
@@ -1608,29 +1608,29 @@ To <dfn>parse filter values</dfn> given a |value|:
 To <dfn>parse filter data</dfn> given a |value|:
 
 1. Let |map| be the result of running [=parse filter values=] with |value|.
-1. If |map| is null, return null.
+1. If |map| is an error, return it.
 1. If |map|'s [=map/size=] is greater than the [=max entries per filter data=],
-    return null.
+    return an error.
 1. [=map/iterate|For each=] |filter| → |set| of |map|:
     1. If |filter|'s [=string/length=] is greater than the [=max length per filter string=],
-        return null.
+        return an error.
     1. If |set|'s [=set/size=] is greater than the
-        [=max values per filter data entry=], return null.
+        [=max values per filter data entry=], return an error.
     1. [=set/iterate|For each=] |s| of |set|:
         1. If |s|'s [=string/length=] is greater than the [=max length per filter string=],
-            return null.
+            return an error.
 1. Return |map|.
 
 To <dfn>parse filter config</dfn> given a |value|:
 
-1. If |value| is not a [=map=], return null.
+1. If |value| is not a [=map=], return an error.
 1. Let |lookbackWindow| be null.
 1. If |value|["`_lookback_window`"] [=map/exists=]:
-    1. If |value|["`_lookback_window`"] is not a positive integer, return null.
+    1. If |value|["`_lookback_window`"] is not a positive integer, return an error.
     1. Set |lookbackWindow| to the [=duration=] of |value|["`_lookback_window`"] seconds.
     1. [=map/Remove=] |value|["`_lookback_window`"].
 1. Let |map| be the result of running [=parse filter values=] with |value|.
-1. If |map| is null, return null.
+1. If |map| is an error, return it.
 1. Let |filter| be a [=filter config=] with the items:
     : [=filter config/map=]
     :: |map|
@@ -1645,13 +1645,13 @@ To <dfn>parse filters</dfn> given a |value|:
 1. Let |filtersList| be a new [=list=].
 1. If |value| is a [=map=], then:
     1. Let |filterConfig| be the result of running [=parse filter config=] with |value|.
-    1. If |filterConfig| is null, return null.
+    1. If |filterConfig| is an error, return it.
     1. [=list/Append=] |filterConfig| to |filtersList|.
     1. Return |filtersList|.
-1. If |value| is not a [=list=], return null.
+1. If |value| is not a [=list=], return an error.
 1. [=list/iterate|For each=] |data| of |value|:
     1. Let |filterConfig| be the result of running [=parse filter config=] with |data|.
-    1. If |filterConfig| is null, return null.
+    1. If |filterConfig| is an error, return it.
     1. [=list/Append=] |filterConfig| to |filtersList|.
 1. Return |filtersList|.
 
@@ -1660,21 +1660,21 @@ To <dfn>parse a filter pair</dfn> given a [=map=] |map|:
 1. Let |positive| be a [=list=] of [=filter configs=], initially empty.
 1. If |map|["<code>[=trigger-registration JSON key/filters=]</code>"] [=map/exists=], set |positive| to the result of running
     [=parse filters=] with |map|["<code>[=trigger-registration JSON key/filters=]</code>"].
-1. If |positive| is null, return null.
+1. If |positive| is an error, return it.
 1. Let |negative| be a [=list=] of [=filter configs=], initially empty.
 1. If |map|["<code>[=trigger-registration JSON key/not_filters=]</code>"] [=map/exists=], set |negative| to the result of
     running [=parse filters=] with |map|["<code>[=trigger-registration JSON key/not_filters=]</code>"].
-1. If |negative| is null, return null.
+1. If |negative| is an error, return it.
 1. Return the [=tuple=] (|positive|, |negative|).
 
 <h3 id="parsing-aggregation-coordinator">Parsing aggregation coordinator</h3>
 
 To <dfn>parse an aggregation coordinator</dfn> given |value|:
 
-1. If |value| is not a [=string=], return null.
+1. If |value| is not a [=string=], return an error.
 1. Let |url| be the result of running the [=URL parser=] on |value|.
-1. If |url| is failure or null, return null.
-1. If |url|'s [=url/origin=] is not an [=aggregation coordinator=], return null.
+1. If |url| is failure or null, return an error.
+1. If |url|'s [=url/origin=] is not an [=aggregation coordinator=], return an error.
 1. Return |url|'s [=url/origin=].
 
 <h3 id="parsing-aggregatable-debug-reporting-config">Parsing aggregatable debug reporting config</h3>
@@ -1694,23 +1694,23 @@ positive integer |maxValue|, and a [=set=] of [=debug data types=]
 |supportedTypes|:
 
 1. [=Assert=]: |maxValue| is less than or equal to [=allowed aggregatable budget per source=].
-1. If |dataList| is not a [=list=], return null.
+1. If |dataList| is not a [=list=], return an error.
 1. Let |debugDataMap| be a new [=map=].
 1. Let |unknownTypes| be a new [=set=].
 1. Let |unspecifiedContribution| be null.
 1. [=list/iterate|For each=] |data| of |dataList|:
-    1. If |data| is not a [=map=], return null.
+    1. If |data| is not a [=map=], return an error.
     1. If |data|["<code>[=aggregatable-debug-reporting JSON key/key_piece=]</code>"]
-        does not [=map/exist=], return null.
+        does not [=map/exist=], return an error.
     1. If |data|["<code>[=aggregatable-debug-reporting JSON key/key_piece=]</code>"]
-        is not a [=string=], return null.
+        is not a [=string=], return an error.
     1. Let |dataKeyPiece| be the result of running [=parse an aggregation key piece=]
         with |data|["<code>[=aggregatable-debug-reporting JSON key/key_piece=]</code>"].
-    1. If |dataKeyPiece| is an error, return null.
+    1. If |dataKeyPiece| is an error, return an error.
     1. If |data|["<code>[=aggregatable-debug-reporting JSON key/value=]</code>"]
-        does not [=map/exist=], return null.
+        does not [=map/exist=], return an error.
     1. If |data|["<code>[=aggregatable-debug-reporting JSON key/value=]</code>"] is
-        not an integer or is less than or equal to 0 or is greater than |maxValue|, return null.
+        not an integer or is less than or equal to 0 or is greater than |maxValue|, return an error.
     1. Let |contribution| be a new [=aggregatable contribution=] with the items:
         : [=aggregatable contribution/key=]
         :: |dataKeyPiece|
@@ -1719,20 +1719,20 @@ positive integer |maxValue|, and a [=set=] of [=debug data types=]
         : [=aggregatable contribution/filtering ID=]
         :: [=default filtering ID value=]
     1. If |data|["<code>[=aggregatable-debug-reporting JSON key/types=]</code>"] does
-        not [=map/exist=], return null.
+        not [=map/exist=], return an error.
     1. Let |dataTypes| be |data|["<code>[=aggregatable-debug-reporting JSON key/types=]</code>"].
-    1. If |dataTypes| is not a [=list=] or [=list/is empty=], return null.
+    1. If |dataTypes| is not a [=list=] or [=list/is empty=], return an error.
     1. [=list/iterate|For each=] |type| of |dataTypes|:
-        1. If |type| is not a [=string=], return null.
+        1. If |type| is not a [=string=], return an error.
         1. If |type| is "`unspecified`":
-            1. If |unspecifiedContribution| is not null, return null.
+            1. If |unspecifiedContribution| is not null, return an error.
             1. Set |unspecifiedContribution| to |contribution|.
             1. [=iteration/Continue=].
         1. If |supportedTypes| [=set/contains=] |type|:
-            1. If |debugDataMap|[|type|] [=map/exists=], return null.
+            1. If |debugDataMap|[|type|] [=map/exists=], return an error.
             1. [=map/Set=] |debugDataMap|[|type|] to |contribution|.
         1. Otherwise:
-            1. If |unknownTypes| [=set/contains=] |type|, return null.
+            1. If |unknownTypes| [=set/contains=] |type|, return an error.
             1. [=set/Append=] |type| to |unknownTypes|.
 1. If |unspecifiedContribution| is null, return |debugDataMap|.
 1. [=set/iterate|For each=] |type| of |supportedTypes|:
@@ -1756,12 +1756,12 @@ and an [=aggregatable debug reporting config=] |default|:
     1. Set |debugDataMap| to the result of running [=parse aggregatable debug reporting data=]
         with |map|["<code>[=aggregatable-debug-reporting JSON key/debug_data=]</code>"], |maxValue|,
         and |supportedTypes|.
-    1. If |debugDataMap| is null, return |default|.
+    1. If |debugDataMap| is an error, return |default|.
 1. Let |aggregationCoordinator| be [=default aggregation coordinator=].
 1. If |map|["<code>[=aggregatable-debug-reporting JSON key/aggregation_coordinator_origin=]</code>"]
     [=map/exists=]:
     1. Set |aggregationCoordinator| to the result of [=parsing an aggregation coordinator=].
-    1. If |aggregationCoordinator| is null, return |default|.
+    1. If |aggregationCoordinator| is an error, return |default|.
 1. Let |aggregatableDebugReportingConfig| be a new [=aggregatable debug reporting config=]
     with the items:
     : [=aggregatable debug reporting config/key piece=]
@@ -2057,7 +2057,7 @@ or null |osSourceHeader|, a [=registration info=] |registrationInfo|, and a
         1. Let |source| be the result of running
             [=parse source-registration JSON=] with |webSourceHeader|,
             |contextOrigin|, |reportingOrigin|, |sourceType|, [=current wall time=], and |fenced|.
-        1. If |source| is null:
+        1. If |source| is an error:
             1. If |reportHeaderErrors| is true, run [=obtain and deliver debug reports on registration header errors=]
                 with "`Attribution-Reporting-Register-Source`",
                 |webSourceHeader|, |reportingOrigin|, |contextOrigin|, and |fenced|.
@@ -2067,7 +2067,7 @@ or null |osSourceHeader|, a [=registration info=] |registrationInfo|, and a
     ::
         1. Let |osSourceRegistrations| be the result of running
             [=get OS registrations from a header value=] with |osSourceHeader|.
-        1. If |osSourceRegistrations| is null:
+        1. If |osSourceRegistrations| is an error:
             1. If |reportHeaderErrors| is true, run [=obtain and deliver debug reports on registration header errors=]
                 with "`Attribution-Reporting-Register-OS-Source`",
                 |osSourceHeader|, |reportingOrigin|, |contextOrigin|, and |fenced|.
@@ -2099,7 +2099,7 @@ a [=header value=] or null |webTriggerHeader|, a [=header value=] or null
         1. Let |trigger| be the result of running
             [=create an attribution trigger=] with |webTriggerHeader|
             |destinationSite|, |reportingOrigin|, [=current wall time=], and |fenced|.
-        1. If |trigger| is null:
+        1. If |trigger| is an error:
             1. If |reportHeaderErrors| is true, run [=obtain and deliver debug reports on registration header errors=]
                 with "`Attribution-Reporting-Register-Trigger`",
                 |webTriggerHeader|, |reportingOrigin|, |contextOrigin|, and |fenced|.
@@ -2109,7 +2109,7 @@ a [=header value=] or null |webTriggerHeader|, a [=header value=] or null
     ::
         1. Let |osTriggerRegistrations| be the result of running
             [=get OS registrations from a header value=] with |osTriggerHeader|.
-        1. If |osTriggerRegistrations| is null:
+        1. If |osTriggerRegistrations| is an error:
             1. If |reportHeaderErrors| is true, run [=obtain and deliver debug reports on registration header errors=]
                 with "`Attribution-Reporting-Register-OS-Trigger`",
                 |osTriggerHeader|, |reportingOrigin|, |contextOrigin|, and |fenced|.
@@ -2412,25 +2412,25 @@ A <dfn>source-registration JSON key</dfn> is one of the following:
 To <dfn>parse an attribution destination</dfn> from a [=string=] |str|:
 1. Let |url| be the result of running the [=URL parser=] on the value of
     the |str|.
-1. If |url| is failure or null, return null.
+1. If |url| is failure or null, return an error.
 1. If |url|'s [=url/origin=] is not [=check if an origin is suitable|suitable=],
-    return null.
+    return an error.
 1. Return the result of [=obtain a site|obtaining a site=] from |url|'s
     [=url/origin=].
 
 To <dfn>parse attribution destinations</dfn> from a [=map=] |map|:
-1. If |map|["<code>[=source-registration JSON key/destination=]</code>"] does not [=map/exists|exist=], return null.
+1. If |map|["<code>[=source-registration JSON key/destination=]</code>"] does not [=map/exists|exist=], return an error.
 1. Let |val| be |map|["<code>[=source-registration JSON key/destination=]</code>"].
 1. If |val| is a [=string=], set |val| to « |val| ».
-1. If |val| is not a [=list=], return null.
+1. If |val| is not a [=list=], return an error.
 1. Let |result| be a [=set=].
 1. [=list/iterate|For each=] |value| of |val|:
-    1. If |value| is not a [=string=], return null.
+    1. If |value| is not a [=string=], return an error.
     1. Let |destination| be the result of [=parse an attribution destination=] with |value|.
-    1. If |destination| is null, return null.
+    1. If |destination| is an error, return it.
     1. [=set/Append=] |destination| to |result|.
 1. If |result| [=set/is empty=] or its [=set/size=] is greater than the
-    [=max destinations per source=], return null.
+    [=max destinations per source=], return an error.
 1. [=list/sort in ascending order|Sort=] |result| in ascending order, with |a|
     being less than |b| if |a|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>,
     is less than |b|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
@@ -2462,15 +2462,15 @@ To <dfn>parse aggregation keys</dfn> given a [=map=] |map|:
 1. Let |aggregationKeys| be a new [=map=].
 1. If |map|["<code>[=source-registration JSON key/aggregation_keys=]</code>"] does not [=map/exist=], return |aggregationKeys|.
 1. Let |values| be |map|["<code>[=source-registration JSON key/aggregation_keys=]</code>"].
-1. If |values| is not an [=map=], return null.
+1. If |values| is not an [=map=], return an error.
 1. If |values|'s [=map/size=] is greater than the
-    [=max aggregation keys per source registration=], return null.
+    [=max aggregation keys per source registration=], return an error.
 1. [=map/iterate|For each=] |key| → |value| of |values|:
     1. If |key|'s [=string/length=] is greater than the [=max length per aggregation key identifier=],
-        return null.
-    1. If |value| is not a [=string=], return null.
+        return an error.
+    1. If |value| is not a [=string=], return an error.
     1. Let |keyPiece| be the result of running [=parse an aggregation key piece=] with |value|.
-    1. If |keyPiece| is an error, return null.
+    1. If |keyPiece| is an error, return it.
     1. [=map/Set=] |aggregationKeys|[|key|] to |keyPiece|.
 1. Return |aggregationKeys|.
 
@@ -2724,33 +2724,33 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 
 1. Let |value| be the result of running
     [=parse JSON bytes to an Infra value=] with |json|.
-1. If |value| is not a [=map=], return null.
+1. If |value| is not a [=map=], return an error.
 1. Let |attributionDestinations| be the result of running
     [=parse attribution destinations=] with |value|.
-1. If |attributionDestinations| is null, return null.
+1. If |attributionDestinations| is an error, return it.
 1. Let |sourceEventId| be the result of running
     [=parse an optional 64-bit unsigned integer=] with |value|,
     "<code>[=source-registration JSON key/source_event_id=]</code>", and 0.
-1. If |sourceEventId| is an error, return null.
+1. If |sourceEventId| is an error, return it.
 1. Let |expiry| be the result of running [=parse a duration=] with |value|,
     "<code>[=source-registration JSON key/expiry=]</code>", and [=valid source expiry range=].
-1. If |expiry| is an error, return null.
+1. If |expiry| is an error, return it.
 1. If |sourceType| is "<code>[=source type/event=]</code>", round |expiry| away
     from zero to the nearest day (86400 seconds).
 1. Let |priority| be the result of running
     [=parse an optional 64-bit signed integer=] with |value|, "<code>[=source-registration JSON key/priority=]</code>", and
     0.
-1. If |priority| is an error, return null.
+1. If |priority| is an error, return it.
 1. Let |destinationLimitPriority| be the result of running
     [=parse an optional 64-bit signed integer=] with |value|,
     "<code>[=source-registration JSON key/destination_limit_priority=]</code>", and 0.
-1. If |destinationLimitPriority| is an error, return null.
+1. If |destinationLimitPriority| is an error, return it.
 1. Let |filterData| be a new [=filter map=].
 1. If |value|["<code>[=source-registration JSON key/filter_data=]</code>"] [=map/exists=]:
     1. Set |filterData| to the result of running [=parse filter data=] with
         |value|["<code>[=source-registration JSON key/filter_data=]</code>"].
-    1. If |filterData| is null, return null.
-    1. If |filterData|["`source_type`"] [=map/exists=], return null.
+    1. If |filterData| is an error, return it.
+    1. If |filterData|["`source_type`"] [=map/exists=], return an error.
 1. [=map/Set=] |filterData|["`source_type`"] to « |sourceType| ».
 1. Let |debugKey| be the result of running
     [=parse an optional 64-bit unsigned integer=] with |value|, "<code>[=source-registration JSON key/debug_key=]</code>",
@@ -2762,13 +2762,13 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     with |reportingOrigin| and |sourceSite| is <strong>allowed</strong>, set |debugCookieSet| to true.
 1. If |debugCookieSet| is false, set |debugKey| to null.
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
-1. If |aggregationKeys| is null, return null.
+1. If |aggregationKeys| is an error, return it.
 1. Let |maxAttributionsPerSource| be [=default event-level attributions per source=][|sourceType|].
 1. Set |maxAttributionsPerSource| to |value|["<code>[=source-registration JSON key/max_event_level_reports=]</code>"] if it [=map/exists=].
-1. If |maxAttributionsPerSource| is not a non-negative integer, or is greater than [=max settable event-level attributions per source=], return null.
+1. If |maxAttributionsPerSource| is not a non-negative integer, or is greater than [=max settable event-level attributions per source=], return an error.
 1. Let |aggregatableReportWindowEnd| be the result of running [=parse a duration=]
     with |value|, "<code>[=source-registration JSON key/aggregatable_report_window=]</code>", and ([=min report window=], |expiry|).
-1. If |aggregatableReportWindowEnd| is an error, return null.
+1. If |aggregatableReportWindowEnd| is an error, return it.
 1. Let |debugReportingEnabled| be false.
 1. If |value|["<code>[=source-registration JSON key/debug_reporting=]</code>"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to |value|["<code>[=source-registration JSON key/debug_reporting=]</code>"].
@@ -2781,17 +2781,17 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 
 1. Let |triggerDataMatchingMode| be "<code>[=trigger-data matching mode/modulus=]</code>".
 1. If |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"] [=map/exists=]:
-    1. If |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"] is not a [=string=], return null.
-    1. If |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"] is not a [=trigger-data matching mode=], return null.
+    1. If |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"] is not a [=string=], return an error.
+    1. If |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"] is not a [=trigger-data matching mode=], return an error.
     1. Set |triggerDataMatchingMode| to |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"].
 1. Let |triggerSpecs| be the result of [=parsing trigger specs=] with |value|,
     |sourceTime|, |sourceType|, |expiry|, and |triggerDataMatchingMode|.
-1. If |triggerSpecs| is an error, return null.
+1. If |triggerSpecs| is an error, return it.
 1. Let |attributionScopes| be the result of running [=parse attribution scopes=] with |value|.
-1. If |attributionScopes| is an error, return null.
+1. If |attributionScopes| is an error, return it.
 1. Let |epsilon| be the user agent's [=max settable event-level epsilon=].
 1. Set |epsilon| to |value|["<code>[=source-registration JSON key/event_level_epsilon=]</code>"] if it [=map/exists=]:
-1. If |epsilon| is not a double, is less than 0, or is greater than the user agent's [=max settable event-level epsilon=], return null.
+1. If |epsilon| is not a double, is less than 0, or is greater than the user agent's [=max settable event-level epsilon=], return an error.
 1. Let |aggregatableDebugBudget| be 0.
 1. Let |aggregatableDebugReportingConfig| be a new [=aggregatable debug reporting config=].
 1. If |value|["<code>[=source-registration JSON key/aggregatable_debug_reporting=]</code>"] [=map/exists=]:
@@ -3426,27 +3426,27 @@ To <dfn>parse event triggers</dfn> given a [=map=] |map|:
 1. If |map|["<code>[=trigger-registration JSON key/event_trigger_data=]</code>"] does not [=map/exists|exist=], return
     |eventTriggers|.
 1. Let |values| be |map|["<code>[=trigger-registration JSON key/event_trigger_data=]</code>"].
-1. If |values| is not a [=list=], return null.
+1. If |values| is not a [=list=], return an error.
 1. [=list/iterate|For each=] |value| of |values|:
-    1. If |value| is not a [=map=], return null.
+    1. If |value| is not a [=map=], return an error.
     1. Let |triggerData| be the result of running
         [=parse an optional 64-bit unsigned integer=] with |value|,
         "<code>[=trigger-registration JSON key/trigger_data=]</code>", and 0.
-    1. If |triggerData| is an error, return null.
+    1. If |triggerData| is an error, return it.
     1. Let |dedupKey| be the result of running
         [=parse an optional 64-bit unsigned integer=] with |value|,
         "<code>[=trigger-registration JSON key/deduplication_key=]</code>", and null.
-    1. If |dedupKey| is an error, return null.
+    1. If |dedupKey| is an error, return it.
     1. Let |priority| be the result of running
         [=parse an optional 64-bit signed integer=] with |value|, "<code>[=trigger-registration JSON key/priority=]</code>",
         and 0.
-    1. If |priority| is an error, return null.
+    1. If |priority| is an error, return it.
     1. Let |filterPair| be the result of running [=parse a filter pair=] with
         |value|.
-    1. If |filterPair| is null, return null.
+    1. If |filterPair| is an error, return it.
     1. Let |triggerValue| be the result of running
         [=parse an event-trigger value=] with |value|.
-    1. If |triggerValue| is an error, return null.
+    1. If |triggerValue| is an error, return it.
     1. Let |eventTrigger| be a new [=event-level trigger configuration=] with
         the items:
         : [=event-level trigger configuration/trigger data=]
@@ -3469,23 +3469,23 @@ To <dfn>parse aggregatable trigger data</dfn> given a [=map=] |map|:
 1. Let |aggregatableTriggerData| be a new [=list=].
 1. If |map|["<code>[=trigger-registration JSON key/aggregatable_trigger_data=]</code>"] does not [=map/exist=], return |aggregatableTriggerData|.
 1. Let |values| be |map|["<code>[=trigger-registration JSON key/aggregatable_trigger_data=]</code>"].
-1. If |values| is not a [=list=], return null.
+1. If |values| is not a [=list=], return an error.
 1. [=list/iterate|For each=] |value| of |values|:
-    1. If |value| is not a [=map=], return null.
-    1. If |value|["<code>[=trigger-registration JSON key/key_piece=]</code>"] does not [=map/exist=] or is not a [=string=], return null.
+    1. If |value| is not a [=map=], return an error.
+    1. If |value|["<code>[=trigger-registration JSON key/key_piece=]</code>"] does not [=map/exist=] or is not a [=string=], return an error.
     1. Let |keyPiece| be the result of running [=parse an aggregation key piece=] with |value|["<code>[=trigger-registration JSON key/key_piece=]</code>"].
-    1. If |keyPiece| is an error, return null.
+    1. If |keyPiece| is an error, return it.
     1. Let |sourceKeys| be a new [=set=].
     1. If |value|["<code>[=trigger-registration JSON key/source_keys=]</code>"] [=map/exists=]:
-        1. If |value|["<code>[=trigger-registration JSON key/source_keys=]</code>"] is not a [=list=], return null.
+        1. If |value|["<code>[=trigger-registration JSON key/source_keys=]</code>"] is not a [=list=], return an error.
         1. [=list/iterate|For each=] |sourceKey| of |value|["<code>[=trigger-registration JSON key/source_keys=]</code>"]:
-            1. If |sourceKey| is not a [=string=], return null.
+            1. If |sourceKey| is not a [=string=], return an error.
             1. If |sourceKey|'s [=string/length=] is greater than the
-                [=max length per aggregation key identifier=], return null.
+                [=max length per aggregation key identifier=], return an error.
             1. [=set/Append=] |sourceKey| to |sourceKeys|.
     1. Let |filterPair| be the result of running [=parse a filter pair=] with
         |value|.
-    1. If |filterPair| is null, return null.
+    1. If |filterPair| is an error, return it.
     1. Let |aggregatableTrigger| be a new [=aggregatable trigger data=] with the items:
         : [=aggregatable trigger data/key piece=]
         :: |keyPiece|
@@ -3505,7 +3505,7 @@ To <dfn>parse aggregatable filtering ID max bytes</dfn> given a [=map=] |map|:
     1. Set |maxBytes| to |map|["<code>[=trigger-registration JSON key/aggregatable_filtering_id_max_bytes=]</code>"].
     1. If |maxBytes| is a positive integer and is [=set/contained=] in the [=valid filtering ID max bytes range=],
         return |maxBytes|.
-    1. Otherwise, return null.
+    1. Otherwise, return an error.
 1. Return |maxBytes|.
 
 To <dfn>validate aggregatable key-values value</dfn> given a |value|:
@@ -3519,26 +3519,26 @@ To <dfn>parse aggregatable key-values</dfn> given a [=map=] |map| and a positive
 1. Let |out| be a new [=map=].
 1. [=map/iterate|For each=] |key| → |value| of |map|:
     1. If |key|'s [=string/length=] is greater than the [=max length per aggregation key identifier=],
-        return null.
-    1. If |value| is not a [=map=] or an integer, return null.
+        return an error.
+    1. If |value| is not a [=map=] or an integer, return an error.
     1. If |value| is an integer:
-        1. If the result of running [=validate aggregatable key-values value=] with |value| is false, return null.
+        1. If the result of running [=validate aggregatable key-values value=] with |value| is false, return an error.
         1. [=map/Set=] |out|[|key|] to a new [=aggregatable key value=] whose items are
             : [=aggregatable key value/value=]
             :: |value|
             : [=aggregatable key value/filtering ID=]
             :: [=default filtering ID value=]
         1. [=iteration/Continue=].
-    1. If |value|["<code>[=trigger-registration JSON key/value=]</code>"] does not [=map/exist=], return null.
+    1. If |value|["<code>[=trigger-registration JSON key/value=]</code>"] does not [=map/exist=], return an error.
     1. If the result of running [=validate aggregatable key-values value=] with
-        |value|["<code>[=trigger-registration JSON key/value=]</code>"] is false, return null.
+        |value|["<code>[=trigger-registration JSON key/value=]</code>"] is false, return an error.
     1. Let |filteringId| be [=default filtering ID value=].
     1. If |value|["<code>[=trigger-registration JSON key/filtering_id=]</code>"] [=map/exists=]:
         1. Set |filteringId| to the result of applying the
             <a spec="html">rules for parsing non-negative integers</a> to |value|["<code>[=trigger-registration JSON key/filtering_id=]</code>"].
-        1. If |filteringId| is an error, return null.
+        1. If |filteringId| is an error, return it.
         1. If |filteringId| is not in [=the exclusive range|the range=]
-            0 to 256<sup>|maxBytes|</sup>, exclusive, return null.
+            0 to 256<sup>|maxBytes|</sup>, exclusive, return an error.
     1.  [=map/Set=] |out|[|key|] to a new [=aggregatable key value=] whose items are
         : [=aggregatable key value/value=]
         :: |value|["<code>[=trigger-registration JSON key/value=]</code>"]
@@ -3550,11 +3550,11 @@ To <dfn>parse aggregatable values</dfn> given a [=map=] |map| and a positive int
 
 1. If |map|["<code>[=trigger-registration JSON key/aggregatable_values=]</code>"] does not [=map/exist=], return a new [=list=].
 1. Let |values| be |map|["<code>[=trigger-registration JSON key/aggregatable_values=]</code>"].
-1. If |values| is not a [=map=] or a [=list=], return null.
+1. If |values| is not a [=map=] or a [=list=], return an error.
 1. Let |aggregatableValuesConfigurations| be a [=list=] of [=aggregatable values configurations=], initially empty.
 1. If |values| is a [=map=]:
     1. Let |aggregatableKeyValues| be the result of running [=parse aggregatable key-values=] with |values| and |maxBytes|.
-    1. If |aggregatableKeyValues| is null, return null.
+    1. If |aggregatableKeyValues| is an error, return it.
     1. Let |aggregatableValuesConfiguration| be a new [=aggregatable values configuration=] with the items:
         : [=aggregatable values configuration/values=]
         :: |aggregatableKeyValues|
@@ -3565,14 +3565,14 @@ To <dfn>parse aggregatable values</dfn> given a [=map=] |map| and a positive int
     1. [=list/Append=] |aggregatableValuesConfiguration| to |aggregatableValuesConfigurations|.
     1. Return |aggregatableValuesConfigurations|.
 1. [=list/iterate|For each=] |value| of |values|:
-    1. If |value| is not a [=map=], return null.
-    1. If |value|["<code>[=trigger-registration JSON key/values=]</code>"] does not [=map/exist=], return null.
+    1. If |value| is not a [=map=], return an error.
+    1. If |value|["<code>[=trigger-registration JSON key/values=]</code>"] does not [=map/exist=], return an error.
     1. Let |aggregatableKeyValues| be the result of running [=parse aggregatable key-values=] with
         |value|["<code>[=trigger-registration JSON key/values=]</code>"] and |maxBytes|.
-    1. If |aggregatableKeyValues| is null, return null.
+    1. If |aggregatableKeyValues| is an error, return it.
     1. Let |filterPair| be the result of running [=parse a filter pair=] with
         |value|.
-    1. If |filterPair| is null, return null.
+    1. If |filterPair| is an error, return it.
     1. Let |aggregatableValuesConfiguration| be a new [=aggregatable values configuration=] with the items:
         : [=aggregatable values configuration/values=]
         :: |aggregatableKeyValues|
@@ -3588,16 +3588,16 @@ To <dfn>parse aggregatable dedup keys</dfn> given a [=map=] |map|:
 1. Let |aggregatableDedupKeys| be a new [=list=].
 1. If |map|["<code>[=trigger-registration JSON key/aggregatable_deduplication_keys=]</code>"] does not [=map/exist=], return |aggregatableDedupKeys|.
 1. Let |values| be |map|["<code>[=trigger-registration JSON key/aggregatable_deduplication_keys=]</code>"].
-1. If |values| is not a [=list=], return null.
+1. If |values| is not a [=list=], return an error.
 1. [=list/iterate|For each=] |value| of |values|:
-    1. If |value| is not a [=map=], return null.
+    1. If |value| is not a [=map=], return an error.
     1. Let |dedupKey| be the result of running
         [=parse an optional 64-bit unsigned integer=] with |value|,
         "<code>[=trigger-registration JSON key/deduplication_key=]</code>", and null.
-    1. If |dedupKey| is an error, return null.
+    1. If |dedupKey| is an error, return it.
     1. Let |filterPair| be the result of running [=parse a filter pair=] with
         |value|.
-    1. If |filterPair| is null, return null.
+    1. If |filterPair| is an error, return it.
     1. Let |aggregatableDedupKey| be a new [=aggregatable dedup key=] with the items:
         : [=aggregatable dedup key/dedup key=]
         :: |dedupKey|
@@ -3624,21 +3624,21 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
 
 1. Let |value| be the result of running
     [=parse JSON bytes to an Infra value=] with |json|.
-1. If |value| is not a [=map=], return null.
+1. If |value| is not a [=map=], return an error.
 1. Let |eventTriggers| be the result of running [=parse event triggers=]
     with |value|.
-1. If |eventTriggers| is null, return null.
+1. If |eventTriggers| is an error, return it.
 1. Let |aggregatableTriggerData| be the result of running [=parse aggregatable trigger data=]
     with |value|.
-1. If |aggregatableTriggerData| is null, return null.
+1. If |aggregatableTriggerData| is an error, return it.
 1. Let |filteringIdsMaxBytes| be the result of [=parsing aggregatable filtering ID max bytes=] with |value|.
-1. If |filteringIdsMaxBytes| is null, return null.
+1. If |filteringIdsMaxBytes| is an error, return it.
 1. Let |aggregatableValuesConfigurations| be the result of running
     [=parse aggregatable values=] with |value| and |filteringIdsMaxBytes|.
-1. If |aggregatableValuesConfigurations| is null, return null.
+1. If |aggregatableValuesConfigurations| is an error, return it.
 1. Let |aggregatableDedupKeys| be the result of running [=parse aggregatable dedup keys=]
     with |value|.
-1. If |aggregatableDedupKeys| is null, return null.
+1. If |aggregatableDedupKeys| is an error, return it.
 1. Let |debugKey| be the result of running
     [=parse an optional 64-bit unsigned integer=] with |value|, "<code>[=trigger-registration JSON key/debug_key=]</code>",
     and null.
@@ -3646,7 +3646,7 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
 1. If the result of running [=check if cookie-based debugging is allowed=] with
     |reportingOrigin| and |destination| is <strong>blocked</strong>, set |debugKey| to null.
 1. Let |filterPair| be the result of running [=parse a filter pair=] with |value|.
-1. If |filterPair| is null, return null.
+1. If |filterPair| is an error, return it.
 1. Let |debugReportingEnabled| be false.
 1. If |value|["<code>[=trigger-registration JSON key/debug_reporting=]</code>"] [=map/exists=] and is a [=boolean=], set
     |debugReportingEnabled| to value["<code>[=trigger-registration JSON key/debug_reporting=]</code>"].
@@ -3654,18 +3654,18 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
 1. If |value|["<code>[=trigger-registration JSON key/aggregation_coordinator_origin=]</code>"] [=map/exists=]:
     1. Set |aggregationCoordinator| to the result of running [=parse an aggregation coordinator=] with
         |value|["<code>[=trigger-registration JSON key/aggregation_coordinator_origin=]</code>"].
-    1. If |aggregationCoordinator| is null, return null.
+    1. If |aggregationCoordinator| is an error, return it.
 1. Let |aggregatableSourceRegTimeConfig| be "<code>[=aggregatable source registration time configuration/exclude=]</code>".
 1. If |value|["<code>[=trigger-registration JSON key/aggregatable_source_registration_time=]</code>"] [=map/exists=]:
-    1. If |value|["<code>[=trigger-registration JSON key/aggregatable_source_registration_time=]</code>"] is not a [=string=], return null.
+    1. If |value|["<code>[=trigger-registration JSON key/aggregatable_source_registration_time=]</code>"] is not a [=string=], return an error.
     1. If |value|["<code>[=trigger-registration JSON key/aggregatable_source_registration_time=]</code>"] is not an [=aggregatable source registration time configuration=],
-        return null.
+        return an error.
     1. Set |aggregatableSourceRegTimeConfig| to |value|["<code>[=trigger-registration JSON key/aggregatable_source_registration_time=]</code>"].
 1. Let |triggerContextID| be null.
 1. If |value|["<code>[=trigger-registration JSON key/trigger_context_id=]</code>"] [=map/exists=]:
-    1. If |value|["<code>[=trigger-registration JSON key/trigger_context_id=]</code>"] is not a [=string=], return null.
+    1. If |value|["<code>[=trigger-registration JSON key/trigger_context_id=]</code>"] is not a [=string=], return an error.
     1. If |value|["<code>[=trigger-registration JSON key/trigger_context_id=]</code>"]'s [=string/length=] is greater than the [=max length per trigger context ID=],
-        return null.
+        return an error.
     1. Set |triggerContextID| to |value|["<code>[=trigger-registration JSON key/trigger_context_id=]</code>"].
 1. Let |aggregatableDebugReportingConfig| be a new [=aggregatable debug reporting config=].
 1. If |value|["<code>[=trigger-registration JSON key/aggregatable_debug_reporting=]</code>"] [=map/exists=]:
@@ -3674,7 +3674,7 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
         with |value|["<code>[=trigger-registration JSON key/aggregatable_debug_reporting=]</code>"],
         [=allowed aggregatable budget per source=], |supportedTypes|, and |aggregatableDebugReportingConfig|.
 1. Let |attributionScopes| be the result of running [=parse attribution scopes for trigger=] with |value|.
-1. If |attributionScopes| is an error, return null.
+1. If |attributionScopes| is an error, return it.
 1. Let |trigger| be a new [=attribution trigger=] with the items:
     : [=attribution trigger/attribution destination=]
     :: |destination|
@@ -3713,7 +3713,7 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
     : [=attribution trigger/attribution scopes=]
     :: |attributionScopes|
 1. If |aggregatableSourceRegTimeConfig| is not "<code>[=aggregatable source registration time configuration/exclude=]</code>"
-    and the result of running [=check if an aggregatable attribution report should be unconditionally sent=] with |trigger| is true, return null.
+    and the result of running [=check if an aggregatable attribution report should be unconditionally sent=] with |trigger| is true, return an error.
 1. Return |trigger|.
 
 Issue: Determine proper charset-handling for the JSON header value.
@@ -4033,7 +4033,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 1. Let |specEntry| be the result of [=finding a matching trigger spec=] with
     |sourceToAttribute| and |matchedConfig|'s
     [=event-level trigger configuration/trigger data=].
-1. If |specEntry| is null:
+1. If |specEntry| is an error:
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
         ("<code>[=trigger debug data type/trigger-event-no-matching-trigger-data=]</code>", null)).
 1. Let |windowResult| be the result of [=check whether a moment falls within a window=]
@@ -4995,7 +4995,7 @@ To <dfn noexport>get [=OS registrations=] from a header value</dfn> given a
 1. Let |values| be the result of [=structured header/parsing structured fields=]
     with <var ignore>input_string</var> set to |header| and
     <var ignore>header_type</var> set to "`list`".
-1. If parsing failed, return null.
+1. If parsing failed, return an error.
 1. Let |registrations| be a new [=list=].
 1. [=list/iterate|For each=] |value| of |values|:
      1. If |value| is not a [=string=], [=iteration/continue=].
@@ -5011,7 +5011,7 @@ To <dfn noexport>get [=OS registrations=] from a header value</dfn> given a
          : [=OS registration/debug reporting enabled=]
          :: |debugReporting|
      1. [=list/Append=] |registration| to |registrations|.
-1. If |registrations| [=list/is empty=], return null.
+1. If |registrations| [=list/is empty=], return an error.
 1. Return |registrations|.
 
 <h3 id="registrars-header">Registrars</h3>
