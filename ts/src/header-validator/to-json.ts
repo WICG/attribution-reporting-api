@@ -205,18 +205,12 @@ type Source = CommonDebug &
 
 export interface Options {
   fullFlex?: boolean | undefined
-  scopes?: boolean | undefined
 }
 
 export function serializeSource(
   s: source.Source,
   opts: Readonly<Options>
 ): string {
-  const scopeFields = opts.scopes
-    ? ifNotNull('attribution_scopes', s.attributionScopes, (v) =>
-        serializeAttributionScopes(v)
-      )
-    : {}
   const source: Source = {
     ...serializeCommonDebug(s),
     ...serializePriority(s),
@@ -249,7 +243,11 @@ export function serializeSource(
       s.aggregatableDebugReporting,
       (v) => serializeSourceAggregatableDebugReportingConfig(v)
     ),
-    ...scopeFields,
+    ...ifNotNull(
+      'attribution_scopes',
+      s.attributionScopes,
+      (v) => serializeAttributionScopes(v)
+    ),
   }
 
   return stringify(source)
@@ -389,12 +387,6 @@ export function serializeTrigger(
   t: trigger.Trigger,
   opts: Readonly<Options>
 ): string {
-  const scopeFields = opts.scopes
-    ? {
-        attribution_scopes: Array.from(t.attributionScopes),
-      }
-    : {}
-
   const trigger: Trigger = {
     ...serializeCommonDebug(t),
     ...serializeFilterPair(t),
@@ -432,7 +424,7 @@ export function serializeTrigger(
       (v) => serializeAggregatableDebugReportingConfig(v)
     ),
 
-    ...scopeFields,
+    attribution_scopes: Array.from(t.attributionScopes),
   }
 
   return stringify(trigger)
