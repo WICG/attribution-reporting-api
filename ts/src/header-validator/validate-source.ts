@@ -726,7 +726,8 @@ function source(j: Json, ctx: Context): Maybe<Source> {
         ),
         attributionScopes: field(
           'attribution_scopes',
-          withDefault(attributionScopes, null)),
+          withDefault(attributionScopes, null)
+        ),
 
         ...commonDebugFields,
         ...priorityField,

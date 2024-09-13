@@ -243,10 +243,8 @@ export function serializeSource(
       s.aggregatableDebugReporting,
       (v) => serializeSourceAggregatableDebugReportingConfig(v)
     ),
-    ...ifNotNull(
-      'attribution_scopes',
-      s.attributionScopes,
-      (v) => serializeAttributionScopes(v)
+    ...ifNotNull('attribution_scopes', s.attributionScopes, (v) =>
+      serializeAttributionScopes(v)
     ),
   }
 
