@@ -52,7 +52,6 @@ const testCases: TestCase[] = [
       }
     }`,
     sourceType: SourceType.navigation,
-    parseScopes: true,
     expected: Maybe.some({
       aggregatableReportWindow: 3601,
       aggregationKeys: new Map([['a', 15n]]),
@@ -104,15 +103,11 @@ const testCases: TestCase[] = [
     name: 'unknown-field',
     input: `{
       "destination": "https://a.test",
-      "attribution_scopes": {
-        "values": false,
-        "limit": false,
-        "max_event_states": false
-      }
+      "x": true
     }`,
     expectedWarnings: [
       {
-        path: ['attribution_scopes'],
+        path: ['x'],
         msg: 'unknown field',
       },
     ],
@@ -1463,7 +1458,6 @@ const testCases: TestCase[] = [
       maxSettableEventLevelEpsilon: 14,
       maxTriggerStateCardinality: 2,
     },
-    parseScopes: true,
     expectedErrors: [
       {
         path: [],
@@ -1490,7 +1484,6 @@ const testCases: TestCase[] = [
       maxSettableEventLevelEpsilon: 14,
       maxTriggerStateCardinality: 3,
     },
-    parseScopes: true,
     expectedErrors: [
       {
         path: [],
@@ -1513,7 +1506,6 @@ const testCases: TestCase[] = [
       maxSettableEventLevelEpsilon: 14,
       maxTriggerStateCardinality: 3,
     },
-    parseScopes: false,
     expectedErrors: [
       {
         path: [],
@@ -2689,7 +2681,6 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "attribution_scopes": ["1"]
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes'],
@@ -2706,7 +2697,6 @@ const testCases: TestCase[] = [
         "values": ["1"]
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'limit'],
@@ -2727,7 +2717,6 @@ const testCases: TestCase[] = [
         "values": ["1"]
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'limit'],
@@ -2748,7 +2737,6 @@ const testCases: TestCase[] = [
         "values": ["1"]
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'limit'],
@@ -2769,7 +2757,6 @@ const testCases: TestCase[] = [
         "values": ["1"]
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'limit'],
@@ -2790,7 +2777,6 @@ const testCases: TestCase[] = [
         "values": []
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'values'],
@@ -2806,7 +2792,6 @@ const testCases: TestCase[] = [
         "values": ["1", "2"]
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'limit'],
@@ -2826,7 +2811,6 @@ const testCases: TestCase[] = [
         "limit": 3
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'values'],
@@ -2843,7 +2827,6 @@ const testCases: TestCase[] = [
         "limit": true
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'limit'],
@@ -2865,7 +2848,6 @@ const testCases: TestCase[] = [
         "max_event_states": -1
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'max_event_states'],
@@ -2883,7 +2865,6 @@ const testCases: TestCase[] = [
         "max_event_states": 0
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'max_event_states'],
@@ -2901,7 +2882,6 @@ const testCases: TestCase[] = [
         "max_event_states": 1.5
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'max_event_states'],
@@ -2918,7 +2898,6 @@ const testCases: TestCase[] = [
         "values": ["1", "2"]
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'values'],
@@ -2935,7 +2914,6 @@ const testCases: TestCase[] = [
         "values": [1]
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         msg: 'must be a string',
@@ -2952,7 +2930,6 @@ const testCases: TestCase[] = [
         "values": []
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         msg: 'must be non-empty if limit is set',
@@ -2969,7 +2946,6 @@ const testCases: TestCase[] = [
         "values": 1
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         msg: 'must be a list',
@@ -2986,7 +2962,6 @@ const testCases: TestCase[] = [
         "values": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21"]
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'values'],
@@ -3003,7 +2978,6 @@ const testCases: TestCase[] = [
         "values": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]
       }
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 'values', 0],
@@ -3030,7 +3004,6 @@ const testCases: TestCase[] = [
       },
       maxSettableEventLevelEpsilon: 14,
     },
-    parseScopes: true,
     expectedErrors: [
       {
         path: [],
@@ -3071,7 +3044,6 @@ const testCases: TestCase[] = [
       },
       maxSettableEventLevelEpsilon: 14,
     },
-    parseScopes: true,
     expectedErrors: [
       {
         path: [],
@@ -3103,7 +3075,6 @@ testCases.forEach((tc) =>
       sourceType: tc.sourceType ?? SourceType.navigation,
       fullFlex: tc.parseFullFlex,
       noteInfoGain: tc.noteInfoGain,
-      scopes: tc.parseScopes,
     })
   )
 )

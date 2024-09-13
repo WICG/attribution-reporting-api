@@ -12,7 +12,6 @@ interface Arguments {
   file?: string
 
   fullFlex: boolean
-  scopes: boolean
   sourceType?: SourceType
 
   silent: boolean
@@ -47,10 +46,6 @@ const options = parse<Arguments>(
     fullFlex: {
       type: Boolean,
       description: 'If true, parse experimental Full Flexible Event fields.',
-    },
-    scopes: {
-      type: Boolean,
-      description: 'If true, parse experimental Attribution Scopes fields.',
     },
 
     silent: {
@@ -100,13 +95,11 @@ const out = validate<unknown>(
     ? trigger.validator({
         vsv: vsv.Chromium,
         fullFlex: options.fullFlex,
-        scopes: options.scopes,
       })
     : source.validator({
         vsv: vsv.Chromium,
         fullFlex: options.fullFlex,
         sourceType: options.sourceType,
-        scopes: options.scopes,
       })
 )
 

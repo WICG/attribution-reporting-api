@@ -49,7 +49,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
       "attribution_scopes": ["1"]
     }`,
-    parseScopes: true,
     expected: Maybe.some({
       aggregatableDedupKeys: [
         {
@@ -1629,7 +1628,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'attribution-scope-not-string',
     input: `{"attribution_scopes": [1]}`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes', 0],
@@ -1639,7 +1637,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   },
   {
     name: 'attribution-scopes-empty-list',
-    parseScopes: true,
     input: `{
       "attribution_scopes": []
     }`,
@@ -1649,7 +1646,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     input: `{
       "attribution_scopes": 1
     }`,
-    parseScopes: true,
     expectedErrors: [
       {
         path: ['attribution_scopes'],
@@ -1728,7 +1724,6 @@ testCases.forEach((tc) =>
     trigger.validator({
       vsv: { ...vsv.Chromium, ...tc.vsv },
       fullFlex: tc.parseFullFlex,
-      scopes: tc.parseScopes,
     })
   )
 )
