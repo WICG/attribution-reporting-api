@@ -724,9 +724,9 @@ function source(j: Json, ctx: Context): Maybe<Source> {
           'destination_limit_priority',
           withDefault(int64, 0n)
         ),
-        attributionScopes: ctx.opts.scopes
-          ? field('attribution_scopes', withDefault(attributionScopes, null))
-          : () => Maybe.some(null),
+        attributionScopes: field(
+          'attribution_scopes',
+          withDefault(attributionScopes, null)),
 
         ...commonDebugFields,
         ...priorityField,

@@ -23,7 +23,6 @@ const sourceTypeFieldset =
 const effective = document.querySelector('#effective')!
 
 const flexCheckbox = form.elements.namedItem('flex') as HTMLInputElement
-const scopesCheckbox = form.elements.namedItem('scopes') as HTMLInputElement
 
 function sourceType(): SourceType {
   return parseSourceType(sourceTypeRadios.value)
@@ -32,7 +31,6 @@ function sourceType(): SourceType {
 function validate(): void {
   sourceTypeFieldset.disabled = true
   flexCheckbox.disabled = true
-  scopesCheckbox.disabled = true
 
   let v: validator.Validator<unknown>
 
@@ -40,22 +38,18 @@ function validate(): void {
     case 'source':
       sourceTypeFieldset.disabled = false
       flexCheckbox.disabled = false
-      scopesCheckbox.disabled = false
       v = source.validator({
         vsv: vsv.Chromium,
         sourceType: sourceType(),
         fullFlex: flexCheckbox.checked,
-        scopes: scopesCheckbox.checked,
         noteInfoGain: true,
       })
       break
     case 'trigger':
       flexCheckbox.disabled = false
-      scopesCheckbox.disabled = false
       v = trigger.validator({
         vsv: vsv.Chromium,
         fullFlex: flexCheckbox.checked,
-        scopes: scopesCheckbox.checked,
       })
       break
     case 'os-source':
@@ -106,7 +100,6 @@ document.querySelector('#linkify')!.addEventListener('click', () => {
   }
 
   url.searchParams.set('flex', flexCheckbox.checked.toString())
-  url.searchParams.set('scopes', scopesCheckbox.checked.toString())
 
   void navigator.clipboard.writeText(url.toString())
 })
@@ -144,6 +137,5 @@ if (st !== null && st in SourceType) {
 sourceTypeRadios.value = st
 
 flexCheckbox.checked = params.get('flex') === 'true'
-scopesCheckbox.checked = params.get('scopes') === 'true'
 
 validate()

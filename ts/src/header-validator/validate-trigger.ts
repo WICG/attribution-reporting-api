@@ -399,13 +399,11 @@ function trigger(j: Json, ctx: Context): Maybe<Trigger> {
           withDefault(struct, null),
           aggregatableDebugReportingConfig
         ),
-        attributionScopes: ctx.opts.scopes
-          ? field(
-              'attribution_scopes',
-              withDefault(set, new Set<string>()),
-              string
-            )
-          : () => Maybe.some(new Set<string>()),
+        attributionScopes: field(
+          'attribution_scopes',
+          withDefault(set, new Set<string>()),
+          string
+        ),
         ...aggregationCoordinatorOriginField,
         ...commonDebugFields,
         ...filterFields,

@@ -38,7 +38,6 @@ export const UINT32_MAX: number = 2 ** 32 - 1
 export interface RegistrationOptions {
   vsv: VendorSpecificValues
   fullFlex?: boolean | undefined
-  scopes?: boolean | undefined
 }
 
 export class RegistrationContext<
