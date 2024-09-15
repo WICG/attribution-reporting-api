@@ -223,7 +223,7 @@ export function epsilonToBoundInfoGainAndDp(
   epsilonUpperBound: number
 ): number {
   // Calculate epsilon to double precision.
-  const candidate: number[] = new Array(64).fill(0)
+  const candidate: number[] = new Array<number>(64).fill(0)
   let epsilon = 0
 
   for (let i = 1; i < 64; i++) {
