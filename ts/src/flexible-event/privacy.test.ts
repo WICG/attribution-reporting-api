@@ -9,6 +9,8 @@ import {
   binaryEntropy,
   flipProbabilityDp,
   maxInformationGain,
+  epsilonToBoundInfoGainAndDp,
+  epsilonToBoundInfoGainAndDpBinarySearch
 } from './privacy'
 
 const flipProbabilityTests = [
@@ -96,6 +98,38 @@ void test('maxInformationGain', async (t) => {
       t.test(`${i}`, () => {
         const actual = maxInformationGain(tc.numStates, tc.epsilon)
         assert.deepStrictEqual(actual, tc.expected)
+      })
+    )
+  )
+})
+
+void test('epsilonToBoundInfoGainAndDp', async (t) => {
+  const infoGainUppers = [11.5, 6.5]
+  const epsilonUpper = 14
+  const numStatesRange = 100000
+
+  await Promise.all(
+    [...Array(500).keys()].map(i =>
+      t.test(`${ i }`, () => {
+        const numStates = Math.ceil(Math.random() * numStatesRange)
+        const infoGainUpper = infoGainUppers[Math.round(Math.random())] || 11.5
+
+        const epsilonByBinarySearch = epsilonToBoundInfoGainAndDpBinarySearch(
+          numStates,
+          infoGainUpper,
+          epsilonUpper)
+
+        const epsilonByBitSearch = epsilonToBoundInfoGainAndDp(
+          numStates,
+          infoGainUpper,
+          epsilonUpper)
+
+        assert(epsilonByBitSearch >= epsilonByBinarySearch)
+
+        if (epsilonByBitSearch > epsilonByBinarySearch) {
+            assert(maxInformationGain(numStates, epsilonByBitSearch)
+                   <= infoGainUpper)
+        }
       })
     )
   )

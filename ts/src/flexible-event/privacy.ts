@@ -184,7 +184,7 @@ export function maxInformationGain(numStates: number, epsilon: number): number {
 
 // Returns the effective epsilon needed to satisfy an information gain bound
 // given a number of output states in the q-ary symmetric channel.
-function epsilonToBoundInfoGainAndDp(
+export function epsilonToBoundInfoGainAndDpBinarySearch(
   numStates: number,
   infoGainUpperBound: number,
   epsilonUpperBound: number,
@@ -213,4 +213,45 @@ function epsilonToBoundInfoGainAndDp(
 
     return epsilon
   }
+}
+
+// Returns the effective epsilon needed to satisfy an information gain bound
+// given a number of output states in the q-ary symmetric channel.
+export function epsilonToBoundInfoGainAndDp(
+  numStates: number,
+  infoGainUpperBound: number,
+  epsilonUpperBound: number
+): number {
+  // Calculate epsilon to double precision.
+  const candidate = new Array(64).fill(0)
+  let epsilon = 0
+
+  for (let i = 1; i < 64; i++) {
+    candidate[i] = 1
+
+    epsilon = binaryToDouble(candidate)
+    if (epsilon > epsilonUpperBound) {
+      candidate[i] = 0
+      continue
+    }
+
+    const infoGain = maxInformationGain(numStates, epsilon)
+
+    if (infoGain > infoGainUpperBound) {
+      candidate[i] = 0
+
+    } else if (epsilon == epsilonUpperBound) {
+      return epsilon
+    }
+  }
+
+  return binaryToDouble(candidate)
+}
+
+function binaryToDouble(binaryArray: number[]): number {
+    const exponentBias = 1023
+    const sign = binaryArray[0] == 1 ? -1 : 1
+    const exponent = parseInt(binaryArray.slice(1, 12).join(''), 2)
+    const fraction = parseInt('1' + binaryArray.slice(12, 64).join(''), 2)
+    return sign * Math.pow(2, exponent - exponentBias - 52) * fraction
 }
