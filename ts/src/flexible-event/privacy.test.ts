@@ -118,7 +118,8 @@ void test('epsilonToBoundInfoGainAndDp', async (t) => {
         const epsilonByBinarySearch = epsilonToBoundInfoGainAndDpBinarySearch(
           numStates,
           infoGainUpper,
-          epsilonUpper
+          epsilonUpper,
+          0.00000000000001
         )
 
         const epsilonByBitSearch = epsilonToBoundInfoGainAndDp(
