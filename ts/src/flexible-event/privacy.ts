@@ -239,7 +239,6 @@ export function epsilonToBoundInfoGainAndDp(
 
     if (infoGain > infoGainUpperBound) {
       candidate[i] = 0
-
     } else if (epsilon == epsilonUpperBound) {
       return epsilon
     }
@@ -249,9 +248,9 @@ export function epsilonToBoundInfoGainAndDp(
 }
 
 function binaryToDouble(binaryArray: number[]): number {
-    const exponentBias = 1023
-    const sign = binaryArray[0] == 1 ? -1 : 1
-    const exponent = parseInt(binaryArray.slice(1, 12).join(''), 2)
-    const fraction = parseInt('1' + binaryArray.slice(12, 64).join(''), 2)
-    return sign * Math.pow(2, exponent - exponentBias - 52) * fraction
+  const exponentBias = 1023
+  const sign = binaryArray[0] == 1 ? -1 : 1
+  const exponent = parseInt(binaryArray.slice(1, 12).join(''), 2)
+  const fraction = parseInt('1' + binaryArray.slice(12, 64).join(''), 2)
+  return sign * Math.pow(2, exponent - exponentBias - 52) * fraction
 }
