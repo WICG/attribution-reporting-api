@@ -10,7 +10,6 @@ import {
   flipProbabilityDp,
   maxInformationGain,
   epsilonToBoundInfoGainAndDp,
-  epsilonToBoundInfoGainAndDpBinarySearch,
 } from './privacy'
 
 const flipProbabilityTests = [
@@ -115,28 +114,16 @@ void test('epsilonToBoundInfoGainAndDp', async (t) => {
         const numStates = Math.ceil(Math.random() * numStatesRange)
         const infoGainUpper = infoGainUppers[Math.round(Math.random())]!
 
-        const epsilonByBinarySearch = epsilonToBoundInfoGainAndDpBinarySearch(
-          numStates,
-          infoGainUpper,
-          epsilonUpper,
-          1e-14
-        )
-
-        const epsilonByBitSearch = epsilonToBoundInfoGainAndDp(
+        const epsilon = epsilonToBoundInfoGainAndDp(
           numStates,
           infoGainUpper,
           epsilonUpper
         )
 
-        assert(epsilonByBitSearch >= epsilonByBinarySearch)
-        assert(
-          maxInformationGain(numStates, epsilonByBitSearch) <= infoGainUpper
-        )
-        if (epsilonByBitSearch < epsilonUpper) {
-          assert(
-            maxInformationGain(numStates, epsilonByBitSearch + 1e-15) >
-              infoGainUpper
-          )
+        assert(maxInformationGain(numStates, epsilon) <= infoGainUpper)
+
+        if (epsilon < epsilonUpper) {
+          assert(maxInformationGain(numStates, epsilon + 1e-15) > infoGainUpper)
         }
       })
     )

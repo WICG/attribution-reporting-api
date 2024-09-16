@@ -184,39 +184,24 @@ export function maxInformationGain(numStates: number, epsilon: number): number {
 
 // Returns the effective epsilon needed to satisfy an information gain bound
 // given a number of output states in the q-ary symmetric channel.
-export function epsilonToBoundInfoGainAndDpBinarySearch(
-  numStates: number,
-  infoGainUpperBound: number,
-  epsilonUpperBound: number,
-  tolerance: number = 0.00001
-): number {
-  // Just perform a simple binary search over values of epsilon.
-  let epsLow = 0
-  let epsHigh = epsilonUpperBound
-
-  for (;;) {
-    const epsilon = (epsHigh + epsLow) / 2
-    const infoGain = maxInformationGain(numStates, epsilon)
-
-    if (infoGain > infoGainUpperBound) {
-      epsHigh = epsilon
-      continue
-    }
-
-    // Allow slack by returning something slightly non-optimal (governed by the tolerance)
-    // that still meets the privacy bar. If epsHigh == epsLow we're now governed by the epsilon
-    // bound and can return.
-    if (infoGain < infoGainUpperBound - tolerance && epsHigh !== epsLow) {
-      epsLow = epsilon
-      continue
-    }
-
-    return epsilon
-  }
-}
-
-// Returns the effective epsilon needed to satisfy an information gain bound
-// given a number of output states in the q-ary symmetric channel.
+//
+// The exponent section of the double is used as a power with base 2, which is
+// multiplied by the significand, which is at least 1 and less than 2. In our
+// case, the sign bit remains unset since we use a positive epsilon. The double
+// is 2^exponent * significand. Since the significand is at least 1, changing it
+// can only lower 2^exponent to at least its own value. And since the
+// significand is less than 2, changing it can only raise 2^exponent to a value
+// less than 2^(exponent + 1). We can therefore first find the highest
+// 2^exponent less than or equal to max-settable-event-level-epsilon that
+// produces information gain within limit, and then search for a significand
+// that raises the overall value as much as possible.
+//
+// In an additive binary representation, the value represented by one bit is
+// higher than all the values added by lower bits together. This inequality
+// holds when multiplying by the constant, 2^exponent. This means that if we
+// search the significand from high bits to low, each choice to set a bit either
+// is already too high, or provides the opportunity to get closer to a higher
+// target using some combination of the lower bits.
 export function epsilonToBoundInfoGainAndDp(
   numStates: number,
   infoGainUpperBound: number,
