@@ -113,7 +113,7 @@ void test('epsilonToBoundInfoGainAndDp', async (t) => {
     [...Array(numTests).keys()].map((i) =>
       t.test(`${i}`, () => {
         const numStates = Math.ceil(Math.random() * numStatesRange)
-        const infoGainUpper = infoGainUppers[Math.round(Math.random())] || 11.5
+        const infoGainUpper = infoGainUppers[Math.round(Math.random())]!
 
         const epsilonByBinarySearch = epsilonToBoundInfoGainAndDpBinarySearch(
           numStates,
