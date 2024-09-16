@@ -109,7 +109,7 @@ void test('epsilonToBoundInfoGainAndDp', async (t) => {
   const numTests = 500
 
   await Promise.all(
-    [...Array(numTests).keys()].map((i) =>
+    Array(numTests).map((_, i) =>
       t.test(`${i}`, () => {
         const numStates = Math.ceil(Math.random() * numStatesRange)
         const infoGainUpper = infoGainUppers[Math.round(Math.random())]!
