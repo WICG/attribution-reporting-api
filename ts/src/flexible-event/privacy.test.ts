@@ -119,7 +119,7 @@ void test('epsilonToBoundInfoGainAndDp', async (t) => {
           numStates,
           infoGainUpper,
           epsilonUpper,
-          0.00000000000001
+          1e-14
         )
 
         const epsilonByBitSearch = epsilonToBoundInfoGainAndDp(
@@ -129,12 +129,66 @@ void test('epsilonToBoundInfoGainAndDp', async (t) => {
         )
 
         assert(epsilonByBitSearch >= epsilonByBinarySearch)
-
-        if (epsilonByBitSearch > epsilonByBinarySearch) {
-          assert(
-            maxInformationGain(numStates, epsilonByBitSearch) <= infoGainUpper
-          )
+        assert(
+          maxInformationGain(numStates, epsilonByBitSearch) <= infoGainUpper
+        )
+        if (epsilonByBitSearch < epsilonUpper) {
+          assert(maxInformationGain(numStates, epsilonByBitSearch + 1e-15)
+                 > infoGainUpper)
         }
+      })
+    )
+  )
+})
+
+const epsilonSearchTests = [
+  {
+    numStates: 5545,
+    infoGainUpper: 6.5,
+    epsilonUpper: 14,
+    expected: 9.028709123768687,
+  },
+  {
+    numStates: 2106,
+    infoGainUpper: 6.5,
+    epsilonUpper: 14,
+    expected: 8.366900276574821,
+  },
+  {
+    numStates: 16036,
+    infoGainUpper: 6.5,
+    epsilonUpper: 14,
+    expected: 9.829279343808693,
+  },
+  {
+    numStates: 84121,
+    infoGainUpper: 11.5,
+    epsilonUpper: 14,
+    expected: 12.45087042924698,
+  },
+  {
+    numStates: 24895,
+    infoGainUpper: 11.5,
+    epsilonUpper: 14,
+    expected: 11.723490703852157,
+  },
+  {
+    numStates: 3648,
+    infoGainUpper: 11.5,
+    epsilonUpper: 14,
+    expected: 12.233993328032184,
+  },
+]
+
+void test('epsilonSearch', async (t) => {
+  await Promise.all(
+    epsilonSearchTests.map((tc) =>
+      t.test(`${tc.numStates}, ${tc.infoGainUpper}, ${tc.epsilonUpper}`, () => {
+        assert.deepStrictEqual(tc.expected, epsilonToBoundInfoGainAndDp(
+          tc.numStates,
+          tc.infoGainUpper,
+          tc.epsilonUpper
+        ))
       })
     )
   )
