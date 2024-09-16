@@ -222,35 +222,26 @@ export function epsilonToBoundInfoGainAndDp(
   infoGainUpperBound: number,
   epsilonUpperBound: number
 ): number {
-  // Calculate epsilon to double precision.
-  const candidate: number[] = new Array<number>(64).fill(0)
-  let epsilon = 0
+  const buffer = new ArrayBuffer(8)
+  const dataView = new DataView(buffer)
 
-  for (let i = 1; i < 64; i++) {
-    candidate[i] = 1
+  for (let bit = 1n << 62n; bit > 0n; bit >>= 1n) {
+    dataView.setBigUint64(0, dataView.getBigUint64(0) | bit)
 
-    epsilon = binaryToDouble(candidate)
+    const epsilon = dataView.getFloat64(0)
     if (epsilon > epsilonUpperBound) {
-      candidate[i] = 0
+      dataView.setBigUint64(0, dataView.getBigUint64(0) & ~bit)
       continue
     }
 
     const infoGain = maxInformationGain(numStates, epsilon)
 
     if (infoGain > infoGainUpperBound) {
-      candidate[i] = 0
-    } else if (epsilon == epsilonUpperBound) {
+      dataView.setBigUint64(0, dataView.getBigUint64(0) & ~bit)
+    } else if (epsilon === epsilonUpperBound) {
       return epsilon
     }
   }
 
-  return binaryToDouble(candidate)
-}
-
-function binaryToDouble(binaryArray: number[]): number {
-  const exponentBias = 1023
-  const sign = binaryArray[0] == 1 ? -1 : 1
-  const exponent = parseInt(binaryArray.slice(1, 12).join(''), 2)
-  const fraction = parseInt('1' + binaryArray.slice(12, 64).join(''), 2)
-  return sign * Math.pow(2, exponent - exponentBias - 52) * fraction
+  return dataView.getFloat64(0)
 }
