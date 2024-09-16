@@ -133,8 +133,10 @@ void test('epsilonToBoundInfoGainAndDp', async (t) => {
           maxInformationGain(numStates, epsilonByBitSearch) <= infoGainUpper
         )
         if (epsilonByBitSearch < epsilonUpper) {
-          assert(maxInformationGain(numStates, epsilonByBitSearch + 1e-15)
-                 > infoGainUpper)
+          assert(
+            maxInformationGain(numStates, epsilonByBitSearch + 1e-15) >
+              infoGainUpper
+          )
         }
       })
     )
@@ -184,11 +186,14 @@ void test('epsilonSearch', async (t) => {
   await Promise.all(
     epsilonSearchTests.map((tc) =>
       t.test(`${tc.numStates}, ${tc.infoGainUpper}, ${tc.epsilonUpper}`, () => {
-        assert.deepStrictEqual(tc.expected, epsilonToBoundInfoGainAndDp(
-          tc.numStates,
-          tc.infoGainUpper,
-          tc.epsilonUpper
-        ))
+        assert.deepStrictEqual(
+          tc.expected,
+          epsilonToBoundInfoGainAndDp(
+            tc.numStates,
+            tc.infoGainUpper,
+            tc.epsilonUpper
+          )
+        )
       })
     )
   )
