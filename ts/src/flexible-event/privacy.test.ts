@@ -106,32 +106,30 @@ void test('epsilonToBoundInfoGainAndDp', async (t) => {
   const infoGainUppers = [11.5, 6.5]
   const epsilonUpper = 14
   const numStatesRange = 100000
-  const numTests = 500
 
-  await Promise.all(
-    Array(numTests)
-      .fill(0)
-      .map((_, i) =>
-        t.test(`${i}`, () => {
-          const numStates = Math.ceil(Math.random() * numStatesRange)
-          const infoGainUpper = infoGainUppers[Math.round(Math.random())]!
+  const subTests = []
+  for (let i = 0; i < 500; ++i) {
+    subTests.push(
+      t.test(`${i}`, () => {
+        const numStates = Math.ceil(Math.random() * numStatesRange)
+        const infoGainUpper = infoGainUppers[Math.round(Math.random())]!
 
-          const epsilon = epsilonToBoundInfoGainAndDp(
-            numStates,
-            infoGainUpper,
-            epsilonUpper
-          )
+        const epsilon = epsilonToBoundInfoGainAndDp(
+          numStates,
+          infoGainUpper,
+          epsilonUpper
+        )
 
-          assert(maxInformationGain(numStates, epsilon) <= infoGainUpper)
+        assert(maxInformationGain(numStates, epsilon) <= infoGainUpper)
 
-          if (epsilon < epsilonUpper) {
-            assert(
-              maxInformationGain(numStates, epsilon + 1e-15) > infoGainUpper
-            )
-          }
-        })
-      )
-  )
+        if (epsilon < epsilonUpper) {
+          assert(maxInformationGain(numStates, epsilon + 1e-15) > infoGainUpper)
+        }
+      })
+    )
+  }
+
+  await Promise.all(subTests)
 })
 
 const epsilonSearchTests = [

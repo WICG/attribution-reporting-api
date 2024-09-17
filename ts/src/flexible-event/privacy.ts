@@ -211,18 +211,19 @@ export function epsilonToBoundInfoGainAndDp(
   const dataView = new DataView(buffer)
 
   for (let bit = 1n << 62n; bit > 0n; bit >>= 1n) {
-    dataView.setBigUint64(0, dataView.getBigUint64(0) | bit)
+    const withoutBit = dataView.getBigUint64(0)
+    dataView.setBigUint64(0, withoutBit | bit)
 
     const epsilon = dataView.getFloat64(0)
     if (epsilon > epsilonUpperBound) {
-      dataView.setBigUint64(0, dataView.getBigUint64(0) & ~bit)
+      dataView.setBigUint64(0, withoutBit)
       continue
     }
 
     const infoGain = maxInformationGain(numStates, epsilon)
 
     if (infoGain > infoGainUpperBound) {
-      dataView.setBigUint64(0, dataView.getBigUint64(0) & ~bit)
+      dataView.setBigUint64(0, withoutBit)
     } else if (epsilon === epsilonUpperBound) {
       return epsilon
     }
