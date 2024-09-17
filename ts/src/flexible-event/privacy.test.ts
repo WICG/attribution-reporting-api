@@ -9,6 +9,7 @@ import {
   binaryEntropy,
   flipProbabilityDp,
   maxInformationGain,
+  epsilonToBoundInfoGainAndDp,
 } from './privacy'
 
 const flipProbabilityTests = [
@@ -96,6 +97,94 @@ void test('maxInformationGain', async (t) => {
       t.test(`${i}`, () => {
         const actual = maxInformationGain(tc.numStates, tc.epsilon)
         assert.deepStrictEqual(actual, tc.expected)
+      })
+    )
+  )
+})
+
+void test('epsilonToBoundInfoGainAndDp', async (t) => {
+  const infoGainUppers = [11.5, 6.5]
+  const epsilonUpper = 14
+  const numStatesRange = 100000
+  const numTests = 500
+
+  await Promise.all(
+    Array(numTests)
+      .fill(0)
+      .map((_, i) =>
+        t.test(`${i}`, () => {
+          const numStates = Math.ceil(Math.random() * numStatesRange)
+          const infoGainUpper = infoGainUppers[Math.round(Math.random())]!
+
+          const epsilon = epsilonToBoundInfoGainAndDp(
+            numStates,
+            infoGainUpper,
+            epsilonUpper
+          )
+
+          assert(maxInformationGain(numStates, epsilon) <= infoGainUpper)
+
+          if (epsilon < epsilonUpper) {
+            assert(
+              maxInformationGain(numStates, epsilon + 1e-15) > infoGainUpper
+            )
+          }
+        })
+      )
+  )
+})
+
+const epsilonSearchTests = [
+  {
+    numStates: 5545,
+    infoGainUpper: 6.5,
+    epsilonUpper: 14,
+    expected: 9.028709123768687,
+  },
+  {
+    numStates: 2106,
+    infoGainUpper: 6.5,
+    epsilonUpper: 14,
+    expected: 8.366900276574821,
+  },
+  {
+    numStates: 16036,
+    infoGainUpper: 6.5,
+    epsilonUpper: 14,
+    expected: 9.829279343808693,
+  },
+  {
+    numStates: 84121,
+    infoGainUpper: 11.5,
+    epsilonUpper: 14,
+    expected: 12.45087042924698,
+  },
+  {
+    numStates: 24895,
+    infoGainUpper: 11.5,
+    epsilonUpper: 14,
+    expected: 11.723490703852157,
+  },
+  {
+    numStates: 3648,
+    infoGainUpper: 11.5,
+    epsilonUpper: 14,
+    expected: 12.233993328032184,
+  },
+]
+
+void test('epsilonSearch', async (t) => {
+  await Promise.all(
+    epsilonSearchTests.map((tc) =>
+      t.test(`${tc.numStates}, ${tc.infoGainUpper}, ${tc.epsilonUpper}`, () => {
+        assert.deepStrictEqual(
+          tc.expected,
+          epsilonToBoundInfoGainAndDp(
+            tc.numStates,
+            tc.infoGainUpper,
+            tc.epsilonUpper
+          )
+        )
       })
     )
   )
