@@ -27,7 +27,6 @@ import {
   aggregatableDebugReportingConfig,
   aggregatableKeyValueValue,
   aggregationCoordinatorOriginField,
-  aggregationKeyIdentifierLength,
   array,
   commonDebugFields,
   enumerated,
@@ -108,9 +107,7 @@ const dedupKeyField: StructFields<DedupKey, Context> = {
 }
 
 function sourceKeys(j: Json, ctx: Context): Maybe<Set<string>> {
-  return set(j, ctx, (j) =>
-    string(j, ctx).filter(aggregationKeyIdentifierLength, ctx)
-  )
+  return set(j, ctx, string)
 }
 
 function aggregatableTriggerData(
@@ -151,14 +148,10 @@ function aggregatableKeyValueFilteringId(
 }
 
 function aggregatableKeyValue(
-  [key, j]: [string, Json],
+  [, j]: [string, Json],
   ctx: Context,
   maxBytes: Maybe<number>
 ): Maybe<AggregatableValuesValue> {
-  if (!aggregationKeyIdentifierLength(key, ctx, 'key ')) {
-    return Maybe.None
-  }
-
   return typeSwitch(j, ctx, {
     number: (j) =>
       aggregatableKeyValueValue(j, ctx).map((j) => ({

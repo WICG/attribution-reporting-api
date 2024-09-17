@@ -416,16 +416,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     ],
   },
   {
-    name: 'aggregatable-values-key-too-long',
-    input: `{"aggregatable_values": {"aaaaaaaaaaaaaaaaaaaaaaaaaa": 1}}`,
-    expectedErrors: [
-      {
-        path: ['aggregatable_values', 'aaaaaaaaaaaaaaaaaaaaaaaaaa'],
-        msg: 'key exceeds max length per aggregation key identifier (26 > 25)',
-      },
-    ],
-  },
-  {
     name: 'aggregatable-values-list-values-field-missing',
     input: `{
       "aggregatable_values": [
@@ -832,19 +822,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['aggregatable_trigger_data', 0, 'source_keys', 2],
         msg: 'duplicate value a',
-      },
-    ],
-  },
-  {
-    name: 'source-keys-key-too-long',
-    input: `{"aggregatable_trigger_data": [{
-      "key_piece": "0x1",
-      "source_keys": ["aaaaaaaaaaaaaaaaaaaaaaaaaa"]
-    }]}`,
-    expectedErrors: [
-      {
-        path: ['aggregatable_trigger_data', 0, 'source_keys', 0],
-        msg: 'exceeds max length per aggregation key identifier (26 > 25)',
       },
     ],
   },
