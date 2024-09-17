@@ -109,24 +109,28 @@ void test('epsilonToBoundInfoGainAndDp', async (t) => {
   const numTests = 500
 
   await Promise.all(
-    Array(numTests).fill(0).map((_, i) =>
-      t.test(`${i}`, () => {
-        const numStates = Math.ceil(Math.random() * numStatesRange)
-        const infoGainUpper = infoGainUppers[Math.round(Math.random())]!
+    Array(numTests)
+      .fill(0)
+      .map((_, i) =>
+        t.test(`${i}`, () => {
+          const numStates = Math.ceil(Math.random() * numStatesRange)
+          const infoGainUpper = infoGainUppers[Math.round(Math.random())]!
 
-        const epsilon = epsilonToBoundInfoGainAndDp(
-          numStates,
-          infoGainUpper,
-          epsilonUpper
-        )
+          const epsilon = epsilonToBoundInfoGainAndDp(
+            numStates,
+            infoGainUpper,
+            epsilonUpper
+          )
 
-        assert(maxInformationGain(numStates, epsilon) <= infoGainUpper)
+          assert(maxInformationGain(numStates, epsilon) <= infoGainUpper)
 
-        if (epsilon < epsilonUpper) {
-          assert(maxInformationGain(numStates, epsilon + 1e-15) > infoGainUpper)
-        }
-      })
-    )
+          if (epsilon < epsilonUpper) {
+            assert(
+              maxInformationGain(numStates, epsilon + 1e-15) > infoGainUpper
+            )
+          }
+        })
+      )
   )
 })
 
