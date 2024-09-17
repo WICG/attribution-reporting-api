@@ -220,6 +220,8 @@ been produced had attribution succeeded.
 
 Event-level attribution for the trigger failed due to the [storage limit][].
 
+Additional fields: `limit`
+
 #### `trigger-event-report-window-not-started`
 
 Event-level attribution for the trigger failed because the attributed source's
@@ -245,15 +247,21 @@ Aggregatable attribution for the trigger failed because no
 Aggregatable attribution for the trigger failed because the attributed source
 had already reached [the maximum number of reports][max aggregatable reports].
 
+Additional fields: `limit`
+
 #### `trigger-aggregate-insufficient-budget`
 
 Aggregatable attribution for the trigger failed because the attributed source
 had [insufficient budget][].
 
+Additional fields: `limit`
+
 #### `trigger-aggregate-storage-limit`
 
 Aggregatable attribution for the trigger failed due to the
 [storage limit][aggregatable storage limit].
+
+Additional fields: `limit`
 
 #### `trigger-aggregate-report-window-passed`
 
