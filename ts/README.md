@@ -54,3 +54,21 @@ Here is an example which matches the default config for navigation sources:
 ```sh
 npm run flexible-event -- -w 3,3,3,3,3,3,3,3 -b 3,3,3,3,3,3,3,3 -m 3 -t navigation
 ```
+
+## Event-Level Epsilon
+
+Event-level epsilon is used to compute the channel capacity of a
+source and obtain a randomized source response. If a source's event
+configuration exceeds channel capacity, a lower event-level epsilon
+may be provided during source registration to increase noise and
+reduce channel capacity to accord with the limit.
+
+The `flexible-event` utility advises on the highest such event-level
+epsilon. For example:
+
+```sh
+npm run flexible-event -- -w 1,2,3 -b 4,5,6
+```
+advises that by providing event-level epsilon 11.405 (default is 14.0),
+randomized trigger rate is increased from 0.0072807 to 0.0894337 to
+accord with the channel capacity limit for navigation sources.
