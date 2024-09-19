@@ -57,7 +57,8 @@ npm run flexible-event -- -w 3,3,3,3,3,3,3,3 -b 3,3,3,3,3,3,3,3 -m 3 -t navigati
 
 ## Event-Level Epsilon
 
-Event-level epsilon is used to compute the channel capacity of a
+[Event-level epsilon](https://wicg.github.io/attribution-reporting-api/#source-registration-json-key-event_level_epsilon)
+is used to compute the channel capacity of a
 source and obtain a randomized source response. If a source's event
 configuration exceeds channel capacity, a lower event-level epsilon
 may be provided during source registration to increase noise and
