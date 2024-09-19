@@ -69,6 +69,7 @@ epsilon. For example:
 ```sh
 npm run flexible-event -- -w 1,2,3 -b 4,5,6
 ```
+
 advises that by providing event-level epsilon 11.405 (default is 14.0),
 randomized trigger rate is increased from 0.0072807 to 0.0894337 to
 accord with the channel capacity limit for navigation sources.
