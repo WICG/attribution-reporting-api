@@ -804,9 +804,11 @@ The debugging reports will be sent to a new endpoint:
 https://<reporting origin>/.well-known/attribution-reporting/debug/verbose
 ```
 
-In order to receive verbose debug reports on trigger registrations, at both
-source and trigger registration times, the reporting origin needs to be able to
-access third-party cookies on the corresponding context site.
+In order to receive verbose debug reports on trigger registrations, the
+reporting origin needs to be able to access third-party cookies on the
+destination site. If the trigger is attributed to a source, the reporting
+origin also needs to be able to access third-party cookies on the source site
+at the time of source registration.
 
 TODO: Consider adding support for the top-level site to opt in to receiving
 debug reports without cross-site leak.
