@@ -105,76 +105,83 @@ If the current trigger passes the top-level filter check during the attribution 
 
 ## Attribution Scope Examples
 
-### Example 1: distinct attribution scopes
+### Example 1: distinct attribution scopes and comparison with attribution filters
 
-This example shows an API caller that manages 3 advertisers that all sell products on the same destination site (scheme + eTLD+1). In this example the API caller uses an `attribution scopes/limit` of 3 and tracks each advertiser with a distinct `attribution_scopes/values` value. Additionally, the user browsing the web sees 4 different ads from these advertisers and each one has a source registration associated:
+This example shows an API caller that manages 2 advertisers that both sell products on the same destination site (scheme + eTLD+1).
+If the API caller uses [attribution filters](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters)
+to select the advertisers:
+
+```jsonc
+// source registration 1 for advertiser1 at t=0
+{
+  ..., // existing fields
+  "filter_data": {
+    "advertiser_id": ["advertiser1"]
+  }
+}
+```
+
+``jsonc
+// source registration 2 for advertiser2 at t=1
+{
+  ..., // existing fields
+  "filter_data": {
+    "advertiser_id": ["advertiser2"]
+  }
+}
+```
+
+```jsonc
+// trigger registration 1 for adveriser1 at t=2
+{
+  ..., // existing fields
+  "filters": {
+    "advertiser_id": ["advertiser1"]
+  }
+}
+```
+
+In this example both source registrations would be eligible for attribution
+based on their reporting origin and destination site, but the API would choose
+the second source registration because it was the most recent source registration.
+However, because the top-level filters (i.e. `filter_data` of the second source
+registration and the `filters` of the trigger) do not match, the API caller would
+not receive an attribution report.
+
+However, if the API caller uses attribution scopes:
 
 ```jsonc
 // source registration 1 for advertiser1 at t=0
 {
   ..., // existing fields
   "attribution_scopes": {
-    "limit": 3,
+    "limit": 2,
     "values": ["advertiser1"],
-    "max_event_states": 3
   }
 }
 ```
 
 ```jsonc
-// source registration 2 for advertiser1 at t=1
+// source registration 2 for advertiser2 at t=1
 {
   ..., // existing fields
   "attribution_scopes": {
-    "limit": 3,
-    "values": ["advertiser1"],
-    "max_event_states": 3
-  }
-}
-```
-
-```jsonc
-// source registration 3 for advertiser2 at t=2
-{
-  ..., // existing fields
-  "attribution_scopes": {
-    "limit": 3,
+    "limit": 2,
     "values": ["advertiser2"],
-    "max_event_states": 3
-  }
-}
-```
-```jsonc
-// source registration 4 for advertiser3 at t=3
-{
-  ..., // existing fields
-  "attribution_scopes": {
-    "limit": 3,
-    "values": ["advertiser3"],
-    "max_event_states": 3
   }
 }
 ```
 
-The user then converts at a later time on the destination site by purchasing a product associated with advertiser1:
-
 ```jsonc
-// trigger registration 1 for advertiser1 at t=4
+// trigger registration 1 for advertiser1 at t=2
 {
   ..., // existing fields
   "attribution_scopes": ["advertiser1"]
 }
 ```
 
-The API automatically performs attribution between any sources that have `attribution_scopes/values` that are not disjoint with the trigger `attribution_scopes`. Any sources that do not have an `attribution_scopes/values` that matches at least one of the trigger registration `attribution_scopes` are deleted (assuming the source that is chosen passes the top-level filter check; if it does not then no sources are deleted). In this example, the API caller would receive an attribution report attributing the trigger registration to advertiser1’s second source registration.
-
-This attribution behavior cannot be achieved by
-[attribution filters](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters)
-which chooses the trigger based on the source that was selected by the
-destination site and the priority. If filters were used in this example, the
-fourth source would be selected, and the API caller would not receive an
-attribution report as the top-level filters don't match for the fourth source
-registration and the trigger.
+The API automatically performs attribution between any sources that have `attribution_scopes/values` that are not disjoint with the trigger `attribution_scopes`.
+The API caller would receive an attribution report attributing the trigger registration to the first source registration.
 
 ### Example 2: multiple attribution scope values per source and trigger
 
