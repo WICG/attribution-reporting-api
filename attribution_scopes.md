@@ -172,9 +172,9 @@ This attribution behavior cannot be achieved by
 [attribution filters](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters)
 which chooses the trigger based on the source that was selected by the
 destination site and the priority. If filters were used in this example, the
-fource source would be selected, and the API caller would not receive an
+fourth source would be selected, and the API caller would not receive an
 attribution report as the top-level filters don't match for the fourth source
-registration and the the trigger.
+registration and the trigger.
 
 ### Example 2: multiple attribution scope values per source and trigger
 
