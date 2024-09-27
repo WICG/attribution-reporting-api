@@ -180,7 +180,7 @@ However, if the API caller uses attribution scopes:
 }
 ```
 
-The API starts by checking to see if there are any sources that have `attribution_scopes/values` that are not disjoint with the trigger `attribution_scopes. The API will then use that set of sources to perform the rest of the attribution process. In this example, the API would start by selecting the first source registration since it is the only source that has a not disjoint set with the trigger `attribution_scopes`.  After this has been checked the API will continue with the rest of the attribution checks.
+The API starts by checking to see if there are any sources that have `attribution_scopes/values` that are not disjoint with the trigger's `attribution_scopes`. The API will then use that set of sources to perform the rest of the attribution process. In this example, the API would start by selecting the first source registration since it is the only source that has a non-disjoint set with the trigger's `attribution_scopes`.  After this has been checked the API will continue with the rest of the attribution checks.
 The API caller would receive an attribution report attributing the trigger registration to the first source registration.
 
 ### Example 2: multiple attribution scope values per source and trigger
