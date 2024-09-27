@@ -121,7 +121,7 @@ to select the advertisers:
 }
 ```
 
-``jsonc
+```jsonc
 // source registration 2 for advertiser2 at t=1
 {
   ..., // existing fields
