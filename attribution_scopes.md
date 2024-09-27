@@ -168,6 +168,14 @@ The user then converts at a later time on the destination site by purchasing a p
 
 The API automatically performs attribution between any sources that have `attribution_scopes/values` that are not disjoint with the trigger `attribution_scopes`. Any sources that do not have an `attribution_scopes/values` that matches at least one of the trigger registration `attribution_scopes` are deleted (assuming the source that is chosen passes the top-level filter check; if it does not then no sources are deleted). In this example, the API caller would receive an attribution report attributing the trigger registration to advertiser1’s second source registration.
 
+This attribution behavior cannot be achieved by
+[attribution filters](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters)
+which chooses the trigger based on the source that was selected by the
+destination site and the priority. If filters were used in this example, the
+fource source would be selected, and the API caller would not receive an
+attribution report as the top-level filters don't match for the fourth source
+registration and the the trigger.
+
 ### Example 2: multiple attribution scope values per source and trigger
 
 This example shows an API caller that manages an ad banner that contains multiple images for different campaigns (for example: Phones and TVs). In this example the API caller needs sources and triggers that span across multiple `attribution_scopes` at once:
