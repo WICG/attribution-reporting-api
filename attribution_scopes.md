@@ -105,7 +105,7 @@ If the current trigger passes the top-level filter check during the attribution 
 
 ## Attribution Scope Examples
 
-### Example 1: distinct attribution scopes and comparison with attribution filters
+### Example 1: distinct attribution scopes comparison with attribution filters
 
 This example shows an API caller that manages 2 advertisers that both sell products on the same destination site (scheme + eTLD+1).
 If the API caller uses [attribution filters](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters)
@@ -148,7 +148,7 @@ However, because the top-level filters (i.e. `filter_data` of the second source
 registration and the `filters` of the trigger) do not match, the API caller would
 not receive an attribution report.
 
-However, if the API caller uses attribution scopes:
+However, if the API caller uses `attribution_scopes`:
 
 ```jsonc
 // source registration 1 for advertiser1 at t=0
