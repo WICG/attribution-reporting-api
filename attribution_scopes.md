@@ -108,9 +108,12 @@ If the current trigger passes the top-level filter check during the attribution 
 ### Example 1: distinct attribution scopes comparison with attribution filters
 
 ```mermaid
-flowchart LR
-  A(User clicks a shoes ad) --> B(User clicks a shirts ad)
-  B --> C(User purchases a pair of shoes)
+timeline
+  section source.example
+    shoes ad: User clicks at t=0
+    shirts ad: User clicks at t=1
+  section trigger.example
+    shoes page: User purchases at t=2
 ```
 
 This example shows an API caller that manages 2 ads on the same destination site (scheme + eTLD+1).
