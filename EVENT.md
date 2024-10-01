@@ -725,9 +725,9 @@ fully understood during roll-out and help flush out any bugs (either in browser
 or caller code), and more easily compare the performance to cookie-based
 alternatives.
 
-The debugging information will only be available while third-party cookies are
-available and are already capable of user tracking, and will be ignored if
-third-party cookies are disabled/deprecated generally or for a particular site.
+The debugging information will only be available if third-party cookies are
+available for current site, and will be ignored if
+third-party cookies are disabled generally or for a particular site.
 
 Additionally, browsers may choose to enable debugging for specific use-cases (for example, reporting origins
 can enable debugging without the cookie check for
