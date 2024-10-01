@@ -124,7 +124,7 @@ The API caller [registers an attribution source](https://github.com/WICG/attribu
 when the user clicks a shoes ad at t=0.
 
 ```jsonc
-// source registration 1 for shoes ad at t=0
+// source registration 1 (Attribution-Reporting-Register-Source) for shoes ad at t=0
 {
   "destination": "https://trigger.example",
   "filter_data": {
@@ -137,7 +137,7 @@ The API caller [registers an attribution source](https://github.com/WICG/attribu
 when the user clicks a shirts ad at t=1.
 
 ```jsonc
-// source registration 2 for shirts ad at t=1
+// source registration 2 (Attribution-Reporting-Register-Source) for shirts ad at t=1
 {
   "destination": "https://trigger.example",
   "filter_data": {
@@ -150,7 +150,7 @@ The API caller [registers an attribution trigger](https://github.com/WICG/attrib
 when the user purchases a pair of shoes at t=2.
 
 ```jsonc
-// trigger registration for shoes purchase at t=2
+// trigger registration (Attribution-Reporting-Register-Trigger) for shoes purchase at t=2
 {
   "event_trigger_data": [{
     "trigger_data": "0"
@@ -180,7 +180,7 @@ timeline
 ```
 
 ```jsonc
-// source registration 1 for shoes ad ad t=0
+// source registration 1 (Attribution-Reporting-Register-Source) for shoes ad ad t=0
 {
   "destination": "https://trigger.example",
   "attribution_scopes": {
@@ -191,7 +191,7 @@ timeline
 ```
 
 ```jsonc
-// source registration 2 for shirts ad at t=1
+// source registration 2 (Attribution-Reporting-Register-Source) for shirts ad at t=1
 {
   "destination": "https://trigger.example",
   "attribution_scopes": {
@@ -202,7 +202,7 @@ timeline
 ```
 
 ```jsonc
-// trigger registration for shoes purchase at t=2
+// trigger registration (Attribution-Reporting-Register-Trigger) for shoes purchase at t=2
 {
   "event_trigger_data": [{
     "trigger_data": "0"
