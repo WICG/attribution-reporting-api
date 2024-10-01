@@ -114,12 +114,10 @@ to select the ads:
 ```mermaid
 timeline
   section source.example
-    shoes ad (filter_data "shoes"): User clicks at t=0
-    shirts ad (filter_data "shirts"): User clicks at t=1
+    shoes ad: source 1 (filter_data "shoes") at t=0
+    shirts ad: source 2 (filter_data "shirts") at t=1
   section trigger.example
-    shoes page (filters "shoes"): User purchases at t=2
-  section reporter.example
-    no attribution report: Top-level filters don't match for shoes purchase and shirts ad
+    shoes page: trigger (filters "shoes") at t=2 but not attributed
 ```
 
 The API caller [registers an attribution source](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#registering-attribution-sources)
@@ -175,12 +173,10 @@ However, if the API caller uses `attribution_scopes`:
 ```mermaid
 timeline
   section source.example
-    shoes ad (scopes "shoes"): User clicks at t=0
-    shirts ad (scopes "shirts"): User clicks at t=1
+    shoes ad: source 1 (scopes "shoes") at t=0
+    shirts ad: source 2 (scopes "shirts") at t=1
   section trigger.example
-    shoes page (scopes "shoes"): User purchases at t=2
-  section reporter.example
-    attribution report: attributing shoes purchase to shoes ad
+    shoes page: trigger (scopes "shoes") at t=2 and attributed to source 1
 ```
 
 ```jsonc
