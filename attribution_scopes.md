@@ -111,6 +111,9 @@ This example shows an API caller that manages 2 advertisers that both sell produ
 If the API caller uses [attribution filters](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters)
 to select the advertisers:
 
+The API caller [registers an attribution source](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#registering-attribution-sources)
+when the user views or clicks the advertisement for advertiser1 at t=0.
+
 ```jsonc
 // source registration 1 for advertiser1 at t=0
 {
@@ -121,6 +124,9 @@ to select the advertisers:
 }
 ```
 
+The API caller [registers an attribution source](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#registering-attribution-sources)
+when the user views or clicks the advertisement for advertiser2 at t=1.
+
 ```jsonc
 // source registration 2 for advertiser2 at t=1
 {
@@ -130,6 +136,9 @@ to select the advertisers:
   }
 }
 ```
+
+The API caller [registers an attribution trigger](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#triggering-attribution)
+when the user converts on advertiser1 at t=2.
 
 ```jsonc
 // trigger registration 1 for adveriser1 at t=2
