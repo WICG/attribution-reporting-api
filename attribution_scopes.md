@@ -107,36 +107,56 @@ If the current trigger passes the top-level filter check during the attribution 
 
 ### Example 1: distinct attribution scopes comparison with attribution filters
 
-This example shows an API caller that manages 2 advertisers that both sell products on the same destination site (scheme + eTLD+1).
+This example shows an API caller that manages 2 ads on the same destination site (scheme + eTLD+1).
 If the API caller uses [attribution filters](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters)
-to select the advertisers:
+to select the ads:
+
+```mermaid
+timeline
+  section source.example
+    shoes ad: source 1 (filter_data "shoes") at t=0
+    shirts ad: source 2 (filter_data "shirts") at t=1
+  section trigger.example
+    shoes page: trigger (filters "shoes") at t=2 but not attributed
+```
+
+The API caller [registers an attribution source](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#registering-attribution-sources)
+when the user clicks a shoes ad at t=0.
 
 ```jsonc
-// source registration 1 for advertiser1 at t=0
+// source registration 1 (Attribution-Reporting-Register-Source) for shoes ad at t=0
 {
-  ..., // existing fields
+  "destination": "https://trigger.example",
   "filter_data": {
-    "advertiser_id": ["advertiser1"]
+    "ad_id": ["shoes"]
   }
 }
 ```
 
+The API caller [registers an attribution source](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#registering-attribution-sources)
+when the user clicks a shirts ad at t=1.
+
 ```jsonc
-// source registration 2 for advertiser2 at t=1
+// source registration 2 (Attribution-Reporting-Register-Source) for shirts ad at t=1
 {
-  ..., // existing fields
+  "destination": "https://trigger.example",
   "filter_data": {
-    "advertiser_id": ["advertiser2"]
+    "ad_id": ["shirts"]
   }
 }
 ```
 
+The API caller [registers an attribution trigger](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#triggering-attribution)
+when the user purchases a pair of shoes at t=2.
+
 ```jsonc
-// trigger registration 1 for adveriser1 at t=2
+// trigger registration (Attribution-Reporting-Register-Trigger) for shoes purchase at t=2
 {
-  ..., // existing fields
+  "event_trigger_data": [{
+    "trigger_data": "0"
+  }],
   "filters": {
-    "advertiser_id": ["advertiser1"]
+    "ad_id": ["shoes"]
   }
 }
 ```
@@ -150,33 +170,44 @@ not receive an attribution report.
 
 However, if the API caller uses `attribution_scopes`:
 
+```mermaid
+timeline
+  section source.example
+    shoes ad: source 1 (scopes "shoes") at t=0
+    shirts ad: source 2 (scopes "shirts") at t=1
+  section trigger.example
+    shoes page: trigger (scopes "shoes") at t=2 and attributed to source 1
+```
+
 ```jsonc
-// source registration 1 for advertiser1 at t=0
+// source registration 1 (Attribution-Reporting-Register-Source) for shoes ad ad t=0
 {
-  ..., // existing fields
+  "destination": "https://trigger.example",
   "attribution_scopes": {
     "limit": 2,
-    "values": ["advertiser1"],
+    "values": ["shoes"],
   }
 }
 ```
 
 ```jsonc
-// source registration 2 for advertiser2 at t=1
+// source registration 2 (Attribution-Reporting-Register-Source) for shirts ad at t=1
 {
-  ..., // existing fields
+  "destination": "https://trigger.example",
   "attribution_scopes": {
     "limit": 2,
-    "values": ["advertiser2"],
+    "values": ["shirts"],
   }
 }
 ```
 
 ```jsonc
-// trigger registration 1 for advertiser1 at t=2
+// trigger registration (Attribution-Reporting-Register-Trigger) for shoes purchase at t=2
 {
-  ..., // existing fields
-  "attribution_scopes": ["advertiser1"]
+  "event_trigger_data": [{
+    "trigger_data": "0"
+  }],
+  "attribution_scopes": ["shoes"]
 }
 ```
 
