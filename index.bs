@@ -842,7 +842,7 @@ An attribution source is a [=struct=] with the following items:
 :: Number of [=aggregatable attribution reports=] created for this [=attribution source=].
 : <dfn>trigger-data matching mode</dfn>
 :: A [=trigger-data matching mode=].
-: <dfn>debug cookie set</dfn> (default false)
+: <dfn>cookie-based debug allowed</dfn> (default false)
 :: A [=boolean=].
 : <dfn>fenced</dfn>
 :: A [=boolean=].
@@ -1819,28 +1819,7 @@ To <dfn>check if cookie-based debugging is allowed</dfn> given a
     or <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-user controls">user controls</a>
     do not allow cookie access for |domain| on |contextDomain| within a <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-third-party-cookies">third-party context</a>,
     return <strong>blocked</strong>.
-1. For each |cookie| of the user agent's <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-storage-model">cookie store</a>:
-    1. If |cookie|'s name is not "`ar_debug`", [=iteration/continue=].
-    1. If |cookie|'s http-only-flag is false, [=iteration/continue=].
-    1. If |cookie|'s secure-flag is false, [=iteration/continue=].
-    1. If |cookie|'s same-site-flag is not "`None`", [=iteration/continue=].
-    1. If |cookie|'s host-only-flag is true and |domain| is not
-        identical to |cookie|'s domain, [=iteration/continue=].
-    1. If |cookie|'s host-only-flag is false and |domain| does not
-        <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-domain-matching">domain-match</a>
-        |cookie|'s domain, [=iteration/continue=].
-    1. If "`/`" does not
-        <a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-paths-and-path-match">path-match</a>
-        |cookie|'s path, [=iteration/continue=].
-    1. Return <strong>allowed</strong>.
-1. Return <strong>blocked</strong>.
-
-Issue: Ideally this would use the
-<a href="https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis#name-retrieval-algorithm">cookie-retrieval algorithm</a>,
-but it cannot: There is no way to consider *only* cookies whose http-only-flag
-is true and whose same-site-flag is "`None`"; there is no way to prevent the
-last-access-time from being modified; and the return value is a string that
-would have to be further processed to check for the "`ar_debug`" cookie.
+1. Return <strong>allowed</strong>.
 
 <h3 algorithm id="obtaining-context-origin">Obtaining context origin</h3>
 
@@ -2756,11 +2735,11 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     [=parse an optional 64-bit unsigned integer=] with |value|, "<code>[=source-registration JSON key/debug_key=]</code>",
     and null.
 1. If |debugKey| is an error, set |debugKey| to null.
-1. Let |debugCookieSet| be false.
+1. Let |cookieBasedDebugAllowed| be false.
 1. Let |sourceSite| be the result of [=obtaining a site=] from |sourceOrigin|.
 1. If the result of running [=check if cookie-based debugging is allowed=]
-    with |reportingOrigin| and |sourceSite| is <strong>allowed</strong>, set |debugCookieSet| to true.
-1. If |debugCookieSet| is false, set |debugKey| to null.
+    with |reportingOrigin| and |sourceSite| is <strong>allowed</strong>, set |cookieBasedDebugAllowed| to true.
+1. If |cookieBasedDebugAllowed| is false, set |debugKey| to null.
 1. Let |aggregationKeys| be the result of running [=parse aggregation keys=] with |value|.
 1. If |aggregationKeys| is an error, return it.
 1. Let |maxAttributionsPerSource| be [=default event-level attributions per source=][|sourceType|].
@@ -2843,8 +2822,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |debugReportingEnabled|
     : [=attribution source/trigger-data matching mode=]
     :: |triggerDataMatchingMode|
-    : [=attribution source/debug cookie set=]
-    :: |debugCookieSet|
+    : [=attribution source/cookie-based debug allowed=]
+    :: |cookieBasedDebugAllowed|
     : [=attribution source/fenced=]
     :: |fenced|
     : [=attribution source/remaining aggregatable debug budget=]
@@ -3051,7 +3030,7 @@ To <dfn>obtain and deliver a verbose debug report on source registration</dfn> g
 a [=boolean=] |isNoised|, and a [=boolean=] |destinationLimitReplaced|:
 
 1. If |source|'s [=attribution source/debug reporting enabled=] is false, return.
-1. If |source|'s [=attribution source/debug cookie set=] is false, return.
+1. If |source|'s [=attribution source/cookie-based debug allowed=] is false, return.
 1. Let |body| be a new [=map=] with the following key/value pairs:
     : "`attribution_destination`"
     :: |source|'s [=attribution source/attribution destinations=], [=serialize attribution destinations|serialized=].
@@ -3930,7 +3909,7 @@ an [=attribution trigger=] |trigger|, a possibly null [=attribution source=]
 1. If |trigger|'s [=attribution trigger/debug reporting enabled=] is false, return null.
 1. If the result of running [=check if cookie-based debugging is allowed=] with |trigger|'s
     [=attribution trigger/reporting origin=] and |trigger|'s [=attribution trigger/attribution destination=] is <strong>blocked</strong>, return null.
-1. If |sourceToAttribute| is not null and |sourceToAttribute|'s [=attribution source/debug cookie set=] is false,
+1. If |sourceToAttribute| is not null and |sourceToAttribute|'s [=attribution source/cookie-based debug allowed=] is false,
      return null.
 1. Let |data| be a new [=verbose debug data=] with the items:
     : [=verbose debug data/data type=]
