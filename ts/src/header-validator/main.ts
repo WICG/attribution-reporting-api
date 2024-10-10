@@ -12,6 +12,7 @@ interface Arguments {
   file?: string
 
   fullFlex: boolean
+  aggregatableBucket: boolean
   sourceType?: SourceType
 
   silent: boolean
@@ -46,6 +47,11 @@ const options = parse<Arguments>(
     fullFlex: {
       type: Boolean,
       description: 'If true, parse experimental Full Flexible Event fields.',
+    },
+
+    aggregatableBucket: {
+      type: Boolean,
+      description: 'If true, parse experimental Aggregatable Bucket fields.',
     },
 
     silent: {
@@ -95,10 +101,12 @@ const out = validate<unknown>(
     ? trigger.validator({
         vsv: vsv.Chromium,
         fullFlex: options.fullFlex,
+        aggregatableBucket: options.aggregatableBucket,
       })
     : source.validator({
         vsv: vsv.Chromium,
         fullFlex: options.fullFlex,
+        aggregatableBucket: options.aggregatableBucket,
         sourceType: options.sourceType,
       })
 )

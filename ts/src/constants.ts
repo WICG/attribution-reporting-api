@@ -83,6 +83,7 @@ export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'trigger-aggregate-deduplicated',
   'trigger-aggregate-excessive-reports',
   'trigger-aggregate-no-contributions',
+  'trigger-aggregate-insufficient-bucket-budget',
   'trigger-aggregate-insufficient-budget',
   'trigger-aggregate-storage-limit',
   'trigger-aggregate-report-window-passed',
@@ -104,3 +105,7 @@ export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
 ]
 
 export const defaultMaxEventStates: number = 3
+
+export const maxAggregatableBucketsPerSource: number = 25
+
+export const maxLengthPerAggregatableBucket: number = 25

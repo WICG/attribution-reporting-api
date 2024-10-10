@@ -19,6 +19,11 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "filters": {"x": []},
         "not_filters": {"y": []}
       }],
+      "aggregatable_buckets": [{
+        "bucket": "1",
+        "filters": {"x": []},
+        "not_filters": {"y": []}
+      }],
       "aggregatable_source_registration_time": "include",
       "aggregatable_trigger_data": [{
         "filters": {"a": ["b"]},
@@ -49,10 +54,28 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
       "attribution_scopes": ["1"]
     }`,
+    parseAggregatableBucket: true,
     expected: Maybe.some({
       aggregatableDedupKeys: [
         {
           dedupKey: 123n,
+          positive: [
+            {
+              lookbackWindow: null,
+              map: new Map([['x', new Set()]]),
+            },
+          ],
+          negative: [
+            {
+              lookbackWindow: null,
+              map: new Map([['y', new Set()]]),
+            },
+          ],
+        },
+      ],
+      aggregatableBuckets: [
+        {
+          bucket: '1',
           positive: [
             {
               lookbackWindow: null,
@@ -1693,6 +1716,51 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
     ],
   },
+
+  // Aggregatable bucket.
+  {
+    name: 'aggregatable-buckets-wrong-type',
+    input: `{"aggregatable_buckets": 1}`,
+    parseAggregatableBucket: true,
+    expectedErrors: [
+      {
+        path: ['aggregatable_buckets'],
+        msg: 'must be a list',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-buckets-value-wrong-type',
+    input: `{"aggregatable_buckets": [1]}`,
+    parseAggregatableBucket: true,
+    expectedErrors: [
+      {
+        path: ['aggregatable_buckets', 0],
+        msg: 'must be an object',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable-bucket-wrong-type',
+    input: `{"aggregatable_buckets": [{
+      "bucket": 1
+    }]}`,
+    parseAggregatableBucket: true,
+    expectedErrors: [
+      {
+        path: ['aggregatable_buckets', 0, 'bucket'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'aggregatable_bucket-missing-bucket-name',
+    input: `{"aggregatable_buckets": [{
+      "filters": [],
+      "not_filters": []
+    }]}`,
+    parseAggregatableBucket: true,
+  },
 ]
 
 testCases.forEach((tc) =>
@@ -1701,6 +1769,7 @@ testCases.forEach((tc) =>
     trigger.validator({
       vsv: { ...vsv.Chromium, ...tc.vsv },
       fullFlex: tc.parseFullFlex,
+      aggregatableBucket: tc.parseAggregatableBucket,
     })
   )
 )

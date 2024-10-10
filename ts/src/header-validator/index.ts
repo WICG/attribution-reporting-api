@@ -23,6 +23,9 @@ const sourceTypeFieldset =
 const effective = document.querySelector('#effective')!
 
 const flexCheckbox = form.elements.namedItem('flex') as HTMLInputElement
+const aggregatableBucketCheckbox = form.elements.namedItem(
+  'aggregatableBucket'
+) as HTMLInputElement
 
 function sourceType(): SourceType {
   return parseSourceType(sourceTypeRadios.value)
@@ -31,6 +34,7 @@ function sourceType(): SourceType {
 function validate(): void {
   sourceTypeFieldset.disabled = true
   flexCheckbox.disabled = true
+  aggregatableBucketCheckbox.disabled = true
 
   let v: validator.Validator<unknown>
 
@@ -38,18 +42,22 @@ function validate(): void {
     case 'source':
       sourceTypeFieldset.disabled = false
       flexCheckbox.disabled = false
+      aggregatableBucketCheckbox.disabled = false
       v = source.validator({
         vsv: vsv.Chromium,
         sourceType: sourceType(),
         fullFlex: flexCheckbox.checked,
+        aggregatableBucket: aggregatableBucketCheckbox.checked,
         noteInfoGain: true,
       })
       break
     case 'trigger':
       flexCheckbox.disabled = false
+      aggregatableBucketCheckbox.disabled = false
       v = trigger.validator({
         vsv: vsv.Chromium,
         fullFlex: flexCheckbox.checked,
+        aggregatableBucket: aggregatableBucketCheckbox.checked,
       })
       break
     case 'os-source':
@@ -100,6 +108,10 @@ document.querySelector('#linkify')!.addEventListener('click', () => {
   }
 
   url.searchParams.set('flex', flexCheckbox.checked.toString())
+  url.searchParams.set(
+    'aggregatableBucket',
+    aggregatableBucketCheckbox.checked.toString()
+  )
 
   void navigator.clipboard.writeText(url.toString())
 })
@@ -137,5 +149,6 @@ if (st !== null && st in SourceType) {
 sourceTypeRadios.value = st
 
 flexCheckbox.checked = params.get('flex') === 'true'
+aggregatableBucketCheckbox.checked = params.get('aggregatableBucket') === 'true'
 
 validate()

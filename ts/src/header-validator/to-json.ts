@@ -190,6 +190,7 @@ type Source = CommonDebug &
   Priority &
   (NotFullFlexSource | FullFlexSource) & {
     aggregation_keys: { [key: string]: string }
+    aggregatable_bucket_max_budget?: { [key: string]: number }
     aggregatable_report_window: number
     destination: string[]
     destination_limit_priority: string
@@ -205,6 +206,7 @@ type Source = CommonDebug &
 
 export interface Options {
   fullFlex?: boolean | undefined
+  aggregatableBucket?: boolean | undefined
 }
 
 export function serializeSource(
@@ -246,6 +248,11 @@ export function serializeSource(
     ...ifNotNull('attribution_scopes', s.attributionScopes, (v) =>
       serializeAttributionScopes(v)
     ),
+    ...(opts.aggregatableBucket && {
+      aggregatable_bucket_max_budget: Object.fromEntries(
+        s.aggregatableBucketBudget
+      ),
+    }),
   }
 
   return stringify(source)
@@ -314,6 +321,9 @@ function serializeEventTriggerDatum(
 }
 
 type AggregatableDedupKey = FilterPair & DedupKey
+type AggregatableBucket = FilterPair & {
+  bucket?: string
+}
 
 function serializeAggregatableDedupKey(
   d: trigger.AggregatableDedupKey
@@ -321,6 +331,15 @@ function serializeAggregatableDedupKey(
   return {
     ...serializeFilterPair(d),
     ...serializeDedupKey(d),
+  }
+}
+
+function serializeAggregatableBucket(
+  b: trigger.AggregatableBucket
+): AggregatableBucket {
+  return {
+    ...serializeFilterPair(b),
+    ...ifNotNull('bucket', b.bucket, (v) => v.toString()),
   }
 }
 
@@ -370,6 +389,7 @@ function serializeAggregatableValuesConfiguration(
 type Trigger = CommonDebug &
   FilterPair & {
     aggregatable_deduplication_keys: AggregatableDedupKey[]
+    aggregatable_buckets?: AggregatableBucket[]
     aggregatable_source_registration_time: string
     aggregatable_trigger_data: AggregatableTriggerDatum[]
     aggregatable_filtering_id_max_bytes: number
@@ -393,6 +413,13 @@ export function serializeTrigger(
       t.aggregatableDedupKeys,
       serializeAggregatableDedupKey
     ),
+
+    ...(opts.aggregatableBucket && {
+      aggregatable_buckets: Array.from(
+        t.aggregatableBuckets,
+        serializeAggregatableBucket
+      ),
+    }),
 
     aggregatable_source_registration_time: t.aggregatableSourceRegistrationTime,
 

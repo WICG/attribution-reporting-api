@@ -551,6 +551,56 @@ as when a trigger context ID is set.
 
 See [flexible_filtering.md](https://github.com/patcg-individual-drafts/private-aggregation-api/blob/main/flexible_filtering.md) for more details.
 
+### Optional: aggregatable buckets
+
+Aggregatable buckets is an optional feature that gives API callers the ability 
+to manage `L1` contribution budget distribution across different aggregatable
+buckets or types of conversions, addressing common challenges such as:
+
+- Allocating the privacy budget between different types of conversions
+  (e.g., biddable vs. non-biddable).
+- Distributing the budget across multiple SDKs to prevent any single SDK
+  from consuming all available privacy budget.
+
+[Source registrations](#attribution-source-registration) will accept an optional
+field `aggregatable_bucket_max_budget`, which is the dictionary used to set the
+maximum contribution for each aggregatable bucket for this source.
+
+```jsonc
+{
+  ...
+  "aggregatable_bucket_max_budget": {
+    "bucket1": 32768,  // Max contribution budget for bucket1.
+    "bucket2": 32768   // Max contribution budget for bucket2.
+  }
+}
+```
+
+[Trigger registrations](#attribution-trigger-registration) will accept an
+optional field `aggregatable_buckets` which will be used to select the
+contribution bucket for the generated aggregate report.
+
+```jsonc
+{
+  ...
+  "aggregatable_buckets": [
+    {
+      "bucket": "example string",
+      "filters": {"source_type": ["navigation"]}
+    }
+  ]
+}
+```
+
+The first aggregatable bucket from the trigger that matches the source filters
+will be selected. If there is no bucket specified or no matching filters, the
+`L1` contribution budget will still be applied.
+
+When generating an aggregate report, in addition to performing the 
+current `L1` budget limit check, the contributions for the report will
+be checked against the available budget in the selected bucket, if applicable.
+If the budget is insufficient, the aggregate report will be dropped.
+
 ## Data processing through a Secure Aggregation Service
 
 The exact design of the service is not specified here. We expect to have more

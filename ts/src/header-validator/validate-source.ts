@@ -3,6 +3,7 @@ import { SourceType } from '../source-type'
 import * as context from './context'
 import { Maybe } from './maybe'
 import {
+  AggregatableBucketBudget,
   AggregationKeys,
   AttributionScopes,
   EventReportWindows,
@@ -234,6 +235,42 @@ function aggregationKeys(j: Json, ctx: Context): Maybe<AggregationKeys> {
     ctx,
     aggregationKey,
     constants.maxAggregationKeysPerSource
+  )
+}
+
+export function aggregatableBucketLength(
+  s: string,
+  ctx: Context,
+  errPrefix: string = ''
+): boolean {
+  if (s.length > constants.maxLengthPerAggregatableBucket) {
+    ctx.error(
+      `${errPrefix}exceeds max length per aggregatable bucket (${s.length} > ${constants.maxLengthPerAggregatableBucket})`
+    )
+    return false
+  }
+  return true
+}
+
+function aggregatableBucket(
+  [bucket, j]: [string, Json],
+  ctx: Context
+): Maybe<number> {
+  if (!aggregatableBucketLength(bucket, ctx, 'bucket ')) {
+    return Maybe.None
+  }
+  return aggregatableKeyValueValue(j, ctx)
+}
+
+function aggregatableBucketBudget(
+  j: Json,
+  ctx: Context
+): Maybe<AggregatableBucketBudget> {
+  return keyValues(
+    j,
+    ctx,
+    aggregatableBucket,
+    constants.maxAggregatableBucketsPerSource
   )
 }
 
@@ -728,6 +765,12 @@ function source(j: Json, ctx: Context): Maybe<Source> {
           'attribution_scopes',
           withDefault(attributionScopes, null)
         ),
+        aggregatableBucketBudget: ctx.opts.aggregatableBucket
+          ? field(
+              'aggregatable_bucket_max_budget',
+              withDefault(aggregatableBucketBudget, new Map())
+            )
+          : () => Maybe.some(new Map()),
 
         ...commonDebugFields,
         ...priorityField,
