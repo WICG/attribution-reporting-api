@@ -790,7 +790,7 @@ An attribution source is a [=struct=] with the following items:
 
 <dl dfn-for="attribution source">
 : <dfn>internal ID</dfn>
-:: A [=string=].
+:: An [=internal ID=].
 : <dfn>source origin</dfn>
 :: A [=suitable origin=].
 : <dfn>event ID</dfn>
@@ -1011,7 +1011,7 @@ An attribution report is a [=struct=] with the following items:
 : <dfn>external ID</dfn>
 :: A UUID formatted as a [=string=].
 : <dfn>internal ID</dfn>
-:: A [=string=].
+:: An [=internal ID=].
 
 </dl>
 
@@ -1125,9 +1125,9 @@ An <dfn>attribution rate-limit record</dfn> is a [=struct=] with the following i
 : <dfn>expiry time</dfn>
 :: Null or a [=moment=].
 : <dfn>entity ID</dfn>
-:: Null for [=obtain a fake report|fake reports=] or an [=event-level report=]'s [=event-level report/internal ID=] or an
-    [=aggregatable attribution report=]'s [=aggregatable attribution report/internal ID=] or an
-    [=attribution source=]'s [=attribution source/internal ID=].
+:: Null for [=obtain a fake report|fake reports=] or an [=internal ID=] for an
+    [=event-level report=], [=aggregatable attribution report=], or
+    [=attribution source=].
 : <dfn>deactivated for unexpired destination limit</dfn> (default false)
 :: A [=boolean=].
 : <dfn>destination limit priority</dfn> (default null)
@@ -1301,6 +1301,12 @@ shared among all [=environment settings objects=].
 
 Note: This would ideally use <a spec=storage>storage bottles</a> to provide access to the attribution caches.
 However attribution data is inherently cross-site, and operations on storage would need to span across all storage bottle maps.
+
+An <dfn>internal ID</dfn> is an integer.
+
+To <dfn>get the next internal ID</dfn>, return an [=internal ID=] strictly
+greater than any previously returned by this algorithm. The user agent MAY reset
+this sequence when no [=attribution cache=] entry contains an [=internal ID=].
 
 # Constants # {#constants}
 
@@ -2273,7 +2279,7 @@ an [=aggregation coordinator=] |aggregationCoordinator|, and a [=moment=] |now|:
     : [=aggregatable debug report/external ID=]
     :: The result of [=generating a random UUID=]
     : [=aggregatable debug report/internal ID=]
-    :: A new unique [=string=]
+    :: The result of [=getting the next internal ID=]
     : [=aggregatable debug report/contributions=]
     :: |contributions|
     : [=aggregatable debug report/aggregation coordinator=]
@@ -2804,7 +2810,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
     : [=attribution source/internal ID=]
-    :: A new unique [=string=]
+    :: The result of [=getting the next internal ID=]
     : [=attribution source/source origin=]
     :: |sourceOrigin|
     : [=attribution source/event ID=]
@@ -2961,7 +2967,7 @@ A <dfn>destination limit record</dfn> is a [=struct=] with the following items:
 : <dfn>time</dfn>
 :: A [=moment=]
 : <dfn>source ID</dfn>
-:: A [=string=].
+:: An [=internal ID=].
 
 </dl>
 
@@ -4396,7 +4402,7 @@ a 64-bit integer priority |priority|, and a [=trigger spec map=] [=map/entry=]
     : [=event-level report/external ID=]
     :: The result of [=generating a random UUID=].
     : [=event-level report/internal ID=]
-    :: A new unique [=string=]
+    :: The result of [=getting the next internal ID=]
     : [=event-level report/attribution debug info=]
     :: (|source|'s [=attribution source/debug key=], |triggerDebugKey|).
 1. Return |report|.
@@ -4426,7 +4432,7 @@ an [=attribution trigger=] |trigger|:
     : [=aggregatable attribution report/external ID=]
     :: The result of [=generating a random UUID=].
     : [=aggregatable attribution report/internal ID=]
-    : A new unique [=string=]
+    :: The result of [=getting the next internal ID=]
     : [=aggregatable attribution report/attribution debug info=]
     :: (|source|'s [=attribution source/debug key=], |trigger|'s [=attribution trigger/debug key=]).
     : [=aggregatable attribution report/contributions=]
@@ -4461,7 +4467,7 @@ To <dfn>obtain a null attribution report</dfn> given an [=attribution trigger=] 
     : [=aggregatable attribution report/external ID=]
     :: The result of [=generating a random UUID=]
     : [=aggregatable attribution report/internal ID=]
-    : A new unique [=string=]
+    :: The result of [=getting the next internal ID=]
     : [=aggregatable attribution report/attribution debug info=]
     :: (null, |trigger|'s [=attribution trigger/debug key=])
     : [=aggregatable attribution report/contributions=]
