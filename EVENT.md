@@ -726,7 +726,7 @@ or caller code), and more easily compare the performance to cookie-based
 alternatives.
 
 The debugging information will only be available if third-party cookies are
-available for current site, and will be ignored if
+available for the current site, and will be ignored if
 third-party cookies are disabled generally or for a particular site.
 
 Additionally, browsers may choose to enable debugging for specific use-cases (for example, reporting origins
@@ -807,7 +807,7 @@ https://<reporting origin>/.well-known/attribution-reporting/debug/verbose
 In order to receive verbose debug reports on trigger registrations, the
 reporting origin needs to be able to access third-party cookies on the
 destination site. If the trigger is attributed to a source, the reporting
-origin also needs to be able to access third-party cookies on the source site
+origin also needed to be able to access third-party cookies on the source site
 at the time of source registration.
 
 TODO: Consider adding support for the top-level site to opt in to receiving
