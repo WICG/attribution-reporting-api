@@ -725,8 +725,8 @@ fully understood during roll-out and help flush out any bugs (either in browser
 or caller code), and more easily compare the performance to cookie-based
 alternatives.
 
-The debugging information will only be available if third-party cookies are
-available for the current site, and will be ignored if
+Debugging will only be permitted if third-party cookies are
+available for the current site, and will be prohibited if
 third-party cookies are disabled generally or for a particular site.
 
 Additionally, browsers may choose to enable debugging for specific use-cases (for example, reporting origins
