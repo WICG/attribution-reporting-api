@@ -725,27 +725,13 @@ fully understood during roll-out and help flush out any bugs (either in browser
 or caller code), and more easily compare the performance to cookie-based
 alternatives.
 
-To ensure that this data (which could enable cross-site tracking) is only
-available in a transitional phase while third-party cookies are available and
-are already capable of user tracking, the browser will check (at both source
-and trigger registration) for the presence of a special cookie
-set by the reporting origin:
-```http
-Set-Cookie: ar_debug=1; SameSite=None; Secure; HttpOnly
-```
-If a cookie of this form is not present, debugging information will be ignored. Additionally,
-browsers may choose to enable debugging for specific use-cases (for example, reporting origins
+Debugging will only be permitted if third-party cookies are
+available for the current site, and will be prohibited if
+third-party cookies are disabled generally or for a particular site.
+
+Additionally, browsers may choose to enable debugging for specific use-cases (for example, reporting origins
 can enable debugging without the cookie check for
 [Mode B groups during Chrome-facilitated testing](https://developers.google.com/privacy-sandbox/setup/web/chrome-facilitated-testing#mode-b)). 
-
-Note that in the context of proposals such as
-[CHIPS](https://github.com/privacycg/CHIPS), the cookie must be unpartitioned in
-order to allow debug keys to be registered.
-
-Responses that register sources/triggers can also set the `ar_debug` cookie to
-ensure that registration is eligible for debug reports. When using the `fetch`
-APIs to do this, it will require ensuring the request is allowed to include
-[`credentials`](https://developer.mozilla.org/en-US/docs/Web/API/fetch).
 
 #### Attribution-success debugging reports
 
@@ -818,8 +804,11 @@ The debugging reports will be sent to a new endpoint:
 https://<reporting origin>/.well-known/attribution-reporting/debug/verbose
 ```
 
-In order to receive verbose debug reports on trigger registrations, the special
-`ar_debug` cookie needs to be present for both source and trigger registrations.
+In order to receive verbose debug reports on trigger registrations, the
+reporting origin needs to be able to access third-party cookies on the
+destination site. If the trigger is attributed to a source, the reporting
+origin also needed to be able to access third-party cookies on the source site
+at the time of source registration.
 
 TODO: Consider adding support for the top-level site to opt in to receiving
 debug reports without cross-site leak.

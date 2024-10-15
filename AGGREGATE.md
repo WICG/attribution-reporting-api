@@ -260,7 +260,7 @@ The report will be JSON encoded with the following scheme:
       "payload": "[base64-encoded HPKE encrypted data readable only by the aggregation service]",
       "key_id": "[string identifying public key used to encrypt payload]",
 
-      // Optional debugging information, if the cookie `ar_debug` is present.
+      // Optional debugging information, if cookie-based debugging is allowed.
       "debug_cleartext_payload": "[base64-encoded unencrypted payload]",
     },
   ],
@@ -269,7 +269,7 @@ The report will be JSON encoded with the following scheme:
   "aggregation_coordinator_origin": "https://publickeyservice.msmt.aws.privacysandboxservices.com",
 
   // Optional debugging information (also present in event-level reports),
-  // if the cookie `ar_debug` is present.
+  // if cookie-based debugging is allowed.
   "source_debug_key": "[64 bit unsigned integer]",
   "trigger_debug_key": "[64 bit unsigned integer]",
 
