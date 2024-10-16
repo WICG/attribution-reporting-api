@@ -256,6 +256,13 @@ had [insufficient budget][].
 
 Additional fields: `limit`
 
+#### `trigger-aggregate-insufficient-named-budget`
+
+Aggregatable attribution for the trigger failed because the attributed source
+had [insufficient named budget][].
+
+Additional fields: `name`, `limit`
+
 #### `trigger-aggregate-storage-limit`
 
 Aggregatable attribution for the trigger failed due to the
@@ -288,6 +295,7 @@ The trigger was rejected due to an internal error.
 [event states limit]: https://wicg.github.io/attribution-reporting-api/#attribution-scopes-max-event-states
 [filter data]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters
 [insufficient budget]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#contribution-bounding-and-budgeting
+[insufficient named budget]: https://wicg.github.io/attribution-reporting-api/#attribution-source-named-budgets
 [max aggregatable reports]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#hide-the-true-number-of-attribution-reports
 [max attributions rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#reporting-cooldown--rate-limits
 [noise]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#data-limits-and-noise

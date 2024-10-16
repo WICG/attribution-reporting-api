@@ -84,6 +84,7 @@ export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'trigger-aggregate-excessive-reports',
   'trigger-aggregate-no-contributions',
   'trigger-aggregate-insufficient-budget',
+  'trigger-aggregate-insufficient-named-budget',
   'trigger-aggregate-storage-limit',
   'trigger-aggregate-report-window-passed',
   'trigger-event-attributions-per-source-destination-limit',
@@ -104,3 +105,7 @@ export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
 ]
 
 export const defaultMaxEventStates: number = 3
+
+export const maxNamedBudgetsPerSource: number = 25
+
+export const maxLengthPerBudgetName: number = 25
