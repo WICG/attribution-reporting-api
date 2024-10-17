@@ -10,6 +10,7 @@ export type VendorSpecificValues = {
   >
   maxSettableEventLevelEpsilon: number
   maxTriggerStateCardinality: number
+  maxAggregatableReportsPerSource: number
 }
 
 export const Chromium: Readonly<VendorSpecificValues> = {
@@ -27,4 +28,5 @@ export const Chromium: Readonly<VendorSpecificValues> = {
   },
   maxSettableEventLevelEpsilon: 14,
   maxTriggerStateCardinality: 2 ** 32 - 1,
+  maxAggregatableReportsPerSource: 100,
 }

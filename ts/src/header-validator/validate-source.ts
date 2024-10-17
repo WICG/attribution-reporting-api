@@ -99,12 +99,7 @@ function maxAggregatableReports(
     ? Maybe.some(constants.defaultMaxAggregatableReportsPerSource)
     : number(j, ctx)
         .filter(isInteger, ctx)
-        .filter(
-          isInRange,
-          ctx,
-          0,
-          constants.maxSettableAggregatableReportsPerSource
-        )
+        .filter(isInRange, ctx, 0, ctx.opts.vsv.maxAggregatableReportsPerSource)
 }
 
 function startTime(
