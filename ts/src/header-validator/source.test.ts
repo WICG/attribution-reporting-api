@@ -1126,6 +1126,40 @@ const testCases: TestCase[] = [
       },
     ],
   },
+  {
+    name: 'max-aggregatable-reports-negative',
+    input: `{
+      "destination": "https://a.test",
+      "max_aggregatable_reports": -1
+    }`,
+    expectedErrors: [
+      {
+        path: ['max_aggregatable_reports'],
+        msg: 'must be in the range [0, 100]',
+      },
+    ],
+  },
+  {
+    name: 'max-aggregatable-reports-zero',
+    input: `{
+      "destination": "https://a.test",
+      "max_aggregatable_reports": 0
+    }`,
+    expectedErrors: [],
+  },
+  {
+    name: 'max-aggregatable-reports-non-integral',
+    input: `{
+      "destination": "https://a.test",
+      "max_aggregatable_reports": 10.5
+    }`,
+    expectedErrors: [
+      {
+        path: ['max_aggregatable_reports'],
+        msg: 'must be an integer',
+      },
+    ],
+  },
 
   {
     name: 'event-level-report-windows-and-window',
