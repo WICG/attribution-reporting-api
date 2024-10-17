@@ -91,6 +91,24 @@ function maxEventLevelReports(
         )
 }
 
+function maxAggregatableReports(
+  j: Json | undefined,
+  ctx: Context
+): Maybe<number> {
+  return j === undefined
+    ? Maybe.some(
+        constants.defaultMaxAggregatableReportsPerSource
+      )
+    : number(j, ctx)
+        .filter(isInteger, ctx)
+        .filter(
+          isInRange,
+          ctx,
+          0,
+          constants.maxSettableAggregatableReportsPerSource
+        )
+}
+
 function startTime(
   j: Json,
   ctx: Context,
@@ -664,6 +682,11 @@ function source(j: Json, ctx: Context): Maybe<Source> {
         maxEventLevelReports
       )(j, ctx)
 
+      const maxAggregatableReportsVal = field(
+        'max_aggregatable_reports',
+        maxAggregatableReports
+      )(j, ctx)
+
       const defaultTriggerSpecsVal = defaultTriggerSpecs(
         ctx,
         eventReportWindowsVal,
@@ -708,6 +731,7 @@ function source(j: Json, ctx: Context): Maybe<Source> {
         expiry: () => expiryVal,
         filterData: field('filter_data', withDefault(filterData, new Map())),
         maxEventLevelReports: () => maxEventLevelReportsVal,
+        maxAggregatableReports: () => maxAggregatableReportsVal,
         sourceEventId: field('source_event_id', withDefault(uint64, 0n)),
         triggerSpecs: () => triggerSpecsVal,
         aggregatableDebugReporting: field(

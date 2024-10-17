@@ -7,6 +7,8 @@ export const SECONDS_PER_DAY: number = 24 * SECONDS_PER_HOUR
 
 export const maxSettableEventLevelAttributionsPerSource: number = 20
 
+export const maxSettableAggregatableReportsPerSource: number = 100
+
 export const maxEntriesPerFilterData: number = 50
 
 export const maxValuesPerFilterDataEntry: number = 50
@@ -43,6 +45,8 @@ export const defaultEventLevelAttributionsPerSource: Readonly<
   [SourceType.event]: 1,
   [SourceType.navigation]: 3,
 }
+
+export const defaultMaxAggregatableReportsPerSource: number = 20
 
 export const maxTriggerDataPerSource: number = 32
 
