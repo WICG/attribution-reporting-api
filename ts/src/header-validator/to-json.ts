@@ -197,6 +197,7 @@ type Source = CommonDebug &
     expiry: number
     filter_data: { [key: string]: string[] }
     max_event_level_reports: number
+    max_aggregatable_reports: number
     source_event_id: string
     trigger_data_matching: string
     aggregatable_debug_reporting?: SourceAggregatableDebugReportingConfig
@@ -236,6 +237,7 @@ export function serializeSource(
     event_level_epsilon: s.eventLevelEpsilon,
     expiry: s.expiry,
     max_event_level_reports: s.maxEventLevelReports,
+    max_aggregatable_reports: s.maxAggregatableReports,
     source_event_id: s.sourceEventId.toString(),
     trigger_data_matching: s.triggerDataMatching,
     ...ifNotNull(

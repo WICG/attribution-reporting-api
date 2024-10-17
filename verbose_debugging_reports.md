@@ -256,6 +256,12 @@ had [insufficient budget][].
 
 Additional fields: `limit`
 
+#### `trigger-aggregate-mismatched-max-aggregatable-reports-config`
+
+Aggregatable attribution for the trigger failed because the attributed source
+had its max number of aggregatable reports set greater than [default max aggregatable reports per source][]
+and the trigger's context ID was null.
+
 #### `trigger-aggregate-storage-limit`
 
 Aggregatable attribution for the trigger failed due to the
@@ -280,6 +286,7 @@ The trigger was rejected due to an internal error.
 [attribution trigger registrations]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#triggering-attribution
 [channel-capacity limit]: https://wicg.github.io/attribution-reporting-api/#max-event-level-channel-capacity-per-source
 [cookie-based debugging]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-transitional-debugging-reports
+[default max aggregatable reports per source]: https://wicg.github.io/attribution-reporting-api/#default-max-aggregatable-reports-per-source
 [destination limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources
 [destinations per source and reporting site per day rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources
 [destinations per source and reporting site rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-per-source-site

@@ -44,6 +44,8 @@ export const defaultEventLevelAttributionsPerSource: Readonly<
   [SourceType.navigation]: 3,
 }
 
+export const defaultMaxAggregatableReportsPerSource: number = 20
+
 export const maxTriggerDataPerSource: number = 32
 
 export const allowedAggregatableBudgetPerSource: number = 65536
