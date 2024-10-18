@@ -57,6 +57,7 @@ The usefulness of this page depends on testers sharing information and updates; 
 | KelkooGroup | Adtech services for affiliate marketing | From 01.12.2023 | | privacysandbox@kelkoogroup.com |
 | Quantcast | Demand-side platform (DSP) | Testing ongoing | | chrome-privacy-sandbox@quantcast.com |
 | Optable | Adtech services | Testing ongoing | | privacysandbox@optable.co | 
+| UOL | Adtech  | | | privacysandbox@uolinc.com |
 
 ## Table - Publishers and Advertisers Interested in Testing or Early Adoption
 Companies who may be interested in participating in tests and early adoption opportunities provided by ad tech companies.
@@ -69,3 +70,4 @@ Companies who may be interested in participating in tests and early adoption opp
 | Globo | Publisher  | | adtech-delivery@g.globo |
 | A Gazeta | Publisher | | cdutra@redegazeta.com.br |
 | Bullwhip Technologies | Analytics SaaS | | privacysandbox@bullwhip.io |
+| UOL | Publisher  | | privacysandbox@uolinc.com |
