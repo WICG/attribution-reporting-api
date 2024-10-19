@@ -96,7 +96,7 @@ function maxAggregatableReports(
   ctx: Context
 ): Maybe<number> {
   return j === undefined
-    ? Maybe.some(constants.defaultMaxAggregatableReportsPerSource)
+    ? Maybe.some(constants.defaultMaxAggregatableAttributionReportsPerSource)
     : number(j, ctx)
         .filter(isInteger, ctx)
         .filter(isInRange, ctx, 0, ctx.opts.vsv.maxAggregatableReportsPerSource)
