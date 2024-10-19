@@ -259,8 +259,9 @@ Additional fields: `limit`
 #### `trigger-aggregate-mismatched-max-aggregatable-reports-config`
 
 Aggregatable attribution for the trigger failed because the attributed source
-had its max number of aggregatable reports set greater than [default max aggregatable attribution reports per source][]
-and the trigger's context ID was null.
+had its max number of aggregatable attribution reports set greater than
+[default max aggregatable attribution reports per source][] and the trigger's
+context ID was null.
 
 #### `trigger-aggregate-storage-limit`
 
