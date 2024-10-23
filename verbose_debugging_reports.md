@@ -256,7 +256,7 @@ had [insufficient budget][].
 
 Additional fields: `limit`
 
-#### `trigger-aggregate-mismatched-max-aggregatable-reports-config`
+#### `trigger-aggregate-incompatible-max-reports`
 
 Aggregatable attribution for the trigger failed because the attributed source
 had its max number of aggregatable attribution reports set greater than
