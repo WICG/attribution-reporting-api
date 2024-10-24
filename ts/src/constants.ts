@@ -44,6 +44,8 @@ export const defaultEventLevelAttributionsPerSource: Readonly<
   [SourceType.navigation]: 3,
 }
 
+export const defaultMaxAggregatableAttributionReportsPerSource: number = 20
+
 export const maxTriggerDataPerSource: number = 32
 
 export const allowedAggregatableBudgetPerSource: number = 65536
@@ -82,8 +84,9 @@ export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'trigger-aggregate-attributions-per-source-destination-limit',
   'trigger-aggregate-deduplicated',
   'trigger-aggregate-excessive-reports',
-  'trigger-aggregate-no-contributions',
+  'trigger-aggregate-incompatible-max-reports',
   'trigger-aggregate-insufficient-budget',
+  'trigger-aggregate-no-contributions',
   'trigger-aggregate-storage-limit',
   'trigger-aggregate-report-window-passed',
   'trigger-event-attributions-per-source-destination-limit',

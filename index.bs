@@ -815,6 +815,8 @@ An attribution source is a [=struct=] with the following items:
 :: Number of [=event-level reports=] created for this [=attribution source=].
 : <dfn>max number of event-level reports</dfn>
 :: The maximum number of [=event-level reports=] that can be created for this [=attribution source=].
+: <dfn>max number of aggregatable attribution reports</dfn>
+:: The maximum number of [=aggregatable attribution reports=] that can be created for this [=attribution source=].
 : <dfn>event-level attributable</dfn> (default true)
 :: A [=boolean=].
 : <dfn>dedup keys</dfn>
@@ -1184,6 +1186,7 @@ Possible values are:
 <li>"<dfn><code>trigger-aggregate-attributions-per-source-destination-limit</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-deduplicated</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-excessive-reports</code></dfn>"
+<li>"<dfn><code>trigger-aggregate-incompatible-max-reports</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-insufficient-budget</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-no-contributions</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-report-window-passed</code></dfn>"
@@ -1387,6 +1390,10 @@ limits the size of filtering IDs within an [=aggregatable attribution report=].
 that controls the allowable values of max bytes. Its value is [=the inclusive
 range|the range=] 1 to 8, inclusive.
 
+<dfn>Default max aggregatable attribution reports per source</dfn> is a positive integer
+that controls the default value of an [=attribution source=]'s
+[=attribution source/max number of aggregatable attribution reports=]. Its value is 20.
+
 <dfn>Max contributions per aggregatable debug report</dfn> is a positive
 integer that controls the maximum [=list/size=] of an [=aggregatable debug report=]'s
 [=aggregatable debug report/contributions=]. Its value is 2.
@@ -1458,8 +1465,9 @@ The keys are «[=source type/navigation=], [=source type/event=]». The values a
 
 <dfn>Max aggregatable reports per source</dfn> is a [=tuple=] consisting of two
 positive integers. The first controls how many [=aggregatable attribution reports=]
-can be created by [=attribution triggers=] attributed to a single [=attribution source=].
-The second controls how many [=aggregatable debug reports=] can be created for an [=attribution source=].
+can be created by [=attribution triggers=] attributed to a single [=attribution source=]. It must be greater than or
+equal to [=default max aggregatable attribution reports per source=]. The second controls how many
+[=aggregatable debug reports=] can be created for an [=attribution source=].
 
 <dfn>Max destinations covered by unexpired sources</dfn> is a positive
 integer that controls the maximum number of distinct [=sites=] across all [=attribution source/attribution destinations=]
@@ -2381,6 +2389,7 @@ A <dfn>source-registration JSON key</dfn> is one of the following:
 <li>"<dfn><code>expiry</code></dfn>"
 <li>"<dfn><code>filter_data</code></dfn>"
 <li>"<dfn><code>limit</code></dfn>"
+<li>"<dfn><code>max_aggregatable_reports</code></dfn>"
 <li>"<dfn><code>max_event_level_reports</code></dfn>"
 <li>"<dfn><code>max_event_states</code></dfn>"
 <li>"<dfn><code>priority</code></dfn>"
@@ -2751,6 +2760,9 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
 1. Let |maxAttributionsPerSource| be [=default event-level attributions per source=][|sourceType|].
 1. Set |maxAttributionsPerSource| to |value|["<code>[=source-registration JSON key/max_event_level_reports=]</code>"] if it [=map/exists=].
 1. If |maxAttributionsPerSource| is not a non-negative integer, or is greater than [=max settable event-level attributions per source=], return an error.
+1. Let |maxAggregatableAttributionReportsPerSource| be [=default max aggregatable attribution reports per source=].
+1. Set |maxAggregatableAttributionReportsPerSource| to |value|["<code>[=source-registration JSON key/max_aggregatable_reports=]</code>"] if it [=map/exists=].
+1. If |maxAggregatableAttributionReportsPerSource| is not a non-negative integer, or is greater than [=max aggregatable reports per source=][0], return an error.
 1. Let |aggregatableReportWindowEnd| be the result of running [=parse a duration=]
     with |value|, "<code>[=source-registration JSON key/aggregatable_report_window=]</code>", and ([=min report window=], |expiry|).
 1. If |aggregatableReportWindowEnd| is an error, return it.
@@ -2814,6 +2826,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: 0
     : [=attribution source/max number of event-level reports=]
     :: |maxAttributionsPerSource|
+    : [=attribution source/max number of aggregatable attribution reports=]
+    :: |maxAggregatableAttributionReportsPerSource|
     : [=attribution source/event-level epsilon=]
     :: |epsilon|
     : [=attribution source/filter data=]
@@ -3887,7 +3901,7 @@ a possibly null [=attribution source=] |sourceToAttribute|, and a possibly null
     :: [=map/Set=] |body|["`limit`"] to [=allowed aggregatable budget per source=],
          [=serialize an integer|serialized=].
     : "<code>[=trigger debug data type/trigger-aggregate-excessive-reports=]</code>"
-    :: [=map/Set=] |body|["`limit`"] to [=max aggregatable reports per source=][0],
+    :: [=map/Set=] |body|["`limit`"] to |sourceToAttribute|'s [=attribution source/max number of aggregatable attribution reports=],
     : "<code>[=trigger debug data type/trigger-event-low-priority=]</code>"
     : "<code>[=trigger debug data type/trigger-event-excessive-reports=]</code>"
     ::
@@ -4102,6 +4116,10 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 
 1. If the result of running [=check if an attribution trigger contains aggregatable data=] is false,
     return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>", null).
+1. If |sourceToAttribute|'s [=attribution source/max number of aggregatable attribution reports=] is greater than
+    [=default max aggregatable attribution reports per source=] and |trigger|'s [=attribution trigger/trigger context ID=] is null:
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-aggregate-incompatible-max-reports=]</code>", null)).
 1. Let |windowResult| be the result of [=check whether a moment falls within a window=] with |trigger|'s
     [=attribution trigger/trigger time=] and |sourceToAttribute|'s [=attribution source/aggregatable report window=].
 1. If |windowResult| is <strong>falls after</strong>:
@@ -4149,7 +4167,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. If the result of running [=check if attribution should be blocked by rate limits=]
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
     return it.
-1. If |sourceToAttribute|'s [=attribution source/number of aggregatable attribution reports=] value is equal to [=max aggregatable reports per source=][0], then:
+1. If |sourceToAttribute|'s [=attribution source/number of aggregatable attribution reports=] value is equal to its [=attribution source/max number of aggregatable attribution reports=], then:
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
         ("<code>[=trigger debug data type/trigger-aggregate-excessive-reports=]</code>", null)).
 1. If the result of running [=check if an attribution source can create aggregatable contributions=]

@@ -36,6 +36,7 @@ const testCases: TestCase[] = [
       "priority": "2",
       "source_event_id": "3",
       "max_event_level_reports": 2,
+      "max_aggregatable_reports": 21,
       "aggregatable_debug_reporting": {
         "budget": 1234,
         "key_piece": "0x2",
@@ -65,6 +66,7 @@ const testCases: TestCase[] = [
       priority: 2n,
       sourceEventId: 3n,
       maxEventLevelReports: 2,
+      maxAggregatableReports: 21,
       triggerSpecs: [
         {
           eventReportWindows: {
@@ -1097,6 +1099,68 @@ const testCases: TestCase[] = [
       },
     ],
   },
+
+  {
+    name: 'max-aggregatable-reports-wrong-type',
+    input: `{
+      "destination": "https://a.test",
+      "max_aggregatable_reports": "2"
+    }`,
+    expectedErrors: [
+      {
+        path: ['max_aggregatable_reports'],
+        msg: 'must be a number',
+      },
+    ],
+  },
+  {
+    name: 'max-aggregatable-reports-exceed-max',
+    input: `{
+      "destination": "https://a.test",
+      "max_aggregatable_reports": 101
+    }`,
+    expectedErrors: [
+      {
+        path: ['max_aggregatable_reports'],
+        msg: 'must be in the range [0, 100]',
+      },
+    ],
+  },
+  {
+    name: 'max-aggregatable-reports-negative',
+    input: `{
+      "destination": "https://a.test",
+      "max_aggregatable_reports": -1
+    }`,
+    expectedErrors: [
+      {
+        path: ['max_aggregatable_reports'],
+        msg: 'must be in the range [0, 100]',
+      },
+    ],
+  },
+  {
+    name: 'max-aggregatable-reports-zero',
+    input: `{
+      "destination": "https://a.test",
+      "max_aggregatable_reports": 0
+    }`,
+    expectedErrors: [],
+  },
+  {
+    name: 'max-aggregatable-reports-non-integral',
+    input: `{
+      "destination": "https://a.test",
+      "max_aggregatable_reports": 10.5
+    }`,
+    expectedErrors: [
+      {
+        path: ['max_aggregatable_reports'],
+        msg: 'must be an integer',
+      },
+    ],
+  },
+
   {
     name: 'event-level-report-windows-and-window',
     input: `{

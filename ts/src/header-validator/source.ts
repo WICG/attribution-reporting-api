@@ -45,6 +45,7 @@ export type Source = reg.CommonDebug &
     expiry: number
     filterData: FilterData
     maxEventLevelReports: number
+    maxAggregatableReports: number
     sourceEventId: bigint
 
     triggerSpecs: TriggerSpec[]

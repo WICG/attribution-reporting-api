@@ -13,7 +13,7 @@ Chromium's implementation assigns the following values:
 | [Randomized null attribution report rate including source registration time][] | [0.008][randomized null attribution report rate including source registration time value] |
 | [Max event-level reports per attribution destination][] | [1024][max event-level reports per attribution destination value] |
 | [Max aggregatable attribution reports per attribution destination][] | [1024][max aggregatable attribution reports per attribution destination value] |
-| [Max aggregatable reports per source][] | [20][max aggregatable attribution reports per source value] attribution reports, [5][max aggregatable debug reports per source value] debug reports |
+| [Max aggregatable reports per source][] | [100][max aggregatable attribution reports per source value] attribution reports, [5][max aggregatable debug reports per source value] debug reports |
 | [Max destinations covered by unexpired sources][] | [100][max destinations covered by unexpired sources value] |
 | [Destination rate-limit window][] | [1 minute][destination rate-limit window value]
 | [Max destinations per rate-limit window][] | [50][max destinations per rate-limit window per reporting site] per reporting site, [200][max destinations per rate-limit window total] total
