@@ -834,6 +834,12 @@ An attribution source is a [=struct=] with the following items:
     non-negative 128-bit integers.
 : <dfn>remaining aggregatable attribution budget</dfn>
 :: A non-negative integer.
+: <dfn>named budgets</dfn>
+:: A [=map=] whose [=map/key|keys=] are [=strings=] and whose [=map/value|values=] are
+    positive integers.
+: <dfn>remaining named budgets</dfn>
+:: A [=map=] whose [=map/key|keys=] are [=strings=] and whose [=map/value|values=] are
+    non-negative integers.
 : <dfn>aggregatable dedup keys</dfn>
 :: A [=set=] of [=aggregatable dedup key/dedup key|aggregatable dedup key values=] associated with this [=attribution source=].
 : <dfn>debug reporting enabled</dfn>
@@ -911,6 +917,20 @@ An aggregatable dedup key is a [=struct=] with the following items:
 <dl dfn-for="aggregatable dedup key">
 : <dfn>dedup key</dfn>
 :: Null or a non-negative 64-bit integer.
+: <dfn>filters</dfn>
+:: A [=list=] of [=filter configs=].
+: <dfn>negated filters</dfn>
+:: A [=list=] of [=filter configs=].
+
+</dl>
+
+<h3 dfn-type=dfn>Named budget</h3>
+
+A named budget is a [=struct=] with the following items:
+
+<dl dfn-for="named budget">
+: <dfn>name</dfn>
+:: Null or a [=string=].
 : <dfn>filters</dfn>
 :: A [=list=] of [=filter configs=].
 : <dfn>negated filters</dfn>
@@ -996,6 +1016,8 @@ An attribution trigger is a [=struct=] with the following items:
 :: An [=aggregatable debug reporting config=].
 : <dfn>attribution scopes</dfn>
 :: A [=set=] of [=strings=].
+: <dfn>named budgets</dfn>
+:: A [=list=] of [=named budgets=].
 
 </dl>
 
@@ -1185,6 +1207,7 @@ Possible values are:
 <li>"<dfn><code>trigger-aggregate-deduplicated</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-excessive-reports</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-insufficient-budget</code></dfn>"
+<li>"<dfn><code>trigger-aggregate-insufficient-named-budget</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-no-contributions</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-report-window-passed</code></dfn>"
 <li>"<dfn><code>trigger-aggregate-storage-limit</code></dfn>"
@@ -1413,6 +1436,18 @@ Its value is 50.
 <dfn>Max attribution scopes per source</dfn> is a positive integer that controls the
 maximum [=set/size=] of an [=attribution source=]'s [=attribution scopes/values=].
 Its value is 20.
+
+<dfn>Max length per budget name for source</dfn> is a positive integer that controls
+the maximum [=string/length=] of keys of an [=attribution source=]'s
+[=attribution source/named budgets=] and
+[=attribution source/remaining named budgets=].
+Its value is 25.
+
+<dfn>Max named budgets per source registration</dfn> is a positive integer that
+controls the maximum [=map/size=] of an [=attribution source=]'s
+[=attribution source/remaining named budgets=]
+and [=attribution source/named budgets=].
+Its value is 25.
 
 # Vendor-Specific Values # {#vendor-specific-values}
 
@@ -2383,6 +2418,7 @@ A <dfn>source-registration JSON key</dfn> is one of the following:
 <li>"<dfn><code>limit</code></dfn>"
 <li>"<dfn><code>max_event_level_reports</code></dfn>"
 <li>"<dfn><code>max_event_states</code></dfn>"
+<li>"<dfn><code>named_budgets</code></dfn>"
 <li>"<dfn><code>priority</code></dfn>"
 <li>"<dfn><code>source_event_id</code></dfn>"
 <li>"<dfn><code>start_time</code></dfn>"
@@ -2458,6 +2494,22 @@ To <dfn>parse aggregation keys</dfn> given a [=map=] |map|:
     1. If |keyPiece| is an error, return it.
     1. [=map/Set=] |aggregationKeys|[|key|] to |keyPiece|.
 1. Return |aggregationKeys|.
+
+To <dfn>parse named budgets for source</dfn> given a [=map=] |map|:
+
+1. Let |namedBudgets| be a new [=map=].
+1. If |map|["<code>[=source-registration JSON key/named_budgets=]</code>"] does not [=map/exists|exist=], return |namedBudgets|.
+1. Let |values| be |map|["<code>[=source-registration JSON key/named_budgets=]</code>"].
+1. If |values| is not a [=map=], return an error.
+1. If |values|'s [=map/size=] is greater than the
+    [=max named budgets per source registration=], return an error.
+1. [=map/iterate|For each=] |key| → |value| of |values|:
+    1. If |key|'s [=string/length=] is greater than the [=max length per budget name for source=],
+        return an error.
+    1. If |value| is not an integer or is less than or equal to 0 or is greater than
+        [=allowed aggregatable budget per source=], return an error.
+    1. [=map/Set=] |namedBudgets|[|key|] to |value|.
+1. Return |namedBudgets|.
 
 To <dfn>obtain default effective windows</dfn> given a [=source type=] |sourceType|,
 a [=moment=] |sourceTime|, and a [=duration=] |eventReportWindow|:
@@ -2785,6 +2837,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
         |value|["<code>[=source-registration JSON key/aggregatable_debug_reporting=]</code>"],
         |aggregatableDebugBudget|, and |aggregatableDebugReportingConfig|.
 1. Let |aggregatableAttributionBudget| be [=allowed aggregatable budget per source=] - |aggregatableDebugBudget|.
+1. Let |namedBudgets| be the result of [=parsing named budgets for source=] with |value|.
+1. If |namedBudgets| is an error, return it.
 1. If [=automation local testing mode=] is true, set |epsilon| to `∞`.
 1. Let |source| be a new [=attribution source=] struct whose items are:
 
@@ -2824,6 +2878,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |aggregationKeys|
     : [=attribution source/remaining aggregatable attribution budget=]
     :: |aggregatableAttributionBudget|
+    : [=attribution source/named budgets=]
+    :: |namedBudgets|
+    : [=attribution source/remaining named budgets=]
+    :: |namedBudgets|
     : [=attribution source/debug reporting enabled=]
     :: |debugReportingEnabled|
     : [=attribution source/trigger-data matching mode=]
@@ -3385,6 +3443,8 @@ A <dfn>trigger-registration JSON key</dfn> is one of the following:
 <li>"<dfn><code>filtering_id</code></dfn>"
 <li>"<dfn><code>filters</code></dfn>"
 <li>"<dfn><code>key_piece</code></dfn>"
+<li>"<dfn><code>name</code></dfn>"
+<li>"<dfn><code>named_budgets</code></dfn>"
 <li>"<dfn><code>not_filters</code></dfn>"
 <li>"<dfn><code>priority</code></dfn>"
 <li>"<dfn><code>source_keys</code></dfn>"
@@ -3589,6 +3649,31 @@ To <dfn>parse aggregatable dedup keys</dfn> given a [=map=] |map|:
     1. [=set/Append=] |aggregatableDedupKey| to |aggregatableDedupKeys|.
 1. Return |aggregatableDedupKeys|.
 
+To <dfn>parse named budgets for trigger</dfn> given a [=map=] |map|:
+
+1. Let |namedBudgets| be a new [=list=].
+1. If |map|["<code>[=trigger-registration JSON key/named_budgets=]</code>"] does not [=map/exist=], return |namedBudgets|.
+1. Let |values| be |map|["<code>[=trigger-registration JSON key/named_budgets=]</code>"].
+1. If |values| is not a [=list=], return an error.
+1. [=list/iterate|For each=] |value| of |values|:
+    1. If |value| is not a [=map=], return an error.
+    1. Let |name| be null.
+    1. If |map|["<code>[=trigger-registration JSON key/name=]</code>"] [=map/exists=]:
+        1. Set |name| to |value|["<code>[=trigger-registration JSON key/name=]</code>"].
+        1. If |name| is not a [=string=], return an error.
+    1. Let |filterPair| be the result of running [=parse a filter pair=] with
+        |value|.
+    1. If |filterPair| is an error, return it.
+    1. Let |namedBudget| be a new [=named budget=] with the items:
+        : [=named budget/name=]
+        :: |name|
+        : [=named budget/filters=]
+        :: |filterPair|[0]
+        : [=named budget/negated filters=]
+        :: |filterPair|[1]
+    1. [=list/Append=] |namedBudget| to |namedBudgets|.
+1. Return |namedBudgets|.
+
 To <dfn>parse attribution scopes for trigger</dfn> from a [=map=] |map|:
 1. Let |result| be a new [=set=].
 1. If |map|["<code>[=trigger-registration JSON key/attribution_scopes=]</code>"] does not [=map/exist=], return |result|.
@@ -3620,6 +3705,9 @@ a [=moment=] |triggerTime|, and a [=boolean=] |fenced|:
 1. Let |aggregatableDedupKeys| be the result of running [=parse aggregatable dedup keys=]
     with |value|.
 1. If |aggregatableDedupKeys| is an error, return it.
+1. Let |namedBudgets| be the result of running [=parse named budgets for trigger=]
+    with |value|.
+1. If |namedBudgets| is an error, return it.
 1. Let |debugKey| be the result of running
     [=parse an optional 64-bit unsigned integer=] with |value|, "<code>[=trigger-registration JSON key/debug_key=]</code>",
     and null.
@@ -3860,6 +3948,24 @@ To <dfn>check if an [=attribution source=] can create [=aggregatable contributio
     |remainingAggregatableBudget|, return false.
 1. Return true.
 
+To <dfn>find matching budget name</dfn> given an [=attribution trigger=] |trigger| and an [=attribution source=] |sourceToAttribute|:
+1. [=list/iterate|For each=] [=named budget=] |namedBudget| of |trigger|'s [=attribution trigger/named budgets=]:
+    1. If the result of running [=match an attribution source against filters and negated filters=]
+        with |sourceToAttribute|, |namedBudget|'s [=named budget/filters=],
+        |namedBudget|'s [=named budget/negated filters=], and
+        |trigger|'s [=attribution trigger/trigger time=] is true:
+        1. Return |namedBudget|'s [=named budget/name=].
+1. Return null.
+
+To <dfn>check if an [=attribution source=] can create [=aggregatable contributions=] for matched budget name</dfn>
+given an [=aggregatable attribution report=] |report|, an [=attribution source=] |sourceToAttribute|,
+and a [=string=] |matchedBudgetName|, run the following steps:
+
+1. If |sourceToAttribute|'s [=attribution source/remaining named budgets=][|matchedBudgetName|] does not [=map/exists|exist=], return true.
+1. If |report|'s [=aggregatable attribution report/required aggregatable budget=] is greater than
+    |sourceToAttribute|'s [=attribution source/remaining named budgets=][|matchedBudgetName|], return false.
+1. Return true.
+
 <h3 id="obtaining-trigger-verbose-debug-data">Obtaining verbose debug data on trigger registration</h3>
 
 To <dfn>obtain verbose debug data body on trigger registration</dfn> given a
@@ -3886,6 +3992,14 @@ a possibly null [=attribution source=] |sourceToAttribute|, and a possibly null
     : "<code>[=trigger debug data type/trigger-aggregate-insufficient-budget=]</code>"
     :: [=map/Set=] |body|["`limit`"] to [=allowed aggregatable budget per source=],
          [=serialize an integer|serialized=].
+    : "<code>[=trigger debug data type/trigger-aggregate-insufficient-named-budget=]</code>"
+    ::
+        1. [=Assert=]: |sourceToAttribute| is not null.
+        1. Let |matchedBudgetName| be the result of running [=find matching budget name=] with |trigger| and |sourceToAttribute|.
+        1. [=Assert=]: |matchedBudgetName| is not null and |sourceToAttribute|'s [=attribution source/named budgets=][|matchedBudgetName|] [=map/exists=].
+        1. [=map/Set=] |body|["`name`"] to |matchedBudgetName|.
+        1. [=map/Set=] |body|["`limit`"] to |sourceToAttribute|'s [=attribution source/named budgets=][|matchedBudgetName|],
+            [=serialize an integer|serialized=].
     : "<code>[=trigger debug data type/trigger-aggregate-excessive-reports=]</code>"
     :: [=map/Set=] |body|["`limit`"] to [=max aggregatable reports per source=][0],
     : "<code>[=trigger debug data type/trigger-event-low-priority=]</code>"
@@ -4156,10 +4270,18 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
     with |report| and |sourceToAttribute| is false:
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
         ("<code>[=trigger debug data type/trigger-aggregate-insufficient-budget=]</code>", null)).
+1. Let |matchedBudgetName| be the result of running [=find matching budget name=] with |trigger| and |sourceToAttribute|.
+1. If |matchedBudgetName| is not null and the result of running [=check if an attribution source can create aggregatable contributions for matched budget name=]
+    with |report|, |sourceToAttribute|, and |matchedBudgetName| is false:
+    1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
+        ("<code>[=trigger debug data type/trigger-aggregate-insufficient-named-budget=]</code>", null)).
 1. [=set/Append=] |report| to the [=aggregatable attribution report cache=].
 1. Increment |sourceToAttribute|'s [=attribution source/number of aggregatable attribution reports=] value by 1.
 1. Decrement |sourceToAttribute|'s [=attribution source/remaining aggregatable attribution budget=] value by
     |report|'s [=aggregatable attribution report/required aggregatable budget=].
+1. If |matchedBudgetName| is not null and |sourceToAttribute|'s [=attribution source/remaining named budgets=][|matchedBudgetName|] [=map/exists=]:
+    1. Decrement |sourceToAttribute|'s [=attribution source/remaining named budgets=][|matchedBudgetName|] value by
+        |report|'s [=aggregatable attribution report/required aggregatable budget=].
 1. If |matchedDedupKey| is not null, [=list/append=] it to |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=].
 1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. Run [=generate null attribution reports=] with |trigger| and |report|.

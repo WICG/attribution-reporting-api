@@ -190,6 +190,7 @@ type Source = CommonDebug &
   Priority &
   (NotFullFlexSource | FullFlexSource) & {
     aggregation_keys: { [key: string]: string }
+    named_budgets?: { [key: string]: number }
     aggregatable_report_window: number
     destination: string[]
     destination_limit_priority: string
@@ -205,6 +206,7 @@ type Source = CommonDebug &
 
 export interface Options {
   fullFlex?: boolean | undefined
+  namedBudgets?: boolean | undefined
 }
 
 export function serializeSource(
@@ -246,6 +248,9 @@ export function serializeSource(
     ...ifNotNull('attribution_scopes', s.attributionScopes, (v) =>
       serializeAttributionScopes(v)
     ),
+    ...(opts.namedBudgets && {
+      named_budgets: Object.fromEntries(s.namedBudgets),
+    }),
   }
 
   return stringify(source)
@@ -314,6 +319,9 @@ function serializeEventTriggerDatum(
 }
 
 type AggregatableDedupKey = FilterPair & DedupKey
+type NamedBudget = FilterPair & {
+  name?: string
+}
 
 function serializeAggregatableDedupKey(
   d: trigger.AggregatableDedupKey
@@ -321,6 +329,13 @@ function serializeAggregatableDedupKey(
   return {
     ...serializeFilterPair(d),
     ...serializeDedupKey(d),
+  }
+}
+
+function serializeNamedBudget(b: trigger.NamedBudget): NamedBudget {
+  return {
+    ...serializeFilterPair(b),
+    ...ifNotNull('name', b.name, (v) => v.toString()),
   }
 }
 
@@ -370,6 +385,7 @@ function serializeAggregatableValuesConfiguration(
 type Trigger = CommonDebug &
   FilterPair & {
     aggregatable_deduplication_keys: AggregatableDedupKey[]
+    named_budgets?: NamedBudget[]
     aggregatable_source_registration_time: string
     aggregatable_trigger_data: AggregatableTriggerDatum[]
     aggregatable_filtering_id_max_bytes: number
@@ -393,6 +409,10 @@ export function serializeTrigger(
       t.aggregatableDedupKeys,
       serializeAggregatableDedupKey
     ),
+
+    ...(opts.namedBudgets && {
+      named_budgets: Array.from(t.namedBudgets, serializeNamedBudget),
+    }),
 
     aggregatable_source_registration_time: t.aggregatableSourceRegistrationTime,
 
