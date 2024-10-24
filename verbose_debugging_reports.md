@@ -43,9 +43,29 @@ Additionally:
 * If the source registration was rejected due to an API limit, then the `body`
   will also contain a string-typed `limit` field.
 
+#### `source-channel-capacity-limit`
+
+The source was rejected due to the [channel-capacity limit][].
+
+Additional fields: `limit`
+
 #### `source-destination-limit`
 
 The source was rejected due to the [destination limit][].
+
+Additional fields: `limit`
+
+#### `source-destination-per-day-rate-limit`
+
+The source was rejected due to the
+[destinations per source and reporting site per day rate limit][].
+
+Additional fields: `limit`
+
+#### `source-destination-rate-limit`
+
+The source was rejected due to the
+[destinations per source and reporting site rate limit][].
 
 Additional fields: `limit`
 
@@ -62,6 +82,19 @@ subsequent trigger because [noise][] has been applied.
 
 The `body` may also include a `source_destination_limit` field if the
 [destination limit][] was exceeded.
+
+#### `source-reporting-origin-per-site-limit`
+
+The source was rejected due to the
+[reporting origins per source and reporting site limit][].
+
+Additional fields: `limit`
+
+#### `source-scopes-channel-capacity-limit`
+
+The source was rejected due to the [attribution scope channel-capacity limit][].
+
+Additional fields: `limit`
 
 #### `source-storage-limit`
 
@@ -84,48 +117,15 @@ registration for security purposes.
 The `body` may also include a `source_destination_limit` field if the
 [destination limit][] was exceeded.
 
-#### `source-destination-rate-limit`
-
-The source was rejected due to the
-[destinations per source and reporting site rate limit][].
-
-Additional fields: `limit`
-
-#### `source-destination-per-day-rate-limit`
-
-The source was rejected due to the
-[destinations per source and reporting site per day rate limit][].
-
-Additional fields: `limit`
-
-#### `source-unknown-error`
-
-The source was rejected due to an internal error.
-
-#### `source-channel-capacity-limit`
-
-The source was rejected due to the [channel-capacity limit][].
-
-Additional fields: `limit`
-
-#### `source-scopes-channel-capacity-limit`
-
-The source was rejected due to the [attribution scope channel-capacity limit][].
-
-Additional fields: `limit`
-
 #### `source-trigger-state-cardinality-limit`
 
 The source was rejected due to the [trigger-state cardinality limit][].
 
 Additional fields: `limit`
 
-#### `source-reporting-origin-per-site-limit`
+#### `source-unknown-error`
 
-The source was rejected due to the
-[reporting origins per source and reporting site limit][].
-
-Additional fields: `limit`
+The source was rejected due to an internal error.
 
 ### Trigger debugging reports
 
@@ -155,23 +155,6 @@ Additionally:
      the source registration did not contain a valid `debug_key` or
      [cookie-based debugging][] was prohibited.
 
-#### `trigger-no-matching-source`
-
-The trigger was rejected because its <reporting origin, destination site> pair
-could not be [matched][trigger algorithm] to a source.
-
-#### `trigger-no-matching-filter-data`
-
-The trigger was rejected because its top-level filters did not match the
-attributed source's [filter data][].
-
-#### `trigger-event-attributions-per-source-destination-limit`
-
-Event-level attribution for the trigger failed due to the
-[max attributions rate limit][].
-
-Additional fields: `limit`
-
 #### `trigger-aggregate-attributions-per-source-destination-limit`
 
 Aggregatable attribution for the trigger failed due to the
@@ -179,68 +162,10 @@ Aggregatable attribution for the trigger failed due to the
 
 Additional fields: `limit`
 
-#### `trigger-reporting-origin-limit`
-
-The trigger was rejected due to the [attributed reporting origin limit][].
-
-Additional fields: `limit`
-
-#### `trigger-event-deduplicated`
-
-Event-level attribution for the trigger was [deduplicated][trigger algorithm].
-
-#### `trigger-event-no-matching-configurations`
-
-Event-level attribution for the trigger failed because no `event_trigger_data`
-entry [matched][trigger algorithm] the attributed source.
-
-#### `trigger-event-noise`
-
-Event-level attribution for the trigger failed because the attributed source was
-subject to [noise][].
-
-#### `trigger-event-low-priority`
-
-Event-level attribution for the trigger failed because the matching
-`event_trigger_data`'s `priority` was [lower][trigger algorithm] than that of
-any pending event-level reports for the same source.
-
-The `body` will be identical to the [event-level report body][] that would have
-been produced had attribution succeeded.
-
-#### `trigger-event-excessive-reports`
-
-Event-level attribution for the trigger failed because the attributed source had
-already reached [the maximum number of reports][trigger algorithm].
-
-The `body` will be identical to the [event-level report body][] that would have
-been produced had attribution succeeded.
-
-#### `trigger-event-storage-limit`
-
-Event-level attribution for the trigger failed due to the [storage limit][].
-
-Additional fields: `limit`
-
-#### `trigger-event-report-window-not-started`
-
-Event-level attribution for the trigger failed because the attributed source's
-event-level [report window][attribution source registrations] hadn't begun.
-
-#### `trigger-event-report-window-passed`
-
-Event-level attribution for the trigger failed because the attributed source's
-event-level [report window][attribution source registrations] had passed.
-
 #### `trigger-aggregate-deduplicated`
 
 Aggregatable attribution for the trigger was
 [deduplicated][aggregatable trigger algorithm].
-
-#### `trigger-aggregate-no-contributions`
-
-Aggregatable attribution for the trigger failed because no
-[histogram contributions][aggregatable trigger algorithm] were produced.
 
 #### `trigger-aggregate-excessive-reports`
 
@@ -256,6 +181,16 @@ had [insufficient budget][].
 
 Additional fields: `limit`
 
+#### `trigger-aggregate-no-contributions`
+
+Aggregatable attribution for the trigger failed because no
+[histogram contributions][aggregatable trigger algorithm] were produced.
+
+#### `trigger-aggregate-report-window-passed`
+
+Aggregatable attribution for the trigger failed because the attributed source's
+aggregatable [report window][attribution trigger algorithm] had passed.
+
 #### `trigger-aggregate-storage-limit`
 
 Aggregatable attribution for the trigger failed due to the
@@ -263,10 +198,75 @@ Aggregatable attribution for the trigger failed due to the
 
 Additional fields: `limit`
 
-#### `trigger-aggregate-report-window-passed`
+#### `trigger-event-attributions-per-source-destination-limit`
 
-Aggregatable attribution for the trigger failed because the attributed source's
-aggregatable [report window][attribution trigger algorithm] had passed.
+Event-level attribution for the trigger failed due to the
+[max attributions rate limit][].
+
+Additional fields: `limit`
+
+#### `trigger-event-deduplicated`
+
+Event-level attribution for the trigger was [deduplicated][trigger algorithm].
+
+#### `trigger-event-excessive-reports`
+
+Event-level attribution for the trigger failed because the attributed source had
+already reached [the maximum number of reports][trigger algorithm].
+
+The `body` will be identical to the [event-level report body][] that would have
+been produced had attribution succeeded.
+
+#### `trigger-event-low-priority`
+
+Event-level attribution for the trigger failed because the matching
+`event_trigger_data`'s `priority` was [lower][trigger algorithm] than that of
+any pending event-level reports for the same source.
+
+The `body` will be identical to the [event-level report body][] that would have
+been produced had attribution succeeded.
+
+#### `trigger-event-no-matching-configurations`
+
+Event-level attribution for the trigger failed because no `event_trigger_data`
+entry [matched][trigger algorithm] the attributed source.
+
+#### `trigger-event-noise`
+
+Event-level attribution for the trigger failed because the attributed source was
+subject to [noise][].
+
+#### `trigger-event-report-window-not-started`
+
+Event-level attribution for the trigger failed because the attributed source's
+event-level [report window][attribution source registrations] hadn't begun.
+
+#### `trigger-event-report-window-passed`
+
+Event-level attribution for the trigger failed because the attributed source's
+event-level [report window][attribution source registrations] had passed.
+
+#### `trigger-event-storage-limit`
+
+Event-level attribution for the trigger failed due to the [storage limit][].
+
+Additional fields: `limit`
+
+#### `trigger-no-matching-filter-data`
+
+The trigger was rejected because its top-level filters did not match the
+attributed source's [filter data][].
+
+#### `trigger-no-matching-source`
+
+The trigger was rejected because its <reporting origin, destination site> pair
+could not be [matched][trigger algorithm] to a source.
+
+#### `trigger-reporting-origin-limit`
+
+The trigger was rejected due to the [attributed reporting origin limit][].
+
+Additional fields: `limit`
 
 #### `trigger-unknown-error`
 
@@ -284,8 +284,8 @@ The trigger was rejected due to an internal error.
 [destinations per source and reporting site per day rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-covered-by-unexpired-sources
 [destinations per source and reporting site rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-per-source-site
 [destinations per source site rate limit]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#limiting-the-number-of-unique-destinations-per-source-site
-[event-level report body]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#attribution-reports
 [event state limit]: https://wicg.github.io/attribution-reporting-api/#attribution-scopes-max-event-states
+[event-level report body]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#attribution-reports
 [filter data]: https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-attribution-filters
 [insufficient budget]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#contribution-bounding-and-budgeting
 [max aggregatable reports]: https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#hide-the-true-number-of-attribution-reports
