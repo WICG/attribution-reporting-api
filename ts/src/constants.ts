@@ -85,6 +85,7 @@ export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'trigger-aggregate-deduplicated',
   'trigger-aggregate-excessive-reports',
   'trigger-aggregate-no-contributions',
+  'trigger-aggregate-incompatible-max-reports',
   'trigger-aggregate-insufficient-budget',
   'trigger-aggregate-storage-limit',
   'trigger-aggregate-report-window-passed',
