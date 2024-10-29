@@ -155,7 +155,7 @@ Additionally:
 * If the trigger was attributed to a source, then the `body` will also contain
   the following fields:
    * `source_event_id`: The source registration's `source_event_id`.
-   * `source_site`: The top-level site, or embedded site for specific use cases, on which the source registration
+   * `source_site`: The top-level site, or the embedded site for specific use cases, on which the source registration
       occurred.
    * `source_debug_key`: The source registration's `debug_key`, but omitted if
      the source registration did not contain a valid `debug_key` or
