@@ -39,7 +39,7 @@ The `body` will contain the following fields for all source debugging reports:
   This will be a string if there was one such site, or a list of strings if
   there were multiple.
 * `source_event_id`: The source registration's `source_event_id`.
-* `source_site`: The top-level site on which the source registration occurred.
+* `source_site`: The top-level site, or the embedded site for specific use cases, on which the source registration occurred.
 
 Additionally:
 
@@ -155,7 +155,7 @@ Additionally:
 * If the trigger was attributed to a source, then the `body` will also contain
   the following fields:
    * `source_event_id`: The source registration's `source_event_id`.
-   * `source_site`: The top-level site on which the source registration
+   * `source_site`: The top-level site, or embedded site for specific use cases, on which the source registration
       occurred.
    * `source_debug_key`: The source registration's `debug_key`, but omitted if
      the source registration did not contain a valid `debug_key` or
