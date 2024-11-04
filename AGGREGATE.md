@@ -598,7 +598,7 @@ will be selected. If there is no budget name specified or no matching filters, t
 
 When generating an aggregatable report, in addition to performing the 
 current `L1` budget limit check, the contributions for the report will
-be checked against the available budget in the selected budget name, if applicable.
+be checked against the available budget with the selected budget name, if applicable.
 If the budget is insufficient, the aggregatable report will not be generated.
 
 ## Data processing through a Secure Aggregation Service
