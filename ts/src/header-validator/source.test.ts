@@ -3175,11 +3175,7 @@ const testCases: TestCase[] = [
     parseNamedBudgets: true,
     expectedErrors: [
       {
-        msg: 'must be in the range [1, 65536]',
-        path: ['named_budgets', '2'],
-      },
-      {
-        msg: 'must be in the range [1, 65536]',
+        msg: 'must be in the range [0, 65536]',
         path: ['named_budgets', '3'],
       },
     ],
@@ -3196,7 +3192,7 @@ const testCases: TestCase[] = [
     parseNamedBudgets: true,
     expectedErrors: [
       {
-        msg: 'must be in the range [1, 65536]',
+        msg: 'must be in the range [0, 65536]',
         path: ['named_budgets', '1'],
       },
     ],

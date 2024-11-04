@@ -238,6 +238,12 @@ function aggregationKeys(j: Json, ctx: Context): Maybe<AggregationKeys> {
   )
 }
 
+function namedBudgetValue(j: Json, ctx: Context): Maybe<number> {
+  return number(j, ctx)
+    .filter(isInteger, ctx)
+    .filter(isInRange, ctx, 0, constants.allowedAggregatableBudgetPerSource)
+}
+
 function namedBudget([name, j]: [string, Json], ctx: Context): Maybe<number> {
   if (name.length > constants.maxLengthPerBudgetName) {
     ctx.error(
@@ -245,7 +251,7 @@ function namedBudget([name, j]: [string, Json], ctx: Context): Maybe<number> {
     )
     return Maybe.None
   }
-  return aggregatableKeyValueValue(j, ctx)
+  return namedBudgetValue(j, ctx)
 }
 
 function namedBudgets(j: Json, ctx: Context): Maybe<NamedBudgets> {
