@@ -19,6 +19,11 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "filters": {"x": []},
         "not_filters": {"y": []}
       }],
+      "named_budgets": [{
+        "name": "1",
+        "filters": {"x": []},
+        "not_filters": {"y": []}
+      }],
       "aggregatable_source_registration_time": "include",
       "aggregatable_trigger_data": [{
         "filters": {"a": ["b"]},
@@ -49,10 +54,28 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
       "attribution_scopes": ["1"]
     }`,
+    parseNamedBudgets: true,
     expected: Maybe.some({
       aggregatableDedupKeys: [
         {
           dedupKey: 123n,
+          positive: [
+            {
+              lookbackWindow: null,
+              map: new Map([['x', new Set()]]),
+            },
+          ],
+          negative: [
+            {
+              lookbackWindow: null,
+              map: new Map([['y', new Set()]]),
+            },
+          ],
+        },
+      ],
+      namedBudgets: [
+        {
+          name: '1',
           positive: [
             {
               lookbackWindow: null,
@@ -1693,6 +1716,51 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
     ],
   },
+
+  // Named budgets.
+  {
+    name: 'named-budgets-wrong-type',
+    input: `{"named_budgets": 1}`,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        path: ['named_budgets'],
+        msg: 'must be a list',
+      },
+    ],
+  },
+  {
+    name: 'named-budgets-value-wrong-type',
+    input: `{"named_budgets": [1]}`,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        path: ['named_budgets', 0],
+        msg: 'must be an object',
+      },
+    ],
+  },
+  {
+    name: 'named-budget-wrong-type',
+    input: `{"named_budgets": [{
+      "name": 1
+    }]}`,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        path: ['named_budgets', 0, 'name'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'named_budget-missing-name',
+    input: `{"named_budgets": [{
+      "filters": [],
+      "not_filters": []
+    }]}`,
+    parseNamedBudgets: true,
+  },
 ]
 
 testCases.forEach((tc) =>
@@ -1701,6 +1769,7 @@ testCases.forEach((tc) =>
     trigger.validator({
       vsv: { ...vsv.Chromium, ...tc.vsv },
       fullFlex: tc.parseFullFlex,
+      namedBudgets: tc.parseNamedBudgets,
     })
   )
 )
