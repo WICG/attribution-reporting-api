@@ -749,9 +749,10 @@ function source(j: Json, ctx: Context): Maybe<Source> {
           'attribution_scopes',
           withDefault(attributionScopes, null)
         ),
-        namedBudgets: ctx.opts.namedBudgets
-          ? field('named_budgets', withDefault(namedBudgets, new Map()))
-          : () => Maybe.some(new Map()),
+        namedBudgets: field(
+          'named_budgets',
+          withDefault(namedBudgets, new Map())
+        ),
 
         ...commonDebugFields,
         ...priorityField,

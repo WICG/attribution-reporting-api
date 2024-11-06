@@ -1769,7 +1769,6 @@ testCases.forEach((tc) =>
     trigger.validator({
       vsv: { ...vsv.Chromium, ...tc.vsv },
       fullFlex: tc.parseFullFlex,
-      namedBudgets: tc.parseNamedBudgets,
     })
   )
 )
