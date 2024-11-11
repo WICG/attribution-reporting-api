@@ -56,7 +56,6 @@ const testCases: TestCase[] = [
       }
     }`,
     sourceType: SourceType.navigation,
-    parseNamedBudgets: true,
     expected: Maybe.some({
       aggregatableReportWindow: 3601,
       aggregationKeys: new Map([['a', 15n]]),
@@ -3083,7 +3082,6 @@ const testCases: TestCase[] = [
         "named_budgets": ["1"]
     }`,
     sourceType: SourceType.navigation,
-    parseNamedBudgets: true,
     expectedErrors: [
       {
         msg: 'must be an object',
@@ -3100,7 +3098,6 @@ const testCases: TestCase[] = [
         }
       }`,
     sourceType: SourceType.navigation,
-    parseNamedBudgets: true,
     expectedErrors: [
       {
         msg: 'name exceeds max length per budget name (26 > 25)',
@@ -3117,7 +3114,6 @@ const testCases: TestCase[] = [
         }
       }`,
     sourceType: SourceType.navigation,
-    parseNamedBudgets: true,
   },
   {
     name: 'named-budgets-too-many',
@@ -3153,7 +3149,6 @@ const testCases: TestCase[] = [
         }
       }`,
     sourceType: SourceType.navigation,
-    parseNamedBudgets: true,
     expectedErrors: [
       {
         msg: 'exceeds the maximum number of keys (25)',
@@ -3172,7 +3167,6 @@ const testCases: TestCase[] = [
         }
       }`,
     sourceType: SourceType.navigation,
-    parseNamedBudgets: true,
     expectedErrors: [
       {
         msg: 'must be in the range [0, 65536]',
@@ -3189,7 +3183,6 @@ const testCases: TestCase[] = [
         }
       }`,
     sourceType: SourceType.navigation,
-    parseNamedBudgets: true,
     expectedErrors: [
       {
         msg: 'must be in the range [0, 65536]',
@@ -3206,7 +3199,6 @@ const testCases: TestCase[] = [
         }
       }`,
     sourceType: SourceType.navigation,
-    parseNamedBudgets: true,
     expectedErrors: [
       {
         msg: 'must be a number',
@@ -3224,7 +3216,6 @@ testCases.forEach((tc) =>
       sourceType: tc.sourceType ?? SourceType.navigation,
       fullFlex: tc.parseFullFlex,
       noteInfoGain: tc.noteInfoGain,
-      namedBudgets: tc.parseNamedBudgets,
     })
   )
 )

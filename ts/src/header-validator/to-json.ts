@@ -206,7 +206,6 @@ type Source = CommonDebug &
 
 export interface Options {
   fullFlex?: boolean | undefined
-  namedBudgets?: boolean | undefined
 }
 
 export function serializeSource(
@@ -248,9 +247,7 @@ export function serializeSource(
     ...ifNotNull('attribution_scopes', s.attributionScopes, (v) =>
       serializeAttributionScopes(v)
     ),
-    ...(opts.namedBudgets && {
-      named_budgets: Object.fromEntries(s.namedBudgets),
-    }),
+    named_budgets: Object.fromEntries(s.namedBudgets),
   }
 
   return stringify(source)
@@ -410,9 +407,7 @@ export function serializeTrigger(
       serializeAggregatableDedupKey
     ),
 
-    ...(opts.namedBudgets && {
-      named_budgets: Array.from(t.namedBudgets, serializeNamedBudget),
-    }),
+    named_budgets: Array.from(t.namedBudgets, serializeNamedBudget),
 
     aggregatable_source_registration_time: t.aggregatableSourceRegistrationTime,
 
