@@ -2639,9 +2639,16 @@ const testCases: TestCase[] = [
       "trigger_specs": [
         {"trigger_data": [1, 0]},
         {"trigger_data": [3]},
-        {"trigger_data": [2]}
+        {"trigger_data": [2]},
+        {"trigger_data": [4, 5, 6, 7, 8, 9, 10]}
       ]
     }`,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: Infinity,
+      },
+    },
     parseFullFlex: true,
   },
   {
@@ -2649,8 +2656,14 @@ const testCases: TestCase[] = [
     input: `{
       "destination": "https://a.test",
       "trigger_data_matching": "modulus",
-      "trigger_data": [1, 0, 2, 3]
+      "trigger_data": [1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     }`,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: Infinity,
+      },
+    },
   },
 
   {
