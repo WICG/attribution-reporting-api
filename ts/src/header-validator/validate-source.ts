@@ -625,6 +625,10 @@ function defaultTriggerSpecs(
   )
 }
 
+function compareNumbers(a: number, b: number): number {
+  return a - b
+}
+
 function isTriggerDataMatchingValidForSpecs(s: Source, ctx: Context): boolean {
   return ctx.scope('trigger_data_matching', () => {
     if (s.triggerDataMatching !== TriggerDataMatching.modulus) {
@@ -633,7 +637,7 @@ function isTriggerDataMatchingValidForSpecs(s: Source, ctx: Context): boolean {
 
     const triggerData: number[] = s.triggerSpecs
       .flatMap((spec) => Array.from(spec.triggerData))
-      .sort()
+      .sort(compareNumbers)
 
     if (triggerData.some((triggerDatum, i) => triggerDatum !== i)) {
       ctx.error(
