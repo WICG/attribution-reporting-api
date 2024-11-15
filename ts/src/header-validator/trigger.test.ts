@@ -514,7 +514,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'debug-reporting-wrong-type',
     input: `{"debug_reporting": "true"}`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_reporting'],
         msg: 'must be a boolean',
@@ -525,7 +525,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'debug-key-wrong-type',
     input: `{"debug_key": 1}`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_key'],
         msg: 'must be a string',
@@ -535,7 +535,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'debug-key-wrong-format',
     input: `{"debug_key": "-1"}`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_key'],
         msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',

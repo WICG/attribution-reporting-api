@@ -18,6 +18,7 @@ export class Context {
     warnings: [],
     notes: [],
   }
+  errorAsWarning: boolean = false
 
   scope<T>(c: PathComponent, f: () => T): T {
     this.path.push(c)
@@ -31,7 +32,11 @@ export class Context {
   }
 
   error(msg: string): void {
-    this.result.errors.push(this.issue(msg))
+    if (this.errorAsWarning) {
+      this.warning(msg)
+    } else {
+      this.result.errors.push(this.issue(msg))
+    }
   }
 
   warning(msg: string): void {

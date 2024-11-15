@@ -622,7 +622,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "debug_key": 1
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_key'],
         msg: 'must be a string',
@@ -635,7 +635,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "debug_key": "-1"
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_key'],
         msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
@@ -1071,7 +1071,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "debug_reporting": "true"
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_reporting'],
         msg: 'must be a boolean',
