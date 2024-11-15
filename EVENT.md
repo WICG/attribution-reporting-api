@@ -149,7 +149,7 @@ window.open(
         attributionsrc="https://adtech.example/attribution_source?my_ad_id=123">
 ```
 
-The `attributionsrc` attribute on `<a>`, `<img>`, and `<script>` may be empty or
+The `attributionsrc` attribute on `<a>`, `<area>`, `<img>`, and `<script>` may be empty or
 non-empty. If it is non-empty, it contains a space-separated list of URLs
 to which the browser will initiate a separate `keepalive` fetch request in the
 background. If it is empty, no background requests will be made. In both
@@ -157,7 +157,7 @@ cases, the request(s) (originating from `href`, `src`, or `attributionsrc`) will
 contain an `Attribution-Reporting-Eligible` header that indicates the types of
 registrations that are allowed in the response.
 
-For `<a>` and `window.open`, background requests, if any, are made when the user
+For `<a>`, `<area>`, and `window.open`, background requests, if any, are made when the user
 navigates. For `<img>` and `<script>`, background requests are made when the
 `attributionsrc` attribute is set on the DOM element.
 
@@ -318,7 +318,7 @@ The reporting origin may use the value of this header to determine which
 registrations, if any, to include in its response. The browser will likewise
 ignore invalid registrations:
 
-1. `<a>` and `window.open` will have `navigation-source`.
+1. `<a>`, `<area>`, and `window.open` will have `navigation-source`.
 2. Other APIs that automatically set `Attribution-Reporting-Eligible` (like
    `<img>`) will contain `event-source, trigger`.
 3. Requests from JavaScript, e.g. `window.fetch`, can set this header using an
