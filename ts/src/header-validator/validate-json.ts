@@ -243,9 +243,24 @@ export function array<T, C extends Context = Context>(
     )
 }
 
+function withErrorAsWarning<C extends Context, I, O>(
+  f: CtxFunc<C, I, O>
+): CtxFunc<C, I, O> {
+  return (i, ctx) => {
+    const prev = ctx.errorAsWarning
+    ctx.errorAsWarning = true
+    const result = f(i, ctx)
+    ctx.errorAsWarning = prev
+    return result
+  }
+}
+
 export const commonDebugFields: StructFields<CommonDebug> = {
-  debugKey: field('debug_key', withDefault(uint64, null)),
-  debugReporting: field('debug_reporting', withDefault(bool, false)),
+  debugKey: field('debug_key', withDefault(withErrorAsWarning(uint64), null)),
+  debugReporting: field(
+    'debug_reporting',
+    withDefault(withErrorAsWarning(bool), false)
+  ),
 }
 
 export const priorityField: StructFields<Priority> = {
