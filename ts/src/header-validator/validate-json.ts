@@ -21,6 +21,7 @@ import {
   required,
   suitableOrigin,
   withDefault,
+  withErrorAsWarning,
 } from './validate'
 import * as validate from './validate'
 
@@ -241,19 +242,6 @@ export function array<T, C extends Context = Context>(
     .flatMap((js) =>
       validate.array(js.entries(), ctx, f, opts?.itemErrorAction)
     )
-}
-
-function withErrorAsWarning<C extends Context, I, O>(
-  f: CtxFunc<C, I, Maybe<O>>,
-  valueIfError: O
-): CtxFunc<C, I, Maybe<O>> {
-  return (i, ctx) => {
-    const prev = ctx.errorAsWarning
-    ctx.errorAsWarning = true
-    const result = f(i, ctx)
-    ctx.errorAsWarning = prev
-    return result.value === undefined ? Maybe.some(valueIfError) : result
-  }
 }
 
 export const commonDebugFields: StructFields<CommonDebug> = {

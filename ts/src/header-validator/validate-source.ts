@@ -22,6 +22,7 @@ import {
   required,
   suitableSite,
   withDefault,
+  withErrorAsWarning,
 } from './validate'
 import * as privacy from '../flexible-event/privacy'
 import { serializeSource } from './to-json'
@@ -737,7 +738,10 @@ function source(j: Json, ctx: Context): Maybe<Source> {
         triggerSpecs: () => triggerSpecsVal,
         aggregatableDebugReporting: field(
           'aggregatable_debug_reporting',
-          withDefault(sourceAggregatableDebugReportingConfig, null)
+          withDefault(
+            withErrorAsWarning(sourceAggregatableDebugReportingConfig, null),
+            null
+          )
         ),
 
         triggerDataMatching: field(

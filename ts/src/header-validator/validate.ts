@@ -79,6 +79,21 @@ export function withDefault<C extends Context, V, T, Args extends unknown[]>(
   }
 }
 
+export function withErrorAsWarning<
+  C extends Context,
+  V,
+  T,
+  Args extends unknown[],
+>(f: CtxArgFunc<V, C, Args, T>, valueIfError: T): CtxArgFunc<V, C, Args, T> {
+  return (i, ctx, ...args) => {
+    const prev = ctx.errorAsWarning
+    ctx.errorAsWarning = true
+    const result = f(i, ctx, ...args)
+    ctx.errorAsWarning = prev
+    return result.value === undefined ? Maybe.some(valueIfError) : result
+  }
+}
+
 type FieldFunc<D, V> = <T, C extends Context, Args extends unknown[]>(
   name: string,
   f: CtxArgFunc<V | undefined, C, Args, T>,
