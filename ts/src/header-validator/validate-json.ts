@@ -244,22 +244,26 @@ export function array<T, C extends Context = Context>(
 }
 
 function withErrorAsWarning<C extends Context, I, O>(
-  f: CtxFunc<C, I, O>
-): CtxFunc<C, I, O> {
+  f: CtxFunc<C, I, Maybe<O>>,
+  valueIfError: O
+): CtxFunc<C, I, Maybe<O>> {
   return (i, ctx) => {
     const prev = ctx.errorAsWarning
     ctx.errorAsWarning = true
     const result = f(i, ctx)
     ctx.errorAsWarning = prev
-    return result
+    return result.value === undefined ? Maybe.some(valueIfError) : result
   }
 }
 
 export const commonDebugFields: StructFields<CommonDebug> = {
-  debugKey: field('debug_key', withDefault(withErrorAsWarning(uint64), null)),
+  debugKey: field(
+    'debug_key',
+    withDefault(withErrorAsWarning(uint64, null), null)
+  ),
   debugReporting: field(
     'debug_reporting',
-    withDefault(withErrorAsWarning(bool), false)
+    withDefault(withErrorAsWarning(bool, false), false)
   ),
 }
 
