@@ -1575,7 +1575,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "aggregatable_debug_reporting": 1
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting'],
         msg: 'must be an object',
@@ -1588,7 +1588,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {}
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'budget'],
         msg: 'required',
@@ -1608,7 +1608,7 @@ const testCases: TestCase[] = [
         "key_piece": "0x1"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'budget'],
         msg: 'must be a number',
@@ -1624,7 +1624,7 @@ const testCases: TestCase[] = [
         "key_piece": "0x1"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'budget'],
         msg: 'must be in the range [1, 65536]',
@@ -1640,7 +1640,7 @@ const testCases: TestCase[] = [
         "key_piece": "0x1"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'budget'],
         msg: 'must be in the range [1, 65536]',
@@ -1656,7 +1656,7 @@ const testCases: TestCase[] = [
         "key_piece": 1
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'key_piece'],
         msg: 'must be a string',
@@ -1672,7 +1672,7 @@ const testCases: TestCase[] = [
         "key_piece": "1"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'key_piece'],
         msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
@@ -1689,7 +1689,7 @@ const testCases: TestCase[] = [
         "aggregation_coordinator_origin": 1
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [
           'aggregatable_debug_reporting',
@@ -1709,7 +1709,7 @@ const testCases: TestCase[] = [
         "aggregation_coordinator_origin": "a.test"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [
           'aggregatable_debug_reporting',
@@ -1729,7 +1729,7 @@ const testCases: TestCase[] = [
         "aggregation_coordinator_origin": "http://a.test"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [
           'aggregatable_debug_reporting',
@@ -1749,7 +1749,7 @@ const testCases: TestCase[] = [
         "debug_data": {}
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data'],
         msg: 'must be a list',
@@ -1766,7 +1766,7 @@ const testCases: TestCase[] = [
         "debug_data": [1]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0],
         msg: 'must be an object',
@@ -1783,7 +1783,7 @@ const testCases: TestCase[] = [
         "debug_data": [{}]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'required',
@@ -1812,7 +1812,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'must be a string',
@@ -1833,7 +1833,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
@@ -1854,7 +1854,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be a number',
@@ -1871,11 +1871,11 @@ const testCases: TestCase[] = [
         "debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
-          "value": 0 
+          "value": 0
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be in the range [1, 65536]',
@@ -1892,11 +1892,11 @@ const testCases: TestCase[] = [
         "debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
-          "value": 65537 
+          "value": 65537
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be in the range [1, 65536]',
@@ -1917,7 +1917,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting'],
         msg: 'data contains value greater than budget (789)',
@@ -1938,7 +1938,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'must be a list',
@@ -1959,7 +1959,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'length must be in the range [1, Infinity]',
@@ -1980,7 +1980,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
         msg: 'must be a string',
@@ -2001,12 +2001,6 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
-      {
-        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
-        msg: 'duplicate value abc',
-      },
-    ],
     expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
@@ -2015,6 +2009,10 @@ const testCases: TestCase[] = [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
         msg: 'unknown type',
+      },
+      {
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
+        msg: 'duplicate value abc',
       },
     ],
   },
@@ -2025,23 +2023,20 @@ const testCases: TestCase[] = [
       "aggregatable_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-        "debug_data": [{
-          "key_piece": "0x2",
-          "types": ["abc"],
-          "value": 123
-        }, {
-          "key_piece": "0x1",
-          "types": ["abc"],
-          "value": 456
-	}]
+        "debug_data": [
+          {
+            "key_piece": "0x2",
+            "types": ["abc"],
+            "value": 123
+          },
+          {
+            "key_piece": "0x1",
+            "types": ["abc"],
+            "value": 456
+          }
+        ]
       }
     }`,
-    expectedErrors: [
-      {
-        path: ['aggregatable_debug_reporting', 'debug_data'],
-        msg: 'duplicate type: abc',
-      },
-    ],
     expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
@@ -2050,6 +2045,10 @@ const testCases: TestCase[] = [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 1, 'types', 0],
         msg: 'unknown type',
+      },
+      {
+        path: ['aggregatable_debug_reporting', 'debug_data'],
+        msg: 'duplicate type: abc',
       },
     ],
   },
@@ -2067,7 +2066,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
         msg: 'duplicate value source-success',
@@ -2092,7 +2091,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data'],
         msg: 'duplicate type: unspecified',

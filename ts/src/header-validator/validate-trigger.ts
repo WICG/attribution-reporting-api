@@ -18,7 +18,13 @@ import {
   NamedBudget,
   Trigger,
 } from './trigger'
-import { isInteger, isInRange, required, withDefault } from './validate'
+import {
+  isInteger,
+  isInRange,
+  required,
+  withDefault,
+  withErrorAsWarning,
+} from './validate'
 import { Validator } from './validator'
 import {
   Json,
@@ -405,7 +411,7 @@ function trigger(j: Json, ctx: Context): Maybe<Trigger> {
         ),
         aggregatableDebugReporting: field(
           'aggregatable_debug_reporting',
-          withDefault(struct, null),
+          withDefault(withErrorAsWarning(struct, null), null),
           aggregatableDebugReportingConfig
         ),
         attributionScopes: field(
