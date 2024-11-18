@@ -26,50 +26,68 @@ interface Arguments {
   windows?: Wrapped<number[]>
   buckets?: Wrapped<number[]>
   json_file?: string
+  help: boolean
 }
 
-const options = parse<Arguments>({
-  max_event_level_reports: {
-    alias: 'm',
-    type: Number,
-    defaultValue: 20,
+const options = parse<Arguments>(
+  {
+    max_event_level_reports: {
+      alias: 'm',
+      type: Number,
+      defaultValue: 20,
+    },
+    attribution_scope_limit: {
+      alias: 'a',
+      type: Number,
+      optional: true,
+    },
+    max_event_states: {
+      alias: 's',
+      type: Number,
+      optional: true,
+    },
+    epsilon: {
+      alias: 'e',
+      type: Number,
+      defaultValue: 14,
+    },
+    source_type: {
+      alias: 't',
+      type: parseSourceType,
+      defaultValue: SourceType.navigation,
+    },
+    windows: {
+      alias: 'w',
+      type: commaSeparatedInts,
+      optional: true,
+    },
+    buckets: {
+      alias: 'b',
+      type: commaSeparatedInts,
+      optional: true,
+    },
+    json_file: {
+      alias: 'f',
+      type: String,
+      optional: true,
+    },
+    help: {
+      alias: 'h',
+      type: Boolean,
+      description: 'Prints this usage guide.',
+    },
   },
-  attribution_scope_limit: {
-    alias: 'a',
-    type: Number,
-    optional: true,
-  },
-  max_event_states: {
-    alias: 's',
-    type: Number,
-    optional: true,
-  },
-  epsilon: {
-    alias: 'e',
-    type: Number,
-    defaultValue: 14,
-  },
-  source_type: {
-    alias: 't',
-    type: parseSourceType,
-    defaultValue: SourceType.navigation,
-  },
-  windows: {
-    alias: 'w',
-    type: commaSeparatedInts,
-    optional: true,
-  },
-  buckets: {
-    alias: 'b',
-    type: commaSeparatedInts,
-    optional: true,
-  },
-  json_file: {
-    alias: 'f',
-    type: String,
-    optional: true,
-  },
-})
+  {
+    helpArg: 'help',
+    headerContentSections: [
+      {
+        header: 'Attribution Reporting Flexible Event',
+        content:
+          'Computes privacy-related information for an attribution source.',
+      },
+    ],
+  }
+)
 
 function logIssue(prefix: string, i: Issue): void {
   console.log(
