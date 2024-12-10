@@ -283,6 +283,16 @@ const testCases: TestCase[] = [
       },
     ],
   },
+  {
+    name: 'destination-uses-public-suffix',
+    input: `{"destination": "https://com"}`,
+    expectedWarnings: [
+      {
+        msg: 'com is a public suffix: only triggers from https://com itself will match, not e.g. https://example.com',
+        path: ['destination'],
+      },
+    ],
+  },
 
   {
     name: 'filter-data-wrong-type',
