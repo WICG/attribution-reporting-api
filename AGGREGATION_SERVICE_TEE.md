@@ -96,6 +96,7 @@ throughout this proposal.
 * _Coordinator:_ an entity responsible for key management and aggregatable report
   accounting. The coordinator maintains a list of hashes of approved aggregation
   service configurations and configures access to decryption keys.
+* _Shared ID:_ A unique identifier assigned to a group of reports in combination with [filtering IDs](https://github.com/patcg-individual-drafts/private-aggregation-api/blob/main/flexible_filtering.md#proposal-filtering-id-in-the-encrypted-payload) to prevents overlap between batches of reports. This eliminates the need to track individual reports and allows for efficient privacy budget management at the group level. 
 
 ## Aggregation workflow
 
@@ -243,7 +244,7 @@ single aggregation batch (as duplicates) or in multiple batches. Because
 of this, the aggregation service enforces a "no duplicates" rule:
 
 * No aggregatable report can appear more than once within a batch. 
-* No aggregatable report can appear in more than one batch or contribute
+* No Shared Id can appear in more than one batch or contribute
   to more than one summary report. 
 
 The no-duplicates rule is enforced during aggregation. If duplicates are
