@@ -244,7 +244,7 @@ single aggregation batch (as duplicates) or in multiple batches. Because
 of this, the aggregation service enforces a "no duplicates" rule:
 
 * No aggregatable report can appear more than once within a batch. 
-* No Shared Id can appear in more than one batch or contribute
+* No Shared ID can appear in more than one batch or contribute
   to more than one summary report. 
 
 The no-duplicates rule is enforced during aggregation. If duplicates are
@@ -255,8 +255,8 @@ found, these batches may be rejected or duplicates may be filtered out.
 It is not technically practical to keep track of every single aggregatable
 report submitted for aggregation to check for batch disjointness, that is,
 that batches are not overlapping. Instead, each aggregatable report will
-be assigned a shared ID. This ID is generated from the combined data points: API version, reporting origin, destination site, source registration time and scheduled report time. 
-These data points come from the report's [shared_info](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#aggregatable-reports) field. 
+be assigned a shared ID. This ID is generated from the combined data points: API version, reporting origin, destination site, source registration time, scheduled report time, and filtering ID. 
+These data points come from the report's [shared_info](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#aggregatable-reports) field and from the job parameter in the request. 
 
 The aggregation service will enforce that all aggregatable reports with
 the same ID must be included in the same batch. Conversely, if more than
