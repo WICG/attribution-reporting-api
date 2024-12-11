@@ -375,10 +375,14 @@ export function suitableOrigin(s: string, ctx: Context): Maybe<string> {
 }
 
 export function suitableSite(s: string, ctx: Context): Maybe<string> {
-  return suitableScope(
-    s,
-    ctx,
-    'site',
-    (u) => `${u.protocol}//${psl.get(u.hostname)}`
-  )
+  return suitableScope(s, ctx, 'site', (u) => {
+    let site = psl.get(u.hostname)
+    if (site === null) {
+      ctx.warning(
+        `${u.hostname} is a public suffix: only triggers from ${u.protocol}//${u.hostname} itself will match, not e.g. ${u.protocol}//example.${u.hostname}`
+      )
+      site = u.hostname
+    }
+    return `${u.protocol}//${site}`
+  })
 }
