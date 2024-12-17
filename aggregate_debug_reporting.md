@@ -4,22 +4,28 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Aggregate Debug Reporting](#aggregate-debug-reporting)
-  - [Introduction](#introduction)
-  - [API changes](#api-changes)
-    - [Opting-in aggregate debug reporting](#opting-in-aggregate-debug-reporting)
-    - [Aggregatable debug reports](#aggregatable-debug-reports)
-      - [Encrypted payload](#encrypted-payload)
-  - [Privacy and Security](#privacy-and-security)
-    - [Contribution bounding and budgeting](#contribution-bounding-and-budgeting)
-    - [Make count of reports deterministic with null reports](#make-count-of-reports-deterministic-with-null-reports)
-    - [Rate limits](#rate-limits)
-    - [No reporting delay](#no-reporting-delay)
-  - [Future considerations](#future-considerations)
-    - [Report verification with debug context ID](#report-verification-with-debug-context-id)
-    - [Application to aggregate error reporting for the Private Aggregation API](#application-to-aggregate-error-reporting-for-the-private-aggregation-api)
+- [Authors](#authors)
+- [Introduction](#introduction)
+- [API changes](#api-changes)
+  - [Opting-in aggregate debug reporting](#opting-in-aggregate-debug-reporting)
+  - [Aggregatable debug reports](#aggregatable-debug-reports)
+    - [Encrypted payload](#encrypted-payload)
+- [Privacy and Security](#privacy-and-security)
+  - [Contribution bounding and budgeting](#contribution-bounding-and-budgeting)
+  - [Make count of reports deterministic with null reports](#make-count-of-reports-deterministic-with-null-reports)
+  - [Rate limits](#rate-limits)
+  - [No reporting delay](#no-reporting-delay)
+- [Future considerations](#future-considerations)
+  - [Report verification with debug context ID](#report-verification-with-debug-context-id)
+  - [Application to aggregate error reporting for the Private Aggregation API](#application-to-aggregate-error-reporting-for-the-private-aggregation-api)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Authors
+
+* John Delaney (johnidel@chromium.org)
+* Arpana Hosabettu (arpanah@chromium.org)
+* Nan Lin (linnan@chromium.org)
 
 ## Introduction
 
