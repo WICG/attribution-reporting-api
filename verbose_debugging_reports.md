@@ -1,5 +1,11 @@
-Verbose Debugging Reports
-=========================
+# Verbose Debugging Reports
+
+## Authors
+
+* Arpana Hosabettu (arpanah@chromium.org)
+* Nan Lin (linnan@chromium.org)
+
+## Introduction
 
 This document describes the format of [verbose debugging reports][].
 
