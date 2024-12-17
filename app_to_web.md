@@ -1,9 +1,10 @@
 # Cross App and Web Attribution Measurement
 
 ## Authors:
+*   Arpana Hosabettu
 *   Charlie Harrison
-*   Michael Thiessen
 *   John Delaney
+*   Michael Thiessen
 
 ## Participate
 See [Participate](https://github.com/WICG/conversion-measurement-api#participate).
