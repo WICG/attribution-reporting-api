@@ -1,10 +1,10 @@
 # Aggregation Service for the Attribution Reporting API
 
-Authors:
-* Carlos Cela <cjcela@google.com>
-* Ruchi Lohani <rlohani@google.com>
-* Martin Pál <mpal@google.com>
-* Chanda Patel <chandapatel@google.com>
+## Authors
+* Carlos Cela (cjcela@google.com)
+* Ruchi Lohani (rlohani@google.com)
+* Martin Pál (mpal@google.com)
+* Chanda Patel (chandapatel@google.com)
 
 ## Introduction
 
