@@ -38,9 +38,10 @@
 
 ## Authors
 
-* csharrison@chromium.org
-* johnidel@chromium.org
-* marianar@google.com
+* Charlie Harrison (csharrison@chromium.org)
+* John Delaney (johnidel@chromium.org)
+* Mariana Raykova (marianar@google.com)
+* Nan Lin (linnan@chromium.org)
 
 ## Introduction
 
