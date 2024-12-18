@@ -1,10 +1,10 @@
 # Cross App and Web Attribution Measurement
 
-## Authors:
-*   Arpana Hosabettu
-*   Charlie Harrison
-*   John Delaney
-*   Michael Thiessen
+## Authors
+*   Arpana Hosabettu (arpanah@chromium.org)
+*   Charlie Harrison (csharrison@chromium.org)
+*   John Delaney (johnidel@chromium.org)
+*   Michael Thiessen (mthiesse@google.com)
 
 ## Participate
 See [Participate](https://github.com/WICG/conversion-measurement-api#participate).
