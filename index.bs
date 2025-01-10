@@ -4274,7 +4274,7 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
 1. If the result of running [=check if attribution should be blocked by rate limits=]
     with |trigger|, |sourceToAttribute|, and |rateLimitRecord| is not null,
     return it.
-1. If |sourceToAttribute|'s [=attribution source/number of aggregatable attribution reports=] value is equal to [=max aggregatable reports per source=][0], then:
+1. If |sourceToAttribute|'s [=attribution source/number of aggregatable attribution reports=] value is equal to [=max aggregatable reports per source=][0] and |trigger|'s [=attribution trigger/trigger context ID=] is null, then:
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
         ("<code>[=trigger debug data type/trigger-aggregate-excessive-reports=]</code>", null)).
 1. If the result of running [=check if an attribution source can create aggregatable contributions=]
@@ -4287,14 +4287,14 @@ To <dfn>trigger aggregatable attribution</dfn> given an [=attribution trigger=] 
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
         ("<code>[=trigger debug data type/trigger-aggregate-insufficient-named-budget=]</code>", null)).
 1. [=set/Append=] |report| to the [=aggregatable attribution report cache=].
-1. Increment |sourceToAttribute|'s [=attribution source/number of aggregatable attribution reports=] value by 1.
+1. If |trigger|'s [=attribution trigger/trigger context ID=] is null, increment |sourceToAttribute|'s [=attribution source/number of aggregatable attribution reports=] value by 1.
 1. Decrement |sourceToAttribute|'s [=attribution source/remaining aggregatable attribution budget=] value by
     |report|'s [=aggregatable attribution report/required aggregatable budget=].
 1. If |matchedBudgetName| is not null and |sourceToAttribute|'s [=attribution source/remaining named budgets=][|matchedBudgetName|] [=map/exists=]:
     1. Decrement |sourceToAttribute|'s [=attribution source/remaining named budgets=][|matchedBudgetName|] value by
         |report|'s [=aggregatable attribution report/required aggregatable budget=].
 1. If |matchedDedupKey| is not null, [=list/append=] it to |sourceToAttribute|'s [=attribution source/aggregatable dedup keys=].
-1. [=set/Append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
+1. If |trigger|'s [=attribution trigger/trigger context ID=] is null, [=set/append=] |rateLimitRecord| to the [=attribution rate-limit cache=].
 1. Run [=generate null attribution reports=] with |trigger| and |report|.
 1. If the result of [=checking if attribution debugging can be enabled=]
     with |report|'s [=aggregatable attribution report/attribution debug info=] is true,

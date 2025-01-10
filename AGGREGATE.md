@@ -505,6 +505,9 @@ As the trigger context ID in the aggregatable report explicitly reveals the
 association between the report and the trigger, these reports can be sent
 immediately without delay.
 
+When a trigger context ID is provided, the aggregatable report will not count
+towards the limit of aggregatable reports per source, nor be limited by it.
+
 Note: This is an [alternative](https://github.com/WICG/attribution-reporting-api/blob/main/report_verification.md#could-we-just-tag-reports-with-a-trigger_id-instead-of-using-anonymous-tokens)
 considered for [report verification](https://github.com/WICG/attribution-reporting-api/blob/main/report_verification.md),
 and achieves all of the higher priority [security goals](https://github.com/WICG/attribution-reporting-api/blob/main/report_verification.md#security-goals).
