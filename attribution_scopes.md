@@ -1,6 +1,5 @@
 # Pre-Attribution Filtering: Attribution Scopes
 
-_Note: This document describes possible new functionality in the Attribution Reporting API. This is a forwards and backwards compatible change to event-level and summary reports. While this new functionality is being developed, we still highly encourage testing the existing API functionalities to support core utility and compatibility needs._
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
