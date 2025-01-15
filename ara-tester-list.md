@@ -58,6 +58,7 @@ The usefulness of this page depends on testers sharing information and updates; 
 | Quantcast | Demand-side platform (DSP) | Testing ongoing | | chrome-privacy-sandbox@quantcast.com |
 | Optable | Adtech services | Testing ongoing | | privacysandbox@optable.co | 
 | UOL | Adtech  | | | privacysandbox@uolinc.com |
+| Taboola | Adtech | Testing ongoing | | privacy-sandbox@taboola.com |
 
 ## Table - Publishers and Advertisers Interested in Testing or Early Adoption
 Companies who may be interested in participating in tests and early adoption opportunities provided by ad tech companies.
