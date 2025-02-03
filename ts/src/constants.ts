@@ -65,6 +65,7 @@ export const sourceAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'source-channel-capacity-limit',
   'source-destination-global-rate-limit',
   'source-destination-limit',
+  'source-destination-limit-replaced',
   'source-destination-rate-limit',
   'source-max-event-states-limit',
   'source-noised',
@@ -84,6 +85,7 @@ export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
   'trigger-aggregate-excessive-reports',
   'trigger-aggregate-no-contributions',
   'trigger-aggregate-insufficient-budget',
+  'trigger-aggregate-insufficient-named-budget',
   'trigger-aggregate-storage-limit',
   'trigger-aggregate-report-window-passed',
   'trigger-event-attributions-per-source-destination-limit',
@@ -104,3 +106,7 @@ export const triggerAggregatableDebugTypes: Readonly<[string, ...string[]]> = [
 ]
 
 export const defaultMaxEventStates: number = 3
+
+export const maxNamedBudgetsPerSource: number = 25
+
+export const maxLengthPerBudgetName: number = 25

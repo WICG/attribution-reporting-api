@@ -21,6 +21,7 @@ import {
   required,
   suitableOrigin,
   withDefault,
+  withErrorAsWarning,
 } from './validate'
 import * as validate from './validate'
 
@@ -244,8 +245,14 @@ export function array<T, C extends Context = Context>(
 }
 
 export const commonDebugFields: StructFields<CommonDebug> = {
-  debugKey: field('debug_key', withDefault(uint64, null)),
-  debugReporting: field('debug_reporting', withDefault(bool, false)),
+  debugKey: field(
+    'debug_key',
+    withDefault(withErrorAsWarning(uint64, null), null)
+  ),
+  debugReporting: field(
+    'debug_reporting',
+    withDefault(withErrorAsWarning(bool, false), false)
+  ),
 }
 
 export const priorityField: StructFields<Priority> = {

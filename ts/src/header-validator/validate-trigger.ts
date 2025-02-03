@@ -10,13 +10,21 @@ import {
   AggregatableValues,
   AggregatableValuesConfiguration,
   AggregatableValuesValue,
+  BudgetName,
   DedupKey,
   EventTriggerDatum,
   FilterConfig,
   FilterPair,
+  NamedBudget,
   Trigger,
 } from './trigger'
-import { isInteger, isInRange, required, withDefault } from './validate'
+import {
+  isInteger,
+  isInRange,
+  required,
+  withDefault,
+  withErrorAsWarning,
+} from './validate'
 import { Validator } from './validator'
 import {
   Json,
@@ -104,6 +112,10 @@ export function filterPair(j: Json, ctx: context.Context): Maybe<FilterPair> {
 
 const dedupKeyField: StructFields<DedupKey, Context> = {
   dedupKey: field('deduplication_key', withDefault(uint64, null)),
+}
+
+const nameField: StructFields<BudgetName> = {
+  name: field('name', withDefault(string, null)),
 }
 
 function sourceKeys(j: Json, ctx: Context): Maybe<Set<string>> {
@@ -273,6 +285,15 @@ function aggregatableDedupKeys(
   )
 }
 
+function namedBudgets(j: Json, ctx: Context): Maybe<NamedBudget[]> {
+  return array(j, ctx, (j) =>
+    struct(j, ctx, {
+      ...nameField,
+      ...filterFields,
+    })
+  )
+}
+
 function warnInconsistentAggregatableKeys(t: Trigger, ctx: Context): void {
   const allAggregatableValueKeys = new Set<string>()
   for (const cfg of t.aggregatableValuesConfigurations) {
@@ -377,6 +398,7 @@ function trigger(j: Json, ctx: Context): Maybe<Trigger> {
           'aggregatable_deduplication_keys',
           withDefault(aggregatableDedupKeys, [])
         ),
+        namedBudgets: field('named_budgets', withDefault(namedBudgets, [])),
         aggregatableSourceRegistrationTime: () => aggregatableSourceRegTimeVal,
         eventTriggerData: field(
           'event_trigger_data',
@@ -389,7 +411,7 @@ function trigger(j: Json, ctx: Context): Maybe<Trigger> {
         ),
         aggregatableDebugReporting: field(
           'aggregatable_debug_reporting',
-          withDefault(struct, null),
+          withDefault(withErrorAsWarning(struct, null), null),
           aggregatableDebugReportingConfig
         ),
         attributionScopes: field(

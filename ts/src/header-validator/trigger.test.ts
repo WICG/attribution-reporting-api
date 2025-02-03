@@ -19,6 +19,11 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "filters": {"x": []},
         "not_filters": {"y": []}
       }],
+      "named_budgets": [{
+        "name": "1",
+        "filters": {"x": []},
+        "not_filters": {"y": []}
+      }],
       "aggregatable_source_registration_time": "include",
       "aggregatable_trigger_data": [{
         "filters": {"a": ["b"]},
@@ -49,10 +54,28 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       },
       "attribution_scopes": ["1"]
     }`,
+    parseNamedBudgets: true,
     expected: Maybe.some({
       aggregatableDedupKeys: [
         {
           dedupKey: 123n,
+          positive: [
+            {
+              lookbackWindow: null,
+              map: new Map([['x', new Set()]]),
+            },
+          ],
+          negative: [
+            {
+              lookbackWindow: null,
+              map: new Map([['y', new Set()]]),
+            },
+          ],
+        },
+      ],
+      namedBudgets: [
+        {
+          name: '1',
           positive: [
             {
               lookbackWindow: null,
@@ -491,7 +514,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'debug-reporting-wrong-type',
     input: `{"debug_reporting": "true"}`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_reporting'],
         msg: 'must be a boolean',
@@ -502,7 +525,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'debug-key-wrong-type',
     input: `{"debug_key": 1}`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_key'],
         msg: 'must be a string',
@@ -512,7 +535,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
   {
     name: 'debug-key-wrong-format',
     input: `{"debug_key": "-1"}`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_key'],
         msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
@@ -1190,7 +1213,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     input: `{
       "aggregatable_debug_reporting": 1
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting'],
         msg: 'must be an object',
@@ -1202,7 +1225,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     input: `{
       "aggregatable_debug_reporting": {}
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'key_piece'],
         msg: 'required',
@@ -1216,7 +1239,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "key_piece": 1
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'key_piece'],
         msg: 'must be a string',
@@ -1230,7 +1253,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "key_piece": "1"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'key_piece'],
         msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
@@ -1245,7 +1268,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "aggregation_coordinator_origin": 1
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [
           'aggregatable_debug_reporting',
@@ -1263,7 +1286,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "aggregation_coordinator_origin": "a.test"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [
           'aggregatable_debug_reporting',
@@ -1281,7 +1304,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "aggregation_coordinator_origin": "http://a.test"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [
           'aggregatable_debug_reporting',
@@ -1299,7 +1322,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "debug_data": {}
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data'],
         msg: 'must be a list',
@@ -1314,7 +1337,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "debug_data": [1]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0],
         msg: 'must be an object',
@@ -1329,7 +1352,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "debug_data": [{}]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'required',
@@ -1356,7 +1379,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'must be a string',
@@ -1375,7 +1398,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
@@ -1394,7 +1417,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be a number',
@@ -1409,11 +1432,11 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "debug_data": [{
           "key_piece": "0x1",
           "types": ["trigger-unknown-error"],
-          "value": 0 
+          "value": 0
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be in the range [1, 65536]',
@@ -1428,11 +1451,11 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         "debug_data": [{
           "key_piece": "0x1",
           "types": ["trigger-unknown-error"],
-          "value": 65537 
+          "value": 65537
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be in the range [1, 65536]',
@@ -1451,7 +1474,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'must be a list',
@@ -1470,7 +1493,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'length must be in the range [1, Infinity]',
@@ -1489,7 +1512,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
         msg: 'must be a string',
@@ -1508,12 +1531,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         }]
       }
     }`,
-    expectedErrors: [
-      {
-        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
-        msg: 'duplicate value abc',
-      },
-    ],
     expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
@@ -1522,6 +1539,10 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
         msg: 'unknown type',
+      },
+      {
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
+        msg: 'duplicate value abc',
       },
     ],
   },
@@ -1530,23 +1551,20 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
-        "debug_data": [{
-          "key_piece": "0x2",
-          "types": ["abc"],
-          "value": 123
-        }, {
-          "key_piece": "0x1",
-          "types": ["abc"],
-          "value": 456
-	}]
+        "debug_data": [
+          {
+            "key_piece": "0x2",
+            "types": ["abc"],
+            "value": 123
+          },
+          {
+            "key_piece": "0x1",
+            "types": ["abc"],
+            "value": 456
+          }
+        ]
       }
     }`,
-    expectedErrors: [
-      {
-        path: ['aggregatable_debug_reporting', 'debug_data'],
-        msg: 'duplicate type: abc',
-      },
-    ],
     expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
@@ -1555,6 +1573,10 @@ const testCases: jsontest.TestCase<Trigger>[] = [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 1, 'types', 0],
         msg: 'unknown type',
+      },
+      {
+        path: ['aggregatable_debug_reporting', 'debug_data'],
+        msg: 'duplicate type: abc',
       },
     ],
   },
@@ -1570,7 +1592,7 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
         msg: 'duplicate value trigger-unknown-error',
@@ -1582,18 +1604,21 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     input: `{
       "aggregatable_debug_reporting": {
         "key_piece": "0x1",
-        "debug_data": [{
-          "key_piece": "0x2",
-          "types": ["unspecified"],
-          "value": 123
-        }, {
-          "key_piece": "0x3",
-          "types": ["unspecified"],
-          "value": 123
-        }]
+        "debug_data": [
+          {
+            "key_piece": "0x2",
+            "types": ["unspecified"],
+            "value": 123
+          },
+          {
+            "key_piece": "0x3",
+            "types": ["unspecified"],
+            "value": 123
+          }
+        ]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data'],
         msg: 'duplicate type: unspecified',
@@ -1692,6 +1717,51 @@ const testCases: jsontest.TestCase<Trigger>[] = [
         msg: 'must be >= 1 and <= uint32 max (4294967295)',
       },
     ],
+  },
+
+  // Named budgets.
+  {
+    name: 'named-budgets-wrong-type',
+    input: `{"named_budgets": 1}`,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        path: ['named_budgets'],
+        msg: 'must be a list',
+      },
+    ],
+  },
+  {
+    name: 'named-budgets-value-wrong-type',
+    input: `{"named_budgets": [1]}`,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        path: ['named_budgets', 0],
+        msg: 'must be an object',
+      },
+    ],
+  },
+  {
+    name: 'named-budget-wrong-type',
+    input: `{"named_budgets": [{
+      "name": 1
+    }]}`,
+    parseNamedBudgets: true,
+    expectedErrors: [
+      {
+        path: ['named_budgets', 0, 'name'],
+        msg: 'must be a string',
+      },
+    ],
+  },
+  {
+    name: 'named_budget-missing-name',
+    input: `{"named_budgets": [{
+      "filters": [],
+      "not_filters": []
+    }]}`,
+    parseNamedBudgets: true,
   },
 ]
 

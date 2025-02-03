@@ -20,6 +20,7 @@
   - [Hide the true number of attribution reports](#hide-the-true-number-of-attribution-reports)
   - [Optional: reduce report delay with trigger context ID](#optional-reduce-report-delay-with-trigger-context-id)
   - [Optional: flexible contribution filtering with filtering IDs](#optional-flexible-contribution-filtering-with-filtering-ids)
+  - [Optional: named budgets](#optional-named-budgets)
 - [Data processing through a Secure Aggregation Service](#data-processing-through-a-secure-aggregation-service)
 - [Privacy considerations](#privacy-considerations)
   - [Differential Privacy](#differential-privacy)
@@ -37,9 +38,10 @@
 
 ## Authors
 
-* csharrison@chromium.org
-* johnidel@chromium.org
-* marianar@google.com
+* Charlie Harrison (csharrison@chromium.org)
+* John Delaney (johnidel@chromium.org)
+* Mariana Raykova (marianar@google.com)
+* Nan Lin (linnan@chromium.org)
 
 ## Introduction
 
@@ -503,6 +505,9 @@ As the trigger context ID in the aggregatable report explicitly reveals the
 association between the report and the trigger, these reports can be sent
 immediately without delay.
 
+When a trigger context ID is provided, the aggregatable report will not count
+towards the limit of aggregatable reports per source, nor be limited by it.
+
 Note: This is an [alternative](https://github.com/WICG/attribution-reporting-api/blob/main/report_verification.md#could-we-just-tag-reports-with-a-trigger_id-instead-of-using-anonymous-tokens)
 considered for [report verification](https://github.com/WICG/attribution-reporting-api/blob/main/report_verification.md),
 and achieves all of the higher priority [security goals](https://github.com/WICG/attribution-reporting-api/blob/main/report_verification.md#security-goals).
@@ -550,6 +555,56 @@ the aggregatable report with a non-default max bytes. This behavior is the same
 as when a trigger context ID is set.
 
 See [flexible_filtering.md](https://github.com/patcg-individual-drafts/private-aggregation-api/blob/main/flexible_filtering.md) for more details.
+
+### Optional: named budgets
+
+Named budgets is an optional feature that gives API callers the ability 
+to manage `L1` contribution budget distribution across different types of
+attributions, addressing common challenges such as:
+
+- Allocating the privacy budget between different types of attributions
+  (e.g., biddable vs. non-biddable).
+- Distributing the budget across multiple product categories to prevent any
+  single product category from consuming all available privacy budget.
+
+[Source registrations](#attribution-source-registration) will accept an optional
+field `named_budgets`, which is a dictionary used to set the
+maximum contribution for each named budget for this source.
+
+```jsonc
+{
+  ..., // existing fields
+  "named_budgets": {
+    "budgetName1": 32768,  // Max contribution budget for budgetName1.
+    "budgetName2": 32768   // Max contribution budget for budgetName2.
+  }
+}
+```
+
+[Trigger registrations](#attribution-trigger-registration) will accept an
+optional field `named_budgets`, which will be used to select the
+named budget for the generated aggregatable report.
+
+```jsonc
+{
+  ..., // existing fields
+  "named_budgets": [
+    {
+      "name": "budgetName1",
+      "filters": {"source_type": ["navigation"]}
+    }
+  ]
+}
+```
+
+The first named budget from the trigger that matches the source's filter data
+will be selected. If there is no budget name specified or no matching filters, the
+`L1` contribution budget will still be applied.
+
+When generating an aggregatable report, in addition to performing the 
+current `L1` budget limit check, the contributions for the report will
+be checked against the available budget with the selected budget name, if applicable.
+If the budget is insufficient, the aggregatable report will not be generated.
 
 ## Data processing through a Secure Aggregation Service
 

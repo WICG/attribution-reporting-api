@@ -49,6 +49,10 @@ const testCases: TestCase[] = [
         "limit": 3,
         "values": ["1"],
         "max_event_states": 4
+      },
+      "named_budgets": {
+        "1": 32768,
+        "2": 32769
       }
     }`,
     sourceType: SourceType.navigation,
@@ -95,6 +99,10 @@ const testCases: TestCase[] = [
         values: new Set<string>('1'),
         maxEventStates: 4,
       },
+      namedBudgets: new Map([
+        ['1', 32768],
+        ['2', 32769],
+      ]),
     }),
   },
 
@@ -272,6 +280,16 @@ const testCases: TestCase[] = [
       {
         path: ['destination'],
         msg: 'length must be in the range [1, 3]',
+      },
+    ],
+  },
+  {
+    name: 'destination-uses-public-suffix',
+    input: `{"destination": "https://com"}`,
+    expectedWarnings: [
+      {
+        msg: 'com is a public suffix: only triggers from https://com itself will match, not e.g. https://example.com',
+        path: ['destination'],
       },
     ],
   },
@@ -614,7 +632,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "debug_key": 1
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_key'],
         msg: 'must be a string',
@@ -627,7 +645,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "debug_key": "-1"
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_key'],
         msg: 'string must represent a non-negative integer (must match /^[0-9]+$/)',
@@ -1063,7 +1081,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "debug_reporting": "true"
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['debug_reporting'],
         msg: 'must be a boolean',
@@ -1567,7 +1585,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "aggregatable_debug_reporting": 1
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting'],
         msg: 'must be an object',
@@ -1580,7 +1598,7 @@ const testCases: TestCase[] = [
       "destination": "https://a.test",
       "aggregatable_debug_reporting": {}
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'budget'],
         msg: 'required',
@@ -1600,7 +1618,7 @@ const testCases: TestCase[] = [
         "key_piece": "0x1"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'budget'],
         msg: 'must be a number',
@@ -1616,7 +1634,7 @@ const testCases: TestCase[] = [
         "key_piece": "0x1"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'budget'],
         msg: 'must be in the range [1, 65536]',
@@ -1632,7 +1650,7 @@ const testCases: TestCase[] = [
         "key_piece": "0x1"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'budget'],
         msg: 'must be in the range [1, 65536]',
@@ -1648,7 +1666,7 @@ const testCases: TestCase[] = [
         "key_piece": 1
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'key_piece'],
         msg: 'must be a string',
@@ -1664,7 +1682,7 @@ const testCases: TestCase[] = [
         "key_piece": "1"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'key_piece'],
         msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
@@ -1681,7 +1699,7 @@ const testCases: TestCase[] = [
         "aggregation_coordinator_origin": 1
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [
           'aggregatable_debug_reporting',
@@ -1701,7 +1719,7 @@ const testCases: TestCase[] = [
         "aggregation_coordinator_origin": "a.test"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [
           'aggregatable_debug_reporting',
@@ -1721,7 +1739,7 @@ const testCases: TestCase[] = [
         "aggregation_coordinator_origin": "http://a.test"
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: [
           'aggregatable_debug_reporting',
@@ -1741,7 +1759,7 @@ const testCases: TestCase[] = [
         "debug_data": {}
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data'],
         msg: 'must be a list',
@@ -1758,7 +1776,7 @@ const testCases: TestCase[] = [
         "debug_data": [1]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0],
         msg: 'must be an object',
@@ -1775,7 +1793,7 @@ const testCases: TestCase[] = [
         "debug_data": [{}]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'required',
@@ -1804,7 +1822,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'must be a string',
@@ -1825,7 +1843,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'key_piece'],
         msg: 'must be a hex128 (must match /^0[xX][0-9A-Fa-f]{1,32}$/)',
@@ -1846,7 +1864,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be a number',
@@ -1863,11 +1881,11 @@ const testCases: TestCase[] = [
         "debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
-          "value": 0 
+          "value": 0
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be in the range [1, 65536]',
@@ -1884,11 +1902,11 @@ const testCases: TestCase[] = [
         "debug_data": [{
           "key_piece": "0x1",
           "types": ["source-success"],
-          "value": 65537 
+          "value": 65537
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'value'],
         msg: 'must be in the range [1, 65536]',
@@ -1909,7 +1927,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting'],
         msg: 'data contains value greater than budget (789)',
@@ -1930,7 +1948,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'must be a list',
@@ -1951,7 +1969,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types'],
         msg: 'length must be in the range [1, Infinity]',
@@ -1972,7 +1990,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
         msg: 'must be a string',
@@ -1993,12 +2011,6 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
-      {
-        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
-        msg: 'duplicate value abc',
-      },
-    ],
     expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
@@ -2007,6 +2019,10 @@ const testCases: TestCase[] = [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
         msg: 'unknown type',
+      },
+      {
+        path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
+        msg: 'duplicate value abc',
       },
     ],
   },
@@ -2017,23 +2033,20 @@ const testCases: TestCase[] = [
       "aggregatable_debug_reporting": {
         "budget": 123,
         "key_piece": "0x1",
-        "debug_data": [{
-          "key_piece": "0x2",
-          "types": ["abc"],
-          "value": 123
-        }, {
-          "key_piece": "0x1",
-          "types": ["abc"],
-          "value": 456
-	}]
+        "debug_data": [
+          {
+            "key_piece": "0x2",
+            "types": ["abc"],
+            "value": 123
+          },
+          {
+            "key_piece": "0x1",
+            "types": ["abc"],
+            "value": 456
+          }
+        ]
       }
     }`,
-    expectedErrors: [
-      {
-        path: ['aggregatable_debug_reporting', 'debug_data'],
-        msg: 'duplicate type: abc',
-      },
-    ],
     expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 0],
@@ -2042,6 +2055,10 @@ const testCases: TestCase[] = [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 1, 'types', 0],
         msg: 'unknown type',
+      },
+      {
+        path: ['aggregatable_debug_reporting', 'debug_data'],
+        msg: 'duplicate type: abc',
       },
     ],
   },
@@ -2059,7 +2076,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data', 0, 'types', 1],
         msg: 'duplicate value source-success',
@@ -2084,7 +2101,7 @@ const testCases: TestCase[] = [
         }]
       }
     }`,
-    expectedErrors: [
+    expectedWarnings: [
       {
         path: ['aggregatable_debug_reporting', 'debug_data'],
         msg: 'duplicate type: unspecified',
@@ -2631,9 +2648,16 @@ const testCases: TestCase[] = [
       "trigger_specs": [
         {"trigger_data": [1, 0]},
         {"trigger_data": [3]},
-        {"trigger_data": [2]}
+        {"trigger_data": [2]},
+        {"trigger_data": [4, 5, 6, 7, 8, 9, 10]}
       ]
     }`,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: Infinity,
+      },
+    },
     parseFullFlex: true,
   },
   {
@@ -2641,8 +2665,14 @@ const testCases: TestCase[] = [
     input: `{
       "destination": "https://a.test",
       "trigger_data_matching": "modulus",
-      "trigger_data": [1, 0, 2, 3]
+      "trigger_data": [1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     }`,
+    vsv: {
+      maxEventLevelChannelCapacityPerSource: {
+        [SourceType.event]: Infinity,
+        [SourceType.navigation]: Infinity,
+      },
+    },
   },
 
   {
@@ -3062,6 +3092,139 @@ const testCases: TestCase[] = [
       {
         path: [],
         msg: 'randomized trigger rate: 0.0024263',
+      },
+    ],
+  },
+
+  // Named budgets.
+  {
+    name: 'named-budgets-not-a-dictionary',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": ["1"]
+    }`,
+    sourceType: SourceType.navigation,
+    expectedErrors: [
+      {
+        msg: 'must be an object',
+        path: ['named_budgets'],
+      },
+    ],
+  },
+  {
+    name: 'budget-name-too-long',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "aaaaaaaaaaaaaaaaaaaaaaaaaa": 32768
+        }
+      }`,
+    sourceType: SourceType.navigation,
+    expectedErrors: [
+      {
+        msg: 'name exceeds max length per budget name (26 > 25)',
+        path: ['named_budgets', 'aaaaaaaaaaaaaaaaaaaaaaaaaa'],
+      },
+    ],
+  },
+  {
+    name: 'budget-name-empty',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "": 32768
+        }
+      }`,
+    sourceType: SourceType.navigation,
+  },
+  {
+    name: 'named-budgets-too-many',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "1": 32768,
+          "2": 32768,
+          "3": 32768,
+          "4": 32768,
+          "5": 32768,
+          "6": 32768,
+          "7": 32768,
+          "8": 32768,
+          "9": 32768,
+          "10": 32768,
+          "11": 32768,
+          "12": 32768,
+          "13": 32768,
+          "14": 32768,
+          "15": 32768,
+          "16": 32768,
+          "17": 32768,
+          "18": 32768,
+          "19": 32768,
+          "20": 32768,
+          "21": 32768,
+          "22": 32768,
+          "23": 32768,
+          "24": 32768,
+          "25": 32768,
+          "26": 32768
+        }
+      }`,
+    sourceType: SourceType.navigation,
+    expectedErrors: [
+      {
+        msg: 'exceeds the maximum number of keys (25)',
+        path: ['named_budgets'],
+      },
+    ],
+  },
+  {
+    name: 'named-budget-non-positive',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "1": 32768,
+          "2": 0,
+          "3": -1
+        }
+      }`,
+    sourceType: SourceType.navigation,
+    expectedErrors: [
+      {
+        msg: 'must be in the range [0, 65536]',
+        path: ['named_budgets', '3'],
+      },
+    ],
+  },
+  {
+    name: 'named-budget-exceeds-max',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "1": 65537
+        }
+      }`,
+    sourceType: SourceType.navigation,
+    expectedErrors: [
+      {
+        msg: 'must be in the range [0, 65536]',
+        path: ['named_budgets', '1'],
+      },
+    ],
+  },
+  {
+    name: 'named-budget-not-integer',
+    input: `{
+        "destination": "https://a.test",
+        "named_budgets": {
+          "1": "1024"
+        }
+      }`,
+    sourceType: SourceType.navigation,
+    expectedErrors: [
+      {
+        msg: 'must be a number',
+        path: ['named_budgets', '1'],
       },
     ],
   },

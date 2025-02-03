@@ -3,6 +3,7 @@ import { SourceType } from '../source-type'
 import * as context from './context'
 import { Maybe } from './maybe'
 import {
+  NamedBudgets,
   AggregationKeys,
   AttributionScopes,
   EventReportWindows,
@@ -21,6 +22,7 @@ import {
   required,
   suitableSite,
   withDefault,
+  withErrorAsWarning,
 } from './validate'
 import * as privacy from '../flexible-event/privacy'
 import { serializeSource } from './to-json'
@@ -235,6 +237,26 @@ function aggregationKeys(j: Json, ctx: Context): Maybe<AggregationKeys> {
     aggregationKey,
     constants.maxAggregationKeysPerSource
   )
+}
+
+function namedBudgetValue(j: Json, ctx: Context): Maybe<number> {
+  return number(j, ctx)
+    .filter(isInteger, ctx)
+    .filter(isInRange, ctx, 0, constants.allowedAggregatableBudgetPerSource)
+}
+
+function namedBudget([name, j]: [string, Json], ctx: Context): Maybe<number> {
+  if (name.length > constants.maxLengthPerBudgetName) {
+    ctx.error(
+      `name exceeds max length per budget name (${name.length} > ${constants.maxLengthPerBudgetName})`
+    )
+    return Maybe.None
+  }
+  return namedBudgetValue(j, ctx)
+}
+
+function namedBudgets(j: Json, ctx: Context): Maybe<NamedBudgets> {
+  return keyValues(j, ctx, namedBudget, constants.maxNamedBudgetsPerSource)
 }
 
 function roundAwayFromZeroToNearestDay(n: number): number {
@@ -604,6 +626,10 @@ function defaultTriggerSpecs(
   )
 }
 
+function compareNumbers(a: number, b: number): number {
+  return a - b
+}
+
 function isTriggerDataMatchingValidForSpecs(s: Source, ctx: Context): boolean {
   return ctx.scope('trigger_data_matching', () => {
     if (s.triggerDataMatching !== TriggerDataMatching.modulus) {
@@ -612,7 +638,7 @@ function isTriggerDataMatchingValidForSpecs(s: Source, ctx: Context): boolean {
 
     const triggerData: number[] = s.triggerSpecs
       .flatMap((spec) => Array.from(spec.triggerData))
-      .sort()
+      .sort(compareNumbers)
 
     if (triggerData.some((triggerDatum, i) => triggerDatum !== i)) {
       ctx.error(
@@ -712,7 +738,10 @@ function source(j: Json, ctx: Context): Maybe<Source> {
         triggerSpecs: () => triggerSpecsVal,
         aggregatableDebugReporting: field(
           'aggregatable_debug_reporting',
-          withDefault(sourceAggregatableDebugReportingConfig, null)
+          withDefault(
+            withErrorAsWarning(sourceAggregatableDebugReportingConfig, null),
+            null
+          )
         ),
 
         triggerDataMatching: field(
@@ -727,6 +756,10 @@ function source(j: Json, ctx: Context): Maybe<Source> {
         attributionScopes: field(
           'attribution_scopes',
           withDefault(attributionScopes, null)
+        ),
+        namedBudgets: field(
+          'named_budgets',
+          withDefault(namedBudgets, new Map())
         ),
 
         ...commonDebugFields,

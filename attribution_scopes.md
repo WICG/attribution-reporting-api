@@ -1,12 +1,12 @@
 # Pre-Attribution Filtering: Attribution Scopes
 
-_Note: This document describes possible new functionality in the Attribution Reporting API. This is a forwards and backwards compatible change to event-level and summary reports. While this new functionality is being developed, we still highly encourage testing the existing API functionalities to support core utility and compatibility needs._
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 **Table of Contents**
 
+- [Authors](#authors)
 - [Goals](#goals)
 - [Pre-Attribution Filtering](#pre-attribution-filtering)
   - [API changes](#api-changes)
@@ -18,7 +18,14 @@ _Note: This document describes possible new functionality in the Attribution Rep
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-<br>
+## Authors
+* Arpana Hosabettu (arpanah@chromium.org)
+* Feifei Ji (feifeiji@google.com)
+* Vikas Sahu (vikassahu@google.com)
+
+
+## Introduction
+
 The current attribution logic in the Attribution Reporting API may not be ideal for use-cases where an API caller needs finer-grained control over the attribution granularity (e.g. campaign, product, conversion ID, etc.) before a source is chosen for attribution. Currently available features such as top-level filters are not sufficient for this use-case because they happen after a source has been selected (i.e. after destination matching), which results in either no attribution occurring or incorrect attribution depending on the top-level filters that are set. We can support this use-case by allowing registrations to specify predefined attribution scopes that will be considered for filtering *before* attributing a source, in order to more efficiently extract utility from the API. 
 
 ## Goals

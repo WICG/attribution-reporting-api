@@ -1,10 +1,10 @@
 # Aggregation Service for the Attribution Reporting API
 
-Authors:
-* Carlos Cela <cjcela@google.com>
-* Ruchi Lohani <rlohani@google.com>
-* Martin Pál <mpal@google.com>
-* Chanda Patel <chandapatel@google.com>
+## Authors
+* Carlos Cela (cjcela@google.com)
+* Ruchi Lohani (rlohani@google.com)
+* Martin Pál (mpal@google.com)
+* Chanda Patel (chandapatel@google.com)
 
 ## Introduction
 
@@ -96,6 +96,7 @@ throughout this proposal.
 * _Coordinator:_ an entity responsible for key management and aggregatable report
   accounting. The coordinator maintains a list of hashes of approved aggregation
   service configurations and configures access to decryption keys.
+* _Shared ID:_ A unique identifier assigned to a group of reports in combination with [filtering IDs](https://github.com/patcg-individual-drafts/private-aggregation-api/blob/main/flexible_filtering.md#proposal-filtering-id-in-the-encrypted-payload) to prevent overlap between batches of reports. This eliminates the need to track individual reports and allows for efficient privacy budget management at the group level. 
 
 ## Aggregation workflow
 
@@ -243,7 +244,7 @@ single aggregation batch (as duplicates) or in multiple batches. Because
 of this, the aggregation service enforces a "no duplicates" rule:
 
 * No aggregatable report can appear more than once within a batch. 
-* No aggregatable report can appear in more than one batch or contribute
+* No Shared ID can appear in more than one batch or contribute
   to more than one summary report. 
 
 The no-duplicates rule is enforced during aggregation. If duplicates are
@@ -254,8 +255,8 @@ found, these batches may be rejected or duplicates may be filtered out.
 It is not technically practical to keep track of every single aggregatable
 report submitted for aggregation to check for batch disjointness, that is,
 that batches are not overlapping. Instead, each aggregatable report will
-be assigned a shared ID. This ID is generated from the combined data points: API version, reporting origin, destination site, source registration time and scheduled report time. 
-These data points come from the report's [shared_info](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#aggregatable-reports) field. 
+be assigned a shared ID. This ID is generated from the combined data points: API version, reporting origin, destination site, source registration time, scheduled report time, and filtering ID. 
+These data points come from the report's [shared_info](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md#aggregatable-reports) field and from the job parameter in the request. 
 
 The aggregation service will enforce that all aggregatable reports with
 the same ID must be included in the same batch. Conversely, if more than
