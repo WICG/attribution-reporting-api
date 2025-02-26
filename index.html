@@ -4,7 +4,7 @@
   <title>Attribution Reporting</title>
   <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
-  <meta content="Bikeshed version c67c745b1, updated Fri Jan 17 14:27:28 2025 -0800" name="generator">
+  <meta content="Bikeshed version 60c422380, updated Thu Feb 20 19:11:22 2025 -0800" name="generator">
   <link href="https://wicg.github.io/attribution-reporting-api" rel="canonical">
   <meta content="dark light" name="color-scheme">
   <link href="https://www.w3.org/StyleSheets/TR/2021/dark.css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css">
@@ -736,7 +736,7 @@ var[data-var-color="6"] { --var-vg: #FFBCF2; }
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">Attribution Reporting</h1>
-   <p id="w3c-state"><a href="https://www.w3.org/standards/types/#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2025-01-21">21 January 2025</time></p>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types/#CG-DRAFT">Draft Community Group Report</a>, <time class="dt-updated" datetime="2025-02-26">26 February 2025</time></p>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -5878,7 +5878,7 @@ set <var>debugDataType</var> to "<code><a data-link-type="dfn" href="#trigger-de
      <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑤④">For each</a> <var>triggerData</var> of <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-aggregatable-trigger-data" id="ref-for-attribution-trigger-aggregatable-trigger-data①">aggregatable trigger data</a>:</p>
      <ol>
       <li data-md>
-       <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-source-against-filters-and-negated-filters" id="ref-for-match-an-attribution-source-against-filters-and-negated-filters">match an attribution source against filters and negated filters</a> with <var>source</var>, <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-filters" id="ref-for-aggregatable-trigger-data-filters①">filters</a>, <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-negated-filters" id="ref-for-aggregatable-trigger-data-negated-filters①">negated filters</a>, and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time②">trigger time</a> is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⑨">continue</a>:</p>
+       <p>If the result of running <a data-link-type="dfn" href="#match-an-attribution-source-against-filters-and-negated-filters" id="ref-for-match-an-attribution-source-against-filters-and-negated-filters">match an attribution source against filters and negated filters</a> with <var>source</var>, <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-filters" id="ref-for-aggregatable-trigger-data-filters①">filters</a>, <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-negated-filters" id="ref-for-aggregatable-trigger-data-negated-filters①">negated filters</a>, and <var>trigger</var>’s <a data-link-type="dfn" href="#attribution-trigger-trigger-time" id="ref-for-attribution-trigger-trigger-time②">trigger time</a> is false, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#iteration-continue" id="ref-for-iteration-continue①⑨">continue</a>.</p>
       <li data-md>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-iterate" id="ref-for-list-iterate⑤⑤">For each</a> <var>sourceKey</var> of <var>triggerData</var>’s <a data-link-type="dfn" href="#aggregatable-trigger-data-source-keys" id="ref-for-aggregatable-trigger-data-source-keys①">source keys</a>:</p>
        <ol>
@@ -11279,7 +11279,12 @@ function hideRefHint(refHint) {
 function showRefHint(link) {
     if(link.classList.contains("dfn-link")) return;
     const url = link.getAttribute("href");
-    const ref = refsData[url];
+    const refHintKey = link.getAttribute("data-refhint-key");
+    let key = url;
+    if(refHintKey) {
+        key = refHintKey + "_" + url;
+    }
+    const ref = refsData[key];
     if(!ref) return;
 
     hideAllRefHints(); // Only display one at this time.
