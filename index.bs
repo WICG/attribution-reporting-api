@@ -431,7 +431,7 @@ a [=set=] of [=strings=] |allowedKeys|:
         value |value|, and the parameters |params| to |entries|.
 1. Return a [=structured header/dictionary=] containing |entries|.
 
-Note: The user agent may "[=structured header/define new structured fields|grease=]" the
+<p class=note>The user agent may "[=structured header/define new structured fields|grease=]" the
 dictionary structured headers according to the preceding algorithm to help ensure that recipients
 use a proper structured header parser, rather than naive string equality or
 `contains` operations, which makes it easier to introduce backwards-compatible
@@ -581,7 +581,7 @@ To <dfn>clear site data</dfn> given an [=origin=] |origin|:
     1. If |report|'s [=aggregatable attribution report/reporting origin=] and |origin| are [=same origin=],
         [=set/remove=] |report| from the [=aggregatable attribution report cache=].
 
-Note: We deliberately do *not* remove matching entries from the
+<p class=note>We deliberately do *not* remove matching entries from the
 [=attribution rate-limit cache=] and [=aggregatable debug rate-limit cache=], as doing so would allow a site to reset and
 therefore exceed the intended rate limits at will.
 
@@ -687,7 +687,7 @@ a [=report window=] [=struct=] with the following fields:
 : [=report window/end=]
 :: The [=report window/end=] of |list|[|list|'s [=list/size=] - 1].
 
-Note: The [=report window list/total window=] is conceptually a union of
+<p class=note>The [=report window list/total window=] is conceptually a union of
 [=report windows=], because there are no gaps in time between any of the
 [=report windows|windows=].
 
@@ -1290,7 +1290,7 @@ A <dfn>triggering status</dfn> is one of the following:
 <li>"<dfn><code>attributed</code></dfn>"
 </ul>
 
-Note: "<code>[=triggering status/noised=]</code>" only applies for [=triggering event-level attribution=] when it is attributed
+<p class=note>"<code>[=triggering status/noised=]</code>" only applies for [=triggering event-level attribution=] when it is attributed
 successfully but dropped as the noise was applied to the source.
 
 A <dfn>trigger debug data</dfn> is a [=tuple=] with the following items:
@@ -1338,7 +1338,7 @@ A user agent holds an <dfn>aggregatable debug rate-limit cache</dfn>, which is a
 The above caches are collectively known as the <dfn>attribution caches</dfn>. The [=attribution caches=] are
 shared among all [=environment settings objects=].
 
-Note: This would ideally use <a spec=storage>storage bottles</a> to provide access to the attribution caches.
+<p class=note>This would ideally use <a spec=storage>storage bottles</a> to provide access to the attribution caches.
 However attribution data is inherently cross-site, and operations on storage would need to span across all storage bottle maps.
 
 An <dfn>internal ID</dfn> is an integer.
@@ -1581,7 +1581,7 @@ Issue: This would ideally be replaced by a more descriptive algorithm in Infra. 
 
 <h3 id="parsing-json-fields">Parsing JSON fields</h3>
 
-Note: The "`Attribution-Reporting-Register-Source`" and
+<p class=note>The "`Attribution-Reporting-Register-Source`" and
 "`Attribution-Reporting-Register-Trigger`" response headers contain JSON-encoded
 data, rather than [=structured header|structured values=],
 because of limitations on nesting in the latter. The recursive
@@ -1626,7 +1626,7 @@ To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destina
 1. If |destinationStrings|'s [=set/size=] is equal to 1, return |destinationStrings|[0].
 1. Return |destinationStrings|.
 
-Note: |destinations| is required to be sorted to avoid revealing extra
+<p class=note>|destinations| is required to be sorted to avoid revealing extra
 information about the original source registration, namely the order of the
 "<code>[=source-registration JSON key/destination=]</code>" field in the
 original JSON registration, which can be used to distinguish semantically
@@ -1827,7 +1827,7 @@ and an [=aggregatable debug reporting config=] |default|:
     :: |aggregationCoordinator|
 1. Return |aggregatableDebugReportingConfig|.
 
-Note: The parsing errors are intentionally ignored in this algorithm with |default|
+<p class=note>The parsing errors are intentionally ignored in this algorithm with |default|
 returned to avoid data loss from the optional debug reporting feature.
 
 <h3 id="getting-registration-info">Getting registration info</h3>
@@ -2163,14 +2163,14 @@ and a [=response=] |response|:
 
 1. The user-agent may ignore the response; if so, return.
 
-    Note: The user-agent may prevent attribution for a number of reasons, such as user opt-out. In these
+    <p class=note>The user-agent may prevent attribution for a number of reasons, such as user opt-out. In these
     cases, it is preferred to abort the API flow at response time rather than at request time so this
     state is not immediately detectable. Attribution may also be blocked if the reporting origin is not
     <a href="https://github.com/privacysandbox/attestation">enrolled</a>.
 
 1. [=Queue a task=] on the [=networking task source=] to proceed with the following steps.
 
-    Note: This algorithm can be invoked from while [=in parallel=].
+    <p class=note>This algorithm can be invoked from while [=in parallel=].
 
 1. [=Assert=]: |eligibility| is
     "<code>[=eligibility/navigation-source=]</code>" or
@@ -2239,14 +2239,13 @@ and a [=boolean=] |fenced|:
     :: |headerName|.
     : "`value`"
     :: |headerValue|.
+1. Optionally, set |body|["`error`"] to error details of any type.
 1. Let |data| be a new [=verbose debug data=] with the items:
     : [=verbose debug data/data type=]
     :: "<code>[=header errors debug data type/header-parsing-error=]</code>"
     : [=verbose debug data/body=]
     :: |body|
 1. Run [=obtain and deliver a verbose debug report=] with « |data| », |reportingOrigin|, and |fenced|.
-
-Note: The user agent may optionally include error details of any type in |body|["`error`"].
 
 <h3 id="attribution-debugging">Attribution debugging</h3>
 
@@ -2267,7 +2266,7 @@ To <dfn>serialize an attribution debug info</dfn> given a [=map=] |data| and an
 1. [=map/Set=] |data|["`trigger_debug_key`"] to |debugInfo|'s [=attribution debug info/trigger debug key=],
     [=serialize an integer|serialized=].
 
-Note: We require both source and trigger debug keys to be present to avoid
+<p class=note>We require both source and trigger debug keys to be present to avoid
 a privacy leak from one-sided third-party cookie access.
 
 <h3 id="obtaining-and-delivering-aggregatable-debug-report">Obtaining and delivering an aggregatable debug report</h3>
@@ -2405,7 +2404,7 @@ To <dfn>compute the channel capacity of a source</dfn> given a positive integer 
 1. Let |p| be |pickRate| * (|states| - 1) / |states|.
 1. Return log2(|states|) - h(|p|) - |p| * log2(|states| - 1) where h is the binary entropy function [[BIN-ENT]].
 
-Note: This algorithm computes the channel capacity [[CHAN]] of a q-ary symmetric channel [[Q-SC]].
+<p class=note>This algorithm computes the channel capacity [[CHAN]] of a q-ary symmetric channel [[Q-SC]].
 
 To <dfn>compute the scopes channel capacity of a source</dfn> given a positive integer |numTriggerStates|, a positive integer |attributionScopeLimit|, and a positive integer |maxEventStates|:
 1. Let |totalStates| be |numTriggerStates| + |maxEventStates| * (|attributionScopeLimit| - 1).
@@ -2473,7 +2472,7 @@ To <dfn>parse attribution destinations</dfn> from a [=map=] |map|:
     is less than |b|, <a href="https://html.spec.whatwg.org/multipage/origin.html#serialization-of-a-site">serialized</a>.
 1. Return |result|.
 
-Note: Sorting |result| helps ensure that registrations with the same set of
+<p class=note>Sorting |result| helps ensure that registrations with the same set of
 destinations are equivalent, regardless of the order of sites in the
 registration JSON.
 
@@ -2767,7 +2766,7 @@ To <dfn>parse attribution scope values for source</dfn> from a [=map=] |map| and
 1. If |result|'s [=set/size=] is greater than |limit| or [=max attribution scopes per source=], return an error.
 1. Return |result|.
 
-Note: Empty attribution scopes are not allowed if |limit| is set,
+<p class=note>Empty attribution scopes are not allowed if |limit| is set,
 to prevent the selection of both sources with and without scopes, which would effectively
 result in |limit| + 1 scopes.
 
@@ -2951,7 +2950,7 @@ To <dfn>check if an [=attribution source=] exceeds the time-based destination li
 
     </dl>
 
-Note: When both limits are hit, we interpret it as "<code>[=destination rate-limit result/hit reporting limit=]</code>"
+<p class=note>When both limits are hit, we interpret it as "<code>[=destination rate-limit result/hit reporting limit=]</code>"
 for debug reporting.
 
 To <dfn>check if an [=attribution source=] exceeds the per day destination limits</dfn>
@@ -2983,7 +2982,7 @@ To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of
         1. [=set/Append=] |report|'s [=event-level report/internal ID=] to |deletedEventLevelReports|.
         1. [=set/Remove=] |report| from the [=event-level report cache=].
 
-    Note: Leaking browsing history of destinations deactivated for unexpired
+    <p class=note>Leaking browsing history of destinations deactivated for unexpired
     destination limit from [=event-level reports=] whose [=event-level report/trigger time=]
     is earlier than |now| is mitigated by the presence of [=obtain a fake report|fake reports=].
     [=Event-level reports=] whose [=event-level report/trigger time=] is greater
@@ -3169,7 +3168,7 @@ a [=boolean=] |isNoised|, and a [=boolean=] |destinationLimitReplaced|:
 1. If |destinationLimitReplaced| is true, [=map/set=] |body|["`source_destination_limit`"]
     to the user agent's [=max destinations covered by unexpired sources=], [=serialize an integer|serialized=].
 
-Note: The "`source_destination_limit`" field may be included to indicate that
+<p class=note>The "`source_destination_limit`" field may be included to indicate that
 [=max destinations covered by unexpired sources=] was hit, which is not
 reported as "<code>[=source debug data type/source-destination-limit=]</code>" to prevent side-channel
 leakage of cross-origin data.
@@ -3428,10 +3427,10 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
     "<code>[=source debug data type/source-success=]</code>", |source|, |isNoised|, and |destinationLimitReplaced|.
 1. [=set/Append=] |source| to the [=attribution source cache=].
 
-Note: Because a fake report does not have a "real" effective destination, we need to subtract from the
+<p class=note>Because a fake report does not have a "real" effective destination, we need to subtract from the
 privacy budget of all possible destinations.
 
-Note: The limits that are not reported as <code>[=source debug data type/source-success=]</code>
+<p class=note>The limits that are not reported as <code>[=source debug data type/source-success=]</code>
 in [=verbose debug reports=] should be checked before any limits that are reported implicitly as
 <code>[=source debug data type/source-success=]</code> (
 <code>[=source debug data type/source-destination-global-rate-limit=]</code> and
@@ -3831,7 +3830,7 @@ To <dfn>match an attribution source against a filter config</dfn> given an
         1. If |isNegated| is false, return false.
     1. Else if |isNegated| is true, return false.
 
-    Note: If non-negated, the source must have been registered inside of the
+    <p class=note>If non-negated, the source must have been registered inside of the
     lookback window. If negated, it must be outside of the lookback window.
 
 1. Let |filterMap| be |filter|'s [=filter config/map=].
@@ -4101,7 +4100,7 @@ To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
     and [=attribution rate-limit record/scope=] is equal to "<code>[=rate-limit scope/event-attribution=]</code>".
 1. [=Assert=]: |rateLimitRecord| is not null.
 
-    Note: We are making an implicit assumption that [=attribution rate-limit window=] is
+    <p class=note>We are making an implicit assumption that [=attribution rate-limit window=] is
     greater than or equal to |sourceToAttribute|'s [=attribution source/expiry=].
     If this assumption does not hold then |rateLimitRecord| might be null.
 
@@ -4394,7 +4393,7 @@ To <dfn>find matching sources</dfn> given an [=attribution trigger=] |trigger|:
 1. [=list/Remove=] |sourceToAttribute| from |matchingSources|.
 1. Return the [=tuple=] (|sourceToAttribute|, |matchingSources|).
 
-Note: We deliberately return all matching sources for deletion even if they don't have
+<p class=note>We deliberately return all matching sources for deletion even if they don't have
 [=check if an attribution source and attribution trigger have matching attribution scopes|matching attribution scopes with the attribution trigger=]
 to avoid creating multiple [=attribution reports=] from a single cross-site user interaction.
 
@@ -4672,24 +4671,24 @@ To <dfn>queue reports for delivery</dfn> given a [=set=] of
         [=current wall time=], [=iteration/continue=].
     1. [=set/Remove=] |report| from |cache|.
 
-        Note: In order to support sending, waiting, and retries across various
+        <p class=note>In order to support sending, waiting, and retries across various
          forms of interruption, including shutdown, the user agent may need to
          persist reports that are in the process of being sent in some other
          storage.
     1. [=list/Append=] |report| to |reportsToSend|.
 1. [=shuffle a list|Shuffle=] |reportsToSend|.
 
-    Note: Shuffling ensures [=event-level reports=] for the same source with the same [=attribution report/report time=] are never sent
+    <p class=note>Shuffling ensures [=event-level reports=] for the same source with the same [=attribution report/report time=] are never sent
      in the order they were created. This results in less information gained from a single [=attribution source=].
 1. [=set/iterate|For each=] |report| of |reportsToSend|, run the following steps [=in parallel=]:
     1. Wait an [=implementation-defined=] random non-negative [=duration=].
 
-        Note: On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
+        <p class=note>On startup, it is possible the user agent will need to send many reports whose report times passed while the browser was
          closed. Adding random delay prevents prevents [=event-level report/event IDs=] from different
          [=attribution source/source origins=] being joined based on the time they were received.
     1. Optionally, wait a further [=implementation-defined=] [=duration=].
 
-        Note: This is intended to allow user agents to optimize device resource usage.
+        <p class=note>This is intended to allow user agents to optimize device resource usage.
     1. Run [=attempt to deliver a report=] with |report|.
 
 <h3 id="encode-integer">Encode an unsigned k-bit integer</h3>
@@ -4741,7 +4740,7 @@ of running the following steps:
     : "`report_id`"
     :: |report|'s [=aggregatable report/external ID=]
 
-    Note: The inclusion of "`report_id`" in the shared info is intended to allow the report recipient
+    <p class=note>The inclusion of "`report_id`" in the shared info is intended to allow the report recipient
     to perform deduplication and prevent double counting, in the event that the user agent retries
     reports on failure.
 
@@ -4752,7 +4751,7 @@ of running the following steps:
     : "`version`"
     :: "`1.0`"
 
-    Note: The "`version`" value needs to be bumped if the <a href="https://github.com/privacysandbox/aggregation-service">aggregation service</a> upgrades.
+    <p class=note>The "`version`" value needs to be bumped if the <a href="https://github.com/privacysandbox/aggregation-service">aggregation service</a> upgrades.
 
 1. If |report|'s [=aggregatable report/debug mode=] is <strong>enabled</strong>,
     [=map/set=] |sharedInfo|["`debug_mode`"] to "`enabled`".
@@ -4776,7 +4775,7 @@ To <dfn>obtain the public key for encryption</dfn> given an [=aggregation coordi
 
 Issue: Specify this in terms of [=fetch=].
 
-Note: The user agent might enforce weekly key rotation. If there are multiple keys, the user agent
+<p class=note>The user agent might enforce weekly key rotation. If there are multiple keys, the user agent
 might independently pick a key uniformly at random for every encryption operation.
 The key should be uniquely identifiable.
 
@@ -4883,7 +4882,7 @@ To <dfn>obtain an event-level report body</dfn> given an [=attribution report=] 
     : "`report_id`"
     :: |report|'s [=event-level report/external ID=]
 
-    Note: The inclusion of "`report_id`" in the report body is intended to allow the report recipient
+    <p class=note>The inclusion of "`report_id`" in the report body is intended to allow the report recipient
     to perform deduplication and prevent double counting, in the event that the user agent retries
     reports on failure.
 
@@ -5218,7 +5217,7 @@ The [=remote end steps=] are:
 
 1. Return [=success=] with data `null`.
 
-Note: Without this, reports would be subject to noise and delays, making testing difficult.
+<p class=note>Without this, reports would be subject to noise and delays, making testing difficult.
 
 ## Send pending reports ## {#webdriver-sendpendingreports}
 
