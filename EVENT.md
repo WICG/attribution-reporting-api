@@ -980,6 +980,11 @@ were reported.
 
 In order to achieve the privacy goals listed above the API has various rate limits, which can be found [here](https://github.com/WICG/attribution-reporting-api/blob/main/params/chromium-params.md) for Chromium.
 
+Note: Browsers may choose to allow separate limits, e.g. storage limit,
+rate-limits, and destination limits, for the embedded site/origin for specific
+use cases (for example, [AMP](https://amp.dev) pages rendered by an AMP
+cache/viewer provider).
+
 ### Trigger Data
 
 Trigger data, e.g. advertiser-side data, is extremely important for critical use
