@@ -2558,13 +2558,11 @@ To <dfn>parse report windows</dfn> given a |value|, a
 1. Return |windows|.
 
 To <dfn>parse trigger data into a trigger spec map</dfn> given a
-|triggerDataList|, a [=trigger spec=] |spec|, a [=trigger spec map=]
-|specs|, and a [=boolean=] |allowEmpty|:
+|triggerDataList|, a [=trigger spec=] |spec|, and a [=trigger spec map=]
+|specs|:
 
 1. If |triggerDataList| is not a [=list=] or its [=list/size=] is greater than
     [=max distinct trigger data per source=], return false.
-1. If |allowEmpty| is false and |triggerDataList| [=list/is empty=], return
-    false.
 1. [=list/iterate|For each=] |triggerData| of |triggerDataList|:
     1. If |triggerData| is not an integer or cannot be represented by an
         unsigned 32-bit integer, or |specs|[|triggerData|] [=map/exists=],
@@ -2587,10 +2585,9 @@ To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
     : [=trigger spec/event-level report windows=]
     :: |defaultReportWindows|
 1. If |map|["<code>[=source-registration JSON key/trigger_data=]</code>"] [=map/exists=]:
-    1. Let |allowEmpty| be true.
     1. If the result of running
         [=parse trigger data into a trigger spec map=] with
-        |map|["<code>[=source-registration JSON key/trigger_data=]</code>"], |spec|, |specs|, and |allowEmpty| is false,
+        |map|["<code>[=source-registration JSON key/trigger_data=]</code>"], |spec|, and |specs| is false,
         return an error.
 1. Otherwise:
     1. [=set/iterate|For each=] integer |triggerData| of
