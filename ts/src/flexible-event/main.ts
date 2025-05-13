@@ -113,12 +113,10 @@ if (options.json_file !== undefined) {
       new Config(
         source.maxEventLevelReports,
         source.attributionScopes,
-        source.triggerSpecs.flatMap((spec) =>
-          new Array<PerTriggerDataConfig>(spec.triggerData.size).fill(
-            new PerTriggerDataConfig(
-              spec.eventReportWindows.endTimes.length,
-              spec.summaryBuckets.length
-            )
+        new Array<PerTriggerDataConfig>(source.triggerData.size).fill(
+          new PerTriggerDataConfig(
+            source.eventReportWindows.endTimes.length,
+            source.maxEventLevelReports
           )
         )
       )

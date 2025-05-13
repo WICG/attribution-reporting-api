@@ -10,9 +10,7 @@ import {
   FilterData,
   Source,
   SourceAggregatableDebugReportingConfig,
-  SummaryOperator,
   TriggerDataMatching,
-  TriggerSpec,
 } from './source'
 import {
   ItemErrorAction,
@@ -336,12 +334,12 @@ function eventLevelEpsilon(j: Json, ctx: Context): Maybe<number> {
 function channelCapacity(s: Source, ctx: Context): void {
   const numStatesWords = 'number of possible output states'
 
-  const perTriggerDataConfigs = s.triggerSpecs.flatMap((spec) =>
-    Array<privacy.PerTriggerDataConfig>(spec.triggerData.size).fill(
-      new privacy.PerTriggerDataConfig(
-        spec.eventReportWindows.endTimes.length,
-        spec.summaryBuckets.length
-      )
+  const perTriggerDataConfigs = Array<privacy.PerTriggerDataConfig>(
+    s.triggerData.size
+  ).fill(
+    new privacy.PerTriggerDataConfig(
+      s.eventReportWindows.endTimes.length,
+      s.maxEventLevelReports
     )
   )
 
@@ -438,82 +436,12 @@ function fullFlexTriggerDatum(j: Json, ctx: Context): Maybe<number> {
     .filter(isInRange, ctx, 0, UINT32_MAX)
 }
 
-function triggerDataSet(
-  j: Json,
-  ctx: Context,
-  allowEmpty: boolean = false
-): Maybe<Set<number>> {
+function triggerData(j: Json, ctx: Context): Maybe<Set<number>> {
   return set(j, ctx, fullFlexTriggerDatum, {
-    minLength: allowEmpty ? 0 : 1,
+    minLength: 0,
     maxLength: constants.maxTriggerDataPerSource,
     requireDistinct: true,
   })
-}
-
-type TriggerSpecDeps = {
-  expiry: Maybe<number>
-  eventReportWindows: Maybe<EventReportWindows>
-  maxEventLevelReports: Maybe<number>
-}
-
-function makeDefaultSummaryBuckets(maxEventLevelReports: number): number[] {
-  return Array.from({ length: maxEventLevelReports }, (_, i) => i + 1)
-}
-
-function triggerSpecsFromTriggerData(
-  j: Json,
-  ctx: Context,
-  deps: TriggerSpecDeps
-): Maybe<TriggerSpec[]> {
-  return triggerDataSet(j, ctx, /*allowEmpty=*/ true).map((triggerData) => {
-    if (
-      triggerData.size === 0 ||
-      deps.eventReportWindows.value === undefined ||
-      deps.maxEventLevelReports.value === undefined
-    ) {
-      return []
-    }
-
-    return [
-      {
-        eventReportWindows: deps.eventReportWindows.value,
-        summaryBuckets: makeDefaultSummaryBuckets(
-          deps.maxEventLevelReports.value
-        ),
-        summaryOperator: SummaryOperator.count,
-        triggerData: triggerData,
-      },
-    ]
-  })
-}
-
-function defaultTriggerSpecs(
-  ctx: Context,
-  eventReportWindows: Maybe<EventReportWindows>,
-  maxEventLevelReports: Maybe<number>
-): Maybe<TriggerSpec[]> {
-  return eventReportWindows.flatMap((eventReportWindows) =>
-    maxEventLevelReports.map((maxEventLevelReports) => [
-      {
-        eventReportWindows,
-        summaryBuckets: Array.from(
-          { length: maxEventLevelReports },
-          (_, i) => i + 1
-        ),
-        summaryOperator: SummaryOperator.count,
-        triggerData: new Set(
-          Array.from(
-            {
-              length: Number(
-                constants.defaultTriggerDataCardinality[ctx.opts.sourceType]
-              ),
-            },
-            (_, i) => i
-          )
-        ),
-      },
-    ])
-  )
 }
 
 function compareNumbers(a: number, b: number): number {
@@ -526,9 +454,7 @@ function isTriggerDataMatchingValidForSpecs(s: Source, ctx: Context): boolean {
       return true
     }
 
-    const triggerData: number[] = s.triggerSpecs
-      .flatMap((spec) => Array.from(spec.triggerData))
-      .sort(compareNumbers)
+    const triggerData: number[] = Array.from(s.triggerData).sort(compareNumbers)
 
     if (triggerData.some((triggerDatum, i) => triggerDatum !== i)) {
       ctx.error(
@@ -546,7 +472,7 @@ function warnInconsistentMaxEventLevelReportsAndTriggerSpecs(
   ctx: Context
 ): void {
   const allowsReports = s.maxEventLevelReports > 0
-  const hasSpecs = s.triggerSpecs.length > 0
+  const hasSpecs = s.triggerData.size > 0
 
   if (allowsReports && !hasSpecs) {
     ctx.warning(
@@ -567,39 +493,6 @@ function source(j: Json, ctx: Context): Maybe<Source> {
         withDefault(expiry, constants.validSourceExpiryRange[1])
       )(j, ctx)
 
-      const eventReportWindowsVal = exclusive(
-        {
-          event_report_window: (j) => eventReportWindow(j, ctx, expiryVal),
-          event_report_windows: (j) => eventReportWindows(j, ctx, expiryVal),
-        },
-        expiryVal.map(defaultEventReportWindows, ctx)
-      )(j, ctx)
-
-      const maxEventLevelReportsVal = field(
-        'max_event_level_reports',
-        maxEventLevelReports
-      )(j, ctx)
-
-      const defaultTriggerSpecsVal = defaultTriggerSpecs(
-        ctx,
-        eventReportWindowsVal,
-        maxEventLevelReportsVal
-      )
-
-      const triggerSpecsDeps = {
-        expiry: expiryVal,
-        eventReportWindows: eventReportWindowsVal,
-        maxEventLevelReports: maxEventLevelReportsVal,
-      }
-
-      const triggerSpecsVal = exclusive(
-        {
-          trigger_data: (j) =>
-            triggerSpecsFromTriggerData(j, ctx, triggerSpecsDeps),
-        },
-        defaultTriggerSpecsVal
-      )(j, ctx)
-
       return struct(j, ctx, {
         aggregatableReportWindow: field('aggregatable_report_window', (j) =>
           j === undefined ? expiryVal : singleReportWindow(j, ctx, expiryVal)
@@ -618,9 +511,35 @@ function source(j: Json, ctx: Context): Maybe<Source> {
         ),
         expiry: () => expiryVal,
         filterData: field('filter_data', withDefault(filterData, new Map())),
-        maxEventLevelReports: () => maxEventLevelReportsVal,
+        maxEventLevelReports: field(
+          'max_event_level_reports',
+          maxEventLevelReports
+        ),
         sourceEventId: field('source_event_id', withDefault(uint64, 0n)),
-        triggerSpecs: () => triggerSpecsVal,
+        eventReportWindows: exclusive(
+          {
+            event_report_window: (j) => eventReportWindow(j, ctx, expiryVal),
+            event_report_windows: (j) => eventReportWindows(j, ctx, expiryVal),
+          },
+          expiryVal.map(defaultEventReportWindows, ctx)
+        ),
+
+        triggerData: field(
+          'trigger_data',
+          withDefault(
+            triggerData,
+            new Set(
+              Array.from(
+                {
+                  length: Number(
+                    constants.defaultTriggerDataCardinality[ctx.opts.sourceType]
+                  ),
+                },
+                (_, i) => i
+              )
+            )
+          )
+        ),
         aggregatableDebugReporting: field(
           'aggregatable_debug_reporting',
           withDefault(
@@ -731,6 +650,6 @@ export function validateSource(
 export function validator(opts: Readonly<SourceOptions>): Validator<Source> {
   return {
     validate: (input) => validateSource(input, opts),
-    serialize: (value) => serializeSource(value, opts),
+    serialize: serializeSource,
   }
 }

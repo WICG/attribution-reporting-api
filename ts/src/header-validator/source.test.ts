@@ -1,7 +1,7 @@
 import { SourceType } from '../source-type'
 import * as vsv from '../vendor-specific-values'
 import { Maybe } from './maybe'
-import { Source, SummaryOperator, TriggerDataMatching } from './source'
+import { Source, TriggerDataMatching } from './source'
 import * as testutil from './util.test'
 import * as jsontest from './validate-json.test'
 import * as source from './validate-source'
@@ -69,17 +69,11 @@ const testCases: TestCase[] = [
       priority: 2n,
       sourceEventId: 3n,
       maxEventLevelReports: 2,
-      triggerSpecs: [
-        {
-          eventReportWindows: {
-            startTime: 0,
-            endTimes: [3601],
-          },
-          summaryBuckets: [1, 2],
-          summaryOperator: SummaryOperator.count,
-          triggerData: new Set([0, 1, 2, 3, 4, 5, 6, 7]),
-        },
-      ],
+      eventReportWindows: {
+        startTime: 0,
+        endTimes: [3601],
+      },
+      triggerData: new Set([0, 1, 2, 3, 4, 5, 6, 7]),
       triggerDataMatching: TriggerDataMatching.modulus,
       aggregatableDebugReporting: {
         budget: 1234,

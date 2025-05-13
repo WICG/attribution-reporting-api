@@ -426,6 +426,6 @@ export function validator(
 ): Validator<Trigger> {
   return {
     validate: (input) => validateTrigger(input, opts),
-    serialize: (value) => serializeTrigger(value, opts),
+    serialize: serializeTrigger,
   }
 }
