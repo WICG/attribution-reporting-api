@@ -34,7 +34,6 @@ export type EventTriggerDatum = FilterPair &
   reg.Priority &
   DedupKey & {
     triggerData: bigint
-    value: number
   }
 
 export type AggregatableDedupKey = FilterPair & DedupKey

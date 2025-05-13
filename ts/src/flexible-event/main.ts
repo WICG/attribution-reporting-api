@@ -101,7 +101,6 @@ if (options.json_file !== undefined) {
   const [{ errors, warnings }, source] = validateSource(json, {
     vsv: vsv.Chromium,
     sourceType: options.source_type,
-    fullFlex: true,
   })
   warnings.forEach((i) => logIssue('W', i))
   if (errors.length > 0) {

@@ -155,7 +155,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
               map: new Map([['y', new Set()]]),
             },
           ],
-          value: 1,
         },
       ],
       positive: [
@@ -1656,69 +1655,6 @@ const testCases: jsontest.TestCase<Trigger>[] = [
     ],
   },
 
-  // Full Flex
-
-  {
-    name: 'value-wrong-type',
-    input: `{"event_trigger_data": [{"value":"1"}]}`,
-    parseFullFlex: true,
-    expectedErrors: [
-      {
-        path: ['event_trigger_data', 0, 'value'],
-        msg: 'must be a number',
-      },
-    ],
-  },
-  {
-    name: 'value-zero',
-    input: `{"event_trigger_data": [{"value":0}]}`,
-    parseFullFlex: true,
-    expectedErrors: [
-      {
-        path: ['event_trigger_data', 0, 'value'],
-        msg: 'must be >= 1 and <= uint32 max (4294967295)',
-      },
-    ],
-  },
-  {
-    name: 'value-negative',
-    input: `{"event_trigger_data": [{"value":-1}]}`,
-    parseFullFlex: true,
-    expectedErrors: [
-      {
-        path: ['event_trigger_data', 0, 'value'],
-        msg: 'must be >= 1 and <= uint32 max (4294967295)',
-      },
-    ],
-  },
-  {
-    name: 'value-not-integer',
-    input: `{"event_trigger_data": [{"value":1.5}]}`,
-    parseFullFlex: true,
-    expectedErrors: [
-      {
-        path: ['event_trigger_data', 0, 'value'],
-        msg: 'must be an integer',
-      },
-    ],
-  },
-  {
-    name: 'value-max',
-    input: `{"event_trigger_data": [{"value":4294967295}]}`,
-    parseFullFlex: true,
-  },
-  {
-    name: 'value-gt-max',
-    input: `{"event_trigger_data": [{"value":4294967296}]}`,
-    parseFullFlex: true,
-    expectedErrors: [
-      {
-        path: ['event_trigger_data', 0, 'value'],
-        msg: 'must be >= 1 and <= uint32 max (4294967295)',
-      },
-    ],
-  },
-
   // Named budgets.
   {
     name: 'named-budgets-wrong-type',
@@ -1770,7 +1706,6 @@ testCases.forEach((tc) =>
     tc,
     trigger.validator({
       vsv: { ...vsv.Chromium, ...tc.vsv },
-      fullFlex: tc.parseFullFlex,
     })
   )
 )

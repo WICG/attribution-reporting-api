@@ -31,7 +31,6 @@ import {
   RegistrationContext as Context,
   RegistrationOptions,
   StructFields,
-  UINT32_MAX,
   aggregatableDebugReportingConfig,
   aggregatableKeyValueValue,
   aggregationCoordinatorOriginField,
@@ -245,26 +244,10 @@ function aggregatableFilteringIdMaxBytes(
     })
 }
 
-function eventTriggerValue(j: Json, ctx: Context): Maybe<number> {
-  return number(j, ctx)
-    .filter(isInteger, ctx)
-    .filter(
-      isInRange,
-      ctx,
-      1,
-      UINT32_MAX,
-      `must be >= 1 and <= uint32 max (${UINT32_MAX})`
-    )
-}
-
 function eventTriggerData(j: Json, ctx: Context): Maybe<EventTriggerDatum[]> {
   return array(j, ctx, (j) =>
     struct(j, ctx, {
       triggerData: field('trigger_data', withDefault(uint64, 0n)),
-
-      value: ctx.opts.fullFlex
-        ? field('value', withDefault(eventTriggerValue, 1))
-        : () => Maybe.some(1),
 
       ...filterFields,
       ...dedupKeyField,

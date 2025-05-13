@@ -432,51 +432,6 @@ function sourceAggregatableDebugReportingConfig(
   })
 }
 
-function summaryBuckets(
-  j: Json | undefined,
-  ctx: Context,
-  maxEventLevelReports: Maybe<number>
-): Maybe<number[]> {
-  let maxLength
-  if (maxEventLevelReports.value === undefined) {
-    ctx.error(
-      'cannot be fully validated without a valid max_event_level_reports'
-    )
-    maxLength = constants.maxSettableEventLevelAttributionsPerSource
-  } else {
-    maxLength = maxEventLevelReports.value
-  }
-
-  if (j === undefined) {
-    return maxEventLevelReports.map(makeDefaultSummaryBuckets)
-  }
-
-  let prev = 0
-  let prevDesc = 'implicit minimum'
-
-  const bucket = (j: Json): Maybe<number> =>
-    number(j, ctx)
-      .filter(isInteger, ctx)
-      .filter(
-        isInRange,
-        ctx,
-        prev + 1,
-        UINT32_MAX,
-        `must be > ${prevDesc} (${prev}) and <= uint32 max (${UINT32_MAX})`
-      )
-      .peek((n) => {
-        prev = n
-        prevDesc = 'previous value'
-      })
-
-  return array(j, ctx, bucket, {
-    minLength: 1,
-    maxLength,
-    maxLengthErrSuffix: ' (max_event_level_reports)',
-    itemErrorAction: ItemErrorAction.earlyExit, // suppress unhelpful cascaded errors
-  })
-}
-
 function fullFlexTriggerDatum(j: Json, ctx: Context): Maybe<number> {
   return number(j, ctx)
     .filter(isInteger, ctx)
@@ -503,71 +458,6 @@ type TriggerSpecDeps = {
 
 function makeDefaultSummaryBuckets(maxEventLevelReports: number): number[] {
   return Array.from({ length: maxEventLevelReports }, (_, i) => i + 1)
-}
-
-function triggerSpec(
-  j: Json,
-  ctx: Context,
-  deps: TriggerSpecDeps
-): Maybe<TriggerSpec> {
-  return struct(j, ctx, {
-    eventReportWindows: field('event_report_windows', (j) =>
-      j === undefined
-        ? deps.eventReportWindows
-        : eventReportWindows(j, ctx, deps.expiry)
-    ),
-
-    summaryBuckets: field(
-      'summary_buckets',
-      summaryBuckets,
-      deps.maxEventLevelReports
-    ),
-
-    summaryOperator: field(
-      'summary_operator',
-      withDefault(enumerated, SummaryOperator.count),
-      SummaryOperator
-    ),
-
-    triggerData: field('trigger_data', required(triggerDataSet)),
-  })
-}
-
-function triggerSpecs(
-  j: Json,
-  ctx: Context,
-  deps: TriggerSpecDeps
-): Maybe<TriggerSpec[]> {
-  return array(j, ctx, (j) => triggerSpec(j, ctx, deps), {
-    maxLength: constants.maxTriggerDataPerSource,
-  }).filter((specs) => {
-    const triggerData = new Set<number>()
-    const dups = new Set<number>()
-    for (const spec of specs) {
-      for (const triggerDatum of spec.triggerData) {
-        if (triggerData.has(triggerDatum)) {
-          dups.add(triggerDatum)
-        } else {
-          triggerData.add(triggerDatum)
-        }
-      }
-    }
-
-    let ok = true
-    if (triggerData.size > constants.maxTriggerDataPerSource) {
-      ctx.error(
-        `exceeds maximum number of distinct trigger_data (${triggerData.size} > ${constants.maxTriggerDataPerSource})`
-      )
-      ok = false
-    }
-
-    if (dups.size > 0) {
-      ctx.error(`duplicate trigger_data: ${Array.from(dups).join(', ')}`)
-      ok = false
-    }
-
-    return ok
-  })
 }
 
 function triggerSpecsFromTriggerData(
@@ -706,11 +596,6 @@ function source(j: Json, ctx: Context): Maybe<Source> {
         {
           trigger_data: (j) =>
             triggerSpecsFromTriggerData(j, ctx, triggerSpecsDeps),
-          ...(ctx.opts.fullFlex
-            ? {
-                trigger_specs: (j) => triggerSpecs(j, ctx, triggerSpecsDeps),
-              }
-            : {}),
         },
         defaultTriggerSpecsVal
       )(j, ctx)
