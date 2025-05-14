@@ -81,45 +81,6 @@ function serializeAggregatableDebugReportingConfig(
   }
 }
 
-type EventReportWindows = {
-  event_report_windows: { start_time: number; end_times: number[] }
-}
-
-function serializeEventReportWindows(
-  e: source.EventReportWindows
-): EventReportWindows {
-  return {
-    event_report_windows: {
-      start_time: e.startTime,
-      end_times: [...e.endTimes],
-    },
-  }
-}
-
-type TriggerData = {
-  trigger_data: number[]
-}
-
-function serializeTriggerData(d: Set<number>): TriggerData {
-  return { trigger_data: Array.from(d) }
-}
-
-type TriggerSpec = EventReportWindows &
-  TriggerData & {
-    summary_buckets: number[]
-    summary_operator: string
-  }
-
-function serializeTriggerSpec(ts: source.TriggerSpec): TriggerSpec {
-  return {
-    ...serializeEventReportWindows(ts.eventReportWindows),
-    ...serializeTriggerData(ts.triggerData),
-
-    summary_buckets: Array.from(ts.summaryBuckets),
-    summary_operator: ts.summaryOperator,
-  }
-}
-
 type SourceAggregatableDebugReportingConfig =
   AggregatableDebugReportingConfig & {
     budget: number
@@ -151,71 +112,29 @@ function serializeAttributionScopes(
   }
 }
 
-type NotFullFlexSource = Partial<EventReportWindows> & {
-  trigger_data: number[]
-  trigger_specs?: never
-}
-
-type FullFlexSource = {
-  event_report_windows?: never
-  trigger_data?: never
-  trigger_specs: TriggerSpec[]
-}
-
-function serializeFlexSource(
-  s: source.Source,
-  fullFlex: boolean
-): NotFullFlexSource | FullFlexSource {
-  if (fullFlex) {
-    return {
-      trigger_specs: Array.from(s.triggerSpecs, serializeTriggerSpec),
-    }
-  }
-
-  if (s.triggerSpecs.length === 0) {
-    return { trigger_data: [] }
-  }
-
-  if (s.triggerSpecs.length === 1) {
-    return {
-      ...serializeEventReportWindows(s.triggerSpecs[0]!.eventReportWindows),
-      ...serializeTriggerData(s.triggerSpecs[0]!.triggerData),
-    }
-  }
-
-  throw new TypeError()
-}
-
 type Source = CommonDebug &
-  Priority &
-  (NotFullFlexSource | FullFlexSource) & {
+  Priority & {
     aggregation_keys: { [key: string]: string }
     named_budgets?: { [key: string]: number }
     aggregatable_report_window: number
     destination: string[]
     destination_limit_priority: string
     event_level_epsilon: number
+    event_report_windows: { start_time: number; end_times: number[] }
     expiry: number
     filter_data: { [key: string]: string[] }
     max_event_level_reports: number
     source_event_id: string
+    trigger_data: number[]
     trigger_data_matching: string
     aggregatable_debug_reporting?: SourceAggregatableDebugReportingConfig
     attribution_scopes?: AttributionScopes
   }
 
-export interface Options {
-  fullFlex?: boolean | undefined
-}
-
-export function serializeSource(
-  s: source.Source,
-  opts: Readonly<Options>
-): string {
+export function serializeSource(s: source.Source): string {
   const source: Source = {
     ...serializeCommonDebug(s),
     ...serializePriority(s),
-    ...serializeFlexSource(s, opts.fullFlex ?? false),
 
     aggregation_keys: Object.fromEntries(
       Array.from(s.aggregationKeys.entries(), ([key, val]) => [
@@ -235,9 +154,14 @@ export function serializeSource(
     destination: Array.from(s.destination),
     destination_limit_priority: s.destinationLimitPriority.toString(),
     event_level_epsilon: s.eventLevelEpsilon,
+    event_report_windows: {
+      start_time: s.eventReportWindows.startTime,
+      end_times: [...s.eventReportWindows.endTimes],
+    },
     expiry: s.expiry,
     max_event_level_reports: s.maxEventLevelReports,
     source_event_id: s.sourceEventId.toString(),
+    trigger_data: Array.from(s.triggerData),
     trigger_data_matching: s.triggerDataMatching,
     ...ifNotNull(
       'aggregatable_debug_reporting',
@@ -293,26 +217,18 @@ type EventTriggerDatum = FilterPair &
   Priority &
   DedupKey & {
     trigger_data: string
-    value?: number
   }
 
 function serializeEventTriggerDatum(
-  d: trigger.EventTriggerDatum,
-  fullFlex: boolean
+  d: trigger.EventTriggerDatum
 ): EventTriggerDatum {
-  const obj: EventTriggerDatum = {
+  return {
     ...serializeFilterPair(d),
     ...serializePriority(d),
     ...serializeDedupKey(d),
 
     trigger_data: d.triggerData.toString(),
   }
-
-  if (fullFlex) {
-    obj.value = d.value
-  }
-
-  return obj
 }
 
 type AggregatableDedupKey = FilterPair & DedupKey
@@ -394,10 +310,7 @@ type Trigger = CommonDebug &
     attribution_scopes?: string[]
   }
 
-export function serializeTrigger(
-  t: trigger.Trigger,
-  opts: Readonly<Options>
-): string {
+export function serializeTrigger(t: trigger.Trigger): string {
   const trigger: Trigger = {
     ...serializeCommonDebug(t),
     ...serializeFilterPair(t),
@@ -426,7 +339,7 @@ export function serializeTrigger(
     aggregation_coordinator_origin: t.aggregationCoordinatorOrigin,
 
     event_trigger_data: Array.from(t.eventTriggerData, (d) =>
-      serializeEventTriggerDatum(d, opts.fullFlex ?? false)
+      serializeEventTriggerDatum(d)
     ),
 
     ...ifNotNull('trigger_context_id', t.triggerContextID, (v) => v),

@@ -101,7 +101,6 @@ if (options.json_file !== undefined) {
   const [{ errors, warnings }, source] = validateSource(json, {
     vsv: vsv.Chromium,
     sourceType: options.source_type,
-    fullFlex: true,
   })
   warnings.forEach((i) => logIssue('W', i))
   if (errors.length > 0) {
@@ -114,12 +113,10 @@ if (options.json_file !== undefined) {
       new Config(
         source.maxEventLevelReports,
         source.attributionScopes,
-        source.triggerSpecs.flatMap((spec) =>
-          new Array<PerTriggerDataConfig>(spec.triggerData.size).fill(
-            new PerTriggerDataConfig(
-              spec.eventReportWindows.endTimes.length,
-              spec.summaryBuckets.length
-            )
+        new Array<PerTriggerDataConfig>(source.triggerData.size).fill(
+          new PerTriggerDataConfig(
+            source.eventReportWindows.endTimes.length,
+            source.maxEventLevelReports
           )
         )
       )

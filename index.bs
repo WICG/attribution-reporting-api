@@ -691,38 +691,6 @@ a [=report window=] [=struct=] with the following fields:
 [=report windows=], because there are no gaps in time between any of the
 [=report windows|windows=].
 
-<h3 id="summary-operator-header">Summary operator</h3>
-
-A <dfn>summary operator</dfn> summarizes the triggers attributed to an
-[=attribution source=]. Its value is one of the following:
-
-<dl dfn-for="summary operator">
-: "<dfn><code>count</code></dfn>"
-:: Number of triggers attributed.
-: "<dfn><code>value_sum</code></dfn>"
-:: Sum of the value of triggers.
-
-</dl>
-
-<h3 id="summary-bucket-header">Summary bucket</h3>
-
-A <dfn>summary bucket</dfn> is a [=struct=] with the following items:
-
-<dl dfn-for="summary bucket">
-: <dfn>start</dfn>
-:: An unsigned 32-bit integer.
-: <dfn>end</dfn>
-:: An unsigned 32-bit integer.
-
-</dl>
-
-A <dfn>summary bucket list</dfn> is a [=list=] of [=summary buckets=].
-It has the following constraints:
-
-* Elements are strictly in ascending order based on their [=summary bucket/start=].
-* Every element's [=summary bucket/end=] is equal to the next element's [=summary bucket/start=] - 1, if it exists.
-* There is at least one element in the list.
-
 <h3 id="trigger-data-matching-mode-header">Trigger-data matching mode</h3>
 
 A <dfn>trigger-data matching mode</dfn> is one of the following:
@@ -969,8 +937,6 @@ An event-level trigger configuration is a [=struct=] with the following items:
 :: A [=list=] of [=filter configs=].
 : <dfn>negated filters</dfn>
 :: A [=list=] of [=filter configs=].
-: <dfn>value</dfn>
-:: A positive unsigned 32-bit integer.
 
 </dl>
 
@@ -2437,11 +2403,8 @@ A <dfn>source-registration JSON key</dfn> is one of the following:
 <li>"<dfn><code>priority</code></dfn>"
 <li>"<dfn><code>source_event_id</code></dfn>"
 <li>"<dfn><code>start_time</code></dfn>"
-<li>"<dfn><code>summary_buckets</code></dfn>"
-<li>"<dfn><code>summary_operator</code></dfn>"
 <li>"<dfn><code>trigger_data</code></dfn>"
 <li>"<dfn><code>trigger_data_matching</code></dfn>"
-<li>"<dfn><code>trigger_specs</code></dfn>"
 <li>"<dfn><code>values</code></dfn>"
 </ul>
 
@@ -2594,56 +2557,12 @@ To <dfn>parse report windows</dfn> given a |value|, a
     1. Set |startDuration| to |endDuration|.
 1. Return |windows|.
 
-The user-agent has an associated boolean
-<dfn>experimental Flexible Event support</dfn> (default false) that exposes
-non-normative behavior described in the
-<a href="https://github.com/WICG/attribution-reporting-api/blob/main/flexible_event_config.md">Flexible event-level configurations</a>
-proposal.
-
-To <dfn>parse summary operator</dfn> given a [=map=] |map|:
-
-1. Let |value| be "<code>[=summary operator/count=]</code>".
-1. If |map|["<code>[=source-registration JSON key/summary_operator=]</code>"] [=map/exists=]:
-    1. If |map|["<code>[=source-registration JSON key/summary_operator=]</code>"] is not a [=string=], return an
-        error.
-    1. If |map|["<code>[=source-registration JSON key/summary_operator=]</code>"] is not a
-        [=summary operator=], return an error.
-    1. Set |value| to |map|["<code>[=source-registration JSON key/summary_operator=]</code>"].
-1. Return |value|.
-
-To <dfn>parse summary buckets</dfn> given a [=map=] |map| and an integer |maxEventLevelReports|:
-
-1. Let |values| be [=the inclusive range|the range=] 1 to
-    |maxEventLevelReports|, inclusive.
-1. If |map|["<code>[=source-registration JSON key/summary_buckets=]</code>"] [=map/exists=]:
-    1. If |map|["<code>[=source-registration JSON key/summary_buckets=]</code>"] is not a [=list=], [=list/is empty=], or
-        its [=list/size=] is greater than |maxEventLevelReports|, return an
-        error.
-    1. Set |values| to |map|["<code>[=source-registration JSON key/summary_buckets=]</code>"].
-1. Let |prev| be 0.
-1. Let |summaryBuckets| be a new [=list=].
-1. [=list/iterate|For each=] |item| of |values|:
-    1. If |item| is not an integer or cannot be represented by an unsigned
-        32-bit integer, or is less than or equal to |prev|, return an error.
-    1. Let |summaryBucket| be a new [=summary bucket=] whose items are
-
-        : [=summary bucket/start=]
-        :: |prev|
-        : [=summary bucket/end=]
-        :: |item| - 1
-
-    1. [=list/Append=] |summaryBucket| to |summaryBuckets|.
-    1. Set |prev| to |item|.
-1. Return |summaryBuckets|.
-
 To <dfn>parse trigger data into a trigger spec map</dfn> given a
-|triggerDataList|, a [=trigger spec=] |spec|, a [=trigger spec map=]
-|specs|, and a [=boolean=] |allowEmpty|:
+|triggerDataList|, a [=trigger spec=] |spec|, and a [=trigger spec map=]
+|specs|:
 
 1. If |triggerDataList| is not a [=list=] or its [=list/size=] is greater than
     [=max distinct trigger data per source=], return false.
-1. If |allowEmpty| is false and |triggerDataList| [=list/is empty=], return
-    false.
 1. [=list/iterate|For each=] |triggerData| of |triggerDataList|:
     1. If |triggerData| is not an integer or cannot be represented by an
         unsigned 32-bit integer, or |specs|[|triggerData|] [=map/exists=],
@@ -2662,54 +2581,25 @@ To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
     and |expiry|.
 1. If |defaultReportWindows| is an error, return an error.
 1. Let |specs| be a new [=trigger spec map=].
-1. If [=experimental Flexible Event support=] is true and
-    |map|["<code>[=source-registration JSON key/trigger_specs=]</code>"] [=map/exists=]:
-    1. If |map|["<code>[=source-registration JSON key/trigger_data=]</code>"] [=map/exists=], return an error.
-    1. If |map|["<code>[=source-registration JSON key/trigger_specs=]</code>"] is not a [=list=] or its
-        [=list/size=] is greater than [=max distinct trigger data per source=],
+1. Let |spec| be a new [=trigger spec=] with the following items:
+    : [=trigger spec/event-level report windows=]
+    :: |defaultReportWindows|
+1. If |map|["<code>[=source-registration JSON key/trigger_data=]</code>"] [=map/exists=]:
+    1. If the result of running
+        [=parse trigger data into a trigger spec map=] with
+        |map|["<code>[=source-registration JSON key/trigger_data=]</code>"], |spec|, and |specs| is false,
         return an error.
-    1. [=list/iterate|For each=] |item| of |map|["<code>[=source-registration JSON key/trigger_specs=]</code>"]:
-        1. If |item| is not a [=map=], return an error.
-        1. Let |spec| be a new [=trigger spec=] with the following items:
-            : [=trigger spec/event-level report windows=]
-            :: |defaultReportWindows|
-        1. If |item|["<code>[=source-registration JSON key/event_report_windows=]</code>"] [=map/exists=]:
-            1. Let |reportWindows| be the result of
-                [=parsing report windows=] with |item|["<code>[=source-registration JSON key/event_report_windows=]</code>"],
-                |sourceTime|, and |expiry|.
-            1. If |reportWindows| is an error, return it.
-            1. Set |spec|'s [=trigger spec/event-level report windows=] to
-                |reportWindows|.
-        1. If |item|["<code>[=source-registration JSON key/trigger_data=]</code>"] does not [=map/exist=], return an error.
-        1. Let |allowEmpty| be false.
-        1. If the result of running
-            [=parse trigger data into a trigger spec map=] with
-            |item|["<code>[=source-registration JSON key/trigger_data=]</code>"], |spec|, |specs|, and |allowEmpty| is
-            false, return an error.
 1. Otherwise:
-    1. Let |spec| be a new [=trigger spec=] with the following items:
-        : [=trigger spec/event-level report windows=]
-        :: |defaultReportWindows|
-    1. If |map|["<code>[=source-registration JSON key/trigger_data=]</code>"] [=map/exists=]:
-        1. Let |allowEmpty| be true.
-        1. If the result of running
-            [=parse trigger data into a trigger spec map=] with
-            |map|["<code>[=source-registration JSON key/trigger_data=]</code>"], |spec|, |specs|, and |allowEmpty| is false,
-            return an error.
-    1. Otherwise:
-        1. [=set/iterate|For each=] integer |triggerData| of
-            [=the exclusive range|the range=] 0 to
-            [=default trigger data cardinality=][|sourceType|], exclusive:
-            1. [=map/Set=] |specs|[|triggerData|] to |spec|.
+    1. [=set/iterate|For each=] integer |triggerData| of
+        [=the exclusive range|the range=] 0 to
+        [=default trigger data cardinality=][|sourceType|], exclusive:
+        1. [=map/Set=] |specs|[|triggerData|] to |spec|.
 1. If |matchingMode| is "<code>[=trigger-data matching mode/modulus=]</code>":
     1. Let |i| be 0.
     1. [=map/iterate|For each=] |triggerData| of |specs|'s [=map/get the keys|keys=]:
         1. If |triggerData| does not equal |i|, return an error.
         1. Set |i| to |i| + 1.
 1. Return |specs|.
-
-Issue: Invoke [=parse summary buckets=] and [=parse summary operator=]
-from this algorithm.
 
 To <dfn>parse a source aggregatable debug reporting config</dfn> given |value|, a
 non-negative integer |defaultBudget|, and an [=aggregatable debug reporting config=]
@@ -3471,15 +3361,6 @@ A <dfn>trigger-registration JSON key</dfn> is one of the following:
 
 <h3 algorithm id="attribution-trigger-creation">Creating an attribution trigger</h3>
 
-To <dfn>parse an event-trigger value</dfn> given a [=map=] |map|:
-
-1. If [=experimental Flexible Event support=] is false or |map|["<code>[=trigger-registration JSON key/value=]</code>"] does
-    not [=map/exists|exist=], return 1.
-1. Let |value| be |map|["<code>[=trigger-registration JSON key/value=]</code>"].
-1. If |value| is not an integer, cannot be represented by an unsigned 32-bit
-    integer, or is less than or equal to zero, return an error.
-1. Return |value|.
-
 To <dfn>parse event triggers</dfn> given a [=map=] |map|:
 
 1. Let |eventTriggers| be a new [=set=].
@@ -3504,9 +3385,6 @@ To <dfn>parse event triggers</dfn> given a [=map=] |map|:
     1. Let |filterPair| be the result of running [=parse a filter pair=] with
         |value|.
     1. If |filterPair| is an error, return it.
-    1. Let |triggerValue| be the result of running
-        [=parse an event-trigger value=] with |value|.
-    1. If |triggerValue| is an error, return it.
     1. Let |eventTrigger| be a new [=event-level trigger configuration=] with
         the items:
         : [=event-level trigger configuration/trigger data=]
@@ -3519,8 +3397,6 @@ To <dfn>parse event triggers</dfn> given a [=map=] |map|:
         :: |filterPair|[0]
         : [=event-level trigger configuration/negated filters=]
         :: |filterPair|[1]
-        : [=event-level trigger configuration/value=]
-        :: |triggerValue|
     1. [=set/Append=] |eventTrigger| to |eventTriggers|.
 1. Return |eventTriggers|.
 
@@ -4106,10 +3982,6 @@ To <dfn>maybe replace event-level report</dfn> given an [=attribution source=]
 
 1. [=set/Remove=] |rateLimitRecord| from the [=attribution rate-limit cache=].
 1. Return "<code>[=event-level-report-replacement result/add-new-report=]</code>".
-
-Issue: This algorithm is not compatible with the behavior proposed for
-[=experimental Flexible Event support=] with differing
-[=trigger spec/event-level report windows=] for a given source.
 
 To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |trigger| and an
 [=attribution source=] |sourceToAttribute|, run the following steps:

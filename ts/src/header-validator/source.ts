@@ -10,18 +10,6 @@ export type FilterData = Map<string, Set<string>>
 export type AggregationKeys = Map<string, bigint>
 export type NamedBudgets = Map<string, number>
 
-export enum SummaryOperator {
-  count = 'count',
-  value_sum = 'value_sum',
-}
-
-export type TriggerSpec = {
-  eventReportWindows: EventReportWindows
-  summaryBuckets: number[]
-  summaryOperator: SummaryOperator
-  triggerData: Set<number>
-}
-
 export type SourceAggregatableDebugReportingConfig =
   reg.AggregatableDebugReportingConfig & {
     budget: number
@@ -49,7 +37,8 @@ export type Source = reg.CommonDebug &
     maxEventLevelReports: number
     sourceEventId: bigint
 
-    triggerSpecs: TriggerSpec[]
+    eventReportWindows: EventReportWindows
+    triggerData: Set<number>
     triggerDataMatching: TriggerDataMatching
 
     eventLevelEpsilon: number

@@ -11,7 +11,6 @@ interface Arguments {
   input?: string
   file?: string
 
-  fullFlex: boolean
   sourceType?: SourceType
 
   silent: boolean
@@ -41,11 +40,6 @@ const options = parse<Arguments>(
       typeLabel: '(event|navigation)',
       description:
         'If present, parse input as a source. Otherwise, parse as a trigger.',
-    },
-
-    fullFlex: {
-      type: Boolean,
-      description: 'If true, parse experimental Full Flexible Event fields.',
     },
 
     silent: {
@@ -94,11 +88,9 @@ const out = validate<unknown>(
   options.sourceType === undefined
     ? trigger.validator({
         vsv: vsv.Chromium,
-        fullFlex: options.fullFlex,
       })
     : source.validator({
         vsv: vsv.Chromium,
-        fullFlex: options.fullFlex,
         sourceType: options.sourceType,
       })
 )
