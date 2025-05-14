@@ -618,8 +618,10 @@ A randomized response output configuration is a [=struct=] with the following it
 <dl dfn-for="randomized response output configuration">
 : <dfn>max attributions per source</dfn>
 :: A positive integer.
-: <dfn>trigger specs</dfn>
-:: A [=trigger spec map=].
+: <dfn>trigger data</dfn>
+:: A [=trigger data set=].
+: <dfn>event-level report windows</dfn>
+:: A [=report window list=].
 
 </dl>
 
@@ -708,34 +710,25 @@ A <dfn>trigger-data matching mode</dfn> is one of the following:
 
 <h3 id="trigger-specs-header">Trigger specs</h3>
 
-A <dfn>trigger spec</dfn> is a [=struct=] with the following items:
+A <dfn>trigger data set</dfn> is a [=set=] whose items are unsigned 32-bit
+integers.
 
-<dl dfn-for="trigger spec">
-: <dfn>event-level report windows</dfn>
-:: A [=report window list=].
-
-</dl>
-
-A <dfn>trigger spec map</dfn> is a [=map=] whose keys are unsigned 32-bit
-integers and values are [=trigger specs=].
-
-To <dfn>find a matching trigger spec</dfn> given an [=attribution source=]
+To <dfn>find matching trigger data</dfn> given an [=attribution source=]
 |source| and an unsigned 64-bit integer |triggerData|:
 
-1. Let |specs| be |source|'s [=attribution source/trigger specs=].
+1. Let |set| be |source|'s [=attribution source/trigger data=].
 1. If |source|'s [=attribution source/trigger-data matching mode=] is:
     <dl class="switch">
     : "<code>[=trigger-data matching mode/exact=]</code>"
     :: Run the following steps:
-        1. If |specs|[|triggerData|] [=map/exists=], return its [=map/entry=].
+        1. If |set| [=set/contains=] |triggerData|, return |triggerData|.
         1. Return an error.
     : "<code>[=trigger-data matching mode/modulus=]</code>"
     :: Run the following steps:
-        1. If |specs| [=map/is empty=], return an error.
-        1. Let |keys| be |specs|'s [=map/get the keys|keys=].
-        1. Let |index| be the remainder when dividing |triggerData| by |keys|'s
+        1. If |set| [=set/is empty=], return an error.
+        1. Let |index| be the remainder when dividing |triggerData| by |set|'s
             [=set/size=].
-        1. Return the [=map/entry=] for |specs|[|keys|[|index|]].
+        1. Return the |set|[|index|].
 
     </dl>
 
@@ -787,8 +780,10 @@ An attribution source is a [=struct=] with the following items:
 :: A [=source type=].
 : <dfn>expiry</dfn>
 :: A [=duration=].
-: <dfn>trigger specs</dfn>
-:: A [=trigger spec map=].
+: <dfn>event-level report windows</dfn>
+:: A [=report window list=].
+: <dfn>trigger data</dfn>
+:: A [=trigger data set=].
 : <dfn>aggregatable report window</dfn>
 :: A [=report window=].
 : <dfn>priority</dfn>
@@ -1322,7 +1317,7 @@ Its value is (1 day, 30 days).
 <dfn>Min report window</dfn> is a positive [=duration=] that controls the
 minimum [=duration from=] an [=attribution source's=] [=attribution source/source time=]
 and any [=report window/end=] in [=attribution source/aggregatable report window=] or
-[=trigger spec/event-level report windows=].
+[=attribution source/event-level report windows=].
 Its value is 1 hour.
 
 <dfn>Max entries per filter data</dfn> is a positive integer that controls the
@@ -1350,7 +1345,7 @@ controls the maximum value of [=attribution source/max number of event-level rep
 Its value is 20.
 
 <dfn>Max settable event-level report windows</dfn> is a positive integer that
-controls the maximum [=list/size=] of [=trigger spec/event-level report windows=].
+controls the maximum [=list/size=] of [=attribution source/event-level report windows=].
 Its value is 5.
 
 <dfn>Default event-level attributions per source</dfn> is a [=map=] that
@@ -1374,7 +1369,7 @@ controls the valid range of [=event-level trigger configuration/trigger data=].
 Its value is «[=source type/navigation=] → 8, [=source type/event=] → 2».
 
 <dfn>Max distinct trigger data per source</dfn> is a positive integer that
-controls the maximum [=map/size=] of a [=trigger spec map=] for an
+controls the maximum [=set/size=] of a [=trigger data set=] for an
 [=attribution source=]. Its value is 32.
 
 <dfn>Max length per trigger context ID</dfn> is a positive integer that controls
@@ -2338,8 +2333,8 @@ an [=aggregation coordinator=] |aggregationCoordinator|, and a [=moment=] |now|:
 
 To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized response output configuration=] |config|:
 1. Let |possibleTriggerStates| be a new [=set=].
-1. [=map/iterate|For each=] |triggerData| → |spec| of |config|'s [=randomized response output configuration/trigger specs=]:
-    1. [=list/For each=] |reportWindow| of |spec|'s [=trigger spec/event-level report windows=]:
+1. [=set/iterate|For each=] |triggerData| |config|'s [=randomized response output configuration/trigger data=]:
+    1. [=list/For each=] |reportWindow| of |config|'s [=randomized response output configuration/event-level report windows=]:
         1. Let |state| be a new [=trigger state=] with the items:
             : [=trigger state/trigger data=]
             :: |triggerData|
@@ -2557,49 +2552,33 @@ To <dfn>parse report windows</dfn> given a |value|, a
     1. Set |startDuration| to |endDuration|.
 1. Return |windows|.
 
-To <dfn>parse trigger data into a trigger spec map</dfn> given a
-|triggerDataList|, a [=trigger spec=] |spec|, and a [=trigger spec map=]
-|specs|:
+To <dfn>parse trigger data into a trigger data set</dfn> given a [=map=] |map|
+and a [=trigger-data matching mode=] |matchingMode|:
 
-1. If |triggerDataList| is not a [=list=] or its [=list/size=] is greater than
-    [=max distinct trigger data per source=], return false.
-1. [=list/iterate|For each=] |triggerData| of |triggerDataList|:
-    1. If |triggerData| is not an integer or cannot be represented by an
-        unsigned 32-bit integer, or |specs|[|triggerData|] [=map/exists=],
-        return false.
-    1. [=map/Set=] |specs|[|triggerData|] to |spec|.
-    1. If |specs|'s [=map/size=] is greater than
-        [=max distinct trigger data per source=], return false.
-1. Return true.
-
-To <dfn>parse trigger specs</dfn> given a [=map=] |map|, a [=moment=]
-|sourceTime|, a [=source type=] |sourceType|, a [=duration=] |expiry|, and a
-[=trigger-data matching mode=] |matchingMode|:
-
-1. Let |defaultReportWindows| be the result of
-    [=parsing top-level report windows=] with |map|, |sourceTime|, |sourceType|,
-    and |expiry|.
-1. If |defaultReportWindows| is an error, return an error.
-1. Let |specs| be a new [=trigger spec map=].
-1. Let |spec| be a new [=trigger spec=] with the following items:
-    : [=trigger spec/event-level report windows=]
-    :: |defaultReportWindows|
+1. Let |set| be a new [=trigger data set=].
 1. If |map|["<code>[=source-registration JSON key/trigger_data=]</code>"] [=map/exists=]:
-    1. If the result of running
-        [=parse trigger data into a trigger spec map=] with
-        |map|["<code>[=source-registration JSON key/trigger_data=]</code>"], |spec|, and |specs| is false,
-        return an error.
+    1. Let |triggerDataList| be
+        |map|["<code>[=source-registration JSON key/trigger_data=]</code>"].
+    1. If |triggerDataList| is not a [=list=] or its [=list/size=] is greater than
+        [=max distinct trigger data per source=], return an error.
+    1. [=list/iterate|For each=] |triggerData| of |triggerDataList|:
+        1. If |triggerData| is not an integer or cannot be represented by an
+            unsigned 32-bit integer, or |set| [=set/contains=] |triggerData|,
+            return an error.
+        1. [=set/Append=] |triggerData| to |set|.
+        1. If |set|'s [=set/size=] is greater than
+            [=max distinct trigger data per source=], return an error.
 1. Otherwise:
     1. [=set/iterate|For each=] integer |triggerData| of
         [=the exclusive range|the range=] 0 to
         [=default trigger data cardinality=][|sourceType|], exclusive:
-        1. [=map/Set=] |specs|[|triggerData|] to |spec|.
+        1. [=set/Append=] |triggerData| to |triggerDataSet|.
 1. If |matchingMode| is "<code>[=trigger-data matching mode/modulus=]</code>":
     1. Let |i| be 0.
-    1. [=map/iterate|For each=] |triggerData| of |specs|'s [=map/get the keys|keys=]:
+    1. [=set/iterate|For each=] |triggerData| of |set|:
         1. If |triggerData| does not equal |i|, return an error.
         1. Set |i| to |i| + 1.
-1. Return |specs|.
+1. Return |set|.
 
 To <dfn>parse a source aggregatable debug reporting config</dfn> given |value|, a
 non-negative integer |defaultBudget|, and an [=aggregatable debug reporting config=]
@@ -2726,9 +2705,13 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     1. If |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"] is not a [=string=], return an error.
     1. If |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"] is not a [=trigger-data matching mode=], return an error.
     1. Set |triggerDataMatchingMode| to |value|["<code>[=source-registration JSON key/trigger_data_matching=]</code>"].
-1. Let |triggerSpecs| be the result of [=parsing trigger specs=] with |value|,
-    |sourceTime|, |sourceType|, |expiry|, and |triggerDataMatchingMode|.
-1. If |triggerSpecs| is an error, return it.
+1. Let |eventReportWindows| be the result of
+    [=parsing top-level report windows=] with |value|, |sourceTime|, |sourceType|,
+    and |expiry|.
+1. If |eventReportWindows| is an error, return it.
+1. Let |triggerDataSet| be the result of [=parsing trigger data into a trigger data set=] with |value|
+    and |triggerDataMatchingMode|.
+1. If |triggerDataSet| is an error, return it.
 1. Let |attributionScopes| be the result of running [=parse attribution scopes=] with |value|.
 1. If |attributionScopes| is an error, return it.
 1. Let |epsilon| be the user agent's [=max settable event-level epsilon=].
@@ -2759,8 +2742,10 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     :: |reportingOrigin|
     : [=attribution source/expiry=]
     :: |expiry|
-    : [=attribution source/trigger specs=]
-    :: |triggerSpecs|
+    : [=attribution source/event-level report windows=]
+    :: |eventReportWindows|
+    : [=attribution source/trigger data=]
+    :: |triggerDataSet|
     : [=attribution source/aggregatable report window=]
     :: |aggregatableReportWindow|
     : [=attribution source/priority=]
@@ -2983,13 +2968,11 @@ To <dfn>check if an [=attribution source=] should be blocked by reporting-origin
 To <dfn>obtain a fake report</dfn> given an [=attribution source=] |source| and
 a [=trigger state=] |triggerState|:
 
-1. Let |specEntry| be the [=map/entry=] for
-    |source|'s [=attribution source/trigger specs=][|triggerState|'s [=trigger state/trigger data=]].
 1. Let |triggerTime| be |triggerState|'s [=trigger state/report window=]'s [=report window/start=].
 1. Let |priority| be 0.
 1. Let |fakeReport| be the result of running [=obtain an event-level report=] with |source|,
     |triggerTime|, [=obtain an event-level report/triggerDebugKey=] set to null,
-    |priority|, and |specEntry|.
+    |priority|, and |triggerState|'s [=trigger state/trigger data=].
 1. [=Assert=]: |fakeReport|'s [=event-level report/report time=] is equal to
     |triggerState|'s [=trigger state/report window=]'s [=report window/end=].
 1. Return |fakeReport|.
@@ -3189,8 +3172,10 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 
     : [=randomized response output configuration/max attributions per source=]
     :: |source|'s [=attribution source/max number of event-level reports=]
-    : [=randomized response output configuration/trigger specs=]
-    :: |source|'s [=trigger specs=]
+    : [=randomized response output configuration/trigger data=]
+    :: |source|'s [=attribution source/trigger data=]
+    : [=randomized response output configuration/event-level report windows=]
+    :: |source|'s [=attribution source/event-level report windows=]
 
 1. Let |epsilon| be |source|'s [=attribution source/event-level epsilon=].
 1. Let |possibleTriggerStates| be the result of [=obtaining a set of possible trigger states=] with |randomizedResponseConfig|.
@@ -4010,15 +3995,15 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
     |sourceToAttribute|'s [=attribution source/dedup keys=] [=list/contains=] it:
      1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
          ("<code>[=trigger debug data type/trigger-event-deduplicated=]</code>", null)).
-1. Let |specEntry| be the result of [=finding a matching trigger spec=] with
+1. Let |triggerData| be the result of [=finding matching trigger data=] with
     |sourceToAttribute| and |matchedConfig|'s
     [=event-level trigger configuration/trigger data=].
-1. If |specEntry| is an error:
+1. If |triggerData| is an error:
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
         ("<code>[=trigger debug data type/trigger-event-no-matching-trigger-data=]</code>", null)).
 1. Let |windowResult| be the result of [=check whether a moment falls within a window=]
     with |trigger|'s [=attribution trigger/trigger time=] and
-    |specEntry|'s [=map/value=]'s [=trigger spec/event-level report windows=]'s
+    |sourceToAttribute|'s [=attribution source/event-level report windows=]'s
     [=report window list/total window=].
 1. If |windowResult| is <strong>falls before</strong>:
     1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
@@ -4029,7 +4014,7 @@ To <dfn>trigger event-level attribution</dfn> given an [=attribution trigger=] |
 1. [=Assert=]: |windowResult| is <strong>falls within</strong>.
 1. Let |report| be the result of running [=obtain an event-level report=] with |sourceToAttribute|,
     |trigger|'s [=attribution trigger/trigger time=], |trigger|'s [=attribution trigger/debug key=],
-    |matchedConfig|'s [=event-level trigger configuration/priority=], and |specEntry|.
+    |matchedConfig|'s [=event-level trigger configuration/priority=], and |triggerData|.
 1. If |sourceToAttribute|'s [=attribution source/event-level attributable=] value
     is false:
      1. Return the [=triggering result=] ("<code>[=triggering status/dropped=]</code>",
@@ -4357,19 +4342,18 @@ To <dfn>obtain an aggregatable attribution report delivery time</dfn> given an [
 To <dfn>obtain an event-level report</dfn> given an [=attribution source=] |source|,
 a [=moment=] |triggerTime|, a possibly null non-negative 64-bit integer
 <dfn for="obtain an event-level report"><var>triggerDebugKey</var></dfn>,
-a 64-bit integer priority |priority|, and a [=trigger spec map=] [=map/entry=]
-|specEntry|:
+a 64-bit integer priority |priority|, and a non-negative 64-bit integer |triggerData|:
 
 1. Let |reportTime| be the result of running
-    [=obtain an event-level report delivery time=] with |specEntry|'s
-    [=map/value=]'s [=trigger spec/event-level report windows=] and
+    [=obtain an event-level report delivery time=] with |source|'s
+    [=attribution source/event-level report windows=] and
     |triggerTime|.
 1. Let |report| be a new [=event-level report=] struct whose items are:
 
     : [=event-level report/event ID=]
     :: |source|'s [=attribution source/event ID=].
     : [=event-level report/trigger data=]
-    :: |specEntry|'s [=map/key=]
+    :: |triggerData|
     : [=event-level report/randomized trigger rate=]
     :: |source|'s [=attribution source/randomized trigger rate=].
     : [=event-level report/reporting origin=]
