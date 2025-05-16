@@ -158,19 +158,19 @@ HTMLScriptElement includes HTMLAttributionSrcElementUtils;
 Add the following <a spec=html>content attributes</a>:
 
 : <{a}>
-:: <dfn for="a" element-attr>attributionsrc</dfn> - A [=string=] containing
+:: <dfn for="a" element-attr>attributionsrc</dfn>: A [=string=] containing
     zero or more [=URLs=] to which a background attributionsrc request will be
     made when the <{a}> is navigated.
 : <{area}>
-:: <dfn for="area" element-attr>attributionsrc</dfn> - A [=string=] containing
+:: <dfn for="area" element-attr>attributionsrc</dfn>: A [=string=] containing
     zero or more [=URLs=] to which a background attributionsrc request will be
     made when the <{area}> is navigated.
 : <{img}>
-:: <dfn for="img" element-attr>attributionsrc</dfn> - A [=string=] containing
+:: <dfn for="img" element-attr>attributionsrc</dfn>: A [=string=] containing
     zero or more [=URLs=] to which a background attributionsrc request will be
     made when set.
 : <{script}>
-:: <dfn for="script" element-attr>attributionsrc</dfn> - A [=string=] containing
+:: <dfn for="script" element-attr>attributionsrc</dfn>: A [=string=] containing
     zero or more [=URLs=] to which a background attributionsrc request will be
     made when set.
 
@@ -687,7 +687,7 @@ a [=report window=] [=struct=] with the following fields:
 : [=report window/start=]
 :: The [=report window/start=] of |list|[0].
 : [=report window/end=]
-:: The [=report window/end=] of |list|[|list|'s [=list/size=] - 1].
+:: The [=report window/end=] of |list|[|list|'s [=list/size=] − 1].
 
 <p class=note>The [=report window list/total window=] is conceptually a union of
 [=report windows=], because there are no gaps in time between any of the
@@ -2349,7 +2349,7 @@ To <dfn>obtain a set of possible trigger states</dfn> given a [=randomized respo
 1. Return |possibleValues|.
 
 To <dfn>obtain a randomized source response pick rate</dfn> given a positive integer |states| and a double |epsilon|:
-1. Return |states| / (|states| - 1 + e<sup>|epsilon|</sup>).
+1. Return |states| / (|states| − 1 + e<sup>|epsilon|</sup>).
 
 To <dfn>obtain a randomized source response</dfn> given a [=set=] of possible trigger states |possibleValues| and a double |epsilon|:
 1. Let |pickRate| be the result of [=obtaining a randomized source response pick rate=] with |possibleValues|'s [=set/size=] and |epsilon|.
@@ -2362,13 +2362,13 @@ To <dfn>compute the channel capacity of a source</dfn> given a positive integer 
 1. If |states| is 1, return 0.
 1. If |states| is greater than the user agent's [=max trigger-state cardinality=], return an error.
 1. Let |pickRate| be the [=obtain a randomized source response pick rate|randomized response pick rate=] with |states| and |epsilon|.
-1. Let |p| be |pickRate| * (|states| - 1) / |states|.
-1. Return log2(|states|) - h(|p|) - |p| * log2(|states| - 1) where h is the binary entropy function [[BIN-ENT]].
+1. Let |p| be |pickRate| × (|states| − 1) / |states|.
+1. Return log2(|states|) − h(|p|) − |p| × log2(|states| − 1) where h is the binary entropy function [[BIN-ENT]].
 
 <p class=note>This algorithm computes the channel capacity [[CHAN]] of a q-ary symmetric channel [[Q-SC]].
 
 To <dfn>compute the scopes channel capacity of a source</dfn> given a positive integer |numTriggerStates|, a positive integer |attributionScopeLimit|, and a positive integer |maxEventStates|:
-1. Let |totalStates| be |numTriggerStates| + |maxEventStates| * (|attributionScopeLimit| - 1).
+1. Let |totalStates| be |numTriggerStates| + |maxEventStates| × (|attributionScopeLimit| − 1).
 1. Return log2(|totalStates|).
 
 <h3 algorithm id="parsing-source-registration">Parsing source-registration JSON</h3>
@@ -2724,7 +2724,7 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
         [=parse a source aggregatable debug reporting config=] with
         |value|["<code>[=source-registration JSON key/aggregatable_debug_reporting=]</code>"],
         |aggregatableDebugBudget|, and |aggregatableDebugReportingConfig|.
-1. Let |aggregatableAttributionBudget| be [=allowed aggregatable budget per source=] - |aggregatableDebugBudget|.
+1. Let |aggregatableAttributionBudget| be [=allowed aggregatable budget per source=] − |aggregatableDebugBudget|.
 1. Let |namedBudgets| be the result of [=parsing named budgets for source=] with |value|.
 1. If |namedBudgets| is an error, return it.
 1. If [=automation local testing mode=] is true, set |epsilon| to `∞`.
@@ -4335,7 +4335,7 @@ To <dfn>obtain an aggregatable attribution report delivery time</dfn> given an [
 1. If the result of running [=check if an aggregatable attribution report should be unconditionally sent=] with |trigger|
     is true, return |triggerTime|.
 1. Let |r| be a random double between 0 (inclusive) and 1 (exclusive) with uniform probability.
-1. Return |triggerTime| + |r| * [=randomized aggregatable attribution report delay=].
+1. Return |triggerTime| + |r| × [=randomized aggregatable attribution report delay=].
 
 <h3 algorithm id="obtaining-an-event-level-report">Obtaining an event-level report</h3>
 
@@ -4487,7 +4487,7 @@ To <dfn>generate null attribution reports</dfn> given an [=attribution trigger=]
     1. If |report| is not null, set |roundedAttributedSourceTime| to the result of [=obtaining rounded source time=] with |report|'s
         [=aggregatable attribution report/source time=].
     1. [=set/iterate|For each=] integer |day| of [=the range=] 0 to the number of days in |maxSourceExpiry|, inclusive:
-        1. Let |fakeSourceTime| be |trigger|'s [=attribution trigger/trigger time=] - |day| days.
+        1. Let |fakeSourceTime| be |trigger|'s [=attribution trigger/trigger time=] − |day| days.
         1. If |roundedAttributedSourceTime| is not null and equals the result of [=obtaining rounded source time=] with |fakeSourceTime|:
             1. [=iteration/Continue=].
         1. If the result of [=determining if a randomized null attribution report is generated=] with [=randomized null attribution report rate including source registration time=] is true:
