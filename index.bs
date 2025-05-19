@@ -431,7 +431,7 @@ a [=set=] of [=strings=] |allowedKeys|:
         value |value|, and the parameters |params| to |entries|.
 1. Return a [=structured header/dictionary=] containing |entries|.
 
-<p class=note>The user agent may "[=structured header/define new structured fields|grease=]" the
+<p class=note>The user agent can "[=structured header/define new structured fields|grease=]" the
 dictionary structured headers according to the preceding algorithm to help ensure that recipients
 use a proper structured header parser, rather than naive string equality or
 `contains` operations, which makes it easier to introduce backwards-compatible
@@ -1587,7 +1587,7 @@ To <dfn>serialize [=event-level report/attribution destinations=]</dfn> |destina
 1. If |destinationStrings|'s [=set/size=] is equal to 1, return |destinationStrings|[0].
 1. Return |destinationStrings|.
 
-<p class=note>|destinations| is required to be sorted to avoid revealing extra
+<p class=note>|destinations| has to be sorted to avoid revealing extra
 information about the original source registration, namely the order of the
 "<code>[=source-registration JSON key/destination=]</code>" field in the
 original JSON registration, which can be used to distinguish semantically
@@ -1789,7 +1789,7 @@ and an [=aggregatable debug reporting config=] |default|:
 1. Return |aggregatableDebugReportingConfig|.
 
 <p class=note>The parsing errors are intentionally ignored in this algorithm with |default|
-returned to avoid data loss from the optional debug reporting feature.
+returned to avoid data loss from the debug reporting feature.
 
 <h3 id="getting-registration-info">Getting registration info</h3>
 
@@ -2124,9 +2124,9 @@ and a [=response=] |response|:
 
 1. The user-agent may ignore the response; if so, return.
 
-    <p class=note>The user-agent may prevent attribution for a number of reasons, such as user opt-out. In these
+    <p class=note>The user-agent can prevent attribution for a number of reasons, such as user opt-out. In these
     cases, it is preferred to abort the API flow at response time rather than at request time so this
-    state is not immediately detectable. Attribution may also be blocked if the reporting origin is not
+    state is not immediately detectable. Attribution can also be blocked if the reporting origin is not
     <a href="https://github.com/privacysandbox/attestation">enrolled</a>.
 
 1. [=Queue a task=] on the [=networking task source=] to proceed with the following steps.
@@ -2857,11 +2857,11 @@ To <dfn>delete sources for unexpired destination limit</dfn> given a [=set=] of
         1. [=set/Append=] |report|'s [=event-level report/internal ID=] to |deletedEventLevelReports|.
         1. [=set/Remove=] |report| from the [=event-level report cache=].
 
-    <p class=note>Leaking browsing history of destinations deactivated for unexpired
+    <p class=note>Leaking browsing history of destinations deactivated for the unexpired
     destination limit from [=event-level reports=] whose [=event-level report/trigger time=]
     is earlier than |now| is mitigated by the presence of [=obtain a fake report|fake reports=].
     [=Event-level reports=] whose [=event-level report/trigger time=] is greater
-    than or equal to |now| must be deleted to avoid exposing whether an
+    than or equal to |now| have to be deleted to avoid exposing whether an
     [=attribution source=] has a [=attribution source/randomized response=].
 
 1. Let |deletedAggregatableReports| be a new [=set=].
@@ -3041,7 +3041,7 @@ a [=boolean=] |isNoised|, and a [=boolean=] |destinationLimitReplaced|:
 1. If |destinationLimitReplaced| is true, [=map/set=] |body|["`source_destination_limit`"]
     to the user agent's [=max destinations covered by unexpired sources=], [=serialize an integer|serialized=].
 
-<p class=note>The "`source_destination_limit`" field may be included to indicate that
+<p class=note>The "`source_destination_limit`" field can be included to indicate that
 [=max destinations covered by unexpired sources=] was hit, which is not
 reported as "<code>[=source debug data type/source-destination-limit=]</code>" to prevent side-channel
 leakage of cross-origin data.
@@ -3306,12 +3306,12 @@ To <dfn>process an attribution source</dfn> given an [=attribution source=] |sou
 privacy budget of all possible destinations.
 
 <p class=note>The limits that are not reported as <code>[=source debug data type/source-success=]</code>
-in [=verbose debug reports=] should be checked before any limits that are reported implicitly as
+in [=verbose debug reports=] have to be checked before any limits that are reported implicitly as
 <code>[=source debug data type/source-success=]</code> (
 <code>[=source debug data type/source-destination-global-rate-limit=]</code> and
 <code>[=source debug data type/source-reporting-origin-limit=]</code>) to
 prevent side-channel leakage of cross-origin data. Furthermore, the [=verbose debug data=]
-should be fully determined regardless of the result of checks on implicitly reported limits.
+have to be fully determined regardless of the result of checks on implicitly reported limits.
 
 # Triggering Algorithms # {#trigger-algorithms}
 
@@ -3691,8 +3691,8 @@ To <dfn>match an attribution source against a filter config</dfn> given an
         1. If |isNegated| is false, return false.
     1. Else if |isNegated| is true, return false.
 
-    <p class=note>If non-negated, the source must have been registered inside of the
-    lookback window. If negated, it must be outside of the lookback window.
+    <p class=note>If non-negated, the source had to be registered inside of the
+    lookback window. If negated, it had to be outside of the lookback window.
 
 1. Let |filterMap| be |filter|'s [=filter config/map=].
 1. Let |sourceData| be |source|'s [=attribution source/filter data=].
@@ -4536,7 +4536,7 @@ To <dfn>queue reports for delivery</dfn> given a [=set=] of
     1. [=set/Remove=] |report| from |cache|.
 
         <p class=note>In order to support sending, waiting, and retries across various
-         forms of interruption, including shutdown, the user agent may need to
+         forms of interruption, including shutdown, the user agent might need to
          persist reports that are in the process of being sent in some other
          storage.
     1. [=list/Append=] |report| to |reportsToSend|.
@@ -4641,7 +4641,7 @@ Issue: Specify this in terms of [=fetch=].
 
 <p class=note>The user agent might enforce weekly key rotation. If there are multiple keys, the user agent
 might independently pick a key uniformly at random for every encryption operation.
-The key should be uniquely identifiable.
+The key has to be uniquely identifiable.
 
 An [=aggregatable report=] |report|'s <dfn for="aggregatable report">plaintext payload</dfn>
 is the result of running the following steps:
