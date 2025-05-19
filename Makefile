@@ -18,7 +18,7 @@ $(bikeshed): $(venv-marker) Makefile
 	@touch $@
 
 $(OUT_DIR)/index.html: index.bs $(OUT_DIR) $(bikeshed)
-	$(bikeshed) --die-on=warning spec $< $@
+	$(bikeshed) --die-on=lint spec $< $@
 
 validator: $(OUT_DIR)/validate-headers.html $(OUT_DIR)/validate-headers.js $(OUT_DIR)/filters.html $(OUT_DIR)/filters-main.js
 
