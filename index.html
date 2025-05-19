@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version b25686b9f, updated Fri Mar 14 14:15:20 2025 -0700" name="generator">
   <link href="https://wicg.github.io/attribution-reporting-api" rel="canonical">
-  <meta content="82db68e835c9408b48b1b373f398eb199cc53c85" name="revision">
+  <meta content="2952db119ffe2c7782cd5f92fdd9c93881aced4c" name="revision">
   <meta content="dark light" name="color-scheme">
   <link href="https://www.w3.org/StyleSheets/TR/2021/dark.css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css">
 <style>/* Boilerplate: style-autolinks */
@@ -1271,7 +1271,7 @@ value <var>value</var>, and the parameters <var>params</var> to <var>entries</va
     <li data-md>
      <p>Return a <a data-link-type="dfn" href="https://httpwg.org/specs/rfc8941#dictionary" id="ref-for-dictionary②">dictionary</a> containing <var>entries</var>.</p>
    </ol>
-   <p class="note" role="note">The user agent may "<a data-link-type="dfn" href="https://httpwg.org/specs/rfc8941#specify" id="ref-for-specify">grease</a>" the
+   <p class="note" role="note">The user agent can "<a data-link-type="dfn" href="https://httpwg.org/specs/rfc8941#specify" id="ref-for-specify">grease</a>" the
 dictionary structured headers according to the preceding algorithm to help ensure that recipients
 use a proper structured header parser, rather than naive string equality or <code>contains</code> operations, which makes it easier to introduce backwards-compatible
 changes to the header definition in the future. Including the allowed keys
@@ -1280,11 +1280,11 @@ keys are interpreted by the recipient. Likewise, shuffling the dictionary
 members helps ensure that, e.g., "<code>key1, key2</code>" is treated equivalently to "<code>key2, key1</code>". </p>
    <p>In the following example, only the "<code>trigger</code>" key should be interpreted by the
 recipient after the header has been parsed as a structured dictionary:</p>
-<pre class="example no-marker" id="example-1c153954"><a class="self-link" href="#example-1c153954"></a><div class="marker">EXAMPLE: Greased Attribution-Reporting-Eligible header</div>Attribution-Reporting-Eligible: not-event-source, trigger=event-source;navigation-source=3
+<pre class="example no-marker" id="grease-eligible"><a class="self-link" href="#grease-eligible"></a><div class="marker">EXAMPLE: Greased Attribution-Reporting-Eligible header</div>Attribution-Reporting-Eligible: not-event-source, trigger=event-source;navigation-source=3
 </pre>
    <p>In the following example, only the "<code>os</code>" key should be interpreted by the
 recipient after the header has been parsed as a structured dictionary:</p>
-<pre class="example no-marker" id="example-a67a61e7"><a class="self-link" href="#example-a67a61e7"></a><div class="marker">EXAMPLE: Greased Attribution-Reporting-Support header</div>Attribution-Reporting-Support: os=web
+<pre class="example no-marker" id="grease-support"><a class="self-link" href="#grease-support"></a><div class="marker">EXAMPLE: Greased Attribution-Reporting-Support header</div>Attribution-Reporting-Support: os=web
 </pre>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="set-attribution-reporting-headers">set Attribution Reporting headers</dfn> given a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org#concept-request" id="ref-for-concept-request③">request</a> <var>request</var>:</p>
    <ol>
@@ -2342,7 +2342,7 @@ is less than <var>b</var>, <a href="https://html.spec.whatwg.org/multipage/origi
     <li data-md>
      <p>Return <var>destinationStrings</var>.</p>
    </ol>
-   <p class="note" role="note"><var>destinations</var> is required to be sorted to avoid revealing extra
+   <p class="note" role="note"><var>destinations</var> has to be sorted to avoid revealing extra
 information about the original source registration, namely the order of the
 "<code><a data-link-type="dfn" href="#source-registration-json-key-destination" id="ref-for-source-registration-json-key-destination">destination</a></code>" field in the
 original JSON registration, which can be used to distinguish semantically
@@ -2674,7 +2674,7 @@ and <var>supportedTypes</var>.</p>
     <li data-md>
      <p>Return <var>aggregatableDebugReportingConfig</var>.</p>
    </ol>
-   <p class="note" role="note">The parsing errors are intentionally ignored in this algorithm with <var>default</var> returned to avoid data loss from the optional debug reporting feature. </p>
+   <p class="note" role="note">The parsing errors are intentionally ignored in this algorithm with <var>default</var> returned to avoid data loss from the debug reporting feature. </p>
    <h3 class="heading settled" data-level="10.8" id="getting-registration-info"><span class="secno">10.8. </span><span class="content">Getting registration info</span><a class="self-link" href="#getting-registration-info"></a></h3>
    <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="get-registration-info-from-a-header-list">get registration info from a header list</dfn> given a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-header-list" id="ref-for-concept-header-list">header list</a> <var>headers</var>:</p>
    <ol>
@@ -3100,9 +3100,9 @@ and a <a data-link-type="dfn" href="https://fetch.spec.whatwg.org/#concept-respo
    <ol>
     <li data-md>
      <p>The user-agent may ignore the response; if so, return.</p>
-     <p class="note" role="note">The user-agent may prevent attribution for a number of reasons, such as user opt-out. In these
+     <p class="note" role="note">The user-agent can prevent attribution for a number of reasons, such as user opt-out. In these
 cases, it is preferred to abort the API flow at response time rather than at request time so this
-state is not immediately detectable. Attribution may also be blocked if the reporting origin is not <a href="https://github.com/privacysandbox/attestation">enrolled</a>. </p>
+state is not immediately detectable. Attribution can also be blocked if the reporting origin is not <a href="https://github.com/privacysandbox/attestation">enrolled</a>. </p>
     <li data-md>
      <p><a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task" id="ref-for-queue-a-task①">Queue a task</a> on the <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/webappapis.html#networking-task-source" id="ref-for-networking-task-source">networking task source</a> to proceed with the following steps.</p>
      <p class="note" role="note">This algorithm can be invoked from while <a data-link-type="dfn" href="https://html.spec.whatwg.org/multipage/infrastructure.html#in-parallel" id="ref-for-in-parallel">in parallel</a>. </p>
@@ -4195,9 +4195,9 @@ for debug reporting. </p>
          <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove⑥">Remove</a> <var>report</var> from the <a data-link-type="dfn" href="#event-level-report-cache" id="ref-for-event-level-report-cache④">event-level report cache</a>.</p>
        </ol>
      </ol>
-     <p class="note" role="note">Leaking browsing history of destinations deactivated for unexpired
+     <p class="note" role="note">Leaking browsing history of destinations deactivated for the unexpired
 destination limit from <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report⑨">event-level reports</a> whose <a data-link-type="dfn" href="#event-level-report-trigger-time" id="ref-for-event-level-report-trigger-time①">trigger time</a> is earlier than <var>now</var> is mitigated by the presence of <a data-link-type="dfn" href="#obtain-a-fake-report" id="ref-for-obtain-a-fake-report①">fake reports</a>. <a data-link-type="dfn" href="#event-level-report" id="ref-for-event-level-report①⓪">Event-level reports</a> whose <a data-link-type="dfn" href="#event-level-report-trigger-time" id="ref-for-event-level-report-trigger-time②">trigger time</a> is greater
-than or equal to <var>now</var> must be deleted to avoid exposing whether an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑤④">attribution source</a> has a <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response">randomized response</a>. </p>
+than or equal to <var>now</var> have to be deleted to avoid exposing whether an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑤④">attribution source</a> has a <a data-link-type="dfn" href="#attribution-source-randomized-response" id="ref-for-attribution-source-randomized-response">randomized response</a>. </p>
     <li data-md>
      <p>Let <var>deletedAggregatableReports</var> be a new <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#ordered-set" id="ref-for-ordered-set③⑥">set</a>.</p>
     <li data-md>
@@ -4466,7 +4466,7 @@ to <var>source</var>’s <a data-link-type="dfn" href="#attribution-source-debug
      <p>If <var>destinationLimitReplaced</var> is true, <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#map-set" id="ref-for-map-set②①">set</a> <var>body</var>["<code>source_destination_limit</code>"]
 to the user agent’s <a data-link-type="dfn" href="#max-destinations-covered-by-unexpired-sources" id="ref-for-max-destinations-covered-by-unexpired-sources②">max destinations covered by unexpired sources</a>, <a data-link-type="dfn" href="#serialize-an-integer" id="ref-for-serialize-an-integer①⓪">serialized</a>.</p>
    </ol>
-   <p class="note" role="note">The "<code>source_destination_limit</code>" field may be included to indicate that <a data-link-type="dfn" href="#max-destinations-covered-by-unexpired-sources" id="ref-for-max-destinations-covered-by-unexpired-sources③">max destinations covered by unexpired sources</a> was hit, which is not
+   <p class="note" role="note">The "<code>source_destination_limit</code>" field can be included to indicate that <a data-link-type="dfn" href="#max-destinations-covered-by-unexpired-sources" id="ref-for-max-destinations-covered-by-unexpired-sources③">max destinations covered by unexpired sources</a> was hit, which is not
 reported as "<code><a data-link-type="dfn" href="#source-debug-data-type-source-destination-limit" id="ref-for-source-debug-data-type-source-destination-limit①">source-destination-limit</a></code>" to prevent side-channel
 leakage of cross-origin data. </p>
    <ol>
@@ -4933,8 +4933,8 @@ then set <var>source</var>’s <a data-link-type="dfn" href="#attribution-source
    </ol>
    <p class="note" role="note">Because a fake report does not have a "real" effective destination, we need to subtract from the
 privacy budget of all possible destinations. </p>
-   <p class="note" role="note">The limits that are not reported as <code><a data-link-type="dfn" href="#source-debug-data-type-source-success" id="ref-for-source-debug-data-type-source-success④">source-success</a></code> in <a data-link-type="dfn" href="#verbose-debug-report" id="ref-for-verbose-debug-report②">verbose debug reports</a> should be checked before any limits that are reported implicitly as <code><a data-link-type="dfn" href="#source-debug-data-type-source-success" id="ref-for-source-debug-data-type-source-success⑤">source-success</a></code> ( <code><a data-link-type="dfn" href="#source-debug-data-type-source-destination-global-rate-limit" id="ref-for-source-debug-data-type-source-destination-global-rate-limit②">source-destination-global-rate-limit</a></code> and <code><a data-link-type="dfn" href="#source-debug-data-type-source-reporting-origin-limit" id="ref-for-source-debug-data-type-source-reporting-origin-limit②">source-reporting-origin-limit</a></code>) to
-prevent side-channel leakage of cross-origin data. Furthermore, the <a data-link-type="dfn" href="#verbose-debug-data" id="ref-for-verbose-debug-data④">verbose debug data</a> should be fully determined regardless of the result of checks on implicitly reported limits. </p>
+   <p class="note" role="note">The limits that are not reported as <code><a data-link-type="dfn" href="#source-debug-data-type-source-success" id="ref-for-source-debug-data-type-source-success④">source-success</a></code> in <a data-link-type="dfn" href="#verbose-debug-report" id="ref-for-verbose-debug-report②">verbose debug reports</a> have to be checked before any limits that are reported implicitly as <code><a data-link-type="dfn" href="#source-debug-data-type-source-success" id="ref-for-source-debug-data-type-source-success⑤">source-success</a></code> ( <code><a data-link-type="dfn" href="#source-debug-data-type-source-destination-global-rate-limit" id="ref-for-source-debug-data-type-source-destination-global-rate-limit②">source-destination-global-rate-limit</a></code> and <code><a data-link-type="dfn" href="#source-debug-data-type-source-reporting-origin-limit" id="ref-for-source-debug-data-type-source-reporting-origin-limit②">source-reporting-origin-limit</a></code>) to
+prevent side-channel leakage of cross-origin data. Furthermore, the <a data-link-type="dfn" href="#verbose-debug-data" id="ref-for-verbose-debug-data④">verbose debug data</a> have to be fully determined regardless of the result of checks on implicitly reported limits. </p>
    <h2 class="heading settled" data-level="12" id="trigger-algorithms"><span class="secno">12. </span><span class="content">Triggering Algorithms</span><a class="self-link" href="#trigger-algorithms"></a></h2>
    <p>A <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="trigger-registration-json-key">trigger-registration JSON key</dfn> is one of the following:</p>
    <ul>
@@ -5550,7 +5550,7 @@ and the result of running <a data-link-type="dfn" href="#check-if-an-aggregatabl
     <li data-md>
      <p>Return true.</p>
    </ol>
-   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="match-an-attribution-source-against-a-filter-config">match an attribution source against a filter config</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑥⑧">attribution source</a> <var>source</var>, a <a data-link-type="dfn" href="#filter-config" id="ref-for-filter-config①⑤">filter config</a> <var>filter</var>, a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" id="ref-for-dfn-moment②②">moment</a> <var>moment</var>, and a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#boolean" id="ref-for-boolean②⑦">boolean</a> <dfn class="dfn-paneled" data-dfn-for="match an attribution source against a filter config" data-dfn-type="dfn" data-noexport id="match-an-attribution-source-against-a-filter-config-isnegated"><var>isNegated</var></dfn>:</p>
+   <p>To <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="match-an-attribution-source-against-a-filter-config">match an attribution source against a filter config</dfn> given an <a data-link-type="dfn" href="#attribution-source" id="ref-for-attribution-source⑥⑧">attribution source</a> <var>source</var>, a <a data-link-type="dfn" href="#filter-config" id="ref-for-filter-config①⑤">filter config</a> <var>filter</var>, a <a data-link-type="dfn" href="https://w3c.github.io/hr-time/#dfn-moment" id="ref-for-dfn-moment②②">moment</a> <var>moment</var>, and a <a data-link-type="dfn" href="https://infra.spec.whatwg.org/#boolean" id="ref-for-boolean②⑦">boolean</a> <var>isNegated</var>:</p>
    <ol>
     <li data-md>
      <p>Let <var>lookbackWindow</var> be <var>filter</var>’s <a data-link-type="dfn" href="#filter-config-lookback-window" id="ref-for-filter-config-lookback-window①">lookback window</a>.</p>
@@ -5566,8 +5566,8 @@ and the result of running <a data-link-type="dfn" href="#check-if-an-aggregatabl
       <li data-md>
        <p>Else if <var>isNegated</var> is true, return false.</p>
      </ol>
-     <p class="note" role="note">If non-negated, the source must have been registered inside of the
-lookback window. If negated, it must be outside of the lookback window. </p>
+     <p class="note" role="note">If non-negated, the source had to be registered inside of the
+lookback window. If negated, it had to be outside of the lookback window. </p>
     <li data-md>
      <p>Let <var>filterMap</var> be <var>filter</var>’s <a data-link-type="dfn" href="#filter-config-map" id="ref-for-filter-config-map①">map</a>.</p>
     <li data-md>
@@ -6729,7 +6729,7 @@ any report that is sent. </p>
       <li data-md>
        <p><a data-link-type="dfn" href="https://infra.spec.whatwg.org/#list-remove" id="ref-for-list-remove②①">Remove</a> <var>report</var> from <var>cache</var>.</p>
        <p class="note" role="note">In order to support sending, waiting, and retries across various
- forms of interruption, including shutdown, the user agent may need to
+ forms of interruption, including shutdown, the user agent might need to
  persist reports that are in the process of being sent in some other
  storage. </p>
       <li data-md>
@@ -6851,7 +6851,7 @@ agent failed to obtain the public key from <var>url</var>. This step may be asyn
    <p class="issue" id="issue-0c097fe9"><a class="self-link" href="#issue-0c097fe9"></a> Specify this in terms of <a data-link-type="dfn" href="https://fetch.spec.whatwg.org#concept-fetch" id="ref-for-concept-fetch③">fetch</a>.</p>
    <p class="note" role="note">The user agent might enforce weekly key rotation. If there are multiple keys, the user agent
 might independently pick a key uniformly at random for every encryption operation.
-The key should be uniquely identifiable. </p>
+The key has to be uniquely identifiable. </p>
    <p>An <a data-link-type="dfn" href="#aggregatable-report" id="ref-for-aggregatable-report⑧">aggregatable report</a> <var>report</var>’s <dfn class="dfn-paneled" data-dfn-for="aggregatable report" data-dfn-type="dfn" data-noexport id="aggregatable-report-plaintext-payload">plaintext payload</dfn> is the result of running the following steps:</p>
    <ol>
     <li data-md>
@@ -8037,12 +8037,7 @@ proxy server could itself handle the <a data-link-type="dfn" href="#event-level-
    <li><a href="#generate-an-attribution-report-url-isdebugreport">isDebugReport</a><span>, in § 13.7</span>
    <li><a href="#attribution-source-is-higher-priority-than">is higher-priority than</a><span>, in § 12.10</span>
    <li><a href="#event-level-report-is-lower-priority-than">is lower-priority than</a><span>, in § 12.8</span>
-   <li>
-    isNegated
-    <ul>
-     <li><a href="#match-an-attribution-source-against-a-filter-config-isnegated">dfn for match an attribution source against a filter config</a><span>, in § 12.2</span>
-     <li><a href="#match-an-attribution-source-against-filters-isnegated">dfn for match an attribution source against filters</a><span>, in § 12.2</span>
-    </ul>
+   <li><a href="#match-an-attribution-source-against-filters-isnegated">isNegated</a><span>, in § 12.2</span>
    <li><a href="#aggregatable-attribution-report-is-null-report">is null report</a><span>, in § 6.24</span>
    <li><a href="#aggregatable-contribution-key">key</a><span>, in § 6.24</span>
    <li>
@@ -9542,7 +9537,6 @@ let dfnPanelData = {
 "make-a-background-attributionsrc-request": {"dfnID":"make-a-background-attributionsrc-request","dfnText":"make a background attributionsrc request","external":false,"refSections":[{"refs":[{"id":"ref-for-make-a-background-attributionsrc-request"}],"title":"2.2. Window open steps"},{"refs":[{"id":"ref-for-make-a-background-attributionsrc-request\u2460"}],"title":"10.16. Making a background attributionsrc request"}],"url":"#make-a-background-attributionsrc-request"},
 "make-background-attributionsrc-requests": {"dfnID":"make-background-attributionsrc-requests","dfnText":"make background attributionsrc requests","external":false,"refSections":[{"refs":[{"id":"ref-for-make-background-attributionsrc-requests"},{"id":"ref-for-make-background-attributionsrc-requests\u2460"}],"title":"2.1. API for elements"}],"url":"#make-background-attributionsrc-requests"},
 "match-an-attribution-source-against-a-filter-config": {"dfnID":"match-an-attribution-source-against-a-filter-config","dfnText":"match an attribution source against a filter config","external":false,"refSections":[{"refs":[{"id":"ref-for-match-an-attribution-source-against-a-filter-config"}],"title":"12.2. Does filter data match"}],"url":"#match-an-attribution-source-against-a-filter-config"},
-"match-an-attribution-source-against-a-filter-config-isnegated": {"dfnID":"match-an-attribution-source-against-a-filter-config-isnegated","dfnText":"isNegated","external":false,"refSections":[],"url":"#match-an-attribution-source-against-a-filter-config-isnegated"},
 "match-an-attribution-source-against-filters": {"dfnID":"match-an-attribution-source-against-filters","dfnText":"match an attribution source against filters","external":false,"refSections":[{"refs":[{"id":"ref-for-match-an-attribution-source-against-filters"},{"id":"ref-for-match-an-attribution-source-against-filters\u2460"}],"title":"12.2. Does filter data match"}],"url":"#match-an-attribution-source-against-filters"},
 "match-an-attribution-source-against-filters-and-negated-filters": {"dfnID":"match-an-attribution-source-against-filters-and-negated-filters","dfnText":"match an attribution source against filters and negated filters","external":false,"refSections":[{"refs":[{"id":"ref-for-match-an-attribution-source-against-filters-and-negated-filters"},{"id":"ref-for-match-an-attribution-source-against-filters-and-negated-filters\u2460"}],"title":"12.5. Creating aggregatable contributions"},{"refs":[{"id":"ref-for-match-an-attribution-source-against-filters-and-negated-filters\u2461"}],"title":"12.6. Can source create aggregatable contributions"},{"refs":[{"id":"ref-for-match-an-attribution-source-against-filters-and-negated-filters\u2462"}],"title":"12.8. Triggering event-level attribution"},{"refs":[{"id":"ref-for-match-an-attribution-source-against-filters-and-negated-filters\u2463"}],"title":"12.9. Triggering aggregatable attribution"},{"refs":[{"id":"ref-for-match-an-attribution-source-against-filters-and-negated-filters\u2464"}],"title":"12.10. Triggering attribution"}],"url":"#match-an-attribution-source-against-filters-and-negated-filters"},
 "match-an-attribution-source-against-filters-isnegated": {"dfnID":"match-an-attribution-source-against-filters-isnegated","dfnText":"isNegated","external":false,"refSections":[{"refs":[{"id":"ref-for-match-an-attribution-source-against-filters-isnegated"},{"id":"ref-for-match-an-attribution-source-against-filters-isnegated\u2460"}],"title":"12.2. Does filter data match"}],"url":"#match-an-attribution-source-against-filters-isnegated"},
