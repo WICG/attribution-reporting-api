@@ -29,13 +29,13 @@
 
 ## Introduction
 
-The [transitional debugging reports](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-transitional-debugging-reports),
+The [cookie-based debugging reports](https://github.com/WICG/attribution-reporting-api/blob/main/EVENT.md#optional-cookie-based-debugging-reports),
 which are currently supported by the Attribution Reporting API to facilitate
-testing, will be deprecated alongside third-party cookie deprecation.
+testing, are only permitted while third-party cookies are available.
 
 Here we propose the aggregate debug reporting framework to allow developers to
-measure the performance of the Attribution Reporting API post third-party
-cookie deprecation. The aggregate debug reporting utilizes the mechanism
+measure the performance of the Attribution Reporting API while third-party
+cookies are unavailable. The aggregate debug reporting utilizes the mechanism
 introduced in the [Aggregate Attribution Reporting](https://github.com/WICG/attribution-reporting-api/blob/main/AGGREGATE.md)
 to report debug data in aggregate. To prevent leakage, the cross-site data in
 the aggregatable reports would be encrypted to ensure it can only be processed

@@ -36,7 +36,7 @@ extension on top of this.
     - [Lookback window](#lookback-window)
   - [Optional: Varying frequency and number of reports](#optional-varying-frequency-and-number-of-reports)
     - [Example](#example)
-  - [Optional: transitional debugging reports](#optional-transitional-debugging-reports)
+  - [Optional: Cookie-based debugging reports](#optional-cookie-based-debugging-reports)
     - [Attribution-success debugging reports](#attribution-success-debugging-reports)
     - [Verbose debugging reports](#verbose-debugging-reports)
       - [Reporting endpoints](#reporting-endpoints)
@@ -715,11 +715,11 @@ This example configuration supports optimizing for receiving reports at earlier 
 }
 ```
 
-### Optional: transitional debugging reports
+### Optional: Cookie-based debugging reports
 
 The Attribution Reporting API is a new and fairly complex way to do attribution
 measurement without third-party cookies. As such, we are open to introducing a
-transitional mechanism to learn more information about attribution reports
+mechanism to learn more information about attribution reports
 _while third-party cookies are available_. This ensures that the API can be
 fully understood during roll-out and help flush out any bugs (either in browser
 or caller code), and more easily compare the performance to cookie-based
