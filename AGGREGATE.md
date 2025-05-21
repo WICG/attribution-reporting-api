@@ -12,7 +12,7 @@
   - [Attribution trigger registration](#attribution-trigger-registration)
   - [Aggregatable reports](#aggregatable-reports)
     - [Encrypted payload](#encrypted-payload)
-  - [Optional: transitional debugging reports](#optional-transitional-debugging-reports)
+  - [Optional: Cookie-based debugging reports](#optional-cookie-based-debugging-reports)
     - [Attribution-success debugging reports](#attribution-success-debugging-reports)
     - [Verbose debugging reports](#verbose-debugging-reports)
   - [Contribution bounding and budgeting](#contribution-bounding-and-budgeting)
@@ -378,7 +378,7 @@ future versions of the API), the endpoint URL should also change.
 **Note:** The browser may need some mechanism to ensure that the same set of
 keys are delivered to different users.
 
-### Optional: transitional debugging reports
+### Optional: Cookie-based debugging reports
 
 #### Attribution-success debugging reports
 
