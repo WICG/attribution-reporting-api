@@ -2162,7 +2162,7 @@ or null |osSourceHeader|, a [=registration info=] |registrationInfo|, and a
 
 <div algorithm>
 To <dfn>process an attribution trigger response</dfn> given a [=suitable origin=]
-|contextOrigin|, a [=suitable origin=] |reportingOrigin|, a [=response=] |response|,
+|contextOrigin|, a [=suitable origin=] |reportingOrigin|,
 a [=header value=] or null |webTriggerHeader|, a [=header value=] or null
 |osTriggerHeader|, a [=registration info=] |registrationInfo|, and a [=boolean=]
 |fenced|:
@@ -2270,7 +2270,7 @@ and a [=response=] |response|:
                 |sourceHeader|, |osSourceHeader|, |registrationInfo|, and |fenced|.
         1. If |hasTriggerRegistration| is true:
             1. Run [=process an attribution trigger response=]
-                with |contextOrigin|, |reportingOrigin|, |response|, |triggerHeader|,
+                with |contextOrigin|, |reportingOrigin|, |triggerHeader|,
                 |osTriggerHeader|, |registrationInfo|, and |fenced|.
 
     </dl>
@@ -2700,8 +2700,8 @@ To <dfn>parse report windows</dfn> given a |value|, a
 </div>
 
 <div algorithm>
-To <dfn>parse trigger data into a trigger data set</dfn> given a [=map=] |map|
-and a [=trigger-data matching mode=] |matchingMode|:
+To <dfn>parse trigger data into a trigger data set</dfn> given a [=map=] |map|,
+a [=trigger-data matching mode=] |matchingMode|, and a [=source type=] |sourceType|:
 
 1. Let |set| be a new [=trigger data set=].
 1. If |map|["<code>[=source-registration JSON key/trigger_data=]</code>"] [=map/exists=]:
@@ -2720,7 +2720,7 @@ and a [=trigger-data matching mode=] |matchingMode|:
     1. [=set/iterate|For each=] integer |triggerData| of
         [=the exclusive range|the range=] 0 to
         [=default trigger data cardinality=][|sourceType|], exclusive:
-        1. [=set/Append=] |triggerData| to |triggerDataSet|.
+        1. [=set/Append=] |triggerData| to |set|.
 1. If |matchingMode| is "<code>[=trigger-data matching mode/modulus=]</code>":
     1. Let |i| be 0.
     1. [=set/iterate|For each=] |triggerData| of |set|:
@@ -2872,8 +2872,8 @@ To <dfn noexport>parse source-registration JSON</dfn> given a [=byte sequence=]
     [=parsing top-level report windows=] with |value|, |sourceTime|, |sourceType|,
     and |expiry|.
 1. If |eventReportWindows| is an error, return it.
-1. Let |triggerDataSet| be the result of [=parsing trigger data into a trigger data set=] with |value|
-    and |triggerDataMatchingMode|.
+1. Let |triggerDataSet| be the result of [=parsing trigger data into a trigger data set=] with |value|,
+    |triggerDataMatchingMode|, and |sourceType|.
 1. If |triggerDataSet| is an error, return it.
 1. Let |attributionScopes| be the result of running [=parse attribution scopes=] with |value|.
 1. If |attributionScopes| is an error, return it.
@@ -3162,7 +3162,7 @@ a [=trigger state=] |triggerState|:
 
 <div algorithm>
 To <dfn>obtain and deliver a verbose debug report on source registration</dfn> given a
-[=source debug data types=] |dataType|, an [=attribution source=] |source|,
+[=source debug data type=] |dataType|, an [=attribution source=] |source|,
 a [=boolean=] |isNoised|, and a [=boolean=] |destinationLimitReplaced|:
 
 1. If |source|'s [=attribution source/debug reporting enabled=] is false, return.
@@ -3283,9 +3283,9 @@ an optional [=boolean=] |isNoised| (default false), and an optional
 [=boolean=] |destinationLimitReplaced| (default false):
 
 1. Run [=obtain and deliver a verbose debug report on source registration=]
-    with |dataTypes|, |source|, |isNoised|, and |destinationLimitReplaced|.
+    with |dataType|, |source|, |isNoised|, and |destinationLimitReplaced|.
 1. Run [=obtain and deliver an aggregatable debug report on source registration=]
-    with |dataTypes|, |source|, |isNoised|, and |destinationLimitReplaced|.
+    with |dataType|, |source|, |isNoised|, and |destinationLimitReplaced|.
 
 </div>
 
