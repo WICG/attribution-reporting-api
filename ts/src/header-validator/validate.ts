@@ -1,3 +1,4 @@
+import ipRegex from 'ip-regex'
 import * as psl from 'psl'
 import { Context, PathComponent } from './context'
 import { Maybe } from './maybe'
@@ -376,6 +377,9 @@ export function suitableOrigin(s: string, ctx: Context): Maybe<string> {
 
 export function suitableSite(s: string, ctx: Context): Maybe<string> {
   return suitableScope(s, ctx, 'site', (u) => {
+    if (ipRegex({ exact: true }).test(u.hostname)) {
+      return `${u.protocol}//${u.hostname}`
+    }
     let site = psl.get(u.hostname)
     if (site === null) {
       ctx.warning(
