@@ -28,7 +28,7 @@ const testCases: TestCase[] = [
       "aggregation_keys": {"a": "0xf"},
       "debug_key": "1",
       "debug_reporting": true,
-      "destination": "https://a.test",
+      "destination": ["https://a.test", "https://1.2.3.4"],
       "destination_limit_priority": "1",
       "event_report_window": "3601",
       "expiry": "86400",
@@ -61,7 +61,7 @@ const testCases: TestCase[] = [
       aggregationKeys: new Map([['a', 15n]]),
       debugKey: 1n,
       debugReporting: true,
-      destination: new Set(['https://a.test']),
+      destination: new Set(['https://a.test', 'https://1.2.3.4']),
       destinationLimitPriority: 1n,
       eventLevelEpsilon: 14,
       expiry: 86400,
@@ -116,7 +116,7 @@ const testCases: TestCase[] = [
   },
   {
     name: 'destination-url-components',
-    input: `{"destination": ["https://a.test/b?c=d#e", "https://x.Y.test", "https://sub.A.test/z"]}`,
+    input: `{"destination": ["https://a.test/b?c=d#e", "https://x.Y.test", "https://sub.A.test/z", "https://1.2.3.4/5"]}`,
     expectedWarnings: [
       {
         path: ['destination', 0],
@@ -133,6 +133,10 @@ const testCases: TestCase[] = [
       {
         path: ['destination', 2],
         msg: 'duplicate value https://a.test',
+      },
+      {
+        msg: 'URL components other than site (https://1.2.3.4) will be ignored',
+        path: ['destination', 3],
       },
     ],
   },
