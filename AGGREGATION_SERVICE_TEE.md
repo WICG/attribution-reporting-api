@@ -1,4 +1,4 @@
-# Aggregation Service for the Attribution Reporting API
+# Aggregation Service for the #Attribution Reporting API
 
 ## Authors
 * Carlos Cela (cjcela@google.com)
