@@ -9,6 +9,7 @@ _Note: This document describes possible new functionality in the Attribution Rep
 - [Goals](#goals)
 - [Phase 2: Full Flexible Event-Level](#phase-2-full-flexible-event-level)
   - [API changes](#api-changes)
+  - [Trigger prioritization](#trigger-prioritization)
   - [Trigger-data modulus matching example](#trigger-data-modulus-matching-example)
 - [Configurations that are equivalent to the current version](#configurations-that-are-equivalent-to-the-current-version)
   - [Equivalent event sources](#equivalent-event-sources)
@@ -311,6 +312,17 @@ When the `event_report_window` for a spec completes, we will map its summary val
   "trigger_summary_bucket": [<bucket start>, <bucket end>]
 }
 ```
+### Trigger prioritization
+
+Given that triggering attribution can affect a source's state without producing a report, we will need a new algorithm for doing trigger prioritization. Here is a sketch of how it could work:
+
+1. For every source, maintain a list of triggers, sorted in order of priority (descending), then trigger time (ascending)
+2. At the end of any report window (across all of a source's specs, breaking ties arbitrarily):
+    1. Iterate through the source's triggers in order, "applying" them to generate a list of "speculative" reports. Stop whenever privacy limits are hit.
+    2. Send all of the speculative reports that are scheduled to be emitted in the current window
+    3. Update the source's total value per trigger data, and total # of event-level reports based on all of the triggers that were successfully applied in the current window.
+    4. Delete all of the speculative reports that are not scheduled to be emitted in this window.
+    5. Delete all of the triggers associated with the current spec and window from the source's trigger list
 
 
 ### Custom configurations: Examples
